@@ -1,0 +1,26 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        exclude = [
+            "*Test.java",
+        ],
+    ),
+    visibility = ["//test/..."],
+    deps = [
+        "//src/com/facebook/buck/core/filesystems:filesystems",
+        "//third-party/java/junit:junit",
+    ],
+)
+
+standard_java_test(
+    name = "filesystems",
+    deps = [
+        ":testutil",
+        "//src/com/facebook/buck/core/filesystems:filesystems",
+        "//third-party/java/junit:junit",
+        "//third-party/java/junitparams:junitparams",
+    ],
+)

@@ -1,23 +1,24 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.cxx;
 
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.environment.PlatformType;
@@ -55,8 +56,15 @@ public class CxxToolchainUtilsForTests {
     if (isWindowsOs) {
       assumeWindowsCxxToolchainIsPresent();
     }
-    String config = isWindowsOs ? getWindowsCxxConfig() : getPosixConfig();
-    workspace.writeContentsToPath(config, ".buckconfig");
+    workspace.writeContentsToPath(configureCxxToolchainsAndGetConfig(), ".buckconfig");
+  }
+
+  public static String configureCxxToolchainsAndGetConfig() throws IOException {
+    boolean isWindowsOs = Platform.detect().getType() == PlatformType.WINDOWS;
+    if (isWindowsOs) {
+      assumeWindowsCxxToolchainIsPresent();
+    }
+    return isWindowsOs ? getWindowsCxxConfig() : getPosixConfig();
   }
 
   private static String getWindowsCxxConfig() throws IOException {
@@ -85,13 +93,13 @@ public class CxxToolchainUtilsForTests {
             "  ar=\"%3$s\"",
             "  archiver_platform=windows",
             "  ranlib=\"%3$s\""),
-        MorePaths.pathWithUnixSeparators(cl),
-        MorePaths.pathWithUnixSeparators(link),
-        MorePaths.pathWithUnixSeparators(lib),
-        MorePaths.pathWithUnixSeparators(WINDOWS_CXX_TOOLCHAIN_LIB_LOCATION),
-        MorePaths.pathWithUnixSeparators(libDir.resolve("km").resolve("x64")),
-        MorePaths.pathWithUnixSeparators(libDir.resolve("ucrt").resolve("x64")),
-        MorePaths.pathWithUnixSeparators(libDir.resolve("um").resolve("x64")));
+        PathFormatter.pathWithUnixSeparators(cl),
+        PathFormatter.pathWithUnixSeparators(link),
+        PathFormatter.pathWithUnixSeparators(lib),
+        PathFormatter.pathWithUnixSeparators(WINDOWS_CXX_TOOLCHAIN_LIB_LOCATION),
+        PathFormatter.pathWithUnixSeparators(libDir.resolve("km").resolve("x64")),
+        PathFormatter.pathWithUnixSeparators(libDir.resolve("ucrt").resolve("x64")),
+        PathFormatter.pathWithUnixSeparators(libDir.resolve("um").resolve("x64")));
   }
 
   private static Path findLastSubDir(Path path) throws IOException {

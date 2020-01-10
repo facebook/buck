@@ -1,8 +1,15 @@
 load("//tools/build_rules:file_alias.bzl", "file_alias")
 
+# python3 ships with typing. Rather than introducing python platforms in the buck
+# repo, just do a simple heuristic to try to guess our version. This can go
+# away once we've switched entirely off of python2
+IS_PY3 = ("python3" in read_config("python", "interpreter", "python"))
+
+TYPING_SRCS = {} if IS_PY3 else {"typing.py": "typing/python2/typing.py"}
+
 python_library(
     name = "typing",
-    srcs = {"typing.py": "typing/python2/typing.py"},
+    srcs = TYPING_SRCS,
     base_module = "",
     visibility = ["PUBLIC"],
 )

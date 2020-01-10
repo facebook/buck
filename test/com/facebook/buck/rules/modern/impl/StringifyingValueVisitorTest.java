@@ -1,22 +1,22 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.modern.impl;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.rules.modern.Buildable;
 import org.junit.Test;
@@ -35,7 +35,8 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
   @Override
   @Test
   public void sourcePath() {
-    assertEquals("path:SourcePath(/project/root/some/path)", stringify(new WithSourcePath()));
+    WithSourcePath value = new WithSourcePath();
+    assertEquals("path:SourcePath($ROOT$/some/path)", stringify(value));
   }
 
   @Override
@@ -88,11 +89,25 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
         stringify(new WithOptional()));
   }
 
-  @Test
   @Override
-  public void optionalInt() {
+  @Test
+  public void frameworkPath() {
     assertEquals(
-        "present:boolean(true)integer(7)\nempty:boolean(false)", stringify(new WithOptionalInt()));
+        "sourceTreePath:com.facebook.buck.rules.coercer.FrameworkPath<\n"
+            + "  type:string(SOURCE_TREE_PATH)\n"
+            + "  sourceTreePath:com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath<\n"
+            + "    sourceTree:string(SDKROOT)\n"
+            + "    path:excluded\n"
+            + "    defaultType:Optional.empty()\n"
+            + "  >\n"
+            + "  sourcePath:null\n"
+            + ">\n"
+            + "sourcePath:com.facebook.buck.rules.coercer.FrameworkPath<\n"
+            + "  type:string(SOURCE_PATH)\n"
+            + "  sourceTreePath:null\n"
+            + "  sourcePath:SourcePath($ROOT$/some/path)\n"
+            + ">",
+        stringify(new WithFrameworkPath()));
   }
 
   @Override
@@ -142,17 +157,17 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
         "nested:com.facebook.buck.rules.modern.impl.AbstractValueVisitorTest$NestedAppendable<\n"
             + "  appendable:Optional<\n"
             + "    com.facebook.buck.rules.modern.impl.AbstractValueVisitorTest$Appendable<\n"
-            + "      sp:SourcePath(/project/root/appendable.path)\n"
+            + "      sp:SourcePath($ROOT$/appendable.path)\n"
             + "    >\n"
             + "  >\n"
             + ">\n"
             + "function:null\n"
             + "list:List<\n"
             + "  com.facebook.buck.rules.modern.impl.AbstractValueVisitorTest$Appendable<\n"
-            + "    sp:SourcePath(/project/root/appendable.path)\n"
+            + "    sp:SourcePath($ROOT$/appendable.path)\n"
             + "  >\n"
             + "  com.facebook.buck.rules.modern.impl.AbstractValueVisitorTest$Appendable<\n"
-            + "    sp:SourcePath(/project/root/appendable.path)\n"
+            + "    sp:SourcePath($ROOT$/appendable.path)\n"
             + "  >\n"
             + ">",
         stringify(new WithAddsToRuleKey()));
@@ -168,7 +183,7 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
             + "    >\n"
             + "    SortedSet<\n"
             + "      SourcePath(//some/build:target)\n"
-            + "      SourcePath(/project/root/some/path)\n"
+            + "      SourcePath($ROOT$/some/path)\n"
             + "    >\n"
             + "  >\n"
             + ">\n"
@@ -180,7 +195,7 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
             + ">\n"
             + "otherOutput:OutputPath(other.file)\n"
             + "appendable:com.facebook.buck.rules.modern.impl.AbstractValueVisitorTest$Appendable<\n"
-            + "  sp:SourcePath(/project/root/appendable.path)\n"
+            + "  sp:SourcePath($ROOT$/appendable.path)\n"
             + ">",
         stringify(new Complex()));
   }
@@ -189,19 +204,48 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
   @Override
   public void buildTarget() {
     assertEquals(
-        "target:path(/project/other)Optional<\n"
+        "target:Optional<\n"
             + "  string(other)\n"
             + ">string(//some)string(target)SortedSet<\n"
             + "  string(flavor1)\n"
             + "  string(flavor2)\n"
-            + ">",
+            + ">configuration<targetPlatform(//platform:platform)>",
         stringify(new WithBuildTarget()));
+  }
+
+  @Test
+  @Override
+  public void buildTargetWithEmptyConfiguration() {
+    assertEquals(
+        "target:Optional<\n"
+            + "  string(other)\n"
+            + ">string(//some)string(target)SortedSet<\n"
+            + "  string(flavor1)\n"
+            + "  string(flavor2)\n"
+            + ">configuration<>",
+        stringify(new WithBuildTargetWithEmptyConfiguration()));
+  }
+
+  @Test
+  @Override
+  public void buildTargetWithConfigurationForConfigurationTargets() {
+    assertEquals(
+        "target:Optional<\n"
+            + "  string(other)\n"
+            + ">string(//some)string(target)SortedSet<\n"
+            + "  string(flavor1)\n"
+            + "  string(flavor2)\n"
+            + ">configuration<configurationTarget>",
+        stringify(new WithBuildTargetWithConfigurationForConfigurationTargets()));
   }
 
   private String stringify(Buildable value) {
     StringifyingValueVisitor visitor = new StringifyingValueVisitor();
     DefaultClassInfoFactory.forInstance(value).visit(value, visitor);
-    return visitor.getValue();
+    return visitor
+        .getValue()
+        .replace(rootFilesystem.getRootPath().toString().replace('\\', '/'), "$ROOT$")
+        .replace(otherFilesystem.getRootPath().toString().replace('\\', '/'), "$OTHER$");
   }
 
   @Override
@@ -222,8 +266,16 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
   @Test
   public void nonHashableSourcePathContainer() {
     assertEquals(
-        "container:SourcePath(/project/root/some/path)",
+        "container:SourcePath($ROOT$/some/path)",
         stringify(new WithNonHashableSourcePathContainer()));
+  }
+
+  @Override
+  @Test
+  public void outputLabel() {
+    assertEquals(
+        "label:com.facebook.buck.core.model.OutputLabel<\n" + "  label:string(test_label)\n" + ">",
+        stringify(new WithOutputLabel()));
   }
 
   @Override
@@ -237,7 +289,7 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
             + "    string(path)\n"
             + "  >\n"
             + "  value<\n"
-            + "    SourcePath(/project/root/some/path)\n"
+            + "    SourcePath($ROOT$/some/path)\n"
             + "  >\n"
             + "  key<\n"
             + "    string(target)\n"
@@ -260,7 +312,7 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
             + "    string(path)\n"
             + "  >\n"
             + "  value<\n"
-            + "    SourcePath(/project/root/some/path)\n"
+            + "    SourcePath($ROOT$/some/path)\n"
             + "  >\n"
             + "  key<\n"
             + "    string(target)\n"
@@ -276,7 +328,7 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
   @Test
   public void supplier() {
     assertEquals(
-        "stringSupplier:string(string)\n" + "weakPath:SourcePath(/project/root/some.path)",
+        "stringSupplier:string(string)\n" + "weakPath:SourcePath($ROOT$/some.path)",
         stringify(new WithSupplier()));
   }
 
@@ -284,7 +336,7 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
   @Test
   public void nullable() {
     assertEquals(
-        "nullString:null\n" + "nullPath:null\n" + "nonNullPath:SourcePath(/project/root/some.path)",
+        "nullString:null\n" + "nullPath:null\n" + "nonNullPath:SourcePath($ROOT$/some.path)",
         stringify(new WithNullable()));
   }
 
@@ -293,34 +345,34 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
   public void either() {
     assertEquals(
         "leftString:boolean(true)string(left)\n"
-            + "rightPath:boolean(false)SourcePath(/project/root/some.path)",
+            + "rightPath:boolean(false)SourcePath($ROOT$/some.path)",
         stringify(new WithEither()));
   }
 
   @Override
   @Test
   public void excluded() {
-    assertEquals("excluded:\n" + "nullNotAnnoted:", stringify(new WithExcluded()));
+    assertEquals("excluded:excluded\n" + "nullNotAnnoted:excluded", stringify(new WithExcluded()));
   }
 
   @Override
   @Test
   public void immutables() {
     assertEquals(
-        "tupleInterfaceData:com.facebook.buck.rules.modern.impl.TupleInterfaceData<\n"
-            + "  first:SourcePath(/project/root/first.path)\n"
+        "tupleInterfaceData:com.facebook.buck.rules.modern.impl.ImmutableTupleInterfaceData<\n"
+            + "  first:SourcePath($ROOT$/first.path)\n"
             + "  second:string(world)\n"
             + ">\n"
             + "immutableInterfaceData:com.facebook.buck.rules.modern.impl.ImmutableInterfaceData<\n"
-            + "  first:SourcePath(/project/root/second.path)\n"
+            + "  first:SourcePath($ROOT$/second.path)\n"
             + "  second:string(world)\n"
             + ">\n"
-            + "tupleClassData:com.facebook.buck.rules.modern.impl.TupleClassData<\n"
-            + "  first:SourcePath(/project/root/third.path)\n"
+            + "tupleClassData:com.facebook.buck.rules.modern.impl.ImmutableTupleClassData<\n"
+            + "  first:SourcePath($ROOT$/third.path)\n"
             + "  second:string(world)\n"
             + ">\n"
             + "immutableClassData:com.facebook.buck.rules.modern.impl.ImmutableClassData<\n"
-            + "  first:SourcePath(/project/root/fourth.path)\n"
+            + "  first:SourcePath($ROOT$/fourth.path)\n"
             + "  second:string(world)\n"
             + ">",
         stringify(new WithImmutables()));
@@ -329,7 +381,7 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
   @Override
   @Test
   public void stringified() {
-    assertEquals("stringified:", stringify(new WithStringified()));
+    assertEquals("stringified:excluded", stringify(new WithStringified()));
   }
 
   @Override
@@ -339,9 +391,16 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
         "path:Optional.empty()\n"
             + "appendables:List<\n"
             + "  com.facebook.buck.rules.modern.impl.AbstractValueVisitorTest$Appendable<\n"
-            + "    sp:SourcePath(/project/root/appendable.path)\n"
+            + "    sp:SourcePath($ROOT$/appendable.path)\n"
             + "  >\n"
             + ">",
         stringify(new WithWildcards()));
+  }
+
+  @Override
+  @Test
+  public void withExcludeFromRuleKey() {
+    assertEquals(
+        "sourcePath:excluded\n" + "otherPath:excluded", stringify(new WithExcludeFromRuleKey()));
   }
 }

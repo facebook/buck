@@ -9,3 +9,4 @@
 [intellij]
   excluded_resource_paths = values-en
   keep_module_files_in_module_dirs = true
+  generate_target_info_map = true

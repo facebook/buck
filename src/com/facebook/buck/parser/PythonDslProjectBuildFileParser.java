@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.parser;
@@ -32,6 +32,7 @@ import com.facebook.buck.json.BuildFileParseExceptionStackTraceEntry;
 import com.facebook.buck.json.BuildFilePythonResult;
 import com.facebook.buck.json.BuildFileSyntaxError;
 import com.facebook.buck.parser.api.BuildFileManifest;
+import com.facebook.buck.parser.api.ImmutableBuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.parser.events.ParseBuckProfilerReportEvent;
@@ -51,9 +52,11 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.AssertScopeExclusiveAccess;
 import com.facebook.buck.util.json.ObjectMappers;
+import com.facebook.buck.util.types.Unit;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -67,10 +70,11 @@ import com.google.devtools.build.lib.syntax.Runtime;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -118,7 +122,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   private boolean isInitialized;
   private boolean isClosed;
 
-  @Nullable private FutureTask<Void> stderrConsumerTerminationFuture;
+  @Nullable private FutureTask<Unit> stderrConsumerTerminationFuture;
   @Nullable private Thread stderrConsumerThread;
 
   private AtomicReference<Path> currentBuildFile = new AtomicReference<Path>();
@@ -164,9 +168,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
                     new BufferedOutputStream(Files.newOutputStream(ignorePathsJson1))) {
                   ObjectMappers.WRITER.writeValue(
                       output,
-                      options
-                          .getIgnorePaths()
-                          .stream()
+                      options.getIgnorePaths().stream()
                           .map(PathMatcher::getPathOrGlob)
                           .collect(ImmutableList.toImmutableList()));
                 }
@@ -243,19 +245,18 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       LOG.debug("Started process %s successfully", buckPyProcess);
       buckPyProcessInput =
           createParserInputStream(
-              Objects.requireNonNull(buckPyProcess).getInputStream(), processedBytes.isPresent());
-      buckPyProcessJsonGenerator = ObjectMappers.createGenerator(buckPyProcess.getOutputStream());
-      // We have to wait to create the JsonParser until after we write our
-      // first request, because Jackson "helpfully" synchronously reads
-      // from the InputStream trying to detect whether the encoding is
-      // UTF-8 or UTF-16 as soon as you create a JsonParser:
-      //
-      // https://git.io/vSgnA
-      //
-      // Since buck.py doesn't write any data until after it receives
-      // a query, creating the JsonParser here would hang indefinitely.
+              Objects.requireNonNull(buckPyProcess).getStdout(), processedBytes.isPresent());
+      buckPyProcessJsonGenerator = ObjectMappers.createGenerator(buckPyProcess.getStdin());
 
-      InputStream stderr = buckPyProcess.getErrorStream();
+      // Explicitly use Reader instead of InputStream because in case if InputStream is provided
+      // Jackson tries to detect encoding be reading first bytes; because the process may not
+      // output anything at this moment yet this can hang indefinitely.
+      buckPyProcessJsonParser =
+          ObjectMappers.createParser(
+              new InputStreamReader(
+                  Objects.requireNonNull(buckPyProcessInput).getInputStream(), Charsets.UTF_8));
+
+      InputStream stderr = buckPyProcess.getStderr();
 
       AtomicInteger numberOfLines = new AtomicInteger(0);
       AtomicReference<Path> lastPath = new AtomicReference<Path>();
@@ -378,14 +379,38 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
    * @param buildFile should be an absolute path to a build file. Must have rootPath as its prefix.
    */
   @Override
-  public BuildFileManifest getBuildFileManifest(Path buildFile)
+  public BuildFileManifest getManifest(Path buildFile)
       throws BuildFileParseException, InterruptedException {
+    LOG.verbose("Started parsing build file %s", buildFile);
     try {
       return getAllRulesInternal(buildFile);
     } catch (IOException e) {
-      LOG.warn(e, "Error getting all rules for %s", buildFile);
       MoreThrowables.propagateIfInterrupt(e);
       throw BuildFileParseException.createForBuildFileParseError(buildFile, e);
+    } catch (BuildFileParseException ex) {
+
+      // When buck.py encounters parsing error, it writes diagnostics and then crashes the process
+      // which renders the parser object unable to serve any further requests.
+      // So in case of a parsing error we want to properly close underlying Process object
+      // without closing corresponding PythonDslProjectBuildFileParser object, letting it
+      // reinitialize itself by opening new buck.py process for any further requests, which is
+      // safe but remarkably slow.
+
+      // This scenario is only legit for resilient parser, when parsing errors do not interrupt
+      // the workflow.
+
+      // Potentially the better way to address this would be to have buck.py to be more resilient as
+      // well and does not crash the process, but at this moment it is unclear of all the
+      // consequences if we made it such.
+
+      try {
+        shutdown();
+      } catch (Throwable tex) {
+        ex.addSuppressed(tex);
+      }
+      throw ex;
+    } finally {
+      LOG.verbose("Finished parsing build file %s", buildFile);
     }
   }
 
@@ -401,7 +426,8 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
     long alreadyReadBytes = buckPyProcessInput.getCount();
 
     ParseBuckFileEvent.Started parseBuckFileStarted =
-        ParseBuckFileEvent.started(buildFile, this.getClass());
+        ParseBuckFileEvent.started(
+            buildFile, ParseBuckFileEvent.ParserKind.PYTHON_DSL, this.getClass());
     buckEventBus.post(parseBuckFileStarted);
 
     ImmutableList<Map<String, Object>> values = ImmutableList.of();
@@ -443,11 +469,12 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       if (values.isEmpty()) {
         // in case Python process cannot send values due to serialization issues, it will send an
         // empty list
-        return BuildFileManifest.of(
+        return ImmutableBuildFileManifest.of(
             ImmutableMap.of(),
             ImmutableSortedSet.of(),
             ImmutableMap.of(),
             Optional.empty(),
+            ImmutableList.of(),
             ImmutableList.of());
       }
       return toBuildFileManifest(values);
@@ -470,7 +497,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
 
   @SuppressWarnings("unchecked")
   private BuildFileManifest toBuildFileManifest(ImmutableList<Map<String, Object>> values) {
-    return BuildFileManifest.of(
+    return ImmutableBuildFileManifest.of(
         indexTargetsByName(values.subList(0, values.size() - 3).asList()),
         ImmutableSortedSet.copyOf(
             Objects.requireNonNull(
@@ -483,21 +510,28 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
                     Objects.requireNonNull(
                         (Map<String, String>) values.get(values.size() - 1).get(MetaRules.ENV)),
                     Optional::ofNullable))),
+        ImmutableList.of(),
         ImmutableList.of());
   }
 
-  private static ImmutableMap<String, Map<String, Object>> indexTargetsByName(
+  private static ImmutableMap<String, ImmutableMap<String, Object>> indexTargetsByName(
       ImmutableList<Map<String, Object>> targets) {
-    ImmutableMap.Builder<String, Map<String, Object>> builder =
+    ImmutableMap.Builder<String, ImmutableMap<String, Object>> builder =
         ImmutableMap.builderWithExpectedSize(targets.size());
     targets.forEach(
         target -> builder.put((String) target.get("name"), convertSelectableAttributes(target)));
     return builder.build();
   }
 
-  private static Map<String, Object> convertSelectableAttributes(Map<String, Object> values) {
-    return Maps.transformValues(
-        values, PythonDslProjectBuildFileParser::convertToSelectableAttributeIfNeeded);
+  private static ImmutableMap<String, Object> convertSelectableAttributes(
+      Map<String, Object> values) {
+    return values.entrySet().stream()
+        .collect(
+            ImmutableMap.toImmutableMap(
+                Map.Entry::getKey,
+                e ->
+                    PythonDslProjectBuildFileParser.convertToSelectableAttributeIfNeeded(
+                        e.getValue())));
   }
 
   /**
@@ -578,39 +612,21 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       // setting it on the JsonGenerator, but it doesn't seem to
       // actually write a newline after each element.
       Objects.requireNonNull(buckPyProcess);
-      buckPyProcess.getOutputStream().write('\n');
+      buckPyProcess.getStdin().write('\n');
       // I tried enabling JsonGenerator.Feature.FLUSH_PASSED_TO_STREAM,
       // but it doesn't actually flush.
-      buckPyProcess.getOutputStream().flush();
+      buckPyProcess.getStdin().flush();
     } catch (IOException e) {
       // https://issues.apache.org/jira/browse/EXEC-101 -- Java 8 throws
       // IOException if the child process exited before writing/flushing
       LOG.debug(e, "Swallowing exception on flush");
     }
 
-    if (buckPyProcessJsonParser == null) {
-      // We have to wait to create the JsonParser until after we write our
-      // first request, because Jackson "helpfully" synchronously reads
-      // from the InputStream trying to detect whether the encoding is
-      // UTF-8 or UTF-16 as soon as you create a JsonParser:
-      //
-      // https://git.io/vSgnA
-      //
-      // Since buck.py doesn't write any data until after it receives
-      // a query, creating the JsonParser any earlier than this would
-      // hang indefinitely.
-      buckPyProcessJsonParser =
-          ObjectMappers.createParser(Objects.requireNonNull(buckPyProcessInput).getInputStream());
+    if (LOG.isVerboseEnabled()) {
+      LOG.verbose(
+          "Parsing output of buck.py for %s...", request.getOrDefault("buildFile", "[unknown]"));
     }
-    LOG.verbose("Parsing output of process %s...", buckPyProcess);
-    BuildFilePythonResult resultObject;
-    try {
-      resultObject = buckPyProcessJsonParser.readValueAs(BuildFilePythonResult.class);
-    } catch (IOException e) {
-      LOG.warn(e, "Parser exited while decoding JSON data");
-      throw e;
-    }
-    return resultObject;
+    return buckPyProcessJsonParser.readValueAs(BuildFilePythonResult.class);
   }
 
   private static void handleDiagnostics(
@@ -668,12 +684,13 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
     }
   }
 
-  private static Optional<BuildFileSyntaxError> parseSyntaxError(Map<String, Object> exceptionMap) {
+  private static Optional<BuildFileSyntaxError> parseSyntaxError(
+      Map<String, Object> exceptionMap, FileSystem fileSystem) {
     String type = (String) exceptionMap.get("type");
     if ("SyntaxError".equals(type)) {
       return Optional.of(
           BuildFileSyntaxError.of(
-              Paths.get((String) Objects.requireNonNull(exceptionMap.get("filename"))),
+              fileSystem.getPath((String) Objects.requireNonNull(exceptionMap.get("filename"))),
               (Number) Objects.requireNonNull(exceptionMap.get("lineno")),
               Optional.ofNullable((Number) exceptionMap.get("offset")),
               (String) Objects.requireNonNull(exceptionMap.get("text"))));
@@ -684,7 +701,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
 
   @SuppressWarnings("unchecked")
   private static ImmutableList<BuildFileParseExceptionStackTraceEntry> parseStackTrace(
-      Map<String, Object> exceptionMap) {
+      Map<String, Object> exceptionMap, FileSystem fileSystem) {
     List<Map<String, Object>> traceback =
         (List<Map<String, Object>>) Objects.requireNonNull(exceptionMap.get("traceback"));
     ImmutableList.Builder<BuildFileParseExceptionStackTraceEntry> stackTraceBuilder =
@@ -692,7 +709,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
     for (Map<String, Object> tracebackItem : traceback) {
       stackTraceBuilder.add(
           BuildFileParseExceptionStackTraceEntry.of(
-              Paths.get((String) Objects.requireNonNull(tracebackItem.get("filename"))),
+              fileSystem.getPath((String) Objects.requireNonNull(tracebackItem.get("filename"))),
               (Number) Objects.requireNonNull(tracebackItem.get("line_number")),
               (String) Objects.requireNonNull(tracebackItem.get("function_name")),
               (String) Objects.requireNonNull(tracebackItem.get("text"))));
@@ -701,17 +718,19 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   @VisibleForTesting
-  static BuildFileParseExceptionData parseExceptionData(Map<String, Object> exceptionMap) {
+  static BuildFileParseExceptionData parseExceptionData(
+      Map<String, Object> exceptionMap, FileSystem fileSystem) {
     return BuildFileParseExceptionData.of(
         (String) Objects.requireNonNull(exceptionMap.get("type")),
         (String) Objects.requireNonNull(exceptionMap.get("value")),
-        parseSyntaxError(exceptionMap),
-        parseStackTrace(exceptionMap));
+        parseSyntaxError(exceptionMap, fileSystem),
+        parseStackTrace(exceptionMap, fileSystem));
   }
 
   private static boolean stackFrameFileIsBuckParser(Path filename, Path buckPyDir) {
     return filename.getParent().equals(buckPyDir)
-        || filename.endsWith(Paths.get("buck_server", "buck_parser", "buck.py"));
+        || filename.endsWith(
+            filename.getFileSystem().getPath("buck_server", "buck_parser", "buck.py"));
   }
 
   private static String formatStackTrace(
@@ -743,7 +762,8 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       return new IOException(message);
     } else {
       Map<String, Object> exceptionMap = (Map<String, Object>) exception;
-      BuildFileParseExceptionData exceptionData = parseExceptionData(exceptionMap);
+      BuildFileParseExceptionData exceptionData =
+          parseExceptionData(exceptionMap, buildFile.getFileSystem());
       LOG.debug("Received exception from buck.py parser: %s", exceptionData);
       Optional<BuildFileSyntaxError> syntaxErrorOpt = exceptionData.getSyntaxError();
       if (syntaxErrorOpt.isPresent()) {
@@ -822,7 +842,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   @Override
   public ImmutableSortedSet<String> getIncludedFiles(Path buildFile)
       throws BuildFileParseException, InterruptedException {
-    return getBuildFileManifest(buildFile).getIncludes();
+    return getManifest(buildFile).getIncludes();
   }
 
   @Override
@@ -839,73 +859,76 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
     }
 
     try {
-      if (isInitialized) {
-
-        // Check isInitialized implications (to avoid Eradicate warnings).
-        Objects.requireNonNull(buckPyProcess);
-
-        // Allow buck.py to terminate gracefully.
-        if (buckPyProcessJsonGenerator != null) {
-          try {
-            LOG.debug("Closing buck.py process stdin");
-            // Closing the JSON generator has the side effect of closing stdin,
-            // which lets buck.py terminate gracefully.
-            buckPyProcessJsonGenerator.close();
-          } catch (IOException e) {
-            // Safe to ignore since we've already flushed everything we wanted
-            // to write.
-          } finally {
-            buckPyProcessJsonGenerator = null;
-          }
-        }
-
-        if (buckPyProcessJsonParser != null) {
-          try {
-            buckPyProcessJsonParser.close();
-          } catch (IOException e) {
-          } finally {
-            buckPyProcessJsonParser = null;
-          }
-        }
-
-        if (stderrConsumerThread != null) {
-          stderrConsumerThread.join();
-          stderrConsumerThread = null;
-          try {
-            Objects.requireNonNull(stderrConsumerTerminationFuture).get();
-          } catch (ExecutionException e) {
-            Throwable cause = e.getCause();
-            if (cause instanceof IOException) {
-              throw (IOException) cause;
-            } else {
-              throw new RuntimeException(e);
-            }
-          }
-          stderrConsumerTerminationFuture = null;
-        }
-
-        LOG.debug("Waiting for process %s to exit...", buckPyProcess);
-        ProcessExecutor.Result result = processExecutor.waitForLaunchedProcess(buckPyProcess);
-        if (result.getExitCode() != 0) {
-          LOG.warn(result.getMessageForUnexpectedResult(buckPyProcess.toString()));
-          throw BuildFileParseException.createForUnknownParseError(
-              result.getMessageForResult("Parser did not exit cleanly"));
-        }
-        LOG.debug("Process %s exited cleanly.", buckPyProcess);
-
-        try {
-          synchronized (this) {
-            if (buckPythonProgram != null) {
-              buckPythonProgram.close();
-            }
-          }
-        } catch (IOException e) {
-          // Eat any exceptions from deleting the temporary buck.py file.
-        }
-      }
+      shutdown();
     } finally {
       isClosed = true;
     }
+  }
+
+  private void shutdown() throws InterruptedException, IOException {
+    if (!isInitialized) {
+      return;
+    }
+
+    // Check isInitialized implications (to avoid Eradicate warnings).
+    Objects.requireNonNull(buckPyProcess);
+
+    // Allow buck.py to terminate gracefully.
+    if (buckPyProcessJsonGenerator != null) {
+      try {
+        LOG.debug("Closing buck.py process stdin");
+        // Closing the JSON generator has the side effect of closing stdin,
+        // which lets buck.py terminate gracefully.
+        buckPyProcessJsonGenerator.close();
+      } catch (IOException e) {
+        // Safe to ignore since we've already flushed everything we wanted
+        // to write.
+      } finally {
+        buckPyProcessJsonGenerator = null;
+      }
+    }
+
+    if (buckPyProcessJsonParser != null) {
+      try {
+        buckPyProcessJsonParser.close();
+      } catch (IOException e) {
+      } finally {
+        buckPyProcessJsonParser = null;
+      }
+    }
+
+    if (stderrConsumerThread != null) {
+      stderrConsumerThread.join();
+      stderrConsumerThread = null;
+      try {
+        Objects.requireNonNull(stderrConsumerTerminationFuture).get();
+      } catch (ExecutionException e) {
+        Throwable cause = e.getCause();
+        if (cause instanceof IOException) {
+          throw (IOException) cause;
+        } else {
+          throw new RuntimeException(e);
+        }
+      }
+      stderrConsumerTerminationFuture = null;
+    }
+
+    LOG.debug("Waiting for process %s to exit...", buckPyProcess);
+    ProcessExecutor.Result result = processExecutor.waitForLaunchedProcess(buckPyProcess);
+    LOG.debug("Process %s exited with status code %d", buckPyProcess, result.getExitCode());
+
+    try {
+      synchronized (this) {
+        if (buckPythonProgram != null) {
+          buckPythonProgram.close();
+          buckPythonProgram = null;
+        }
+      }
+    } catch (IOException e) {
+      // Eat any exceptions from deleting the temporary buck.py file.
+    }
+
+    isInitialized = false;
   }
 
   private synchronized Path getPathToBuckPy(ImmutableSet<BaseDescription<?>> descriptions)

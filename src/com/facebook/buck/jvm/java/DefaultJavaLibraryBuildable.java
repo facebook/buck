@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
@@ -21,23 +21,20 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.CustomFieldBehavior;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
-import com.facebook.buck.core.rules.modern.annotations.DefaultFieldSerialization;
 import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
+import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
-import com.facebook.buck.rules.modern.CustomFieldSerialization;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.rules.modern.PipelinedBuildable;
 import com.facebook.buck.rules.modern.PublicOutputPath;
-import com.facebook.buck.rules.modern.ValueCreator;
-import com.facebook.buck.rules.modern.ValueVisitor;
 import com.facebook.buck.rules.modern.impl.ModernBuildableSupport;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
@@ -54,6 +51,7 @@ import javax.annotation.Nullable;
 
 /** Buildable for DefaultJavaLibrary. */
 class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineState> {
+  @AddToRuleKey private final int buckJavaVersion = JavaVersion.getMajorVersion();
   @AddToRuleKey private final JarBuildStepsFactory jarBuildStepsFactory;
   @AddToRuleKey private final UnusedDependenciesAction unusedDependenciesAction;
   @AddToRuleKey private final Optional<NonHashableSourcePathContainer> sourceAbiOutput;
@@ -66,7 +64,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
   @CustomFieldBehavior(DefaultFieldSerialization.class)
   private final BuildTarget buildTarget;
 
-  @CustomFieldBehavior(SerializeAsEmptyOptional.class)
+  @AddToRuleKey
   private final Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory;
 
   DefaultJavaLibraryBuildable(
@@ -89,11 +87,15 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
 
     CompilerOutputPaths outputPaths = CompilerOutputPaths.of(buildTarget, filesystem);
 
-    Path pathToClassHashes = JavaLibraryRules.getPathToClassHashes(buildTarget, filesystem);
+    Path pathToClassHashes = getPathToClassHashes(filesystem);
     this.pathToClassHashesOutputPath = new PublicOutputPath(pathToClassHashes);
 
     this.rootOutputPath = new PublicOutputPath(outputPaths.getOutputJarDirPath());
     this.annotationsOutputPath = new PublicOutputPath(outputPaths.getAnnotationPath());
+  }
+
+  Path getPathToClassHashes(ProjectFilesystem filesystem) {
+    return JavaLibraryRules.getPathToClassHashes(buildTarget, filesystem);
   }
 
   public ImmutableSortedSet<SourcePath> getSources() {
@@ -128,7 +130,14 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
     ImmutableList.Builder<Step> steps =
         ImmutableList.builderWithExpectedSize(factoryBuildSteps.size() + 1);
     steps.addAll(factoryBuildSteps);
-    unusedDependenciesFinderFactory.ifPresent(factory -> steps.add(factory.create()));
+    unusedDependenciesFinderFactory.ifPresent(
+        factory ->
+            steps.add(
+                factory.create(
+                    buildTarget,
+                    filesystem,
+                    buildContext.getSourcePathResolver(),
+                    unusedDependenciesAction)));
     addMakeMissingOutputsStep(filesystem, outputPathResolver, steps);
     return steps.build();
   }
@@ -185,13 +194,12 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
     return jarBuildStepsFactory.useDependencyFileRuleKeys();
   }
 
-  public Predicate<SourcePath> getCoveredByDepFilePredicate(
-      SourcePathResolver pathResolver, SourcePathRuleFinder ruleFinder) {
-    return jarBuildStepsFactory.getCoveredByDepFilePredicate(pathResolver, ruleFinder);
+  public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathRuleFinder ruleFinder) {
+    return jarBuildStepsFactory.getCoveredByDepFilePredicate(ruleFinder);
   }
 
-  public Predicate<SourcePath> getExistenceOfInterestPredicate(SourcePathResolver pathResolver) {
-    return jarBuildStepsFactory.getExistenceOfInterestPredicate(pathResolver);
+  public Predicate<SourcePath> getExistenceOfInterestPredicate() {
+    return jarBuildStepsFactory.getExistenceOfInterestPredicate();
   }
 
   public ImmutableList<SourcePath> getInputsAfterBuildingLocally(
@@ -209,17 +217,6 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
 
   public RulePipelineStateFactory<JavacPipelineState> getPipelineStateFactory() {
     return jarBuildStepsFactory;
-  }
-
-  private static class SerializeAsEmptyOptional<T>
-      implements CustomFieldSerialization<Optional<T>> {
-    @Override
-    public <E extends Exception> void serialize(Optional<T> value, ValueVisitor<E> serializer) {}
-
-    @Override
-    public <E extends Exception> Optional<T> deserialize(ValueCreator<E> deserializer) {
-      return Optional.empty();
-    }
   }
 
   public boolean hasAnnotationProcessing() {

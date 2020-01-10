@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -24,7 +24,6 @@ import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildRules;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -60,13 +59,13 @@ public class AaptPackageResources extends AbstractBuildRule {
   @AddToRuleKey private final ManifestEntries manifestEntries;
   @AddToRuleKey private final boolean includesVectorDrawables;
   @AddToRuleKey private final ImmutableList<SourcePath> dependencyResourceApks;
+  @AddToRuleKey private final ImmutableList<String> additionalAaptParams;
 
   private final AndroidPlatformTarget androidPlatformTarget;
   private final Supplier<SortedSet<BuildRule>> buildDepsSupplier;
 
   static ImmutableSortedSet<BuildRule> getAllDeps(
       BuildTarget aaptTarget,
-      SourcePathRuleFinder ruleFinder,
       BuildRuleResolver ruleResolver,
       SourcePath manifest,
       FilteredResourcesProvider filteredResourcesProvider,
@@ -78,15 +77,13 @@ public class AaptPackageResources extends AbstractBuildRule {
     depsBuilder.addAll(
         BuildRules.toBuildRulesFor(aaptTarget, ruleResolver, resourceTargets::iterator));
     depsBuilder.addAll(
-        resourceDeps
-            .stream()
-            .map(HasAndroidResourceDeps::getRes)
-            .flatMap(ruleFinder.FILTER_BUILD_RULE_INPUTS)
+        ruleResolver
+            .filterBuildRuleInputs(resourceDeps.stream().map(HasAndroidResourceDeps::getRes))
             .iterator());
     for (SourcePath apk : dependencyResourceApks) {
-      ruleFinder.getRule(apk).ifPresent(depsBuilder::add);
+      ruleResolver.getRule(apk).ifPresent(depsBuilder::add);
     }
-    ruleFinder.getRule(manifest).ifPresent(depsBuilder::add);
+    ruleResolver.getRule(manifest).ifPresent(depsBuilder::add);
     filteredResourcesProvider.getResourceFilterRule().ifPresent(depsBuilder::add);
     return depsBuilder.build();
   }
@@ -95,7 +92,6 @@ public class AaptPackageResources extends AbstractBuildRule {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       AndroidPlatformTarget androidPlatformTarget,
-      SourcePathRuleFinder ruleFinder,
       BuildRuleResolver ruleResolver,
       SourcePath manifest,
       ImmutableList<SourcePath> dependencyResourceApks,
@@ -103,7 +99,8 @@ public class AaptPackageResources extends AbstractBuildRule {
       ImmutableList<HasAndroidResourceDeps> resourceDeps,
       boolean skipCrunchPngs,
       boolean includesVectorDrawables,
-      ManifestEntries manifestEntries) {
+      ManifestEntries manifestEntries,
+      ImmutableList<String> additionalAaptParams) {
     super(buildTarget, projectFilesystem);
     this.androidPlatformTarget = androidPlatformTarget;
     this.manifest = manifest;
@@ -117,12 +114,12 @@ public class AaptPackageResources extends AbstractBuildRule {
             () ->
                 getAllDeps(
                     buildTarget,
-                    ruleFinder,
                     ruleResolver,
                     manifest,
                     filteredResourcesProvider,
                     dependencyResourceApks,
                     resourceDeps));
+    this.additionalAaptParams = additionalAaptParams;
   }
 
   @Override
@@ -194,8 +191,7 @@ public class AaptPackageResources extends AbstractBuildRule {
             getResourceApkPath(),
             rDotTxtDir,
             pathToGeneratedProguardConfig,
-            dependencyResourceApks
-                .stream()
+            dependencyResourceApks.stream()
                 .map(context.getSourcePathResolver()::getAbsolutePath)
                 .collect(ImmutableList.toImmutableList()),
             /*
@@ -209,7 +205,8 @@ public class AaptPackageResources extends AbstractBuildRule {
              */
             !skipCrunchPngs /* && packageType.isCrunchPngFiles() */,
             includesVectorDrawables,
-            manifestEntries),
+            manifestEntries,
+            additionalAaptParams),
         ZipScrubberStep.of(
             context.getSourcePathResolver().getAbsolutePath(getSourcePathToOutput())));
 
@@ -281,12 +278,10 @@ public class AaptPackageResources extends AbstractBuildRule {
 
   public AaptOutputInfo getAaptOutputInfo() {
     BuildTarget target = getBuildTarget();
-    return AaptOutputInfo.builder()
-        .setPathToRDotTxt(ExplicitBuildTargetSourcePath.of(target, getPathToRDotTxtFile()))
-        .setPrimaryResourcesApkPath(ExplicitBuildTargetSourcePath.of(target, getResourceApkPath()))
-        .setAndroidManifestXml(ExplicitBuildTargetSourcePath.of(target, getAndroidManifestXml()))
-        .setAaptGeneratedProguardConfigFile(
-            ExplicitBuildTargetSourcePath.of(target, getPathToGeneratedProguardConfigFile()))
-        .build();
+    return ImmutableAaptOutputInfo.of(
+        ExplicitBuildTargetSourcePath.of(target, getPathToRDotTxtFile()),
+        ExplicitBuildTargetSourcePath.of(target, getResourceApkPath()),
+        ExplicitBuildTargetSourcePath.of(target, getAndroidManifestXml()),
+        ExplicitBuildTargetSourcePath.of(target, getPathToGeneratedProguardConfigFile()));
   }
 }

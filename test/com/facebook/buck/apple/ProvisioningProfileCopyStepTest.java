@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple;
@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
@@ -33,8 +34,8 @@ import com.facebook.buck.apple.toolchain.CodeSignIdentity;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileMetadata;
 import com.facebook.buck.apple.toolchain.impl.ProvisioningProfileStoreFactory;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -67,7 +68,7 @@ public class ProvisioningProfileCopyStepTest {
   private Path xcentFile;
   private Path dryRunResultFile;
   private Path entitlementsFile;
-  private ProjectFilesystem projectFilesystem;
+  private FakeProjectFilesystem projectFilesystem;
   private ExecutionContext executionContext;
   private Supplier<ImmutableList<CodeSignIdentity>> codeSignIdentitiesSupplier;
 
@@ -80,7 +81,7 @@ public class ProvisioningProfileCopyStepTest {
   @Before
   public void setUp() throws IOException {
     testdataDir = TestDataHelper.getTestDataDirectory(this).resolve("provisioning_profiles");
-    projectFilesystem = new FakeProjectFilesystem(testdataDir);
+    projectFilesystem = new FakeProjectFilesystem(CanonicalCellName.rootCell(), testdataDir);
     Files.walkFileTree(
         testdataDir,
         new SimpleFileVisitor<Path>() {
@@ -367,5 +368,78 @@ public class ProvisioningProfileCopyStepTest {
         (NSDictionary) PropertyListParser.parse(xcentContents.get().getBytes());
     assertEquals(
         xcentPlist.get("application-identifier"), new NSString("ABCDE12345.com.example.TestApp"));
+  }
+
+  @Test
+  public void testApplicationIdentifierIsInInfoPlist() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    Path infoPlistPath = testdataDir.resolve("Info.plist");
+    ProvisioningProfileCopyStep step =
+        new ProvisioningProfileCopyStep(
+            projectFilesystem,
+            infoPlistPath,
+            ApplePlatform.IPHONEOS,
+            Optional.empty(),
+            Optional.empty(),
+            ProvisioningProfileStoreFactory.fromSearchPath(
+                new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, testdataDir),
+            outputFile,
+            xcentFile,
+            codeSignIdentitiesSupplier,
+            Optional.empty());
+    step.execute(executionContext);
+
+    byte[] infoPlistContents = projectFilesystem.getFileBytes(infoPlistPath);
+    NSDictionary infoPlist = (NSDictionary) PropertyListParser.parse(infoPlistContents);
+    assertEquals(
+        infoPlist.get("ApplicationIdentifier"), new NSString("ABCDE12345.com.example.TestApp"));
+  }
+
+  @Test
+  public void testApplicationIdentifierNotInInfoPlistForFrameworks() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    Path infoPlistPath = testdataDir.resolve("Info_Framework.plist");
+    ProvisioningProfileCopyStep step =
+        new ProvisioningProfileCopyStep(
+            projectFilesystem,
+            infoPlistPath,
+            ApplePlatform.IPHONEOS,
+            Optional.empty(),
+            Optional.empty(),
+            ProvisioningProfileStoreFactory.fromSearchPath(
+                new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, testdataDir),
+            outputFile,
+            xcentFile,
+            codeSignIdentitiesSupplier,
+            Optional.empty());
+    step.execute(executionContext);
+
+    byte[] infoPlistContents = projectFilesystem.getFileBytes(infoPlistPath);
+    NSDictionary infoPlist = (NSDictionary) PropertyListParser.parse(infoPlistContents);
+    assertNull(infoPlist.get("ApplicationIdentifier"));
+  }
+
+  @Test
+  public void testApplicationIdentifierNotInInfoPlistForWatchOSApps() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    Path infoPlistPath = testdataDir.resolve("Info_WatchOS.plist");
+    ProvisioningProfileCopyStep step =
+        new ProvisioningProfileCopyStep(
+            projectFilesystem,
+            infoPlistPath,
+            ApplePlatform.IPHONEOS,
+            Optional.empty(),
+            Optional.empty(),
+            ProvisioningProfileStoreFactory.fromSearchPath(
+                new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, testdataDir),
+            outputFile,
+            xcentFile,
+            codeSignIdentitiesSupplier,
+            Optional.empty());
+    step.execute(executionContext);
+
+    byte[] infoPlistContents = projectFilesystem.getFileBytes(infoPlistPath);
+    NSDictionary infoPlist = (NSDictionary) PropertyListParser.parse(infoPlistContents);
+    assertNull(infoPlist.get("ApplicationIdentifier"));
   }
 }

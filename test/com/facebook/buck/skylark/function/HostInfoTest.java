@@ -1,28 +1,30 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.skylark.function;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.starlark.knowntypes.KnownUserDefinedRuleTypes;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
-import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.LabelCache;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.skylark.io.impl.NativeGlobber;
@@ -83,7 +85,7 @@ public class HostInfoTest {
         "arch",
         "is_armeb");
     validateSkylarkStruct(
-        HostInfo.createHostInfoStruct(() -> Platform.UNKNOWN, () -> Architecture.I386),
+        HostInfo.createHostInfoStruct(() -> Platform.UNKNOWN, () -> Architecture.X86_32),
         "arch",
         "is_i386");
     validateSkylarkStruct(
@@ -193,9 +195,7 @@ public class HostInfoTest {
     SkylarkInfo realHostOs = realHostInfo.getValue("os", SkylarkInfo.class);
     SkylarkInfo realHostArch = realHostInfo.getValue("arch", SkylarkInfo.class);
     String trueOsKey =
-        realHostOs
-            .getFieldNames()
-            .stream()
+        realHostOs.getFieldNames().stream()
             .filter(
                 k -> {
                   try {
@@ -208,9 +208,7 @@ public class HostInfoTest {
             .get();
 
     String trueArchKey =
-        realHostArch
-            .getFieldNames()
-            .stream()
+        realHostArch.getFieldNames().stream()
             .filter(
                 k -> {
                   try {
@@ -247,7 +245,7 @@ public class HostInfoTest {
     Files.write(fs.resolve("file.bzl"), macroFile.getBytes(Charsets.UTF_8));
 
     SkylarkProjectBuildFileParser parser = createParser(cell.getFilesystem(), eventHandler);
-    parser.getBuildFileManifest(fs.resolve("BUCK"));
+    parser.getManifest(fs.resolve("BUCK"));
   }
 
   private SkylarkProjectBuildFileParser createParser(
@@ -260,6 +258,7 @@ public class HostInfoTest {
             .setBuildFileName("BUCK")
             .setBuildFileImportWhitelist(ImmutableList.of())
             .setPythonInterpreter("skylark")
+            .setEnableUserDefinedRules(false)
             .build();
     RuleFunctionFactory ruleFunctionFactory =
         new RuleFunctionFactory(new DefaultTypeCoercerFactory());
@@ -268,9 +267,13 @@ public class HostInfoTest {
         BuckEventBusForTests.newInstance(),
         SkylarkFilesystem.using(filesystem),
         BuckGlobals.builder()
+            .setSkylarkFunctionModule(SkylarkBuildModule.BUILD_MODULE)
             .setDescriptions(options.getDescriptions())
             .setDisableImplicitNativeRules(options.getDisableImplicitNativeRules())
             .setRuleFunctionFactory(ruleFunctionFactory)
+            .setEnableUserDefinedRules(options.getEnableUserDefinedRules())
+            .setLabelCache(LabelCache.newLabelCache())
+            .setKnownUserDefinedRuleTypes(new KnownUserDefinedRuleTypes())
             .build(),
         eventHandler,
         NativeGlobber::create);

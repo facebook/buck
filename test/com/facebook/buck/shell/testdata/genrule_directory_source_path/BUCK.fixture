@@ -13,9 +13,23 @@ genrule(
 )
 
 genrule(
-    name = "cpdir_no_remote",
-    out = "copy",
-    bash = "cp -r $(location :mkdir) $OUT",
-    cmd_exe = "powershell -Command cp -r $(location :mkdir) $env:OUT",
-    no_remote = True,
+    name = "mkdir_outs",
+    outs = {
+        "output": [
+            "directory",
+        ],
+    },
+    bash = "mkdir $OUT/directory && touch $OUT/directory/hello",
+    cmd_exe = "mkdir $OUT\\directory && echo something> $OUT\\directory\\hello",
+)
+
+genrule(
+    name = "cpdir_outs",
+    outs = {
+        "output": [
+            "copy",
+        ],
+    },
+    bash = "cp -r $(location :mkdir_outs[output]) $OUT/copy",
+    cmd_exe = "powershell -Command cp -r $(location :mkdir_outs[output]) $env:OUT\\copy",
 )

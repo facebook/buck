@@ -1,34 +1,36 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.RuleType;
-import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.io.file.MorePaths;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -65,7 +67,7 @@ public class BuiltTargetVerifierTest {
         cell,
         RuleType.of("build_rule", RuleType.Kind.BUILD),
         Paths.get("a/b/BUCK"),
-        BuildTargetFactory.newInstance("//a/b:c#d"),
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c#d"),
         new FlavoredDescription(
             new FlavorDomain<>("flavors", ImmutableMap.of(InternalFlavor.of("a"), "b"))),
         ImmutableMap.of());
@@ -84,7 +86,7 @@ public class BuiltTargetVerifierTest {
         cell,
         RuleType.of("build_rule", RuleType.Kind.BUILD),
         Paths.get("a/b/BUCK"),
-        BuildTargetFactory.newInstance("//a/b:c#d"),
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c#d"),
         new NonFlavoredDescription(),
         ImmutableMap.of());
   }
@@ -103,7 +105,7 @@ public class BuiltTargetVerifierTest {
         cell,
         RuleType.of("build_rule", RuleType.Kind.BUILD),
         Paths.get("a/b/BUCK"),
-        BuildTargetFactory.newInstance("//a/b:c"),
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c"),
         new NonFlavoredDescription(),
         ImmutableMap.of("attribute", "value"));
   }
@@ -122,7 +124,7 @@ public class BuiltTargetVerifierTest {
         cell,
         RuleType.of("build_rule", RuleType.Kind.BUILD),
         cell.getRoot().resolve("a/b/BUCK"),
-        BuildTargetFactory.newInstance("//a/b:c"),
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c"),
         new NonFlavoredDescription(),
         ImmutableMap.of("name", "target_name", "buck.base_path", "z/y/z"));
   }
@@ -140,7 +142,7 @@ public class BuiltTargetVerifierTest {
         cell,
         RuleType.of("build_rule", RuleType.Kind.BUILD),
         cell.getRoot().resolve("a/b/BUCK"),
-        BuildTargetFactory.newInstance("//a/b:c"),
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c"),
         new NonFlavoredDescription(),
         ImmutableMap.of("name", "target_name", "buck.base_path", "a/b"));
   }
@@ -153,7 +155,7 @@ public class BuiltTargetVerifierTest {
         cell,
         RuleType.of("build_rule", RuleType.Kind.BUILD),
         cell.getRoot().resolve("a/b/BUCK"),
-        BuildTargetFactory.newInstance("//a/b:c#d"),
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c#d"),
         new FlavoredDescription(
             new FlavorDomain<>("flavors", ImmutableMap.of(InternalFlavor.of("d"), "b"))),
         ImmutableMap.of("name", "c", "buck.base_path", "a/b"));
@@ -167,12 +169,13 @@ public class BuiltTargetVerifierTest {
         cell,
         RuleType.of("build_rule", RuleType.Kind.BUILD),
         cell.getRoot().resolve("a/b/BUCK"),
-        BuildTargetFactory.newInstance("//a/b:c"),
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c"),
         new NonFlavoredDescription(),
         ImmutableMap.of("name", "c", "buck.base_path", "a/b"));
   }
 
-  private static class FlavoredDescription implements DescriptionWithTargetGraph<Object>, Flavored {
+  private static class FlavoredDescription
+      implements DescriptionWithTargetGraph<BuildRuleArg>, Flavored {
 
     private final ImmutableSet<FlavorDomain<?>> flavorDomains;
 
@@ -185,34 +188,35 @@ public class BuiltTargetVerifierTest {
         BuildRuleCreationContextWithTargetGraph context,
         BuildTarget buildTarget,
         BuildRuleParams params,
-        Object args) {
+        BuildRuleArg args) {
       throw new UnsupportedOperationException();
     }
 
     @Override
-    public Class<Object> getConstructorArgType() {
+    public Class<BuildRuleArg> getConstructorArgType() {
       throw new UnsupportedOperationException();
     }
 
     @Override
-    public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
+    public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains(
+        TargetConfiguration toolchainTargetConfiguration) {
       return Optional.of(flavorDomains);
     }
   }
 
-  private static class NonFlavoredDescription implements DescriptionWithTargetGraph<Object> {
+  private static class NonFlavoredDescription implements DescriptionWithTargetGraph<BuildRuleArg> {
 
     @Override
     public BuildRule createBuildRule(
         BuildRuleCreationContextWithTargetGraph context,
         BuildTarget buildTarget,
         BuildRuleParams params,
-        Object args) {
+        BuildRuleArg args) {
       throw new UnsupportedOperationException();
     }
 
     @Override
-    public Class<Object> getConstructorArgType() {
+    public Class<BuildRuleArg> getConstructorArgType() {
       throw new UnsupportedOperationException();
     }
   }

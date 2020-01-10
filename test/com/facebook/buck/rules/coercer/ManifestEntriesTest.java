@@ -1,32 +1,34 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.rules.coercer;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
-import com.facebook.buck.rules.keys.AlterRuleKeys;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.hasher.StringRuleKeyHasher;
+import com.facebook.buck.testutil.DummyFileHashCache;
 import com.google.common.collect.ImmutableMap;
-import java.nio.file.Path;
-import java.util.Optional;
-import java.util.OptionalInt;
-import java.util.concurrent.atomic.AtomicBoolean;
-import javax.annotation.Nullable;
+import java.util.function.Function;
 import org.junit.Test;
 
 /** Test functionality for the ManifestEntries class that goes beyond basic key/value get/set */
@@ -49,57 +51,6 @@ public class ManifestEntriesTest {
 
   @Test
   public void shouldUpdateRuleKey() {
-
-    AtomicBoolean minSdkVersionSet = new AtomicBoolean(false);
-    AtomicBoolean targetSdkVersionSet = new AtomicBoolean(false);
-    AtomicBoolean versionCodeSet = new AtomicBoolean(false);
-    AtomicBoolean versionNameSet = new AtomicBoolean(false);
-    AtomicBoolean debugModeSet = new AtomicBoolean(false);
-    AtomicBoolean placeholdersSet = new AtomicBoolean(false);
-    AtomicBoolean classSet = new AtomicBoolean(false);
-
-    RuleKeyObjectSink ruleKeyBuilder =
-        new RuleKeyObjectSink() {
-          @Override
-          public RuleKeyObjectSink setReflectively(String key, @Nullable Object val) {
-            if ("minSdkVersion".equals(key)) {
-              assertEquals(OptionalInt.of(5), val);
-              minSdkVersionSet.set(true);
-              return this;
-            } else if ("targetSdkVersion".equals(key)) {
-              assertEquals(OptionalInt.of(7), val);
-              targetSdkVersionSet.set(true);
-              return this;
-            } else if ("versionCode".equals(key)) {
-              assertEquals(OptionalInt.of(11), val);
-              versionCodeSet.set(true);
-              return this;
-            } else if ("versionName".equals(key)) {
-              assertEquals(Optional.of("thirteen"), val);
-              versionNameSet.set(true);
-              return this;
-            } else if ("debugMode".equals(key)) {
-              assertEquals(Optional.empty(), val);
-              debugModeSet.set(true);
-              return this;
-            } else if ("placeholders".equals(key)) {
-              assertEquals(Optional.empty(), val);
-              placeholdersSet.set(true);
-              return this;
-            } else if (".class".equals(key)) {
-              assertEquals(ManifestEntries.class.getCanonicalName(), val);
-              classSet.set(true);
-              return this;
-            }
-            throw new IllegalArgumentException(key);
-          }
-
-          @Override
-          public RuleKeyObjectSink setPath(Path absolutePath, Path ideallyRelative) {
-            throw new UnsupportedOperationException();
-          }
-        };
-
     ManifestEntries entries =
         ManifestEntries.builder()
             .setMinSdkVersion(5)
@@ -108,16 +59,30 @@ public class ManifestEntriesTest {
             .setVersionName("thirteen")
             .build();
 
-    // The appendToRuleKey should set both present and absent properties
-    AlterRuleKeys.amendKey(ruleKeyBuilder, entries);
+    DefaultRuleKeyFactory factory =
+        new TestDefaultRuleKeyFactory(new DummyFileHashCache(), new TestActionGraphBuilder());
 
-    assertTrue(
-        minSdkVersionSet.get()
-            && targetSdkVersionSet.get()
-            && versionCodeSet.get()
-            && versionNameSet.get()
-            && debugModeSet.get()
-            && placeholdersSet.get()
-            && classSet.get());
+    Function<AddsToRuleKey, String> computeKey =
+        value -> factory.buildForDiagnostics(value, new StringRuleKeyHasher()).diagKey;
+
+    assertNotEquals(
+        computeKey.apply(entries),
+        computeKey.apply(ManifestEntries.builder().from(entries).setMinSdkVersion(10).build()));
+
+    assertNotEquals(
+        computeKey.apply(entries),
+        computeKey.apply(ManifestEntries.builder().from(entries).setTargetSdkVersion(10).build()));
+
+    assertNotEquals(
+        computeKey.apply(entries),
+        computeKey.apply(ManifestEntries.builder().from(entries).setVersionCode(10).build()));
+
+    assertNotEquals(
+        computeKey.apply(entries),
+        computeKey.apply(ManifestEntries.builder().from(entries).setVersionName("10").build()));
+
+    assertEquals(
+        computeKey.apply(entries),
+        computeKey.apply(ManifestEntries.builder().from(entries).build()));
   }
 }

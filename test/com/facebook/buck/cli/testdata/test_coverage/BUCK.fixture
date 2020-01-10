@@ -5,7 +5,29 @@ java_library(
     ],
     tests = [
         "//test:simple_test",
+        "//test:test_setup_for_source_only_abi",
+        "//test:wider_classpath_coverage_test",
     ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+genrule(
+    name = "processor",
+    srcs = [":foo"],
+    out = "out.jar",
+    cmd = "cp $SRCS $OUT",
+)
+
+prebuilt_jar(
+    name = "postprocessed",
+    binary_jar = ":processor",
+)
+
+java_library(
+    name = "top",
+    exported_deps = [":postprocessed"],
     visibility = [
         "PUBLIC",
     ],

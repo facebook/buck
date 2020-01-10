@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -27,19 +27,19 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
-import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
+import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
+import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxToolProvider;
-import com.facebook.buck.cxx.toolchain.MungingDebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.PicType;
+import com.facebook.buck.cxx.toolchain.PrefixMapDebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
+import com.facebook.buck.cxx.toolchain.ToolType;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.FluentIterable;
@@ -109,15 +109,13 @@ public class PrecompiledHeaderFeatureTest {
                   "foo.c", preconfiguredCxxSourceBuilder().build());
       boolean hasPchFlag =
           commandLineContainsPchFlag(
-              FakeBuildContext.withSourcePathResolver(
-                  DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder))),
+              FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()),
               rule,
               toolType,
               headerFilename);
       boolean hasPrefixFlag =
           commandLineContainsPrefixFlag(
-              FakeBuildContext.withSourcePathResolver(
-                  DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder))),
+              FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()),
               rule,
               toolType,
               headerFilename);
@@ -154,8 +152,7 @@ public class PrecompiledHeaderFeatureTest {
       ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
       CxxPlatform platform =
           PLATFORM_SUPPORTING_PCH.withCompilerDebugPathSanitizer(
-              new MungingDebugPathSanitizer(
-                  250, File.separatorChar, Paths.get("."), ImmutableBiMap.of()));
+              new PrefixMapDebugPathSanitizer(".", ImmutableBiMap.of()));
       CxxBuckConfig config = buildConfig(/* pchEnabled */ true);
       CxxSourceRuleFactory factory =
           preconfiguredSourceRuleFactoryBuilder(graphBuilder)
@@ -197,11 +194,7 @@ public class PrecompiledHeaderFeatureTest {
               preconfiguredSourceRuleFactoryBuilder(graphBuilder)
                   .setCxxPlatform(
                       PLATFORM_SUPPORTING_PCH.withCompilerDebugPathSanitizer(
-                          new MungingDebugPathSanitizer(
-                              250,
-                              File.separatorChar,
-                              Paths.get("."),
-                              ImmutableBiMap.of(from, "melon"))))
+                          new PrefixMapDebugPathSanitizer(".", ImmutableBiMap.of(from, "melon"))))
                   .setPrefixHeader(FakeSourcePath.of(("foo.pch")))
                   .setCxxBuckConfig(buildConfig(/* pchEnabled */ true))
                   .build();
@@ -404,15 +397,12 @@ public class PrecompiledHeaderFeatureTest {
    */
   private static CxxSourceRuleFactory.Builder preconfiguredSourceRuleFactoryBuilder(
       String targetPath, ActionGraphBuilder graphBuilder) {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance(targetPath);
     return CxxSourceRuleFactory.builder()
         .setProjectFilesystem(new FakeProjectFilesystem())
         .setBaseBuildTarget(target)
         .setActionGraphBuilder(graphBuilder)
-        .setPathResolver(pathResolver)
-        .setRuleFinder(ruleFinder)
+        .setPathResolver(graphBuilder.getSourcePathResolver())
         .setPicType(PicType.PDC);
   }
 
@@ -441,8 +431,12 @@ public class PrecompiledHeaderFeatureTest {
     return CxxPlatformUtils.build(buildConfig(pchEnabled))
         .withCpp(
             new PreprocessorProvider(
-                PathSourcePath.of(new FakeProjectFilesystem(), Paths.get("/usr/bin/foopp")),
-                Optional.of(type)));
+                new ConstantToolProvider(
+                    new HashedFileTool(
+                        PathSourcePath.of(
+                            new FakeProjectFilesystem(), Paths.get("/usr/bin/foopp")))),
+                type,
+                ToolType.CPP));
   }
 
   private static final CxxPlatform PLATFORM_SUPPORTING_PCH =

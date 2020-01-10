@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.unarchive;
@@ -23,6 +23,8 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.PatternsMatcher;
+import com.facebook.buck.util.config.Config;
+import com.facebook.buck.util.config.RawConfig;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -273,7 +275,7 @@ public class UntarTest {
               Paths.get("output_dir"),
               Optional.empty(),
               ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES,
-              PatternsMatcher.EMPTY,
+              PatternsMatcher.NONE,
               writeSymlinksLast.get());
     } else {
       unarchivedFiles =
@@ -732,5 +734,32 @@ public class UntarTest {
 
     Assert.assertThat(unarchivedFiles, Matchers.containsInAnyOrder(expectedPaths.toArray()));
     Assert.assertEquals(expectedPaths.size(), unarchivedFiles.size());
+  }
+
+  /**
+   * Tests that Untar cleans all files from pre-existing directories, even if those files were
+   * ignored by project config.
+   */
+  @Test
+  public void testIgnoredEntiresInTargetDirectoryAreTidied() throws IOException {
+    ArchiveFormat format = ArchiveFormat.TAR;
+    Config config = new Config(RawConfig.builder().put("project", "ignore", "foo.pyc").build());
+    ProjectFilesystem testFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot(), config);
+    testFilesystem.mkdirs(OUTPUT_SUBDIR);
+    testFilesystem.mkdirs(getDestPath("root"));
+    Path pycPath = getDestPath("root", "foo.pyc");
+    testFilesystem.createNewFile(pycPath);
+    Path archivePath = getTestFilePath(format.getExtension());
+    format
+        .getUnarchiver()
+        .extractArchive(
+            archivePath,
+            testFilesystem,
+            Paths.get("output_dir"),
+            Optional.empty(),
+            ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
+
+    Assert.assertFalse(testFilesystem.exists(pycPath));
   }
 }

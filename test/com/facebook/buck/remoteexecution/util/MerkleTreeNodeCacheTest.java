@@ -1,21 +1,24 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.remoteexecution.util;
 
+import static com.google.common.collect.Iterables.getOnlyElement;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -54,17 +57,18 @@ public class MerkleTreeNodeCacheTest {
   @Test
   public void testSimple() {
     MerkleTreeNodeCache nodeCache = new MerkleTreeNodeCache(protocol);
-    MerkleTreeNode node = nodeCache.createNode(ImmutableMap.of(), ImmutableMap.of());
+    MerkleTreeNode node =
+        nodeCache.createNode(ImmutableMap.of(), ImmutableMap.of(), ImmutableMap.of());
 
     // There shouldn't be any files.
-    node.forAllFiles((Paths.get("")), (path, n) -> fail());
+    node.forAllFiles((path, n) -> fail());
 
     NodeData data = nodeCache.getData(node);
     assertTrue(data.getDirectory().getDirectoriesList().isEmpty());
     assertTrue(data.getDirectory().getFilesList().isEmpty());
     assertTrue(data.getDirectory().getSymlinksList().isEmpty());
 
-    assertSame(node, nodeCache.createNode(ImmutableMap.of(), ImmutableMap.of()));
+    assertSame(node, nodeCache.createNode(ImmutableMap.of(), ImmutableMap.of(), ImmutableMap.of()));
   }
 
   @Test
@@ -87,48 +91,47 @@ public class MerkleTreeNodeCacheTest {
 
     symlink.2 -> something/file.4
 
+    duck/duck1/duck2/duck3
+
     Note that dog/ and pig/ have the same contents
      */
 
     Path catDir = Paths.get("cat");
     Path dogDir = Paths.get("dog");
     Path pigDir = Paths.get("pig");
+    Path duckDir = Paths.get("duck");
+    Path duckEmptyNestedDir = duckDir.resolve("duck1/duck2/duck3");
 
     Path dogFoodDir = dogDir.resolve("food");
     Path pigFoodDir = pigDir.resolve("food");
 
     // Use suppliers so that we get a different instances of everything all the time (to ensure that
     // the node cache behavior doesn't depend on reference equality).
-    Supplier<Digest> hash1 = () -> protocol.computeDigest("hash1".getBytes(Charsets.UTF_8));
-    Supplier<Digest> hash2 = () -> protocol.computeDigest("hash2".getBytes(Charsets.UTF_8));
-    Supplier<Digest> hash3 = () -> protocol.computeDigest("hash3".getBytes(Charsets.UTF_8));
-    Supplier<Digest> hash4 = () -> protocol.computeDigest("hash4".getBytes(Charsets.UTF_8));
-    Supplier<Digest> hash5 = () -> protocol.computeDigest("hash5".getBytes(Charsets.UTF_8));
-    Supplier<Digest> hash6 = () -> protocol.computeDigest("hash6".getBytes(Charsets.UTF_8));
+    Digest hash1 = protocol.computeDigest("hash1".getBytes(Charsets.UTF_8));
+    Digest hash2 = protocol.computeDigest("hash2".getBytes(Charsets.UTF_8));
+    Digest hash3 = protocol.computeDigest("hash3".getBytes(Charsets.UTF_8));
+    Digest hash4 = protocol.computeDigest("hash4".getBytes(Charsets.UTF_8));
+    Digest hash5 = protocol.computeDigest("hash5".getBytes(Charsets.UTF_8));
+    Digest hash6 = protocol.computeDigest("hash6".getBytes(Charsets.UTF_8));
+    Digest emptyDirectoryDigest =
+        protocol.computeDigest(
+            protocol.newDirectory(ImmutableList.of(), ImmutableList.of(), ImmutableList.of()));
 
     Supplier<ImmutableMap<Path, FileNode>> filesSupplier =
         () ->
             ImmutableMap.<Path, FileNode>builder()
                 // cat dir
-                .put(catDir.resolve("file.1"), protocol.newFileNode(hash1.get(), "file.1", false))
-                .put(catDir.resolve("file.2"), protocol.newFileNode(hash2.get(), "file.2", false))
-                .put(catDir.resolve("file.3"), protocol.newFileNode(hash3.get(), "file.3", false))
+                .put(catDir.resolve("file.1"), protocol.newFileNode(hash1, "file.1", false))
+                .put(catDir.resolve("file.2"), protocol.newFileNode(hash2, "file.2", false))
+                .put(catDir.resolve("file.3"), protocol.newFileNode(hash3, "file.3", false))
                 // dog dir
-                .put(dogDir.resolve("file.4"), protocol.newFileNode(hash4.get(), "file.4", false))
-                .put(
-                    dogFoodDir.resolve("file.5"),
-                    protocol.newFileNode(hash5.get(), "file.5", false))
-                .put(
-                    dogFoodDir.resolve("file.6"),
-                    protocol.newFileNode(hash6.get(), "file.6", false))
+                .put(dogDir.resolve("file.4"), protocol.newFileNode(hash4, "file.4", false))
+                .put(dogFoodDir.resolve("file.5"), protocol.newFileNode(hash5, "file.5", false))
+                .put(dogFoodDir.resolve("file.6"), protocol.newFileNode(hash6, "file.6", false))
                 // pig dir
-                .put(pigDir.resolve("file.4"), protocol.newFileNode(hash4.get(), "file.4", false))
-                .put(
-                    pigFoodDir.resolve("file.5"),
-                    protocol.newFileNode(hash5.get(), "file.5", false))
-                .put(
-                    pigFoodDir.resolve("file.6"),
-                    protocol.newFileNode(hash6.get(), "file.6", false))
+                .put(pigDir.resolve("file.4"), protocol.newFileNode(hash4, "file.4", false))
+                .put(pigFoodDir.resolve("file.5"), protocol.newFileNode(hash5, "file.5", false))
+                .put(pigFoodDir.resolve("file.6"), protocol.newFileNode(hash6, "file.6", false))
                 .build();
     Supplier<ImmutableMap<Path, SymlinkNode>> symlinksSupplier =
         () ->
@@ -144,21 +147,36 @@ public class MerkleTreeNodeCacheTest {
                     protocol.newSymlinkNode("symlink.2", pigDir.resolve("file.4")))
                 .build();
 
-    MerkleTreeNode node = nodeCache.createNode(filesSupplier.get(), symlinksSupplier.get());
-    assertSame(node, nodeCache.createNode(filesSupplier.get(), symlinksSupplier.get()));
+    Supplier<ImmutableMap<Path, DirectoryNode>> emptyDirectoriesSupplier =
+        () ->
+            ImmutableMap.<Path, DirectoryNode>builder()
+                .put(
+                    duckEmptyNestedDir,
+                    protocol.newDirectoryNode(
+                        duckEmptyNestedDir.getFileName().toString(), emptyDirectoryDigest))
+                .build();
+
+    MerkleTreeNode node =
+        nodeCache.createNode(
+            filesSupplier.get(), symlinksSupplier.get(), emptyDirectoriesSupplier.get());
+    assertSame(
+        node,
+        nodeCache.createNode(
+            filesSupplier.get(), symlinksSupplier.get(), emptyDirectoriesSupplier.get()));
 
     // There shouldn't be any files.
     Set<Path> filePaths = new HashSet<>();
-    node.forAllFiles((tmpRoot.getRoot()), (path, n) -> filePaths.add(path));
+    node.forAllFiles((path, n) -> filePaths.add(path));
 
     Set<Path> expectedPaths = new HashSet<>();
-    filesSupplier.get().keySet().forEach(p -> expectedPaths.add(tmpRoot.getRoot().resolve(p)));
-    assertEquals(filePaths, expectedPaths);
+    filesSupplier.get().keySet().forEach(p -> expectedPaths.add(p));
+    assertEquals(expectedPaths, filePaths);
 
-    Map<Digest, Directory> dataMap = new HashMap<>();
-    nodeCache.forAllData(node, data -> dataMap.put(data.getDigest(), data.getDirectory()));
+    Map<Digest, NodeData> dataMap = new HashMap<>();
+    nodeCache.forAllData(node, data -> dataMap.put(data.getDigest(), data));
 
-    Directory rootDirectory = dataMap.get(nodeCache.getData(node).getDigest());
+    NodeData rootData = dataMap.get(nodeCache.getData(node).getDigest());
+    Directory rootDirectory = rootData.getDirectory();
 
     assertTrue(rootDirectory.getFilesList().isEmpty());
     MoreAsserts.assertIterablesEquals(
@@ -166,15 +184,15 @@ public class MerkleTreeNodeCacheTest {
         ImmutableList.of(symlinksSupplier.get().get(Paths.get("symlink.2"))));
 
     Collection<DirectoryNode> rootDirectories = rootDirectory.getDirectoriesList();
-    assertEquals(3, rootDirectories.size());
+    assertEquals(4, rootDirectories.size());
 
-    DirectoryNode catDirNode =
-        rootDirectories.stream().filter(d -> d.getName().equals("cat")).findFirst().get();
-    Directory cat = dataMap.get(catDirNode.getDigest());
+    DirectoryNode catDirNode = getDirNodeEqualsName(rootDirectories, "cat");
+    NodeData catData = dataMap.get(catDirNode.getDigest());
+    Directory cat = catData.getDirectory();
 
-    DirectoryNode dogDirNode =
-        rootDirectories.stream().filter(d -> d.getName().equals("dog")).findFirst().get();
-    Directory dog = dataMap.get(dogDirNode.getDigest());
+    DirectoryNode dogDirNode = getDirNodeEqualsName(rootDirectories, "dog");
+    NodeData dogData = dataMap.get(dogDirNode.getDigest());
+    Directory dog = dogData.getDirectory();
 
     assertTrue(cat.getSymlinksList().isEmpty());
     assertTrue(cat.getDirectoriesList().isEmpty());
@@ -190,9 +208,31 @@ public class MerkleTreeNodeCacheTest {
         dog.getFilesList(),
         Maps.filterKeys(filesSupplier.get(), other -> dogDir.equals(other.getParent())).values());
 
-    DirectoryNode pigDirNode =
-        rootDirectories.stream().filter(d -> d.getName().equals("pig")).findFirst().get();
+    DirectoryNode pigDirNode = getDirNodeEqualsName(rootDirectories, "pig");
     assertEquals(pigDirNode.getDigest(), dogDirNode.getDigest());
+
+    DirectoryNode duckDirNode = getDirNodeEqualsName(rootDirectories, "duck");
+    NodeData duckData = dataMap.get(duckDirNode.getDigest());
+    DirectoryNode duck1Dir = getOnlyElement(duckData.getDirectory().getDirectoriesList());
+    NodeData duck1Data = dataMap.get(duck1Dir.getDigest());
+    DirectoryNode duck2Dir = getOnlyElement(duck1Data.getDirectory().getDirectoriesList());
+    NodeData duck2Data = dataMap.get(duck2Dir.getDigest());
+    DirectoryNode duck3Dir = getOnlyElement(duck2Data.getDirectory().getDirectoriesList());
+    NodeData duck3Data = dataMap.get(duck3Dir.getDigest());
+    assertNull(duck3Data);
+
+    assertEquals(45, rootData.getTotalSize());
+    assertEquals(15, catData.getTotalSize());
+    assertEquals(15, dogData.getTotalSize());
+    assertEquals(0, duckData.getTotalSize());
+  }
+
+  private DirectoryNode getDirNodeEqualsName(
+      Collection<DirectoryNode> rootDirectories, String dirName) {
+    return rootDirectories.stream()
+        .filter(directoryNode -> directoryNode.getName().equals(dirName))
+        .findFirst()
+        .get();
   }
 
   @Test
@@ -246,17 +286,21 @@ public class MerkleTreeNodeCacheTest {
             .build();
 
     MerkleTreeNodeCache nodeCache = new MerkleTreeNodeCache(protocol);
-    MerkleTreeNode firstNode = nodeCache.createNode(firstFiles, firstSymlinks);
-    MerkleTreeNode secondNode = nodeCache.createNode(secondFiles, secondSymlinks);
+    MerkleTreeNode firstNode = nodeCache.createNode(firstFiles, firstSymlinks, ImmutableMap.of());
+    MerkleTreeNode secondNode =
+        nodeCache.createNode(secondFiles, secondSymlinks, ImmutableMap.of());
     MerkleTreeNode combinedNode =
         nodeCache.createNode(
             ImmutableMap.<Path, FileNode>builder().putAll(firstFiles).putAll(secondFiles).build(),
             ImmutableMap.<Path, SymlinkNode>builder()
                 .putAll(firstSymlinks)
                 .putAll(secondSymlinks)
-                .build());
+                .build(),
+            ImmutableMap.of());
 
     assertSame(combinedNode, nodeCache.mergeNodes(ImmutableList.of(firstNode, secondNode)));
+
+    assertEquals(30, nodeCache.getData(combinedNode).getTotalSize());
   }
 
   @Test
@@ -268,6 +312,7 @@ public class MerkleTreeNodeCacheTest {
                 Paths.get("file.name"),
                 protocol.newFileNode(
                     protocol.computeDigest(new byte[] {}), "different.name", false)),
+            ImmutableMap.of(),
             ImmutableMap.of());
   }
 
@@ -278,7 +323,7 @@ public class MerkleTreeNodeCacheTest {
         .createNode(
             ImmutableMap.of(),
             ImmutableMap.of(
-                Paths.get("file.name"),
-                protocol.newSymlinkNode("other.name", Paths.get("target"))));
+                Paths.get("file.name"), protocol.newSymlinkNode("other.name", Paths.get("target"))),
+            ImmutableMap.of());
   }
 }

@@ -1,30 +1,30 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rulekey.CustomFieldBehavior;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
-import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
-import com.facebook.buck.core.rules.modern.annotations.DefaultFieldSerialization;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.PathShortener;
@@ -32,7 +32,6 @@ import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.facebook.buck.util.Optionals;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -43,7 +42,7 @@ import org.immutables.value.Value;
 @BuckStyleImmutable
 abstract class AbstractPreprocessorFlags implements AddsToRuleKey {
 
-  /** File set via {@code -include}. */
+  /** File set via {@code -include}. This might be a prefix header or a precompiled header. */
   @AddToRuleKey
   @Value.Parameter
   public abstract Optional<SourcePath> getPrefixHeader();
@@ -69,15 +68,12 @@ abstract class AbstractPreprocessorFlags implements AddsToRuleKey {
   @CustomFieldBehavior(DefaultFieldSerialization.class)
   @Value.Derived
   public CxxIncludePaths getCxxIncludePaths() {
-    return CxxIncludePaths.of(getIncludes(), getFrameworkPaths());
+    return ImmutableCxxIncludePaths.of(getIncludes(), getFrameworkPaths());
   }
 
   public Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
-    deps.addAll(
-        Optionals.toStream(getPrefixHeader())
-            .flatMap(ruleFinder.FILTER_BUILD_RULE_INPUTS)
-            .iterator());
+    deps.addAll(ruleFinder.filterBuildRuleInputs(getPrefixHeader()).iterator());
     for (CxxHeaders cxxHeaders : getIncludes()) {
       cxxHeaders.getDeps(ruleFinder).forEachOrdered(deps::add);
     }
@@ -91,7 +87,7 @@ abstract class AbstractPreprocessorFlags implements AddsToRuleKey {
   }
 
   public CxxToolFlags getIncludePathFlags(
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       PathShortener pathShortener,
       Function<FrameworkPath, Path> frameworkPathTransformer,
       Preprocessor preprocessor) {
@@ -105,7 +101,7 @@ abstract class AbstractPreprocessorFlags implements AddsToRuleKey {
 
   public CxxToolFlags getSanitizedIncludePathFlags(
       DebugPathSanitizer sanitizer,
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       PathShortener pathShortener,
       Function<FrameworkPath, Path> frameworkPathTransformer,
       Preprocessor preprocessor) {
@@ -120,7 +116,9 @@ abstract class AbstractPreprocessorFlags implements AddsToRuleKey {
   }
 
   public CxxToolFlags getNonIncludePathFlags(
-      SourcePathResolver resolver, Optional<PrecompiledHeaderData> pch, Preprocessor preprocessor) {
+      SourcePathResolverAdapter resolver,
+      Optional<PrecompiledHeaderData> pch,
+      Preprocessor preprocessor) {
     ExplicitCxxToolFlags.Builder builder = CxxToolFlags.explicitBuilder();
     ExplicitCxxToolFlags.addCxxToolFlags(builder, getOtherFlags());
     if (pch.isPresent()) {
@@ -133,7 +131,7 @@ abstract class AbstractPreprocessorFlags implements AddsToRuleKey {
   }
 
   public CxxToolFlags toToolFlags(
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       PathShortener pathShortener,
       Function<FrameworkPath, Path> frameworkPathTransformer,
       Preprocessor preprocessor,

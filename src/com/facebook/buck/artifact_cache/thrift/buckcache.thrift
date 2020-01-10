@@ -1,14 +1,18 @@
-# Copyright 2016 Facebook. All Rights Reserved.
-#
-# To refresh the protocol, make sure you have public version of Thrift installed:
-#   brew install thrift
-# and run the following command:
-#   /usr/local/bin/thrift --gen java:generated_annotations=undated  -out src-gen/ src/com/facebook/buck/artifact_cache/thrift/buckcache.thrift
-#
-# This .thrift file contains the protocol required by the buck client to
-# communicate with the buck-cache server.
-# This protocol is under active development and
-# will likely be changed in non-compatible ways
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 namespace java com.facebook.buck.artifact_cache.thrift
 
@@ -38,7 +42,7 @@ struct ArtifactMetadata {
   5: optional string artifactPayloadCrc32;  // DEPRECATED: Will be removed soon.
   6: optional string scheduleType;
   7: optional string artifactPayloadMd5;
-  8: optional bool distributedBuildModeEnabled;
+  // 8: DEPRECATED.
   // Free-form identifier of a service that produced the artifact
   9: optional string producerId;
   // How long it took to build this artifact, in milliseconds
@@ -47,6 +51,7 @@ struct ArtifactMetadata {
   11: optional string producerHostname;
   // Size of the content in bytes
   12: optional i64 sizeBytes;
+  13: optional string configuration;
 }
 
 enum ContainsResultType {
@@ -101,7 +106,9 @@ struct BuckCacheFetchRequest {
   1: optional RuleKey ruleKey;
   2: optional string repository;
   3: optional string scheduleType;
-  4: optional bool distributedBuildModeEnabled;
+  // 4: DEPRECATED.
+  // The fully qualified target name associated with the ruleKey
+  5: optional string buildTarget;
 }
 
 struct BuckCacheFetchResponse {
@@ -124,7 +131,7 @@ struct BuckCacheMultiContainsRequest {
   1: optional list<RuleKey> ruleKeys;
   2: optional string repository;
   3: optional string scheduleType;
-  4: optional bool distributedBuildModeEnabled;
+  // 4: DEPRECATED.
 }
 
 struct BuckCacheMultiContainsResponse {
@@ -147,6 +154,10 @@ enum FetchResultType {
   // the requested key was looked up. The key should be requested again.
   SKIPPED = 103,
   ERROR = 104,
+  MISS_ONLY_IN_MEMCACHE = 105,
+  MISS_IN_SLA = 106,
+  MISS_OUT_SLA = 107,
+  MISS_UNKNOWN = 108,
 }
 
 struct FetchResult {
@@ -163,7 +174,13 @@ struct BuckCacheMultiFetchRequest {
   1: optional list<RuleKey> ruleKeys;
   2: optional string repository;
   3: optional string scheduleType;
-  4: optional bool distributedBuildModeEnabled;
+  // 4: DEPRECATED.
+  // Fully qualified target names associated with the rulekeys. There should
+  // always be the same number of these as ruleKeys, and the entries should
+  // match 1:1 (aka buildTargets[2] is associated with ruleKeys[2]).
+  // RuleKeys that don't have an associated build target (for whatever reason)
+  // will have an entry of "" (aka empty string).
+  5: optional list<string> buildTargets;
 }
 
 struct BuckCacheMultiFetchResponse {
@@ -178,7 +195,7 @@ struct BuckCacheDeleteRequest {
   1: optional list<RuleKey> ruleKeys;
   2: optional string repository;
   3: optional string scheduleType;
-  4: optional bool distributedBuildModeEnabled;
+  // 4: DEPRECATED.
 }
 
 struct DeleteDebugInfo {

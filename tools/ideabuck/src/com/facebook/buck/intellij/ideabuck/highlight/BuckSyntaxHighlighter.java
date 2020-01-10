@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.intellij.ideabuck.highlight;
@@ -43,8 +43,6 @@ public class BuckSyntaxHighlighter extends SyntaxHighlighterBase {
   public static final TextAttributesKey BUCK_RULE_NAME =
       createTextAttributesKey(
           "BUCK.RULE_NAME", DefaultLanguageHighlighterColors.FUNCTION_DECLARATION);
-  public static final TextAttributesKey BUCK_GLOB =
-      createTextAttributesKey("BUCK.GLOB", DefaultLanguageHighlighterColors.FUNCTION_CALL);
   public static final TextAttributesKey BUCK_FUNCTION_NAME =
       createTextAttributesKey("BUCK.FUNCTION_NAME", DefaultLanguageHighlighterColors.FUNCTION_CALL);
   public static final TextAttributesKey BUCK_STRING =
@@ -86,15 +84,16 @@ public class BuckSyntaxHighlighter extends SyntaxHighlighterBase {
         }) {
       sKeys.put(type, BUCK_KEYWORD);
     }
-    sKeys.put(BuckTypes.SINGLE_QUOTED_DOC_STRING, BUCK_STRING);
-    sKeys.put(BuckTypes.DOUBLE_QUOTED_DOC_STRING, BUCK_STRING);
-    sKeys.put(BuckTypes.GLOB, BUCK_GLOB);
-    sKeys.put(BuckTypes.DOUBLE_QUOTED_STRING, BUCK_STRING);
-    sKeys.put(BuckTypes.SINGLE_QUOTED_STRING, BUCK_STRING);
-    sKeys.put(BuckTypes.NUMBER, BUCK_NUMBER);
+    sKeys.put(BuckTypes.APOSTROPHED_STRING, BUCK_STRING);
+    sKeys.put(BuckTypes.APOSTROPHED_RAW_STRING, BUCK_STRING);
+    sKeys.put(BuckTypes.TRIPLE_APOSTROPHED_STRING, BUCK_STRING);
+    sKeys.put(BuckTypes.TRIPLE_APOSTROPHED_RAW_STRING, BUCK_STRING);
+    sKeys.put(BuckTypes.QUOTED_STRING, BUCK_STRING);
+    sKeys.put(BuckTypes.QUOTED_RAW_STRING, BUCK_STRING);
+    sKeys.put(BuckTypes.TRIPLE_QUOTED_STRING, BUCK_STRING);
+    sKeys.put(BuckTypes.TRIPLE_QUOTED_RAW_STRING, BUCK_STRING);
+    sKeys.put(BuckTypes.INTEGER, BUCK_NUMBER);
     sKeys.put(BuckTypes.LINE_COMMENT, BUCK_COMMENT);
-    sKeys.put(BuckTypes.FUNCTION_NAME, BUCK_FUNCTION_NAME);
-    sKeys.put(BuckTypes.PROPERTY_LVALUE, BUCK_PROPERTY_LVALUE);
     sKeys.put(BuckTypes.IDENTIFIER, BUCK_IDENTIFIER);
 
     sKeys.put(TokenType.BAD_CHARACTER, HighlighterColors.BAD_CHARACTER);

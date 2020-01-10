@@ -1,33 +1,39 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.modern.impl;
 
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
+import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
+import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
+import com.facebook.buck.core.rulekey.CustomFieldBehaviorTag;
 import com.facebook.buck.rules.modern.ClassInfo;
+import com.facebook.buck.rules.modern.Serializer;
 import com.facebook.buck.rules.modern.ValueTypeInfo;
 import com.facebook.buck.rules.modern.ValueVisitor;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.lang.reflect.Field;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -91,7 +97,7 @@ public abstract class AbstractValueVisitor<E extends Exception> implements Value
       Field field,
       T value,
       ValueTypeInfo<T> valueTypeInfo,
-      Optional<CustomFieldBehavior> customBehavior)
+      List<Class<? extends CustomFieldBehaviorTag>> customBehavior)
       throws E {
     try {
       valueTypeInfo.visit(value, this);
@@ -151,5 +157,20 @@ public abstract class AbstractValueVisitor<E extends Exception> implements Value
   @Override
   public void visitDouble(Double value) throws E {
     visitSimple(value);
+  }
+
+  @Override
+  public void visitTargetConfiguration(TargetConfiguration value) throws E {
+    if (value instanceof UnconfiguredTargetConfiguration) {
+      visitSimple(Serializer.TARGET_CONFIGURATION_TYPE_EMPTY);
+    } else if (value instanceof RuleBasedTargetConfiguration) {
+      visitSimple(Serializer.TARGET_CONFIGURATION_TYPE_DEFAULT);
+      visitSimple(
+          ((RuleBasedTargetConfiguration) value).getTargetPlatform().getFullyQualifiedName());
+    } else if (value instanceof ConfigurationForConfigurationTargets) {
+      visitSimple(Serializer.TARGET_CONFIGURATION_TYPE_CONFIGURATION);
+    } else {
+      throw new IllegalArgumentException("Cannot visit target configuration: " + value);
+    }
   }
 }

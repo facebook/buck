@@ -1,19 +1,20 @@
-# Copyright 2018-present Facebook, Inc.
+# Copyright (c) Facebook, Inc. and its affiliates.
 #
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License. You may obtain
-# a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations
-# under the License.
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 from __future__ import print_function
 
+import contextlib
 import errno
 import glob
 import json
@@ -29,18 +30,83 @@ import textwrap
 import time
 import traceback
 import uuid
+from collections import namedtuple
 from subprocess import CalledProcessError, check_output
 
 from ng import NailgunConnection, NailgunException
-from subprocutils import which
-from timing import monotonic_time_nanos
-from tracing import Tracing
+from programs.subprocutils import which
+from programs.timing import monotonic_time_nanos
+from programs.tracing import Tracing
+
 
 BUCKD_CLIENT_TIMEOUT_MILLIS = 180000
 BUCKD_STARTUP_TIMEOUT_MILLIS = 10000
 GC_MAX_PAUSE_TARGET = 15000
 
 JAVA_MAX_HEAP_SIZE_MB = 1000
+
+# Files that are used to invoke programs after running buck. Used for buck run, and
+# to automatically invoke buck fix scripts
+PostRunFiles = namedtuple("PostRunFiles", ["command_args_file"])
+
+
+class MovableTemporaryFile(object):
+    def __init__(self, *args, **kwargs):
+        self.file = None
+        self._temp_file = None
+        self._should_delete = True
+        self._named_temporary_args = args
+        self._named_temporary_kwargs = kwargs
+
+    @property
+    def name(self):
+        if self.file:
+            return self.file.name
+        else:
+            raise AttributeError(
+                "`file` is not set. You cannot call name on a moved file"
+            )
+
+    def close(self):
+        if self.file:
+            self.file.close()
+
+    def move(self):
+        new_wrapper = MovableTemporaryFile(
+            self._named_temporary_args, self._named_temporary_kwargs
+        )
+        new_wrapper.file = self.file
+        new_wrapper._temp_file = self._temp_file
+        self.file = None
+        self._temp_file = None
+        return new_wrapper
+
+    def __enter__(self):
+        if not self._temp_file:
+            # Due to a bug in python (https://bugs.python.org/issue14243), we need to
+            # be able to close() the temporary file without deleting it. So, set
+            # delete=False, and cleanup manually on __exit__() rather than using
+            # NamedTemproaryFile's built in delete logic
+            self._temp_file = tempfile.NamedTemporaryFile(
+                *self._named_temporary_args,
+                delete=False,
+                **self._named_temporary_kwargs
+            )
+            self.file = self._temp_file.__enter__()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if self._temp_file:
+            self._temp_file.__exit__(exc_type, exc_value, traceback)
+        if self.file:
+            try:
+                os.remove(self.file.name)
+            except OSError as e:
+                # It's possible this fails because of a race with another buck
+                # instance has removed the entire resource_path, so ignore
+                # 'file not found' errors.
+                if e.errno != errno.ENOENT:
+                    raise
 
 
 class Resource(object):
@@ -59,7 +125,7 @@ class Resource(object):
 
 # Resource that get propagated to buck via system properties.
 EXPORTED_RESOURCES = [
-    Resource("fix_script", executable=True),
+    Resource("legacy_fix_script", executable=True),
     Resource("testrunner_classes"),
     Resource("logging_config_file"),
     Resource("path_to_python_dsl"),
@@ -87,7 +153,9 @@ class CommandLineArgs:
         self.command_options = []
 
         for arg in self.args:
-            if self.command is not None:
+            if arg == "--":
+                break
+            elif self.command is not None:
                 self.command_options.append(arg)
             elif (arg[:1]) == "-":
                 self.buck_options.append(arg)
@@ -98,12 +166,31 @@ class CommandLineArgs:
     # n.b. 'buck --help clean' is *not* currently a help command
     # n.b. 'buck --version' *is* a help command
     def is_help(self):
-        return self.command is None or "--help" in self.command_options
+        # --help or -h can be anywhere except after ""--"
+        return (
+            self.command is None
+            or any(v in self.command_options for v in ["--help", "-h"])
+            or any(v in self.buck_options for v in ["--help", "-h"])
+        )
 
     def is_version(self):
         return self.command is None and any(
             v in self.buck_options for v in ["--version", "-V"]
         )
+
+
+class ExitCode(object):
+    """Python equivalent of com.facebook.buck.util.ExitCode"""
+
+    SUCCESS = 0
+    COMMANDLINE_ERROR = 3
+    FATAL_GENERIC = 10
+    FATAL_BOOTSTRAP = 11
+    FATAL_IO = 13
+    FATAL_DISK_FULL = 14
+    FIX_FAILED = 16
+    SIGNAL_INTERRUPT = 130
+    SIGNAL_PIPE = 141
 
 
 class BuckToolException(Exception):
@@ -114,25 +201,96 @@ class BuckDaemonErrorException(BuckToolException):
     pass
 
 
-class ExecuteTarget(Exception):
-    def __init__(self, path, argv, envp, cwd):
+class ExitCodeCallable(object):
+    """ Simple callable class that just returns a given exit code """
+
+    def __init__(self, exit_code):
+        self.exit_code = exit_code
+
+    def __call__(self):
+        return self.exit_code
+
+
+class ExecuteTarget(ExitCodeCallable):
+    """ Callable that executes a given target after the build finishes """
+
+    def __init__(self, exit_code, path, argv, envp, cwd):
+        super(ExecuteTarget, self).__init__(exit_code)
         self._path = path
         self._argv = argv
         self._envp = envp
         self._cwd = cwd
 
-    def execve(self):
+    def __call__(self):
+        if self.exit_code != ExitCode.SUCCESS:
+            return self.exit_code
+
         # Restore default handling of SIGPIPE.  See https://bugs.python.org/issue1652.
         if os.name != "nt":
             signal.signal(signal.SIGPIPE, signal.SIG_DFL)
             os.execvpe(self._path, self._argv, self._envp)
         else:
-            child = subprocess.Popen(self._argv, env=self._envp, cwd=self._cwd)
+            args = [self._path]
+            args.extend(self._argv[1:])
+            child = subprocess.Popen(args, env=self._envp, cwd=self._cwd)
             child.wait()
             sys.exit(child.returncode)
 
 
+class ExecuteFixScript(ExitCodeCallable):
+    """
+    Callable that tries to execute a "fix" script, returning a different error
+    if the fix script fails
+    """
+
+    def __init__(self, exit_code, path, argv, envp, cwd):
+        super(ExecuteFixScript, self).__init__(exit_code)
+        self._path = path
+        self._argv = argv
+        self._envp = envp
+        self._cwd = cwd
+
+    @contextlib.contextmanager
+    def _disable_signal_handlers(self):
+        if os.name == "nt":
+            yield
+        else:
+            original_signal = signal.getsignal(signal.SIGINT)
+            try:
+                signal.signal(signal.SIGINT, signal.SIG_IGN)
+                yield
+            finally:
+                signal.signal(signal.SIGINT, original_signal)
+
+    def __call__(self):
+        exit_code = self.exit_code
+
+        extra_kwargs = {}
+        if os.name != "nt":
+            # Restore default handling of SIGPIPE.  See https://bugs.python.org/issue1652.
+            extra_kwargs["preexec_fn"] = lambda: signal.signal(
+                signal.SIGPIPE, signal.SIG_DFL
+            )
+
+        # Do not respond to ctrl-c while this is running. Users will expect this to go
+        # to the fix script. Make sure we restore the signal handler afterward
+        # We could have done this with tcsetpgrp and the like, but it also leads to
+        # weird behavior with ctrl-z when the processes are in different pgroups
+        # (to set the foreground job) and both processes don't suspend.
+        with self._disable_signal_handlers():
+            args = [self._path]
+            args.extend(self._argv[1:])
+            proc = subprocess.Popen(args, env=self._envp, cwd=self._cwd, **extra_kwargs)
+            proc.wait()
+
+        # If the script failed, return a different code to indicate that
+        if proc.returncode != ExitCode.SUCCESS:
+            exit_code = ExitCode.FIX_FAILED
+        return exit_code
+
+
 class BuckStatusReporter(object):
+
     """ Add custom logic to log Buck completion statuses or errors including
     critical ones like JVM crashes and OOMs. This object is fully mutable with
     all fields optional which get populated on the go. Only safe operations
@@ -241,7 +399,13 @@ class BuckTool(object):
     def _get_buck_repo_dirty(self):
         return self._package_info["is_dirty"]
 
+    def get_buck_compiled_java_version(self):
+        return self._package_info["java_version"]
+
     def _get_bootstrap_classpath(self):
+        raise NotImplementedError()
+
+    def _get_buckfilesystem_classpath(self):
         raise NotImplementedError()
 
     def _get_java_classpath(self):
@@ -267,11 +431,18 @@ class BuckTool(object):
 
     @property
     def _use_buckd(self):
-        return not os.environ.get("NO_BUCKD")
+        return not os.environ.get("NO_BUCKD") or os.environ.get("NO_BUCKD") == "0"
 
     def _environ_for_buck(self):
         env = os.environ.copy()
-        env["CLASSPATH"] = str(self._get_bootstrap_classpath())
+
+        classpath = str(self._get_bootstrap_classpath())
+        # On Java 9 and higher, the BuckFileSystem jar gets loaded via the bootclasspath and doesn't
+        # need to be added here.
+        if self.get_buck_compiled_java_version() < 9:
+            classpath += os.pathsep + str(self._get_buckfilesystem_classpath())
+
+        env["CLASSPATH"] = classpath
         env["BUCK_CLASSPATH"] = str(self._get_java_classpath())
         env["BUCK_TTY"] = str(int(sys.stdin.isatty()))
         if os.name == "posix":
@@ -279,9 +450,13 @@ class BuckTool(object):
             try:
                 # Get the number of columns in the terminal.
                 with open(os.devnull, "w") as devnull:
-                    stty_size_str = check_output(
-                        ["stty", "size"], stderr=devnull
-                    ).strip()
+                    # Make sure we get a string back in py3, but encoding isn't
+                    # valid in py2, so don't send in that case
+                    stty_size_str = (
+                        check_output(["stty", "size"], stderr=devnull)
+                        .decode("utf-8")
+                        .strip()
+                    )
                     stty_size = stty_size_str.split(" ")
                     if len(stty_size) >= 2:
                         env["BUCK_TERM_COLUMNS"] = stty_size[1]
@@ -290,20 +465,81 @@ class BuckTool(object):
                 pass
         return env
 
-    def _add_args(self, argv, args):
+    def _handle_isolation_args(self, args):
+        try:
+            pos = args.index("--isolation_prefix")
+            # Allow for the argument to --isolation_prefix
+            if (pos + 1) < len(args):
+                new_args = args[:pos] + args[pos + 2 :]
+                new_args.append("--config")
+                new_args.append(
+                    "buck.base_buck_out_dir={0}".format(
+                        self._buck_project.get_buck_out_relative_dir()
+                    )
+                )
+                return new_args
+            else:
+                return args  # buck will error out on unrecognized option
+        except ValueError:
+            return args
+
+    def _handle_buck_fix_args(self, argv, post_run_files):
+        additional_args = ["--command-args-file", post_run_files.command_args_file]
+        insert_idx = 1
+        # Cover the case where someone runs `buck --isolation_prefix foo`, which would
+        # make the first arg `--config`, not a subcommand
+        if len(argv) and argv[0].startswith("--"):
+            insert_idx = 0
+
+        ret = argv[:insert_idx] + additional_args + argv[insert_idx:]
+        return ret
+
+    def _add_args(self, argv, args, post_run_files):
+
+        self._adjust_help_args(argv, args)
+
         """
         Add new arguments to the end of arguments string
         But before optional arguments to test runner ("--")
         """
+        if len(args) == 0:
+            return self._handle_buck_fix_args(
+                self._handle_isolation_args(argv), post_run_files
+            )
+
         try:
             pos = argv.index("--")
         except ValueError:
             # "--" not found, just add to the end of the list
             pos = len(argv)
 
-        return argv[:pos] + args + argv[pos:]
+        return self._handle_buck_fix_args(
+            self._handle_isolation_args(argv[:pos] + args + argv[pos:]), post_run_files
+        )
 
-    def _add_args_from_env(self, argv):
+    def _adjust_help_args(self, argv, args):
+        # allow --help right after "buck" then followed by subcommand, in order for java code
+        # to process this as help, move --help to after subcommand
+        if len(argv) and argv[0] == "--help":
+            del argv[0]
+            args.append("--help")
+        else:
+            # '-h' need to be replaced by '--help' for java code to process as help
+            try:
+                pos_h = argv.index("-h")
+            except ValueError:
+                pos_h = -1
+            if pos_h >= 0:
+                try:
+                    # don't do the replacement if '-h' is after '--', it's for external runner
+                    pos_ex = argv.index("--")
+                except ValueError:
+                    pos_ex = -1
+                if pos_ex < 0 or pos_h < pos_ex:
+                    del argv[pos_h]
+                    args.append("--help")
+
+    def _add_args_from_env(self, argv, post_run_files):
         """
         Implicitly add command line arguments based on environmental variables. This is a bad
         practice and should be considered for infrastructure / debugging purposes only
@@ -315,11 +551,9 @@ class BuckTool(object):
         if os.environ.get("BUCK_CACHE_READONLY") == "1":
             args.append("-c")
             args.append("cache.http_mode=readonly")
-        if len(args) == 0:
-            return argv
-        return self._add_args(argv, args)
+        return self._add_args(argv, args, post_run_files)
 
-    def _run_with_nailgun(self, argv, env, java11_test_mode):
+    def _run_with_nailgun(self, java_path, argv, env, post_run_files):
         """
         Run the command using nailgun.  If the daemon is busy, block until it becomes free.
         """
@@ -334,8 +568,8 @@ class BuckTool(object):
                     now = int(round(time.time() * 1000))
                     env["BUCK_PYTHON_SPACE_INIT_TIME"] = str(now - self._init_timestamp)
                     exit_code = c.send_command(
-                        "com.facebook.buck.cli.Main",
-                        self._add_args_from_env(argv),
+                        "com.facebook.buck.cli.MainWithNailgun",
+                        self._add_args_from_env(argv, post_run_files),
                         env=env,
                         cwd=self._buck_project.root,
                     )
@@ -380,39 +614,36 @@ class BuckTool(object):
 
         return exit_code
 
-    def _run_without_nailgun(self, argv, env, java11_test_mode):
+    def _run_without_nailgun(self, java_path, argv, env, post_run_files):
         """
         Run the command by directly invoking `java` (rather than by sending a command via nailgun)
         """
         command = ["buck"]
         extra_default_options = [
+            "-Dbuck.is_buckd=false",
             "-Djava.io.tmpdir={0}".format(self._tmp_dir),
             "-Dfile.encoding=UTF-8",
             "-XX:SoftRefLRUPolicyMSPerMB=0",
             "-XX:+UseG1GC",
         ]
         command.extend(
-            self._get_java_args(
-                self._get_buck_version_uid(), java11_test_mode, extra_default_options
-            )
+            self._get_java_args(self._get_buck_version_uid(), extra_default_options)
         )
         command.append("com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper")
-        command.append("com.facebook.buck.cli.Main")
-        command.extend(self._add_args_from_env(argv))
+        command.append("com.facebook.buck.cli.MainWithoutNailgun")
+        command.extend(self._add_args_from_env(argv, post_run_files))
         now = int(round(time.time() * 1000))
         env["BUCK_PYTHON_SPACE_INIT_TIME"] = str(now - self._init_timestamp)
-        java = get_java_path()
         with Tracing("buck", args={"command": command}):
             return subprocess.call(
-                command, cwd=self._buck_project.root, env=env, executable=java
+                command, cwd=self._buck_project.root, env=env, executable=java_path
             )
 
-    def _execute_command_and_maybe_run_target(
-        self, run_fn, env, argv, java11_test_mode
-    ):
+    def _execute_command_and_maybe_run_target(self, run_fn, java_path, env, argv):
         """
-        Run a buck command using the specified `run_fn`.  If the command is "run", get the path,
-        args, etc. from the daemon, and raise an exception that tells __main__ to run that binary
+        Run a buck command using the specified `run_fn`.
+        If the command writes out to --command-args-file, return a callable that
+        executes the program in the --command-args-file
         """
         with Tracing("buck", args={"command": sys.argv[1:]}):
             if os.name == "nt":
@@ -438,27 +669,34 @@ class BuckTool(object):
                     )
 
             argv = argv[1:]
-            if len(argv) == 0 or argv[0] != "run":
-                return run_fn(argv, env, java11_test_mode)
-            else:
-                with tempfile.NamedTemporaryFile(dir=self._tmp_dir) as argsfile:
-                    # Splice in location of command file to run outside buckd
-                    argv = [argv[0]] + ["--command-args-file", argsfile.name] + argv[1:]
-                    exit_code = run_fn(argv, env, java11_test_mode)
-                    if exit_code != 0 or os.path.getsize(argsfile.name) == 0:
-                        # Build failed, so there's nothing to run.  Exit normally.
-                        return exit_code
-                    cmd = json.load(argsfile)
-                    path = cmd["path"].encode("utf8")
-                    argv = [arg.encode("utf8") for arg in cmd["argv"]]
-                    envp = {
-                        k.encode("utf8"): v.encode("utf8")
-                        for k, v in cmd["envp"].iteritems()
-                    }
-                    cwd = cmd["cwd"].encode("utf8")
-                    raise ExecuteTarget(path, argv, envp, cwd)
 
-    def launch_buck(self, build_id, argv, java11_test_mode):
+            # The argsfile can go in the project tmpdir as we read it back immediately,
+            # the fix spec file needs to be somewhere else, as we cleanup the tmpdir
+            # before we run the actual fix script, and we need to make sure that the
+            # build details are not deleted before that.
+            with MovableTemporaryFile(dir=self._tmp_dir) as argsfile:
+                argsfile.close()
+
+                post_run_files = PostRunFiles(command_args_file=argsfile.name)
+                exit_code = run_fn(java_path, argv, env, post_run_files)
+                if os.path.getsize(argsfile.name) == 0:
+                    # No file was requested to be run by the daemon. Exit normally.
+                    return ExitCodeCallable(exit_code)
+
+                with open(argsfile.name, "r") as reopened_argsfile:
+                    cmd = json.load(reopened_argsfile)
+                path = cmd["path"].encode("utf8")
+                argv = [arg.encode("utf8") for arg in cmd["argv"]]
+                envp = {
+                    k.encode("utf8"): v.encode("utf8") for k, v in cmd["envp"].items()
+                }
+                cwd = cmd["cwd"].encode("utf8")
+                if cmd["is_fix_script"]:
+                    return ExecuteFixScript(exit_code, path, argv, envp, cwd)
+                else:
+                    return ExecuteTarget(exit_code, path, argv, envp, cwd)
+
+    def launch_buck(self, build_id, client_cwd, java_path, argv):
         with Tracing("BuckTool.launch_buck"):
             with JvmCrashLogger(self, self._buck_project.root):
                 self._reporter.build_id = build_id
@@ -482,7 +720,7 @@ class BuckTool(object):
 
                 if self._command_line.is_version():
                     print("buck version {}".format(buck_version_uid))
-                    return 0
+                    return ExitCodeCallable(ExitCode.SUCCESS)
 
                 use_buckd = self._use_buckd
                 if not use_buckd:
@@ -506,7 +744,7 @@ class BuckTool(object):
                     need_start = True
                     running_version = self._buck_project.get_running_buckd_version()
                     running_jvm_args = self._buck_project.get_running_buckd_jvm_args()
-                    jvm_args = self._get_java_args(buck_version_uid, java11_test_mode)
+                    jvm_args = self._get_java_args(buck_version_uid)
                     if running_version is None:
                         logging.info("Starting new Buck daemon...")
                     elif running_version != buck_version_uid:
@@ -527,9 +765,7 @@ class BuckTool(object):
                     if need_start:
                         self.kill_buckd()
                         if not self.launch_buckd(
-                            java11_test_mode,
-                            jvm_args,
-                            buck_version_uid=buck_version_uid,
+                            java_path, jvm_args, buck_version_uid=buck_version_uid
                         ):
                             use_buckd = False
                             self._reporter.no_buckd_reason = "daemon_failure"
@@ -539,6 +775,7 @@ class BuckTool(object):
 
                 env = self._environ_for_buck()
                 env["BUCK_BUILD_ID"] = build_id
+                env["BUCK_CLIENT_PWD"] = client_cwd
 
                 self._reporter.is_buckd = use_buckd
                 run_fn = (
@@ -547,24 +784,27 @@ class BuckTool(object):
 
                 self._unpack_modules()
 
-                exit_code = self._execute_command_and_maybe_run_target(
-                    run_fn, env, argv, java11_test_mode
+                exit_code_callable = self._execute_command_and_maybe_run_target(
+                    run_fn, java_path, env, argv
                 )
 
                 # Most shells return process termination with signal as
                 # 128 + N, where N is the signal. However Python's subprocess
                 # call returns them as negative numbers. Buck binary protocol
                 # uses shell's convention, so convert
-                if exit_code < 0:
-                    exit_code = 128 + (-1 * exit_code)
-                return exit_code
+                if exit_code_callable.exit_code < 0:
+                    exit_code_callable.exit_code = 128 + (
+                        -1 * exit_code_callable.exit_code
+                    )
+                return exit_code_callable
 
 
-    def launch_buckd(self, java11_test_mode, jvm_args, buck_version_uid=None):
+    def launch_buckd(self, java_path, jvm_args, buck_version_uid=None):
         with Tracing("BuckTool.launch_buckd"):
             setup_watchman_watch()
             if buck_version_uid is None:
                 buck_version_uid = self._get_buck_version_uid()
+            self._buck_project.create_buckd_dir()
             # Override self._tmp_dir to a long lived directory.
             buckd_tmp_dir = self._buck_project.create_buckd_tmp_dir()
             ngserver_output_path = os.path.join(buckd_tmp_dir, "ngserver-out")
@@ -579,6 +819,7 @@ class BuckTool(object):
             """
             command = ["buckd"]
             extra_default_options = [
+                "-Dbuck.is_buckd=true",
                 "-Dbuck.buckd_launch_time_nanos={0}".format(monotonic_time_nanos()),
                 "-Dfile.encoding=UTF-8",
                 "-XX:MaxGCPauseMillis={0}".format(GC_MAX_PAUSE_TARGET),
@@ -604,7 +845,7 @@ class BuckTool(object):
             command.extend(extra_default_options)
             command.extend(jvm_args)
             command.append("com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper")
-            command.append("com.facebook.buck.cli.Main$DaemonBootstrap")
+            command.append("com.facebook.buck.cli.BuckDaemon")
             command.append(self._buck_project.get_buckd_transport_address())
             command.append("{0}".format(BUCKD_CLIENT_TIMEOUT_MILLIS))
 
@@ -637,7 +878,7 @@ class BuckTool(object):
 
             process = subprocess.Popen(
                 command,
-                executable=get_java_path(),
+                executable=java_path,
                 cwd=self._buck_project.root,
                 env=self._environ_for_buck(),
                 creationflags=creationflags,
@@ -649,7 +890,7 @@ class BuckTool(object):
 
             self._buck_project.save_buckd_version(buck_version_uid)
             self._buck_project.save_buckd_jvm_args(
-                self._get_java_args(buck_version_uid, java11_test_mode)
+                self._get_java_args(buck_version_uid)
             )
 
             # Give Java some time to create the listening socket.
@@ -771,36 +1012,57 @@ class BuckTool(object):
                     raise
             return True
 
-    def _get_java_args(self, version_uid, java11_test_mode, extra_default_options=None):
+    def _get_java_args(self, version_uid, extra_default_options=None):
         with Tracing("BuckTool._get_java_args"):
-            java_args = [
-                "-Xmx{0}m".format(JAVA_MAX_HEAP_SIZE_MB),
-                "-Djava.awt.headless=true",
-                "-Djna.nosys=true",
-                "-Djava.util.logging.config.class=com.facebook.buck.cli.bootstrapper.LogConfig",
-                "-Dbuck.test_util_no_tests_dir=true",
-                "-Dbuck.version_uid={0}".format(version_uid),
-                "-Dbuck.buckd_dir={0}".format(self._buck_project.buckd_dir),
-                "-Dorg.eclipse.jetty.util.log.class=org.eclipse.jetty.util.log.JavaUtilLog",
-                "-Dbuck.git_commit={0}".format(self._get_buck_version_uid()),
-                "-Dbuck.git_commit_timestamp={0}".format(
-                    self._get_buck_version_timestamp()
-                ),
-                "-Dbuck.binary_hash={0}".format(self._get_buck_binary_hash()),
-            ]
+            java_args = []
 
-            if (
-                "BUCK_DEFAULT_FILESYSTEM" not in os.environ
-                and (sys.platform == "darwin" or sys.platform.startswith("linux"))
-                and not java11_test_mode
+            if "BUCK_DEFAULT_FILESYSTEM" not in os.environ and (
+                sys.platform == "darwin" or sys.platform.startswith("linux")
             ):
                 # Change default filesystem to custom filesystem for memory optimizations
                 # Calls like Paths.get() would return optimized Path implementation
-                # TODO: Temporarily disabled for Java 11 due to class loader issues.
+                if self.get_buck_compiled_java_version() >= 9:
+                    # In Java 9+, the default file system provider gets initialized in the middle of
+                    # loading the jar for the main class (bootstrapper.jar for Buck). Due to a
+                    # potential circular dependency, we can't place BuckFileSystemProvider in
+                    # bootstrapper.jar, or even in a separate jar on the regular classpath. To
+                    # ensure BuckFileSystemProvider is available early enough, we add it to the JVM
+                    # bootstrap classloader (not to be confused with Buck's bootstrapper) via the
+                    # bootclasspath. Note that putting everything in bootstrapper.jar and putting it
+                    # on the bootclasspath is problematic due to subtle classloader issues during
+                    # in-process Java compilation.
+                    #
+                    # WARNING: The JVM appears to be sensitive about where this argument appears in
+                    #          the argument list. It needs to come first, or it *sometimes* doesn't
+                    #          get picked up. We don't understand exactly when or why this occurs.
+                    java_args.append(
+                        "-Xbootclasspath/a:" + self._get_buckfilesystem_classpath()
+                    )
                 java_args.append(
                     "-Djava.nio.file.spi.DefaultFileSystemProvider="
-                    "com.facebook.buck.cli.bootstrapper.filesystem.BuckFileSystemProvider"
+                    "com.facebook.buck.core.filesystems.BuckFileSystemProvider"
                 )
+
+            java_args.extend(
+                [
+                    "-Xmx{0}m".format(JAVA_MAX_HEAP_SIZE_MB),
+                    "-Djava.awt.headless=true",
+                    "-Djna.nosys=true",
+                    "-Djava.util.logging.config.class=com.facebook.buck.cli.bootstrapper.LogConfig",
+                    "-Dbuck.test_util_no_tests_dir=true",
+                    "-Dbuck.version_uid={0}".format(version_uid),
+                    "-Dbuck.buckd_dir={0}".format(self._buck_project.buckd_dir),
+                    "-Dorg.eclipse.jetty.util.log.class=org.eclipse.jetty.util.log.JavaUtilLog",
+                    "-Dbuck.git_commit={0}".format(self._get_buck_version_uid()),
+                    "-Dbuck.git_commit_timestamp={0}".format(
+                        self._get_buck_version_timestamp()
+                    ),
+                    "-Dbuck.binary_hash={0}".format(self._get_buck_binary_hash()),
+                    "-Dbuck.base_buck_out_dir={0}".format(
+                        self._buck_project.get_buck_out_relative_dir()
+                    ),
+                ]
+            )
 
             resource_lock_path = self._get_resource_lock_path()
             if resource_lock_path is not None:
@@ -857,6 +1119,45 @@ class BuckTool(object):
             extra_java_args = os.environ.get("BUCK_EXTRA_JAVA_ARGS")
             if extra_java_args:
                 java_args.extend(shlex.split(extra_java_args))
+
+            # Remove unsupported args on newer Java versions. This is only here temporarily to
+            # simplify the transition while we need to support multiple versions of the JVM.
+            # TODO: Remove once Java 11 upgrade is done.
+            if self.get_buck_compiled_java_version() >= 9:
+                unsupported_args = set(
+                    [
+                        # `-verbose:gc` and `-XX:+PrintGCDetails` are technically supported, but log
+                        # to stdout, which is problematic when Buck's output needs to be
+                        # programmatically parsed. So we disallow them. `-Xlog:gc:/path/to/gc.log`
+                        # should be used in Java 11 instead.
+                        "-verbose:gc",
+                        "-XX:+PrintGCDetails",
+                        "-XX:+PrintGCDateStamps",
+                        "-XX:+PrintGCTimeStamps",
+                        "-XX:+UseParNewGC",
+                    ]
+                )
+                stripped_args = []
+                for arg in java_args:
+                    if arg in unsupported_args:
+                        logging.warning(
+                            "Warning: Removing JVM arg `%s`, which is not supported in Java %d.",
+                            arg,
+                            self.get_buck_compiled_java_version(),
+                        )
+                    elif arg.startswith("-Xloggc"):
+                        logging.warning(
+                            "Warning: JVM arg `-Xloggc` is deprecated in Java %d. Replacing with `-Xlog:gc`.",
+                            self.get_buck_compiled_java_version(),
+                        )
+                        # Though the JVM will make this replacement itself, it stupidly logs the
+                        # deprecation warning to stdout, which will break programmatic parsing of
+                        # Buck's output.
+                        stripped_args.append(arg.replace("-Xloggc", "-Xlog:gc"))
+                    else:
+                        stripped_args.append(arg)
+                java_args = stripped_args
+
             return java_args
 
 
@@ -865,34 +1166,6 @@ class BuckTool(object):
 def install_signal_handlers():
     if os.name == "posix":
         signal.signal(signal.SIGUSR1, lambda sig, frame: traceback.print_stack(frame))
-
-
-def _get_java_exec_under_home(java_home_base):
-    java_exec = "java.exe" if os.name == "nt" else "java"
-    return os.path.join(java_home_base, "bin", java_exec)
-
-
-def get_java_path():
-    java_home_path = os.getenv("JAVA_HOME")
-    if java_home_path is None:
-        java_path = which("java")
-        if java_path is None:
-            raise BuckToolException(
-                "Could not find Java executable. \
-Make sure it is on PATH or JAVA_HOME is set."
-            )
-    else:
-        java_path = _get_java_exec_under_home(java_home_path)
-        if not os.path.isfile(java_path):
-            message = textwrap.dedent(
-                """
-            Could not find Java executable under JAVA_HOME at: '{}'.
-            Please make sure your JAVA_HOME environment variable is set correctly.
-            Then restart buck (buck kill) and try again.
-            """
-            ).format(java_path)
-            raise BuckToolException(message)
-    return java_path
 
 
 def platform_path(path):

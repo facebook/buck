@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.io.file;
@@ -25,6 +25,8 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.core.filesystems.BuckFileSystem;
+import com.facebook.buck.testutil.BuckFSProviderDeleteError;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -70,6 +72,42 @@ public class MostFilesTest {
   }
 
   @Test
+  public void deleteRecursivelyNonExistentDeleteContentsIgnoreNoSuchFile() throws IOException {
+    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
+    Path fakeTmpDir = vfs.getPath("/tmp/fake-tmp-dir");
+    MostFiles.deleteRecursivelyWithOptions(
+        fakeTmpDir.resolve("nonexistent"),
+        EnumSet.of(
+            MostFiles.DeleteRecursivelyOptions.DELETE_CONTENTS_ONLY,
+            MostFiles.DeleteRecursivelyOptions.IGNORE_NO_SUCH_FILE_EXCEPTION));
+  }
+
+  @Test(expected = IOException.class)
+  public void deleteRecursivelyIfExistsShouldFailOnFileIfDeletingOnlyContents() throws IOException {
+    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
+    Path fakeTmpDir = vfs.getPath("/tmp/fake-tmp-dir");
+    Path fileToDelete = fakeTmpDir.resolve("delete-me");
+    Files.createDirectories(fakeTmpDir);
+    MostFiles.writeLinesToFile(ImmutableList.of(""), fileToDelete);
+
+    MostFiles.deleteRecursivelyWithOptions(
+        fileToDelete, EnumSet.of(MostFiles.DeleteRecursivelyOptions.DELETE_CONTENTS_ONLY));
+  }
+
+  @Test
+  public void deleteRecursivelyIfExistsShouldNotFailOnFile() throws IOException {
+    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
+    Path fakeTmpDir = vfs.getPath("/tmp/fake-tmp-dir");
+    Path fileToDelete = fakeTmpDir.resolve("delete-me");
+    Files.createDirectories(fakeTmpDir);
+    MostFiles.writeLinesToFile(ImmutableList.of(""), fileToDelete);
+
+    MostFiles.deleteRecursivelyWithOptions(
+        fileToDelete, EnumSet.noneOf(MostFiles.DeleteRecursivelyOptions.class));
+    assertThat(Files.exists(fileToDelete), is(false));
+  }
+
+  @Test
   public void deleteRecursivelyIfExistsDeletesDirectory() throws IOException {
     FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
     Path fakeTmpDir = vfs.getPath("/tmp/fake-tmp-dir");
@@ -78,6 +116,49 @@ public class MostFilesTest {
     Files.createDirectories(childDir);
     MostFiles.deleteRecursivelyIfExists(dirToDelete);
     assertThat(Files.exists(dirToDelete), is(false));
+  }
+
+  @Test
+  public void deleteRecursivelyIfExistsWithUndeletableFile() throws IOException {
+    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
+    BuckFSProviderDeleteError bfsProvider = new BuckFSProviderDeleteError(vfs);
+    BuckFileSystem bfs = new BuckFileSystem(bfsProvider, "/");
+    Path fakeTmpDir = bfs.getPath("/tmp/fake-tmp-dir");
+    Path dirToDelete = fakeTmpDir.resolve("delete-me");
+    Path childDir = dirToDelete.resolve("child-dir");
+    Files.createDirectories(childDir);
+    Path readOnlyFile = dirToDelete.resolve("roFile");
+    Files.createFile(readOnlyFile);
+    Path deletableFile = childDir.resolve("deletableFile");
+    Files.createFile(deletableFile);
+    bfsProvider.setFileToErrorOnDeletion(readOnlyFile);
+
+    MostFiles.deleteRecursivelyIfExists(dirToDelete);
+    assertThat(Files.exists(childDir), is(false));
+    assertThat(Files.exists(dirToDelete), is(true));
+    assertThat(Files.exists(readOnlyFile), is(true));
+  }
+
+  @Test
+  public void deleteRecursivelyIfExistsWithUndeletableDirectory() throws IOException {
+    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
+    BuckFSProviderDeleteError bfsProvider = new BuckFSProviderDeleteError(vfs);
+    BuckFileSystem bfs = new BuckFileSystem(bfsProvider, "/");
+    Path fakeTmpDir = bfs.getPath("/tmp/fake-tmp-dir");
+    Path dirToDelete = fakeTmpDir.resolve("delete-me");
+    Path childDir = dirToDelete.resolve("child-dir");
+    Files.createDirectories(childDir);
+    Path readOnlyDir = dirToDelete.resolve("roDir");
+    Files.createDirectories(readOnlyDir);
+    bfsProvider.setFileToErrorOnDeletion(readOnlyDir);
+    Path fileInReadOnlyDir = readOnlyDir.resolve("deletableFile");
+    Files.createFile(fileInReadOnlyDir);
+
+    MostFiles.deleteRecursivelyIfExists(dirToDelete);
+    assertThat(Files.exists(childDir), is(false));
+    assertThat(Files.exists(fileInReadOnlyDir), is(false));
+    assertThat(Files.exists(dirToDelete), is(true));
+    assertThat(Files.exists(readOnlyDir), is(true));
   }
 
   @Test

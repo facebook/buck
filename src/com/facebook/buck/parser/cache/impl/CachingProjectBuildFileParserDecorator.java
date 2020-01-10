@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.parser.cache.impl;
@@ -22,8 +22,8 @@ import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ForwardingProjectBuildFileParserDecorator;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
-import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.config.Config;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
@@ -42,19 +42,19 @@ public class CachingProjectBuildFileParserDecorator
   private final ParserCache parserCache;
   private final Config config;
   private final ProjectFilesystem filesystem;
-  private final FileHashCache fileHashCache;
+  private final FileHashLoader fileHashLoader;
 
   private CachingProjectBuildFileParserDecorator(
       ParserCache parserCache,
       ProjectBuildFileParser delegate,
       Config config,
       ProjectFilesystem filesystem,
-      FileHashCache fileHashCache) {
+      FileHashLoader fileHashLoader) {
     super(delegate);
     this.parserCache = parserCache;
     this.config = config;
     this.filesystem = filesystem;
-    this.fileHashCache = fileHashCache;
+    this.fileHashLoader = fileHashLoader;
   }
 
   /**
@@ -70,14 +70,14 @@ public class CachingProjectBuildFileParserDecorator
       ProjectBuildFileParser delegate,
       Config config,
       ProjectFilesystem filesystem,
-      FileHashCache fileHashCache) {
+      FileHashLoader fileHashLoader) {
     return new CachingProjectBuildFileParserDecorator(
-        parserCache, delegate, config, filesystem, fileHashCache);
+        parserCache, delegate, config, filesystem, fileHashLoader);
   }
 
   // calculate the globs state is proper for using the returned manifest from storage.
   @Override
-  public BuildFileManifest getBuildFileManifest(Path buildFile)
+  public BuildFileManifest getManifest(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
 
     @Nullable HashCode weakFingerprint = null;
@@ -89,7 +89,7 @@ public class CachingProjectBuildFileParserDecorator
       ImmutableSortedSet<String> includeBuildFiles = delegate.getIncludedFiles(buildFile);
       weakFingerprint = Fingerprinter.getWeakFingerprint(buildFile, config);
       strongFingerprint =
-          Fingerprinter.getStrongFingerprint(filesystem, includeBuildFiles, fileHashCache);
+          Fingerprinter.getStrongFingerprint(filesystem, includeBuildFiles, fileHashLoader);
 
       buildFileManifestFromCache =
           parserCache.getBuildFileManifest(buildFile, delegate, weakFingerprint, strongFingerprint);
@@ -104,7 +104,7 @@ public class CachingProjectBuildFileParserDecorator
           e, "Failure getting includes when getting the BuildFileManifest in caching decorator.");
     }
 
-    BuildFileManifest parsedManifest = delegate.getBuildFileManifest(buildFile);
+    BuildFileManifest parsedManifest = delegate.getManifest(buildFile);
 
     if (weakFingerprint != null && strongFingerprint != null) {
       try {

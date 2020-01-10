@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
@@ -27,6 +27,7 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbiInfo;
+import com.facebook.buck.jvm.core.JavaClassHashesProvider;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
@@ -39,7 +40,17 @@ import java.util.Set;
 public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, AndroidPackageable {
 
   private ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
+  private ImmutableSortedSet<SourcePath> resources = ImmutableSortedSet.of();
   private Optional<String> mavenCoords = Optional.empty();
+
+  public FakeJavaLibrary(
+      BuildTarget target,
+      ProjectFilesystem filesystem,
+      ImmutableSortedSet<BuildRule> deps,
+      ImmutableSortedSet<SourcePath> resources) {
+    super(target, filesystem, deps.toArray(new BuildRule[0]));
+    this.resources = resources;
+  }
 
   public FakeJavaLibrary(
       BuildTarget target, ProjectFilesystem filesystem, ImmutableSortedSet<BuildRule> deps) {
@@ -48,6 +59,14 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
 
   public FakeJavaLibrary(BuildTarget target, ImmutableSortedSet<BuildRule> deps) {
     super(target, deps);
+  }
+
+  public FakeJavaLibrary(
+      BuildTarget target,
+      ImmutableSortedSet<BuildRule> deps,
+      ImmutableSortedSet<SourcePath> resources) {
+    super(target, deps);
+    this.resources = resources;
   }
 
   public FakeJavaLibrary(BuildTarget target) {
@@ -104,7 +123,7 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
 
   @Override
   public ImmutableSortedSet<SourcePath> getResources() {
-    return ImmutableSortedSet.of();
+    return resources;
   }
 
   @Override
@@ -129,13 +148,18 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   }
 
   @Override
+  public boolean neverMarkAsUnusedDependency() {
+    return false;
+  }
+
+  @Override
   public Optional<BuildTarget> getAbiJar() {
     return Optional.empty();
   }
 
   @Override
   public ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
-    throw new UnsupportedOperationException();
+    return ImmutableSortedMap.of();
   }
 
   @Override
@@ -156,5 +180,10 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   public FakeJavaLibrary setMavenCoords(String mavenCoords) {
     this.mavenCoords = Optional.of(mavenCoords);
     return this;
+  }
+
+  @Override
+  public JavaClassHashesProvider getClassHashesProvider() {
+    return new FakeJavaClassHashesProvider(getClassNamesToHashes());
   }
 }

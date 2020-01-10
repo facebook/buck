@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -23,7 +23,7 @@ import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.testutil.ParameterizedTests;
@@ -78,8 +78,8 @@ public class CxxRawHeadersIntegrationTest {
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
-    target1 = BuildTargetFactory.newInstance(workspace.getDestPath(), "//depfiles1:test");
-    target2 = BuildTargetFactory.newInstance(workspace.getDestPath(), "//depfiles2/test:test");
+    target1 = BuildTargetFactory.newInstance("//depfiles1:test");
+    target2 = BuildTargetFactory.newInstance("//depfiles2/test:test");
 
     CxxSourceRuleFactory cxxSourceRuleFactory1 =
         CxxSourceRuleFactoryHelper.of(workspace.getDestPath(), target1, cxxPlatform);
@@ -227,6 +227,15 @@ public class CxxRawHeadersIntegrationTest {
     assertThat(
         processResult.getStderr(),
         containsString("Cannot use `headers` and `raw_headers` in the same rule"));
+  }
+
+  @Test
+  public void includeDirectories() throws IOException {
+    runCommand("build", "//app:app1").assertSuccess();
+    runCommand("build", "//app:app2").assertSuccess();
+    runCommand("build", "//app:app3").assertSuccess();
+    runCommand("build", "//app:app4").assertSuccess();
+    runCommand("build", "//app:app5").assertSuccess();
   }
 
   private ProcessResult runCommand(String... args) throws IOException {

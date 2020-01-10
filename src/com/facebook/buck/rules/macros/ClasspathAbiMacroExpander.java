@@ -1,29 +1,28 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.rules.args.Arg;
@@ -83,7 +82,7 @@ public class ClasspathAbiMacroExpander extends BuildTargetMacroExpander<Classpat
   }
 
   @Override
-  protected Arg expand(SourcePathResolver resolver, ClasspathAbiMacro macro, BuildRule rule)
+  protected Arg expand(SourcePathResolverAdapter resolver, ClasspathAbiMacro macro, BuildRule rule)
       throws MacroException {
     throw new MacroException(
         "expand(BuildRuleResolver ruleResolver, ClasspathAbiMacro input) should be called instead");
@@ -91,10 +90,7 @@ public class ClasspathAbiMacroExpander extends BuildTargetMacroExpander<Classpat
 
   @Override
   public Arg expandFrom(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      ActionGraphBuilder graphBuilder,
-      ClasspathAbiMacro input)
+      BuildTarget target, ActionGraphBuilder graphBuilder, ClasspathAbiMacro input)
       throws MacroException {
 
     BuildRule inputRule = resolve(graphBuilder, input);
@@ -104,9 +100,7 @@ public class ClasspathAbiMacroExpander extends BuildTargetMacroExpander<Classpat
   protected Arg expand(ActionGraphBuilder graphBuilder, BuildRule inputRule) throws MacroException {
 
     ImmutableList<SourcePath> jarPaths =
-        getHasClasspathEntries(inputRule)
-            .getTransitiveClasspathDeps()
-            .stream()
+        getHasClasspathEntries(inputRule).getTransitiveClasspathDeps().stream()
             .filter(d -> d.getSourcePathToOutput() != null)
             .map(d -> getJarPath(d, graphBuilder))
             .filter(Objects::nonNull)
@@ -116,7 +110,7 @@ public class ClasspathAbiMacroExpander extends BuildTargetMacroExpander<Classpat
     return new AbiJarPathArg(jarPaths);
   }
 
-  private class AbiJarPathArg implements Arg {
+  private static class AbiJarPathArg implements Arg {
 
     @AddToRuleKey private final ImmutableList<SourcePath> classpath;
 
@@ -125,10 +119,10 @@ public class ClasspathAbiMacroExpander extends BuildTargetMacroExpander<Classpat
     }
 
     @Override
-    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+    public void appendToCommandLine(
+        Consumer<String> consumer, SourcePathResolverAdapter pathResolver) {
       consumer.accept(
-          classpath
-              .stream()
+          classpath.stream()
               .map(pathResolver::getAbsolutePath)
               .map(Object::toString)
               .sorted(Ordering.natural())

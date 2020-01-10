@@ -1,18 +1,19 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.step.fs;
 
 import static org.junit.Assert.assertEquals;
@@ -45,7 +46,7 @@ public class SymlinkFileStepTest {
   @Rule public final TemporaryFolder tmpDir = new TemporaryFolder();
 
   @Test
-  public void testAbsoluteSymlinkFiles() throws InterruptedException, IOException {
+  public void testAbsoluteSymlinkFiles() throws IOException {
     ExecutionContext context = TestExecutionContext.newInstance();
 
     File source = tmpDir.newFile();
@@ -55,12 +56,10 @@ public class SymlinkFileStepTest {
     target.delete();
 
     SymlinkFileStep step =
-        SymlinkFileStep.builder()
-            .setFilesystem(
-                TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath()))
-            .setExistingFile(Paths.get(source.getName()))
-            .setDesiredLink(Paths.get(target.getName()))
-            .build();
+        SymlinkFileStep.of(
+            TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath()),
+            Paths.get(source.getName()),
+            Paths.get(target.getName()));
     step.execute(context);
     // Run twice to ensure we can overwrite an existing symlink
     step.execute(context);
@@ -102,11 +101,7 @@ public class SymlinkFileStepTest {
 
     tmpDir.newFile("dummy");
     SymlinkFileStep symlinkStep =
-        SymlinkFileStep.builder()
-            .setFilesystem(projectFilesystem)
-            .setExistingFile(Paths.get("dummy"))
-            .setDesiredLink(Paths.get("my_symlink"))
-            .build();
+        SymlinkFileStep.of(projectFilesystem, Paths.get("dummy"), Paths.get("my_symlink"));
     int exitCode = symlinkStep.execute(executionContext).getExitCode();
     assertEquals(0, exitCode);
     assertTrue(java.nio.file.Files.isSymbolicLink(symlink));

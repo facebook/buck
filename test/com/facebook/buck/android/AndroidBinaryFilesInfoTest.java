@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -30,7 +30,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.util.types.Either;
+import com.facebook.buck.step.fs.XzStep;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -41,7 +41,6 @@ import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.stream.Stream;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
@@ -60,9 +59,7 @@ public class AndroidBinaryFilesInfoTest {
     APKModuleGraph apkModuleGraph =
         new APKModuleGraph(TargetGraph.EMPTY, apkTarget, Optional.empty());
     AndroidPackageableCollection collection =
-        new AndroidPackageableCollector(
-                apkTarget, ImmutableSet.of(), ImmutableSet.of(), apkModuleGraph)
-            .build();
+        new AndroidPackageableCollector(apkTarget, ImmutableSet.of(), apkModuleGraph).build();
 
     preDexMerge = new FakePreDexMerge(apkTarget, apkModuleGraph);
     preDexMerge.dexInfo =
@@ -73,7 +70,7 @@ public class AndroidBinaryFilesInfoTest {
             ImmutableMap.of());
     AndroidGraphEnhancementResult enhancementResult =
         AndroidGraphEnhancementResult.builder()
-            .setDexMergeRule(Either.ofLeft(preDexMerge))
+            .setDexMergeRule(preDexMerge)
             .setPackageableCollection(collection)
             .setPrimaryResourcesApkPath(FakeSourcePath.of("primary_resources.apk"))
             .setAndroidManifestPath(FakeSourcePath.of("AndroidManifest.xml"))
@@ -98,7 +95,7 @@ public class AndroidBinaryFilesInfoTest {
     Assert.assertEquals(metadataAndSourcePath.getSecond(), dexInfo.getDirectory());
   }
 
-  private class FakePreDexMerge extends PreDexMerge {
+  private class FakePreDexMerge extends PreDexSplitDexMerge {
     DexFilesInfo dexInfo;
     List<Pair<SourcePath, SourcePath>> moduleMetadataAndDexSources;
 
@@ -106,9 +103,10 @@ public class AndroidBinaryFilesInfoTest {
       super(
           buildTarget,
           new FakeProjectFilesystem(),
-          null,
           new BuildRuleParams(
               ImmutableSortedSet::of, ImmutableSortedSet::of, ImmutableSortedSet.of()),
+          null,
+          "dx",
           new DexSplitMode(
               /* shouldSplitDex */ true,
               DexSplitStrategy.MINIMIZE_PRIMARY_DEX_SIZE,
@@ -124,9 +122,8 @@ public class AndroidBinaryFilesInfoTest {
           apkModuleGraph,
           null,
           MoreExecutors.newDirectExecutorService(),
-          OptionalInt.empty(),
-          Optional.empty(),
-          "dx");
+          XzStep.DEFAULT_COMPRESSION_LEVEL,
+          Optional.empty());
     }
 
     @Override

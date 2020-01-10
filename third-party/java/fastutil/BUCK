@@ -6,6 +6,8 @@ prebuilt_jar(
     ],
     source_jar = "fastutil-7.2.0-sources.jar",
     visibility = [
+        "//src/com/facebook/buck/multitenant/...",
+        "//test/com/facebook/buck/multitenant/...",
         "//third-party/java/d8/...",
     ],
 )

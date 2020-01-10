@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.keys;
@@ -19,27 +19,33 @@ package com.facebook.buck.rules.keys;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
-import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.artifact.BuildArtifact;
+import com.facebook.buck.core.artifact.BuildTargetSourcePathToArtifactConverter;
+import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
+import com.facebook.buck.core.artifact.SourceArtifact;
+import com.facebook.buck.core.build.action.BuildEngineAction;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.RuleType;
-import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.SingleThreadedActionGraphBuilder;
-import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.core.rules.actions.Action;
+import com.facebook.buck.core.rules.actions.ActionExecutionResult;
+import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
+import com.facebook.buck.core.rules.actions.FakeAction;
+import com.facebook.buck.core.rules.resolver.impl.FakeActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.sourcepath.SourcePathFactoryForTests;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.FakeFileHashCache;
@@ -48,31 +54,67 @@ import com.facebook.buck.util.types.Either;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
+import com.google.devtools.build.lib.events.Location;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.OptionalInt;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.junit.Test;
 
 public class RuleKeyBuilderTest {
 
-  private static final BuildTarget TARGET_1 =
-      BuildTargetFactory.newInstance(Paths.get("/root"), "//example/base:one");
+  private static final BuildTarget TARGET_1 = BuildTargetFactory.newInstance("//example/base:one");
   private static final BuildTarget TARGET_2 =
-      BuildTargetFactory.newInstance(Paths.get("/root"), "//example/base:one#flavor");
+      BuildTargetFactory.newInstance("//example/base:one#flavor");
+  private static final BuildTarget TARGET_3 =
+      BuildTargetFactory.newInstance("//example/base:three");
+
   private static final BuildRule IGNORED_RULE = new EmptyFakeBuildRule(TARGET_1);
   private static final BuildRule RULE_1 = new EmptyFakeBuildRule(TARGET_1);
   private static final BuildRule RULE_2 = new EmptyFakeBuildRule(TARGET_2);
+  private static final BuildRule RULE_3 = new EmptyFakeBuildRule(TARGET_3);
   private static final RuleKey RULE_KEY_1 = new RuleKey("a002b39af204cdfaa5fdb67816b13867c32ac52c");
   private static final RuleKey RULE_KEY_2 = new RuleKey("b67816b13867c32ac52ca002b39af204cdfaa5fd");
+  private static final RuleKey RULE_KEY_3 = new RuleKey("c57816b13867c32ac52cb002b39af204cdfae5fe");
+
+  private static final Action ACTION_1;
+  private static final Action ACTION_2;
+
+  static {
+    FakeAction.FakeActionExecuteLambda executeLambda =
+        (ignored, ignored1, ignored2, ignored3) ->
+            ActionExecutionResult.success(Optional.empty(), Optional.empty(), ImmutableList.of());
+
+    ActionRegistryForTests actionRegistry = new ActionRegistryForTests(TARGET_1);
+    ACTION_1 =
+        new FakeAction(
+            actionRegistry,
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(actionRegistry.declareArtifact("foo", Location.BUILTIN)),
+            executeLambda);
+    ACTION_2 =
+        new FakeAction(
+            actionRegistry,
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(actionRegistry.declareArtifact("bar", Location.BUILTIN)),
+            executeLambda);
+  }
+
+  private static final RuleKey ACTION_RULE_KEY_1 =
+      new RuleKey("a002b39af204cdfaa5fdb67816b13867c32ac52d");
+  private static final RuleKey ACTION_RULE_KEY_2 =
+      new RuleKey("a002b39af204cdfaa5fdb67816b13867c32ac22d");
 
   private static final AddsToRuleKey IGNORED_APPENDABLE = new FakeRuleKeyAppendable("");
   private static final AddsToRuleKey APPENDABLE_1 = new FakeRuleKeyAppendable("");
@@ -80,9 +122,14 @@ public class RuleKeyBuilderTest {
 
   private static final Path PATH_1 = Paths.get("path1");
   private static final Path PATH_2 = Paths.get("path2");
+  private static final Path PATH_3 = Paths.get("path3");
   private static final ProjectFilesystem FILESYSTEM = new FakeProjectFilesystem();
   private static final SourcePath SOURCE_PATH_1 = PathSourcePath.of(FILESYSTEM, PATH_1);
   private static final SourcePath SOURCE_PATH_2 = PathSourcePath.of(FILESYSTEM, PATH_2);
+  private static final PathSourcePath SOURCE_PATH_3 = PathSourcePath.of(FILESYSTEM, PATH_3);
+  private static final SourceArtifact SOURCE_ARTIFACT =
+      ImmutableSourceArtifactImpl.of(SOURCE_PATH_3);
+
   private static final ArchiveMemberSourcePath ARCHIVE_PATH_1 =
       ArchiveMemberSourcePath.of(SOURCE_PATH_1, Paths.get("member"));
   private static final ArchiveMemberSourcePath ARCHIVE_PATH_2 =
@@ -91,6 +138,10 @@ public class RuleKeyBuilderTest {
       DefaultBuildTargetSourcePath.of(TARGET_1);
   private static final DefaultBuildTargetSourcePath TARGET_PATH_2 =
       DefaultBuildTargetSourcePath.of(TARGET_2);
+  private static final ExplicitBuildTargetSourcePath TARGET_PATH_3 =
+      ExplicitBuildTargetSourcePath.of(TARGET_2, Paths.get("example/three"));
+  private static final BuildArtifact BUILD_ARTIFACT =
+      BuildTargetSourcePathToArtifactConverter.convert(FILESYSTEM, TARGET_PATH_3);
 
   @Test
   public void testUniqueness() {
@@ -144,17 +195,20 @@ public class RuleKeyBuilderTest {
           ARCHIVE_PATH_2,
           TARGET_PATH_1,
           TARGET_PATH_2,
+          SOURCE_ARTIFACT,
+          BUILD_ARTIFACT,
 
           // Buck rules & appendables
           RULE_1,
           RULE_2,
+          ACTION_1,
+          ACTION_2,
           APPENDABLE_1,
           APPENDABLE_2,
 
           // Wrappers
           Suppliers.ofInstance(42),
           Optional.of(42),
-          OptionalInt.of(42),
           Either.ofLeft(42),
           Either.ofRight(42),
 
@@ -164,6 +218,8 @@ public class RuleKeyBuilderTest {
           ImmutableMap.of(42, 42),
           ImmutableList.of(ImmutableList.of(1, 2, 3, 4)),
           ImmutableList.of(ImmutableList.of(1, 2), ImmutableList.of(3, 4)),
+          (Supplier<Stream<Object>>) () -> Stream.of(ImmutableList.of(42), SOURCE_PATH_1),
+          (Supplier<Stream<Object>>) () -> Stream.of(ImmutableList.of(42), SOURCE_PATH_2),
         };
 
     List<RuleKey> ruleKeys = new ArrayList<>();
@@ -208,25 +264,44 @@ public class RuleKeyBuilderTest {
   }
 
   private RuleKeyBuilder<HashCode> newBuilder() {
-    Map<BuildTarget, BuildRule> ruleMap = ImmutableMap.of(TARGET_1, RULE_1, TARGET_2, RULE_2);
-    Map<BuildRule, RuleKey> ruleKeyMap = ImmutableMap.of(RULE_1, RULE_KEY_1, RULE_2, RULE_KEY_2);
+    Map<BuildTarget, BuildRule> ruleMap =
+        ImmutableMap.of(TARGET_1, RULE_1, TARGET_2, RULE_2, TARGET_3, RULE_3);
+    Map<BuildEngineAction, RuleKey> ruleKeyMap =
+        ImmutableMap.of(
+            RULE_1,
+            RULE_KEY_1,
+            RULE_2,
+            RULE_KEY_2,
+            RULE_3,
+            RULE_KEY_3,
+            ACTION_1,
+            ACTION_RULE_KEY_1,
+            ACTION_2,
+            ACTION_RULE_KEY_2);
     Map<AddsToRuleKey, RuleKey> appendableKeys =
         ImmutableMap.of(APPENDABLE_1, RULE_KEY_1, APPENDABLE_2, RULE_KEY_2);
     BuildRuleResolver ruleResolver = new FakeActionGraphBuilder(ruleMap);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolverAdapter pathResolver = ruleResolver.getSourcePathResolver();
     FakeFileHashCache hashCache =
         new FakeFileHashCache(
             ImmutableMap.of(
                 FILESYSTEM.resolve(PATH_1), HashCode.fromInt(0),
-                FILESYSTEM.resolve(PATH_2), HashCode.fromInt(42)),
+                FILESYSTEM.resolve(PATH_2), HashCode.fromInt(42),
+                FILESYSTEM.resolve(PATH_3), HashCode.fromInt(63)),
             ImmutableMap.of(
-                pathResolver.getAbsoluteArchiveMemberPath(ARCHIVE_PATH_1), HashCode.fromInt(0),
-                pathResolver.getAbsoluteArchiveMemberPath(ARCHIVE_PATH_2), HashCode.fromInt(42)),
+                SourcePathFactoryForTests.toAbsoluteArchiveMemberPath(pathResolver, ARCHIVE_PATH_1),
+                    HashCode.fromInt(0),
+                SourcePathFactoryForTests.toAbsoluteArchiveMemberPath(pathResolver, ARCHIVE_PATH_2),
+                    HashCode.fromInt(42)),
             ImmutableMap.of());
 
     return new RuleKeyBuilder<HashCode>(
-        ruleFinder, pathResolver, hashCache, RuleKeyBuilder.createDefaultHasher(Optional.empty())) {
+        ruleResolver, hashCache, RuleKeyBuilder.createDefaultHasher(Optional.empty())) {
+
+      @Override
+      protected AbstractRuleKeyBuilder<HashCode> setAction(Action action) {
+        return setActionRuleKey(ruleKeyMap.get(action));
+      }
 
       @Override
       protected RuleKeyBuilder<HashCode> setBuildRule(BuildRule rule) {
@@ -258,24 +333,6 @@ public class RuleKeyBuilderTest {
         return setNonHashingSourcePathDirectly(sourcePath);
       }
     };
-  }
-
-  // This ugliness is necessary as we don't have mocks in Buck unit tests.
-  private static class FakeActionGraphBuilder extends SingleThreadedActionGraphBuilder {
-    private final Map<BuildTarget, BuildRule> ruleMap;
-
-    public FakeActionGraphBuilder(Map<BuildTarget, BuildRule> ruleMap) {
-      super(
-          TargetGraph.EMPTY,
-          new DefaultTargetNodeToBuildRuleTransformer(),
-          new TestCellBuilder().build().getCellProvider());
-      this.ruleMap = ruleMap;
-    }
-
-    @Override
-    public BuildRule getRule(BuildTarget target) {
-      return Objects.requireNonNull(ruleMap.get(target), "No rule for target: " + target);
-    }
   }
 
   private static class FakeRuleKeyAppendable implements AddsToRuleKey {

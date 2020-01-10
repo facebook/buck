@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.coercer;
@@ -19,6 +19,7 @@ package com.facebook.buck.rules.coercer;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.description.arg.DataTransferObject;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -59,16 +60,14 @@ public class ImmutableTypeCoercerTest {
 
     assertEquals(
         Sets.newHashSet("//a:b", "//a:c", "//a:d"),
-        collectedTargets
-            .build()
-            .stream()
+        collectedTargets.build().stream()
             .map(BuildTarget::getFullyQualifiedName)
             .collect(Collectors.toSet()));
   }
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoAttributeWithCollections {
+  abstract static class AbstractDtoAttributeWithCollections implements DataTransferObject {
     abstract Set<BuildTarget> getDeps();
 
     abstract Set<BuildTarget> getNotDeps();
@@ -76,7 +75,7 @@ public class ImmutableTypeCoercerTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithImmutableAttribute {
+  abstract static class AbstractDtoWithImmutableAttribute implements DataTransferObject {
     abstract DtoAttributeWithCollections getDto();
 
     abstract Set<BuildTarget> getDeps();

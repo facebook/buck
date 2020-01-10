@@ -1,24 +1,24 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.CompilerErrorEvent;
 import com.facebook.buck.event.ConsoleEvent;
@@ -26,6 +26,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -44,14 +45,14 @@ public class JavacStep implements Step {
   private final BuildTarget invokingRule;
 
   private final boolean ownsPipelineObject;
-  private final SourcePathResolver resolver;
+  private final SourcePathResolverAdapter resolver;
   private final ProjectFilesystem filesystem;
 
   public JavacStep(
       Javac javac,
       JavacOptions javacOptions,
       BuildTarget invokingRule,
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       ProjectFilesystem filesystem,
       ClasspathChecker classpathChecker,
       CompilerParameters compilerParameters,
@@ -75,7 +76,7 @@ public class JavacStep implements Step {
   public JavacStep(
       JavacPipelineState pipeline,
       BuildTarget invokingRule,
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       ProjectFilesystem filesystem) {
     this(pipeline, invokingRule, false, resolver, filesystem);
   }
@@ -84,7 +85,7 @@ public class JavacStep implements Step {
       JavacPipelineState pipeline,
       BuildTarget invokingRule,
       boolean ownsPipelineObject,
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       ProjectFilesystem filesystem) {
     this.pipeline = pipeline;
     this.invokingRule = invokingRule;
@@ -116,13 +117,16 @@ public class JavacStep implements Step {
         pipeline.close();
       }
     }
-    if (declaredDepsBuildResult != 0) {
+    if (declaredDepsBuildResult != StepExecutionResults.SUCCESS_EXIT_CODE) {
       returnedStderr =
           processBuildFailure(context.getBuckEventBus(), firstOrderStdout, firstOrderStderr);
     } else {
       returnedStderr = Optional.empty();
     }
-    return StepExecutionResult.of(declaredDepsBuildResult, returnedStderr);
+    return StepExecutionResult.builder()
+        .setExitCode(declaredDepsBuildResult)
+        .setStderr(returnedStderr)
+        .build();
   }
 
   private Optional<String> processBuildFailure(

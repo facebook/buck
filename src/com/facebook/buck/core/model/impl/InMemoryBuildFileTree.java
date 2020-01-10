@@ -1,27 +1,25 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.model.impl;
 
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.io.file.MorePaths;
-import com.google.common.annotations.VisibleForTesting;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.nio.file.Path;
@@ -58,8 +56,8 @@ public class InMemoryBuildFileTree implements BuildFileTree {
    *
    * @param targets BuildTargetPaths to get base paths from.
    */
-  public InMemoryBuildFileTree(Iterable<BuildTarget> targets) {
-    this(collectBasePaths(targets));
+  public InMemoryBuildFileTree(Iterable<BuildTarget> targets, ProjectFilesystem filesystem) {
+    this(collectBasePaths(targets, filesystem));
   }
 
   /**
@@ -68,9 +66,10 @@ public class InMemoryBuildFileTree implements BuildFileTree {
    * @param targets targets to return base paths for
    * @return base paths for targets
    */
-  private static Collection<Path> collectBasePaths(Iterable<? extends BuildTarget> targets) {
+  private static Collection<Path> collectBasePaths(
+      Iterable<? extends BuildTarget> targets, ProjectFilesystem filesystem) {
     return StreamSupport.stream(targets.spliterator(), false)
-        .map(BuildTarget::getBasePath)
+        .map(t -> t.getCellRelativeBasePath().getPath().toPath(filesystem.getFileSystem()))
         .collect(ImmutableSet.toImmutableSet());
   }
 
@@ -110,28 +109,6 @@ public class InMemoryBuildFileTree implements BuildFileTree {
   }
 
   /**
-   * @return Iterable of relative paths to the BuildTarget's directory that contain their own build
-   *     files. No element in the Iterable is a prefix of any other element in the Iterable.
-   */
-  @Override
-  public Collection<Path> getChildPaths(BuildTarget buildTarget) {
-    return getChildPaths(buildTarget.getBasePath());
-  }
-
-  @VisibleForTesting
-  Collection<Path> getChildPaths(Path path) {
-    Node node = Objects.requireNonNull(basePathToNodeIndex.get(path));
-    if (node.children == null) {
-      return ImmutableList.of();
-    } else {
-      return node.children
-          .stream()
-          .map(child -> MorePaths.relativize(path, child.basePath))
-          .collect(ImmutableList.toImmutableList());
-    }
-  }
-
-  /**
    * Finds the parent Node of the specified child Node.
    *
    * @param child whose parent is sought in {@code basePathToNodeIndex}.
@@ -156,7 +133,7 @@ public class InMemoryBuildFileTree implements BuildFileTree {
   /** Represents a build file in the project directory. */
   private static class Node {
 
-    /** Result of {@link BuildTarget#getBasePath()}. */
+    /** Build target base path. */
     private final Path basePath;
 
     /** List of child nodes: created lazily to save memory. */

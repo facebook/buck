@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_test")
+load("//tools/build_rules:java_rules.bzl", "java_test")
 
 java_test(
     name = "impl",
@@ -7,6 +7,7 @@ java_test(
     deps = [
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
         "//src/com/facebook/buck/rules/keys:keys",
+        "//src/com/facebook/buck/rules/modern:modern",
         "//src/com/facebook/buck/shell:rules",
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/model/targetgraph:testutil",
@@ -17,6 +18,7 @@ java_test(
         "//test/com/facebook/buck/io/filesystem/impl:testutil",
         "//test/com/facebook/buck/shell:testutil",
         "//test/com/facebook/buck/testutil:testutil",
+        "//third-party/java/easymock:easymock",
         "//third-party/java/junit:junit",
     ],
 )

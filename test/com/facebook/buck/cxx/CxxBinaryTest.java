@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -21,14 +21,12 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -46,8 +44,6 @@ public class CxxBinaryTest {
   @Test
   public void getExecutableCommandUsesAbsolutePath() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     BuildTarget linkTarget = BuildTargetFactory.newInstance("//:link");
     Path bin = Paths.get("path/to/exectuable");
@@ -57,16 +53,19 @@ public class CxxBinaryTest {
             new CxxLink(
                 linkTarget,
                 projectFilesystem,
-                ruleFinder,
+                graphBuilder,
                 TestCellPathResolver.get(projectFilesystem),
-                CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(graphBuilder),
+                CxxPlatformUtils.DEFAULT_PLATFORM
+                    .getLd()
+                    .resolve(graphBuilder, UnconfiguredTargetConfiguration.INSTANCE),
                 bin,
                 ImmutableMap.of(),
                 ImmutableList.of(),
                 Optional.empty(),
                 Optional.empty(),
                 /* cacheable */ true,
-                /* thinLto */ false));
+                /* thinLto */ false,
+                /* fatLto */ false));
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     BuildRuleParams params = TestBuildRuleParams.create();
     CxxBinary binary =
@@ -84,7 +83,8 @@ public class CxxBinaryTest {
                 ImmutableList.of(),
                 target,
                 false));
-    ImmutableList<String> command = binary.getExecutableCommand().getCommandPrefix(pathResolver);
+    ImmutableList<String> command =
+        binary.getExecutableCommand().getCommandPrefix(graphBuilder.getSourcePathResolver());
     assertTrue(Paths.get(command.get(0)).isAbsolute());
   }
 }

@@ -1,0 +1,30 @@
+load("//with_dep:defs.bzl", "noop", "write_file")
+
+write_file(
+    name = "default",
+    content = "default_file_contents",
+    executable = False,
+    filename = "default_file",
+)
+
+write_file(
+    name = "hidden",
+    content = "hidden_file_contents",
+    executable = False,
+    filename = "hidden_file",
+)
+
+write_file(
+    name = "other",
+    content = "other_file_contents",
+    executable = False,
+    filename = "other_file",
+)
+
+noop(name = "with_default_dep")
+
+noop(
+    name = "with_explicit_dep",
+    dep =
+        "//with_dep:other",
+)

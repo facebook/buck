@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.unarchive;
@@ -28,11 +28,13 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -118,7 +120,7 @@ public class Untar extends Unarchiver {
       TarArchiveEntry entry;
       while ((entry = archiveStream.getNextTarEntry()) != null) {
         String entryName = entry.getName();
-        if (entriesToExclude.matchesAny(entryName)) {
+        if (entriesToExclude.matches(entryName)) {
           continue;
         }
         Path destFile = Paths.get(entryName);
@@ -185,7 +187,8 @@ public class Untar extends Unarchiver {
       ProjectFilesystem filesystem, Set<Path> dirsToTidy, ImmutableSet<Path> createdFiles)
       throws IOException {
     for (Path directory : dirsToTidy) {
-      for (Path foundFile : filesystem.getDirectoryContents(directory)) {
+      for (Path foundFile :
+          filesystem.asView().getFilesUnderPath(directory, EnumSet.noneOf(FileVisitOption.class))) {
         if (!createdFiles.contains(foundFile) && !dirsToTidy.contains(foundFile)) {
           filesystem.deleteRecursivelyIfExists(foundFile);
         }

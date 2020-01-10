@@ -1,25 +1,26 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.zip;
 
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.util.types.Pair;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteSource;
@@ -32,6 +33,7 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.zip.ZipEntry;
@@ -89,7 +91,7 @@ public class Zip {
 
           private String getEntryName(Path path) {
             Path relativePath = junkPaths ? path.getFileName() : baseDir.relativize(path);
-            return MorePaths.pathWithUnixSeparators(relativePath);
+            return PathFormatter.pathWithUnixSeparators(relativePath);
           }
 
           private CustomZipEntry getZipEntry(String entryName, Path path, BasicFileAttributes attr)
@@ -127,7 +129,7 @@ public class Zip {
           @Override
           public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
               throws IOException {
-            if (!isSkipFile(file)) {
+            if (!file.equals(baseDir) && !isSkipFile(file)) {
               CustomZipEntry entry = getZipEntry(getEntryName(file), file, attrs);
               entries.put(entry.getName(), new Pair<>(entry, Optional.of(file)));
             }
@@ -162,6 +164,16 @@ public class Zip {
         }
       }
       zipOut.closeEntry();
+    }
+  }
+
+  /** @return a list of all entry names in a zip archive. */
+  public static ImmutableList<String> getAllZipEntries(Path archiveAbsolutePath)
+      throws IOException {
+    try (java.util.zip.ZipFile zip = new java.util.zip.ZipFile(archiveAbsolutePath.toFile())) {
+      return Collections.list(zip.entries()).stream()
+          .map(ZipEntry::getName)
+          .collect(ImmutableList.toImmutableList());
     }
   }
 }

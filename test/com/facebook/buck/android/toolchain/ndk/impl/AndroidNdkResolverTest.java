@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android.toolchain.ndk.impl;
@@ -37,6 +37,7 @@ import org.junit.rules.ExpectedException;
 public class AndroidNdkResolverTest {
 
   @Rule public TemporaryPaths tmpDir = new TemporaryPaths();
+  @Rule public TemporaryPaths tmpDir2 = new TemporaryPaths();
 
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
@@ -439,12 +440,12 @@ public class AndroidNdkResolverTest {
     Path expectedPath =
         createTmpNdkVersions(
             NDK_POST_R11_VERSION_FILENAME,
-            "ndk-dir-r11",
-            "Pkg.Desc = Android NDK\nPkg.Revision = 11.2",
-            "ndk-dir-r17c",
-            "Pkg.Desc = Android NDK\nPkg.Revision = 17.2.4988734",
-            "ndk-dir-r18",
-            "Pkg.Desc = Android NDK\nPkg.Revision = 18.1.4828580")[1];
+            "ndk-dir-r19b",
+            "Pkg.Desc = Android NDK\nPkg.Revision = 19.1.5304403",
+            "ndk-dir-r20",
+            "Pkg.Desc = Android NDK\nPkg.Revision = 20.0.5594570",
+            "ndk-dir-r21-xxx",
+            "Pkg.Desc = Android NDK\nPkg.Revision = 21.0.5000000")[1];
     AndroidNdkResolver resolver =
         new AndroidNdkResolver(
             tmpDir.getRoot().getFileSystem(),
@@ -474,7 +475,139 @@ public class AndroidNdkResolverTest {
     assertEquals(expectedPath, resolver.getNdkOrThrow());
   }
 
-  private Path[] createTmpNdkVersions(String filename, String... directoryNamesAndVersionStrings)
+  @Test
+  public void repoConfigEntryInNdkSearchOrderIsUsed() throws IOException {
+    Path configDir =
+        createTmpNdkVersions(
+            tmpDir,
+            NDK_POST_R11_VERSION_FILENAME,
+            "ndk-dir-r17c1",
+            "Pkg.Desc = Android NDK\nPkg.Revision = 17.2.4988734.1")[0];
+    createTmpNdkVersions(
+        tmpDir2,
+        NDK_POST_R11_VERSION_FILENAME,
+        "ndk-dir-r17c1",
+        "Pkg.Desc = Android NDK\nPkg.Revision = 17.2.4988734.1");
+    AndroidNdkResolver resolver =
+        new AndroidNdkResolver(
+            tmpDir.getRoot().getFileSystem(),
+            ImmutableMap.of("ANDROID_NDK_REPOSITORY", tmpDir2.getRoot().toString()),
+            FakeAndroidBuckConfig.builder()
+                .setNdkRepositoryPath(tmpDir.getRoot().toString())
+                .setNdkSearchOrder("<NDK_REPOSITORY_CONFIG>, ANDROID_NDK_REPOSITORY")
+                .build());
+    assertEquals(configDir, resolver.getNdkOrThrow());
+  }
+
+  @Test
+  public void rootConfigEntryInNdkSearchOrderIsUsed() throws IOException {
+    Path configDir =
+        createTmpNdkVersions(
+            tmpDir,
+            NDK_POST_R11_VERSION_FILENAME,
+            "ndk-dir-r17c1",
+            "Pkg.Desc = Android NDK\nPkg.Revision = 17.2.4988734.1")[0];
+    Path envDir =
+        createTmpNdkVersions(
+            tmpDir2,
+            NDK_POST_R11_VERSION_FILENAME,
+            "ndk-dir-r17c1",
+            "Pkg.Desc = Android NDK\nPkg.Revision = 17.2.4988734.1")[0];
+    AndroidNdkResolver resolver =
+        new AndroidNdkResolver(
+            tmpDir.getRoot().getFileSystem(),
+            ImmutableMap.of("NDK_HOME", envDir.toString()),
+            FakeAndroidBuckConfig.builder()
+                .setNdkPath(configDir.toString())
+                .setNdkSearchOrder("<NDK_DIRECTORY_CONFIG>, NDK_HOME")
+                .build());
+    assertEquals(configDir, resolver.getNdkOrThrow());
+  }
+
+  @Test
+  public void envRepoVariableInNdkSearchOrderIsUsed() throws IOException {
+    Path envDir =
+        createTmpNdkVersions(
+            NDK_POST_R11_VERSION_FILENAME,
+            "ndk-dir-r17c1",
+            "Pkg.Desc = Android NDK\nPkg.Revision = 17.2.4988734.1")[0];
+    AndroidNdkResolver resolver =
+        new AndroidNdkResolver(
+            tmpDir.getRoot().getFileSystem(),
+            ImmutableMap.of("ANDROID_NDK_REPOSITORY", tmpDir.getRoot().toString()),
+            FakeAndroidBuckConfig.builder()
+                .setNdkSearchOrder("<NDK_REPOSITORY_CONFIG>, ANDROID_NDK_REPOSITORY")
+                .build());
+    assertEquals(envDir, resolver.getNdkOrThrow());
+  }
+
+  @Test
+  public void envRootVariableInNdkSearchOrderIsUsed() throws IOException {
+    Path envDir =
+        createTmpNdkVersions(
+            NDK_POST_R11_VERSION_FILENAME,
+            "ndk-dir-r17c1",
+            "Pkg.Desc = Android NDK\nPkg.Revision = 17.2.4988734.1")[0];
+    AndroidNdkResolver resolver =
+        new AndroidNdkResolver(
+            tmpDir.getRoot().getFileSystem(),
+            ImmutableMap.of("ANDROID_NDK", envDir.toString()),
+            FakeAndroidBuckConfig.builder()
+                .setNdkSearchOrder("<NDK_REPOSITORY_CONFIG>, ANDROID_NDK")
+                .build());
+    assertEquals(envDir, resolver.getNdkOrThrow());
+  }
+
+  @Test
+  public void firstConfigSettingInNdkSearchOrderIsUsed() throws IOException {
+    Path config1Dir =
+        createTmpNdkVersions(
+            tmpDir,
+            NDK_POST_R11_VERSION_FILENAME,
+            "ndk-dir-r17c1",
+            "Pkg.Desc = Android NDK\nPkg.Revision = 17.2.4988734.1")[0];
+    Path config2Dir =
+        createTmpNdkVersions(
+            tmpDir2,
+            NDK_POST_R11_VERSION_FILENAME,
+            "ndk-dir-r17c1",
+            "Pkg.Desc = Android NDK\nPkg.Revision = 17.2.4988734.1")[0];
+    AndroidNdkResolver resolver =
+        new AndroidNdkResolver(
+            tmpDir.getRoot().getFileSystem(),
+            ImmutableMap.of(),
+            FakeAndroidBuckConfig.builder()
+                .setNdkPath(config1Dir.toString())
+                .setNdkRepositoryPath(config2Dir.toString())
+                .setNdkSearchOrder("<NDK_DIRECTORY_CONFIG>, <NDK_REPOSITORY_CONFIG>")
+                .build());
+    assertEquals(config1Dir, resolver.getNdkOrThrow());
+  }
+
+  @Test
+  public void firstEnvVariableInNdkSearchOrderIsUsed() throws IOException {
+    Path env1Dir =
+        createTmpNdkVersions(
+            tmpDir,
+            NDK_POST_R11_VERSION_FILENAME,
+            "ndk-dir-r17c1",
+            "Pkg.Desc = Android NDK\nPkg.Revision = 17.2.4988734.1")[0];
+    Path env2Dir =
+        createTmpNdkVersions(
+            tmpDir2,
+            NDK_POST_R11_VERSION_FILENAME,
+            "ndk-dir-r17c1",
+            "Pkg.Desc = Android NDK\nPkg.Revision = 17.2.4988734.1")[0];
+    AndroidNdkResolver resolver =
+        new AndroidNdkResolver(
+            tmpDir.getRoot().getFileSystem(),
+            ImmutableMap.of("ANDROID_NDK", env1Dir.toString(), "NDK_HOME", env2Dir.toString()),
+            FakeAndroidBuckConfig.builder().setNdkSearchOrder("NDK_HOME, ANDROID_NDK").build());
+    assertEquals(env2Dir, resolver.getNdkOrThrow());
+  }
+
+  private Path[] createTmpNdkVersions(
+      TemporaryPaths tmpDir, String filename, String... directoryNamesAndVersionStrings)
       throws IOException {
     Path[] ret = new Path[directoryNamesAndVersionStrings.length / 2];
     for (int i = 0; i < directoryNamesAndVersionStrings.length / 2; i++) {
@@ -485,5 +618,10 @@ public class AndroidNdkResolverTest {
       MostFiles.writeLinesToFile(ImmutableList.of(version), releaseFile);
     }
     return ret;
+  }
+
+  private Path[] createTmpNdkVersions(String filename, String... directoryNamesAndVersionStrings)
+      throws IOException {
+    return createTmpNdkVersions(tmpDir, filename, directoryNamesAndVersionStrings);
   }
 }

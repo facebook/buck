@@ -1,6 +1,14 @@
 java_library(
     name = "calculator",
     srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/collect:collect",
+        "//third-party/java/guava:guava",
+    ],
     exported_deps = [
         "//src/com/facebook/buck/core/build/engine:engine",
         "//src/com/facebook/buck/core/model:model",
@@ -8,14 +16,5 @@ java_library(
         "//src/com/facebook/buck/core/rules/impl:impl",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/rules/keys:keys",
-    ],
-    visibility = [
-        "PUBLIC",
-    ],
-    deps = [
-        "//src/com/facebook/buck/util:exceptions",
-        "//src/com/facebook/buck/util:util",
-        "//src/com/facebook/buck/util/collect:collect",
-        "//third-party/java/guava:guava",
     ],
 )

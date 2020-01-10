@@ -1,9 +1,8 @@
-java_library(
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
     name = "impl",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//src/com/facebook/buck/core/rules/providers:providers",
-    ],
     tests = [
         "//test/com/facebook/buck/core/rules/providers/impl:impl",
     ],
@@ -11,7 +10,13 @@ java_library(
         "PUBLIC",
     ],
     deps = [
+        "//src/com/facebook/buck/util:util",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/rules/providers:providers",
+        "//src/com/facebook/buck/core/rules/providers/annotations:annotations",
+        "//src/com/facebook/buck/core/starlark/compatible:compatible",
     ],
 )

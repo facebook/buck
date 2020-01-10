@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.event.listener.stats.cache;
@@ -21,7 +21,6 @@ import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.core.build.engine.BuildRuleStatus;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
-import com.facebook.buck.distributed.thrift.CacheRateStats;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.external.events.CacheRateStatsUpdateExternalEventInterface;
@@ -47,8 +46,6 @@ public class CacheRateStatsKeeper {
   private final AtomicInteger cacheHits = new AtomicInteger(0);
   private final AtomicInteger cacheIgnores = new AtomicInteger(0);
   private final AtomicInteger cacheLocalKeyUnchangedHits = new AtomicInteger(0);
-  private final AtomicInteger unexpectedCacheMissesInStampedeBuildSlave = new AtomicInteger(0);
-
   private final AtomicInteger ruleCount = new AtomicInteger(0);
 
   public void buildRuleFinished(BuildRuleEvent.Finished finished) {
@@ -61,6 +58,7 @@ public class CacheRateStatsKeeper {
         cacheMisses.incrementAndGet();
         break;
       case ERROR:
+      case SOFT_ERROR:
         cacheErrors.incrementAndGet();
         break;
       case HIT:
@@ -83,42 +81,12 @@ public class CacheRateStatsKeeper {
     }
   }
 
-  public void recordUnexpectedCacheMisses(int unexpectedMisses) {
-    unexpectedCacheMissesInStampedeBuildSlave.addAndGet(unexpectedMisses);
-  }
-
   public void ruleCountCalculated(BuildEvent.RuleCountCalculated calculated) {
     ruleCount.set(calculated.getNumRules());
   }
 
   public void ruleCountUpdated(BuildEvent.UnskippedRuleCountUpdated updated) {
     ruleCount.set(updated.getNumRules());
-  }
-
-  public CacheRateStats getSerializableStats() {
-    CacheRateStats serializableStats = new CacheRateStats();
-    serializableStats.setTotalRulesCount(ruleCount.get());
-    serializableStats.setUpdatedRulesCount(updated.get());
-    serializableStats.setCacheHitsCount(cacheHits.get());
-    serializableStats.setCacheMissesCount(cacheMisses.get());
-    serializableStats.setCacheErrorsCount(cacheErrors.get());
-    serializableStats.setCacheLocalKeyUnchangedHitsCount(cacheLocalKeyUnchangedHits.get());
-    serializableStats.setCacheIgnoresCount(cacheIgnores.get());
-    serializableStats.setCacheIgnoresCount(cacheIgnores.get());
-    serializableStats.setUnexpectedCacheMissesCount(
-        unexpectedCacheMissesInStampedeBuildSlave.get());
-
-    return serializableStats;
-  }
-
-  public static CacheRateStatsUpdateEvent getCacheRateStatsUpdateEventFromSerializedStats(
-      CacheRateStats serializedStats) {
-    return new CacheRateStatsUpdateEvent(
-        serializedStats.getCacheMissesCount(),
-        serializedStats.getCacheErrorsCount(),
-        serializedStats.getCacheHitsCount(),
-        serializedStats.getTotalRulesCount(),
-        serializedStats.getUpdatedRulesCount());
   }
 
   public static CacheRateStatsUpdateEvent getAggregatedCacheRateStats(

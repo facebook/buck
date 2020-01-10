@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -57,29 +57,28 @@ public class SplitZipStepTest {
   @Test
   public void testMetaList() throws IOException {
     Path outJar = tempDir.newFile("test.jar").toPath();
-    ZipOutputStream zipOut =
-        new ZipOutputStream(new BufferedOutputStream(Files.newOutputStream(outJar)));
-    Map<String, String> fileToClassName =
-        ImmutableMap.of(
-            "com/facebook/foo.class", "com.facebook.foo",
-            "bar.class", "bar");
-    try {
+    Map<String, String> fileToClassName;
+    try (ZipOutputStream zipOut =
+        new ZipOutputStream(new BufferedOutputStream(Files.newOutputStream(outJar)))) {
+      fileToClassName =
+          ImmutableMap.of(
+              "com/facebook/foo.class", "com.facebook.foo",
+              "bar.class", "bar");
       for (String entry : fileToClassName.keySet()) {
         zipOut.putNextEntry(new ZipEntry(entry));
         zipOut.write(new byte[] {0});
       }
-    } finally {
-      zipOut.close();
     }
 
     StringWriter stringWriter = new StringWriter();
-    BufferedWriter writer = new BufferedWriter(stringWriter);
-    ImmutableSet<APKModule> requires = ImmutableSet.of();
-    try {
+    try (BufferedWriter writer = new BufferedWriter(stringWriter)) {
+      ImmutableSet<APKModule> requires = ImmutableSet.of();
       SplitZipStep.writeMetaList(
-          writer, SplitZipStep.SECONDARY_DEX_ID, requires, ImmutableList.of(outJar), DexStore.JAR);
-    } finally {
-      writer.close();
+          writer,
+          APKModule.of(SplitZipStep.SECONDARY_DEX_ID, false),
+          requires,
+          ImmutableList.of(outJar),
+          DexStore.JAR);
     }
     List<String> lines = CharStreams.readLines(new StringReader(stringWriter.toString()));
     assertEquals(1, lines.size());
@@ -98,29 +97,24 @@ public class SplitZipStepTest {
   @Test
   public void testMetaListApkModuule() throws IOException {
     Path outJar = tempDir.newFile("test.jar").toPath();
-    ZipOutputStream zipOut =
-        new ZipOutputStream(new BufferedOutputStream(Files.newOutputStream(outJar)));
-    Map<String, String> fileToClassName =
-        ImmutableMap.of(
-            "com/facebook/foo.class", "com.facebook.foo",
-            "bar.class", "bar");
-    try {
+    Map<String, String> fileToClassName;
+    try (ZipOutputStream zipOut =
+        new ZipOutputStream(new BufferedOutputStream(Files.newOutputStream(outJar)))) {
+      fileToClassName =
+          ImmutableMap.of(
+              "com/facebook/foo.class", "com.facebook.foo",
+              "bar.class", "bar");
       for (String entry : fileToClassName.keySet()) {
         zipOut.putNextEntry(new ZipEntry(entry));
         zipOut.write(new byte[] {0});
       }
-    } finally {
-      zipOut.close();
     }
 
     StringWriter stringWriter = new StringWriter();
-    BufferedWriter writer = new BufferedWriter(stringWriter);
-    ImmutableSet<APKModule> requires = ImmutableSet.of(APKModule.of("dependency", false));
-    try {
+    try (BufferedWriter writer = new BufferedWriter(stringWriter)) {
+      ImmutableSet<APKModule> requires = ImmutableSet.of(APKModule.of("dependency", false));
       SplitZipStep.writeMetaList(
-          writer, "module", requires, ImmutableList.of(outJar), DexStore.JAR);
-    } finally {
-      writer.close();
+          writer, APKModule.of("module", false), requires, ImmutableList.of(outJar), DexStore.JAR);
     }
     List<String> lines = CharStreams.readLines(new StringReader(stringWriter.toString()));
     assertEquals(3, lines.size());

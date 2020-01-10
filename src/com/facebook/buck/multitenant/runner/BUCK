@@ -1,0 +1,50 @@
+java_binary(
+    name = "runner",
+    main_class = "com.facebook.buck.multitenant.runner.MainKt",
+    deps = [
+        ":runner_main",
+    ],
+)
+
+MAIN = [
+    "Main.kt",
+    "Output.kt",
+]
+
+kotlin_library(
+    name = "runner_main",
+    srcs = MAIN,
+    visibility = [
+        "//src/com/facebook/buck/multitenant/...",
+        "//test/com/facebook/buck/multitenant/...",
+    ],
+    deps = [
+        ":runner_lib",
+        "//src/com/facebook/buck/multitenant/fs:fs",
+        "//src/com/facebook/buck/multitenant/service:service",
+        "//third-party/java/kotlinx-coroutines:kotlinx-coroutines",
+    ],
+)
+
+kotlin_library(
+    name = "runner_lib",
+    srcs = glob(
+        ["*.kt"],
+        exclude = MAIN,
+    ),
+    visibility = [
+        "//src/com/facebook/buck/multitenant/...",
+        "//test/com/facebook/buck/multitenant/...",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/multitenant/fs:fs",
+        "//src/com/facebook/buck/multitenant/query:query",
+        "//src/com/facebook/buck/multitenant/service:service",
+        "//src/com/facebook/buck/query:query",
+        "//third-party/java/guava:guava",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/cell/nameresolver:nameresolver",
+    ],
+)

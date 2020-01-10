@@ -1,9 +1,6 @@
 java_library(
     name = "json",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//third-party/java/jackson:jackson-databind",
-    ],
     tests = [
         "//test/com/facebook/buck/util/json:json",
     ],
@@ -12,10 +9,20 @@ java_library(
     ],
     deps = [
         "//src/com/facebook/buck/core/exceptions:exceptions",
-        "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/model/targetgraph/raw:raw",
+        "//src/com/facebook/buck/core/parser/buildtargetpattern:buildtargetpattern",
         "//third-party/java/guava:guava",
-        "//third-party/java/jackson:jackson-annotations",
         "//third-party/java/jackson:jackson-datatype-guava",
         "//third-party/java/jackson:jackson-datatype-jdk8",
+        "//third-party/java/jackson:jackson-module-kotlin",
+    ],
+    exported_deps = [
+        "//third-party/java/jackson:jackson-annotations",
+        "//third-party/java/jackson:jackson-databind",
+        "//third-party/java/kotlin:kotlin-reflect",
+        "//third-party/java/kotlin:kotlin-stdlib",
+        "//third-party/java/protobuf:protobuf",
+        "//third-party/java/protobuf:protobuf-util",
     ],
 )

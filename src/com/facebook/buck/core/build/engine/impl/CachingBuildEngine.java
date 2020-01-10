@@ -1,25 +1,25 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.build.engine.impl;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.CacheResult;
+import com.facebook.buck.core.build.action.resolver.BuildEngineActionToBuildRuleResolver;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
-import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.core.build.engine.BuildEngine;
 import com.facebook.buck.core.build.engine.BuildEngineBuildContext;
 import com.facebook.buck.core.build.engine.BuildEngineResult;
@@ -35,39 +35,37 @@ import com.facebook.buck.core.build.engine.config.ResourceAwareSchedulingInfo;
 import com.facebook.buck.core.build.engine.delegate.CachingBuildEngineDelegate;
 import com.facebook.buck.core.build.engine.type.BuildType;
 import com.facebook.buck.core.build.engine.type.DepFiles;
-import com.facebook.buck.core.build.engine.type.MetadataStorage;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.build.stats.BuildRuleDurationTracker;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.rules.keys.RuleKeyDiagnostics;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.hasher.StringRuleKeyHasher;
-import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.collect.SortedSets;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.SettableFuture;
 import java.io.Closeable;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -82,7 +80,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /**
@@ -100,7 +97,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
   static final String BUILD_RULE_TYPE_CONTEXT_KEY = "build_rule_type";
   static final String STEP_TYPE_CONTEXT_KEY = "step_type";
-  private final ConcurrentLinkedQueue<ListenableFuture<Void>> asyncCallbacks;
+  private final ConcurrentLinkedQueue<ListenableFuture<Unit>> asyncCallbacks;
 
   enum StepType {
     BUILD_STEP,
@@ -123,21 +120,18 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   private final CachingBuildEngineDelegate cachingBuildEngineDelegate;
 
   private final WeightedListeningExecutorService service;
-  private final StepRunner stepRunner;
   private final BuildType buildMode;
-  private final MetadataStorage metadataStorage;
   private final DepFiles depFiles;
   private final long maxDepFileCacheEntries;
   private final BuildRuleResolver resolver;
-  private final SourcePathRuleFinder ruleFinder;
-  private final SourcePathResolver pathResolver;
+  private final TargetConfigurationSerializer targetConfigurationSerializer;
   private final Optional<Long> artifactCacheSizeLimit;
   private final FileHashCache fileHashCache;
   @VisibleForTesting final RuleKeyFactories ruleKeyFactories;
   private final ResourceAwareSchedulingInfo resourceAwareSchedulingInfo;
 
   private final RuleDepsCache ruleDeps;
-  private final Optional<UnskippedRulesTracker> unskippedRulesTracker;
+  private final Optional<UnskippedBuildEngineActionTracker> unskippedRulesTracker;
   private final BuildRuleDurationTracker buildRuleDurationTracker = new BuildRuleDurationTracker();
   private final RuleKeyDiagnostics<RuleKey, String> defaultRuleKeyDiagnostics;
   private final BuildRulePipelinesRunner pipelinesRunner = new BuildRulePipelinesRunner();
@@ -147,8 +141,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
   private final boolean consoleLogBuildFailuresInline;
 
-  private final RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter;
-
   private final Optional<BuildRuleStrategy> customBuildRuleStrategy;
 
   private final Optional<ManifestService> manifestService;
@@ -157,37 +149,31 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       CachingBuildEngineDelegate cachingBuildEngineDelegate,
       Optional<BuildRuleStrategy> customBuildRuleStrategy,
       WeightedListeningExecutorService service,
-      StepRunner stepRunner,
       BuildType buildMode,
-      MetadataStorage metadataStorage,
       DepFiles depFiles,
       long maxDepFileCacheEntries,
       Optional<Long> artifactCacheSizeLimit,
       BuildRuleResolver resolver,
-      SourcePathRuleFinder ruleFinder,
-      SourcePathResolver pathResolver,
+      BuildEngineActionToBuildRuleResolver actionToBuildRuleResolver,
+      TargetConfigurationSerializer targetConfigurationSerializer,
       BuildInfoStoreManager buildInfoStoreManager,
       ResourceAwareSchedulingInfo resourceAwareSchedulingInfo,
       boolean consoleLogBuildFailuresInline,
       RuleKeyFactories ruleKeyFactories,
-      RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
       Optional<ManifestService> manifestService) {
     this(
         cachingBuildEngineDelegate,
         customBuildRuleStrategy,
         service,
-        stepRunner,
         buildMode,
-        metadataStorage,
         depFiles,
         maxDepFileCacheEntries,
         artifactCacheSizeLimit,
         resolver,
         buildInfoStoreManager,
-        ruleFinder,
-        pathResolver,
+        actionToBuildRuleResolver,
+        targetConfigurationSerializer,
         ruleKeyFactories,
-        remoteBuildRuleCompletionWaiter,
         resourceAwareSchedulingInfo,
         new RuleKeyDiagnostics<>(
             rule ->
@@ -208,18 +194,15 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       CachingBuildEngineDelegate cachingBuildEngineDelegate,
       Optional<BuildRuleStrategy> customBuildRuleStrategy,
       WeightedListeningExecutorService service,
-      StepRunner stepRunner,
       BuildType buildMode,
-      MetadataStorage metadataStorage,
       DepFiles depFiles,
       long maxDepFileCacheEntries,
       Optional<Long> artifactCacheSizeLimit,
       BuildRuleResolver resolver,
       BuildInfoStoreManager buildInfoStoreManager,
-      SourcePathRuleFinder ruleFinder,
-      SourcePathResolver pathResolver,
+      BuildEngineActionToBuildRuleResolver actionToBuildRuleResolver,
+      TargetConfigurationSerializer targetConfigurationSerializer,
       RuleKeyFactories ruleKeyFactories,
-      RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
       ResourceAwareSchedulingInfo resourceAwareSchedulingInfo,
       RuleKeyDiagnostics<RuleKey, String> defaultRuleKeyDiagnostics,
       boolean consoleLogBuildFailuresInline,
@@ -229,23 +212,19 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
     this.manifestService = manifestService;
     this.service = service;
-    this.stepRunner = stepRunner;
     this.buildMode = buildMode;
-    this.metadataStorage = metadataStorage;
     this.depFiles = depFiles;
     this.maxDepFileCacheEntries = maxDepFileCacheEntries;
     this.artifactCacheSizeLimit = artifactCacheSizeLimit;
     this.resolver = resolver;
-    this.ruleFinder = ruleFinder;
-    this.pathResolver = pathResolver;
+    this.targetConfigurationSerializer = targetConfigurationSerializer;
 
     this.fileHashCache = cachingBuildEngineDelegate.getFileHashCache();
     this.ruleKeyFactories = ruleKeyFactories;
     this.resourceAwareSchedulingInfo = resourceAwareSchedulingInfo;
     this.buildInfoStoreManager = buildInfoStoreManager;
-    this.remoteBuildRuleCompletionWaiter = remoteBuildRuleCompletionWaiter;
 
-    this.ruleDeps = new DefaultRuleDepsCache(resolver);
+    this.ruleDeps = new DefaultRuleDepsCache(resolver, actionToBuildRuleResolver);
     this.unskippedRulesTracker = createUnskippedRulesTracker(buildMode, ruleDeps, resolver);
     this.defaultRuleKeyDiagnostics = defaultRuleKeyDiagnostics;
     this.consoleLogBuildFailuresInline = consoleLogBuildFailuresInline;
@@ -293,13 +272,13 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     return resourceAwareSchedulingInfo.adjustServiceDefaultWeightsTo(defaultAmounts, service);
   }
 
-  private static Optional<UnskippedRulesTracker> createUnskippedRulesTracker(
+  private static Optional<UnskippedBuildEngineActionTracker> createUnskippedRulesTracker(
       BuildType buildMode, RuleDepsCache ruleDeps, BuildRuleResolver resolver) {
     if (buildMode == BuildType.DEEP || buildMode == BuildType.POPULATE_FROM_REMOTE_CACHE) {
       // Those modes never skip rules, there is no need to track unskipped rules.
       return Optional.empty();
     }
-    return Optional.of(new UnskippedRulesTracker(ruleDeps, resolver));
+    return Optional.of(new UnskippedBuildEngineActionTracker(ruleDeps, resolver));
   }
 
   @VisibleForTesting
@@ -362,11 +341,19 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
   // Provide a future that resolves to the result of executing this rule and its runtime
   // dependencies.
-  private ListenableFuture<BuildResult> getBuildRuleResultWithRuntimeDepsUnlocked(
+  private ListenableFuture<BuildResult> getBuildRuleResultWithRuntimeDeps(
       BuildRule rule, BuildEngineBuildContext buildContext, ExecutionContext executionContext) {
 
     // If the rule is already executing, return its result future from the cache.
     ListenableFuture<BuildResult> existingResult = results.get(rule.getBuildTarget());
+    if (existingResult != null) {
+      return existingResult;
+    }
+
+    // Create a `SettableFuture` and atomically put it in the results map.  At this point, if it's
+    // not already created, we should proceed.
+    SettableFuture<BuildResult> future = SettableFuture.create();
+    existingResult = results.putIfAbsent(rule.getBuildTarget(), future);
     if (existingResult != null) {
       return existingResult;
     }
@@ -380,18 +367,22 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             input -> processBuildRule(rule, buildContext, executionContext),
             serviceByAdjustingDefaultWeightsTo(SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS));
     if (!(rule instanceof HasRuntimeDeps)) {
-      results.put(rule.getBuildTarget(), result);
-      return result;
+      future.setFuture(result);
+      return future;
     }
 
     // Collect any runtime deps we have into a list of futures.
-    Stream<BuildTarget> runtimeDepPaths = ((HasRuntimeDeps) rule).getRuntimeDeps(ruleFinder);
-    List<ListenableFuture<BuildResult>> runtimeDepResults = new ArrayList<>();
-    ImmutableSet<BuildRule> runtimeDeps =
-        resolver.getAllRules(runtimeDepPaths.collect(ImmutableSet.toImmutableSet()));
-    for (BuildRule dep : runtimeDeps) {
-      runtimeDepResults.add(
-          getBuildRuleResultWithRuntimeDepsUnlocked(dep, buildContext, executionContext));
+    List<ListenableFuture<BuildResult>> runtimeDepResults =
+        ((HasRuntimeDeps) rule)
+            .getRuntimeDeps(resolver)
+            .map(resolver::getRule)
+            .map(dep -> getBuildRuleResultWithRuntimeDeps(dep, buildContext, executionContext))
+            .collect(ImmutableList.toImmutableList());
+
+    // If we don't have any runtime deps we can short circuit here
+    if (runtimeDepResults.isEmpty()) {
+      future.setFuture(result);
+      return future;
     }
 
     // Create a new combined future, which runs the original rule and all the runtime deps in
@@ -401,35 +392,17 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         Futures.transformAsync(
             Futures.allAsList(runtimeDepResults),
             results -> {
-              if (!isKeepGoingEnabled(buildContext)) {
-                for (BuildResult buildResult : results) {
-                  if (!buildResult.isSuccess()) {
-                    return Futures.immediateFuture(
-                        BuildResult.canceled(rule, buildResult.getFailure()));
-                  }
+              for (BuildResult buildResult : results) {
+                if (!buildResult.isSuccess()) {
+                  return Futures.immediateFuture(
+                      BuildResult.canceled(rule, buildResult.getFailure()));
                 }
               }
               return result;
             },
             MoreExecutors.directExecutor());
-    results.put(rule.getBuildTarget(), chainedResult);
-    return chainedResult;
-  }
-
-  private ListenableFuture<BuildResult> getBuildRuleResultWithRuntimeDeps(
-      BuildRule rule, BuildEngineBuildContext buildContext, ExecutionContext executionContext) {
-
-    // If the rule is already executing, return it's result future from the cache without acquiring
-    // the lock.
-    ListenableFuture<BuildResult> existingResult = results.get(rule.getBuildTarget());
-    if (existingResult != null) {
-      return existingResult;
-    }
-
-    // Otherwise, grab the lock and delegate to the real method,
-    synchronized (results) {
-      return getBuildRuleResultWithRuntimeDepsUnlocked(rule, buildContext, executionContext);
-    }
+    future.setFuture(chainedResult);
+    return future;
   }
 
   public ListenableFuture<?> walkRule(BuildRule rule, Set<BuildRule> seen) {
@@ -494,8 +467,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   private ListenableFuture<BuildResult> processBuildRule(
       BuildRule rule, BuildEngineBuildContext buildContext, ExecutionContext executionContext) {
 
-    BuildInfoStore buildInfoStore =
-        buildInfoStoreManager.get(rule.getProjectFilesystem(), metadataStorage);
+    BuildInfoStore buildInfoStore = buildInfoStoreManager.get(rule.getProjectFilesystem());
     OnDiskBuildInfo onDiskBuildInfo =
         buildContext.createOnDiskBuildInfoFor(
             rule.getBuildTarget(), rule.getProjectFilesystem(), buildInfoStore);
@@ -520,12 +492,11 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             depFiles,
             fileHashCache,
             maxDepFileCacheEntries,
-            metadataStorage,
-            pathResolver,
+            resolver.getSourcePathResolver(),
+            targetConfigurationSerializer,
             resourceAwareSchedulingInfo,
             ruleKeyFactories,
             service,
-            stepRunner,
             this.ruleDeps,
             rule,
             buildContext,
@@ -534,7 +505,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             buildInfoRecorder,
             buildableContext,
             pipelinesRunner,
-            remoteBuildRuleCompletionWaiter,
             customBuildRuleStrategy,
             manifestService);
     ruleBuilders.add(new WeakReference<>(cachingBuildRuleBuilder));
@@ -578,7 +548,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     }
 
     @Override
-    public void addAsyncCallback(ListenableFuture<Void> callback) {
+    public void addAsyncCallback(ListenableFuture<Unit> callback) {
       cachingBuildEngine.asyncCallbacks.add(callback);
     }
 

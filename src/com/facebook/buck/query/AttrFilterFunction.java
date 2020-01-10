@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.query;
@@ -19,9 +19,13 @@ package com.facebook.buck.query;
 import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
+import com.facebook.buck.util.string.StringMatcher;
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Predicate;
 
 /**
@@ -30,7 +34,7 @@ import java.util.function.Predicate;
  *
  * <pre>expr ::= ATTRFILTER '(' WORD ',' WORD ',' expr ')'</pre>
  */
-public class AttrFilterFunction implements QueryFunction {
+public class AttrFilterFunction implements QueryFunction<QueryBuildTarget, QueryBuildTarget> {
 
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.WORD, ArgumentType.WORD, ArgumentType.EXPRESSION);
@@ -53,22 +57,47 @@ public class AttrFilterFunction implements QueryFunction {
   }
 
   @Override
-  public ImmutableSet<QueryTarget> eval(
-      QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args)
+  public Set<QueryBuildTarget> eval(
+      QueryEvaluator<QueryBuildTarget> evaluator,
+      QueryEnvironment<QueryBuildTarget> env,
+      ImmutableList<Argument<QueryBuildTarget>> args)
       throws QueryException {
-    QueryExpression argument = args.get(args.size() - 1).getExpression();
+    QueryExpression<QueryBuildTarget> argument = args.get(args.size() - 1).getExpression();
     String attr = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, args.get(0).getWord());
 
     String attrValue = args.get(1).getWord();
-    Predicate<Object> predicate = input -> attrValue.equals(input.toString());
+    Predicate<Object> predicate =
+        input -> {
+          if (input instanceof Collection) {
+            Collection<?> collection = (Collection<?>) input;
+            for (Object item : collection) {
+              if (matches(item, attrValue)) {
+                return true;
+              }
+            }
+          }
 
-    ImmutableSet.Builder<QueryTarget> result = new ImmutableSet.Builder<>();
-    for (QueryTarget target : evaluator.eval(argument, env)) {
-      ImmutableSet<Object> matchingObjects = env.filterAttributeContents(target, attr, predicate);
+          return matches(input, attrValue);
+        };
+
+    Set<QueryBuildTarget> targets = evaluator.eval(argument, env);
+    HashSet<QueryBuildTarget> result = new HashSet<>(targets.size());
+    for (QueryBuildTarget target : targets) {
+      Set<Object> matchingObjects = env.filterAttributeContents(target, attr, predicate);
       if (!matchingObjects.isEmpty()) {
         result.add(target);
       }
     }
-    return result.build();
+    return result;
+  }
+
+  private boolean matches(Object value, String expectedValue) {
+    if (value instanceof StringMatcher) {
+      return ((StringMatcher) value).matches(expectedValue);
+    }
+    if (value instanceof Collection || value instanceof Map) {
+      return false;
+    }
+    return expectedValue.equals(value.toString());
   }
 }

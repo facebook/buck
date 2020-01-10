@@ -1,4 +1,4 @@
 [scala]
 library = buck//third-party/scala:scala-library
 compiler = buck//third-party/scala:scala-compiler
-compiler_plugins = //:paradise
+compiler_flags = -Ymacro-annotations

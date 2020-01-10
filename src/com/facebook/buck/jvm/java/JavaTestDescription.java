@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
@@ -20,17 +20,22 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.HasContacts;
 import com.facebook.buck.core.description.arg.HasTestTimeout;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.impl.SymlinkTree;
+import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.impl.MappedSymlinkTree;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.test.rule.HasTestRunner;
+import com.facebook.buck.core.test.rule.TestRunnerSpec;
+import com.facebook.buck.core.test.rule.coercer.TestRunnerSpecCoercer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
@@ -43,6 +48,8 @@ import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.toolchain.JavaCxxPlatformProvider;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.macros.AbsoluteOutputMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroExpander;
@@ -53,15 +60,14 @@ import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Supplier;
+import java.util.function.Function;
 import java.util.logging.Level;
 import org.immutables.value.Value;
 
@@ -71,11 +77,11 @@ public class JavaTestDescription
         VersionRoot<JavaTestDescriptionArg> {
 
   public static final ImmutableList<MacroExpander<? extends Macro, ?>> MACRO_EXPANDERS =
-      ImmutableList.of(new LocationMacroExpander());
+      ImmutableList.of(new LocationMacroExpander(), new AbsoluteOutputMacroExpander());
 
   private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
-  private final Supplier<JavaOptions> javaOptionsForTests;
+  private final Function<TargetConfiguration, JavaOptions> javaOptionsForTests;
   private final JavacFactory javacFactory;
 
   public JavaTestDescription(ToolchainProvider toolchainProvider, JavaBuckConfig javaBuckConfig) {
@@ -90,16 +96,23 @@ public class JavaTestDescription
     return JavaTestDescriptionArg.class;
   }
 
-  private UnresolvedCxxPlatform getUnresolvedCxxPlatform(AbstractJavaTestDescriptionArg args) {
+  private UnresolvedCxxPlatform getUnresolvedCxxPlatform(
+      AbstractJavaTestDescriptionArg args, TargetConfiguration toolchainTargetConfiguration) {
     return args.getDefaultCxxPlatform()
         .map(
             toolchainProvider
-                    .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
+                    .getByName(
+                        CxxPlatformsProvider.DEFAULT_NAME,
+                        toolchainTargetConfiguration,
+                        CxxPlatformsProvider.class)
                     .getUnresolvedCxxPlatforms()
                 ::getValue)
         .orElse(
             toolchainProvider
-                .getByName(JavaCxxPlatformProvider.DEFAULT_NAME, JavaCxxPlatformProvider.class)
+                .getByName(
+                    JavaCxxPlatformProvider.DEFAULT_NAME,
+                    toolchainTargetConfiguration,
+                    JavaCxxPlatformProvider.class)
                 .getDefaultJavaCxxPlatform());
   }
 
@@ -115,13 +128,15 @@ public class JavaTestDescription
     JavacOptions javacOptions =
         JavacOptionsFactory.create(
             toolchainProvider
-                .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                .getByName(
+                    JavacOptionsProvider.DEFAULT_NAME,
+                    buildTarget.getTargetConfiguration(),
+                    JavacOptionsProvider.class)
                 .getJavacOptions(),
             buildTarget,
             graphBuilder,
             args);
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     CxxLibraryEnhancement cxxLibraryEnhancement =
         new CxxLibraryEnhancement(
             buildTarget,
@@ -130,8 +145,8 @@ public class JavaTestDescription
             args.getUseCxxLibraries(),
             args.getCxxLibraryWhitelist(),
             graphBuilder,
-            ruleFinder,
-            getUnresolvedCxxPlatform(args).resolve(graphBuilder));
+            getUnresolvedCxxPlatform(args, buildTarget.getTargetConfiguration())
+                .resolve(graphBuilder, buildTarget.getTargetConfiguration()));
     params = cxxLibraryEnhancement.updatedParams;
 
     DefaultJavaLibraryRules defaultJavaLibraryRules =
@@ -141,7 +156,6 @@ public class JavaTestDescription
                 context.getToolchainProvider(),
                 params,
                 graphBuilder,
-                cellRoots,
                 new JavaConfiguredCompilerFactory(javaBuckConfig, javacFactory),
                 javaBuckConfig,
                 args)
@@ -154,25 +168,85 @@ public class JavaTestDescription
     }
 
     JavaLibrary testsLibrary = graphBuilder.addToIndex(defaultJavaLibraryRules.buildLibrary());
+    params = params.copyAppendingExtraDeps(testsLibrary);
 
     StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(buildTarget)
-            .setCellPathResolver(cellRoots)
-            .setExpanders(MACRO_EXPANDERS)
-            .build();
+        StringWithMacrosConverter.of(buildTarget, cellRoots, graphBuilder, MACRO_EXPANDERS);
+    List<Arg> vmArgs = Lists.transform(args.getVmArgs(), macrosConverter::convert);
+
+    Optional<BuildTarget> runner = args.getRunner();
+    Optional<TestRunnerSpec> runnerSpecs = args.getSpecs();
+    if (runnerSpecs.isPresent()) {
+      JavaTestRunner testRunner;
+      if (runner.isPresent()) {
+        BuildRule runnerRule = graphBuilder.requireRule(runner.get());
+        if (!(runnerRule instanceof JavaTestRunner)) {
+          throw new HumanReadableException(
+              "Java tests should have a java_test_runner as the runner for test protocol");
+        }
+        testRunner = (JavaTestRunner) runnerRule;
+
+      } else {
+        throw new HumanReadableException(
+            "Java test should have a java_test_runner as the runner for test protocol");
+      }
+
+      params = params.copyAppendingExtraDeps(testRunner.getCompiledTestsLibrary());
+
+      // Construct the build rule to build the binary JAR.
+      ImmutableSet<JavaLibrary> transitiveClasspathDeps =
+          JavaLibraryClasspathProvider.getClasspathDeps(params.getBuildDeps());
+      ImmutableSet<SourcePath> transitiveClasspaths =
+          JavaLibraryClasspathProvider.getClasspathsFromLibraries(transitiveClasspathDeps);
+      JavaBinary javaBinary =
+          new JavaBinary(
+              buildTarget.withFlavors(InternalFlavor.of("bin")),
+              projectFilesystem,
+              params.copyAppendingExtraDeps(transitiveClasspathDeps),
+              javaOptionsForTests
+                  .apply(buildTarget.getTargetConfiguration())
+                  .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
+              testRunner.getMainClass(),
+              args.getManifestFile().orElse(null),
+              true,
+              false,
+              null,
+              ImmutableSet.of(),
+              transitiveClasspathDeps,
+              transitiveClasspaths,
+              javaBuckConfig.shouldCacheBinaries(),
+              javaBuckConfig.getDuplicatesLogLevel());
+
+      graphBuilder.addToIndex(javaBinary);
+
+      return new JavaTestX(
+          buildTarget,
+          projectFilesystem,
+          params.copyAppendingExtraDeps(javaBinary),
+          javaBinary,
+          testsLibrary,
+          args.getLabels(),
+          args.getContacts(),
+          TestRunnerSpecCoercer.coerce(args.getSpecs().get(), macrosConverter),
+          vmArgs);
+    } else if (runner.isPresent()) {
+      throw new HumanReadableException("Should not have runner set when no specs are set");
+    }
 
     return new JavaTest(
         buildTarget,
         projectFilesystem,
-        params.copyAppendingExtraDeps(ImmutableSortedSet.of(testsLibrary)),
+        params,
         testsLibrary,
         Optional.empty(),
         args.getLabels(),
         args.getContacts(),
         args.getTestType().orElse(TestType.JUNIT),
-        javaOptionsForTests.get().getJavaRuntimeLauncher(graphBuilder),
-        Lists.transform(args.getVmArgs(), vmArg -> macrosConverter.convert(vmArg, graphBuilder)),
+        javacOptions.getLanguageLevelOptions().getTargetLevel(),
+        javaOptionsForTests
+            .apply(buildTarget.getTargetConfiguration())
+            .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
+        vmArgs,
         cxxLibraryEnhancement.nativeLibsEnvironment,
         args.getTestRuleTimeoutMs()
             .map(Optional::of)
@@ -182,8 +256,7 @@ public class JavaTestDescription
                     .getView(TestBuckConfig.class)
                     .getDefaultTestRuleTimeoutMs()),
         args.getTestCaseTimeoutMs(),
-        ImmutableMap.copyOf(
-            Maps.transformValues(args.getEnv(), x -> macrosConverter.convert(x, graphBuilder))),
+        ImmutableMap.copyOf(Maps.transformValues(args.getEnv(), macrosConverter::convert)),
         args.getRunTestSeparately(),
         args.getForkMode(),
         args.getStdOutLogLevel(),
@@ -200,10 +273,14 @@ public class JavaTestDescription
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     if (constructorArg.getUseCxxLibraries().orElse(false)) {
       targetGraphOnlyDepsBuilder.addAll(
-          getUnresolvedCxxPlatform(constructorArg).getParseTimeDeps());
+          getUnresolvedCxxPlatform(constructorArg, buildTarget.getTargetConfiguration())
+              .getParseTimeDeps(buildTarget.getTargetConfiguration()));
     }
-    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, constructorArg);
-    javaOptionsForTests.get().addParseTimeDeps(targetGraphOnlyDepsBuilder);
+    javacFactory.addParseTimeDeps(
+        targetGraphOnlyDepsBuilder, constructorArg, buildTarget.getTargetConfiguration());
+    javaOptionsForTests
+        .apply(buildTarget.getTargetConfiguration())
+        .addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
   }
 
   public interface CoreArg extends HasContacts, HasTestTimeout, JavaLibraryDescription.CoreArg {
@@ -238,7 +315,7 @@ public class JavaTestDescription
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractJavaTestDescriptionArg extends CoreArg {}
+  interface AbstractJavaTestDescriptionArg extends CoreArg, HasTestRunner {}
 
   public static class CxxLibraryEnhancement {
     public final BuildRuleParams updatedParams;
@@ -251,12 +328,11 @@ public class JavaTestDescription
         Optional<Boolean> useCxxLibraries,
         ImmutableSet<BuildTarget> cxxLibraryWhitelist,
         ActionGraphBuilder graphBuilder,
-        SourcePathRuleFinder ruleFinder,
         CxxPlatform cxxPlatform) {
       if (useCxxLibraries.orElse(false)) {
-        SymlinkTree nativeLibsSymlinkTree =
+        MappedSymlinkTree nativeLibsSymlinkTree =
             buildNativeLibsSymlinkTreeRule(
-                buildTarget, projectFilesystem, graphBuilder, ruleFinder, params, cxxPlatform);
+                buildTarget, projectFilesystem, graphBuilder, params, cxxPlatform);
 
         // If the cxxLibraryWhitelist is present, remove symlinks that were not requested.
         // They could point to old, invalid versions of the library in question.
@@ -273,16 +349,14 @@ public class JavaTestDescription
             }
           }
           nativeLibsSymlinkTree =
-              new SymlinkTree(
+              new MappedSymlinkTree(
                   "java_test_native_libs",
                   nativeLibsSymlinkTree.getBuildTarget(),
                   nativeLibsSymlinkTree.getProjectFilesystem(),
                   nativeLibsSymlinkTree
                       .getProjectFilesystem()
                       .relativize(nativeLibsSymlinkTree.getRoot()),
-                  filteredLinks.build(),
-                  ImmutableMultimap.of(),
-                  ruleFinder);
+                  filteredLinks.build());
         }
 
         graphBuilder.addToIndex(nativeLibsSymlinkTree);
@@ -296,11 +370,15 @@ public class JavaTestDescription
                     // (2) They affect the JavaTest's RuleKey, so changing them will invalidate
                     // the test results cache.
                     .addAll(
-                        ruleFinder.filterBuildRuleInputs(nativeLibsSymlinkTree.getLinks().values()))
+                        graphBuilder.filterBuildRuleInputs(
+                            nativeLibsSymlinkTree.getLinks().values()))
                     .build());
         nativeLibsEnvironment =
             ImmutableMap.of(
-                cxxPlatform.getLd().resolve(graphBuilder).searchPathEnvVar(),
+                cxxPlatform
+                    .getLd()
+                    .resolve(graphBuilder, buildTarget.getTargetConfiguration())
+                    .searchPathEnvVar(),
                 nativeLibsSymlinkTree.getRoot().toString());
       } else {
         updatedParams = params;
@@ -308,11 +386,10 @@ public class JavaTestDescription
       }
     }
 
-    public static SymlinkTree buildNativeLibsSymlinkTreeRule(
+    public static MappedSymlinkTree buildNativeLibsSymlinkTreeRule(
         BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         ActionGraphBuilder graphBuilder,
-        SourcePathRuleFinder ruleFinder,
         BuildRuleParams buildRuleParams,
         CxxPlatform cxxPlatform) {
       // TODO(cjhopman): The behavior of this doesn't really make sense. This should use a
@@ -322,7 +399,6 @@ public class JavaTestDescription
           buildTarget,
           projectFilesystem,
           graphBuilder,
-          ruleFinder,
           cxxPlatform,
           buildRuleParams.getBuildDeps(),
           r ->

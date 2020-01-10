@@ -1,0 +1,14 @@
+EMPTY_CONFIGS = {
+    "Debug": {},
+    "Release": {},
+}
+
+apple_library(
+    name = "Dep1",
+    srcs = [],
+    configs = EMPTY_CONFIGS,
+    frameworks = [],
+    tests = ["//Tests:Tests"],
+    visibility = ["PUBLIC"],
+    deps = [],
+)

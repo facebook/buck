@@ -3,9 +3,6 @@ load("//tools/build_rules:module_rules.bzl", "buck_module")
 buck_module(
     name = "rules",
     srcs = glob(["*.java"]),
-    module_deps = [
-        "//src/com/facebook/buck/features/filebundler:filebundler",
-    ],
     provided_deps = [
         "//src/com/facebook/buck/core/description/arg:arg",
         "//src/com/facebook/buck/core/model:model",
@@ -18,9 +15,9 @@ buck_module(
         "//src/com/facebook/buck/rules/modern:modern",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/fs:fs",
-        "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/zip:zip",
+        "//src/com/facebook/buck/util/zip/collect:collect",
         "//src/com/facebook/buck/versions:versions",
         "//src/com/facebook/buck/zip:zip",
         "//third-party/java/guava:guava",
@@ -30,8 +27,10 @@ buck_module(
         "//test/com/facebook/buck/features/zip/rules:rules",
     ],
     visibility = [
+        "//src/com/facebook/buck/features/project/intellij:",
         "//test/com/facebook/buck/cli:cli",
         "//test/com/facebook/buck/features/project/intellij:intellij",
         "//test/com/facebook/buck/features/zip/rules:rules",
+        "//test/com/facebook/buck/rules/modern:subclass_exclusion",
     ],
 )

@@ -1,0 +1,51 @@
+platform(
+    name = "linux_platform",
+    constraint_values = [
+        "buck//config/constraints:linux",
+    ],
+)
+
+platform(
+    name = "osx_platform",
+    constraint_values = [
+        "buck//config/constraints:osx",
+    ],
+)
+
+genrule(
+    name = "a",
+    out = "a",
+    cmd = "echo a > $OUT",
+    target_compatible_with = [
+        "buck//config/constraints:linux",
+    ],
+)
+
+genrule(
+    name = "b",
+    out = "b",
+    cmd = "echo b > $OUT",
+    target_compatible_with = [
+        "buck//config/constraints:osx",
+    ],
+)
+
+java_library(
+    name = "lib_linux",
+    srcs = [
+        "A.java",
+    ],
+    target_compatible_with = [
+        "buck//config/constraints:linux",
+    ],
+)
+
+java_library(
+    name = "lib_osx",
+    srcs = [
+        "A.java",
+    ],
+    target_compatible_with = [
+        "buck//config/constraints:osx",
+    ],
+)

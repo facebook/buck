@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.rust;
@@ -19,47 +19,44 @@ package com.facebook.buck.features.rust;
 import static com.facebook.buck.features.rust.RustCompileUtils.ruleToCrateName;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
-import com.facebook.buck.core.description.arg.HasDeclaredDeps;
-import com.facebook.buck.core.description.arg.HasDefaultPlatform;
-import com.facebook.buck.core.description.arg.HasSrcs;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
-import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
+import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkableGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.PlatformLockedNativeLinkableGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
-import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.rules.macros.StringWithMacrosConverter;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
-import java.util.List;
+import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.Maps;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -91,50 +88,52 @@ public class RustLibraryDescription
   private RustCompileRule requireBuild(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver pathResolver,
-      SourcePathRuleFinder ruleFinder,
       RustPlatform rustPlatform,
       RustBuckConfig rustBuckConfig,
-      ImmutableList<String> extraFlags,
-      ImmutableList<String> extraLinkerFlags,
+      ImmutableSortedMap<String, Arg> environment,
+      ImmutableList<Arg> extraFlags,
+      ImmutableList<Arg> extraLinkerFlags,
       Iterable<Arg> linkerInputs,
       String crate,
       CrateType crateType,
-      Linker.LinkableDepType depType,
+      Optional<String> edition,
+      LinkableDepType depType,
       RustLibraryDescriptionArg args,
-      Iterable<BuildRule> deps) {
-    Pair<SourcePath, ImmutableSortedSet<SourcePath>> rootModuleAndSources =
+      Iterable<BuildRule> deps,
+      ImmutableMap<String, BuildTarget> depsAliases) {
+    Pair<String, ImmutableSortedMap<SourcePath, Optional<String>>> rootModuleAndSources =
         RustCompileUtils.getRootModuleAndSources(
+            projectFilesystem,
             buildTarget,
             graphBuilder,
-            pathResolver,
-            ruleFinder,
             rustPlatform.getCxxPlatform(),
             crate,
             args.getCrateRoot(),
             ImmutableSet.of("lib.rs"),
-            args.getSrcs());
+            args.getSrcs(),
+            args.getMappedSrcs());
     return RustCompileUtils.requireBuild(
         buildTarget,
         projectFilesystem,
-        params,
         graphBuilder,
-        ruleFinder,
         rustPlatform,
         rustBuckConfig,
+        environment,
         extraFlags,
         extraLinkerFlags,
         linkerInputs,
         crate,
         crateType,
+        edition,
         depType,
         rootModuleAndSources.getSecond(),
         rootModuleAndSources.getFirst(),
         rustBuckConfig.getForceRlib(),
         rustBuckConfig.getPreferStaticLibs(),
-        deps);
+        deps,
+        depsAliases,
+        rustBuckConfig.getIncremental(rustPlatform.getFlavor().getName()));
   }
 
   @Override
@@ -144,25 +143,37 @@ public class RustLibraryDescription
       BuildRuleParams params,
       RustLibraryDescriptionArg args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     CxxDeps allDeps =
-        CxxDeps.builder().addDeps(args.getDeps()).addPlatformDeps(args.getPlatformDeps()).build();
+        CxxDeps.builder()
+            .addDeps(args.getDeps())
+            .addDeps(args.getNamedDeps().values())
+            .addPlatformDeps(args.getPlatformDeps())
+            .build();
 
-    Function<RustPlatform, ImmutableList<String>> getRustcArgs =
-        rustPlatform -> {
-          ImmutableList.Builder<String> rustcArgs = ImmutableList.builder();
-          RustCompileUtils.addFeatures(buildTarget, args.getFeatures(), rustcArgs);
-          RustCompileUtils.addTargetTripleForFlavor(rustPlatform.getFlavor(), rustcArgs);
-          rustcArgs.addAll(rustPlatform.getRustLibraryFlags());
-          rustcArgs.addAll(args.getRustcFlags());
-          return rustcArgs.build();
-        };
+    Function<RustPlatform, Pair<ImmutableList<Arg>, ImmutableSortedMap<String, Arg>>>
+        getRustcArgsEnv =
+            rustPlatform -> {
+              StringWithMacrosConverter converter =
+                  RustCompileUtils.getMacroExpander(
+                      context, buildTarget, rustPlatform.getCxxPlatform());
+
+              ImmutableList.Builder<Arg> rustcArgs = ImmutableList.builder();
+              RustCompileUtils.addFeatures(buildTarget, args.getFeatures(), rustcArgs);
+              RustCompileUtils.addTargetTripleForFlavor(rustPlatform.getFlavor(), rustcArgs);
+              rustcArgs.addAll(rustPlatform.getRustLibraryFlags());
+              rustcArgs.addAll(args.getRustcFlags().stream().map(converter::convert).iterator());
+
+              ImmutableSortedMap<String, Arg> env =
+                  ImmutableSortedMap.copyOf(
+                      Maps.transformValues(args.getEnv(), converter::convert));
+
+              return new Pair<>(rustcArgs.build(), env);
+            };
 
     String crate = args.getCrate().orElse(ruleToCrateName(buildTarget.getShortName()));
 
-    RustToolchain rustToolchain = getRustToolchain();
+    RustToolchain rustToolchain = getRustToolchain(buildTarget.getTargetConfiguration());
 
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
@@ -192,35 +203,44 @@ public class RustLibraryDescription
         }
       }
 
-      RustPlatform platform = RustCompileUtils.getRustPlatform(rustToolchain, buildTarget, args);
+      RustPlatform platform =
+          RustCompileUtils.getRustPlatform(rustToolchain, buildTarget, args)
+              .resolve(graphBuilder, buildTarget.getTargetConfiguration());
+
+      Pair<ImmutableList<Arg>, ImmutableSortedMap<String, Arg>> argenv =
+          getRustcArgsEnv.apply(platform);
+
       return requireBuild(
           buildTarget,
           projectFilesystem,
-          params,
           graphBuilder,
-          pathResolver,
-          ruleFinder,
           platform,
           rustBuckConfig,
-          getRustcArgs.apply(platform),
+          argenv.getSecond(),
+          argenv.getFirst(),
           /* linkerArgs */ ImmutableList.of(),
           /* linkerInputs */ ImmutableList.of(),
           crate,
           crateType,
+          args.getEdition(),
           depType,
           args,
-          allDeps.get(graphBuilder, platform.getCxxPlatform()));
+          allDeps.get(graphBuilder, platform.getCxxPlatform()),
+          args.getNamedDeps());
     }
 
     // Common case - we're being invoked to satisfy some other rule's dependency.
     return new RustLibrary(buildTarget, projectFilesystem, params) {
+      private final PlatformLockedNativeLinkableGroup.Cache linkableCache =
+          LegacyNativeLinkableGroup.getNativeLinkableCache(this);
       // RustLinkable
       @Override
       public Arg getLinkerArg(
           boolean direct,
           boolean isCheck,
           RustPlatform rustPlatform,
-          Linker.LinkableDepType depType) {
+          LinkableDepType depType,
+          Optional<String> alias) {
         BuildRule rule;
         CrateType crateType;
 
@@ -264,26 +284,29 @@ public class RustLibraryDescription
           }
         }
 
+        Pair<ImmutableList<Arg>, ImmutableSortedMap<String, Arg>> argenv =
+            getRustcArgsEnv.apply(rustPlatform);
+
         rule =
             requireBuild(
                 buildTarget,
                 projectFilesystem,
-                params,
                 graphBuilder,
-                pathResolver,
-                ruleFinder,
                 rustPlatform,
                 rustBuckConfig,
-                getRustcArgs.apply(rustPlatform),
+                argenv.getSecond(),
+                argenv.getFirst(),
                 /* linkerArgs */ ImmutableList.of(),
                 /* linkerInputs */ ImmutableList.of(),
                 crate,
                 crateType,
+                args.getEdition(),
                 depType,
                 args,
-                allDeps.get(graphBuilder, rustPlatform.getCxxPlatform()));
+                allDeps.get(graphBuilder, rustPlatform.getCxxPlatform()),
+                args.getNamedDeps());
         SourcePath rlib = rule.getSourcePathToOutput();
-        return new RustLibraryArg(crate, rlib, direct);
+        return new RustLibraryArg(crate, rlib, direct, alias);
       }
 
       @Override
@@ -302,25 +325,29 @@ public class RustLibraryDescription
 
         ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
         String sharedLibrarySoname =
-            CrateType.DYLIB.filenameFor(target, crate, rustPlatform.getCxxPlatform()).get();
+            CrateType.DYLIB.filenameFor(target, crate, rustPlatform.getCxxPlatform());
+
+        Pair<ImmutableList<Arg>, ImmutableSortedMap<String, Arg>> argenv =
+            getRustcArgsEnv.apply(rustPlatform);
+
         BuildRule sharedLibraryBuildRule =
             requireBuild(
                 buildTarget,
                 projectFilesystem,
-                params,
                 graphBuilder,
-                pathResolver,
-                ruleFinder,
                 rustPlatform,
                 rustBuckConfig,
-                getRustcArgs.apply(rustPlatform),
+                argenv.getSecond(),
+                argenv.getFirst(),
                 /* linkerArgs */ ImmutableList.of(),
                 /* linkerInputs */ ImmutableList.of(),
                 crate,
                 CrateType.DYLIB,
-                Linker.LinkableDepType.SHARED,
+                args.getEdition(),
+                LinkableDepType.SHARED,
                 args,
-                allDeps.get(graphBuilder, rustPlatform.getCxxPlatform()));
+                allDeps.get(graphBuilder, rustPlatform.getCxxPlatform()),
+                args.getNamedDeps());
         libs.put(sharedLibrarySoname, sharedLibraryBuildRule.getSourcePathToOutput());
         return libs.build();
       }
@@ -332,28 +359,36 @@ public class RustLibraryDescription
 
       // NativeLinkable
       @Override
-      public Iterable<? extends NativeLinkable> getNativeLinkableDeps(
+      public Iterable<? extends NativeLinkableGroup> getNativeLinkableDeps(
           BuildRuleResolver ruleResolver) {
         return ImmutableList.of();
       }
 
       @Override
-      public Iterable<NativeLinkable> getNativeLinkableExportedDeps(
+      public Iterable<NativeLinkableGroup> getNativeLinkableExportedDeps(
           BuildRuleResolver ruleResolver) {
         return RichStream.from(allDeps.getForAllPlatforms(ruleResolver))
-            .filter(NativeLinkable.class)
+            .filter(NativeLinkableGroup.class)
             .toImmutableList();
       }
 
       @Override
-      public Iterable<? extends NativeLinkable> getNativeLinkableExportedDepsForPlatform(
+      public PlatformLockedNativeLinkableGroup.Cache getNativeLinkableCompatibilityCache() {
+        return linkableCache;
+      }
+
+      @Override
+      public Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDepsForPlatform(
           CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
         // We want to skip over all the transitive Rust deps, and only return non-Rust
         // deps at the edge of the graph
-        ImmutableList.Builder<NativeLinkable> nativedeps = ImmutableList.builder();
+        ImmutableList.Builder<NativeLinkableGroup> nativedeps = ImmutableList.builder();
 
         RustPlatform rustPlatform =
-            getRustToolchain().getRustPlatforms().getValue(cxxPlatform.getFlavor());
+            getRustToolchain(buildTarget.getTargetConfiguration())
+                .getRustPlatforms()
+                .getValue(cxxPlatform.getFlavor())
+                .resolve(graphBuilder, buildTarget.getTargetConfiguration());
         new AbstractBreadthFirstTraversal<BuildRule>(allDeps.get(graphBuilder, cxxPlatform)) {
           @Override
           public Iterable<BuildRule> visit(BuildRule rule) {
@@ -361,8 +396,8 @@ public class RustLibraryDescription
               // Rust rule - we just want to visit the children
               return ((RustLinkable) rule).getRustLinakbleDeps(rustPlatform);
             }
-            if (rule instanceof NativeLinkable) {
-              nativedeps.add((NativeLinkable) rule);
+            if (rule instanceof NativeLinkableGroup) {
+              nativedeps.add((NativeLinkableGroup) rule);
             }
             return ImmutableList.of();
           }
@@ -376,7 +411,8 @@ public class RustLibraryDescription
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType depType,
           boolean forceLinkWhole,
-          ActionGraphBuilder graphBuilder) {
+          ActionGraphBuilder graphBuilder,
+          TargetConfiguration targetConfiguration) {
         CrateType crateType;
 
         switch (depType) {
@@ -395,25 +431,31 @@ public class RustLibraryDescription
         }
 
         RustPlatform rustPlatform =
-            getRustToolchain().getRustPlatforms().getValue(cxxPlatform.getFlavor());
+            getRustToolchain(targetConfiguration)
+                .getRustPlatforms()
+                .getValue(cxxPlatform.getFlavor())
+                .resolve(graphBuilder, buildTarget.getTargetConfiguration());
+        Pair<ImmutableList<Arg>, ImmutableSortedMap<String, Arg>> argenv =
+            getRustcArgsEnv.apply(rustPlatform);
+
         BuildRule rule =
             requireBuild(
                 buildTarget,
                 projectFilesystem,
-                params,
                 graphBuilder,
-                pathResolver,
-                ruleFinder,
                 rustPlatform,
                 rustBuckConfig,
-                getRustcArgs.apply(rustPlatform),
+                argenv.getSecond(),
+                argenv.getFirst(),
                 /* linkerArgs */ ImmutableList.of(),
                 /* linkerInputs */ ImmutableList.of(),
                 crate,
                 crateType,
+                args.getEdition(),
                 depType,
                 args,
-                allDeps.get(graphBuilder, rustPlatform.getCxxPlatform()));
+                allDeps.get(graphBuilder, rustPlatform.getCxxPlatform()),
+                args.getNamedDeps());
 
         SourcePath lib = rule.getSourcePathToOutput();
         SourcePathArg arg = SourcePathArg.of(lib);
@@ -422,7 +464,7 @@ public class RustLibraryDescription
       }
 
       @Override
-      public Linkage getPreferredLinkage(CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+      public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
         return args.getPreferredLinkage();
       }
 
@@ -431,27 +473,34 @@ public class RustLibraryDescription
           CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
         ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
         String sharedLibrarySoname =
-            CrateType.DYLIB.filenameFor(getBuildTarget(), crate, cxxPlatform).get();
+            CrateType.DYLIB.filenameFor(getBuildTarget(), crate, cxxPlatform);
         RustPlatform rustPlatform =
-            getRustToolchain().getRustPlatforms().getValue(cxxPlatform.getFlavor());
+            getRustToolchain(buildTarget.getTargetConfiguration())
+                .getRustPlatforms()
+                .getValue(cxxPlatform.getFlavor())
+                .resolve(graphBuilder, buildTarget.getTargetConfiguration());
+
+        Pair<ImmutableList<Arg>, ImmutableSortedMap<String, Arg>> argenv =
+            getRustcArgsEnv.apply(rustPlatform);
+
         BuildRule sharedLibraryBuildRule =
             requireBuild(
                 buildTarget,
                 projectFilesystem,
-                params,
                 graphBuilder,
-                pathResolver,
-                ruleFinder,
                 rustPlatform,
                 rustBuckConfig,
-                getRustcArgs.apply(rustPlatform),
+                argenv.getSecond(),
+                argenv.getFirst(),
                 /* linkerArgs */ ImmutableList.of(),
                 /* linkerInputs */ ImmutableList.of(),
                 crate,
                 CrateType.CDYLIB,
-                Linker.LinkableDepType.SHARED,
+                args.getEdition(),
+                LinkableDepType.SHARED,
                 args,
-                allDeps.get(graphBuilder, rustPlatform.getCxxPlatform()));
+                allDeps.get(graphBuilder, rustPlatform.getCxxPlatform()),
+                args.getNamedDeps());
         libs.put(sharedLibrarySoname, sharedLibraryBuildRule.getSourcePathToOutput());
         return libs.build();
       }
@@ -468,49 +517,39 @@ public class RustLibraryDescription
     // Add parse-time deps for *all* platforms, as we don't know which platform will be
     // selected by a top-level binary rule (e.g. a Python binary transitively depending on
     // this library may choose platform "foo").
-    getRustToolchain()
-        .getRustPlatforms()
-        .getValues()
-        .stream()
-        .flatMap(p -> RichStream.from(RustCompileUtils.getPlatformParseTimeDeps(p)))
+    getRustToolchain(buildTarget.getTargetConfiguration()).getRustPlatforms().getValues().stream()
+        .flatMap(
+            p ->
+                RichStream.from(
+                    RustCompileUtils.getPlatformParseTimeDeps(
+                        buildTarget.getTargetConfiguration(), p)))
         .forEach(targetGraphOnlyDepsBuilder::add);
   }
 
   @Override
-  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
-    return Optional.of(ImmutableSet.of(getRustToolchain().getRustPlatforms(), LIBRARY_TYPE));
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains(
+      TargetConfiguration toolchainTargetConfiguration) {
+    return Optional.of(
+        ImmutableSet.of(
+            getRustToolchain(toolchainTargetConfiguration).getRustPlatforms(), LIBRARY_TYPE));
   }
 
-  private RustToolchain getRustToolchain() {
-    return toolchainProvider.getByName(RustToolchain.DEFAULT_NAME, RustToolchain.class);
+  private RustToolchain getRustToolchain(TargetConfiguration toolchainTargetConfiguration) {
+    return toolchainProvider.getByName(
+        RustToolchain.DEFAULT_NAME, toolchainTargetConfiguration, RustToolchain.class);
   }
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractRustLibraryDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs, HasTests, HasDefaultPlatform {
-    @Value.NaturalOrder
-    ImmutableSortedSet<String> getFeatures();
-
-    List<String> getRustcFlags();
-
+  interface AbstractRustLibraryDescriptionArg extends RustCommonArgs, HasTests {
     @Value.Default
-    default NativeLinkable.Linkage getPreferredLinkage() {
-      return NativeLinkable.Linkage.ANY;
+    default NativeLinkableGroup.Linkage getPreferredLinkage() {
+      return NativeLinkableGroup.Linkage.ANY;
     }
-
-    Optional<String> getCrate();
-
-    Optional<SourcePath> getCrateRoot();
 
     @Value.Default
     default boolean getProcMacro() {
       return false;
-    }
-
-    @Value.Default
-    default PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getPlatformDeps() {
-      return PatternMatchedCollection.of();
     }
   }
 }

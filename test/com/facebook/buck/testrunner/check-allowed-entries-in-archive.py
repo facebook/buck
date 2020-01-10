@@ -1,17 +1,17 @@
 #!/usr/bin/env python
-# Copyright 2017-present Facebook, Inc.
+# Copyright (c) Facebook, Inc. and its affiliates.
 #
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License. You may obtain
-# a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations
-# under the License.
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 
 """
@@ -23,9 +23,11 @@ from zipfile import ZipFile
 
 import pkg_resources
 
+
 ALLOWED_ENTRIES = """
 com/facebook/buck/core/util/log/appendablelogrecord/AppendableLogRecord.class
 com/facebook/buck/jvm/java/runner/FileClassPathRunner.class
+com/facebook/buck/jvm/java/version/JavaVersion.class
 com/facebook/buck/test/result/type/ResultType.class
 com/facebook/buck/test/selectors/Nullable.class
 com/facebook/buck/test/selectors/PatternTestSelector.class
@@ -67,6 +69,10 @@ com/facebook/buck/testrunner/TestNGRunner$JUnitReportReporterWithMethodParameter
 com/facebook/buck/testrunner/TestNGRunner$TestListener.class
 com/facebook/buck/testrunner/TestNGRunner.class
 com/facebook/buck/testrunner/TestResult.class
+com/facebook/buck/testrunner/TestXmlEscaper.class
+com/facebook/buck/testrunner/TestXmlEscaper$1.class
+com/facebook/buck/testrunner/TestXmlEscaper$AttributeEscaper.class
+com/facebook/buck/testrunner/TestXmlEscaper$ContentEscaper.class
 com/facebook/buck/util/concurrent/MostExecutors$1.class
 com/facebook/buck/util/concurrent/MostExecutors$NamedThreadFactory.class
 com/facebook/buck/util/concurrent/MostExecutors.class
@@ -81,8 +87,7 @@ class TestAppend(unittest.TestCase):
 
         with pkg_resources.resource_stream(__name__, "testrunner-bin-fixed.jar") as r:
             with ZipFile(r) as zip_file:
-                for zip_file_entry in zip_file.namelist():
-                    entry = zip_file_entry.encode("utf-8")
+                for entry in zip_file.namelist():
                     if not entry.endswith("/"):
                         self.assertTrue(
                             entry in ALLOWED_ENTRIES,

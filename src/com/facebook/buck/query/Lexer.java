@@ -61,6 +61,8 @@ final class Lexer {
     PLUS("+"),
     RPAREN(")"),
     CARET("^"),
+    LBRACKET("["),
+    RBRACKET("]"),
 
     __ALL_IDENTIFIERS_FOLLOW(""), // See below
 
@@ -319,6 +321,16 @@ final class Lexer {
         case ')':
           {
             addToken(new Token(TokenKind.RPAREN));
+            break;
+          }
+        case '[':
+          {
+            addToken(new Token((TokenKind.LBRACKET)));
+            break;
+          }
+        case ']':
+          {
+            addToken(new Token((TokenKind.RBRACKET)));
             break;
           }
         case ',':

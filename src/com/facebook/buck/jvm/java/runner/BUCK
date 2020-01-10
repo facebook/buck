@@ -11,4 +11,8 @@ java_library(
         "//test/com/facebook/buck/jvm/java:java",
         "//test/com/facebook/buck/jvm/java/runner:runner",
     ],
+    deps = [
+        "//src/com/facebook/buck/jvm/java/version:version",
+        # DO NOT add any deps here.
+    ],
 )

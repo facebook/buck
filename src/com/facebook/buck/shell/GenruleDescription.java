@@ -1,25 +1,23 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
-import com.facebook.buck.android.toolchain.AndroidSdkLocation;
-import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -27,10 +25,13 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.sandbox.SandboxConfig;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.versions.VersionRoot;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -62,22 +63,17 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
       Optional<Arg> cmd,
       Optional<Arg> bash,
       Optional<Arg> cmdExe) {
-    Optional<AndroidPlatformTarget> androidPlatformTarget =
-        toolchainProvider.getByNameIfPresent(
-            AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
-    Optional<AndroidNdk> androidNdk =
-        toolchainProvider.getByNameIfPresent(AndroidNdk.DEFAULT_NAME, AndroidNdk.class);
-    Optional<AndroidSdkLocation> androidSdkLocation =
-        toolchainProvider.getByNameIfPresent(
-            AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
-
+    boolean executeRemotely = args.getRemote().orElse(false);
+    if (executeRemotely) {
+      RemoteExecutionConfig reConfig = buckConfig.getView(RemoteExecutionConfig.class);
+      executeRemotely = reConfig.shouldUseRemoteExecutionForGenruleIfRequested();
+    }
     if (!args.getExecutable().orElse(false)) {
       SandboxConfig sandboxConfig = buckConfig.getView(SandboxConfig.class);
       return new Genrule(
           buildTarget,
           projectFilesystem,
           graphBuilder,
-          params,
           sandboxExecutionStrategy,
           args.getSrcs(),
           cmd,
@@ -85,33 +81,30 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
           cmdExe,
           args.getType(),
           args.getOut(),
+          args.getOuts(),
           sandboxConfig.isSandboxEnabledForCurrentPlatform()
               && args.getEnableSandbox().orElse(sandboxConfig.isGenruleSandboxEnabled()),
           args.getCacheable().orElse(true),
           args.getEnvironmentExpansionSeparator(),
-          androidPlatformTarget,
-          androidNdk,
-          androidSdkLocation,
-          args.getNoRemote().orElse(false));
+          getAndroidToolsOptional(args, buildTarget.getTargetConfiguration()),
+          executeRemotely);
     } else {
       return new GenruleBinary(
           buildTarget,
           projectFilesystem,
           sandboxExecutionStrategy,
           graphBuilder,
-          params,
           args.getSrcs(),
           cmd,
           bash,
           cmdExe,
           args.getType(),
           args.getOut(),
+          args.getOuts(),
           args.getCacheable().orElse(true),
           args.getEnvironmentExpansionSeparator(),
-          androidPlatformTarget,
-          androidNdk,
-          androidSdkLocation,
-          args.getNoRemote().orElse(false));
+          getAndroidToolsOptional(args, buildTarget.getTargetConfiguration()),
+          executeRemotely);
     }
   }
 
@@ -123,14 +116,20 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractGenruleDescriptionArg extends AbstractGenruleDescription.CommonArg {
-    String getOut();
+    // Only one of out or outs should be used. out will be deprecated and removed once outs becomes
+    // stable.
+    Optional<String> getOut();
+
+    Optional<ImmutableMap<String, ImmutableList<String>>> getOuts();
 
     Optional<Boolean> getExecutable();
 
-    /**
-     * This functionality only exists to facilitate migration of projects to distributed building.
-     * It will likely go away in the future.
-     */
-    Optional<Boolean> getNoRemote();
+    @Value.Check
+    default void check() {
+      if (!(getOut().isPresent() ^ getOuts().isPresent())) {
+        throw new HumanReadableException(
+            "One and only one of 'out' or 'outs' must be present in genrule.");
+      }
+    }
   }
 }

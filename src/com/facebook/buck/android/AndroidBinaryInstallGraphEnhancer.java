@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -82,7 +82,6 @@ class AndroidBinaryInstallGraphEnhancer {
     ExopackageDeviceDirectoryLister directoryLister =
         new ExopackageDeviceDirectoryLister(
             buildTarget.withFlavors(DIRECTORY_LISTING_FLAVOR), projectFilesystem);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     ExopackageInfo exopackageInfo = apkInfo.getExopackageInfo().get();
     ImmutableList.Builder<BuildRule> finisherDeps = ImmutableList.builder();
     if (exopackageInfo.getDexInfo().isPresent()
@@ -98,7 +97,7 @@ class AndroidBinaryInstallGraphEnhancer {
           new ExopackageFilesInstaller(
               buildTarget.withFlavors(EXO_FILE_INSTALL_FLAVOR),
               projectFilesystem,
-              ruleFinder,
+              graphBuilder,
               directoryLister.getSourcePathToOutput(),
               apkInfo.getManifestPath(),
               filteredExopackageInfo);
@@ -109,7 +108,7 @@ class AndroidBinaryInstallGraphEnhancer {
       List<BuildRule> resourceInstallRules =
           createResourceInstallRules(
               exopackageInfo.getResourcesInfo().get(),
-              ruleFinder,
+              graphBuilder,
               apkInfo.getManifestPath(),
               directoryLister.getSourcePathToOutput());
       resourceInstallRules.forEach(graphBuilder::addToIndex);
@@ -120,7 +119,7 @@ class AndroidBinaryInstallGraphEnhancer {
         new ExopackageInstallFinisher(
             buildTarget,
             projectFilesystem,
-            ruleFinder,
+            graphBuilder,
             apkInfo,
             directoryLister,
             finisherDeps.build());
@@ -139,9 +138,7 @@ class AndroidBinaryInstallGraphEnhancer {
     // and so we don't want a single rule to generate a bunch of resource files and then take up a
     // bunch of build threads all waiting on each other.
     Multimap<BuildRule, ExopackagePathAndHash> creatorMappedPaths =
-        resourcesInfo
-            .getResourcesPaths()
-            .stream()
+        resourcesInfo.getResourcesPaths().stream()
             .collect(
                 ImmutableListMultimap.toImmutableListMultimap(
                     (ExopackagePathAndHash pathAndHash) ->

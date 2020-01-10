@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.swift;
@@ -20,9 +20,9 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.util.ListeningProcessExecutor;
+import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.util.ProcessExecutor.Result;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.facebook.buck.util.SimpleProcessListener;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -52,29 +52,38 @@ class SwiftCompileStep implements Step {
     return "swift compile";
   }
 
-  private ProcessExecutorParams makeProcessExecutorParams() {
+  private ProcessExecutorParams makeProcessExecutorParams(ExecutionContext context) {
     ProcessExecutorParams.Builder builder = ProcessExecutorParams.builder();
     builder.setDirectory(compilerCwd.toAbsolutePath());
     builder.setEnvironment(compilerEnvironment);
-    builder.setCommand(compilerCommand);
+    builder.setCommand(
+        ImmutableList.<String>builder()
+            .addAll(compilerCommand)
+            .addAll(getColorArguments(context.getAnsi().isAnsiTerminal()))
+            .build());
     return builder.build();
+  }
+
+  private Iterable<String> getColorArguments(boolean allowColorInDiagnostics) {
+    return allowColorInDiagnostics ? ImmutableList.of("-color-diagnostics") : ImmutableList.of();
   }
 
   @Override
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
-    ListeningProcessExecutor executor = new ListeningProcessExecutor();
-    ProcessExecutorParams params = makeProcessExecutorParams();
-    SimpleProcessListener listener = new SimpleProcessListener();
+    ProcessExecutorParams params = makeProcessExecutorParams(context);
 
     // TODO(markwang): parse the output, print build failure errors, etc.
     LOG.debug("%s", compilerCommand);
-    ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(params, listener);
-    int result = executor.waitForProcess(process);
-    if (result != 0) {
-      LOG.error("Error running %s: %s", getDescription(context), listener.getStderr());
+
+    Result processResult = context.getProcessExecutor().launchAndExecute(params);
+
+    int result = processResult.getExitCode();
+    Optional<String> stderr = processResult.getStderr();
+    if (result != StepExecutionResults.SUCCESS_EXIT_CODE) {
+      LOG.error("Error running %s: %s", getDescription(context), stderr);
     }
-    return StepExecutionResult.of(result, Optional.of(listener.getStderr()));
+    return StepExecutionResult.of(processResult);
   }
 
   @Override

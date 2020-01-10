@@ -1,21 +1,22 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.model.targetgraph;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
@@ -24,7 +25,7 @@ import com.facebook.buck.util.MoreMaps;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -73,10 +74,19 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?>> {
     return Optional.ofNullable(getInternal(target));
   }
 
+  /**
+   * Get a target from graph. Use of {@link #get(BuildTarget, DependencyStack)} is encouraged
+   * because it provides better diagnostics
+   */
   public TargetNode<?> get(BuildTarget target) {
+    return get(target, DependencyStack.root());
+  }
+
+  /** Get a target from graph */
+  public TargetNode<?> get(BuildTarget target, DependencyStack dependencyStack) {
     TargetNode<?> node = getInternal(target);
     if (node == null) {
-      throw new NoSuchTargetException(target);
+      throw new NoSuchTargetException(dependencyStack, target);
     }
     return node;
   }
@@ -131,7 +141,7 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?>> {
    */
   public <T> TargetGraph getSubgraph(Iterable<? extends TargetNode<? extends T>> roots) {
     MutableDirectedGraph<TargetNode<?>> subgraph = new MutableDirectedGraph<>();
-    Map<BuildTarget, TargetNode<?>> index = new HashMap<>();
+    Map<BuildTarget, TargetNode<?>> index = new LinkedHashMap<>();
 
     new AbstractBreadthFirstTraversal<TargetNode<?>>(roots) {
       @Override

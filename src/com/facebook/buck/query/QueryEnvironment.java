@@ -30,6 +30,7 @@
 
 package com.facebook.buck.query;
 
+import com.facebook.buck.core.model.QueryTarget;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.Objects;
@@ -42,8 +43,16 @@ import javax.annotation.Nullable;
  * The environment of a Buck query that can evaluate queries to produce a result.
  *
  * <p>The query language is documented at docs/command/query.soy
+ *
+ * @param <NODE_TYPE> The primary type of "node" in the graph over which a {@code buck query} is run
+ *     in this environment. Although all objects returned by {@link QueryEnvironment} implement
+ *     {@link QueryTarget}, which is a marker interface for all possible "nodes" in the graph being
+ *     queried, <em>most</em> methods return objects that correspond to build rules. As such, {@code
+ *     NODE_TYPE} specifies the type used to represent build rules in this environment. Methods that
+ *     return objects of type {@code NODE_TYPE} therefore provide stronger guarantees than those
+ *     that only guarantee {@link QueryTarget} as the return type.
  */
-public interface QueryEnvironment {
+public interface QueryEnvironment<NODE_TYPE> {
 
   /** Type of an argument of a user-defined query function. */
   enum ArgumentType {
@@ -52,12 +61,18 @@ public interface QueryEnvironment {
     INTEGER,
   }
 
-  /** Value of an argument of a user-defined query function. */
-  class Argument {
+  /**
+   * Value of an argument of a user-defined query function.
+   *
+   * @param <ENV_NODE_TYPE> If this argument represents an {@link ArgumentType#EXPRESSION},
+   *     determines the type of the {@link QueryEnvironment} in which the expression is expected to
+   *     be evaluated.
+   */
+  class Argument<ENV_NODE_TYPE> {
 
     private final ArgumentType type;
 
-    @Nullable private final QueryExpression expression;
+    @Nullable private final QueryExpression<ENV_NODE_TYPE> expression;
 
     @Nullable private final String word;
 
@@ -65,7 +80,7 @@ public interface QueryEnvironment {
 
     private Argument(
         ArgumentType type,
-        @Nullable QueryExpression expression,
+        @Nullable QueryExpression<ENV_NODE_TYPE> expression,
         @Nullable String word,
         int integer) {
       this.type = type;
@@ -74,23 +89,23 @@ public interface QueryEnvironment {
       this.integer = integer;
     }
 
-    public static Argument of(QueryExpression expression) {
-      return new Argument(ArgumentType.EXPRESSION, expression, null, 0);
+    public static <T> Argument<T> of(QueryExpression<T> expression) {
+      return new Argument<T>(ArgumentType.EXPRESSION, expression, null, 0);
     }
 
-    public static Argument of(String word) {
-      return new Argument(ArgumentType.WORD, null, word, 0);
+    public static Argument<?> of(String word) {
+      return new Argument<>(ArgumentType.WORD, null, word, 0);
     }
 
-    public static Argument of(int integer) {
-      return new Argument(ArgumentType.INTEGER, null, null, integer);
+    public static Argument<?> of(int integer) {
+      return new Argument<>(ArgumentType.INTEGER, null, null, integer);
     }
 
     public ArgumentType getType() {
       return type;
     }
 
-    public QueryExpression getExpression() {
+    public QueryExpression<ENV_NODE_TYPE> getExpression() {
       return Objects.requireNonNull(expression);
     }
 
@@ -118,10 +133,10 @@ public interface QueryEnvironment {
 
     @Override
     public boolean equals(Object other) {
-      return (other instanceof Argument) && equalTo((Argument) other);
+      return (other instanceof Argument) && equalTo((Argument<?>) other);
     }
 
-    public boolean equalTo(Argument other) {
+    public boolean equalTo(Argument<?> other) {
       return type.equals(other.type)
           && integer == other.integer
           && Objects.equals(expression, other.expression)
@@ -143,8 +158,14 @@ public interface QueryEnvironment {
     }
   }
 
-  /** A user-defined query function. */
-  interface QueryFunction {
+  /**
+   * A user-defined query function.
+   *
+   * @param <ENV_NODE_TYPE> determines the type of the {@link QueryEnvironment} in which this
+   *     function is expected to operate.
+   * @param <OUTPUT_TYPE> return type of this function.
+   */
+  interface QueryFunction<OUTPUT_TYPE extends QueryTarget, ENV_NODE_TYPE> {
     /** Name of the function as it appears in the query language. */
     String getName();
 
@@ -166,9 +187,14 @@ public interface QueryEnvironment {
      * @param env the query environment this function is evaluated in.
      * @param args the input arguments. These are type-checked against the specification returned by
      *     {@link #getArgumentTypes} and {@link #getMandatoryArguments}
+     * @return results of evaluating the query expression. The result type is mutable {@link Set} to
+     *     enable actual implementation to avoid making unnecessary copies, but resulting set is not
+     *     supposed to be mutated afterwards so implementation is ok to return {@link ImmutableSet}.
      */
-    ImmutableSet<QueryTarget> eval(
-        QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args)
+    Set<OUTPUT_TYPE> eval(
+        QueryEvaluator<ENV_NODE_TYPE> evaluator,
+        QueryEnvironment<ENV_NODE_TYPE> env,
+        ImmutableList<Argument<ENV_NODE_TYPE>> args)
         throws QueryException;
   }
 
@@ -178,7 +204,7 @@ public interface QueryEnvironment {
    */
   interface TargetEvaluator {
     /** Returns the set of target nodes for the specified target pattern, in 'buck build' syntax. */
-    ImmutableSet<QueryTarget> evaluateTarget(String target) throws QueryException;
+    Set<QueryTarget> evaluateTarget(String target) throws QueryException;
 
     Type getType();
 
@@ -195,34 +221,33 @@ public interface QueryEnvironment {
    * Returns the set of target nodes in the graph for the specified target pattern, in 'buck build'
    * syntax.
    */
-  default ImmutableSet<QueryTarget> getTargetsMatchingPattern(String pattern)
-      throws QueryException {
+  default Set<QueryTarget> getTargetsMatchingPattern(String pattern) throws QueryException {
     return getTargetEvaluator().evaluateTarget(pattern);
   }
 
   /** Returns the direct forward dependencies of the specified targets. */
-  ImmutableSet<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets) throws QueryException;
+  Set<NODE_TYPE> getFwdDeps(Iterable<NODE_TYPE> targets) throws QueryException;
 
   /**
    * Applies {@code action} to each forward dependencies of the specified targets.
    *
    * <p>Might apply more than once to the same target, so {@code action} should be idempotent.
    */
-  default void forEachFwdDep(Iterable<QueryTarget> targets, Consumer<? super QueryTarget> action)
+  default void forEachFwdDep(Iterable<NODE_TYPE> targets, Consumer<NODE_TYPE> action)
       throws QueryException {
     getFwdDeps(targets).forEach(action);
   }
 
   /** Returns the direct reverse dependencies of the specified targets. */
-  Set<QueryTarget> getReverseDeps(Iterable<QueryTarget> targets) throws QueryException;
+  Set<NODE_TYPE> getReverseDeps(Iterable<NODE_TYPE> targets) throws QueryException;
 
-  Set<QueryTarget> getInputs(QueryTarget target) throws QueryException;
+  Set<QueryFileTarget> getInputs(NODE_TYPE target) throws QueryException;
 
   /**
    * Returns the forward transitive closure of all of the targets in "targets". Callers must ensure
    * that {@link #buildTransitiveClosure} has been called for the relevant subgraph.
    */
-  Set<QueryTarget> getTransitiveClosure(Set<QueryTarget> targets) throws QueryException;
+  Set<NODE_TYPE> getTransitiveClosure(Set<NODE_TYPE> targets) throws QueryException;
 
   /**
    * Construct the dependency graph for a depth-bounded forward transitive closure of all nodes in
@@ -231,32 +256,38 @@ public interface QueryEnvironment {
    * <p>If a larger transitive closure was already built, returns it to improve incrementality,
    * since all depth-constrained methods filter it after it is built anyway.
    */
-  void buildTransitiveClosure(Set<QueryTarget> targetNodes, int maxDepth) throws QueryException;
+  void buildTransitiveClosure(Set<? extends QueryTarget> targetNodes, int maxDepth)
+      throws QueryException;
 
-  String getTargetKind(QueryTarget target) throws QueryException;
+  String getTargetKind(NODE_TYPE target) throws QueryException;
 
   /** Returns the tests associated with the given target. */
-  ImmutableSet<QueryTarget> getTestsForTarget(QueryTarget target) throws QueryException;
+  Set<NODE_TYPE> getTestsForTarget(NODE_TYPE target) throws QueryException;
 
   /** Returns the build files that define the given targets. */
-  ImmutableSet<QueryTarget> getBuildFiles(Set<QueryTarget> targets) throws QueryException;
+  Set<QueryFileTarget> getBuildFiles(Set<NODE_TYPE> targets) throws QueryException;
 
   /** Returns the targets that own one or more of the given files. */
-  ImmutableSet<QueryTarget> getFileOwners(ImmutableList<String> files) throws QueryException;
+  Set<NODE_TYPE> getFileOwners(ImmutableList<String> files) throws QueryException;
 
-  /** Returns the existing targets in the value of `attribute` of the given `target`. */
-  ImmutableSet<QueryTarget> getTargetsInAttribute(QueryTarget target, String attribute)
+  /**
+   * Returns the existing targets in the value of `attribute` of the given `target`.
+   *
+   * <p>Note that unlike most methods in this interface, this method can return a heterogeneous
+   * collection of objects that implement {@link QueryTarget}.
+   */
+  Set<? extends QueryTarget> getTargetsInAttribute(NODE_TYPE target, String attribute)
       throws QueryException;
 
   /** Returns the objects in the `attribute` of the given `target` that satisfy `predicate` */
-  ImmutableSet<Object> filterAttributeContents(
-      QueryTarget target, String attribute, Predicate<Object> predicate) throws QueryException;
+  Set<Object> filterAttributeContents(
+      NODE_TYPE target, String attribute, Predicate<Object> predicate) throws QueryException;
 
   /** Returns the set of query functions implemented by this query environment. */
-  Iterable<QueryFunction> getFunctions();
+  Iterable<QueryFunction<? extends QueryTarget, NODE_TYPE>> getFunctions();
 
   /** @return the {@link QueryTarget}s expanded from the given variable {@code name}. */
-  default ImmutableSet<QueryTarget> resolveTargetVariable(String name) {
+  default Set<NODE_TYPE> resolveTargetVariable(String name) {
     throw new IllegalArgumentException(String.format("unexpected target variable \"%s\"", name));
   }
 }

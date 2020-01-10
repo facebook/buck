@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
@@ -20,18 +20,14 @@ import static com.facebook.buck.jvm.core.JavaLibrary.MAVEN_JAR;
 import static com.facebook.buck.jvm.core.JavaLibrary.SRC_JAR;
 import static com.facebook.buck.jvm.java.Javadoc.DOC_JAR;
 
-import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.jvm.java.MavenPublishable;
 import com.facebook.buck.maven.Publisher;
-import com.facebook.buck.parser.BuildTargetSpec;
-import com.facebook.buck.parser.TargetNodeSpec;
+import com.facebook.buck.parser.spec.BuildTargetSpec;
+import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.base.Joiner;
@@ -132,7 +128,8 @@ public class PublishCommand extends BuildCommand {
     BuildRunResult buildRunResult;
     try (CommandThreadManager pool =
         new CommandThreadManager("Publish", getConcurrencyLimit(params.getBuckConfig()))) {
-      buildRunResult = super.run(params, pool, ImmutableSet.of());
+      buildRunResult =
+          super.run(params, pool, this::enhanceFlavorsForPublishing, ImmutableSet.of());
     }
 
     ExitCode exitCode = buildRunResult.getExitCode();
@@ -180,9 +177,7 @@ public class PublishCommand extends BuildCommand {
     try {
       ImmutableSet<DeployResult> deployResults =
           publisher.publish(
-              DefaultSourcePathResolver.from(
-                  new SourcePathRuleFinder(getBuild().getGraphBuilder())),
-              publishables.build());
+              getBuild().getGraphBuilder().getSourcePathResolver(), publishables.build());
       for (DeployResult deployResult : deployResults) {
         printArtifactsInformation(params, deployResult);
       }
@@ -209,13 +204,10 @@ public class PublishCommand extends BuildCommand {
     return artifact + " < " + artifact.getFile();
   }
 
-  @Override
-  public ImmutableList<TargetNodeSpec> parseArgumentsAsTargetNodeSpecs(
-      CellPathResolver cellPathResolver, BuckConfig config, Iterable<String> targetsAsArgs) {
-    ImmutableList<TargetNodeSpec> specs =
-        super.parseArgumentsAsTargetNodeSpecs(cellPathResolver, config, targetsAsArgs);
+  private ImmutableList<TargetNodeSpec> enhanceFlavorsForPublishing(
+      ImmutableList<TargetNodeSpec> specs) {
 
-    Map<UnconfiguredBuildTarget, TargetNodeSpec> uniqueSpecs = new HashMap<>();
+    Map<UnconfiguredBuildTargetView, TargetNodeSpec> uniqueSpecs = new HashMap<>();
     for (TargetNodeSpec spec : specs) {
       if (!(spec instanceof BuildTargetSpec)) {
         throw new IllegalArgumentException(
@@ -223,22 +215,22 @@ public class PublishCommand extends BuildCommand {
       }
 
       BuildTargetSpec targetSpec = (BuildTargetSpec) spec;
-      Objects.requireNonNull(targetSpec.getUnconfiguredBuildTarget());
+      Objects.requireNonNull(targetSpec.getUnconfiguredBuildTargetView());
 
-      UnconfiguredBuildTarget mavenTarget =
-          targetSpec.getUnconfiguredBuildTarget().withFlavors(MAVEN_JAR);
-      uniqueSpecs.put(mavenTarget, targetSpec.withUnconfiguredBuildTarget(mavenTarget));
+      UnconfiguredBuildTargetView mavenTarget =
+          targetSpec.getUnconfiguredBuildTargetView().withFlavors(MAVEN_JAR);
+      uniqueSpecs.put(mavenTarget, BuildTargetSpec.from(mavenTarget));
 
       if (includeSource) {
-        UnconfiguredBuildTarget sourceTarget =
-            targetSpec.getUnconfiguredBuildTarget().withFlavors(MAVEN_JAR, SRC_JAR);
-        uniqueSpecs.put(sourceTarget, targetSpec.withUnconfiguredBuildTarget(sourceTarget));
+        UnconfiguredBuildTargetView sourceTarget =
+            targetSpec.getUnconfiguredBuildTargetView().withFlavors(MAVEN_JAR, SRC_JAR);
+        uniqueSpecs.put(sourceTarget, BuildTargetSpec.from(sourceTarget));
       }
 
       if (includeDocs) {
-        UnconfiguredBuildTarget docsTarget =
-            targetSpec.getUnconfiguredBuildTarget().withFlavors(MAVEN_JAR, DOC_JAR);
-        uniqueSpecs.put(docsTarget, targetSpec.withUnconfiguredBuildTarget(docsTarget));
+        UnconfiguredBuildTargetView docsTarget =
+            targetSpec.getUnconfiguredBuildTargetView().withFlavors(MAVEN_JAR, DOC_JAR);
+        uniqueSpecs.put(docsTarget, BuildTargetSpec.from(docsTarget));
       }
     }
 

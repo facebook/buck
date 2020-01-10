@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -23,6 +23,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -39,6 +40,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.OptionalInt;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -197,7 +199,7 @@ public class PreDexedFilesSorterTest {
           moduleGraph.getRootAPKModule(),
           createFakeDexWithClasses(
               filesystem,
-              Paths.get("primary").resolve(String.format("/primary%d.dex", i)),
+              Paths.get("primary").resolve(String.format("primary%d.dex", i)),
               ImmutableSet.of(String.format("primary.primary%d.class", i)),
               STANDARD_DEX_FILE_ESTIMATE));
     }
@@ -220,18 +222,25 @@ public class PreDexedFilesSorterTest {
               STANDARD_DEX_FILE_ESTIMATE));
     }
 
-    PreDexedFilesSorter sorter =
-        new PreDexedFilesSorter(
-            inputDexes.build(),
-            ImmutableSet.of(PRIMARY_DEX_PATTERN),
-            moduleGraph,
-            tempDir.newFolder("scratch").toPath(),
-            DEX_WEIGHT_LIMIT,
-            DexStore.JAR,
-            tempDir.newFolder("secondary").toPath(),
-            tempDir.newFolder("additional").toPath());
+    ImmutableMultimap<APKModule, DexWithClasses> dexes = inputDexes.build();
+    ImmutableMap.Builder<String, PreDexedFilesSorter.Result> results = ImmutableMap.builder();
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    return sorter.sortIntoPrimaryAndSecondaryDexes(filesystem, steps);
+
+    for (APKModule module : dexes.keySet()) {
+      PreDexedFilesSorter sorter =
+          new PreDexedFilesSorter(
+              dexes.get(module),
+              ImmutableSet.of(PRIMARY_DEX_PATTERN),
+              moduleGraph,
+              module,
+              tempDir.newFolder(module.getName(), "scratch").toPath(),
+              DEX_WEIGHT_LIMIT,
+              DexStore.JAR,
+              tempDir.newFolder(module.getName(), "secondary").toPath(),
+              OptionalInt.empty());
+      results.put(module.getName(), sorter.sortIntoPrimaryAndSecondaryDexes(filesystem, steps));
+    }
+    return results.build();
   }
 
   private DexWithClasses createFakeDexWithClasses(
@@ -240,6 +249,12 @@ public class PreDexedFilesSorterTest {
       ImmutableSet<String> classNames,
       int weightEstimate) {
     return new DexWithClasses() {
+      @Override
+      public BuildTarget getSourceBuildTarget() {
+        return BuildTargetFactory.newInstance(
+            pathToDex.getParent() + ":" + pathToDex.getFileName());
+      }
+
       @Override
       public SourcePath getSourcePathToDexFile() {
         return PathSourcePath.of(filesystem, pathToDex);

@@ -1,20 +1,22 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ListMultimap;
@@ -60,19 +62,21 @@ class UntrackedHeaderReporterWithShowIncludes implements UntrackedHeaderReporter
     this.treeParents = null;
   }
 
-  private List<Path> getPathToUntrackedHeader(Path header) throws IOException {
+  private List<Path> getPathToUntrackedHeader(SourcePathResolverAdapter pathResolver, Path header)
+      throws IOException {
     // An intermediate depfile in `show_include` mode contains a source file + used headers
     // (see CxxPreprocessAndCompileStep for details).
     // So, we "strip" the the source file first.
     List<String> srcAndIncludes = filesystem.readLines(sourceDepFile);
     List<String> includes = srcAndIncludes.subList(1, srcAndIncludes.size());
-    return getPathToUntrackedHeader(includes, header);
+    return getPathToUntrackedHeader(pathResolver, includes, header);
   }
 
   /**
    * @return a list of headers that represents a chain of includes ending in a particular header.
    */
-  private List<Path> getPathToUntrackedHeader(List<String> includeLines, Path header) {
+  private List<Path> getPathToUntrackedHeader(
+      SourcePathResolverAdapter pathResolver, List<String> includeLines, Path header) {
     // We parse the tree structure linearly by maintaining a stack of the current active parents.
     Stack<Path> active_parents = new Stack<Path>();
     for (String line : includeLines) {
@@ -87,7 +91,7 @@ class UntrackedHeaderReporterWithShowIncludes implements UntrackedHeaderReporter
       Path currentHeader = filesystem.resolve(line.trim()).normalize();
       currentHeader =
           headerPathNormalizer
-              .getAbsolutePathForUnnormalizedPath(currentHeader)
+              .getAbsolutePathForUnnormalizedPath(pathResolver, currentHeader)
               .orElse(currentHeader);
       active_parents.push(currentHeader);
       if (currentHeader.equals(header)) {
@@ -103,10 +107,13 @@ class UntrackedHeaderReporterWithShowIncludes implements UntrackedHeaderReporter
   }
 
   @Override
-  public String getErrorReport(Path header) throws IOException {
+  public String getErrorReport(SourcePathResolverAdapter pathResolver, Path header)
+      throws IOException {
     Path absolutePath =
-        headerPathNormalizer.getAbsolutePathForUnnormalizedPath(header).orElse(header);
-    List<Path> chain = getPathToUntrackedHeader(absolutePath);
+        headerPathNormalizer
+            .getAbsolutePathForUnnormalizedPath(pathResolver, header)
+            .orElse(header);
+    List<Path> chain = getPathToUntrackedHeader(pathResolver, absolutePath);
     String errorMessage =
         String.format(
             "%s: included an untracked header: %n%s",
@@ -124,8 +131,7 @@ class UntrackedHeaderReporterWithShowIncludes implements UntrackedHeaderReporter
   }
 
   private String prettyPrintChain(List<Path> chain) {
-    return chain
-        .stream()
+    return chain.stream()
         .map((file) -> prettyPrintFileName(file, false))
         .collect(Collectors.joining(CHAIN_SEPARATOR));
   }

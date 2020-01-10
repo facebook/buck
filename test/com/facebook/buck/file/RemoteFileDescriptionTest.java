@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.file;
@@ -25,12 +25,9 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TestBuildRuleCreationContextFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -57,13 +54,14 @@ public class RemoteFileDescriptionTest {
   private RemoteFileDescription description;
   private ProjectFilesystem filesystem;
   private ActionGraphBuilder graphBuilder;
+  private ToolchainProvider toolchainProvider;
 
   @Before
   public void setUp() {
     downloader = new ExplodingDownloader();
-    ToolchainProvider toolchainProvider =
+    toolchainProvider =
         new ToolchainProviderBuilder().withToolchain(Downloader.DEFAULT_NAME, downloader).build();
-    description = new RemoteFileDescription(toolchainProvider);
+    description = new RemoteFileDescription();
     filesystem = new FakeProjectFilesystem();
     graphBuilder = new TestActionGraphBuilder();
   }
@@ -83,7 +81,7 @@ public class RemoteFileDescriptionTest {
     exception.expectMessage(Matchers.containsString(target.getFullyQualifiedName()));
 
     description.createBuildRule(
-        TestBuildRuleCreationContextFactory.create(graphBuilder, filesystem),
+        TestBuildRuleCreationContextFactory.create(graphBuilder, filesystem, toolchainProvider),
         target,
         RemoteFileBuilder.createBuilder(downloader, target)
             .from(arg)
@@ -106,7 +104,7 @@ public class RemoteFileDescriptionTest {
 
     BuildRule buildRule =
         description.createBuildRule(
-            TestBuildRuleCreationContextFactory.create(graphBuilder, filesystem),
+            TestBuildRuleCreationContextFactory.create(graphBuilder, filesystem, toolchainProvider),
             target,
             RemoteFileBuilder.createBuilder(downloader, target)
                 .from(arg)
@@ -115,8 +113,6 @@ public class RemoteFileDescriptionTest {
     graphBuilder.addToIndex(buildRule);
 
     assertThat(buildRule, CoreMatchers.instanceOf(RemoteFileBinary.class));
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
     Tool executableCommand = ((RemoteFileBinary) buildRule).getExecutableCommand();
     assertThat(
         BuildableSupport.deriveInputs(executableCommand).collect(ImmutableList.toImmutableList()),
@@ -125,10 +121,10 @@ public class RemoteFileDescriptionTest {
         Iterables.getOnlyElement(
             BuildableSupport.deriveInputs(executableCommand)
                 .collect(ImmutableList.toImmutableList()));
-    Path absolutePath = pathResolver.getAbsolutePath(input);
+    Path absolutePath = graphBuilder.getSourcePathResolver().getAbsolutePath(input);
     assertEquals("kale", absolutePath.getFileName().toString());
     assertEquals(
         ImmutableList.of(absolutePath.toString()),
-        executableCommand.getCommandPrefix(pathResolver));
+        executableCommand.getCommandPrefix(graphBuilder.getSourcePathResolver()));
   }
 }

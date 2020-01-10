@@ -1,0 +1,16 @@
+load("//:defs.bzl", "my_rule")
+
+my_rule(
+    name = "not_a_path",
+    filename = "\0",
+)
+
+my_rule(
+    name = "rejected_path",
+    filename = "../ancestor",
+)
+
+my_rule(
+    name = "valid_filename",
+    filename = "bar/baz.sh",
+)

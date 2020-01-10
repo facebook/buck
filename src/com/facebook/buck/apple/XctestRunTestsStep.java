@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple;
@@ -122,7 +122,7 @@ class XctestRunTestsStep implements Step {
     int exitCode;
     try (OutputStream outputStream = filesystem.newFileOutputStream(outputPath);
         TeeInputStream outputWrapperStream =
-            new TeeInputStream(launchedProcess.getInputStream(), outputStream)) {
+            new TeeInputStream(launchedProcess.getStdout(), outputStream)) {
       if (outputReadingCallback.isPresent()) {
         // The caller is responsible for reading all the data, which TeeInputStream will
         // copy to outputStream.
@@ -131,7 +131,7 @@ class XctestRunTestsStep implements Step {
         // Nobody's going to read from outputWrapperStream, so close it and copy
         // the process's stdout and stderr to outputPath directly.
         outputWrapperStream.close();
-        ByteStreams.copy(launchedProcess.getInputStream(), outputStream);
+        ByteStreams.copy(launchedProcess.getStdout(), outputStream);
       }
       exitCode = executor.waitForLaunchedProcess(launchedProcess).getExitCode();
 

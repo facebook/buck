@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.build.engine.buildinfo;
@@ -31,6 +31,9 @@ public class BuildInfo {
   public static class MetadataKey {
     /** Utility class: do not instantiate. */
     private MetadataKey() {}
+
+    /** Value for file that contains all artifact metadata as a json bundle. */
+    public static final String ARTIFACT_METADATA = "ARTIFACT_METADATA";
 
     /** Key for {@link OnDiskBuildInfo} which lists the recorded items. */
     public static final String RECORDED_PATHS = "RECORDED_PATHS";
@@ -59,6 +62,12 @@ public class BuildInfo {
     /** Key for {@link OnDiskBuildInfo} to store the build target of the owning build rule. */
     public static final String TARGET = "TARGET";
 
+    /**
+     * Key for {@link OnDiskBuildInfo} to store the build target configuration of the owning build
+     * rule.
+     */
+    public static final String CONFIGURATION = "CONFIGURATION";
+
     /** Key for {@link OnDiskBuildInfo} to store the cache key of the manifest. */
     public static final String MANIFEST_KEY = "MANIFEST_KEY";
 
@@ -85,6 +94,7 @@ public class BuildInfo {
           MetadataKey.DEP_FILE_RULE_KEY,
           MetadataKey.DEP_FILE,
           MetadataKey.TARGET,
+          MetadataKey.CONFIGURATION,
           MetadataKey.MANIFEST_KEY,
           MetadataKey.BUILD_ID,
           MetadataKey.ORIGIN_BUILD_ID);
@@ -111,7 +121,7 @@ public class BuildInfo {
    */
   @VisibleForTesting
   public static Path getPathToMetadataDirectory(BuildTarget target, ProjectFilesystem filesystem) {
-    return BuildTargetPaths.getScratchPath(filesystem, target, ".%s/metadata/");
+    return BuildTargetPaths.getScratchPath(filesystem, target, ".%s/metadata");
   }
 
   public static Path getPathToArtifactMetadataDirectory(
@@ -119,13 +129,25 @@ public class BuildInfo {
     return getPathToMetadataDirectory(target, filesystem).resolve("artifact");
   }
 
-  public static Path getPathToBuildMetadataDirectory(
+  public static Path getPathToArtifactMetadataFile(
       BuildTarget target, ProjectFilesystem filesystem) {
-    return getPathToMetadataDirectory(target, filesystem).resolve("build");
+    return getPathToArtifactMetadataDirectory(target, filesystem)
+        .resolve(MetadataKey.ARTIFACT_METADATA);
   }
 
   public static Path getPathToOtherMetadataDirectory(
       BuildTarget target, ProjectFilesystem filesystem) {
     return getPathToMetadataDirectory(target, filesystem).resolve("other");
+  }
+
+  /**
+   * Whether this is a key that represents data to be stored as {@link
+   * MetadataKey#ARTIFACT_METADATA}.
+   */
+  public static boolean isArtifactMetadata(String key) {
+    return key.equals(MetadataKey.OUTPUT_SIZE)
+        || key.equals(MetadataKey.OUTPUT_HASH)
+        || key.equals(MetadataKey.RECORDED_PATHS)
+        || key.equals(MetadataKey.RECORDED_PATH_HASHES);
   }
 }

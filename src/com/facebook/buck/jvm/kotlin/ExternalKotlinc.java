@@ -1,18 +1,19 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.jvm.kotlin;
 
 import static com.google.common.collect.Iterables.transform;
@@ -22,7 +23,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -48,6 +49,7 @@ public class ExternalKotlinc implements Kotlinc, AddsToRuleKey {
 
   private final Path pathToKotlinc;
   private final Supplier<KotlincVersion> version;
+  @AddToRuleKey private final String kotlinCompilerVersion;
 
   public ExternalKotlinc(Path pathToKotlinc) {
     this.pathToKotlinc = pathToKotlinc;
@@ -73,11 +75,11 @@ public class ExternalKotlinc implements Kotlinc, AddsToRuleKey {
                 return KotlincVersion.of(output);
               }
             });
+    this.kotlinCompilerVersion = getKotlinCompilerVersion();
   }
 
   /** Returns the Kotlin version, or the path if version is unknown */
-  @AddToRuleKey
-  public String getKotlinCompilerVersion() {
+  private String getKotlinCompilerVersion() {
     if (DEFAULT_VERSION.equals(getVersion())) {
       // What we really want to do here is use a VersionedTool, however, this will suffice for now.
       return getShortName();
@@ -87,7 +89,7 @@ public class ExternalKotlinc implements Kotlinc, AddsToRuleKey {
   }
 
   @Override
-  public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
+  public ImmutableList<String> getCommandPrefix(SourcePathResolverAdapter resolver) {
     return ImmutableList.of(pathToKotlinc.toString());
   }
 
@@ -175,22 +177,23 @@ public class ExternalKotlinc implements Kotlinc, AddsToRuleKey {
   }
 
   @Override
-  public Path getAnnotationProcessorPath(SourcePathResolver sourcePathResolver) {
+  public Path getAnnotationProcessorPath(SourcePathResolverAdapter sourcePathResolverAdapter) {
     throw new IllegalStateException("Not supported yet");
   }
 
   @Override
-  public Path getStdlibPath(SourcePathResolver sourcePathResolver) {
+  public Path getStdlibPath(SourcePathResolverAdapter sourcePathResolverAdapter) {
     throw new IllegalStateException("Not supported yet");
   }
 
   @Override
-  public ImmutableList<Path> getAdditionalClasspathEntries(SourcePathResolver sourcePathResolver) {
+  public ImmutableList<Path> getAdditionalClasspathEntries(
+      SourcePathResolverAdapter sourcePathResolverAdapter) {
     return ImmutableList.of();
   }
 
   @Override
-  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+  public ImmutableMap<String, String> getEnvironment(SourcePathResolverAdapter resolver) {
     return ImmutableMap.of();
   }
 }

@@ -1,20 +1,20 @@
-load("//tools/build_rules:java_rules.bzl", "standard_java_test")
-
 java_library(
     name = "testutil",
     srcs = glob(
         ["*.java"],
         exclude = ["*Test.java"],
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/core/rules/resolver/impl:impl",
-    ],
     visibility = ["//test/..."],
     deps = [
+        "//src/com/facebook/buck/core/model/platform/impl:impl",
         "//src/com/facebook/buck/core/rules:rules",
+        "//src/com/facebook/buck/core/rules/config/registry/impl:impl",
         "//src/com/facebook/buck/core/rules/transformer/impl:impl",
         "//src/com/facebook/buck/util:util",
         "//test/com/facebook/buck/core/cell:testutil",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/rules/resolver/impl:impl",
     ],
 )
 
@@ -25,15 +25,22 @@ java_test(
     ),
     deps = [
         ":testutil",
+        "//src/com/facebook/buck/core/model/platform/impl:impl",
         "//src/com/facebook/buck/core/rules:rules",
+        "//src/com/facebook/buck/core/rules/config/registry/impl:impl",
+        "//src/com/facebook/buck/core/rules/providers/impl:impl",
         "//src/com/facebook/buck/core/rules/transformer/impl:impl",
         "//src/com/facebook/buck/jvm/java:rules",
         "//src/com/facebook/buck/util/concurrent:concurrent_for_junit_runner",
         "//test/com/facebook/buck/core/cell:testutil",
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/model/targetgraph:testutil",
+        "//test/com/facebook/buck/core/model/targetgraph/impl:testutil",
         "//test/com/facebook/buck/core/rules:testutil",
+        "//test/com/facebook/buck/core/rules/actions:testutil",
+        "//test/com/facebook/buck/core/rules/analysis/impl:testutil",
         "//test/com/facebook/buck/core/rules/impl:testutil",
+        "//test/com/facebook/buck/core/rules/providers/collect/impl:testutil",
         "//test/com/facebook/buck/jvm/java:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//third-party/java/guava:guava",

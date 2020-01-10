@@ -3,6 +3,7 @@ load("//tools/build_rules:java_rules.bzl", "java_test")
 java_test(
     name = "utils",
     srcs = glob(["*.java"]),
+    source = "1.8",
     target = "1.8",
     deps = [
         "//third-party/java/guava:guava",

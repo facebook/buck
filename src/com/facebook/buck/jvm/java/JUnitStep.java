@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
@@ -21,12 +21,15 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -34,6 +37,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public class JUnitStep extends ShellStep {
   private static final Logger LOG = Logger.get(JUnitStep.class);
@@ -45,6 +49,7 @@ public class JUnitStep extends ShellStep {
   private final Optional<Long> testCaseTimeoutMs;
   private final ImmutableMap<String, String> env;
   private final JUnitJvmArgs junitJvmArgs;
+  private Supplier<Path> classpathArgfile;
 
   // Set when the junit command times out.
   private boolean hasTimedOut = false;
@@ -65,11 +70,33 @@ public class JUnitStep extends ShellStep {
     this.testCaseTimeoutMs = testCaseTimeoutMs;
     this.env = env;
     this.junitJvmArgs = junitJvmArgs;
+
+    this.classpathArgfile =
+        MoreSuppliers.memoize(
+            () -> {
+              try {
+                return filesystem.createTempFile("classpath-argfile", "");
+              } catch (IOException e) {
+                throw new RuntimeException(e);
+              }
+            });
   }
 
   @Override
   public String getShortName() {
     return "junit";
+  }
+
+  /** Returns the classpath argfile for Java 9+ invocations. */
+  public Path getClasspathArgfile() {
+    return classpathArgfile.get();
+  }
+
+  /** Ensures the classpath argfile for Java 9+ invocations has been created. */
+  public void ensureClasspathArgfile() throws IOException {
+    if (junitJvmArgs.shouldUseClasspathArgfile()) {
+      junitJvmArgs.writeClasspathArgfile(filesystem, classpathArgfile.get());
+    }
   }
 
   @Override
@@ -80,6 +107,7 @@ public class JUnitStep extends ShellStep {
     junitJvmArgs.formatCommandLineArgsToList(
         args,
         filesystem,
+        classpathArgfile,
         context.getVerbosity(),
         testCaseTimeoutMs.orElse(context.getDefaultTestTimeoutMillis()));
 
@@ -89,6 +117,13 @@ public class JUnitStep extends ShellStep {
     }
 
     return args.build();
+  }
+
+  @Override
+  public StepExecutionResult execute(ExecutionContext context)
+      throws InterruptedException, IOException {
+    ensureClasspathArgfile();
+    return super.execute(context);
   }
 
   @Override

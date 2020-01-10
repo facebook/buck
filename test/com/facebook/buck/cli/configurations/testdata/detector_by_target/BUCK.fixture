@@ -1,0 +1,41 @@
+constraint_setting(
+    name = "cs",
+)
+
+constraint_value(
+    name = "foo-cv",
+    constraint_setting = ":cs",
+)
+
+constraint_value(
+    name = "bar-cv",
+    constraint_setting = ":cs",
+)
+
+config_setting(
+    name = "foo-c",
+    constraint_values = [
+        ":foo-cv",
+    ],
+)
+
+config_setting(
+    name = "bar-c",
+    constraint_values = [
+        ":bar-cv",
+    ],
+)
+
+platform(
+    name = "foo-p",
+    constraint_values = [
+        ":foo-cv",
+    ],
+)
+
+platform(
+    name = "bar-p",
+    constraint_values = [
+        ":bar-cv",
+    ],
+)

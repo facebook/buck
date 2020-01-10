@@ -1,0 +1,49 @@
+#!<PYTHON> <PYTHON_INTERPRETER_FLAGS>
+
+# Wrap everything in a private function to prevent globals being captured by
+# the `runpy._run_module_as_main` below.
+def __run():
+    import sys
+    import os
+    import platform
+    import subprocess
+
+    def try_resolve_possible_symlink(path):
+        p = subprocess.Popen(
+            ["powershell", "/c", "(Get-Item {}).Target".format(sys.argv[0])],
+            stdout=subprocess.PIPE,
+            shell=True,
+        )
+        stdout, _ = p.communicate()
+        if len(stdout) != 0:
+            return stdout
+        # if the file was not a symlink, powershell prints nothing
+        return path
+
+    # We set the paths beforehand to have a minimal amount of imports before
+    # nuking PWD from sys.path. Otherwise, there can be problems if someone runs
+    # from a directory with a similarly named file, even if their code is properly
+    # namespaced. e.g. if one has foo/bar/contextlib.py and while in foo/bar runs
+    # `buck run foo/bar:bin`, runpy will fail as it tries to import
+    # foo/bar/contextlib.py. You're just out of luck if you have sys.py or os.py
+
+    dirpath = os.path.dirname(os.path.realpath(__file__))
+    if platform.system() == "Windows":
+        # Hah hah just kidding. __file__ will point to the symlink and not the
+        # actual pex we want to execute, if we're in a symlink. os.path.realpath
+        # does *not* dereference symlinks on windows until, like, 3.8 maybe.
+        dirpath = os.path.dirname(try_resolve_possible_symlink(sys.argv[0]))
+
+    # Replace the working directory with location of the modules directory.
+    modules_dir = <MODULES_DIR>
+    main_module = <MAIN_MODULE>
+
+    sys.path[0] = os.path.join(dirpath, modules_dir)
+
+    import os
+    import runpy
+
+    runpy._run_module_as_main(main_module, False)
+
+
+__run()

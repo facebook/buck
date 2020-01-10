@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import com.android.common.sdklib.build.ApkBuilder;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.util.MoreIterables;
@@ -63,7 +63,7 @@ public class AaptStep extends ShellStep {
         || fileName.endsWith("~");
   }
 
-  private final SourcePathResolver pathResolver;
+  private final SourcePathResolverAdapter pathResolver;
 
   private final AndroidPlatformTarget androidPlatformTarget;
   private final Path androidManifest;
@@ -78,8 +78,10 @@ public class AaptStep extends ShellStep {
   private final boolean includesVectorDrawables;
   private final ManifestEntries manifestEntries;
 
+  private final ImmutableList<String> additionalAaptParams;
+
   public AaptStep(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       AndroidPlatformTarget androidPlatformTarget,
       Path workingDirectory,
       Path androidManifest,
@@ -91,7 +93,8 @@ public class AaptStep extends ShellStep {
       ImmutableList<Path> pathToDependecyResourceApks,
       boolean isCrunchPngFiles,
       boolean includesVectorDrawables,
-      ManifestEntries manifestEntries) {
+      ManifestEntries manifestEntries,
+      ImmutableList<String> additionalAaptParams) {
     super(workingDirectory);
     this.pathResolver = pathResolver;
     this.androidPlatformTarget = androidPlatformTarget;
@@ -105,6 +108,7 @@ public class AaptStep extends ShellStep {
     this.isCrunchPngFiles = isCrunchPngFiles;
     this.includesVectorDrawables = includesVectorDrawables;
     this.manifestEntries = manifestEntries;
+    this.additionalAaptParams = additionalAaptParams;
   }
 
   @Override
@@ -149,17 +153,15 @@ public class AaptStep extends ShellStep {
     builder.add("--ignore-assets", IGNORE_ASSETS_PATTERN);
 
     if (manifestEntries.getMinSdkVersion().isPresent()) {
-      builder.add(
-          "--min-sdk-version", String.valueOf(manifestEntries.getMinSdkVersion().getAsInt()));
+      builder.add("--min-sdk-version", manifestEntries.getMinSdkVersion().get().toString());
     }
 
     if (manifestEntries.getTargetSdkVersion().isPresent()) {
-      builder.add(
-          "--target-sdk-version", String.valueOf(manifestEntries.getTargetSdkVersion().getAsInt()));
+      builder.add("--target-sdk-version", manifestEntries.getTargetSdkVersion().get().toString());
     }
 
     if (manifestEntries.getVersionCode().isPresent()) {
-      builder.add("--version-code", String.valueOf(manifestEntries.getVersionCode().getAsInt()));
+      builder.add("--version-code", manifestEntries.getVersionCode().get().toString());
     }
 
     if (manifestEntries.getVersionName().isPresent()) {
@@ -187,6 +189,8 @@ public class AaptStep extends ShellStep {
     while (iterator.hasNext()) {
       builder.add("--feature-after", iterator.next().toString());
     }
+
+    builder.addAll(additionalAaptParams);
 
     return builder.build();
   }

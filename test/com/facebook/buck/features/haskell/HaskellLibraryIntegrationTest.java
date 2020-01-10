@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.haskell;
@@ -42,12 +42,11 @@ public class HaskellLibraryIntegrationTest {
   public static Collection<Object[]> data() {
     return ImmutableList.copyOf(
         new Object[][] {
-          {Linker.LinkableDepType.STATIC},
-          {Linker.LinkableDepType.STATIC_PIC},
-          {Linker.LinkableDepType.SHARED},
+          {Linker.LinkableDepType.STATIC}, {Linker.LinkableDepType.SHARED},
         });
   }
 
+  private HaskellVersion version;
   private ProjectWorkspace workspace;
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
@@ -66,7 +65,7 @@ public class HaskellLibraryIntegrationTest {
     assumeThat(Platform.detect(), Matchers.not(Platform.WINDOWS));
 
     // Verify that the system contains a compiler.
-    HaskellVersion version = HaskellTestUtils.assumeSystemCompiler();
+    version = HaskellTestUtils.assumeSystemCompiler();
 
     // Setup the workspace.
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "library_test", tmp);
@@ -77,22 +76,29 @@ public class HaskellLibraryIntegrationTest {
   }
 
   @Test
-  public void simple() throws IOException {
+  public void simple() {
     workspace.runBuckBuild("//:foo#default," + getLinkFlavor()).assertSuccess();
   }
 
   @Test
-  public void dependency() throws IOException {
+  public void dependency() {
     workspace.runBuckBuild("//:dependent#default," + getLinkFlavor()).assertSuccess();
   }
 
   @Test
-  public void foreign() throws IOException {
+  public void mutuallyRecursive() {
+    // .hs-boot doesn't work well with -i (empty import directory list) for ghc <8
+    assumeThat(version.getMajorVersion(), Matchers.greaterThanOrEqualTo(8));
+    workspace.runBuckBuild("//:mutually_recursive#default," + getLinkFlavor()).assertSuccess();
+  }
+
+  @Test
+  public void foreign() {
     workspace.runBuckBuild("//:foreign#default," + getLinkFlavor()).assertSuccess();
   }
 
   @Test
-  public void firstOrderDeps() throws IOException {
+  public void firstOrderDeps() {
     workspace.runBuckBuild("//:first_order_a_pass#default," + getLinkFlavor()).assertSuccess();
     ProcessResult result =
         workspace.runBuckBuild("//:first_order_a_fail#default," + getLinkFlavor()).assertFailure();
@@ -114,7 +120,7 @@ public class HaskellLibraryIntegrationTest {
   }
 
   @Test
-  public void cHeader() throws IOException {
+  public void cHeader() {
     workspace.runBuckBuild("//:hs_header#default," + getLinkFlavor()).assertSuccess();
   }
 }

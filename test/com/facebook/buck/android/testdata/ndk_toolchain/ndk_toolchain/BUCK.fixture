@@ -1,0 +1,17 @@
+ndk_toolchain(
+    name = "good",
+    cxx_runtime = "libcxx",
+    cxx_toolchain = "//toolchain:good",
+    objdump = "//:objdump",
+    shared_runtime_path = "//data:runtime.so",
+    visibility = ["PUBLIC"],
+)
+
+ndk_toolchain(
+    name = "bad",
+    cxx_runtime = "libcxx",
+    cxx_toolchain = "//toolchain:bad",
+    objdump = "//:objdump",
+    shared_runtime_path = "//data:runtime.so",
+    visibility = ["PUBLIC"],
+)

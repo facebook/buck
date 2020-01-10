@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.httpserver;
@@ -29,9 +29,16 @@ import com.facebook.buck.artifact_cache.ClientCertificateHandler;
 import com.facebook.buck.artifact_cache.DirArtifactCacheTestUtil;
 import com.facebook.buck.artifact_cache.TestArtifactCaches;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.BuckConfigTestUtils;
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.model.TargetConfigurationSerializer;
+import com.facebook.buck.core.model.TargetConfigurationSerializerForTests;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -42,8 +49,7 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemDelegate;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
-import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
-import com.facebook.buck.support.bgtasks.TaskManagerScope;
+import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.support.bgtasks.TestBackgroundTaskManager;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.environment.Architecture;
@@ -62,6 +68,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
@@ -77,6 +84,9 @@ public class ServedCacheIntegrationTest {
   private static final BuildId BUILD_ID = new BuildId("test");
 
   private ProjectFilesystem projectFilesystem;
+  private Function<String, UnconfiguredBuildTargetView> unconfiguredBuildTargetFactory;
+  private CellPathResolver cellPathResolver;
+  private TargetConfigurationSerializer targetConfigurationSerializer;
   private WebServer webServer = null;
   private BuckEventBus buckEventBus;
   private ArtifactCache dirCache;
@@ -86,8 +96,8 @@ public class ServedCacheIntegrationTest {
   private static final ListeningExecutorService DIRECT_EXECUTOR_SERVICE =
       MoreExecutors.newDirectExecutorService();
 
-  private BackgroundTaskManager bgTaskManager;
-  private TaskManagerScope managerScope;
+  private TestBackgroundTaskManager bgTaskManager;
+  private TaskManagerCommandScope managerScope;
 
   @Before
   public void setUp() throws Exception {
@@ -100,8 +110,15 @@ public class ServedCacheIntegrationTest {
         ArtifactInfo.builder().addRuleKeys(A_FILE_RULE_KEY).setMetadata(A_FILE_METADATA).build(),
         BorrowablePath.notBorrowablePath(A_FILE_PATH));
 
-    bgTaskManager = new TestBackgroundTaskManager();
+    bgTaskManager = TestBackgroundTaskManager.of();
     managerScope = bgTaskManager.getNewScope(BUILD_ID);
+
+    cellPathResolver = TestCellPathResolver.get(projectFilesystem);
+    ParsingUnconfiguredBuildTargetViewFactory parsingUnconfiguredBuildTargetFactory =
+        new ParsingUnconfiguredBuildTargetViewFactory();
+    unconfiguredBuildTargetFactory =
+        target -> parsingUnconfiguredBuildTargetFactory.create(cellPathResolver, target);
+    targetConfigurationSerializer = TargetConfigurationSerializerForTests.create(cellPathResolver);
   }
 
   @After
@@ -197,6 +214,7 @@ public class ServedCacheIntegrationTest {
   public void testExceptionDuringTheRead() throws Exception {
     ProjectFilesystem throwingStreamFilesystem =
         new DefaultProjectFilesystem(
+            CanonicalCellName.rootCell(),
             tmpDir.getRoot(),
             new DefaultProjectFilesystemDelegate(tmpDir.getRoot()),
             DefaultProjectFilesystemFactory.getWindowsFSInstance()) {
@@ -235,6 +253,7 @@ public class ServedCacheIntegrationTest {
   public void testExceptionDuringTheReadRetryingFail() throws Exception {
     ProjectFilesystem throwingStreamFilesystem =
         new DefaultProjectFilesystem(
+            CanonicalCellName.rootCell(),
             tmpDir.getRoot(),
             new DefaultProjectFilesystemDelegate(tmpDir.getRoot()),
             DefaultProjectFilesystemFactory.getWindowsFSInstance()) {
@@ -268,6 +287,7 @@ public class ServedCacheIntegrationTest {
   public void testExceptionDuringTheReadRetryingSuccess() throws Exception {
     ProjectFilesystem throwingStreamFilesystem =
         new DefaultProjectFilesystem(
+            CanonicalCellName.rootCell(),
             tmpDir.getRoot(),
             new DefaultProjectFilesystemDelegate(tmpDir.getRoot()),
             DefaultProjectFilesystemFactory.getWindowsFSInstance()) {
@@ -374,6 +394,8 @@ public class ServedCacheIntegrationTest {
                 "dir = test-cache",
                 "serve_local_cache = true",
                 "served_local_cache_mode = readwrite"),
+            unconfiguredBuildTargetFactory,
+            targetConfigurationSerializer,
             projectFilesystem));
 
     ArtifactCache serverBackedCache =
@@ -412,6 +434,8 @@ public class ServedCacheIntegrationTest {
                 "dir = test-cache",
                 "serve_local_cache = true",
                 "served_local_cache_mode = readwrite"),
+            unconfiguredBuildTargetFactory,
+            targetConfigurationSerializer,
             projectFilesystem));
 
     ArtifactCache serverBackedCache =
@@ -450,6 +474,8 @@ public class ServedCacheIntegrationTest {
                 "dir = test-cache",
                 "serve_local_cache = true",
                 "served_local_cache_mode = readonly"),
+            unconfiguredBuildTargetFactory,
+            targetConfigurationSerializer,
             projectFilesystem));
 
     ArtifactCache serverBackedCache =
@@ -485,6 +511,8 @@ public class ServedCacheIntegrationTest {
                 "dir = test-cache",
                 "serve_local_cache = true",
                 "served_local_cache_mode = readonly"),
+            unconfiguredBuildTargetFactory,
+            targetConfigurationSerializer,
             projectFilesystem));
 
     ArtifactCache serverBackedCache =
@@ -532,13 +560,14 @@ public class ServedCacheIntegrationTest {
     return cacheResult.getType().isSuccess();
   }
 
-  private ArtifactCache createArtifactCache(ArtifactCacheBuckConfig buckConfig) throws IOException {
+  private ArtifactCache createArtifactCache(ArtifactCacheBuckConfig buckConfig) {
     return new ArtifactCaches(
             buckConfig,
             buckEventBus,
+            unconfiguredBuildTargetFactory,
+            TargetConfigurationSerializerForTests.create(cellPathResolver),
             projectFilesystem,
             Optional.empty(),
-            DIRECT_EXECUTOR_SERVICE,
             DIRECT_EXECUTOR_SERVICE,
             DIRECT_EXECUTOR_SERVICE,
             DIRECT_EXECUTOR_SERVICE,

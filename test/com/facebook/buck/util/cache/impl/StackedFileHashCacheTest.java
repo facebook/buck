@@ -1,24 +1,25 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.cache.impl;
 
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.io.ArchiveMemberPath;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -33,11 +34,13 @@ import com.google.common.collect.ImmutableList;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.EnumSet;
+import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
@@ -58,8 +61,7 @@ public class StackedFileHashCacheTest {
 
   @Parameterized.Parameters(name = "{0}")
   public static Collection<Object[]> data() {
-    return EnumSet.allOf(FileHashCacheMode.class)
-        .stream()
+    return EnumSet.allOf(FileHashCacheMode.class).stream()
         .map(v -> new Object[] {v})
         .collect(ImmutableList.toImmutableList());
   }
@@ -112,7 +114,8 @@ public class StackedFileHashCacheTest {
     ProjectFileHashCache innerCache =
         DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode);
     StackedFileHashCache cache = new StackedFileHashCache(ImmutableList.of(innerCache));
-    cache.get(fullArchiveMemberPath);
+    cache.getForArchiveMember(
+        fullArchiveMemberPath.getArchivePath(), fullArchiveMemberPath.getMemberPath());
     assertTrue(innerCache.willGet(archiveMemberPath));
   }
 
@@ -129,7 +132,8 @@ public class StackedFileHashCacheTest {
     ProjectFileHashCache innerCache =
         DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode);
     StackedFileHashCache cache = new StackedFileHashCache(ImmutableList.of(innerCache));
-    cache.get(filesystem, archiveMemberPath);
+    cache.getForArchiveMember(
+        filesystem, archiveMemberPath.getArchivePath(), archiveMemberPath.getMemberPath());
     assertTrue(innerCache.willGet(archiveMemberPath));
   }
 
@@ -194,7 +198,9 @@ public class StackedFileHashCacheTest {
         archiveMemberPath.withArchivePath(filesystem2.resolve(archiveMemberPath.getArchivePath()));
     StackedFileHashCache cache =
         new StackedFileHashCache(ImmutableList.of(innerCache, innerCache2));
-    cache.get(fullArchiveMemberPath);
+
+    cache.getForArchiveMember(
+        fullArchiveMemberPath.getArchivePath(), fullArchiveMemberPath.getMemberPath());
     assertTrue(innerCache2.willGet(archiveMemberPath));
   }
 
@@ -215,14 +221,16 @@ public class StackedFileHashCacheTest {
         ArchiveMemberPath.of(path, Paths.get(SOME_FILE_INSIDE_JAR));
     StackedFileHashCache cache =
         new StackedFileHashCache(ImmutableList.of(innerCache, innerCache2));
-    cache.get(filesystem2, archiveMemberPath);
+    cache.getForArchiveMember(
+        filesystem2, archiveMemberPath.getArchivePath(), archiveMemberPath.getMemberPath());
     assertTrue(innerCache2.willGet(archiveMemberPath));
   }
 
   @Test
   public void skipsFirstCacheAbsolutePath() throws IOException {
     Path fullPath = Paths.get("some/path");
-    ProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem =
+        new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp.getRoot());
     ProjectFileHashCache innerCache =
         DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode);
     StackedFileHashCache cache = new StackedFileHashCache(ImmutableList.of(innerCache));
@@ -232,7 +240,8 @@ public class StackedFileHashCacheTest {
 
   @Test
   public void skipsFirstCache() throws IOException {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem =
+        new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp.getRoot());
     Path path = filesystem.getPath("some/path");
     ProjectFileHashCache innerCache =
         DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode);
@@ -255,7 +264,8 @@ public class StackedFileHashCacheTest {
         DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode);
     StackedFileHashCache cache = new StackedFileHashCache(ImmutableList.of(innerCache));
     expectedException.expect(NoSuchFileException.class);
-    cache.get(archiveMemberPath);
+    cache.getForArchiveMember(
+        archiveMemberPath.getArchivePath(), archiveMemberPath.getMemberPath());
   }
 
   @Test
@@ -272,7 +282,8 @@ public class StackedFileHashCacheTest {
         DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode);
     StackedFileHashCache cache = new StackedFileHashCache(ImmutableList.of(innerCache));
     expectedException.expect(NoSuchFileException.class);
-    cache.get(filesystem, archiveMemberPath);
+    cache.getForArchiveMember(
+        filesystem, archiveMemberPath.getArchivePath(), archiveMemberPath.getMemberPath());
   }
 
   @Test
@@ -317,7 +328,8 @@ public class StackedFileHashCacheTest {
         DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode);
     StackedFileHashCache cache = new StackedFileHashCache(ImmutableList.of(innerCache));
     expectedException.expect(NoSuchFileException.class);
-    cache.get(archiveMemberPath);
+    cache.getForArchiveMember(
+        archiveMemberPath.getArchivePath(), archiveMemberPath.getMemberPath());
   }
 
   @Test
@@ -333,7 +345,30 @@ public class StackedFileHashCacheTest {
         DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode);
     StackedFileHashCache cache = new StackedFileHashCache(ImmutableList.of(innerCache));
     expectedException.expect(NoSuchFileException.class);
-    cache.get(filesystem, archiveMemberPath);
+    cache.getForArchiveMember(
+        filesystem, archiveMemberPath.getArchivePath(), archiveMemberPath.getMemberPath());
+  }
+
+  @Test
+  public void sortsByRootPathLength() throws IOException {
+    ProjectFilesystem filesystem1 = FakeProjectFilesystem.createJavaOnlyFilesystem();
+
+    Path path = filesystem1.getPath("dir");
+    Path newRoot = Files.createDirectory(filesystem1.resolve(path));
+
+    ProjectFilesystem filesystem2 =
+        FakeProjectFilesystem.createJavaOnlyFilesystem(
+            filesystem1.resolve(newRoot).toAbsolutePath().toString());
+
+    ProjectFileHashCache shortCache =
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem1, fileHashCacheMode);
+    ProjectFileHashCache longCache =
+        DefaultFileHashCache.createDefaultFileHashCache(filesystem2, fileHashCacheMode);
+    StackedFileHashCache stackedFileHashCache =
+        new StackedFileHashCache(ImmutableList.of(shortCache, longCache));
+
+    Assert.assertSame(longCache, stackedFileHashCache.getCaches().get(0));
+    Assert.assertSame(shortCache, stackedFileHashCache.getCaches().get(1));
   }
 
   private void writeJarWithHashes(ProjectFilesystem filesystem, Path path) throws IOException {

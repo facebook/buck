@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.event.listener.stats.cache;
@@ -29,7 +29,6 @@ import com.facebook.buck.core.rulekey.BuildRuleKeys;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
-import com.facebook.buck.distributed.thrift.CacheRateStats;
 import com.facebook.buck.event.TestEventConfigurator;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
@@ -63,6 +62,7 @@ public class CacheRateStatsKeeperTest {
         Optional.empty(),
         Optional.empty(),
         UploadToCacheResultType.UNCACHEABLE,
+        Optional.empty(),
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),
@@ -165,24 +165,6 @@ public class CacheRateStatsKeeperTest {
     assertThat(stats.getCacheMissRate(), Matchers.is(0.0));
     assertThat(stats.getCacheHitCount(), Matchers.is(0));
     assertThat(stats.getUpdatedRulesCount(), Matchers.is(1));
-  }
-
-  @Test
-  public void unexpectedStampedeSlaveCacheMisses() {
-    CacheRateStatsKeeper cacheRateStatsKeeper = new CacheRateStatsKeeper();
-    cacheRateStatsKeeper.recordUnexpectedCacheMisses(6);
-    cacheRateStatsKeeper.recordUnexpectedCacheMisses(7);
-
-    CacheRateStats serializableStats = cacheRateStatsKeeper.getSerializableStats();
-
-    assertThat(serializableStats.getUnexpectedCacheMissesCount(), Matchers.is(13));
-    assertThat(serializableStats.getCacheErrorsCount(), Matchers.is(0));
-    assertThat(serializableStats.getCacheHitsCount(), Matchers.is(0));
-    assertThat(serializableStats.getCacheMissesCount(), Matchers.is(0));
-    assertThat(serializableStats.getTotalRulesCount(), Matchers.is(0));
-    assertThat(serializableStats.getUpdatedRulesCount(), Matchers.is(0));
-    assertThat(serializableStats.getCacheIgnoresCount(), Matchers.is(0));
-    assertThat(serializableStats.getCacheLocalKeyUnchangedHitsCount(), Matchers.is(0));
   }
 
   @Test

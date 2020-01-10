@@ -76,7 +76,7 @@ public class MyAnnotationProcessor extends AbstractProcessor {
       for (String config : required_configs) {
         try {
           FileObject inputFile =
-              mFiler.getResource(StandardLocation.CLASS_PATH, "", "META-INF/" + config);
+              mFiler.getResource(StandardLocation.CLASS_PATH, "", "_STRIPPED_RESOURCES/" + config);
           int len = inputFile.openInputStream().read(buffer);
           String contents = new String(buffer, 0, len);
           sb.append("    \"").append(config).append("\": ");
@@ -91,7 +91,7 @@ public class MyAnnotationProcessor extends AbstractProcessor {
       for (String config : maybe_configs) {
         try {
           FileObject inputFile =
-              mFiler.getResource(StandardLocation.CLASS_PATH, "", "META-INF/" + config);
+              mFiler.getResource(StandardLocation.CLASS_PATH, "", "_STRIPPED_RESOURCES/" + config);
           int len = inputFile.openInputStream().read(buffer);
           String contents = new String(buffer, 0, len);
           sb.append("    \"").append(config).append("\": ");

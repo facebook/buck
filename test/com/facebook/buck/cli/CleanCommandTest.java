@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
@@ -24,65 +24,41 @@ import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.artifact_cache.SingletonArtifactCacheFactory;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.config.DirCacheEntry;
-import com.facebook.buck.command.config.BuildBuckConfig;
-import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellName;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProviderBuilder;
-import com.facebook.buck.core.module.TestBuckModuleManagerFactory;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
-import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
-import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.event.BuckEventBusForTests;
-import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
-import com.facebook.buck.manifestservice.ManifestService;
-import com.facebook.buck.parser.TestParserFactory;
-import com.facebook.buck.remoteexecution.MetadataProviderFactory;
-import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
-import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
-import com.facebook.buck.testutil.FakeExecutor;
+import com.facebook.buck.testutil.CloseableResource;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.ExitCode;
-import com.facebook.buck.util.FakeProcessExecutor;
-import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
-import com.facebook.buck.util.cache.NoOpCacheStatsTracker;
-import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
-import com.facebook.buck.util.timing.DefaultClock;
-import com.facebook.buck.util.versioncontrol.NoOpCmdLineInterface;
-import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
-import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
-import com.facebook.buck.versions.VersionedTargetGraphCache;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Optional;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
-import org.pf4j.PluginManager;
 
 /** Unit test for {@link CleanCommand}. */
 public class CleanCommandTest {
 
   private ProjectFilesystem projectFilesystem;
+
+  @Rule
+  public CloseableResource<DepsAwareExecutor<? super ComputeResult, ?>> executor =
+      CloseableResource.of(() -> DefaultDepsAwareExecutor.of(4));
 
   @Before
   public void setUp() {
@@ -287,62 +263,21 @@ public class CleanCommandTest {
     return createCommandRunnerParams(buckConfig, cell);
   }
 
-  private static ThrowingCloseableMemoizedSupplier<ManifestService, IOException>
-      getManifestSupplier() {
-    return ThrowingCloseableMemoizedSupplier.of(() -> null, ManifestService::close);
-  }
-
   private CommandRunnerParams createCommandRunnerParams(BuckConfig buckConfig, Cell cell) {
-    ProcessExecutor processExecutor = new FakeProcessExecutor();
+    CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>>
+        depsAwareExecutorSupplier =
+            MainRunner.getDepsAwareExecutorSupplier(buckConfig, BuckEventBusForTests.newInstance());
 
-    PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
-    TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-    KnownRuleTypesProvider knownRuleTypesProvider =
-        TestKnownRuleTypesProvider.create(pluginManager);
-    ExecutableFinder executableFinder = new ExecutableFinder();
-
-    return CommandRunnerParams.of(
+    return CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
+        depsAwareExecutorSupplier.get(),
         new TestConsole(),
-        new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)),
         cell,
-        WatchmanFactory.NULL_WATCHMAN,
-        new InstrumentedVersionedTargetGraphCache(
-            new VersionedTargetGraphCache(), new NoOpCacheStatsTracker()),
-        new SingletonArtifactCacheFactory(new NoopArtifactCache()),
-        typeCoercerFactory,
-        new ParsingUnconfiguredBuildTargetFactory(),
-        TestParserFactory.create(buckConfig, knownRuleTypesProvider),
+        new SingletonArtifactCacheFactory(new NoopArtifactCache()).newInstance(),
         BuckEventBusForTests.newInstance(),
+        buckConfig,
         Platform.detect(),
         EnvVariablesProvider.getSystemEnv(),
         new FakeJavaPackageFinder(),
-        new DefaultClock(),
-        new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()),
-        Optional.empty(),
-        Optional.empty(),
-        Maps.newConcurrentMap(),
-        buckConfig,
-        new StackedFileHashCache(ImmutableList.of()),
-        ImmutableMap.of(),
-        new FakeExecutor(),
-        CommandRunnerParamsForTesting.BUILD_ENVIRONMENT_DESCRIPTION,
-        new ActionGraphProviderBuilder()
-            .withMaxEntries(
-                buckConfig.getView(BuildBuckConfig.class).getMaxActionGraphCacheEntries())
-            .withPoolSupplier(Main.getForkJoinPoolSupplier(buckConfig))
-            .build(),
-        knownRuleTypesProvider,
-        new BuildInfoStoreManager(),
-        Optional.empty(),
-        Optional.empty(),
-        new DefaultProjectFilesystemFactory(),
-        TestRuleKeyConfigurationFactory.create(),
-        processExecutor,
-        executableFinder,
-        pluginManager,
-        TestBuckModuleManagerFactory.create(pluginManager),
-        Main.getForkJoinPoolSupplier(buckConfig),
-        MetadataProviderFactory.emptyMetadataProvider(),
-        getManifestSupplier());
+        Optional.empty());
   }
 }

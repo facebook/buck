@@ -95,3 +95,54 @@ android_binary(
         "//prebuilt_aar_without_res:play-services-base-license",
     ],
 )
+
+android_binary(
+    name = "app-dep-on-aar-with-native-loaded-so",
+    keystore = ":debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        ":aar",
+        "//android_prebuilt_aar_with_native_lib:lib",
+    ],
+)
+
+android_binary(
+    name = "app-dep-on-aar-with-native-loaded-so_exo-native",
+    exopackage_modes = [
+        "native_library",
+        "arch64",
+    ],
+    keystore = ":debug",
+    manifest = "AndroidManifest.xml",
+    use_split_dex = True,
+    deps = [
+        ":aar",
+        "//android_prebuilt_aar_with_native_lib:lib",
+    ],
+)
+
+android_binary(
+    name = "app-dep-on-aar-with-native-loaded-so_exo-native_armv7",
+    cpu_filters = ["armv7"],
+    exopackage_modes = [
+        "native_library",
+        "arch64",
+    ],
+    keystore = ":debug",
+    manifest = "AndroidManifest.xml",
+    use_split_dex = True,
+    deps = [
+        ":aar",
+        "//android_prebuilt_aar_with_native_lib:lib",
+    ],
+)
+
+android_binary(
+    name = "app-system-loader-aar-only",
+    keystore = ":debug",
+    manifest = "AndroidManifestNoRes.xml",
+    use_split_dex = True,
+    deps = [
+        "//android_prebuilt_aar_with_native_lib:lib",
+    ],
+)

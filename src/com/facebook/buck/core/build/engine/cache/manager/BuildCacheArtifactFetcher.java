@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.build.engine.cache.manager;
@@ -19,10 +19,10 @@ package com.facebook.buck.core.build.engine.cache.manager;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
+import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfo;
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfoStore;
 import com.facebook.buck.core.build.engine.buildinfo.OnDiskBuildInfo;
-import com.facebook.buck.core.build.engine.type.MetadataStorage;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.util.log.Logger;
@@ -31,12 +31,13 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.unarchive.ArchiveFormat;
 import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.Futures;
@@ -56,7 +57,6 @@ public class BuildCacheArtifactFetcher {
   private final OnOutputsWillChange onOutputsWillChange;
   private final BuckEventBus eventBus;
   private final BuildInfoStoreManager buildInfoStoreManager;
-  private final MetadataStorage metadataStorage;
   private final OnDiskBuildInfo onDiskBuildInfo;
 
   public BuildCacheArtifactFetcher(
@@ -66,7 +66,6 @@ public class BuildCacheArtifactFetcher {
       OnOutputsWillChange onOutputsWillChange,
       BuckEventBus eventBus,
       BuildInfoStoreManager buildInfoStoreManager,
-      MetadataStorage metadataStorage,
       OnDiskBuildInfo onDiskBuildInfo) {
     this.rule = rule;
     this.buildRuleScopeManager = buildRuleScopeManager;
@@ -74,12 +73,45 @@ public class BuildCacheArtifactFetcher {
     this.onOutputsWillChange = onOutputsWillChange;
     this.eventBus = eventBus;
     this.buildInfoStoreManager = buildInfoStoreManager;
-    this.metadataStorage = metadataStorage;
     this.onDiskBuildInfo = onDiskBuildInfo;
   }
 
   private Scope buildRuleScope() {
     return buildRuleScopeManager.scope();
+  }
+
+  /**
+   * Converts a failed {@code ListenableFuture<CacheResult>} to a {@code CacheResult} error. Then
+   * logs all {@code CacheResult} of type {@code CacheResultType.ERROR}. Returns a {@code
+   * ListenableFuture<CacheResult>} without an Exception.
+   *
+   * @param cacheResultListenableFuture ListenableFuture input
+   * @param ruleKey rule key associated with that cache result
+   * @return a ListenableFuture that holds a CacheResult without Exception
+   */
+  protected ListenableFuture<CacheResult> convertErrorToSoftError(
+      ListenableFuture<CacheResult> cacheResultListenableFuture, RuleKey ruleKey) {
+    return Futures.transformAsync(
+        Futures.catchingAsync(
+            cacheResultListenableFuture,
+            Exception.class,
+            e ->
+                Futures.immediateFuture(
+                    CacheResult.softError(
+                        "fetch_cache_artifact_exception",
+                        ArtifactCacheMode.unknown,
+                        Throwables.getStackTraceAsString(e))),
+            executorService),
+        cacheResult -> {
+          if (cacheResult.getType() == CacheResultType.ERROR
+              || cacheResult.getType() == CacheResultType.SOFT_ERROR) {
+            LOG.warn(
+                "Cache error from fetching artifact with rule key [%s]: %s",
+                ruleKey, cacheResult.cacheError().get());
+          }
+          return Futures.immediateFuture(cacheResult);
+        },
+        executorService);
   }
 
   public ListenableFuture<CacheResult>
@@ -104,30 +136,33 @@ public class BuildCacheArtifactFetcher {
     // TODO(mbolin): Change ArtifactCache.fetch() so that it returns a File instead of takes one.
     // Then we could download directly from the remote cache into the on-disk cache and unzip it
     // from there.
-    return Futures.transformAsync(
-        fetch(artifactCache, ruleKey, lazyZipPath),
-        cacheResult -> {
-          try (Scope ignored = buildRuleScope()) {
-            // Verify that the rule key we used to fetch the artifact is one of the rule keys
-            // reported in it's metadata.
-            if (cacheResult.getType().isSuccess()) {
-              ImmutableSet<RuleKey> ruleKeys =
-                  RichStream.from(cacheResult.getMetadata().entrySet())
-                      .filter(e -> BuildInfo.RULE_KEY_NAMES.contains(e.getKey()))
-                      .map(Map.Entry::getValue)
-                      .map(RuleKey::new)
-                      .toImmutableSet();
-              if (!ruleKeys.contains(ruleKey)) {
-                LOG.warn(
-                    "%s: rule keys in artifact don't match rule key used to fetch it: %s not in %s",
-                    rule.getBuildTarget(), ruleKey, ruleKeys);
-              }
-            }
+    return convertErrorToSoftError(
+        Futures.transformAsync(
+            fetch(artifactCache, ruleKey, lazyZipPath),
+            cacheResult -> {
+              try (Scope ignored = buildRuleScope()) {
+                // Verify that the rule key we used to fetch the artifact is one of the rule keys
+                // reported in it's metadata.
+                if (cacheResult.getType().isSuccess()) {
+                  ImmutableSet<RuleKey> ruleKeys =
+                      RichStream.from(cacheResult.getMetadata().entrySet())
+                          .filter(e -> BuildInfo.RULE_KEY_NAMES.contains(e.getKey()))
+                          .map(Map.Entry::getValue)
+                          .map(RuleKey::new)
+                          .toImmutableSet();
+                  if (!ruleKeys.contains(ruleKey)) {
+                    LOG.warn(
+                        "%s: rule keys in artifact don't match rule key used to fetch it: %s not in %s",
+                        rule.getBuildTarget(), ruleKey, ruleKeys);
+                  }
+                }
 
-            return Futures.immediateFuture(
-                extractArtifactFromCacheResult(ruleKey, lazyZipPath, filesystem, cacheResult));
-          }
-        });
+                return Futures.immediateFuture(
+                    extractArtifactFromCacheResult(ruleKey, lazyZipPath, filesystem, cacheResult));
+              }
+            },
+            executorService),
+        ruleKey);
   }
 
   public ListenableFuture<CacheResult> fetch(
@@ -203,12 +238,13 @@ public class BuildCacheArtifactFetcher {
         ArtifactCompressionEvent.started(
             ArtifactCompressionEvent.Operation.DECOMPRESS, ImmutableSet.of(ruleKey));
     eventBus.post(started);
+    long compressedSize = filesystem.getFileSize(zipPath);
+    long fullSize = 0L;
     try {
       // First, clear out the pre-existing metadata directory.  We have to do this *before*
       // unpacking the zipped artifact, as it includes files that will be stored in the metadata
       // directory.
-      BuildInfoStore buildInfoStore =
-          buildInfoStoreManager.get(rule.getProjectFilesystem(), metadataStorage);
+      BuildInfoStore buildInfoStore = buildInfoStoreManager.get(rule.getProjectFilesystem());
 
       Preconditions.checkState(
           cacheResult.getMetadata().containsKey(BuildInfo.MetadataKey.ORIGIN_BUILD_ID),
@@ -225,6 +261,7 @@ public class BuildCacheArtifactFetcher {
                   ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
       onDiskBuildInfo.validateArtifact(extractedFiles);
+      fullSize = Long.parseLong(onDiskBuildInfo.getValue(BuildInfo.MetadataKey.OUTPUT_SIZE).get());
 
       // We only delete the ZIP file when it has been unzipped successfully. Otherwise, we leave it
       // around for debugging purposes.
@@ -241,7 +278,7 @@ public class BuildCacheArtifactFetcher {
               e.getMessage(), ruleKey),
           e.getCause());
     } finally {
-      eventBus.post(ArtifactCompressionEvent.finished(started));
+      eventBus.post(ArtifactCompressionEvent.finished(started, fullSize, compressedSize));
     }
 
     return cacheResult;

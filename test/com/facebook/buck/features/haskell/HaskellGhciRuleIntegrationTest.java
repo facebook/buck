@@ -1,23 +1,25 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.haskell;
 
 import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.model.impl.TargetConfigurationHasher;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -42,9 +44,7 @@ public class HaskellGhciRuleIntegrationTest {
   public static Collection<Object[]> data() {
     return ImmutableList.copyOf(
         new Object[][] {
-          {Linker.LinkableDepType.STATIC},
-          {Linker.LinkableDepType.STATIC_PIC},
-          {Linker.LinkableDepType.SHARED},
+          {Linker.LinkableDepType.STATIC}, {Linker.LinkableDepType.SHARED},
         });
   }
 
@@ -62,7 +62,7 @@ public class HaskellGhciRuleIntegrationTest {
   private Path genPath;
 
   @Before
-  public void setUp() throws IOException, InterruptedException {
+  public void setUp() throws IOException {
 
     // We don't currently support windows.
     assumeThat(Platform.detect(), Matchers.not(Platform.WINDOWS));
@@ -77,6 +77,10 @@ public class HaskellGhciRuleIntegrationTest {
     // Write out the `.buckconfig`.
     workspace.writeContentsToPath(HaskellTestUtils.formatHaskellConfig(version), ".buckconfig");
     genPath = workspace.getBuckPaths().getGenDir();
+    if (workspace.getProjectFileSystem().getBuckPaths().shouldIncludeTargetConfigHash()) {
+      genPath =
+          genPath.resolve(TargetConfigurationHasher.hash(UnconfiguredTargetConfiguration.INSTANCE));
+    }
   }
 
   @Test
@@ -89,5 +93,17 @@ public class HaskellGhciRuleIntegrationTest {
   public void enableProfiling() throws IOException {
     workspace.runBuckBuild("//:foo_prof").assertSuccess();
     workspace.verify(Paths.get("foo_prof_output.expected"), genPath);
+  }
+
+  @Test
+  public void mutuallyRecursive() throws IOException {
+    workspace.runBuckBuild("//:mutually_recursive").assertSuccess();
+    workspace.verify(Paths.get("mutually_recursive_output.expected"), genPath);
+  }
+
+  @Test
+  public void foreign() throws IOException {
+    workspace.runBuckBuild("//:prebuilt_foreign").assertSuccess();
+    workspace.verify(Paths.get("prebuilt_foreign_output.expected"), genPath);
   }
 }

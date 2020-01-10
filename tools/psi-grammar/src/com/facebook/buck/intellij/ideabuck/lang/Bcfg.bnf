@@ -59,7 +59,9 @@ section ::= COMMENT* section_header property* {
   ]
 }
 
-section_header ::= '[' section_name ']'
+section_header ::= '[' section_name ']' {
+  pin = 2
+}
 section_name ::= SECTION_NAME_FRAGMENT* {
   methods=[
     getFragments
@@ -69,6 +71,7 @@ section_name ::= SECTION_NAME_FRAGMENT* {
 
 // Include leading comments so they get bundled with property
 property ::= COMMENT* property_name ASSIGN property_value PROPERTY_END {
+  pin = 2
   implements = "com.facebook.buck.intellij.ideabuck.lang.psi.BcfgNamedElement"
   methods=[
     getName
@@ -80,7 +83,7 @@ property ::= COMMENT* property_name ASSIGN property_value PROPERTY_END {
   ]
 }
 
-property_name ::= PROPERTY_NAME_FRAGMENT* {
+property_name ::= PROPERTY_NAME_FRAGMENT+ {
   methods = [
     getFragments
     getValue

@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android.toolchain.impl;
@@ -63,9 +63,9 @@ public class AndroidBuildToolsResolver {
   }
 
   private Optional<Path> findBuildTools(Path sdkPath) {
-    Path toolsDir = sdkPath.resolve("build-tools");
+    Path buildToolsDir = sdkPath.resolve("build-tools");
 
-    if (toolsDir.toFile().isDirectory()) {
+    if (buildToolsDir.toFile().isDirectory()) {
       // In older versions of the ADT that have been upgraded via the SDK manager, the build-tools
       // directory appears to contain subfolders of the form "17.0.0". However, newer versions of
       // the ADT that are downloaded directly from http://developer.android.com/ appear to have
@@ -74,7 +74,7 @@ public class AndroidBuildToolsResolver {
       File[] directories;
       try {
         directories =
-            toolsDir
+            buildToolsDir
                 .toFile()
                 .listFiles(
                     pathname -> {
@@ -125,11 +125,11 @@ public class AndroidBuildToolsResolver {
       if (newestBuildDir == null) {
         buildToolsErrorMessage =
             Optional.of(
-                buildTools
+                buildToolsDir
                     + " was empty, but should have "
                     + "contained a subdirectory with build tools. Install them using the Android "
                     + "SDK Manager ("
-                    + toolsDir.getParent().resolve("tools").resolve("android")
+                    + buildToolsDir.getParent().resolve("tools").resolve("android")
                     + ").");
         return Optional.empty();
       }
@@ -160,7 +160,7 @@ public class AndroidBuildToolsResolver {
         "Unable to find build-tools version "
             + targetBuildToolsVersion.get()
             + ", which is specified by your config.  Please see "
-            + "https://buckbuild.com/concept/buckconfig.html#android.build_tools_version for more "
+            + "https://buck.build/concept/buckconfig.html#android.build_tools_version for more "
             + "details about the setting.  To install the correct version of the tools, run `"
             + Escaper.escapeAsShellString(sdkPath.resolve("tools/bin/sdkmanager").toString())
             + " \"build-tools;"

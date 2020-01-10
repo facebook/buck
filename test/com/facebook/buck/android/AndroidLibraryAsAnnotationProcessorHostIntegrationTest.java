@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -37,12 +37,12 @@ public class AndroidLibraryAsAnnotationProcessorHostIntegrationTest extends AbiC
 
   @Before
   public void setUp() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
 
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "android_library_as_ap_host", tmpFolder);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     workspace.enableDirCache();
     workspace.addBuckConfigLocalOption("build", "depfiles", "cache");
     setWorkspaceCompilationMode(workspace);
@@ -88,7 +88,7 @@ public class AndroidLibraryAsAnnotationProcessorHostIntegrationTest extends AbiC
     assertZipFileContains(output, "res1");
 
     // Now, edit a config and assert we rebuild
-    workspace.replaceFileContents("res/META-INF/res1.json", "res1", "replaced");
+    workspace.replaceFileContents("res/_STRIPPED_RESOURCES/res1.json", "res1", "replaced");
     workspace.runBuckCommand("build", "//:top_level").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:lib");
     workspace.getBuildLog().assertTargetBuiltLocally("//:top_level");
@@ -116,7 +116,7 @@ public class AndroidLibraryAsAnnotationProcessorHostIntegrationTest extends AbiC
     assertZipFileContains(output, "res1");
 
     // Now, edit a used config and assert we rebuild
-    workspace.replaceFileContents("res/META-INF/res1.json", "res1", "replaced");
+    workspace.replaceFileContents("res/_STRIPPED_RESOURCES/res1.json", "res1", "replaced");
     workspace.runBuckCommand("build", "//:top_level").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:lib");
     workspace.getBuildLog().assertTargetBuiltLocally("//:top_level");
@@ -150,7 +150,7 @@ public class AndroidLibraryAsAnnotationProcessorHostIntegrationTest extends AbiC
     workspace.getBuildLog().assertTargetBuiltLocally("//:top_level");
 
     // Edit the unread metadata file and assert no dep file false negative
-    workspace.replaceFileContents("res/META-INF/unread.json", "replace_me", "foobar");
+    workspace.replaceFileContents("res/_STRIPPED_RESOURCES/unread.json", "replace_me", "foobar");
     workspace.runBuckCommand("build", "//:top_level").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:lib");
     workspace.getBuildLog().assertTargetHadMatchingDepfileRuleKey("//:top_level");
@@ -164,7 +164,7 @@ public class AndroidLibraryAsAnnotationProcessorHostIntegrationTest extends AbiC
     workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
 
     // Edit the unread metadata file and assert we can get a manifest hit
-    workspace.replaceFileContents("res/META-INF/unread.json", "replace_me", "foobar");
+    workspace.replaceFileContents("res/_STRIPPED_RESOURCES/unread.json", "replace_me", "foobar");
     workspace.runBuckCommand("build", "//:top_level").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:lib");
     workspace.getBuildLog().assertTargetWasFetchedFromCacheByManifestMatch("//:top_level");

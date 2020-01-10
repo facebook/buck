@@ -1,24 +1,24 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.maven;
 
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.jvm.core.HasMavenCoordinates;
 import com.facebook.buck.jvm.java.MavenPublishable;
 import com.google.common.annotations.VisibleForTesting;
@@ -77,10 +77,10 @@ public class Pom {
 
   private final Model model;
   private final MavenPublishable publishable;
-  private final SourcePathResolver pathResolver;
+  private final SourcePathResolverAdapter pathResolver;
   private final Path path;
 
-  public Pom(SourcePathResolver pathResolver, Path path, MavenPublishable buildRule) {
+  public Pom(SourcePathResolverAdapter pathResolver, Path path, MavenPublishable buildRule) {
     this.pathResolver = pathResolver;
     this.path = path;
     this.publishable = buildRule;
@@ -88,7 +88,7 @@ public class Pom {
     applyBuildRule();
   }
 
-  public static Path generatePomFile(SourcePathResolver pathResolver, MavenPublishable rule)
+  public static Path generatePomFile(SourcePathResolverAdapter pathResolver, MavenPublishable rule)
       throws IOException {
     Path pom = getPomPath(rule);
     Files.deleteIfExists(pom);
@@ -105,7 +105,7 @@ public class Pom {
 
   @VisibleForTesting
   static void generatePomFile(
-      SourcePathResolver pathResolver, MavenPublishable rule, Path optionallyExistingPom)
+      SourcePathResolverAdapter pathResolver, MavenPublishable rule, Path optionallyExistingPom)
       throws IOException {
     new Pom(pathResolver, optionallyExistingPom, rule).flushToFile();
   }

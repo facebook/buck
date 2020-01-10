@@ -1,20 +1,21 @@
 java_library(
     name = "file",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//src/com/facebook/buck/io/windowsfs:windowsfs",
-    ],
     visibility = [
         "PUBLIC",
     ],
     deps = [
-        "//src/com/facebook/buck/cli/bootstrapper/filesystem:filesystem_lib",
         "//src/com/facebook/buck/core/exceptions:exceptions",
+        "//src/com/facebook/buck/core/filesystems:filesystems",
         "//src/com/facebook/buck/core/util/log:log",
-        "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/io/pathformat:pathformat",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/stream:stream",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/io/windowsfs:windowsfs",
     ],
 )

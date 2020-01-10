@@ -1,18 +1,19 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.event.listener.stats.parse;
 
 import static org.junit.Assert.assertEquals;
@@ -27,7 +28,7 @@ import com.facebook.buck.event.listener.util.EventInterval;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.parser.ParseEvent.Finished;
 import com.facebook.buck.parser.ParseEvent.Started;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 import org.junit.Test;
 
@@ -44,7 +45,7 @@ public class ParseStatsTrackerTest {
 
     BuildId buildId = new BuildId();
     Started started =
-        ParseEvent.started(ImmutableList.of(BuildTargetFactory.newInstance("//:target")));
+        ParseEvent.started(ImmutableSet.of(BuildTargetFactory.newInstance("//:target")));
     started.configure(100, 0, 0, 0, buildId);
     eventBus.postWithoutConfiguring(started);
 
@@ -76,7 +77,7 @@ public class ParseStatsTrackerTest {
 
     BuildId buildId = new BuildId();
     Started startedRoot =
-        ParseEvent.started(ImmutableList.of(BuildTargetFactory.newInstance("//:target")));
+        ParseEvent.started(ImmutableSet.of(BuildTargetFactory.newInstance("//:target")));
     startedRoot.configure(100, 0, 0, 0, buildId);
     eventBus.postWithoutConfiguring(startedRoot);
 
@@ -85,7 +86,7 @@ public class ParseStatsTrackerTest {
     assertTrue(interval.isStarted());
     assertTrue(interval.isOngoing());
 
-    Started startedSecondary = ParseEvent.started(ImmutableList.of());
+    Started startedSecondary = ParseEvent.started(ImmutableSet.of());
     startedSecondary.configure(300, 0, 0, 1, buildId);
     eventBus.postWithoutConfiguring(startedSecondary);
 

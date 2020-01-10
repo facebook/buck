@@ -1,0 +1,8 @@
+prebuilt_cxx_library(
+    name = "implib_prebuilt",
+    exported_headers = ["MathLibrary.h"],
+    header_namespace = "",
+    import_lib = "implib_prebuilt.lib",
+    shared_lib = "implib_prebuilt.dll",
+    visibility = ["PUBLIC"],
+)

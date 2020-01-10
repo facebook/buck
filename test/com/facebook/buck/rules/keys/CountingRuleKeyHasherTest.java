@@ -1,29 +1,29 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.keys;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
-import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.rules.keys.hasher.CountingRuleKeyHasher;
 import com.facebook.buck.rules.keys.hasher.GuavaRuleKeyHasher;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
@@ -38,10 +38,9 @@ public class CountingRuleKeyHasherTest {
 
   private static final RuleKey RULE_KEY_1 = new RuleKey("a002b39af204cdfaa5fdb67816b13867c32ac52c");
   private static final RuleKey RULE_KEY_2 = new RuleKey("b67816b13867c32ac52ca002b39af204cdfaa5fd");
-  private static final BuildTarget TARGET_1 =
-      BuildTargetFactory.newInstance(Paths.get("/root"), "//example/base:one");
+  private static final BuildTarget TARGET_1 = BuildTargetFactory.newInstance("//example/base:one");
   private static final BuildTarget TARGET_2 =
-      BuildTargetFactory.newInstance(Paths.get("/root"), "//example/base:one#flavor");
+      BuildTargetFactory.newInstance("//example/base:one#flavor");
 
   @Test
   public void testForwarding() {
@@ -142,47 +141,52 @@ public class CountingRuleKeyHasherTest {
         newGuavaHasher().putPath(Paths.get("42/42"), HashCode.fromInt(42)).hash(),
         newCountHasher().putPath(Paths.get("42/42"), HashCode.fromInt(42)).hash());
     assertEquals(
-        newGuavaHasher().putArchiveMemberPath(newArchiveMember("", ""), HashCode.fromInt(0)).hash(),
+        newGuavaHasher()
+            .putArchiveMemberPath(Paths.get(""), Paths.get(""), HashCode.fromInt(0))
+            .hash(),
         newCountHasher()
-            .putArchiveMemberPath(newArchiveMember("", ""), HashCode.fromInt(0))
+            .putArchiveMemberPath(Paths.get(""), Paths.get(""), HashCode.fromInt(0))
             .hash());
     assertEquals(
         newGuavaHasher()
-            .putArchiveMemberPath(newArchiveMember("", ""), HashCode.fromInt(42))
+            .putArchiveMemberPath(Paths.get(""), Paths.get(""), HashCode.fromInt(42))
             .hash(),
         newCountHasher()
-            .putArchiveMemberPath(newArchiveMember("", ""), HashCode.fromInt(42))
+            .putArchiveMemberPath(Paths.get(""), Paths.get(""), HashCode.fromInt(42))
             .hash());
     assertEquals(
         newGuavaHasher()
-            .putArchiveMemberPath(newArchiveMember("42", "42"), HashCode.fromInt(0))
+            .putArchiveMemberPath(Paths.get("42"), Paths.get("2"), HashCode.fromInt(0))
             .hash(),
         newCountHasher()
-            .putArchiveMemberPath(newArchiveMember("42", "42"), HashCode.fromInt(0))
+            .putArchiveMemberPath(Paths.get("42"), Paths.get("2"), HashCode.fromInt(0))
             .hash());
     assertEquals(
         newGuavaHasher()
-            .putArchiveMemberPath(newArchiveMember("42", "42"), HashCode.fromInt(42))
+            .putArchiveMemberPath(Paths.get("42"), Paths.get("2"), HashCode.fromInt(42))
             .hash(),
         newCountHasher()
-            .putArchiveMemberPath(newArchiveMember("42", "42"), HashCode.fromInt(42))
+            .putArchiveMemberPath(Paths.get("42"), Paths.get("2"), HashCode.fromInt(42))
             .hash());
     assertEquals(
         newGuavaHasher()
-            .putArchiveMemberPath(newArchiveMember("42/42", "42/42"), HashCode.fromInt(42))
+            .putArchiveMemberPath(Paths.get("42/42"), Paths.get("2"), HashCode.fromInt(42))
             .hash(),
         newCountHasher()
-            .putArchiveMemberPath(newArchiveMember("42/42", "42/42"), HashCode.fromInt(42))
+            .putArchiveMemberPath(Paths.get("42/42"), Paths.get("2"), HashCode.fromInt(42))
             .hash());
     assertEquals(
-        newGuavaHasher().putNonHashingPath("").hash(),
-        newCountHasher().putNonHashingPath("").hash());
+        newGuavaHasher().putNonHashingPath(Paths.get("")).hash(),
+        newCountHasher().putNonHashingPath(Paths.get("")).hash());
     assertEquals(
-        newGuavaHasher().putNonHashingPath("42").hash(),
-        newCountHasher().putNonHashingPath("42").hash());
+        newGuavaHasher().putNonHashingPath(Paths.get("42")).hash(),
+        newCountHasher().putNonHashingPath(Paths.get("42")).hash());
     assertEquals(
-        newGuavaHasher().putNonHashingPath("4").putNonHashingPath("2").hash(),
-        newCountHasher().putNonHashingPath("4").putNonHashingPath("2").hash());
+        newGuavaHasher().putNonHashingPath(Paths.get("4")).putNonHashingPath(Paths.get("2")).hash(),
+        newCountHasher()
+            .putNonHashingPath(Paths.get("4"))
+            .putNonHashingPath(Paths.get("2"))
+            .hash());
     assertEquals(
         newGuavaHasher().putRuleKey(RULE_KEY_1).hash(),
         newCountHasher().putRuleKey(RULE_KEY_1).hash());
@@ -327,21 +331,21 @@ public class CountingRuleKeyHasherTest {
         .putPath(Paths.get("42/42"), HashCode.fromInt(42))
         .putPath(Paths.get("43"), HashCode.fromInt(43));
     assertEquals(count += 2, hasher.getCount());
-    hasher.putArchiveMemberPath(newArchiveMember("", ""), HashCode.fromInt(0));
+    hasher.putArchiveMemberPath(Paths.get(""), Paths.get(""), HashCode.fromInt(0));
     assertEquals(++count, hasher.getCount());
-    hasher.putArchiveMemberPath(newArchiveMember("", ""), HashCode.fromInt(42));
+    hasher.putArchiveMemberPath(Paths.get(""), Paths.get(""), HashCode.fromInt(42));
     assertEquals(++count, hasher.getCount());
-    hasher.putArchiveMemberPath(newArchiveMember("42", "42"), HashCode.fromInt(0));
+    hasher.putArchiveMemberPath(Paths.get("42"), Paths.get("2"), HashCode.fromInt(0));
     assertEquals(++count, hasher.getCount());
-    hasher.putArchiveMemberPath(newArchiveMember("42", "42"), HashCode.fromInt(42));
+    hasher.putArchiveMemberPath(Paths.get("42"), Paths.get("2"), HashCode.fromInt(42));
     assertEquals(++count, hasher.getCount());
     hasher
-        .putArchiveMemberPath(newArchiveMember("42/42", "42/42"), HashCode.fromInt(42))
-        .putArchiveMemberPath(newArchiveMember("43/43", "43/43"), HashCode.fromInt(43));
+        .putArchiveMemberPath(Paths.get("42/42"), Paths.get("2"), HashCode.fromInt(42))
+        .putArchiveMemberPath(Paths.get("43/43"), Paths.get("3"), HashCode.fromInt(43));
     assertEquals(count += 2, hasher.getCount());
-    hasher.putNonHashingPath("");
+    hasher.putNonHashingPath(Paths.get(""));
     assertEquals(++count, hasher.getCount());
-    hasher.putNonHashingPath("42").putNonHashingPath("43");
+    hasher.putNonHashingPath(Paths.get("42")).putNonHashingPath(Paths.get("43"));
     assertEquals(count += 2, hasher.getCount());
     hasher.putRuleKey(RULE_KEY_1);
     assertEquals(++count, hasher.getCount());

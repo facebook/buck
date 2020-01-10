@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -31,17 +31,20 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
-import com.facebook.buck.cxx.toolchain.CxxPlatforms;
-import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
+import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.impl.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.toolchain.objectfile.ObjectFileScrubbers;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystem;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
@@ -183,7 +186,11 @@ public class CxxLibraryIntegrationTest {
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
-    assumeTrue(cxxPlatform.getAr().resolve(ruleResolver).supportsThinArchives());
+    assumeTrue(
+        cxxPlatform
+            .getAr()
+            .resolve(ruleResolver, UnconfiguredTargetConfiguration.INSTANCE)
+            .supportsThinArchives());
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_library", tmp);
     workspace.setUp();
@@ -212,14 +219,13 @@ public class CxxLibraryIntegrationTest {
   }
 
   @Test
-  public void testCxxLibraryWithDefaultsInFlagBuildsSomething()
-      throws InterruptedException, IOException {
+  public void testCxxLibraryWithDefaultsInFlagBuildsSomething() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple", tmp);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
 
     BuildTarget target = BuildTargetFactory.newInstance("//foo:library_with_header");
     ProcessResult result =
@@ -300,8 +306,7 @@ public class CxxLibraryIntegrationTest {
     workspace.runBuckBuild("//:lib_header#default,shared").assertSuccess();
   }
 
-  private void assumeSymLinkTreeWithHeaderMap(Path rootPath)
-      throws InterruptedException, IOException {
+  private void assumeSymLinkTreeWithHeaderMap(Path rootPath) throws IOException {
     // We can only disable symlink trees if header map is supported.
     HeaderMode headerMode = CxxPlatformUtils.getHeaderModeForDefaultPlatform(rootPath);
     assumeTrue(headerMode == HeaderMode.SYMLINK_TREE_WITH_HEADER_MAP);
@@ -315,13 +320,22 @@ public class CxxLibraryIntegrationTest {
     workspace.runBuckBuild("-v=3", "//:main#default").assertSuccess();
     Path rootPath = tmp.getRoot();
     assumeSymLinkTreeWithHeaderMap(rootPath);
-    assertTrue(
-        Files.exists(
-            rootPath.resolve(
-                "buck-out/gen/foobar#header-mode-symlink-tree-with-header-map,headers/foobar/public.h")));
-    assertTrue(
-        Files.exists(
-            rootPath.resolve("buck-out/gen/foobar#default,private-headers/foobar/private.h")));
+
+    DefaultProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+
+    Path publicGenDir =
+        BuildPaths.getGenDir(
+            filesystem,
+            BuildTargetFactory.newInstance(
+                "//:foobar#header-mode-symlink-tree-with-header-map,headers"));
+
+    Path privateGenDir =
+        BuildPaths.getGenDir(
+            filesystem, BuildTargetFactory.newInstance("//:foobar#default,private-headers"));
+
+    assertTrue(Files.exists(rootPath.resolve(publicGenDir.resolve("foobar/public.h"))));
+    assertTrue(Files.exists(rootPath.resolve(privateGenDir.resolve("foobar/private.h"))));
   }
 
   @Test
@@ -335,13 +349,22 @@ public class CxxLibraryIntegrationTest {
         .assertSuccess();
     Path rootPath = tmp.getRoot();
     assumeSymLinkTreeWithHeaderMap(rootPath);
-    assertFalse(
-        Files.exists(
-            rootPath.resolve(
-                "buck-out/gen/foobar#header-mode-symlink-tree-with-header-map,headers/foobar/public.h")));
-    assertTrue(
-        Files.exists(
-            rootPath.resolve("buck-out/gen/foobar#default,private-headers/foobar/private.h")));
+
+    DefaultProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+
+    Path publicGenDir =
+        BuildPaths.getGenDir(
+            filesystem,
+            BuildTargetFactory.newInstance(
+                "//:foobar#header-mode-symlink-tree-with-header-map,headers"));
+
+    Path privateGenDir =
+        BuildPaths.getGenDir(
+            filesystem, BuildTargetFactory.newInstance("//:foobar#default,private-headers"));
+
+    assertFalse(Files.exists(rootPath.resolve(publicGenDir.resolve("foobar/public.h"))));
+    assertTrue(Files.exists(rootPath.resolve(privateGenDir.resolve("foobar/private.h"))));
   }
 
   @Test
@@ -354,13 +377,22 @@ public class CxxLibraryIntegrationTest {
         .assertSuccess();
     Path rootPath = tmp.getRoot();
     assumeSymLinkTreeWithHeaderMap(rootPath);
-    assertTrue(
-        Files.exists(
-            rootPath.resolve(
-                "buck-out/gen/foobar#header-mode-symlink-tree-with-header-map,headers/foobar/public.h")));
-    assertFalse(
-        Files.exists(
-            rootPath.resolve("buck-out/gen/foobar#default,private-headers/foobar/private.h")));
+
+    DefaultProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+
+    Path publicGenDir =
+        BuildPaths.getGenDir(
+            filesystem,
+            BuildTargetFactory.newInstance(
+                "//:foobar#header-mode-symlink-tree-with-header-map,headers"));
+
+    Path privateGenDir =
+        BuildPaths.getGenDir(
+            filesystem, BuildTargetFactory.newInstance("//:foobar#default,private-headers"));
+
+    assertTrue(Files.exists(rootPath.resolve(publicGenDir.resolve("foobar/public.h"))));
+    assertFalse(Files.exists(rootPath.resolve(privateGenDir.resolve("foobar/private.h"))));
   }
 
   @Test
@@ -368,17 +400,26 @@ public class CxxLibraryIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "headers_symlinks", tmp);
     workspace.setUp();
+
     workspace
         .runBuckBuild("-c", "cxx.header_mode=symlink_tree_only", "-v=3", "//:main#default")
         .assertSuccess();
     Path rootPath = tmp.getRoot();
-    assertTrue(
-        Files.exists(
-            rootPath.resolve(
-                "buck-out/gen/foobar#header-mode-symlink-tree-only,headers/foobar/public.h")));
-    assertTrue(
-        Files.exists(
-            rootPath.resolve("buck-out/gen/foobar#default,private-headers/foobar/private.h")));
+
+    DefaultProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+
+    Path publicGenDir =
+        BuildPaths.getGenDir(
+            filesystem,
+            BuildTargetFactory.newInstance("//:foobar#header-mode-symlink-tree-only,headers"));
+
+    Path privateGenDir =
+        BuildPaths.getGenDir(
+            filesystem, BuildTargetFactory.newInstance("//:foobar#default,private-headers"));
+
+    assertTrue(Files.exists(rootPath.resolve(publicGenDir.resolve("foobar/public.h"))));
+    assertTrue(Files.exists(rootPath.resolve(privateGenDir.resolve("foobar/private.h"))));
   }
 
   @Test
@@ -397,13 +438,22 @@ public class CxxLibraryIntegrationTest {
         .assertSuccess();
     Path rootPath = tmp.getRoot();
     assumeSymLinkTreeWithHeaderMap(rootPath);
-    assertFalse(
-        Files.exists(
-            rootPath.resolve(
-                "buck-out/gen/foobar#header-mode-symlink-tree-with-header-map,headers/foobar/public.h")));
-    assertFalse(
-        Files.exists(
-            rootPath.resolve("buck-out/gen/foobar#default,private-headers/foobar/private.h")));
+
+    DefaultProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+
+    Path publicGenDir =
+        BuildPaths.getGenDir(
+            filesystem,
+            BuildTargetFactory.newInstance(
+                "//:foobar#header-mode-symlink-tree-with-header-map,headers"));
+
+    Path privateGenDir =
+        BuildPaths.getGenDir(
+            filesystem, BuildTargetFactory.newInstance("//:foobar#default,private-headers"));
+
+    assertFalse(Files.exists(rootPath.resolve(publicGenDir.resolve("foobar/public.h"))));
+    assertFalse(Files.exists(rootPath.resolve(privateGenDir.resolve("foobar/private.h"))));
   }
 
   @Test
@@ -453,9 +503,15 @@ public class CxxLibraryIntegrationTest {
     workspace
         .runBuckBuild("-c", "cxx.unique_library_name_enabled=true", "//:foo#default,static")
         .assertSuccess();
+
+    DefaultProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+
+    Path genDir =
+        BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//:foo#default,static"));
+
     Path rootPath = tmp.getRoot();
-    assertTrue(
-        Files.exists(rootPath.resolve("buck-out/gen/foo#default,static/libfoo-Z2_rLdsOWS.a")));
+    assertTrue(Files.exists(rootPath.resolve(genDir.resolve("libfoo-Z2_rLdsOWS.a"))));
   }
 
   @Test
@@ -475,5 +531,33 @@ public class CxxLibraryIntegrationTest {
             "targets", "--config", "cxx.should_remap_host_platform=true", "//:foo");
     result.assertSuccess();
     assertThat(result.getStdout(), containsString("//:foo#" + hostFlavor));
+  }
+
+  @Test(timeout = 180000)
+  public void testSymlinksOnAndOff() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "symlink_on_off", tmp);
+    workspace.setUp();
+
+    // Build with symlinks on.
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "build", "--config", "cxx.exported_headers_symlinks_enabled=true", "//:bar");
+    result.assertSuccess();
+
+    // Build with symlinks off.
+    result =
+        workspace.runBuckCommand(
+            "build", "--config", "cxx.exported_headers_symlinks_enabled=false", "//:bar");
+    result.assertFailure();
+  }
+
+  @Test
+  public void exportedHeaderStyleSystem() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "exported_header_style", tmp);
+    workspace.setUp();
+    workspace.runBuckBuild("//:bin").assertSuccess();
   }
 }

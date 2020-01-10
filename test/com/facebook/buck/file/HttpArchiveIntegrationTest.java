@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.file;
@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.Matchers.not;
 
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.HttpdForTests;
@@ -101,7 +102,7 @@ public class HttpArchiveIntegrationTest {
   }
 
   @Test
-  public void doesNotWriteFileIfDownloadFails() throws IOException, InterruptedException {
+  public void doesNotWriteFileIfDownloadFails() throws IOException {
     rewriteBuckFileTemplate(workspace);
 
     Path outputPath =
@@ -131,18 +132,19 @@ public class HttpArchiveIntegrationTest {
   }
 
   @Test
-  public void doesNotWriteFileIfShaVerificationFails() throws IOException, InterruptedException {
+  public void doesNotWriteFileIfShaVerificationFails() throws IOException {
     rewriteBuckFileTemplate(workspace);
 
     Path outputPath =
-        workspace.getBuckPaths().getGenDir().resolve("bad_hash.tar").resolve("bad_hash.tar");
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance("//:bad_hash.tar"), "%s")
+            .resolve("bad_hash.tar");
     Path scratchDownloadPath =
-        workspace.getBuckPaths().getScratchDir().resolve("bad_hash.tar#archive-download");
+        workspace.getScratchPath(
+            BuildTargetFactory.newInstance("//:bad_hash.tar#archive-download"), "%s");
     Path downloadPath =
         workspace
-            .getBuckPaths()
-            .getGenDir()
-            .resolve("bad_hash.tar#archive_download")
+            .getGenPath(BuildTargetFactory.newInstance("//:bad_hash.tar#archive_download"), "%s")
             .resolve("bad_hash.tar");
 
     ProcessResult result = workspace.runBuckCommand("fetch", "//:bad_hash.tar");
@@ -162,19 +164,19 @@ public class HttpArchiveIntegrationTest {
   }
 
   @Test
-  public void writesFileToAlternateLocationIfOutProvided()
-      throws IOException, InterruptedException {
+  public void writesFileToAlternateLocationIfOutProvided() throws IOException {
     rewriteBuckFileTemplate(workspace);
 
     Path outputPath =
-        workspace.getBuckPaths().getGenDir().resolve("out_specified").resolve("some_directory");
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance("//:out_specified"), "%s")
+            .resolve("some_directory");
     Path scratchDownloadPath =
-        workspace.getBuckPaths().getScratchDir().resolve("out_specified#archive-download");
+        workspace.getScratchPath(
+            BuildTargetFactory.newInstance("//:out_specified#archive-download"), "%s");
     Path downloadPath =
         workspace
-            .getBuckPaths()
-            .getGenDir()
-            .resolve("out_specified#archive-download")
+            .getGenPath(BuildTargetFactory.newInstance("//:out_specified#archive-download"), "%s")
             .resolve("some_directory");
     Path expectedMainDotJavaPath = outputPath.resolve("root").resolve(mainDotJavaPath);
     Path expectedEchoDotShPath = outputPath.resolve("root").resolve(echoDotShPath);
@@ -197,20 +199,22 @@ public class HttpArchiveIntegrationTest {
   }
 
   @Test
-  public void downloadsZipFileAndValidatesIt() throws IOException, InterruptedException {
+  public void downloadsZipFileAndValidatesIt() throws IOException {
     // TODO: Windows has some issues w/ symlinks in zip files. Once fixed, remove this distinction
     Assume.assumeThat(Platform.detect(), is(not(WINDOWS)));
 
     rewriteBuckFileTemplate(workspace);
 
-    Path outputPath = workspace.getBuckPaths().getGenDir().resolve("test.zip").resolve("test.zip");
+    Path outputPath =
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance("//:test.zip"), "%s")
+            .resolve("test.zip");
     Path scratchDownloadPath =
-        workspace.getBuckPaths().getScratchDir().resolve("test.zip#archive-download");
+        workspace.getScratchPath(
+            BuildTargetFactory.newInstance("//:test.zip#archive-download"), "%s");
     Path downloadPath =
         workspace
-            .getBuckPaths()
-            .getGenDir()
-            .resolve("test.zip#archive-download")
+            .getGenPath(BuildTargetFactory.newInstance("//:test.zip#archive-download"), "%s")
             .resolve("test.zip");
     Path expectedMainDotJavaPath = outputPath.resolve("root").resolve(mainDotJavaPath);
     Path expectedEchoDotShPath = outputPath.resolve("root").resolve(echoDotShPath);
@@ -238,8 +242,7 @@ public class HttpArchiveIntegrationTest {
   }
 
   @Test
-  public void downloadsZipFileAndValidatesItWithNoSymlinksOnWindows()
-      throws IOException, InterruptedException {
+  public void downloadsZipFileAndValidatesItWithNoSymlinksOnWindows() throws IOException {
     // TODO: Windows has some issues w/ symlinks in zip files. Once fixed, remove this distinction
     Assume.assumeThat(Platform.detect(), is(WINDOWS));
 
@@ -286,17 +289,19 @@ public class HttpArchiveIntegrationTest {
   }
 
   @Test
-  public void downloadsTarFileAndValidatesIt() throws IOException, InterruptedException {
+  public void downloadsTarFileAndValidatesIt() throws IOException {
     rewriteBuckFileTemplate(workspace);
 
-    Path outputPath = workspace.getBuckPaths().getGenDir().resolve("test.tar").resolve("test.tar");
+    Path outputPath =
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance("//:test.tar"), "%s")
+            .resolve("test.tar");
     Path scratchDownloadPath =
-        workspace.getBuckPaths().getScratchDir().resolve("test.tar#archive-download");
+        workspace.getScratchPath(
+            BuildTargetFactory.newInstance("//:test.tar#archive-download"), "%s");
     Path downloadPath =
         workspace
-            .getBuckPaths()
-            .getGenDir()
-            .resolve("test.tar#archive-download")
+            .getGenPath(BuildTargetFactory.newInstance("//:test.tar#archive-download"), "%s")
             .resolve("test.tar");
     Path expectedMainDotJavaPath = outputPath.resolve("root").resolve(mainDotJavaPath);
     Path expectedEchoDotShPath = outputPath.resolve("root").resolve(echoDotShPath);
@@ -324,18 +329,19 @@ public class HttpArchiveIntegrationTest {
   }
 
   @Test
-  public void downloadsTarBz2FileAndValidatesIt() throws IOException, InterruptedException {
+  public void downloadsTarBz2FileAndValidatesIt() throws IOException {
     rewriteBuckFileTemplate(workspace);
 
     Path outputPath =
-        workspace.getBuckPaths().getGenDir().resolve("test.tar.bz2").resolve("test.tar.bz2");
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance("//:test.tar.bz2"), "%s")
+            .resolve("test.tar.bz2");
     Path scratchDownloadPath =
-        workspace.getBuckPaths().getScratchDir().resolve("test.tar.bz2#archive-download");
+        workspace.getScratchPath(
+            BuildTargetFactory.newInstance("//:test.tar.bz2#archive-download"), "%s");
     Path downloadPath =
         workspace
-            .getBuckPaths()
-            .getGenDir()
-            .resolve("test.tar.bz2#archive-download")
+            .getGenPath(BuildTargetFactory.newInstance("//:test.tar.bz2#archive-download"), "%s")
             .resolve("test.tar.bz2");
     Path expectedMainDotJavaPath = outputPath.resolve("root").resolve(mainDotJavaPath);
     Path expectedEchoDotShPath = outputPath.resolve("root").resolve(echoDotShPath);
@@ -364,18 +370,19 @@ public class HttpArchiveIntegrationTest {
   }
 
   @Test
-  public void downloadsTarGzFileAndValidatesIt() throws IOException, InterruptedException {
+  public void downloadsTarGzFileAndValidatesIt() throws IOException {
     rewriteBuckFileTemplate(workspace);
 
     Path outputPath =
-        workspace.getBuckPaths().getGenDir().resolve("test.tar.gz").resolve("test.tar.gz");
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance("//:test.tar.gz"), "%s")
+            .resolve("test.tar.gz");
     Path scratchDownloadPath =
-        workspace.getBuckPaths().getScratchDir().resolve("test.tar.gz#archive-download");
+        workspace.getScratchPath(
+            BuildTargetFactory.newInstance("//:test.tar.gz#archive-download"), "%s");
     Path downloadPath =
         workspace
-            .getBuckPaths()
-            .getGenDir()
-            .resolve("test.tar.gz#archive-download")
+            .getGenPath(BuildTargetFactory.newInstance("//:test.tar.gz#archive-download"), "%s")
             .resolve("test.tar.gz");
     Path expectedMainDotJavaPath = outputPath.resolve("root").resolve(mainDotJavaPath);
     Path expectedEchoDotShPath = outputPath.resolve("root").resolve(echoDotShPath);
@@ -403,18 +410,19 @@ public class HttpArchiveIntegrationTest {
   }
 
   @Test
-  public void downloadsTarXzFileAndValidatesIt() throws IOException, InterruptedException {
+  public void downloadsTarXzFileAndValidatesIt() throws IOException {
     rewriteBuckFileTemplate(workspace);
 
     Path outputPath =
-        workspace.getBuckPaths().getGenDir().resolve("test.tar.xz").resolve("test.tar.xz");
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance("//:test.tar.xz"), "%s")
+            .resolve("test.tar.xz");
     Path scratchDownloadPath =
-        workspace.getBuckPaths().getScratchDir().resolve("test.tar.xz#archive-download");
+        workspace.getScratchPath(
+            BuildTargetFactory.newInstance("//:test.tar.xz#archive-download"), "%s");
     Path downloadPath =
         workspace
-            .getBuckPaths()
-            .getGenDir()
-            .resolve("test.tar.xz#archive-download")
+            .getGenPath(BuildTargetFactory.newInstance("//:test.tar.xz#archive-download"), "%s")
             .resolve("test.tar.xz");
     Path expectedMainDotJavaPath = outputPath.resolve("root").resolve(mainDotJavaPath);
     Path expectedEchoDotShPath = outputPath.resolve("root").resolve(echoDotShPath);
@@ -442,21 +450,22 @@ public class HttpArchiveIntegrationTest {
   }
 
   @Test
-  public void stripsZipPrefixIfRequested() throws IOException, InterruptedException {
+  public void stripsZipPrefixIfRequested() throws IOException {
     // TODO: Windows has some issues w/ symlinks in zip files. Once fixed, remove this distinction
     Assume.assumeThat(Platform.detect(), is(not(WINDOWS)));
 
     rewriteBuckFileTemplate(workspace);
 
     Path outputPath =
-        workspace.getBuckPaths().getGenDir().resolve("strip.zip").resolve("strip.zip");
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance("//:strip.zip"), "%s")
+            .resolve("strip.zip");
     Path scratchDownloadPath =
-        workspace.getBuckPaths().getScratchDir().resolve("strip.zip#archive-download");
+        workspace.getScratchPath(
+            BuildTargetFactory.newInstance("//:strip.zip#archive-download"), "%s");
     Path downloadPath =
         workspace
-            .getBuckPaths()
-            .getGenDir()
-            .resolve("strip.zip#archive-download")
+            .getGenPath(BuildTargetFactory.newInstance("//:strip.zip#archive-download"), "%s")
             .resolve("strip.zip");
     Path expectedMainDotJavaPath = outputPath.resolve(mainDotJavaPath);
     Path expectedEchoDotShPath = outputPath.resolve(echoDotShPath);
@@ -484,8 +493,7 @@ public class HttpArchiveIntegrationTest {
   }
 
   @Test
-  public void stripsZipPrefixIfRequestedWithNoSymlinksOnWindows()
-      throws IOException, InterruptedException {
+  public void stripsZipPrefixIfRequestedWithNoSymlinksOnWindows() throws IOException {
     // TODO: Windows has some issues w/ symlinks in zip files. Once fixed, remove this distinction
     Assume.assumeThat(Platform.detect(), is(WINDOWS));
 
@@ -493,17 +501,15 @@ public class HttpArchiveIntegrationTest {
 
     Path outputPath =
         workspace
-            .getBuckPaths()
-            .getGenDir()
-            .resolve("strip_no_symlinks.zip")
+            .getGenPath(BuildTargetFactory.newInstance("//:strip_no_symlinks.zip"), "%s")
             .resolve("strip_no_symlinks.zip");
     Path scratchDownloadPath =
-        workspace.getBuckPaths().getScratchDir().resolve("strip_no_symlinks.zip#archive-download");
+        workspace.getScratchPath(
+            BuildTargetFactory.newInstance("//:strip_no_symlinks.zip#archive-download"), "%s");
     Path downloadPath =
         workspace
-            .getBuckPaths()
-            .getGenDir()
-            .resolve("strip_no_symlinks.zip#archive-download")
+            .getGenPath(
+                BuildTargetFactory.newInstance("//:strip_no_symlinks.zip#archive-download"), "%s")
             .resolve("strip_no_symlinks.zip");
     Path expectedMainDotJavaPath = outputPath.resolve(mainDotJavaPath);
     Path expectedEchoDotShPath = outputPath.resolve(echoDotShPath);
@@ -532,18 +538,19 @@ public class HttpArchiveIntegrationTest {
   }
 
   @Test
-  public void stripsTarPrefixIfRequested() throws IOException, InterruptedException {
+  public void stripsTarPrefixIfRequested() throws IOException {
     rewriteBuckFileTemplate(workspace);
 
     Path outputPath =
-        workspace.getBuckPaths().getGenDir().resolve("strip.tar").resolve("strip.tar");
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance("//:strip.tar"), "%s")
+            .resolve("strip.tar");
     Path scratchDownloadPath =
-        workspace.getBuckPaths().getScratchDir().resolve("strip.tar#archive-download");
+        workspace.getScratchPath(
+            BuildTargetFactory.newInstance("//:strip.tar#archive-download"), "%s");
     Path downloadPath =
         workspace
-            .getBuckPaths()
-            .getGenDir()
-            .resolve("strip.tar#archive-download")
+            .getGenPath(BuildTargetFactory.newInstance("//:strip.tar#archive-download"), "%s")
             .resolve("strip.tar");
     Path expectedMainDotJavaPath = outputPath.resolve(mainDotJavaPath);
     Path expectedEchoDotShPath = outputPath.resolve(echoDotShPath);
@@ -571,18 +578,19 @@ public class HttpArchiveIntegrationTest {
   }
 
   @Test
-  public void stripsTarBz2PrefixIfRequested() throws IOException, InterruptedException {
+  public void stripsTarBz2PrefixIfRequested() throws IOException {
     rewriteBuckFileTemplate(workspace);
 
     Path outputPath =
-        workspace.getBuckPaths().getGenDir().resolve("strip.tar.bz2").resolve("strip.tar.bz2");
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance("//:strip.tar.bz2"), "%s")
+            .resolve("strip.tar.bz2");
     Path scratchDownloadPath =
-        workspace.getBuckPaths().getScratchDir().resolve("strip.tar.bz2#archive-download");
+        workspace.getScratchPath(
+            BuildTargetFactory.newInstance("//:strip.tar.bz2#archive-download"), "%s");
     Path downloadPath =
         workspace
-            .getBuckPaths()
-            .getGenDir()
-            .resolve("strip.tar.bz2#archive-download")
+            .getGenPath(BuildTargetFactory.newInstance("//:strip.tar.bz2#archive-download"), "%s")
             .resolve("strip.tar.bz2");
     Path expectedMainDotJavaPath = outputPath.resolve(mainDotJavaPath);
     Path expectedEchoDotShPath = outputPath.resolve(echoDotShPath);
@@ -611,18 +619,19 @@ public class HttpArchiveIntegrationTest {
   }
 
   @Test
-  public void stripsTarGzPrefixIfRequested() throws IOException, InterruptedException {
+  public void stripsTarGzPrefixIfRequested() throws IOException {
     rewriteBuckFileTemplate(workspace);
 
     Path outputPath =
-        workspace.getBuckPaths().getGenDir().resolve("strip.tar.gz").resolve("strip.tar.gz");
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance("//:strip.tar.gz"), "%s")
+            .resolve("strip.tar.gz");
     Path scratchDownloadPath =
-        workspace.getBuckPaths().getScratchDir().resolve("strip.tar.gz#archive-download");
+        workspace.getScratchPath(
+            BuildTargetFactory.newInstance("//:strip.tar.gz#archive-download"), "%s");
     Path downloadPath =
         workspace
-            .getBuckPaths()
-            .getGenDir()
-            .resolve("strip.tar.gz#archive-download")
+            .getGenPath(BuildTargetFactory.newInstance("//:strip.tar.gz#archive-download"), "%s")
             .resolve("strip.tar.gz");
     Path expectedMainDotJavaPath = outputPath.resolve(mainDotJavaPath);
     Path expectedEchoDotShPath = outputPath.resolve(echoDotShPath);
@@ -651,18 +660,19 @@ public class HttpArchiveIntegrationTest {
   }
 
   @Test
-  public void stripsTarXzPrefixIfRequested() throws IOException, InterruptedException {
+  public void stripsTarXzPrefixIfRequested() throws IOException {
     rewriteBuckFileTemplate(workspace);
 
     Path outputPath =
-        workspace.getBuckPaths().getGenDir().resolve("strip.tar.xz").resolve("strip.tar.xz");
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance("//:strip.tar.xz"), "%s")
+            .resolve("strip.tar.xz");
     Path scratchDownloadPath =
-        workspace.getBuckPaths().getScratchDir().resolve("strip.tar.xz#archive-download");
+        workspace.getScratchPath(
+            BuildTargetFactory.newInstance("//:strip.tar.xz#archive-download"), "%s");
     Path downloadPath =
         workspace
-            .getBuckPaths()
-            .getGenDir()
-            .resolve("strip.tar.xz#archive-download")
+            .getGenPath(BuildTargetFactory.newInstance("//:strip.tar.xz#archive-download"), "%s")
             .resolve("strip.tar.xz");
     Path expectedMainDotJavaPath = outputPath.resolve(mainDotJavaPath);
     Path expectedEchoDotShPath = outputPath.resolve(echoDotShPath);
@@ -691,18 +701,19 @@ public class HttpArchiveIntegrationTest {
   }
 
   @Test
-  public void typeOverridesUrl() throws IOException, InterruptedException {
+  public void typeOverridesUrl() throws IOException {
     rewriteBuckFileTemplate(workspace);
 
     Path outputPath =
-        workspace.getBuckPaths().getGenDir().resolve("override_type").resolve("override_type");
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance("//:override_type"), "%s")
+            .resolve("override_type");
     Path scratchDownloadPath =
-        workspace.getBuckPaths().getScratchDir().resolve("override_type#archive-download");
+        workspace.getScratchPath(
+            BuildTargetFactory.newInstance("//:override_type#archive-download"), "%s");
     Path downloadPath =
         workspace
-            .getBuckPaths()
-            .getGenDir()
-            .resolve("override_type#archive-download")
+            .getGenPath(BuildTargetFactory.newInstance("//:override_type#archive-download"), "%s")
             .resolve("override_type");
     Path expectedMainDotJavaPath = outputPath.resolve(mainDotJavaPath);
     Path expectedEchoDotShPath = outputPath.resolve(echoDotShPath);
@@ -731,20 +742,21 @@ public class HttpArchiveIntegrationTest {
   }
 
   @Test
-  public void downloadZipFromMavenCoordinates() throws IOException, InterruptedException {
+  public void downloadZipFromMavenCoordinates() throws IOException {
     TestDataHelper.overrideBuckconfig(
         workspace,
         ImmutableMap.of("download", ImmutableMap.of("maven_repo", httpd.getRootUri().toString())));
 
     Path outputPath =
-        workspace.getBuckPaths().getGenDir().resolve("zip_from_maven").resolve("zip_from_maven");
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance("//:zip_from_maven"), "%s")
+            .resolve("zip_from_maven");
     Path scratchDownloadPath =
-        workspace.getBuckPaths().getScratchDir().resolve("zip_from_maven#archive-download");
+        workspace.getScratchPath(
+            BuildTargetFactory.newInstance("//:zip_from_maven#archive-download"), "%s");
     Path downloadPath =
         workspace
-            .getBuckPaths()
-            .getGenDir()
-            .resolve("zip_from_maven#archive-download")
+            .getGenPath(BuildTargetFactory.newInstance("//:zip_from_maven#archive-download"), "%s")
             .resolve("zip_from_maven");
     Path expectedMainDotJavaPath = outputPath.resolve(mainDotJavaPath);
     Path expectedEchoDotShPath = outputPath.resolve(echoDotShPath);
@@ -772,5 +784,18 @@ public class HttpArchiveIntegrationTest {
         httpdHandler.getRequestedPaths());
     Assert.assertEquals(
         0, Files.walk(workspace.resolve(scratchDownloadPath)).filter(Files::isRegularFile).count());
+  }
+
+  @Test
+  public void canBeUsedAsDependencyInRuleAnalysis() throws IOException {
+    workspace.setUp();
+    rewriteBuckFileTemplate(workspace);
+
+    workspace.addBuckConfigLocalOption("parser", "default_build_file_syntax", "skylark");
+    workspace.addBuckConfigLocalOption("parser", "enable_user_defined_rules", "true");
+    workspace.addBuckConfigLocalOption("rule_analysis", "mode", "PROVIDER_COMPATIBLE");
+    workspace.addBuckConfigLocalOption("download", "in_build", "true");
+
+    workspace.runBuckBuild("//rag:expect_path").assertSuccess();
   }
 }

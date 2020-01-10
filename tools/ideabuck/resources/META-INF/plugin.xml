@@ -1,18 +1,77 @@
 <idea-plugin>
   <id>intellij.buck.plugin</id>
   <name>Buck for IDEA</name>
-  <version>3.7.1-SNAPSHOT</version>
+  <version>3.9.3-SNAPSHOT</version>
   <category>Build</category>
   <vendor email="fb-plugins@fb.com" url="www.facebook.com">Facebook, Inc.</vendor>
 
   <description><![CDATA[
-    An IntelliJ plugin for <a href="https://buckbuild.com">the Buck build system.</a>
+    An IntelliJ plugin for <a href="https://buck.build">the Buck build system.</a>
   ]]></description>
 
   <change-notes><![CDATA[
+<h3>3.9.2</h3>
+<ul>
+</ul>
+<h3>3.9.1</h3>
+<ul>
+  <li>Add "copy Buck target" feature</li>
+  <li>Fix memory leak of Buck tool window</li>
+  <li>Change auto-completion to be triggered by : and /</li>
+</ul>
+<h3>3.9.0</h3>
+<ul>
+  <li>Fix parsing of trailing indents</li>
+  <li>Add extension point for transforming target metadata</li>
+  <li>Allow BuckAddDependencyIntention to work with other languages</li>
+</ul>
+<h3>3.8.2</h3>
+<ul>
+  <li>Fix rendering of BuckToolWindow, remove non-useful buttons.</li>
+</ul>
+<h3>3.8.1</h3>
+<ul>
+  <li>Change trigger for auto-formatting build files from save to editor blur.</li>
+</ul>
+<h3>3.8.0</h3>
+<ul>
+  <li>Use <code>buildifier</code> for the "Reformat Code" action</li>
+  <li>Support auto-formatting build files on save</li>
+  <li>Remove dependency on Android Support plugin</li>
+</ul>
+<h3>3.7.5</h3>
+<ul>
+  <li>Refine macros for External Tools:
+    <ul>
+      <li><code>$BuckExecutable$</code>: Path to the buck executable for the active project</li>
+      <li><code>$BuckCoordinates$</code>: fully-qualified TargetPattern for the active selection</li>
+      <li><code>$BuckCellName$, $BuckCellRelativePath$, $BuckRuleName$</code>: components of the <code>$BuckCoordinates$</code></li>
+      <li><code>$BuckCellRoot$</code>: path to cell root for the selected file</li>
+      <li><code>$BuckCellRoot(name)$</code>: path to cell root for the named cell</li>
+    </ul>
+  </li>
+</ul>
+<h3>3.7.4</h3>
+<ul>
+  <li>Support buck commands as "Before Run" tasks/</li>
+</ul>
+<h3>3.7.3</h3>
+<ul>
+  <li>Fixes to make triggering buck from IntelliJ more consistent with
+  invoking it from the command-line.</li>
+  <li>Improved cell discovery in prefs.</li>
+</ul>
+<h3>3.7.2</h3>
+<ul>
+  <li>Make grammar fully Starlark-compatible.</li>
+  <li>Support reference navigation for identifiers in Starlark files.</li>
+  <li>Support folding of various multi-line Starlark elements (function definitions,
+      collections/comprehensions, etc.).</li>
+  <li>Support structure view.</li>
+</ul>
 <h3>3.7.1</h3>
 <ul>
-  <li></li>
+  <li>Rebuild for changes in buck core re: test results.</li>
 </ul>
 <h3>3.7</h3>
 <ul>
@@ -210,12 +269,10 @@
   </change-notes>
 
   <!-- please see https://confluence.jetbrains.com/display/IDEADEV/Build+Number+Ranges for description -->
-  <idea-version since-build="172.1294"/>
+  <idea-version since-build="191.5849.21"/>
 
   <depends>com.intellij.modules.platform</depends>
   <depends>com.intellij.modules.lang</depends>
-
-  <depends optional="true">org.jetbrains.android</depends>
 
   <extensions defaultExtensionNs="com.intellij">
     <fileTypeFactory implementation="com.facebook.buck.intellij.ideabuck.lang.BuckFileTypeFactory"/>
@@ -232,9 +289,6 @@
     <lang.syntaxHighlighterFactory
       language="Buckconfig"
       implementationClass="com.facebook.buck.intellij.ideabuck.highlight.BcfgSyntaxHighlighterFactory"/>
-    <lang.formatter
-      language="Buck"
-      implementationClass="com.facebook.buck.intellij.ideabuck.format.BuckFormattingModelBuilder"/>
     <lang.importOptimizer
       language="Buck"
       implementationClass="com.facebook.buck.intellij.ideabuck.format.BuckImportOptimizer"/>
@@ -251,16 +305,13 @@
     <completion.contributor
       language="Buck"
       implementationClass="com.facebook.buck.intellij.ideabuck.completion.BuckTargetCompletionContributor"/>
+    <typedHandler implementation="com.facebook.buck.intellij.ideabuck.completion.BuckTargetAutoPopupHandler"/>
     <codeStyleSettingsProvider
       implementation="com.facebook.buck.intellij.ideabuck.config.BuckCodeStyleSettingsProvider"/>
     <langCodeStyleSettingsProvider
       implementation="com.facebook.buck.intellij.ideabuck.format.BuckLanguageCodeStyleSettingsProvider"/>
-    <gotoDeclarationHandler
-      implementation="com.facebook.buck.intellij.ideabuck.navigation.BuckGotoProvider"
-      order="FIRST"/>
-    <gotoDeclarationHandler
-      implementation="com.facebook.buck.intellij.ideabuck.navigation.BcfgGotoFileProvider"
-      language="Buckconfig"/>
+    <gotoDeclarationHandler implementation="com.facebook.buck.intellij.ideabuck.navigation.BuckGotoProvider" order="FIRST"/>
+    <gotoDeclarationHandler implementation="com.facebook.buck.intellij.ideabuck.navigation.BcfgGotoFileProvider" />
     <annotator language="Buck"
       implementationClass="com.facebook.buck.intellij.ideabuck.annotator.BuckAnnotator"/>
     <annotator language="Buckconfig"
@@ -276,9 +327,11 @@
     <lang.braceMatcher
       language="Buck"
       implementationClass="com.facebook.buck.intellij.ideabuck.format.BuckBraceMatcher"/>
+    <lang.refactoringSupport language="Buck" implementationClass="com.facebook.buck.intellij.ideabuck.lang.BuckIdentifierRefactoringSupportProvider"/>
     <quoteHandler
       fileType="Buck"
       className="com.facebook.buck.intellij.ideabuck.format.BuckQuoteHandler"/>
+    <lang.psiStructureViewFactory language="Buck" implementationClass="com.facebook.buck.intellij.ideabuck.structure.BuckStructureViewFactory"/>
     <copyPastePreProcessor
       implementation="com.facebook.buck.intellij.ideabuck.format.BuckCopyPasteProcessor"/>
     <toolWindow
@@ -301,6 +354,8 @@
       implementation="com.facebook.buck.intellij.ideabuck.configurations.TestConfigurationType"/>
     <programRunner
       implementation="com.facebook.buck.intellij.ideabuck.configurations.TestProgramRunner"/>
+    <psi.referenceContributor implementation="com.facebook.buck.intellij.ideabuck.lang.BuckIdentifierReferenceContributor"/>
+
     <runLineMarkerContributor language="JAVA"
       implementationClass="com.facebook.buck.intellij.ideabuck.actions.select.SelectedTestRunLineMarkerContributor"/>
     <additionalTextAttributes scheme="Default" file="colorSchemes/BuckDefault.xml"/>
@@ -312,12 +367,28 @@
     <liveTemplateContext implementation="com.facebook.buck.intellij.ideabuck.completion.BuckCodeContexts$Declaration"/>
     <liveTemplateContext implementation="com.facebook.buck.intellij.ideabuck.completion.BuckCodeContexts$InString"/>
     <liveTemplateContext implementation="com.facebook.buck.intellij.ideabuck.completion.BuckCodeContexts$NamedArgument"/>
-    <liveTemplateContext implementation="com.facebook.buck.intellij.ideabuck.completion.BuckCodeContexts$SingleExpression"/>
+    <liveTemplateContext implementation="com.facebook.buck.intellij.ideabuck.completion.BuckCodeContexts$SimpleExpression"/>
     <liveTemplateContext implementation="com.facebook.buck.intellij.ideabuck.completion.BuckCodeContexts$Statement"/>
+
+    <macro implementation="com.facebook.buck.intellij.ideabuck.macro.BuckBuildFileNameMacro"/>
+    <macro implementation="com.facebook.buck.intellij.ideabuck.macro.BuckBuildFilePathMacro"/>
+    <macro implementation="com.facebook.buck.intellij.ideabuck.macro.BuckCellNameMacro"/>
+    <macro implementation="com.facebook.buck.intellij.ideabuck.macro.BuckCellRelativeBuildFilePathMacro"/>
+    <macro implementation="com.facebook.buck.intellij.ideabuck.macro.BuckCellRelativeFilePathMacro"/>
+    <macro implementation="com.facebook.buck.intellij.ideabuck.macro.BuckCellRootDirMacro"/>
+    <macro implementation="com.facebook.buck.intellij.ideabuck.macro.BuckExecutableMacro"/>
+
+    <stepsBeforeRunProvider implementation="com.facebook.buck.intellij.ideabuck.configurations.BuckCommandBeforeRunTaskProvider"/>
+
+    <postFormatProcessor implementation="com.facebook.buck.intellij.ideabuck.format.BuildifierPostFormatProcessor"/>
   </extensions>
 
   <actions>
-    <group id="buck.Menu">
+
+    <group
+      id="buck.Menu"
+      popup="true"
+      text="Buck">
       <action
         id="buck.GoToBuckFile"
         class="com.facebook.buck.intellij.ideabuck.actions.GoToBuckFile"
@@ -325,8 +396,12 @@
         description="Go to Buck file for this source file.">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift P"/>
       </action>
-      <add-to-group anchor="first" group-id="EditorPopupMenu.GoTo"/>
-      <add-to-group group-id="GoToMenu" anchor="after" relative-to-action="GoToCodeGroup"/>
+      <action
+          id="buck.CopyTarget"
+          class="com.facebook.buck.intellij.ideabuck.actions.CopyTargetAction"
+          text="Copy Buck Target"
+          description="Copy the Buck target of the current class"/>
+      <add-to-group anchor="after" group-id="EditorPopupMenu" relative-to-action="EditorToggleColumnMode"/>
     </group>
 
     <group id="buck.ToolbarActions">
@@ -358,17 +433,9 @@
         id="buck.Install">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift X"/>
       </action>
-      <action class="com.facebook.buck.intellij.ideabuck.actions.BuckInstallDebugAction"
-        id="buck.InstallDebug">
-        <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift D"/>
-      </action>
       <action class="com.facebook.buck.intellij.ideabuck.actions.BuckUninstallAction"
         id="buck.Uninstall">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift M"/>
-      </action>
-      <action class="com.facebook.buck.intellij.ideabuck.actions.BuckProjectGenerationAction"
-        id="buck.ProjectGeneration">
-        <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift B"/>
       </action>
       <action class="com.facebook.buck.intellij.ideabuck.actions.BuckKillAction" id="buck.Kill">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift L"/>
@@ -384,7 +451,19 @@
       <add-to-group anchor="last" group-id="RunContextGroup"/>
     </group>
 
+    <!-- Under certain circumstances (while debugging ideabuck?), the "Reformat Code" action does
+    not invoke the BuildifierPostFormatProcessor.  Instead, provide this action (but don't put it
+    in menus) to make it possible to invoke directly. -->
+    <action class="com.facebook.buck.intellij.ideabuck.format.BuildifierExternalFormatAction"
+        id="buck.BuildifierExternalFormatAction"/>
+
   </actions>
+
+  <application-components>
+    <component>
+      <implementation-class>com.facebook.buck.intellij.ideabuck.format.BuildifierAutoFormatter</implementation-class>
+    </component>
+  </application-components>
 
   <project-components>
     <component>
@@ -412,7 +491,6 @@
         com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider
       </implementation-class>
     </component>
-
     <!--
       Components in the package com.facebook.buck.intellij.ideabuck.api have
       stable APIs that are intended for use by other plugins.
@@ -426,4 +504,10 @@
       <implementation-class>com.facebook.buck.intellij.ideabuck.impl.BuckTargetLocatorImpl</implementation-class>
     </component>
   </project-components>
+
+  <extensionPoints>
+      <extensionPoint area="IDEA_PROJECT"
+          name="TargetMetadataTransformer"
+          interface="com.facebook.buck.intellij.ideabuck.autodeps.TargetMetadataTransformer" />
+  </extensionPoints>
 </idea-plugin>

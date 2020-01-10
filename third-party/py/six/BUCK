@@ -1,5 +1,3 @@
-load("//tools/build_rules:export_files.bzl", "export_files")
-
 python_library(
     name = "six",
     srcs = [
@@ -14,4 +12,9 @@ python_library(
     ],
 )
 
-export_files(["six.py"])
+export_file(
+    name = "six.py",
+    visibility = [
+        "PUBLIC",
+    ],
+)

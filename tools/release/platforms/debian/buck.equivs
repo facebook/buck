@@ -1,6 +1,6 @@
 Section: Development
 Priority: optional
-Homepage: https://buckbuild.com
+Homepage: https://buck.build
 Standards-Version: 3.9.2
 
 Package: buck
@@ -13,4 +13,4 @@ Copyright: LICENSE
 Readme: README.md
 Changelog: Changelog
 Files: buck /usr/local/bin
-Description: A fast build system that encourages the creation of small, reusable modules over a variety of platforms and languages. https://buckbuild.com
+Description: A fast build system that encourages the creation of small, reusable modules over a variety of platforms and languages. https://buck.build

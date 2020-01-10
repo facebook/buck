@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.build.engine;
@@ -20,6 +20,7 @@ import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.core.build.engine.BuildResult.Builder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.util.Optional;
@@ -42,9 +43,11 @@ abstract class AbstractBuildResult {
   abstract Optional<CacheResult> getCacheResult();
 
   /** Signals that the cache upload for this rule (if there were one) has completed. */
-  abstract Optional<ListenableFuture<Void>> getUploadCompleteFuture();
+  abstract Optional<ListenableFuture<Unit>> getUploadCompleteFuture();
 
   abstract Optional<BuildRuleSuccessType> getSuccessOptional();
+
+  abstract Optional<String> getStrategyResult();
 
   abstract Optional<Throwable> getFailureOptional();
 
@@ -86,7 +89,7 @@ abstract class AbstractBuildResult {
       BuildRule rule,
       BuildRuleSuccessType success,
       CacheResult cacheResult,
-      ListenableFuture<Void> uploadCompleteFuture) {
+      ListenableFuture<Unit> uploadCompleteFuture) {
     return successBuilder(rule, success, cacheResult)
         .setUploadCompleteFuture(uploadCompleteFuture)
         .build();

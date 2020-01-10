@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
@@ -149,8 +149,7 @@ public class InstallCommandOptionsTest {
   }
 
   @Test
-  public void testInstallCommandOptionsMultiInstallMode()
-      throws CmdLineException, InterruptedException, IOException {
+  public void testInstallCommandOptionsMultiInstallMode() throws CmdLineException, IOException {
     // Short form.
     AdbOptions options = getAdbOptions(false, AdbCommandLineOptions.MULTI_INSTALL_MODE_SHORT_ARG);
     assertTrue(options.isMultiInstallModeEnabled());
@@ -165,8 +164,7 @@ public class InstallCommandOptionsTest {
   }
 
   @Test
-  public void testInstallCommandOptionsAdbThreads()
-      throws CmdLineException, InterruptedException, IOException {
+  public void testInstallCommandOptionsAdbThreads() throws CmdLineException, IOException {
     // Short form.
     AdbOptions options = getAdbOptions(false, AdbCommandLineOptions.ADB_THREADS_SHORT_ARG, "4");
     assertEquals(4, options.getAdbThreadCount());
@@ -181,8 +179,7 @@ public class InstallCommandOptionsTest {
   }
 
   @Test
-  public void testMultiInstallModeFromBuckConfig()
-      throws CmdLineException, InterruptedException, IOException {
+  public void testMultiInstallModeFromBuckConfig() throws CmdLineException, IOException {
     AdbOptions options = getAdbOptions(true);
     assertTrue(options.isMultiInstallModeEnabled());
 

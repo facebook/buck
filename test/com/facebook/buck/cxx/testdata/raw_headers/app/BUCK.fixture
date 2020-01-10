@@ -1,0 +1,42 @@
+cxx_binary(
+    name = "app1",
+    srcs = ["main1.c"],
+    include_directories = ["headers"],
+    raw_headers = ["headers/lib.h"],
+)
+
+cxx_binary(
+    name = "app2",
+    srcs = ["main2.c"],
+    deps = [":lib2"],
+)
+
+cxx_library(
+    name = "lib2",
+    public_include_directories = ["lib2"],
+    raw_headers = ["lib2/lib2.h"],
+)
+
+cxx_binary(
+    name = "app3",
+    srcs = ["main3.c"],
+    deps = ["//app/lib3:lib3"],
+)
+
+cxx_binary(
+    name = "app4",
+    srcs = ["main4.c"],
+    deps = [
+        "//app/lib4:lib4-header",
+        "//app/lib4:lib4-include",
+    ],
+)
+
+cxx_binary(
+    name = "app5",
+    srcs = ["main5.c"],
+    deps = [
+        "//app/lib5:lib5-header",
+        "//app/lib5:lib5-include",
+    ],
+)

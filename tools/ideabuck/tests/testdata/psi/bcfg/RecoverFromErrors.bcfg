@@ -1,0 +1,22 @@
+# First section is ok
+[a]
+b = c
+
+# Malformed section: no terminating ']'
+[d
+e = f
+
+# Malformed properties
+[g]
+# Empty values are ok
+h =
+# Even if they use line continuations
+i = \
+    \
+
+# But missing an '=' is not ok
+j
+
+# File ends on a non-terminated, malformed property
+[k]
+l

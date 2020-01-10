@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.model.targetgraph.impl;
@@ -27,16 +27,16 @@ import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.json.JsonObjectHashing;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.hashing.FileHashLoader;
 import com.facebook.buck.util.hashing.StringHashing;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
+import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
-import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -69,6 +69,7 @@ public class TargetGraphHashing {
   private final ListeningExecutorService executor;
   private final RuleKeyConfiguration ruleKeyConfiguration;
   private final Function<TargetNode<?>, ListenableFuture<?>> targetNodeRawAttributesProvider;
+  private final HashFunction hashFunction;
 
   public TargetGraphHashing(
       BuckEventBus eventBus,
@@ -77,10 +78,12 @@ public class TargetGraphHashing {
       Iterable<TargetNode<?>> roots,
       ListeningExecutorService executor,
       RuleKeyConfiguration ruleKeyConfiguration,
-      Function<TargetNode<?>, ListenableFuture<?>> targetNodeRawAttributesProvider) {
+      Function<TargetNode<?>, ListenableFuture<?>> targetNodeRawAttributesProvider,
+      HashFunction hashFunction) {
     this.eventBus = eventBus;
     this.targetGraph = targetGraph;
     this.fileHashLoader = fileHashLoader;
+    this.hashFunction = hashFunction;
     this.roots = roots;
     this.executor = executor;
     this.ruleKeyConfiguration = ruleKeyConfiguration;
@@ -92,7 +95,7 @@ public class TargetGraphHashing {
    * (BuildTarget, HashCode)} pairs for all root build targets and their dependencies.
    */
   public ImmutableMap<BuildTarget, HashCode> hashTargetGraph() throws InterruptedException {
-    try (SimplePerfEvent.Scope scope =
+    try (SimplePerfEvent.Scope ignored =
         SimplePerfEvent.scope(eventBus, PerfEventId.of("ShowTargetHashes"))) {
       return new Runner().run();
     } catch (ExecutionException e) {
@@ -112,7 +115,7 @@ public class TargetGraphHashing {
      * @return the partial {@link Hasher}.
      */
     private Hasher startNode(TargetNode<?> node, Object nodeAttributes) {
-      Hasher hasher = Hashing.sha1().newHasher();
+      Hasher hasher = hashFunction.newHasher();
 
       // Hash the node's build target and rules.
       LOG.verbose("Hashing node %s", node);
@@ -157,8 +160,7 @@ public class TargetGraphHashing {
     private ListenableFuture<List<Pair<BuildTarget, HashCode>>> getDepPairsFuture(
         TargetNode<?> node) {
       return Futures.allAsList(
-          node.getParseDeps()
-              .stream()
+          node.getParseDeps().stream()
               .map(
                   dep ->
                       Futures.transform(
@@ -190,7 +192,7 @@ public class TargetGraphHashing {
                     Futures.transform(
                         getDepPairsFuture(node),
                         depPairs -> finishNode(node.getBuildTarget(), hasher, depPairs),
-                        MoreExecutors.directExecutor()),
+                        executor),
                 executor);
         futures.put(node.getBuildTarget(), future);
       }

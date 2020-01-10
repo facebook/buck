@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.toolchain.tool.impl;
@@ -22,12 +22,9 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
@@ -35,7 +32,7 @@ import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.UncachedRuleKeyBuilder;
 import com.facebook.buck.testutil.FakeFileHashCache;
-import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import java.util.function.Function;
@@ -45,14 +42,10 @@ import org.junit.Test;
 public class CommandToolRuleKeyTest {
 
   private BuildRuleResolver resolver;
-  private SourcePathRuleFinder ruleFinder;
-  private SourcePathResolver pathResolver;
 
   @Before
   public void setUp() {
     resolver = new TestActionGraphBuilder();
-    ruleFinder = new SourcePathRuleFinder(resolver);
-    pathResolver = DefaultSourcePathResolver.from(ruleFinder);
   }
 
   @Test
@@ -125,15 +118,14 @@ public class CommandToolRuleKeyTest {
     return ruleKey(tool, fakeHashCache(ImmutableMap.of()));
   }
 
-  private RuleKey ruleKey(CommandTool tool, FileHashCache hashCache) {
-    return new UncachedRuleKeyBuilder(
-            ruleFinder, pathResolver, hashCache, ruleKeyFactory(hashCache))
+  private RuleKey ruleKey(CommandTool tool, FileHashLoader hashCache) {
+    return new UncachedRuleKeyBuilder(resolver, hashCache, ruleKeyFactory(hashCache))
         .setReflectively("key", tool)
         .build(RuleKey::new);
   }
 
-  private DefaultRuleKeyFactory ruleKeyFactory(FileHashCache hashCache) {
-    return new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder);
+  private DefaultRuleKeyFactory ruleKeyFactory(FileHashLoader hashCache) {
+    return new TestDefaultRuleKeyFactory(hashCache, resolver);
   }
 
   private static FakeFileHashCache fakeHashCache(String file, String hash) {

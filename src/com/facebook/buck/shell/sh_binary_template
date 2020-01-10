@@ -11,9 +11,62 @@ BUCK_PROJECT_ROOT_FILE=<path_to_project_root_file>
 # means it can't contain any absolute filepaths. Expose the absolute filepath of the root of
 # the project as $BUCK_REAL_ROOT, determined at runtime.
 
+# A portable implementation of `realpath` / `readlink -e`
+# This is needed in order to resolve the actual path to the sh_binary() script
+# if it is invoked through a symlink.  We need to find the actual path before
+# searching upwards for the buck project root.
+function readlink_e() {
+    local path="$1"
+    readlink -e "$path" 2>/dev/null && return
+
+    # macosx / bsd readlink doesn't support -e
+    # so use pwd -P with some recursive readlinking
+
+    # strip trailing /
+    path="${path%/}"
+
+    # make path an absolute path
+    if [[ "${path:0:1}" != "/" ]]
+    then
+        path="$(pwd -P)/$path"
+    fi
+
+    local slash_basename=""
+    local counter=0
+    while [[ -h "$path" ]]
+    do
+        if [[ counter -gt 200 ]]
+        then
+            echo "ERROR: Cyclical symbolic link detected: $path" 1>&2
+            return
+        fi
+        counter=$(( counter + 1 ))
+
+        target="$(readlink "$path")"
+        if [[ "${target:0:1}" == "/" ]]
+        then
+            path="$target"
+        else
+            slash_basename="/$(basename "$path")"
+            path="${path%$slash_basename}/$target"
+        fi
+    done
+
+    # determine the target
+    slash_basename="/$(basename "$path")"
+    if [[ "$slash_basename" == "/.." || "$slash_basename" == "/." ]]
+    then
+        slash_basename=""
+    fi
+    local parent_dir="${path%$slash_basename}"
+
+    # subshell to preserve the cwd (instead of pushd/popd)
+    (cd "$parent_dir"; echo "$(pwd -P)$slash_basename")
+}
+
 # `cd` can produce output under specific configuration (for example, when CDPATH is present),
 # redirecting its output to /dev/null
-BUCK_REAL_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null && pwd)"
+BUCK_REAL_ROOT="$(cd "$(dirname $(readlink_e "${BASH_SOURCE[0]}"))" >/dev/null && pwd)"
 BUCK_PROJECT_ROOT_FILE_LOCATION="$BUCK_REAL_ROOT/$BUCK_PROJECT_ROOT_FILE"
 if [ ! -f "$BUCK_PROJECT_ROOT_FILE_LOCATION" ]; then
   (>&2 echo "Failed to check that $BUCK_PROJECT_ROOT_FILE_LOCATION is a file")
@@ -66,4 +119,5 @@ trap "rm -rf $BUCK_TMP_ROOT" EXIT HUP INT TERM
   done
 )
 
-BUCK_PROJECT_ROOT="$BUCK_TMP_ROOT/__default__" "$BUCK_TMP_ROOT/__default__/$SCRIPT_TO_RUN" "$@"
+export BUCK_PROJECT_ROOT="$BUCK_TMP_ROOT/__default__"
+exec "$BUCK_TMP_ROOT/__default__/$SCRIPT_TO_RUN" "$@"

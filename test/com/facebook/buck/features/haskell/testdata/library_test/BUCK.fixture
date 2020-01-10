@@ -23,6 +23,15 @@ haskell_library(
 )
 
 haskell_library(
+    name = "mutually_recursive",
+    srcs = [
+        "Boot/Bar.hs",
+        "Boot/Foo.hs",
+        "Boot/Foo.hs-boot",
+    ],
+)
+
+haskell_library(
     name = "foreign",
     srcs = [
         "Foreign.hs",

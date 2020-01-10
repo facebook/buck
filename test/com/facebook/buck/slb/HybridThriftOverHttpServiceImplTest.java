@@ -1,22 +1,22 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.slb;
 
-import com.facebook.buck.distributed.thrift.Digest;
+import com.facebook.buck.frontend.thrift.Announcement;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -34,31 +34,33 @@ public class HybridThriftOverHttpServiceImplTest {
 
   @Test
   public void testWriteReadingDataWithoutPayload() throws IOException {
-    Digest digestOriginal = new Digest().setHash("hello").setSizeBytes(42);
+    Announcement announcementOriginal =
+        new Announcement().setErrorMessage("hello").setSolutionMessage("hi");
     byte[] data = null;
     try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         DataOutputStream dataStream = new DataOutputStream(outputStream)) {
       HybridThriftOverHttpServiceImpl.writeToStream(
           dataStream,
-          ThriftUtil.serialize(PROTOCOL, digestOriginal),
-          HybridThriftRequestHandler.createWithoutPayloads(digestOriginal));
+          ThriftUtil.serialize(PROTOCOL, announcementOriginal),
+          HybridThriftRequestHandler.createWithoutPayloads(announcementOriginal));
 
       data = outputStream.toByteArray();
-      Assert.assertEquals(14, data.length);
+      Assert.assertEquals(16, data.length);
     }
 
-    Digest digestResponse = new Digest();
+    Announcement announcementResponse = new Announcement();
     HybridThriftOverHttpServiceImpl.readFromStream(
         toDataInputStream(new ByteArrayInputStream(data)),
         PROTOCOL,
-        HybridThriftResponseHandler.createNoPayloadHandler(digestResponse));
+        HybridThriftResponseHandler.createNoPayloadHandler(announcementResponse));
 
-    Assert.assertEquals(digestOriginal, digestResponse);
+    Assert.assertEquals(announcementOriginal, announcementResponse);
   }
 
   @Test
   public void testWriteReadingDataWithMultiplePayloads() throws IOException {
-    Digest digestOriginal = new Digest().setHash("viva").setSizeBytes(21);
+    Announcement announcementOriginal =
+        new Announcement().setErrorMessage("hello").setSolutionMessage("hi");
     final byte[] payload1 = "super".getBytes();
     final byte[] payload2 = "cool".getBytes();
     byte[] data = null;
@@ -66,8 +68,8 @@ public class HybridThriftOverHttpServiceImplTest {
         DataOutputStream dataStream = new DataOutputStream(outputStream)) {
       HybridThriftOverHttpServiceImpl.writeToStream(
           dataStream,
-          ThriftUtil.serialize(PROTOCOL, digestOriginal),
-          new HybridThriftRequestHandler(digestOriginal) {
+          ThriftUtil.serialize(PROTOCOL, announcementOriginal),
+          new HybridThriftRequestHandler(announcementOriginal) {
             @Override
             public long getTotalPayloadsSizeBytes() {
               return payload1.length + payload2.length;
@@ -92,17 +94,17 @@ public class HybridThriftOverHttpServiceImplTest {
           });
 
       data = outputStream.toByteArray();
-      Assert.assertEquals(22, data.length);
+      Assert.assertEquals(25, data.length);
     }
 
-    Digest digestResponse = new Digest();
+    Announcement announcementResponse = new Announcement();
     ByteArrayOutputStream payload1Actual = new ByteArrayOutputStream();
     ByteArrayOutputStream payload2Actual = new ByteArrayOutputStream();
     try (DataInputStream inputStream = toDataInputStream(new ByteArrayInputStream(data))) {
       HybridThriftOverHttpServiceImpl.readFromStream(
           inputStream,
           PROTOCOL,
-          new HybridThriftResponseHandler<Digest>(digestResponse) {
+          new HybridThriftResponseHandler<Announcement>(announcementResponse) {
             @Override
             public int getTotalPayloads() {
               return 2;
@@ -134,7 +136,7 @@ public class HybridThriftOverHttpServiceImplTest {
           });
     }
 
-    Assert.assertEquals(digestOriginal, digestResponse);
+    Assert.assertEquals(announcementOriginal, announcementResponse);
     Assert.assertTrue(Arrays.equals(payload1, payload1Actual.toByteArray()));
     Assert.assertTrue(Arrays.equals(payload2, payload2Actual.toByteArray()));
   }

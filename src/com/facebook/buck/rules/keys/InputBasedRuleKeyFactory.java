@@ -1,31 +1,31 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.core.build.action.BuildEngineAction;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.attr.HasDeclaredAndExtraDeps;
-import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.core.rules.impl.DependencyAggregation;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
@@ -39,35 +39,33 @@ import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 
 /**
  * A factory for generating input-based {@link RuleKey}s.
  *
- * @see SupportsInputBasedRuleKey
+ * @see com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey
  */
 public class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
 
   private final RuleKeyFieldLoader ruleKeyFieldLoader;
   private final FileHashLoader fileHashLoader;
-  private final SourcePathResolver pathResolver;
   private final SourcePathRuleFinder ruleFinder;
   private final long inputSizeLimit;
   private final Optional<ThriftRuleKeyLogger> ruleKeyLogger;
 
-  private final SingleBuildRuleKeyCache<Result<RuleKey>> ruleKeyCache =
-      new SingleBuildRuleKeyCache<>();
+  private final SingleBuildActionRuleKeyCache<Result<RuleKey>> ruleKeyCache =
+      new SingleBuildActionRuleKeyCache<>();
 
   public InputBasedRuleKeyFactory(
       RuleKeyFieldLoader ruleKeyFieldLoader,
       FileHashLoader hashLoader,
-      SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       long inputSizeLimit,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
     this.ruleKeyFieldLoader = ruleKeyFieldLoader;
     this.fileHashLoader = hashLoader;
-    this.pathResolver = pathResolver;
     this.ruleFinder = ruleFinder;
     this.inputSizeLimit = inputSizeLimit;
     this.ruleKeyLogger = ruleKeyLogger;
@@ -78,9 +76,9 @@ public class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
     return Optional.of(inputSizeLimit);
   }
 
-  private Result<RuleKey> calculateBuildRuleKey(BuildRule buildRule) {
-    Builder<HashCode> builder = newVerifyingBuilder(buildRule);
-    ruleKeyFieldLoader.setFields(builder, buildRule, RuleKeyType.INPUT);
+  private Result<RuleKey> calculateBuildRuleKey(BuildEngineAction action) {
+    Builder<HashCode> builder = newVerifyingBuilder(action);
+    ruleKeyFieldLoader.setFields(builder, action, RuleKeyType.INPUT);
     return builder.buildResult(RuleKey::new);
   }
 
@@ -92,9 +90,9 @@ public class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
   }
 
   @Override
-  public RuleKey build(BuildRule buildRule) {
+  public RuleKey build(BuildEngineAction action) {
     try {
-      return ruleKeyCache.get(buildRule, this::calculateBuildRuleKey).getRuleKey();
+      return ruleKeyCache.get(action, this::calculateBuildRuleKey).getRuleKey();
     } catch (RuntimeException e) {
       propagateIfSizeLimitException(e);
       throw e;
@@ -109,16 +107,28 @@ public class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
     // At the moment, it is difficult to make SizeLimitException be a checked exception. Due to how
     // exceptions are currently handled (e.g. LoadingCache wraps them with ExecutionException),
     // we need to iterate through the cause chain to check if a SizeLimitException is wrapped.
-    Throwables.getCausalChain(throwable)
-        .stream()
+    Throwables.getCausalChain(throwable).stream()
         .filter(t -> t instanceof SizeLimiter.SizeLimitException)
         .findFirst()
         .ifPresent(Throwables::throwIfUnchecked);
   }
 
-  private Builder<HashCode> newVerifyingBuilder(BuildRule rule) {
+  private Builder<HashCode> newVerifyingBuilder(BuildEngineAction action) {
+    Set<BuildRule> deps;
+    if (action instanceof BuildRule) {
+      deps = ((BuildRule) action).getBuildDeps();
+    } else if (action instanceof Action) {
+      deps =
+          ruleFinder.filterBuildRuleInputs(
+              Iterables.transform(
+                  ((Action) action).getInputs(), artifact -> artifact.asBound().getSourcePath()));
+    } else {
+      throw new IllegalStateException(
+          String.format("Unknown BuildEngineAction type %s", action.getClass()));
+    }
+
     Iterable<DependencyAggregation> aggregatedRules =
-        Iterables.filter(rule.getBuildDeps(), DependencyAggregation.class);
+        Iterables.filter(deps, DependencyAggregation.class);
     return new Builder<HashCode>(RuleKeyBuilder.createDefaultHasher(ruleKeyLogger)) {
       private boolean hasEffectiveDirectDep(BuildRule dep) {
         for (BuildRule aggregationRule : aggregatedRules) {
@@ -136,16 +146,16 @@ public class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
         Result<RESULT> result = super.buildResult(mapper);
         for (BuildRule usedDep : result.getDeps()) {
           Preconditions.checkState(
-              rule.getBuildDeps().contains(usedDep)
+              deps.contains(usedDep)
                   || hasEffectiveDirectDep(usedDep)
-                  || (rule instanceof HasDeclaredAndExtraDeps
-                      && ((HasDeclaredAndExtraDeps) rule)
+                  || (action instanceof HasDeclaredAndExtraDeps
+                      && ((HasDeclaredAndExtraDeps) action)
                           .getTargetGraphOnlyDeps()
                           .contains(usedDep)),
               "%s: %s not in deps (%s)",
-              rule.getBuildTarget(),
+              action.getBuildTarget(),
               usedDep.getBuildTarget(),
-              rule.getBuildDeps());
+              deps);
         }
         return result;
       }
@@ -158,7 +168,7 @@ public class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
     private final SizeLimiter sizeLimiter = new SizeLimiter(inputSizeLimit);
 
     public Builder(RuleKeyHasher<RULE_KEY> hasher) {
-      super(ruleFinder, pathResolver, fileHashLoader, hasher);
+      super(ruleFinder, fileHashLoader, hasher);
     }
 
     @Override
@@ -209,6 +219,13 @@ public class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
       }
       setSourcePathDirectly(sourcePath);
       return this;
+    }
+
+    @Override
+    protected AbstractRuleKeyBuilder<RULE_KEY> setAction(Action action) {
+      // called reflectively via InputBasedRuleKeyFactory.build(BuildRule), so we still need to
+      // handle it.
+      return setActionRuleKey(InputBasedRuleKeyFactory.this.build(action));
     }
 
     // Rules supporting input-based rule keys should be described entirely by their `SourcePath`

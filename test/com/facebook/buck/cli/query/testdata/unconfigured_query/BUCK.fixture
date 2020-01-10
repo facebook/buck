@@ -1,0 +1,124 @@
+cxx_library(
+    name = "1",
+)
+
+cxx_library(
+    name = "2",
+)
+
+cxx_library(
+    name = "3",
+)
+
+cxx_library(
+    name = "4",
+)
+
+cxx_library(
+    name = "5",
+)
+
+cxx_library(
+    name = "6",
+    deps = select({
+        ":linux": [":2"],
+        ":macos": [":1"],
+        "DEFAULT": [],
+    }),
+)
+
+cxx_library(
+    name = "7",
+    deps = select({
+        ":macos": [":3"],
+        "DEFAULT": [],
+    }),
+)
+
+cxx_library(
+    name = "8",
+    deps = select({
+        ":linux": [],
+        "DEFAULT": [
+            ":4",
+            ":5",
+        ],
+    }),
+)
+
+config_setting(
+    name = "macos",
+    values = {
+        "os.name": "macos",
+    },
+)
+
+config_setting(
+    name = "linux",
+    values = {
+        "os.name": "linux",
+    },
+)
+
+cxx_library(
+    name = "dummy_without_selects",
+    deps = [
+        ":1",
+        ":2",
+        ":3",
+        ":4",
+        ":5",
+    ],
+)
+
+cxx_library(
+    name = "dummy_with_one_select",
+    deps = select({
+        ":macos": [":1"],
+        "DEFAULT": [
+            ":2",
+            ":3",
+        ],
+    }),
+)
+
+cxx_library(
+    name = "dummy_list_plus_select",
+    deps = [":1"] + select({
+        ":linux": [":2"],
+        "DEFAULT": [":3"],
+    }),
+)
+
+cxx_library(
+    name = "dummy_multiple_concats",
+    deps = [":4"] + select({
+        ":macos": [
+            ":1",
+            ":2",
+            ":3",
+        ],
+        "DEFAULT": [
+            ":1",
+        ],
+    }) + select({
+        ":linux": [
+            ":2",
+        ],
+        "DEFAULT": [
+            ":3",
+        ],
+    }) + [":5"],
+)
+
+cxx_library(
+    name = "dummy_deps_with_selects",
+    deps = select({
+        ":macos": [
+            ":6",
+        ],
+        "DEFAULT": [
+            ":7",
+        ],
+    }) + [":8"],
+)

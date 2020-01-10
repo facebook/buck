@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
@@ -19,9 +19,9 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rulekey.CustomFieldBehavior;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
-import com.facebook.buck.core.rules.modern.annotations.DefaultFieldSerialization;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
@@ -39,6 +39,15 @@ import org.immutables.value.Value;
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractJavacPluginProperties implements AddsToRuleKey {
+
+  enum Type {
+    JAVAC_PLUGIN,
+    ANNOTATION_PROCESSOR
+  }
+
+  @AddToRuleKey
+  public abstract Type getType();
+
   @Value.NaturalOrder
   @AddToRuleKey
   public abstract ImmutableSortedSet<String> getProcessorNames();
@@ -94,6 +103,10 @@ abstract class AbstractJavacPluginProperties implements AddsToRuleKey {
           if (entry.getSourcePathToOutput() != null) {
             addInputs(entry.getSourcePathToOutput());
           }
+
+          // Resources from dependency JavaLibraries must be included as inputs otherwise
+          // remote builds will fail with missing files in the execution sandbox.
+          entry.getResources().forEach(this::addInputs);
         }
         addAllClasspathEntries(hasClasspathEntries.getTransitiveClasspaths());
       } else {

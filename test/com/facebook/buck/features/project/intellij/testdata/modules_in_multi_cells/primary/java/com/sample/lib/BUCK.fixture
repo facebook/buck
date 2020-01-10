@@ -1,0 +1,14 @@
+android_library(
+    name = "lib",
+    srcs = glob(["*.java"]),
+    resources = [
+        "secondary//js:generated",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "secondary//java/com/crosscell:crosscell",
+        "//res/com/sample/base:base",
+    ],
+)

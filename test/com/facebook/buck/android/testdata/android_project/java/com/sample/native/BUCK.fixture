@@ -1,0 +1,10 @@
+android_library(
+    name = "native",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//native/cxx:lib-with-platform-deps",
+    ],
+)

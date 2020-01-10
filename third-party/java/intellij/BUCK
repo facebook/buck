@@ -1,5 +1,8 @@
 java_library(
     name = "intellij-plugin-sdk",
+    visibility = [
+        "PUBLIC",
+    ],
     exported_deps = [
         ":android",
         ":annotations",
@@ -17,9 +20,6 @@ java_library(
         # IntelliJ will provide these, too...
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
-    ],
-    visibility = [
-        "PUBLIC",
     ],
 )
 

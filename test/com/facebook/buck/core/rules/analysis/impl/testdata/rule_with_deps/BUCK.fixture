@@ -1,0 +1,20 @@
+basic_rule(
+    name = "bar",
+    val = 1,
+    deps = [
+        ":baz",
+        ":foo",
+        "//dir:faz",
+    ],
+)
+
+basic_rule(
+    name = "foo",
+    val = 2,
+    deps = [":baz"],
+)
+
+basic_rule(
+    name = "baz",
+    val = 4,
+)

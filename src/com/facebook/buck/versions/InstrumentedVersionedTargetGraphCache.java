@@ -1,31 +1,33 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.versions;
 
-import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
-import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
+import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.cache.CacheStats;
 import com.facebook.buck.util.cache.CacheStatsTracker;
 import com.google.common.collect.ImmutableMap;
-import java.util.concurrent.ForkJoinPool;
+import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 
 /**
@@ -47,21 +49,19 @@ public class InstrumentedVersionedTargetGraphCache {
    * @return a versioned target graph, either generated from the parameters or retrieved from a
    *     cache, with the current CacheStatsTracker.
    */
-  public VersionedTargetGraphCacheResult getVersionedTargetGraph(
-      BuckEventBus eventBus,
+  public VersionedTargetGraphCache.VersionedTargetGraphCacheResult getVersionedTargetGraph(
+      DepsAwareExecutor<? super ComputeResult, ?> depsAwareExecutor,
       TypeCoercerFactory typeCoercerFactory,
-      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
-      TargetGraphAndBuildTargets targetGraphAndBuildTargets,
-      ImmutableMap<String, VersionUniverse> versionUniverses,
-      ForkJoinPool pool)
+      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
+      TargetGraphCreationResult targetGraphCreationResult,
+      ImmutableMap<String, VersionUniverse> versionUniverses)
       throws VersionException, InterruptedException, TimeoutException {
     return cache.toVersionedTargetGraph(
-        eventBus,
+        depsAwareExecutor,
         versionUniverses,
         typeCoercerFactory,
         unconfiguredBuildTargetFactory,
-        targetGraphAndBuildTargets,
-        pool,
+        targetGraphCreationResult,
         statsTracker);
   }
 
@@ -69,24 +69,26 @@ public class InstrumentedVersionedTargetGraphCache {
    * @return a versioned target graph, either generated from the parameters or retrieved from a
    *     cache, with the current CacheStatsTracker
    */
-  public TargetGraphAndBuildTargets toVersionedTargetGraph(
-      BuckEventBus eventBus,
+  public TargetGraphCreationResult toVersionedTargetGraph(
+      DepsAwareExecutor<? super ComputeResult, ?> depsAwareExecutor,
       BuckConfig buckConfig,
       TypeCoercerFactory typeCoercerFactory,
-      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
-      TargetGraphAndBuildTargets targetGraphAndBuildTargets)
+      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
+      TargetGraphCreationResult targetGraphCreationResult,
+      Optional<TargetConfiguration> targetConfiguration,
+      BuckEventBus eventBus)
       throws VersionException, InterruptedException {
     return cache
         .getVersionedTargetGraph(
-            eventBus,
+            depsAwareExecutor,
+            buckConfig,
             typeCoercerFactory,
             unconfiguredBuildTargetFactory,
-            targetGraphAndBuildTargets,
-            new VersionBuckConfig(buckConfig).getVersionUniverses(),
-            new ForkJoinPool(buckConfig.getView(BuildBuckConfig.class).getNumThreads()),
-            new VersionBuckConfig(buckConfig),
-            statsTracker)
-        .getTargetGraphAndBuildTargets();
+            targetGraphCreationResult,
+            targetConfiguration,
+            statsTracker,
+            eventBus)
+        .getTargetGraphCreationResult();
   }
 
   /** @return a CacheStats object containing the performance data of this cache */

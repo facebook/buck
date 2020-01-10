@@ -1,0 +1,30 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        exclude = ["*Test.java"],
+    ),
+    visibility = ["//test/..."],
+    deps = [
+        "//src/com/facebook/buck/core/rules/providers/lib:lib",
+        "//third-party/java/guava:guava",
+    ],
+    exported_deps = ["//src/com/facebook/buck/core/rules/providers/collect/impl:impl"],
+)
+
+java_test(
+    name = "impl",
+    srcs = glob(
+        ["*Test.java"],
+    ),
+    has_immutable_types = True,
+    deps = [
+        "//src/com/facebook/buck/core/rules/providers/collect/impl:impl",
+        "//test/com/facebook/buck/core/rules/analysis/impl:testutil",
+        "//test/com/facebook/buck/core/starlark/compatible:testutil",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)

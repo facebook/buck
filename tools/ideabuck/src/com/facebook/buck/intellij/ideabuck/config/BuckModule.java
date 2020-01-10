@@ -1,23 +1,21 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.intellij.ideabuck.config;
 
-import com.facebook.buck.intellij.ideabuck.debugger.AndroidDebugger;
-import com.facebook.buck.intellij.ideabuck.file.BuckFileUtil;
 import com.facebook.buck.intellij.ideabuck.ui.BuckEventsConsumer;
 import com.facebook.buck.intellij.ideabuck.ui.BuckUIManager;
 import com.facebook.buck.intellij.ideabuck.ui.utils.BuckPluginNotifications;
@@ -61,7 +59,7 @@ public final class BuckModule implements ProjectComponent {
   @Override
   public void projectOpened() {
     projectClosed = new AtomicBoolean(false);
-    BuckFileUtil.setBuckFileType();
+
     // connect to the Buck client
     BuckClientManager.getOrCreateClient(mProject, mEventHandler).connect();
 
@@ -76,7 +74,6 @@ public final class BuckModule implements ProjectComponent {
   public void projectClosed() {
     projectClosed.set(true);
     BuckClientManager.getOrCreateClient(mProject, mEventHandler).disconnectWithoutRetry();
-    AndroidDebugger.disconnect();
     if (mBuckEventsConsumer != null) {
       mBuckEventsConsumer.detach();
     }

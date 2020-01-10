@@ -1,3 +1,4 @@
+!com.facebook.buck.cli.endtoend.BaseDirEndToEndTest
 !com.facebook.buck.cli.DaemonIntegrationTest
 !com.facebook.buck.cxx.ArchiveStepIntegrationTest#thatGeneratedArchivesAreDeterministic
 !com.facebook.buck.cxx.CxxBinaryDescriptionTest#binaryShouldLinkOwnRequiredLibraries
@@ -30,4 +31,3 @@
 !com.facebook.buck.core.build.engine.impl.CachingBuildEngineTest
 !com.facebook.buck.core.build.engine.impl.CachingBuildEngineTest.*
 !com.facebook.buck.core.model.graph.action.computation.ActionGraphCacheIntegrationTest
-!com.facebook.buck.swift.SwiftNativeLinkableTest

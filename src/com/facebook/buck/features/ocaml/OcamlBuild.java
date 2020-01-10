@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.ocaml;
@@ -25,6 +25,7 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDe
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.Compiler;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -38,7 +39,7 @@ public class OcamlBuild extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   @AddToRuleKey private final OcamlBuildContext ocamlContext;
   @AddToRuleKey private final Compiler cCompiler;
-  @AddToRuleKey private final Compiler cxxCompiler;
+  @AddToRuleKey private final Linker cxxLinker;
   @AddToRuleKey private final boolean bytecodeOnly;
 
   public OcamlBuild(
@@ -47,12 +48,12 @@ public class OcamlBuild extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       BuildRuleParams params,
       OcamlBuildContext ocamlContext,
       Compiler cCompiler,
-      Compiler cxxCompiler,
+      Linker cxxLinker,
       boolean bytecodeOnly) {
     super(buildTarget, projectFilesystem, params);
     this.ocamlContext = ocamlContext;
     this.cCompiler = cCompiler;
-    this.cxxCompiler = cxxCompiler;
+    this.cxxLinker = cxxLinker;
     this.bytecodeOnly = bytecodeOnly;
 
     Objects.requireNonNull(ocamlContext.getInput());
@@ -81,10 +82,11 @@ public class OcamlBuild extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                 context,
                 getProjectFilesystem(),
                 ocamlContext,
+                getBuildTarget(),
                 cCompiler.getEnvironment(context.getSourcePathResolver()),
                 cCompiler.getCommandPrefix(context.getSourcePathResolver()),
-                cxxCompiler.getEnvironment(context.getSourcePathResolver()),
-                cxxCompiler.getCommandPrefix(context.getSourcePathResolver()),
+                cxxLinker.getEnvironment(context.getSourcePathResolver()),
+                cxxLinker.getCommandPrefix(context.getSourcePathResolver()),
                 bytecodeOnly))
         .build();
   }

@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.AndroidLibraryDescription.CoreArg;
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -50,13 +49,13 @@ import java.util.SortedSet;
 import javax.annotation.Nullable;
 
 public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackageable {
+
   public static Builder builder(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       ToolchainProvider toolchainProvider,
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
-      CellPathResolver cellPathResolver,
       JavaBuckConfig javaBuckConfig,
       JavacFactory javacFactory,
       JavacOptions javacOptions,
@@ -68,7 +67,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         toolchainProvider,
         params,
         graphBuilder,
-        cellPathResolver,
         javaBuckConfig,
         javacFactory,
         javacOptions,
@@ -87,17 +85,20 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       ImmutableSortedSet<BuildRule> fullJarExportedDeps,
       ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
       ImmutableSortedSet<BuildRule> fullJarExportedProvidedDeps,
+      ImmutableSortedSet<BuildRule> runtimeDeps,
       @Nullable BuildTarget abiJar,
       @Nullable BuildTarget sourceOnlyAbiJar,
       Optional<String> mavenCoords,
       Optional<SourcePath> manifestFile,
+      Optional<AndroidLibraryDescription.JvmLanguage> jvmLanguage,
       ImmutableSortedSet<BuildTarget> tests,
       boolean requiredForSourceOnlyAbi,
       UnusedDependenciesAction unusedDependenciesAction,
       Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory,
       @Nullable CalculateSourceAbi sourceAbi,
       boolean isDesugarEnabled,
-      boolean isInterfaceMethodsDesugarEnabled) {
+      boolean isInterfaceMethodsDesugarEnabled,
+      boolean neverMarkAsUnusedDependency) {
     super(
         buildTarget,
         projectFilesystem,
@@ -108,6 +109,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         fullJarExportedDeps,
         fullJarProvidedDeps,
         fullJarExportedProvidedDeps,
+        runtimeDeps,
         abiJar,
         sourceOnlyAbiJar,
         mavenCoords,
@@ -117,8 +119,10 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         unusedDependenciesFinderFactory,
         sourceAbi,
         isDesugarEnabled,
-        isInterfaceMethodsDesugarEnabled);
+        isInterfaceMethodsDesugarEnabled,
+        neverMarkAsUnusedDependency);
     this.manifestFile = manifestFile;
+    this.type = jvmLanguage.isPresent() ? evalType(jvmLanguage.get()) : super.getType();
   }
 
   /**
@@ -127,8 +131,22 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
    */
   private final Optional<SourcePath> manifestFile;
 
+  private final String type;
+
   public Optional<SourcePath> getManifestFile() {
     return manifestFile;
+  }
+
+  private String evalType(AndroidLibraryDescription.JvmLanguage jvmLanguage) {
+    if (!jvmLanguage.equals(AndroidLibraryDescription.JvmLanguage.JAVA)) {
+      return super.getType();
+    }
+    return jvmLanguage.toString().toLowerCase() + "_" + super.getType();
+  }
+
+  @Override
+  public String getType() {
+    return type;
   }
 
   @Override
@@ -150,7 +168,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         ToolchainProvider toolchainProvider,
         BuildRuleParams params,
         ActionGraphBuilder graphBuilder,
-        CellPathResolver cellPathResolver,
         JavaBuckConfig javaBuckConfig,
         JavacFactory javacFactory,
         JavacOptions javacOptions,
@@ -164,7 +181,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
               toolchainProvider,
               params,
               graphBuilder,
-              cellPathResolver,
               compilerFactory,
               javaBuckConfig,
               args);
@@ -181,6 +197,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                 ImmutableSortedSet<BuildRule> fullJarExportedDeps,
                 ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
                 ImmutableSortedSet<BuildRule> fullJarExportedProvidedDeps,
+                ImmutableSortedSet<BuildRule> runtimeDeps,
                 @Nullable BuildTarget abiJar,
                 @Nullable BuildTarget sourceOnlyAbiJar,
                 Optional<String> mavenCoords,
@@ -190,7 +207,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                 Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory,
                 @Nullable CalculateSourceAbi sourceAbi,
                 boolean isDesugarEnabled,
-                boolean isInterfaceMethodsDesugarEnabled) {
+                boolean isInterfaceMethodsDesugarEnabled,
+                boolean neverMarkAsUnusedDependency) {
               return new AndroidLibrary(
                   buildTarget,
                   projectFilesystem,
@@ -201,17 +219,20 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                   fullJarExportedDeps,
                   fullJarProvidedDeps,
                   fullJarExportedProvidedDeps,
+                  runtimeDeps,
                   abiJar,
                   sourceOnlyAbiJar,
                   mavenCoords,
                   args.getManifest(),
+                  args.getLanguage(),
                   tests,
                   requiredForSourceOnlyAbi,
                   unusedDependenciesAction,
                   unusedDependenciesFinderFactory,
                   sourceAbi,
                   isDesugarEnabled,
-                  isInterfaceMethodsDesugarEnabled);
+                  isInterfaceMethodsDesugarEnabled,
+                  neverMarkAsUnusedDependency);
             }
           });
       delegateBuilder.setJavacOptions(javacOptions);
@@ -227,7 +248,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
               libraryTarget,
               projectFilesystem,
               ImmutableSortedSet.copyOf(Iterables.concat(deps.getDeps(), deps.getProvidedDeps())),
-              javacFactory.create(new SourcePathRuleFinder(graphBuilder), args),
+              javacFactory.create(graphBuilder, args, buildTarget.getTargetConfiguration()),
               javacOptions,
               DependencyMode.FIRST_ORDER,
               /* forceFinalResourceIds */ false,
@@ -241,7 +262,12 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
               dummyRDotJava -> {
                 delegateBuilder.setDeps(
                     new JavaLibraryDeps.Builder(graphBuilder)
-                        .from(JavaLibraryDeps.newInstance(args, graphBuilder, compilerFactory))
+                        .from(
+                            JavaLibraryDeps.newInstance(
+                                args,
+                                graphBuilder,
+                                buildTarget.getTargetConfiguration(),
+                                compilerFactory))
                         .addDepTargets(dummyRDotJava.getBuildTarget())
                         .build());
               });

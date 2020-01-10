@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.shell;
@@ -23,6 +23,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -61,7 +62,7 @@ public class ShBinaryRuleIntegrationTest {
   }
 
   @Test
-  public void testExecutableFromCache() throws IOException {
+  public void testExecutableOnRebuild() throws IOException {
     // sh_binary is not available on Windows. Ignore this test on Windows.
     assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace =
@@ -75,7 +76,10 @@ public class ShBinaryRuleIntegrationTest {
     buildResult.assertSuccess();
 
     // Make sure the sh_binary output is executable to begin with.
-    String outputPath = "buck-out/gen/__example_sh__/example_sh.sh";
+    Path outputPath =
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance("//:example_sh"), "__%s__")
+            .resolve("example_sh.sh");
     Path output = workspace.getPath(outputPath);
     assertTrue("Output file should be written to '" + outputPath + "'.", Files.exists(output));
     assertTrue("Output file must be executable.", Files.isExecutable(output));
@@ -89,8 +93,9 @@ public class ShBinaryRuleIntegrationTest {
     buildResult = workspace.runBuckCommand("build", "//:run_example", "-v", "2");
     buildResult.assertSuccess("Build failed when rerunning sh_binary from cache.");
 
-    // verify it's actually fetched from cache
-    workspace.getBuildLog().assertTargetWasFetchedFromCache("//:example_sh");
+    // Note that previously we used to verify that the //:example_sh rule was
+    // fetched from the cache here.  However, caching for sh_binary() rules has
+    // since been disabled.
 
     // In addition to running the build, explicitly check that the output file is still executable.
     assertTrue(
@@ -146,6 +151,26 @@ public class ShBinaryRuleIntegrationTest {
 
     // Verify contents of output.txt
     return Files.readAllLines(outputFile, UTF_8);
+  }
+
+  @Test
+  public void testShBinaryWithMappedResourcesFromCache() throws IOException {
+    // sh_binary is not available on Windows. Ignore this test on Windows.
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "sh_binary_with_mapped_resources", temporaryFolder);
+    workspace.setUp();
+    workspace.enableDirCache();
+
+    ProcessResult result = workspace.runBuckCommand("run", "//node:node1");
+    result.assertSuccess();
+    assertThat(result.getStdout(), containsString("stuff\nfluff\n"));
+
+    workspace.runBuckCommand("clean", "--keep-cache");
+    ProcessResult result2 = workspace.runBuckCommand("run", "//node:node1");
+    result2.assertSuccess();
+    assertThat(result2.getStdout(), containsString("stuff\nfluff\n"));
   }
 
   @Test
@@ -241,5 +266,18 @@ public class ShBinaryRuleIntegrationTest {
     Files.createSymbolicLink(temporaryFolder.getRoot().resolve("buck-out"), tempBuckOut);
 
     workspace.buildAndReturnOutput("//:run_example");
+  }
+
+  @Test
+  public void testShBinaryWithTest() throws IOException {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "sh_binary_with_test", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult buildResult = workspace.runBuckCommand("test", "//:hello");
+    buildResult.assertSuccess();
   }
 }

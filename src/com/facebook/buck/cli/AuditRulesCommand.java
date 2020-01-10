@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
@@ -24,6 +24,7 @@ import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.function.BuckPyFunction;
 import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.string.MoreStrings;
@@ -63,7 +64,8 @@ public class AuditRulesCommand extends AbstractCommand {
   private static final String INDENT = "  ";
 
   /** Properties that should be listed last in the declaration of a build rule. */
-  private static final ImmutableSet<String> LAST_PROPERTIES = ImmutableSet.of("deps", "visibility");
+  private static final ImmutableSet<String> LAST_PROPERTIES =
+      ImmutableSet.of("deps", VisibilityAttributes.VISIBILITY, VisibilityAttributes.WITHIN_VIEW);
 
   @Option(
       name = "--type",
@@ -99,8 +101,8 @@ public class AuditRulesCommand extends AbstractCommand {
                 params.getKnownRuleTypesProvider(),
                 params.getManifestServiceSupplier(),
                 params.getFileHashCache())
-            .createBuildFileParser(
-                params.getBuckEventBus(), params.getCell(), params.getWatchman())) {
+            .createFileParser(
+                params.getBuckEventBus(), params.getCell(), params.getWatchman(), false)) {
       /*
        * The super console does a bunch of rewriting over the top of the console such that
        * simultaneously writing to stdout and stderr in an interactive session is problematic.
@@ -126,8 +128,8 @@ public class AuditRulesCommand extends AbstractCommand {
           }
 
           // Parse the rules from the build file.
-          ImmutableMap<String, Map<String, Object>> rawRules =
-              parser.getBuildFileManifest(path).getTargets();
+          ImmutableMap<String, ImmutableMap<String, Object>> rawRules =
+              parser.getManifest(path).getTargets();
 
           // Format and print the rules from the raw data, filtered by type.
           ImmutableSet<String> types = getTypes();
@@ -154,11 +156,9 @@ public class AuditRulesCommand extends AbstractCommand {
 
   private void printRulesToStdout(
       PrintStream stdOut,
-      ImmutableMap<String, Map<String, Object>> rawRules,
+      ImmutableMap<String, ImmutableMap<String, Object>> rawRules,
       Predicate<String> includeType) {
-    rawRules
-        .entrySet()
-        .stream()
+    rawRules.entrySet().stream()
         .filter(
             rawRule -> {
               String type = (String) rawRule.getValue().get(BuckPyFunction.TYPE_PROPERTY_NAME);

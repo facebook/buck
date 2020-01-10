@@ -5,9 +5,8 @@ CONFIG_SRCS = [
 ]
 
 VALUE_TYPES_SRCS = [
-    "AbstractFullVersionControlStats.java",
-    "AbstractFastVersionControlStats.java",
-    "AbstractSlowVersionControlStats.java",
+    "FullVersionControlStats.java",
+    "FastVersionControlStats.java",
     "CommonFastVersionControlStats.java",
     "CommonSlowVersionControlStats.java",
 ]
@@ -36,7 +35,6 @@ java_library(
         ":value_types",
         "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/exceptions:exceptions",
-        "//src/com/facebook/buck/util:exceptions",
         "//third-party/java/guava:guava",
     ],
 )

@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.modern.impl;
@@ -24,13 +24,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
@@ -39,14 +38,14 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.rules.keys.AlterRuleKeys;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.InputRuleResolver;
-import com.facebook.buck.rules.modern.ModernBuildRule;
+import com.facebook.buck.rules.modern.NoOpModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
@@ -72,9 +71,8 @@ public class DefaultClassInfoTest {
   @SuppressWarnings("unchecked")
   private Consumer<OutputPath> outputConsumer = createStrictMock(Consumer.class);
 
-  private RuleKeyObjectSink ruleKeyObjectSink = createStrictMock(RuleKeyObjectSink.class);
-
-  private ProjectFilesystem filesystem = new FakeProjectFilesystem(Paths.get("/project/root"));
+  private ProjectFilesystem filesystem =
+      new FakeProjectFilesystem(CanonicalCellName.rootCell(), Paths.get("/project/root"));
 
   static class NoOpBuildable implements Buildable {
     @Override
@@ -113,9 +111,9 @@ public class DefaultClassInfoTest {
 
   @Test
   public void testDerivedClass() {
-    BuildTarget target1 = BuildTargetFactory.newInstance(Paths.get("some1"), "//some1", "name");
-    BuildTarget target2 = BuildTargetFactory.newInstance(Paths.get("some2"), "//some2", "name");
-    BuildTarget target3 = BuildTargetFactory.newInstance(Paths.get("some3"), "//some3", "name");
+    BuildTarget target1 = BuildTargetFactory.newInstance("//some1", "name");
+    BuildTarget target2 = BuildTargetFactory.newInstance("//some2", "name");
+    BuildTarget target3 = BuildTargetFactory.newInstance("//some3", "name");
 
     BuildRule rule1 = new FakeBuildRule(target1, ImmutableSortedSet.of());
     BuildRule rule2 = new FakeBuildRule(target2, ImmutableSortedSet.of());
@@ -136,27 +134,6 @@ public class DefaultClassInfoTest {
             ImmutableList.of(targetSourcePath2, targetSourcePath3, pathSourcePath));
     ClassInfo<DerivedClass> classInfo = DefaultClassInfoFactory.forInstance(buildable);
     assertEquals("derived_class", classInfo.getType());
-
-    expect(
-            ruleKeyObjectSink.setReflectively(
-                ".class", "com.facebook.buck.rules.modern.impl.DefaultClassInfoTest$DerivedClass"))
-        .andReturn(ruleKeyObjectSink);
-    expect(ruleKeyObjectSink.setReflectively("enabled", true)).andReturn(ruleKeyObjectSink);
-    expect(
-            ruleKeyObjectSink.setReflectively(
-                "inputs", ImmutableList.of(targetSourcePath2, targetSourcePath3, pathSourcePath)))
-        .andReturn(ruleKeyObjectSink);
-    expect(ruleKeyObjectSink.setReflectively("something", 2l)).andReturn(ruleKeyObjectSink);
-    expect(ruleKeyObjectSink.setReflectively("value", 1)).andReturn(ruleKeyObjectSink);
-
-    expect(ruleKeyObjectSink.setReflectively("baseInputPath", targetSourcePath1))
-        .andReturn(ruleKeyObjectSink);
-    expect(ruleKeyObjectSink.setReflectively("baseOutputPath", buildable.baseOutputPath))
-        .andReturn(ruleKeyObjectSink);
-
-    replay(ruleKeyObjectSink);
-    AlterRuleKeys.amendKey(ruleKeyObjectSink, buildable);
-    verify(ruleKeyObjectSink);
 
     expect(inputRuleResolver.resolve(targetSourcePath1)).andReturn(Optional.of(rule1));
     expect(inputRuleResolver.resolve(targetSourcePath2)).andReturn(Optional.of(rule2));
@@ -298,24 +275,7 @@ public class DefaultClassInfoTest {
         new NoOpModernBuildRule(
             BuildTargetFactory.newInstance("//some:target"),
             new FakeProjectFilesystem(),
-            new SourcePathRuleFinder(new TestActionGraphBuilder())));
-  }
-
-  static class NoOpModernBuildRule extends ModernBuildRule<NoOpModernBuildRule>
-      implements Buildable {
-    NoOpModernBuildRule(
-        BuildTarget buildTarget, ProjectFilesystem filesystem, SourcePathRuleFinder finder) {
-      super(buildTarget, filesystem, finder, NoOpModernBuildRule.class);
-    }
-
-    @Override
-    public ImmutableList<Step> getBuildSteps(
-        BuildContext buildContext,
-        ProjectFilesystem filesystem,
-        OutputPathResolver outputPathResolver,
-        BuildCellRelativePathFactory buildCellPathFactory) {
-      return ImmutableList.of();
-    }
+            new TestActionGraphBuilder()));
   }
 
   @Test(expected = Exception.class)
@@ -343,7 +303,7 @@ public class DefaultClassInfoTest {
     ClassInfo<ExcludedLazyImmutable> classInfo = DefaultClassInfoFactory.forInstance(excludedLazy);
     StringifyingValueVisitor visitor = new StringifyingValueVisitor();
     classInfo.visit(excludedLazy, visitor);
-    assertEquals("path:\n" + "lazyPath:", visitor.getValue());
+    assertEquals("path:excluded\n" + "lazyPath:excluded", visitor.getValue());
   }
 
   @Value.Immutable
@@ -364,7 +324,8 @@ public class DefaultClassInfoTest {
     ClassInfo<DerivedImmutable> classInfo = DefaultClassInfoFactory.forInstance(derived);
     StringifyingValueVisitor visitor = new StringifyingValueVisitor();
     classInfo.visit(derived, visitor);
-    assertEquals("path:\n" + "lazyPath:SourcePath(/project/root/some.path)", visitor.getValue());
+    assertEquals(
+        "path:excluded\n" + "lazyPath:SourcePath(/project/root/some.path)", visitor.getValue());
   }
 
   @Value.Immutable
@@ -377,5 +338,21 @@ public class DefaultClassInfoTest {
     default SourcePath getLazyPath() {
       return getPath();
     }
+  }
+
+  @Test
+  public void testBuckStyleValueImmutable() {
+    SourcePath path = FakeSourcePath.of(filesystem, "some.path");
+    BuckStyleValueImmutable immutable = ImmutableBuckStyleValueImmutable.of(path);
+    ClassInfo<BuckStyleValueImmutable> classInfo = DefaultClassInfoFactory.forInstance(immutable);
+    StringifyingValueVisitor visitor = new StringifyingValueVisitor();
+    classInfo.visit(immutable, visitor);
+    assertEquals("path:SourcePath(/project/root/some.path)", visitor.getValue());
+  }
+
+  @BuckStyleValue
+  interface BuckStyleValueImmutable extends AddsToRuleKey {
+    @AddToRuleKey
+    SourcePath getPath();
   }
 }

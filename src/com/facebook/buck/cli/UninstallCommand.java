@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
@@ -24,14 +24,10 @@ import com.facebook.buck.android.exopackage.AndroidDevicesHelperFactory;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.step.AdbOptions;
@@ -98,24 +94,21 @@ public class UninstallCommand extends AbstractCommand {
 
     try (CommandThreadManager pool =
         new CommandThreadManager("Uninstall", getConcurrencyLimit(params.getBuckConfig()))) {
-      TargetGraphAndBuildTargets result =
+      TargetGraphCreationResult result =
           params
               .getParser()
-              .buildTargetGraphWithConfigurationTargets(
-                  ParsingContext.builder(params.getCell(), pool.getListeningExecutorService())
-                      .setProfilingEnabled(getEnableParserProfiling())
-                      .setSpeculativeParsing(SpeculativeParsing.ENABLED)
-                      .build(),
+              .buildTargetGraphWithTopLevelConfigurationTargets(
+                  createParsingContext(params.getCell(), pool.getListeningExecutorService())
+                      .withExcludeUnsupportedTargets(false)
+                      .withSpeculativeParsing(SpeculativeParsing.ENABLED),
                   parseArgumentsAsTargetNodeSpecs(
-                      params.getCell().getCellPathResolver(),
-                      params.getBuckConfig(),
-                      getArguments()));
+                      params.getCell(),
+                      params.getClientWorkingDir(),
+                      getArguments(),
+                      params.getBuckConfig()),
+                  params.getTargetConfiguration());
       buildTargets = result.getBuildTargets();
-      graphBuilder =
-          params
-              .getActionGraphProvider()
-              .getActionGraph(result.getTargetGraph())
-              .getActionGraphBuilder();
+      graphBuilder = params.getActionGraphProvider().getActionGraph(result).getActionGraphBuilder();
     } catch (BuildFileParseException e) {
       params
           .getBuckEventBus()
@@ -146,10 +139,9 @@ public class UninstallCommand extends AbstractCommand {
     AndroidDevicesHelper adbHelper = getExecutionContext().getAndroidDevicesHelper().get();
 
     // Find application package name from manifest and uninstall from matching devices.
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
     String appId =
-        AdbHelper.tryToExtractPackageNameFromManifest(pathResolver, hasInstallableApk.getApkInfo());
+        AdbHelper.tryToExtractPackageNameFromManifest(
+            graphBuilder.getSourcePathResolver(), hasInstallableApk.getApkInfo());
     adbHelper.uninstallApp(appId, uninstallOptions().shouldKeepUserData());
     return ExitCode.SUCCESS;
   }

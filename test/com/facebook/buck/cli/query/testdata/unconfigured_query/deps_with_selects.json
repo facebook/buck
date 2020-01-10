@@ -1,0 +1,83 @@
+{
+  "//:1" : {
+    "buck.type" : "cxx_library",
+    "name" : "1"
+  },
+  "//:2" : {
+    "buck.type" : "cxx_library",
+    "name" : "2"
+  },
+  "//:3" : {
+    "buck.type" : "cxx_library",
+    "name" : "3"
+  },
+  "//:4" : {
+    "buck.type" : "cxx_library",
+    "name" : "4"
+  },
+  "//:5" : {
+    "buck.type" : "cxx_library",
+    "name" : "5"
+  },
+  "//:6" : {
+    "buck.type" : "cxx_library",
+    "deps" : {
+      "concatable" : true,
+      "elements" : [ {
+        "selectable" : true,
+        "conditions" : {
+          ":macos" : [ ":1" ],
+          ":linux" : [ ":2" ],
+          "DEFAULT" : [ ]
+        },
+        "no_match_error" : ""
+      } ]
+    },
+    "name" : "6"
+  },
+  "//:7" : {
+    "buck.type" : "cxx_library",
+    "deps" : {
+      "concatable" : true,
+      "elements" : [ {
+        "selectable" : true,
+        "conditions" : {
+          ":macos" : [ ":3" ],
+          "DEFAULT" : [ ]
+        },
+        "no_match_error" : ""
+      } ]
+    },
+    "name" : "7"
+  },
+  "//:8" : {
+    "buck.type" : "cxx_library",
+    "deps" : {
+      "concatable" : true,
+      "elements" : [ {
+        "selectable" : true,
+        "conditions" : {
+          ":linux" : [ ],
+          "DEFAULT" : [ ":4", ":5" ]
+        },
+        "no_match_error" : ""
+      } ]
+    },
+    "name" : "8"
+  },
+  "//:dummy_deps_with_selects" : {
+    "buck.type" : "cxx_library",
+    "deps" : {
+      "concatable" : true,
+      "elements" : [ {
+        "selectable" : true,
+        "conditions" : {
+          ":macos" : [ ":6" ],
+          "DEFAULT" : [ ":7" ]
+        },
+        "no_match_error" : ""
+      }, [ ":8" ] ]
+    },
+    "name" : "dummy_deps_with_selects"
+  }
+}

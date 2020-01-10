@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.log;
@@ -21,6 +21,7 @@ import static com.facebook.buck.util.MoreThrowables.getThrowableOrigin;
 
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.concurrent.ThreadIdToCommandIdMapper;
 import com.facebook.buck.util.environment.BuckBuildType;
 import com.facebook.buck.util.network.hostname.HostnameFetching;
@@ -59,6 +60,11 @@ abstract class AbstractErrorLogRecord {
     } catch (IOException e) {
       LOG.debug(e, "Unable to fetch hostname");
     }
+    Optional<String> initialError =
+        Optional.ofNullable(getRecord().getThrown())
+            .map(t -> getInitialCause(t).getClass().getName());
+    Optional<ErrorLogger.DeconstructedException> deconstructedException =
+        Optional.ofNullable(getRecord().getThrown()).map(ErrorLogger::deconstruct);
     return ImmutableMap.<String, String>builder()
         .put("severity", getRecord().getLevel().toString())
         .put("logger", logger != null ? logger : "unknown")
@@ -73,6 +79,15 @@ abstract class AbstractErrorLogRecord {
         .put("isDaemon", getIsDaemon().map(Object::toString).orElse("null"))
         .put("commandId", getBuildUuid().orElse("null"))
         .put("isRemoteExecution", getIsRemoteExecution().map(Object::toString).orElse("null"))
+        .put("initialError", initialError.orElse("null"))
+        .put("repository", GlobalStateManager.singleton().getRepository())
+        .put(
+            "isUserError",
+            String.valueOf(
+                deconstructedException
+                    .map(ErrorLogger.DeconstructedException::isUserError)
+                    .orElse(false)))
+        .put("rootCause", deconstructedException.map(t -> t.getMessage(true)).orElse("unknown"))
         .build();
   }
 

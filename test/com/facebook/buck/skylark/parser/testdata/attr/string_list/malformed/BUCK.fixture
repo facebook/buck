@@ -1,0 +1,3 @@
+load("//string_list:defs.bzl", "malformed")
+
+malformed()

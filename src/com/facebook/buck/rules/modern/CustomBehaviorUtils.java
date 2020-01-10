@@ -1,26 +1,25 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.modern;
 
+import com.facebook.buck.core.rulekey.CustomFieldBehaviorTag;
 import com.facebook.buck.core.rules.modern.annotations.CustomClassBehavior;
 import com.facebook.buck.core.rules.modern.annotations.CustomClassBehaviorTag;
-import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
-import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehaviorTag;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Preconditions;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -62,21 +61,9 @@ public class CustomBehaviorUtils {
 
   /** Returns the field behavior behavior of the requested type (if there is one). */
   public static <U extends CustomFieldBehaviorTag> Optional<U> get(
-      Optional<CustomFieldBehavior> behavior, Class<U> behaviorClass) {
-    return behavior.flatMap(b -> get(b, behaviorClass));
-  }
-
-  /** Returns the field behavior behavior of the requested type (if there is one). */
-  public static <U extends CustomFieldBehaviorTag> Optional<U> get(
-      CustomFieldBehavior behavior, Class<U> behaviorClass) {
-    if (behavior == null) {
-      return Optional.empty();
-    }
-
+      Class<U> behaviorClass, List<Class<? extends CustomFieldBehaviorTag>> behaviors) {
     List<Class<? extends CustomFieldBehaviorTag>> matches =
-        RichStream.from(behavior.value())
-            .filter(behaviorClass::isAssignableFrom)
-            .collect(Collectors.toList());
+        behaviors.stream().filter(behaviorClass::isAssignableFrom).collect(Collectors.toList());
     if (matches.isEmpty()) {
       return Optional.empty();
     }

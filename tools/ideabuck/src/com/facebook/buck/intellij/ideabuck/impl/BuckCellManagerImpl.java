@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.intellij.ideabuck.impl;
@@ -63,18 +63,14 @@ public class BuckCellManagerImpl implements BuckCellManager {
 
   @Override
   public List<CellImpl> getCells() {
-    return mBuckCellSettingsProvider
-        .getCells()
-        .stream()
+    return mBuckCellSettingsProvider.getCells().stream()
         .map(CellImpl::new)
         .collect(Collectors.toList());
   }
 
   @Override
   public Optional<CellImpl> findCellByName(String name) {
-    return mBuckCellSettingsProvider
-        .getCells()
-        .stream()
+    return mBuckCellSettingsProvider.getCells().stream()
         .filter(cell -> name.equals(cell.getName()))
         .findFirst()
         .map(CellImpl::new);
@@ -99,9 +95,7 @@ public class BuckCellManagerImpl implements BuckCellManager {
     if (canonicalPath == null) {
       return Optional.empty();
     }
-    return mBuckCellSettingsProvider
-        .getCells()
-        .stream()
+    return mBuckCellSettingsProvider.getCells().stream()
         .filter(
             cell -> {
               String root = mPathMacroManager.expandPath(cell.getRoot());

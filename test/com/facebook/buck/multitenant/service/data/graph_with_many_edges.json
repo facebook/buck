@@ -1,0 +1,196 @@
+[
+  {
+    /*
+Dependency graph that roughly looks like the following:
+
+         A
+     /  /  \ \
+    B  |   |  C
+     \ |   |  /
+       D   E
+     / |   | \
+    F  |   |  G
+     \ |   | /
+       H   I <----- //other:pkg
+
+Though there are additional dependencies on H and I that
+are not shown in the ASCII diagram. The idea is that we
+want to add enough edges so that deps and rdeps queries
+are interesting.
+    */
+    "commit": "608fd7bdf9",
+    "added": [
+      {
+        "path": "",
+        "nodes": {
+          "A": {
+            "attributes": {
+              "buck.type": "java_library"
+            },
+            "deps": [
+              "//:B",
+              "//:C",
+              "//:D",
+              "//:E",
+              "//:H",
+              "//:I"
+            ]
+          },
+          "B": {
+            "attributes": {
+              "buck.type": "java_library"
+            },
+            "deps": [
+              "//:D"
+            ]
+          },
+          "C": {
+            "attributes": {
+              "buck.type": "java_library"
+            },
+            "deps": [
+              "//:E"
+            ]
+          },
+          "D": {
+            "attributes": {
+              "buck.type": "java_library"
+            },
+            "deps": [
+              "//:F",
+              "//:H",
+              "//:I"
+            ]
+          },
+          "E": {
+            "attributes": {
+              "buck.type": "java_library"
+            },
+            "deps": [
+              "//:G",
+              "//:H",
+              "//:I"
+            ]
+          },
+          "F": {
+            "attributes": {
+              "buck.type": "java_library"
+            },
+            "deps": [
+              "//:H",
+              "//:I"
+            ]
+          },
+          "G": {
+            "attributes": {
+              "buck.type": "java_library"
+            },
+            "deps": [
+              "//:H",
+              "//:I"
+            ]
+          },
+          "H": {
+            "attributes": {
+              "buck.type": "java_library"
+            },
+            "deps": []
+          },
+          "I": {
+            "attributes": {
+              "buck.type": "java_library"
+            },
+            "deps": []
+          }
+        }
+      },
+      {
+        "path": "other",
+        "nodes": {
+          "pkg": {
+            "attributes": {
+              "buck.type": "java_library"
+            },
+            "deps": [
+              "//:I"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  // Remove the other package.
+  {
+    "commit": "9efba3bca1",
+    "removed": [
+      "other"
+    ]
+  },
+  // Remove :A, :E, and :H.
+  // Replace :D with :Z.
+  // Add a new rule, :Y, and update :I and :Z to depend on it.
+  {
+    "commit": "1b522b5b47",
+    "modified": [
+      {
+        "path": "",
+        "nodes": {
+          "B": {
+            "attributes": {
+              "buck.type": "java_library"
+            },
+            "deps": [
+              "//:Z"
+            ]
+          },
+          "C": {
+            "attributes": {
+              "buck.type": "java_library"
+            },
+            "deps": []
+          },
+          "F": {
+            "attributes": {
+              "buck.type": "java_library"
+            },
+            "deps": [
+              "//:I"
+            ]
+          },
+          "G": {
+            "attributes": {
+              "buck.type": "java_library"
+            },
+            "deps": [
+              "//:I"
+            ]
+          },
+          "I": {
+            "attributes": {
+              "buck.type": "java_library"
+            },
+            "deps": [
+              "//:Y"
+            ]
+          },
+          "Y": {
+            "attributes": {
+              "buck.type": "java_library"
+            },
+            "deps": []
+          },
+          "Z": {
+            "attributes": {
+              "buck.type": "java_library"
+            },
+            "deps": [
+              "//:F",
+              "//:I",
+              "//:Y"
+            ]
+          }
+        }
+      }
+    ]
+  }
+]

@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.intellij.ideabuck.completion;
@@ -25,6 +25,7 @@ import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
 import com.facebook.buck.intellij.ideabuck.lang.BuckFileType;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadCall;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadTargetArgument;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckString;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckTypes;
 import com.facebook.buck.intellij.ideabuck.util.BuckPsiUtils;
 import com.intellij.codeInsight.completion.CompletionContributor;
@@ -49,7 +50,6 @@ import org.jetbrains.annotations.NotNull;
  * of the form {@code @cellname//path/to:file.bzl}.
  */
 public class BuckTargetCompletionContributor extends CompletionContributor {
-
   @Override
   public void fillCompletionVariants(
       @NotNull CompletionParameters parameters, @NotNull CompletionResultSet result) {
@@ -58,15 +58,23 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
       return;
     }
     PsiElement position = parameters.getPosition();
-    String quotes;
-    if (BuckPsiUtils.hasElementType(position, BuckTypes.SINGLE_QUOTED_STRING)) {
-      quotes = "'";
-    } else if (BuckPsiUtils.hasElementType(position, BuckTypes.DOUBLE_QUOTED_STRING)) {
-      quotes = "\"";
-    } else if (BuckPsiUtils.hasElementType(position, BuckTypes.SINGLE_QUOTED_DOC_STRING)) {
-      quotes = "'''";
-    } else if (BuckPsiUtils.hasElementType(position, BuckTypes.DOUBLE_QUOTED_DOC_STRING)) {
-      quotes = "\"\"\"";
+    String openingQuote;
+    if (BuckPsiUtils.hasElementType(position, BuckTypes.APOSTROPHED_STRING)) {
+      openingQuote = "'";
+    } else if (BuckPsiUtils.hasElementType(position, BuckTypes.APOSTROPHED_RAW_STRING)) {
+      openingQuote = "r'";
+    } else if (BuckPsiUtils.hasElementType(position, BuckTypes.TRIPLE_APOSTROPHED_STRING)) {
+      openingQuote = "'''";
+    } else if (BuckPsiUtils.hasElementType(position, BuckTypes.TRIPLE_APOSTROPHED_RAW_STRING)) {
+      openingQuote = "r'''";
+    } else if (BuckPsiUtils.hasElementType(position, BuckTypes.QUOTED_STRING)) {
+      openingQuote = "\"";
+    } else if (BuckPsiUtils.hasElementType(position, BuckTypes.QUOTED_RAW_STRING)) {
+      openingQuote = "r\"";
+    } else if (BuckPsiUtils.hasElementType(position, BuckTypes.TRIPLE_QUOTED_STRING)) {
+      openingQuote = "\"\"\"";
+    } else if (BuckPsiUtils.hasElementType(position, BuckTypes.TRIPLE_QUOTED_RAW_STRING)) {
+      openingQuote = "r\"\"\"";
     } else {
       return;
     }
@@ -75,7 +83,7 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
     String positionStringWithQuotes = position.getText();
     String prefix =
         positionStringWithQuotes.substring(
-            quotes.length(), parameters.getOffset() - position.getTextOffset());
+            openingQuote.length(), parameters.getOffset() - position.getTextOffset());
     if (BuckPsiUtils.findAncestorWithType(position, BuckTypes.LOAD_TARGET_ARGUMENT) != null) {
       // Inside a load target, extension files are "@this//syntax/points:to/files.bzl"
       if (prefix.startsWith("@")) {
@@ -147,9 +155,7 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
       if (!name.startsWith(partial)) {
         continue;
       }
-      if (child.isDirectory()) {
-        addResultForFile(result, child, path + name + "/");
-      } else if (name.endsWith(".bzl")) {
+      if (child.isDirectory() || name.endsWith(".bzl")) {
         addResultForFile(result, child, path + name);
       }
     }
@@ -196,9 +202,9 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
       }
       if (child.isDirectory()) {
         doTargetsForFullyQualifiedExtensionFile(
-            child, project, cellName + "//" + cellPath + name + ":", result);
+            child, project, cellName + "//" + cellPath + name, result);
         if (Stream.of(child.getChildren()).anyMatch(VirtualFile::isDirectory)) {
-          addResultForFile(result, child, partialPrefix + name + "/");
+          addResultForFile(result, child, partialPrefix + name);
         }
       }
     }
@@ -258,7 +264,7 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
         .map(e -> PsiTreeUtil.getParentOfType(e, BuckLoadCall.class))
         .map(BuckLoadCall::getLoadTargetArgument)
         .map(BuckLoadTargetArgument::getString)
-        .map(BuckPsiUtils::getStringValueFromBuckString)
+        .map(BuckString::getValue)
         .flatMap(BuckTarget::parse)
         .flatMap(target -> buckTargetLocator.resolve(sourceFile, target))
         .flatMap(buckTargetLocator::findVirtualFileForExtensionFile)
@@ -267,8 +273,7 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
         .map(Map::keySet)
         .ifPresent(
             symbols ->
-                symbols
-                    .stream()
+                symbols.stream()
                     .filter(symbol -> !symbol.startsWith("_")) // do not show private symbols
                     .forEach(symbol -> addResultForTarget(result, symbol)));
   }
@@ -339,11 +344,7 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
         continue;
       }
       if (child.isDirectory()) {
-        VirtualFile childBuckFile = child.findChild(cell.getBuildfileName());
-        if (childBuckFile != null && childBuckFile.exists()) {
-          addResultForFile(result, childBuckFile, partialPrefix + name + ":");
-        }
-        addResultForFile(result, child, partialPrefix + name + "/");
+        addResultForFile(result, child, partialPrefix + name);
       }
     }
   }

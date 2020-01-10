@@ -1,23 +1,25 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.select;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.util.Map;
+import java.util.Objects;
 import javax.annotation.Nullable;
 
 /**
@@ -29,7 +31,6 @@ public class Selector<T> {
   private final ImmutableMap<SelectorKey, T> conditions;
   private final ImmutableSet<SelectorKey> nullConditions;
   private final String noMatchMessage;
-  private final boolean hasDefaultCondition;
 
   /**
    * Creates a new Selector with a custom error message for a situation when no conditions match.
@@ -37,12 +38,14 @@ public class Selector<T> {
   public Selector(
       ImmutableMap<SelectorKey, T> conditions,
       ImmutableSet<SelectorKey> nullConditions,
-      String noMatchMessage,
-      boolean hasDefaultCondition) {
+      String noMatchMessage) {
     this.conditions = conditions;
     this.nullConditions = nullConditions;
     this.noMatchMessage = noMatchMessage;
-    this.hasDefaultCondition = hasDefaultCondition;
+  }
+
+  public static <T> Selector<T> onlyDefault(T element) {
+    return new Selector<>(ImmutableMap.of(SelectorKey.DEFAULT, element), ImmutableSet.of(), "");
   }
 
   public ImmutableMap<SelectorKey, T> getConditions() {
@@ -64,7 +67,8 @@ public class Selector<T> {
 
   /** Returns whether or not this selector has a default condition. */
   public boolean hasDefaultCondition() {
-    return hasDefaultCondition;
+    return conditions.containsKey(SelectorKey.DEFAULT)
+        || nullConditions.contains(SelectorKey.DEFAULT);
   }
 
   /**
@@ -74,5 +78,61 @@ public class Selector<T> {
    */
   public String getNoMatchMessage() {
     return noMatchMessage;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    Selector<?> selector = (Selector<?>) o;
+    return conditions.equals(selector.conditions)
+        && nullConditions.equals(selector.nullConditions)
+        && noMatchMessage.equals(selector.noMatchMessage);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(conditions, nullConditions, noMatchMessage);
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("select({");
+    boolean first = true;
+
+    for (Map.Entry<SelectorKey, T> entry : conditions.entrySet()) {
+      if (!first) {
+        sb.append(", ");
+      }
+      first = false;
+      sb.append('"').append(entry.getKey()).append('"');
+      sb.append(": ");
+      sb.append(entry.getValue());
+    }
+
+    for (SelectorKey entry : nullConditions) {
+      if (!first) {
+        sb.append(", ");
+      }
+      first = false;
+      sb.append('"').append(entry).append('"');
+      sb.append(": ");
+      sb.append("None");
+    }
+
+    sb.append("}");
+    if (noMatchMessage != null) {
+      sb.append(", no_match_message=");
+      sb.append('"').append(noMatchMessage).append('"');
+    }
+
+    sb.append(")");
+
+    return sb.toString();
   }
 }

@@ -1,0 +1,21 @@
+java_library(
+    name = "seven",
+    srcs = ["7.txt"],
+    tests = [
+        ":seven-tests",
+        "//other:eight-tests",
+    ],
+    deps = [],
+)
+
+java_test(
+    name = "seven-tests",
+    srcs = ["7-test.txt"],
+    deps = [":seven"],
+)
+
+java_library(
+    name = "nine",
+    srcs = ["lib/9.txt"],
+    deps = [],
+)

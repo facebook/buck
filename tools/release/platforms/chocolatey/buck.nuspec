@@ -6,7 +6,7 @@
     <version>__REPLACE__</version>
     <title>Buck</title>
     <authors>Facebook Inc</authors>
-    <projectUrl>https://buckbuild.com</projectUrl>
+    <projectUrl>https://buck.build</projectUrl>
     <copyright>2012-present Facebook Inc</copyright>
     <licenseUrl>https://github.com/facebook/buck/blob/master/LICENSE</licenseUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>

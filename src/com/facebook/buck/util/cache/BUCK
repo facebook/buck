@@ -3,19 +3,19 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 java_immutables_library(
     name = "cache",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//third-party/java/bazel:bazel",
-    ],
     tests = ["//test/com/facebook/buck/util/cache:cache"],
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/core/exceptions:exceptions",
+        "//src/com/facebook/buck/core/io:io",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/filesystem:filesystem",
-        "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/hashing:hashing",
         "//src/com/facebook/buck/util/timing:timing",
+    ],
+    exported_deps = [
+        "//third-party/java/guava:guava",
     ],
 )

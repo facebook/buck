@@ -1,21 +1,22 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.unarchive;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.util.PatternsMatcher;
@@ -51,12 +52,7 @@ public abstract class Unarchiver {
       ExistingFileMode existingFileMode)
       throws IOException {
     return extractArchive(
-        archiveFile,
-        filesystem,
-        relativePath,
-        stripPrefix,
-        PatternsMatcher.EMPTY,
-        existingFileMode);
+        archiveFile, filesystem, relativePath, stripPrefix, PatternsMatcher.NONE, existingFileMode);
   }
 
   /**
@@ -115,13 +111,13 @@ public abstract class Unarchiver {
       Path archiveFile,
       Path destination,
       ExistingFileMode existingFileMode)
-      throws InterruptedException, IOException {
+      throws IOException {
     return extractArchive(
         projectFilesystemFactory,
         archiveFile,
         destination,
         Optional.empty(),
-        PatternsMatcher.EMPTY,
+        PatternsMatcher.NONE,
         existingFileMode);
   }
 
@@ -137,7 +133,6 @@ public abstract class Unarchiver {
    *     stripping is done.
    * @param existingFileMode How to handle existing files
    * @return A list of paths to files that were created (not directories)
-   * @throws InterruptedException If a filesystem could not be created in the destination directory
    * @throws IOException If the archive could not be extracted for any reason
    */
   public ImmutableList<Path> extractArchive(
@@ -147,12 +142,13 @@ public abstract class Unarchiver {
       Optional<Path> stripPrefix,
       PatternsMatcher entriesToExclude,
       ExistingFileMode existingFileMode)
-      throws InterruptedException, IOException {
+      throws IOException {
     // Create output directory if it does not exist
     Files.createDirectories(destination);
     return extractArchive(
             archiveFile,
-            projectFilesystemFactory.createProjectFilesystem(destination),
+            projectFilesystemFactory.createProjectFilesystem(
+                CanonicalCellName.unsafeNotACell(), destination),
             destination.getFileSystem().getPath(""),
             stripPrefix,
             entriesToExclude,

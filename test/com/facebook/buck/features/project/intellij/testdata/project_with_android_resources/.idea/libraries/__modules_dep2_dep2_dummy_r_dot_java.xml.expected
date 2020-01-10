@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="//modules/dep2:dep2#dummy_r_dot_java">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/buck-out/gen/modules/dep2/__dep2#dummy_r_dot_java_dummyrdotjava_output__/dep2#dummy_r_dot_java.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

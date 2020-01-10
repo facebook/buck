@@ -1,22 +1,23 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.util.log.Logger;
@@ -24,7 +25,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ParsingEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.parser.AbstractParserConfig.AllowSymlinks;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -57,7 +58,7 @@ class SymlinkCache {
    */
   private final Map<Path, Optional<Path>> symlinkExistenceCache = new ConcurrentHashMap<>();
 
-  private final Map<Path, ParserConfig.AllowSymlinks> cellSymlinkAllowability =
+  private final Map<CanonicalCellName, ParserConfig.AllowSymlinks> cellSymlinkAllowability =
       new ConcurrentHashMap<>();
 
   public SymlinkCache(BuckEventBus eventBus, DaemonicParserState daemonicParserState) {
@@ -96,8 +97,8 @@ class SymlinkCache {
       return;
     }
 
-    AllowSymlinks allowSymlinks =
-        Objects.requireNonNull(cellSymlinkAllowability.get(node.getBuildTarget().getCellPath()));
+    ParserConfig.AllowSymlinks allowSymlinks =
+        Objects.requireNonNull(cellSymlinkAllowability.get(node.getBuildTarget().getCell()));
     if (allowSymlinks == ParserConfig.AllowSymlinks.FORBID) {
       throw new HumanReadableException(
           "Target %s contains input files under a path which contains a symbolic link "
@@ -161,9 +162,10 @@ class SymlinkCache {
     return newSymlinksEncountered;
   }
 
-  public void registerCell(Path root, Cell cell) {
+  public void registerCell(Cell cell) {
     cellSymlinkAllowability.put(
-        root, cell.getBuckConfig().getView(ParserConfig.class).getAllowSymlinks());
+        cell.getCanonicalName(),
+        cell.getBuckConfig().getView(ParserConfig.class).getAllowSymlinks());
   }
 
   public void close() {

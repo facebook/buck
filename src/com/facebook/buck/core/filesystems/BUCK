@@ -1,0 +1,17 @@
+java_library(
+    name = "filesystems",
+    srcs = glob(["*.java"]),
+    tests = ["//test/com/facebook/buck/core/filesystems:filesystems"],
+    visibility = [
+        "//programs:bucklib",
+        "//programs:calculate-buck-binary-hash",
+        # `BuckUnixPath` needs to be visible in `MorePaths.dropInternalCaches`
+        "//src/com/facebook/buck/io/file:file",
+        # `ForwardRelativePath` works with `BuckFileSystem` internals
+        "//src/com/facebook/buck/core/path:path",
+        "//test/...",
+    ],
+    deps = [
+        # Do NOT add deps here. This library is loaded into the JVM bootstrap classloader in Java 9+.
+    ],
+)

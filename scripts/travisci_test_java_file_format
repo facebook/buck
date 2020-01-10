@@ -11,7 +11,7 @@ trap finish EXIT
 
 REPO_ROOT_DIR="$(git rev-parse --show-toplevel)"
 
-FORMAT_JAR_VERSION="1.6"
+FORMAT_JAR_VERSION="1.7"
 FORMAT_JAR_NAME="google-java-format-${FORMAT_JAR_VERSION}-all-deps.jar"
 FORMAT_JAR_URL="https://github.com/google/google-java-format/releases/download/google-java-format-${FORMAT_JAR_VERSION}/${FORMAT_JAR_NAME}"
 FORMAT_JAR_LOCATION="${HOME}/${FORMAT_JAR_NAME}"

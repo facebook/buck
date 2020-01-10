@@ -1,11 +1,13 @@
+INFER_ANNOTATION_VERSION = "0.17.0"
+
 prebuilt_jar(
     name = "infer-annotations",
-    binary_jar = "infer-annotations-4.2.jar",
+    binary_jar = "infer-annotation-" + INFER_ANNOTATION_VERSION + ".jar",
     licenses = [
         "LICENSE",
     ],
     required_for_source_only_abi = True,
-    source_jar = "infer-annotations-4.2-src.jar",
+    source_jar = "infer-annotation-" + INFER_ANNOTATION_VERSION + "-sources.jar",
     visibility = [
         "PUBLIC",
     ],

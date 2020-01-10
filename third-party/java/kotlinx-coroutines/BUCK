@@ -1,0 +1,11 @@
+prebuilt_jar(
+    name = "kotlinx-coroutines",
+    binary_jar = "kotlinx-coroutines-core-1.2.1.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    source_jar = "kotlinx-coroutines-core-1.2.1-sources.jar",
+    visibility = [
+        "PUBLIC",
+    ],
+)

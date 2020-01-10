@@ -1,21 +1,22 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.string;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -29,6 +30,12 @@ import java.util.List;
 import java.util.Optional;
 
 public final class MoreStrings {
+
+  private static final Logger LOG = Logger.get(MoreStrings.class);
+
+  private static final int KEEP_CHARS_DEFAULT = 10_000;
+  private static final String TRUNCATE_MESSAGE =
+      "...\n<truncated>\n...".replace("\n", System.lineSeparator());
 
   /** Utility class: do not instantiate. */
   private MoreStrings() {}
@@ -120,10 +127,15 @@ public final class MoreStrings {
   }
 
   public static String truncatePretty(String data) {
-    int keepFirstChars = 10000;
-    int keepLastChars = 10000;
-    String truncateMessage = "...\n<truncated>\n...";
-    return truncateMiddle(data, keepFirstChars, keepLastChars, truncateMessage);
+    return truncateMiddle(data, KEEP_CHARS_DEFAULT, KEEP_CHARS_DEFAULT);
+  }
+
+  public static String truncateTail(String data, int keepFirstChars) {
+    return truncateMiddle(data, keepFirstChars, 0, TRUNCATE_MESSAGE);
+  }
+
+  public static String truncateMiddle(String data, int keepFirstChars, int keepLastChars) {
+    return truncateMiddle(data, keepFirstChars, keepLastChars, TRUNCATE_MESSAGE);
   }
 
   public static String truncateMiddle(
@@ -131,9 +143,14 @@ public final class MoreStrings {
     if (data.length() <= keepFirstChars + keepLastChars + truncateMessage.length()) {
       return data;
     }
-    return data.substring(0, keepFirstChars)
-        + truncateMessage
-        + data.substring(data.length() - keepLastChars);
+    LOG.info("Before truncate: " + data);
+
+    StringBuilder resultBuilder = new StringBuilder(data.substring(0, keepFirstChars));
+    resultBuilder.append(truncateMessage);
+    if (keepLastChars > 0) {
+      resultBuilder.append(data.substring(data.length() - keepLastChars));
+    }
+    return resultBuilder.toString();
   }
 
   public static ImmutableList<String> lines(String data) throws IOException {
@@ -154,8 +171,7 @@ public final class MoreStrings {
    */
   public static List<String> getSpellingSuggestions(
       String input, Collection<String> options, int maxDistance) {
-    return options
-        .stream()
+    return options.stream()
         .map(option -> new Pair<>(option, MoreStrings.getLevenshteinDistance(input, option)))
         .filter(pair -> pair.getSecond() <= maxDistance)
         .sorted(Comparator.comparing(Pair::getSecond))
@@ -163,8 +179,15 @@ public final class MoreStrings {
         .collect(ImmutableList.toImmutableList());
   }
 
-  /** Removes carriage return characters from the string with preserving new line characters. */
-  public static String replaceCR(String text) {
-    return text.replace("\r\n", "\n").replace('\r', '\n');
+  /** If string width exceeds passed parameter, replace string tail with dot-dot-dot. */
+  public static String abbreviate(String s, int width) {
+    String dotDotDot = "...";
+    if (s.length() <= width) {
+      return s;
+    } else if (width <= dotDotDot.length()) {
+      return dotDotDot;
+    } else {
+      return s.substring(0, width - dotDotDot.length()) + dotDotDot;
+    }
   }
 }

@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -32,7 +32,7 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -156,8 +156,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
   public void inputBasedRuleKeyAvoidsRerunningIfGeneratedSourceDoesNotChange() throws Exception {
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
-    BuildTarget target =
-        BuildTargetFactory.newInstance(workspace.getDestPath(), "//:binary_using_generated_source");
+    BuildTarget target = BuildTargetFactory.newInstance("//:binary_using_generated_source");
     String unusedGenruleInput = "unused.dat";
     BuildTarget genrule = BuildTargetFactory.newInstance("//:gensource");
     String sourceName = "bar.cpp";
@@ -527,12 +526,12 @@ public class CxxPreprocessAndCompileIntegrationTest {
   }
 
   @Test
-  public void langCompilerFlags() throws IOException {
+  public void langCompilerFlags() {
     workspace.runBuckBuild("//:lang_compiler_flags#default,static").assertSuccess();
   }
 
   @Test
-  public void binaryBuildRuleTools() throws IOException {
+  public void binaryBuildRuleTools() {
     workspace
         .runBuckBuild(
             "-c",
@@ -556,14 +555,14 @@ public class CxxPreprocessAndCompileIntegrationTest {
   }
 
   @Test
-  public void ignoreVerifyHeaders() throws IOException {
+  public void ignoreVerifyHeaders() {
     ProcessResult result =
         workspace.runBuckBuild("-c", "cxx.untracked_headers=ignore", "//:untracked_header");
     result.assertSuccess();
   }
 
   @Test
-  public void errorVerifyHeaders() throws IOException {
+  public void errorVerifyHeaders() {
     ProcessResult result;
     result =
         workspace.runBuckBuild(
@@ -581,7 +580,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
   }
 
   @Test
-  public void errorVerifyTwoHeaders() throws IOException {
+  public void errorVerifyTwoHeaders() {
     ProcessResult result;
     result =
         workspace.runBuckBuild(
@@ -606,7 +605,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
   }
 
   @Test
-  public void errorVerifyNestedHeaders() throws IOException {
+  public void errorVerifyNestedHeaders() {
     ProcessResult result;
     result =
         workspace.runBuckBuild(
@@ -629,7 +628,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
   }
 
   @Test
-  public void whitelistVerifyHeaders() throws IOException {
+  public void whitelistVerifyHeaders() {
     ProcessResult result =
         workspace.runBuckBuild(
             "-c",
@@ -649,7 +648,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
   }
 
   @Test
-  public void errorVerifyHeadersWithPrefixHeader() throws Exception {
+  public void errorVerifyHeadersWithPrefixHeader() {
     ProcessResult result =
         workspace.runBuckBuild(
             "-c",
@@ -662,7 +661,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
   }
 
   @Test
-  public void verifyAppleFrameworksHeaders() throws IOException {
+  public void verifyAppleFrameworksHeaders() {
     assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 

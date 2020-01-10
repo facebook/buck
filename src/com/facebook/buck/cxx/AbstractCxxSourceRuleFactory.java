@@ -1,48 +1,46 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.impl.DependencyAggregation;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.Compiler;
-import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxFlavorSanitizer;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
-import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SanitizedArg;
@@ -61,6 +59,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.Hashing;
 import java.io.File;
@@ -85,6 +84,7 @@ abstract class AbstractCxxSourceRuleFactory {
 
   private static final Logger LOG = Logger.get(AbstractCxxSourceRuleFactory.class);
   private static final String COMPILE_FLAVOR_PREFIX = "compile-";
+  private static final String OPTIMIZE_FLAVOR_PREFIX = "optimize-";
   private static final Flavor AGGREGATED_PREPROCESS_DEPS_FLAVOR =
       InternalFlavor.of("preprocessor-deps");
 
@@ -98,10 +98,7 @@ abstract class AbstractCxxSourceRuleFactory {
   protected abstract ActionGraphBuilder getActionGraphBuilder();
 
   @Value.Parameter
-  protected abstract SourcePathResolver getPathResolver();
-
-  @Value.Parameter
-  protected abstract SourcePathRuleFinder getRuleFinder();
+  protected abstract SourcePathResolverAdapter getPathResolver();
 
   @Value.Parameter
   protected abstract CxxBuckConfig getCxxBuckConfig();
@@ -141,7 +138,7 @@ abstract class AbstractCxxSourceRuleFactory {
     return getCxxBuckConfig().isPCHEnabled()
         && sourceType.getPrecompiledHeaderLanguage().isPresent()
         && CxxSourceTypes.getPreprocessor(getCxxPlatform(), sourceType)
-            .resolve(getActionGraphBuilder())
+            .resolve(getActionGraphBuilder(), getBaseBuildTarget().getTargetConfiguration())
             .supportsPrecompiledHeaders();
   }
 
@@ -168,11 +165,12 @@ abstract class AbstractCxxSourceRuleFactory {
   protected ImmutableSortedSet<BuildRule> getPreprocessDeps() {
     ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.naturalOrder();
     for (CxxPreprocessorInput input : getCxxPreprocessorInput()) {
-      builder.addAll(input.getDeps(getActionGraphBuilder(), getRuleFinder()));
+      builder.addAll(input.getDeps(getActionGraphBuilder()));
     }
     if (getPreInclude().isPresent()) {
       builder.addAll(
-          getRuleFinder().filterBuildRuleInputs(getPreInclude().get().getHeaderSourcePath()));
+          getActionGraphBuilder()
+              .filterBuildRuleInputs(getPreInclude().get().getHeaderSourcePath()));
       builder.addAll(getPreInclude().get().getBuildDeps());
     }
     return builder.build();
@@ -180,16 +178,14 @@ abstract class AbstractCxxSourceRuleFactory {
 
   @Value.Lazy
   protected ImmutableSet<FrameworkPath> getFrameworks() {
-    return getCxxPreprocessorInput()
-        .stream()
+    return getCxxPreprocessorInput().stream()
         .flatMap(input -> input.getFrameworks().stream())
         .collect(ImmutableSet.toImmutableSet());
   }
 
   @Value.Lazy
   protected ImmutableList<CxxHeaders> getIncludes() {
-    return getCxxPreprocessorInput()
-        .stream()
+    return getCxxPreprocessorInput().stream()
         .flatMap(input -> input.getIncludes().stream())
         .collect(ImmutableList.toImmutableList());
   }
@@ -197,8 +193,7 @@ abstract class AbstractCxxSourceRuleFactory {
   private final Function<CxxSource.Type, ImmutableList<Arg>> rulePreprocessorFlags =
       memoize(
           type ->
-              getCxxPreprocessorInput()
-                  .stream()
+              getCxxPreprocessorInput().stream()
                   .flatMap(input -> input.getPreprocessorFlags().get(type).stream())
                   .collect(ImmutableList.toImmutableList()));
 
@@ -208,7 +203,8 @@ abstract class AbstractCxxSourceRuleFactory {
               key -> {
                 Preprocessor preprocessor =
                     CxxSourceTypes.getPreprocessor(getCxxPlatform(), key.getSourceType())
-                        .resolve(getActionGraphBuilder());
+                        .resolve(
+                            getActionGraphBuilder(), getBaseBuildTarget().getTargetConfiguration());
                 // TODO(cjhopman): The aggregated deps logic should move into PreprocessorDelegate
                 // itself.
                 BuildRule aggregatedDeps = requireAggregatedPreprocessDepsRule();
@@ -227,8 +223,7 @@ abstract class AbstractCxxSourceRuleFactory {
                         /* leadingIncludePaths */ Optional.empty(),
                         Optional.of(aggregatedDeps),
                         getCxxPlatform().getConflictingHeaderBasenameWhitelist());
-                return new PreprocessorDelegateCacheValue(
-                    delegate, getSanitizerForSourceType(key.getSourceType()));
+                return new PreprocessorDelegateCacheValue(delegate, getSanitizer());
               });
 
   /**
@@ -263,8 +258,7 @@ abstract class AbstractCxxSourceRuleFactory {
 
   /** @return the object file name for the given source name. */
   private String getCompileOutputName(String name) {
-    Linker ld = getCxxPlatform().getLd().resolve(getActionGraphBuilder());
-    String outName = ld.hasFilePathSizeLimitations() ? "out" : getOutputName(name);
+    String outName = getCxxPlatform().getFilepathLengthLimited() ? "out" : getOutputName(name);
     return outName + "." + getCxxPlatform().getObjectFileExtension();
   }
 
@@ -272,11 +266,17 @@ abstract class AbstractCxxSourceRuleFactory {
     return getOutputName(name) + "." + getCxxPlatform().getObjectFileExtension();
   }
 
-  /** @return the output path for an object file compiled from the source with the given name. */
-  @VisibleForTesting
-  Path getCompileOutputPath(BuildTarget target, String name) {
-    return BuildTargetPaths.getGenPath(getProjectFilesystem(), target, "%s")
-        .resolve(getCompileOutputName(name));
+  /** @return a build target for a {@link CxxThinLTOOpt} rule for the source with the given name. */
+  public BuildTarget createOptimizeBuildTarget(String name) {
+    String outputName = CxxFlavorSanitizer.sanitize(getCompileFlavorSuffix(name));
+    return getBaseBuildTarget()
+        .withAppendedFlavors(
+            getCxxPlatform().getFlavor(),
+            InternalFlavor.of(
+                String.format(
+                    OPTIMIZE_FLAVOR_PREFIX + "%s%s",
+                    getPicType() == PicType.PIC ? "pic-" : "",
+                    outputName)));
   }
 
   /**
@@ -313,7 +313,7 @@ abstract class AbstractCxxSourceRuleFactory {
   // need a stable object each time.
   @Value.Lazy
   protected Function<String, String> getSanitizeFunction() {
-    return getCxxPlatform().getCompilerDebugPathSanitizer().sanitize(Optional.empty());
+    return getCxxPlatform().getCompilerDebugPathSanitizer().sanitizer(Optional.empty());
   }
 
   private ImmutableList<Arg> sanitizedArgs(Iterable<String> flags) {
@@ -352,6 +352,54 @@ abstract class AbstractCxxSourceRuleFactory {
   }
 
   /**
+   * @return a {@link CxxThinLTOOpt} rule that handles the opt phase of ThinLTO with the given
+   *     {@link CxxSource}. thinIndicesRoot points to the root of the thin index artifacts generated
+   *     in the ThinLTO indexing step. See {@link CxxThinLTOIndex}.
+   */
+  private CxxThinLTOOpt createThinOptBuildRule(
+      String name, CxxSource source, SourcePath thinIndicesRoot) {
+
+    Preconditions.checkArgument(CxxSourceTypes.isOptimizableType(source.getType()));
+
+    BuildTarget target = createOptimizeBuildTarget(name);
+
+    Compiler compiler =
+        CxxSourceTypes.getCompiler(getCxxPlatform(), source.getType())
+            .resolve(getActionGraphBuilder(), getBaseBuildTarget().getTargetConfiguration());
+
+    CxxToolFlags flags =
+        CxxToolFlags.explicitBuilder()
+            // If we're using pic, add in the appropriate flag.
+            .addAllPlatformFlags(StringArg.from(getPicType().getFlags(compiler)))
+            // Add in the platform specific compiler flags.
+            .addAllPlatformFlags(getPlatformCompileFlags(source.getType()))
+            // Add custom compiler flags.
+            .addAllRuleFlags(getRuleCompileFlags(source.getType()))
+            // Add custom per-file flags.
+            .addAllRuleFlags(sanitizedArgs(source.getFlags()))
+            .addRuleFlags(new CxxThinLTOIndexArg(thinIndicesRoot, source.getPath()))
+            .build();
+
+    CompilerDelegate compilerDelegate =
+        new CompilerDelegate(
+            getCxxPlatform().getCompilerDebugPathSanitizer(),
+            compiler,
+            flags,
+            getCxxPlatform().getUseArgFile());
+
+    return CxxThinLTOOpt.optimize(
+        target,
+        getProjectFilesystem(),
+        getActionGraphBuilder(),
+        compilerDelegate,
+        getCompileOutputName(name),
+        source.getPath(),
+        thinIndicesRoot,
+        source.getType(),
+        getSanitizer());
+  }
+
+  /**
    * @return a {@link CxxPreprocessAndCompile} rule that preprocesses, compiles, and assembles the
    *     given {@link CxxSource}.
    */
@@ -363,7 +411,7 @@ abstract class AbstractCxxSourceRuleFactory {
 
     Compiler compiler =
         CxxSourceTypes.getCompiler(getCxxPlatform(), source.getType())
-            .resolve(getActionGraphBuilder());
+            .resolve(getActionGraphBuilder(), getBaseBuildTarget().getTargetConfiguration());
 
     // Build up the list of compiler flags.
     CxxToolFlags flags =
@@ -391,12 +439,12 @@ abstract class AbstractCxxSourceRuleFactory {
     return CxxPreprocessAndCompile.compile(
         target,
         getProjectFilesystem(),
-        getRuleFinder(),
+        getActionGraphBuilder(),
         compilerDelegate,
         getCompileOutputName(name),
         source.getPath(),
         source.getType(),
-        getSanitizerForSourceType(source.getType()));
+        getSanitizer());
   }
 
   @VisibleForTesting
@@ -417,7 +465,7 @@ abstract class AbstractCxxSourceRuleFactory {
       CxxSource.Type type, ImmutableList<String> sourceFlags) {
     Compiler compiler =
         CxxSourceTypes.getCompiler(getCxxPlatform(), CxxSourceTypes.getPreprocessorOutputType(type))
-            .resolve(getActionGraphBuilder());
+            .resolve(getActionGraphBuilder(), getBaseBuildTarget().getTargetConfiguration());
     return CxxToolFlags.explicitBuilder()
         .addAllPlatformFlags(StringArg.from(getPicType().getFlags(compiler)))
         .addAllPlatformFlags(getPlatformPreprocessorFlags(type))
@@ -437,7 +485,9 @@ abstract class AbstractCxxSourceRuleFactory {
                 getPicType()
                     .getFlags(
                         CxxSourceTypes.getCompiler(getCxxPlatform(), outputType)
-                            .resolve(getActionGraphBuilder()))))
+                            .resolve(
+                                getActionGraphBuilder(),
+                                getBaseBuildTarget().getTargetConfiguration()))))
         // Add in the platform specific compiler flags.
         .addAllPlatformFlags(getPlatformCompileFlags(outputType))
         .addAllRuleFlags(getRuleCompileFlags(outputType))
@@ -458,7 +508,7 @@ abstract class AbstractCxxSourceRuleFactory {
                   LOG.verbose(
                       "Creating preprocessed InferCapture build rule %s for %s", target, source);
 
-                  DepsBuilder depsBuilder = new DepsBuilder(getRuleFinder());
+                  DepsBuilder depsBuilder = new DepsBuilder(getActionGraphBuilder());
                   depsBuilder.add(requireAggregatedPreprocessDepsRule());
 
                   PreprocessorDelegateCacheValue preprocessorDelegateValue =
@@ -490,6 +540,37 @@ abstract class AbstractCxxSourceRuleFactory {
                 });
   }
 
+  public ImmutableMap<CxxThinLTOOpt, SourcePath> requireThinOptRules(
+      ImmutableMap<String, CxxSource> sources, SourcePath thinIndicesRoot) {
+
+    ImmutableMap.Builder<BuildTarget, Function<BuildTarget, BuildRule>> mappings =
+        ImmutableMap.builder();
+
+    sources.forEach(
+        (name, source) -> {
+          BuildTarget target = createOptimizeBuildTarget(name);
+          mappings.put(
+              target,
+              ignored -> {
+                Preconditions.checkState(CxxSourceTypes.isOptimizableType(source.getType()));
+                CxxThinLTOOpt rule = createThinOptBuildRule(name, source, thinIndicesRoot);
+                Preconditions.checkState(
+                    rule.getInput().equals(source.getPath()),
+                    "Hash collision for %s; a build rule would have been ignored.",
+                    name);
+                return rule;
+              });
+        });
+
+    ImmutableSortedMap<BuildTarget, BuildRule> computedRules =
+        getActionGraphBuilder().computeAllIfAbsent(mappings.build());
+
+    return computedRules.values().stream()
+        .map(CxxThinLTOOpt.class::cast)
+        .collect(
+            ImmutableMap.toImmutableMap(Function.identity(), CxxThinLTOOpt::getSourcePathToOutput));
+  }
+
   /**
    * @return a {@link CxxPreprocessAndCompile} rule that preprocesses, compiles, and assembles the
    *     given {@link CxxSource}.
@@ -506,7 +587,7 @@ abstract class AbstractCxxSourceRuleFactory {
             getCxxPlatform().getCompilerDebugPathSanitizer(),
             CxxSourceTypes.getCompiler(
                     getCxxPlatform(), CxxSourceTypes.getPreprocessorOutputType(source.getType()))
-                .resolve(getActionGraphBuilder()),
+                .resolve(getActionGraphBuilder(), getBaseBuildTarget().getTargetConfiguration()),
             computeCompilerFlags(source.getType(), source.getFlags()),
             getCxxPlatform().getUseArgFile());
 
@@ -530,14 +611,14 @@ abstract class AbstractCxxSourceRuleFactory {
     return CxxPreprocessAndCompile.preprocessAndCompile(
         target,
         getProjectFilesystem(),
-        getRuleFinder(),
+        getActionGraphBuilder(),
         preprocessorDelegate,
         compilerDelegate,
         getCompileOutputName(name),
         source.getPath(),
         source.getType(),
         precompiledHeaderRule,
-        getSanitizerForSourceType(source.getType()));
+        getSanitizer());
   }
 
   Optional<CxxPrecompiledHeader> getOptionalPrecompiledHeader(
@@ -564,7 +645,6 @@ abstract class AbstractCxxSourceRuleFactory {
             sourceType,
             source.getFlags(),
             getActionGraphBuilder(),
-            getRuleFinder(),
             getPathResolver()));
   }
 
@@ -608,8 +688,7 @@ abstract class AbstractCxxSourceRuleFactory {
       CxxSource.Type sourceType,
       ImmutableList<String> sourceFlags,
       ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
-      SourcePathResolver pathResolver) {
+      SourcePathResolverAdapter pathResolver) {
 
     // This method should be called only if prefix/precompiled header param present.
     Preconditions.checkState(getPreInclude().isPresent());
@@ -626,7 +705,6 @@ abstract class AbstractCxxSourceRuleFactory {
         sourceType,
         sourceFlags,
         graphBuilder,
-        ruleFinder,
         pathResolver);
   }
 
@@ -657,41 +735,61 @@ abstract class AbstractCxxSourceRuleFactory {
 
   public ImmutableMap<CxxPreprocessAndCompile, SourcePath> requirePreprocessAndCompileRules(
       ImmutableMap<String, CxxSource> sources) {
+    ImmutableMap.Builder<BuildTarget, Function<BuildTarget, BuildRule>> mappings =
+        ImmutableMap.builder();
 
-    return sources
-        .entrySet()
-        .stream()
-        .map(
-            entry -> {
-              String name = entry.getKey();
-              CxxSource source = entry.getValue();
+    sources.forEach(
+        (name, source) -> {
+          BuildTarget target = createCompileBuildTarget(name);
+          mappings.put(
+              target,
+              ignored -> {
+                Preconditions.checkState(
+                    CxxSourceTypes.isPreprocessableType(source.getType())
+                        || CxxSourceTypes.isCompilableType(source.getType()));
 
-              Preconditions.checkState(
-                  CxxSourceTypes.isPreprocessableType(source.getType())
-                      || CxxSourceTypes.isCompilableType(source.getType()));
+                // If it's a preprocessable source, use a combine preprocess-and-compile build rule.
+                // Otherwise, use a regular compile rule.
+                if (CxxSourceTypes.isPreprocessableType(source.getType())) {
+                  CxxPreprocessAndCompile rule = createPreprocessAndCompileBuildRule(name, source);
+                  Preconditions.checkState(
+                      rule.getInput().equals(source.getPath()),
+                      "Hash collision for %s; a build rule would have been ignored.",
+                      name);
+                  return rule;
+                } else {
+                  CxxPreprocessAndCompile rule = createCompileBuildRule(name, source);
+                  Preconditions.checkState(
+                      rule.getInput().equals(source.getPath()),
+                      "Hash collision for %s; a build rule would have been ignored.",
+                      name);
+                  return rule;
+                }
+              });
+        });
 
-              // If it's a preprocessable source, use a combine preprocess-and-compile build rule.
-              // Otherwise, use a regular compile rule.
-              if (CxxSourceTypes.isPreprocessableType(source.getType())) {
-                return requirePreprocessAndCompileBuildRule(name, source);
-              } else {
-                return requireCompileBuildRule(name, source);
-              }
-            })
+    ImmutableSortedMap<BuildTarget, BuildRule> computedRules =
+        getActionGraphBuilder().computeAllIfAbsent(mappings.build());
+
+    return computedRules.values().stream()
+        .map(CxxPreprocessAndCompile.class::cast)
         .collect(
             ImmutableMap.toImmutableMap(
                 Function.identity(), CxxPreprocessAndCompile::getSourcePathToOutput));
   }
 
-  private DebugPathSanitizer getSanitizerForSourceType(CxxSource.Type type) {
-    return type.isAssembly()
-        ? getCxxPlatform().getAssemblerDebugPathSanitizer()
-        : getCxxPlatform().getCompilerDebugPathSanitizer();
+  private DebugPathSanitizer getSanitizer() {
+    return getCxxPlatform().getCompilerDebugPathSanitizer();
   }
 
-  @Value.Immutable
-  @BuckStyleTuple
-  interface AbstractPreprocessorDelegateCacheKey {
+  @BuckStyleValue
+  interface PreprocessorDelegateCacheKey {
+
+    static PreprocessorDelegateCacheKey of(
+        CxxSource.Type sourceType, ImmutableList<String> sourceFlags) {
+      return ImmutablePreprocessorDelegateCacheKey.of(sourceType, sourceFlags);
+    }
+
     CxxSource.Type getSourceType();
 
     ImmutableList<String> getSourceFlags();
@@ -774,12 +872,11 @@ abstract class AbstractCxxSourceRuleFactory {
     private final Function<AddsToRuleKey, String> commandHashCache;
 
     public HashBuilder(Function<AddsToRuleKey, String> commandHashCache) {
-      super(new NoopRuleKeyScopedHasher());
+      super(NoopRuleKeyScopedHasher.INSTANCE);
       this.commandHashCache = commandHashCache;
     }
 
-    @Override
-    public RuleKeyObjectSink setPath(Path absolutePath, Path ideallyRelative) {
+    public HashBuilder setPath(Path ideallyRelative) {
       // This matches default rulekey computation (skipping the hash, though).
       if (ideallyRelative.isAbsolute()) {
         hasher.putString(ideallyRelative.getFileName().toString());
@@ -790,7 +887,7 @@ abstract class AbstractCxxSourceRuleFactory {
     }
 
     @Override
-    protected AbstractRuleKeyBuilder<String> setSingleValue(@Nullable Object val) {
+    protected HashBuilder setSingleValue(@Nullable Object val) {
       if (val == null) { // Null value first
         hasher.putNull();
       } else if (val instanceof Boolean) { // JRE types
@@ -805,6 +902,8 @@ abstract class AbstractCxxSourceRuleFactory {
         hasher.putPattern((Pattern) val);
       } else if (val instanceof byte[]) {
         hasher.putBytes((byte[]) val);
+      } else if (val instanceof BuildTarget) {
+        hasher.putBuildTarget((BuildTarget) val);
       } else {
         throw new RuntimeException("Unsupported value type: " + val.getClass());
       }
@@ -812,26 +911,34 @@ abstract class AbstractCxxSourceRuleFactory {
     }
 
     @Override
-    protected AbstractRuleKeyBuilder<String> setBuildRule(BuildRule rule) {
+    protected AbstractRuleKeyBuilder<String> setAction(Action action) {
       throw new IllegalStateException();
     }
 
     @Override
-    protected AbstractRuleKeyBuilder<String> setAddsToRuleKey(AddsToRuleKey appendable) {
+    protected HashBuilder setBuildRule(BuildRule rule) {
+      throw new IllegalStateException();
+    }
+
+    @Override
+    protected HashBuilder setAddsToRuleKey(AddsToRuleKey appendable) {
       hasher.putString(commandHashCache.apply(appendable));
       return this;
     }
 
     @Override
-    protected AbstractRuleKeyBuilder<String> setSourcePath(SourcePath sourcePath) {
-      setPath(
-          getPathResolver().getAbsolutePath(sourcePath),
-          getPathResolver().getIdeallyRelativePath(sourcePath));
+    protected AbstractRuleKeyBuilder<String> setArtifact(Artifact artifact) {
+      return setSourcePath(artifact.asBound().getSourcePath());
+    }
+
+    @Override
+    protected HashBuilder setSourcePath(SourcePath sourcePath) {
+      setPath(getPathResolver().getIdeallyRelativePath(sourcePath));
       return this;
     }
 
     @Override
-    protected AbstractRuleKeyBuilder<String> setNonHashingSourcePath(SourcePath sourcePath) {
+    protected HashBuilder setNonHashingSourcePath(SourcePath sourcePath) {
       return setSourcePath(sourcePath);
     }
 

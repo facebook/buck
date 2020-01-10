@@ -1,18 +1,19 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
@@ -21,10 +22,9 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.impl.testutil.SimpleTool;
+import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.step.TestExecutionContext;
@@ -43,6 +43,19 @@ public class AaptStepTest {
   private Path basePath = Paths.get("/java/com/facebook/buck/example");
   private Path proguardConfig = basePath.resolve("mock_proguard.txt");
 
+  private AaptStep buildAaptStep(
+      Path pathToGeneratedProguardConfig,
+      boolean isCrunchFiles,
+      boolean includesVectorDrawables,
+      ManifestEntries manifestEntries) {
+    return buildAaptStep(
+        pathToGeneratedProguardConfig,
+        isCrunchFiles,
+        includesVectorDrawables,
+        manifestEntries,
+        ImmutableList.of());
+  }
+
   /**
    * Build an AaptStep that can be used to generate a shell command. Should only be used for
    * checking the generated command, since it does not refer to useful directories (so it can't be
@@ -52,15 +65,16 @@ public class AaptStepTest {
       Path pathToGeneratedProguardConfig,
       boolean isCrunchFiles,
       boolean includesVectorDrawables,
-      ManifestEntries manifestEntries) {
+      ManifestEntries manifestEntries,
+      ImmutableList<String> additionalAaptParams) {
     return new AaptStep(
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder())),
+        new TestActionGraphBuilder().getSourcePathResolver(),
         AndroidPlatformTarget.of(
             "android",
             basePath.resolve("mock_android.jar"),
             Collections.emptyList(),
             () -> new SimpleTool("mock_aapt_bin"),
-            () -> new SimpleTool(""),
+            new ConstantToolProvider(new SimpleTool("")),
             Paths.get(""),
             Paths.get(""),
             Paths.get(""),
@@ -79,7 +93,8 @@ public class AaptStepTest {
         ImmutableList.of(),
         isCrunchFiles,
         includesVectorDrawables,
-        manifestEntries);
+        manifestEntries,
+        additionalAaptParams);
   }
 
   /**
@@ -200,5 +215,19 @@ public class AaptStepTest {
     ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
     assertFalse(command.contains("--error-on-failed-insert"));
+  }
+
+  @Test
+  public void shouldEmitAdditionalAaptParams() {
+    AaptStep aaptStep =
+        buildAaptStep(
+            proguardConfig,
+            false,
+            false,
+            ManifestEntries.empty(),
+            ImmutableList.of("--shared-lib"));
+    ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
+    ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
+    assertTrue(command.contains("--shared-lib"));
   }
 }

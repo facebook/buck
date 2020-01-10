@@ -1,0 +1,15 @@
+java_library(
+    name = "knowntypes",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/core/starlark/rule/names:names",
+        "//third-party/java/jsr:jsr305",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/description:description",
+        "//src/com/facebook/buck/core/rules/knowntypes:knowntypes",
+        "//src/com/facebook/buck/core/starlark/rule:rule",
+        "//third-party/java/bazel:bazel",
+    ],
+)

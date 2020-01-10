@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -23,23 +23,26 @@ import com.facebook.buck.android.dalvik.ZipSplitter.DexSplitStrategy;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
-import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.util.Optionals;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
@@ -47,7 +50,7 @@ import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.rules.macros.StringWithMacros;
-import com.facebook.buck.util.Optionals;
+import com.facebook.buck.step.fs.XzStep;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -55,7 +58,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.OptionalInt;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import org.immutables.value.Value;
 
@@ -76,7 +79,7 @@ public class AndroidBundleDescription
   private final JavaBuckConfig javaBuckConfig;
   private final AndroidBuckConfig androidBuckConfig;
   private final JavacFactory javacFactory;
-  private final Supplier<JavaOptions> javaOptions;
+  private final Function<TargetConfiguration, JavaOptions> javaOptions;
   private final ProGuardConfig proGuardConfig;
   private final CxxBuckConfig cxxBuckConfig;
   private final DxConfig dxConfig;
@@ -149,8 +152,8 @@ public class AndroidBundleDescription
 
     DexSplitMode dexSplitMode = createDexSplitMode(args, exopackageModes);
 
-    ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex =
-        NoDxArgsHelper.findRulesToExcludeFromDex(graphBuilder, buildTarget, args.getNoDx());
+    Supplier<ImmutableSet<JavaLibrary>> rulesToExcludeFromDex =
+        NoDxArgsHelper.createSupplierForRulesToExclude(graphBuilder, buildTarget, args.getNoDx());
 
     CellPathResolver cellRoots = context.getCellPathResolver();
 
@@ -158,16 +161,20 @@ public class AndroidBundleDescription
 
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
+    // TODO(nga): obtain proper dependency stack
+    DependencyStack dependencyStack = DependencyStack.top(buildTarget);
     AndroidBinaryGraphEnhancer graphEnhancer =
         androidBinaryGraphEnhancerFactory.create(
             toolchainProvider,
             javaBuckConfig,
+            androidBuckConfig,
             cxxBuckConfig,
             dxConfig,
             proGuardConfig,
             cellRoots,
             context.getTargetGraph(),
             buildTarget,
+            dependencyStack,
             projectFilesystem,
             params,
             graphBuilder,
@@ -176,9 +183,10 @@ public class AndroidBundleDescription
             exopackageModes,
             rulesToExcludeFromDex,
             args,
-            true,
-            javaOptions.get(),
-            javacFactory);
+            /* useProtoFormat */ true,
+            javaOptions.apply(buildTarget.getTargetConfiguration()),
+            javacFactory,
+            context.getConfigurationRuleRegistry());
     AndroidBundle androidBundle =
         androidBundleFactory.create(
             toolchainProvider,
@@ -191,9 +199,8 @@ public class AndroidBundleDescription
             dexSplitMode,
             exopackageModes,
             resourceFilter,
-            rulesToExcludeFromDex,
             args,
-            javaOptions.get());
+            javaOptions.apply(buildTarget.getTargetConfiguration()));
     // The exo installer is always added to the index so that the action graph is the same
     // between build and install calls.
     new AndroidBinaryInstallGraphEnhancer(
@@ -216,6 +223,7 @@ public class AndroidBundleDescription
         dexSplitStrategy,
         args.getDexCompression().orElse(defaultDexStore),
         args.getLinearAllocHardLimit(),
+        args.getDexGroupLibLimit(),
         args.getPrimaryDexPatterns(),
         args.getPrimaryDexClassesFile(),
         args.getPrimaryDexScenarioFile(),
@@ -226,7 +234,8 @@ public class AndroidBundleDescription
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
     for (Flavor flavor : flavors) {
       if (!FLAVORS.contains(flavor)) {
         return false;
@@ -242,22 +251,27 @@ public class AndroidBundleDescription
       AbstractAndroidBundleDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, null);
-    javaOptions.get().addParseTimeDeps(targetGraphOnlyDepsBuilder);
+    javacFactory.addParseTimeDeps(
+        targetGraphOnlyDepsBuilder, null, buildTarget.getTargetConfiguration());
+    javaOptions
+        .apply(buildTarget.getTargetConfiguration())
+        .addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
 
-    Optionals.addIfPresent(proGuardConfig.getProguardTarget(), extraDepsBuilder);
+    Optionals.addIfPresent(
+        proGuardConfig.getProguardTarget(buildTarget.getTargetConfiguration()), extraDepsBuilder);
 
     if (constructorArg.getRedex()) {
       // If specified, this option may point to either a BuildTarget or a file.
-      Optional<BuildTarget> redexTarget = androidBuckConfig.getRedexTarget();
+      Optional<BuildTarget> redexTarget =
+          androidBuckConfig.getRedexTarget(buildTarget.getTargetConfiguration());
       redexTarget.ifPresent(extraDepsBuilder::add);
     }
   }
 
   @BuckStyleImmutable
-  @Value.Immutable
+  @Value.Immutable(copy = true)
   abstract static class AbstractAndroidBundleDescriptionArg
-      implements CommonDescriptionArg,
+      implements BuildRuleArg,
           HasDeclaredDeps,
           HasExopackageArgs,
           HasTests,
@@ -291,6 +305,8 @@ public class AndroidBundleDescription
 
     abstract Optional<SourcePath> getSecondaryDexTailClassesFile();
 
+    abstract Optional<SourcePath> getBundleConfigFile();
+
     abstract Optional<SourcePath> getAndroidAppModularityResult();
 
     @Value.Default
@@ -298,12 +314,20 @@ public class AndroidBundleDescription
       return DexSplitMode.DEFAULT_LINEAR_ALLOC_HARD_LIMIT;
     }
 
+    @Value.Default
+    int getDexGroupLibLimit() {
+      return DexSplitMode.DEFAULT_DEX_GROUP_LIB_LIMIT;
+    }
+
     abstract List<String> getResourceFilter();
 
     @Value.NaturalOrder
     abstract ImmutableSortedSet<BuildTarget> getPreprocessJavaClassesDeps();
 
-    abstract OptionalInt getXzCompressionLevel();
+    @Value.Default
+    int getXzCompressionLevel() {
+      return XzStep.DEFAULT_COMPRESSION_LEVEL;
+    }
 
     @Value.Default
     boolean isPackageAssetLibraries() {

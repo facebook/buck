@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.keys;
@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.log.LogFormatter;
+import com.facebook.buck.testutil.PlatformUtils;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -30,6 +31,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -76,19 +78,20 @@ public class DiffRuleKeysScriptIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "diff_rulekeys_script", tmp);
     workspace.setUp();
 
+    String oldHash = getFileSha1Hash(workspace, "JavaLib1.java");
     invokeBuckCommand(workspace, "buck-0.log");
     workspace.writeContentsToPath("public class JavaLib1 { /* change */ }", "JavaLib1.java");
+    String newHash = getFileSha1Hash(workspace, "JavaLib1.java");
     invokeBuckCommand(workspace, "buck-1.log");
 
-    String expectedResult =
-        Joiner.on('\n')
-            .join(
-                "Change details for [//:java_lib_1->jarBuildStepsFactory]",
-                "  (srcs):",
-                "    -[path(JavaLib1.java:fc76b6367ddddc08ff2fb46d8f22676c09c95be5)]",
-                "    +[path(JavaLib1.java:7d82c86f964af479abefa21da1f19b1030649314)]",
-                "");
-    assertThat(runRuleKeyDiffer(workspace), Matchers.equalTo(expectedResult));
+    assertThat(
+        runRuleKeyDiffer(workspace),
+        Matchers.stringContainsInOrder(
+            "Change details for [//:java_lib_1",
+            "->jarBuildStepsFactory]",
+            "  (srcs):",
+            String.format("    -[path(JavaLib1.java:%s)]", oldHash),
+            String.format("    +[path(JavaLib1.java:%s)]", newHash)));
   }
 
   @Test
@@ -99,19 +102,19 @@ public class DiffRuleKeysScriptIntegrationTest {
 
     invokeBuckCommand(workspace, "buck-0.log");
     workspace.writeContentsToPath("public class JavaLib3 { /* change */ }", "JavaLib3.java");
+    String newHash = getFileSha1Hash(workspace, "JavaLib3.java");
     invokeBuckCommand(workspace, "buck-1.log");
 
-    String expectedResult =
-        Joiner.on('\n')
-            .join(
-                "Change details for [//:java_lib_2->jarBuildStepsFactory]",
-                "  (srcs):",
-                "    -[<missing>]",
-                "    -[container(LIST,len=1)]",
-                "    +[container(LIST,len=2)]",
-                "    +[path(JavaLib3.java:3396c5e71e9fad8e8f177af9d842f1b9b67bfb46)]",
-                "");
-    assertThat(runRuleKeyDiffer(workspace), Matchers.equalTo(expectedResult));
+    assertThat(
+        runRuleKeyDiffer(workspace),
+        Matchers.stringContainsInOrder(
+            "Change details for [//:java_lib_2",
+            "->jarBuildStepsFactory]",
+            "  (srcs):",
+            "    -[<missing>]",
+            "    -[container(LIST,len=1)]",
+            "    +[container(LIST,len=2)]",
+            String.format("    +[path(JavaLib3.java:%s)]", newHash)));
   }
 
   @Test
@@ -125,19 +128,17 @@ public class DiffRuleKeysScriptIntegrationTest {
     writeBuckConfig(workspace, "7");
     invokeBuckCommand(workspace, "buck-1.log");
 
-    String expectedResult =
-        Joiner.on('\n')
-            .join(
-                "Change details for "
-                    + "[//:java_lib_2->jarBuildStepsFactory->configuredCompiler->javacOptions]",
-                "  (sourceLevel):",
-                "    -[string(\"6\")]",
-                "    +[string(\"7\")]",
-                "  (targetLevel):",
-                "    -[string(\"6\")]",
-                "    +[string(\"7\")]",
-                "");
-    assertThat(runRuleKeyDiffer(workspace), Matchers.equalTo(expectedResult));
+    assertThat(
+        runRuleKeyDiffer(workspace),
+        Matchers.stringContainsInOrder(
+            "Change details for " + "[//:java_lib_2->",
+            "->languageLevelOptions]",
+            "  (sourceLevel):",
+            "    -[string(\"6\")]",
+            "    +[string(\"7\")]",
+            "  (targetLevel):",
+            "    -[string(\"6\")]",
+            "    +[string(\"7\")]"));
   }
 
   @Test
@@ -156,7 +157,10 @@ public class DiffRuleKeysScriptIntegrationTest {
         runRuleKeyDiffer(workspace, "//cxx:cxx_bin"),
         Matchers.stringContainsInOrder(
             "Change details for [//cxx:cxx_bin#compile-a.cpp.", /* hash */
-            ",default->preprocessDelegate->preprocessorFlags->includes]",
+            ",default",
+            // We don't want this test to be sensitive to the specific paths through objects, but we
+            // do want to ensure that field names are appearing.
+            "->includes]",
             "(cxx/a.h):",
             "-[path(cxx/a.h:", /*hash*/
             ")]",
@@ -202,7 +206,8 @@ public class DiffRuleKeysScriptIntegrationTest {
             "    +[\"//:java_lib_3\"@ruleKey(sha1=", /* some rulekey */
             ")]",
             "    +[\"//:java_lib_3#class-abi\"@ruleKey(sha1=", /* some rulekey */
-            "Change details for [//:java_lib_2->jarBuildStepsFactory->abiClasspath]",
+            "Change details for [//:java_lib_2",
+            "->abiClasspath]",
             "  (zipFiles):",
             "    -[<missing>]",
             "    +[\"//:java_lib_3#class-abi\"@ruleKey(sha1=", /* some rulekey */
@@ -217,27 +222,39 @@ public class DiffRuleKeysScriptIntegrationTest {
     workspace.setUp();
 
     invokeBuckCommand(workspace, "buck-0.log");
+    String oldHash1 = getFileSha1Hash(workspace, "JavaLib1.java");
     workspace.writeContentsToPath("public class JavaLib1 { /* change */ }", "JavaLib1.java");
     workspace.writeContentsToPath("public class JavaLib3 { /* change */ }", "JavaLib3.java");
+    String newHash1 = getFileSha1Hash(workspace, "JavaLib1.java");
+    String newHash3 = getFileSha1Hash(workspace, "JavaLib3.java");
     invokeBuckCommand(workspace, "buck-1.log");
 
+    String output = runRuleKeyDiffer(workspace, "");
     assertThat(
-        runRuleKeyDiffer(workspace, ""),
-        // TODO: The fact that it shows only the rule key difference for jarBuildStepsFactory
-        // rather than the change in the srcs property of that class is a bug in the differ.
+        output,
         Matchers.stringContainsInOrder(
-            "Change details for [//:java_lib_2->jarBuildStepsFactory]\n",
-            "  (srcs):\n",
-            "    -[<missing>]\n",
-            "    -[container(LIST,len=1)]\n",
-            "    +[container(LIST,len=2)]\n",
-            "    +[path(JavaLib3.java:3396c5e71e9fad8e8f177af9d842f1b9b67bfb46)]\n",
-            "Change details for [//:java_lib_1->jarBuildStepsFactory]\n",
-            "  (srcs):\n",
-            "    -[path(JavaLib1.java:fc76b6367ddddc08ff2fb46d8f22676c09c95be5)]\n",
-            "    +[path(JavaLib1.java:7d82c86f964af479abefa21da1f19b1030649314)]\n",
-            "Change details for [//:java_lib_all]\n",
-            "  (jarBuildStepsFactory):\n",
+            "Change details for [//:java_lib_2->buildableForRuleKey->jarBuildStepsFactory]",
+            "  (srcs):",
+            "    -[<missing>]",
+            "    -[container(LIST,len=1)]",
+            "    +[container(LIST,len=2)]",
+            String.format("    +[path(JavaLib3.java:%s)]", newHash3)));
+
+    assertThat(
+        output,
+        Matchers.stringContainsInOrder(
+            "Change details for [//:java_lib_1->buildableForRuleKey->jarBuildStepsFactory]",
+            "  (srcs):",
+            String.format("    -[path(JavaLib1.java:%s)]", oldHash1),
+            String.format("    +[path(JavaLib1.java:%s)]", newHash1)));
+
+    assertThat(
+        output,
+        Matchers.stringContainsInOrder(
+            // TODO: The fact that it shows only the rule key difference for jarBuildStepsFactory
+            // rather than the change in the srcs property of that class is a bug in the differ.
+            "Change details for [//:java_lib_all->buildableForRuleKey]",
+            "  (jarBuildStepsFactory):",
             "    -[ruleKey(sha1=" /* some rulekey */,
             "    +[ruleKey(sha1=" /* some other rulekey */));
   }
@@ -274,10 +291,9 @@ public class DiffRuleKeysScriptIntegrationTest {
 
   private String runRuleKeyDiffer(ProjectWorkspace workspace, String target)
       throws IOException, InterruptedException {
-    String cmd = Platform.detect() == Platform.WINDOWS ? "python" : "python2.7";
     ProcessExecutor.Result result =
         workspace.runCommand(
-            cmd,
+            PlatformUtils.getForPlatform().getPython2Executable(),
             Paths.get("scripts", "diff_rulekeys.py").toAbsolutePath().toString(),
             tmp.getRoot().resolve("buck-0.log").toString(),
             tmp.getRoot().resolve("buck-1.log").toString(),
@@ -285,7 +301,7 @@ public class DiffRuleKeysScriptIntegrationTest {
     assertThat(result.getStderr(), Matchers.equalTo(Optional.of("")));
     assertThat(result.getExitCode(), Matchers.is(0));
     String stdout = result.getStdout().get();
-    String comparingRuleString = "Comparing rules...\n";
+    String comparingRuleString = "Comparing rules..." + System.lineSeparator();
     int i = stdout.indexOf(comparingRuleString);
     Preconditions.checkState(i != -1);
     return stdout.substring(i + comparingRuleString.length());
@@ -311,5 +327,10 @@ public class DiffRuleKeysScriptIntegrationTest {
 
   private Path getLogFilePath() {
     return tmp.getRoot().resolve("buck.test.log");
+  }
+
+  private String getFileSha1Hash(ProjectWorkspace projectWorkspace, String path)
+      throws IOException {
+    return Hashing.sha1().hashString(projectWorkspace.getFileContents(path), UTF_8).toString();
   }
 }

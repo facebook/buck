@@ -28,13 +28,86 @@ android_binary(
     ],
 )
 
+android_binary(
+    name = "xzs_multiple_dex",
+    dex_compression = "xzs",
+    keystore = "//keystores:debug",
+    linear_alloc_hard_limit = 3600,
+    manifest = "SimpleManifest.xml",
+    primary_dex_patterns = [],
+    use_split_dex = True,
+    deps = [
+        ":many_libs",
+    ],
+)
+
+def gen_src(count):
+    for i in range(1, count):
+        data = "".join(["%d" % x for x in range(1,10000)]),
+        genrule(
+            name = "generated_class_%d" % i,
+            out = "Class%d.java" % i,
+            bash = "echo -e 'package gen;\npublic class Class%d { static String data = \"%s\"; }' > $OUT" % (i, data)
+        )
+        android_library(
+            name = "generated_lib_%d" % i,
+            srcs = [":generated_class_%d" % i]
+        )
+
+    return [":generated_lib_%d" % x for x in range(1, count)]
+
+android_library(
+    name = "many_libs",
+    deps = gen_src(120),
+)
+
+android_binary(
+    name = "dex_groups",
+    dex_compression = "jar",
+    dex_group_lib_limit = 1,
+    keystore = "//keystores:debug",
+    linear_alloc_hard_limit = 350,
+    manifest = "SimpleManifest.xml",
+    primary_dex_patterns = [],
+    use_split_dex = True,
+    deps = [
+        ":many_libs",
+    ],
+)
+
+android_binary(
+    name = "raw_dex_over_100",
+    dex_compression = "raw",
+    dex_group_lib_limit = 1,
+    keystore = "//keystores:debug",
+    linear_alloc_hard_limit = 350,
+    manifest = "SimpleManifest.xml",
+    primary_dex_patterns = [],
+    use_split_dex = True,
+    deps = [
+        ":many_libs",
+    ],
+)
+
 genrule(
-    name = "disassemble_app_with_d8",
-    out = "disassembled_d8.smali",
+    name = "disassemble_app_with_d8_for_canary",
+    out = "disassembled_d8_canary.smali",
     bash = " && ".join([
         "unzip -p $(location :app_with_d8) classes2.dex > $TMP/classes2.dex",
         "$(exe //third-party/smali:baksmali) d -o $TMP $TMP/classes2.dex",
         "cat $TMP/secondary/*/Canary.smali > $OUT",
+    ]),
+)
+
+genrule(
+    name = "disassemble_app_with_d8_for_jumbo_string",
+    out = "disassembled_d8_jumbo_string.smali",
+    bash = " && ".join([
+        "mkdir $TMP/dexes",
+        "mkdir $TMP/smali",
+        "unzip -j $(location :app_with_d8) *.dex -d $TMP/dexes",
+        "find $TMP/dexes/ -name *.dex -exec $(exe //third-party/smali:baksmali) d -o $TMP/smali {} \;",
+        "find $TMP/smali/ -name *.smali -exec cat {} \; > $OUT",
     ]),
 )
 
@@ -49,6 +122,25 @@ android_binary(
     primary_dex_patterns = [
         "/MyApplication^",
     ],
+    use_split_dex = True,
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//java/com/sample/small:small_with_no_resource_deps",
+        "//res/com/sample/base:base",
+    ],
+)
+
+android_binary(
+    name = "app_modular_debug_dex_groups",
+    application_module_configs = {
+        "small_with_no_resource_deps": ["//java/com/sample/small:small_with_no_resource_deps"],
+    },
+    dex_compression = "jar",
+    dex_group_lib_limit = 1,
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    package_type = "debug",
     use_split_dex = True,
     deps = [
         "//java/com/sample/app:app",
@@ -128,6 +220,32 @@ android_binary(
     name = "app_modular_manifest_debug_blacklist_shared_multiple",
     application_module_blacklist = [
         "//java/com/sample/shared:shared_with_no_resource_deps",
+    ],
+    application_module_configs = {
+        "small_with_shared_with_no_resource_deps": ["//java/com/sample/small_with_shared:small_with_shared_with_no_resource_deps"],
+        "small_with_shared2_with_no_resource_deps": ["//java/com/sample/small_with_shared2:small_with_shared2_with_no_resource_deps"],
+    },
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    module_manifest_skeleton = "ModuleManifest.xml",
+    package_type = "debug",
+    primary_dex_patterns = [
+        "/MyApplication^",
+    ],
+    use_split_dex = True,
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//java/com/sample/small_with_shared:small_with_shared_with_no_resource_deps",
+        "//java/com/sample/small_with_shared2:small_with_shared2_with_no_resource_deps",
+        "//res/com/sample/base:base",
+    ],
+)
+
+android_binary(
+    name = "app_modular_manifest_debug_blacklist_query_shared_multiple",
+    application_module_blacklist = [
+        "filter(shared_with_no_resource_deps, deps(//java/com/sample/small_with_shared:small_with_shared_with_no_resource_deps))",
     ],
     application_module_configs = {
         "small_with_shared_with_no_resource_deps": ["//java/com/sample/small_with_shared:small_with_shared_with_no_resource_deps"],
@@ -325,6 +443,61 @@ android_binary(
     ],
 )
 
+android_binary(
+    name = "app_with_resources_and_d8",
+    dex_compression = "jar",
+    dex_tool = "d8",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    primary_dex_patterns = [
+        "/MyApplication^",
+        "/R$",
+    ],
+    use_split_dex = True,
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//native/cxx:lib",
+    ],
+)
+
+android_binary(
+    name = "dex_groups_r_dot_secondary_dex",
+    dex_compression = "jar",
+    dex_group_lib_limit = 1,
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    primary_dex_patterns = [
+        "/MyApplication^",
+    ],
+    use_split_dex = True,
+    allow_r_dot_java_in_secondary_dex = True,
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//java/com/sample2:lib",
+    ],
+)
+
+android_binary(
+    name = "app_with_resources_and_groups",
+    dex_compression = "jar",
+    dex_group_lib_limit = 3,
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    primary_dex_patterns = [
+        "/MyApplication^",
+        "/R$",
+    ],
+    use_split_dex = True,
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//java/com/sample2:lib",
+        "//native/cxx:lib",
+    ],
+)
+
 genrule(
     name = "disassemble_app_r_dot_java",
     out = "all_r_fields.smali",
@@ -481,6 +654,21 @@ android_app_modularity(
 )
 
 android_app_modularity(
+    name = "modularity-metadata-no-classes",
+    application_module_configs = {
+        "small_with_no_resource_deps": ["//java/com/sample/small:small_with_no_resource_deps"],
+    },
+    no_dx = [],
+    should_include_classes = False,
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//java/com/sample/small:small_with_no_resource_deps",
+        "//res/com/sample/base:base",
+    ],
+)
+
+android_app_modularity(
     name = "modularity-metadata-inner-class",
     application_module_configs = {
         "small_inner_class_with_no_resource_deps": ["//java/com/sample/small_inner_class:small_inner_class_with_no_resource_deps"],
@@ -541,6 +729,20 @@ android_app_modularity(
         "//java/com/sample/lib:lib",
         "//java/com/sample/small_with_shared:small_with_shared_with_no_resource_deps",
         "//java/com/sample/small_with_shared2:small_with_shared2_with_no_resource_deps",
+        "//res/com/sample/base:base",
+    ],
+)
+
+android_app_modularity(
+    name = "modularity-metadata-with-native-libraries",
+    application_module_configs = {
+        "native_only_module": ["//native/cxx:lib-shared"],
+    },
+    should_include_libraries = True,
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//native/cxx:lib-shared",
         "//res/com/sample/base:base",
     ],
 )

@@ -1,36 +1,40 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.description.arg.DataTransferObject;
+import com.facebook.buck.core.linkgroup.CxxLinkGroupMapping;
+import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPattern;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
-import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcher;
+import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcherParser;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.select.SelectorList;
-import com.facebook.buck.core.select.impl.SelectorFactory;
-import com.facebook.buck.core.select.impl.SelectorListFactory;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.macros.AbsoluteOutputMacro;
 import com.facebook.buck.rules.macros.CcFlagsMacro;
 import com.facebook.buck.rules.macros.CcMacro;
 import com.facebook.buck.rules.macros.ClasspathAbiMacro;
@@ -41,6 +45,7 @@ import com.facebook.buck.rules.macros.CxxMacro;
 import com.facebook.buck.rules.macros.CxxppFlagsMacro;
 import com.facebook.buck.rules.macros.EnvMacro;
 import com.facebook.buck.rules.macros.ExecutableMacro;
+import com.facebook.buck.rules.macros.ExecutableTargetMacro;
 import com.facebook.buck.rules.macros.LdMacro;
 import com.facebook.buck.rules.macros.LdflagsSharedFilterMacro;
 import com.facebook.buck.rules.macros.LdflagsSharedMacro;
@@ -49,6 +54,7 @@ import com.facebook.buck.rules.macros.LdflagsStaticMacro;
 import com.facebook.buck.rules.macros.LdflagsStaticPicFilterMacro;
 import com.facebook.buck.rules.macros.LdflagsStaticPicMacro;
 import com.facebook.buck.rules.macros.LocationMacro;
+import com.facebook.buck.rules.macros.LocationPlatformMacro;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MavenCoordinatesMacro;
 import com.facebook.buck.rules.macros.OutputMacro;
@@ -57,11 +63,13 @@ import com.facebook.buck.rules.macros.QueryOutputsMacro;
 import com.facebook.buck.rules.macros.QueryPathsMacro;
 import com.facebook.buck.rules.macros.QueryTargetsAndOutputsMacro;
 import com.facebook.buck.rules.macros.QueryTargetsMacro;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.WorkerMacro;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.util.Types;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -73,7 +81,6 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -83,75 +90,214 @@ import java.util.regex.Pattern;
  */
 public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
 
-  private final UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory =
-      new ParsingUnconfiguredBuildTargetFactory();
-  private final PathTypeCoercer.PathExistenceVerificationMode pathExistenceVerificationMode;
+  private final CoercedTypeCache coercedTypeCache = new CoercedTypeCache(this);
 
+  private final TypeCoercer<UnconfiguredBuildTargetView> unconfiguredBuildTargetTypeCoercer;
   private final TypeCoercer<Pattern> patternTypeCoercer = new PatternTypeCoercer();
 
   private final TypeCoercer<?>[] nonParameterizedTypeCoercers;
+  private final ParsingUnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
 
   public DefaultTypeCoercerFactory() {
-    this(PathTypeCoercer.PathExistenceVerificationMode.VERIFY);
-  }
-
-  public DefaultTypeCoercerFactory(
-      PathTypeCoercer.PathExistenceVerificationMode pathExistenceVerificationMode) {
-    this.pathExistenceVerificationMode = pathExistenceVerificationMode;
     TypeCoercer<String> stringTypeCoercer = new StringTypeCoercer();
     TypeCoercer<Flavor> flavorTypeCoercer = new FlavorTypeCoercer();
     // This has no implementation, but is here so that constructor succeeds so that it can be
     // queried. This is only used for the visibility field, which is not actually handled by the
     // coercer.
-    TypeCoercer<BuildTargetPattern> buildTargetPatternTypeCoercer =
-        new IdentityTypeCoercer<BuildTargetPattern>(BuildTargetPattern.class) {
+    TypeCoercer<BuildTargetMatcher> buildTargetPatternTypeCoercer =
+        new IdentityTypeCoercer<BuildTargetMatcher>(BuildTargetMatcher.class) {
           @Override
-          public BuildTargetPattern coerce(
+          public BuildTargetMatcher coerce(
               CellPathResolver cellRoots,
               ProjectFilesystem filesystem,
-              Path pathRelativeToProjectRoot,
+              ForwardRelativePath pathRelativeToProjectRoot,
               TargetConfiguration targetConfiguration,
+              TargetConfiguration hostConfiguration,
               Object object) {
             // This is only actually used directly by ConstructorArgMarshaller, for parsing the
             // groups list. It's also queried (but not actually used) when Descriptions declare
             // deps fields.
             // TODO(csarbora): make this work for all types of BuildTargetPatterns
             // probably differentiate them by inheritance
-            return BuildTargetPatternParser.forVisibilityArgument()
+            return BuildTargetMatcherParser.forVisibilityArgument()
                 .parse(cellRoots, (String) object);
           }
         };
+    unconfiguredBuildTargetFactory = new ParsingUnconfiguredBuildTargetViewFactory();
+    unconfiguredBuildTargetTypeCoercer =
+        new UnconfiguredBuildTargetTypeCoercer(unconfiguredBuildTargetFactory);
     TypeCoercer<BuildTarget> buildTargetTypeCoercer =
-        new BuildTargetTypeCoercer(unconfiguredBuildTargetFactory);
+        new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer);
+    TypeCoercer<BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer =
+        new BuildTargetWithOutputsTypeCoercer(buildTargetTypeCoercer);
     PathTypeCoercer pathTypeCoercer = new PathTypeCoercer();
     TypeCoercer<SourcePath> sourcePathTypeCoercer =
-        new SourcePathTypeCoercer(buildTargetTypeCoercer, pathTypeCoercer);
+        new SourcePathTypeCoercer(buildTargetWithOutputsTypeCoercer, pathTypeCoercer);
     TypeCoercer<SourceWithFlags> sourceWithFlagsTypeCoercer =
         new SourceWithFlagsTypeCoercer(
             sourcePathTypeCoercer, new ListTypeCoercer<>(stringTypeCoercer));
     TypeCoercer<Integer> intTypeCoercer = new NumberTypeCoercer<>(Integer.class);
+    TypeCoercer<Double> doubleTypeCoercer = new NumberTypeCoercer<>(Double.class);
+    TypeCoercer<Boolean> booleanTypeCoercer = new IdentityTypeCoercer<>(Boolean.class);
     TypeCoercer<NeededCoverageSpec> neededCoverageSpecTypeCoercer =
         new NeededCoverageSpecTypeCoercer(
             intTypeCoercer, buildTargetTypeCoercer, stringTypeCoercer);
     TypeCoercer<Query> queryTypeCoercer = new QueryCoercer(this, unconfiguredBuildTargetFactory);
     TypeCoercer<ImmutableList<BuildTarget>> buildTargetsTypeCoercer =
         new ListTypeCoercer<>(buildTargetTypeCoercer);
+    TypeCoercer<CxxLinkGroupMappingTarget.Traversal> linkGroupMappingTraversalCoercer =
+        new CxxLinkGroupMappingTargetTraversalCoercer();
+    TypeCoercer<CxxLinkGroupMappingTarget> linkGroupMappingTargetCoercer =
+        new CxxLinkGroupMappingTargetCoercer(
+            buildTargetTypeCoercer, linkGroupMappingTraversalCoercer, patternTypeCoercer);
+    TypeCoercer<ImmutableList<CxxLinkGroupMappingTarget>> linkGroupMappingTargetsCoercer =
+        new ListTypeCoercer<>(linkGroupMappingTargetCoercer);
+    TypeCoercer<CxxLinkGroupMapping> linkGroupMappingCoercer =
+        new CxxLinkGroupMappingCoercer(stringTypeCoercer, linkGroupMappingTargetsCoercer);
+    TypeCoercer<StringWithMacros> stringWithMacrosCoercer =
+        StringWithMacrosTypeCoercer.from(
+            ImmutableMap.<String, Class<? extends Macro>>builder()
+                .put("classpath", ClasspathMacro.class)
+                .put("classpath_abi", ClasspathAbiMacro.class)
+                .put("exe", ExecutableMacro.class)
+                .put("exe_target", ExecutableTargetMacro.class)
+                .put("env", EnvMacro.class)
+                .put("location", LocationMacro.class)
+                .put("location-platform", LocationPlatformMacro.class)
+                .put("maven_coords", MavenCoordinatesMacro.class)
+                .put("output", OutputMacro.class)
+                .put("abs_output", AbsoluteOutputMacro.class)
+                .put("query_targets", QueryTargetsMacro.class)
+                .put("query_outputs", QueryOutputsMacro.class)
+                .put("query_paths", QueryPathsMacro.class)
+                .put("query_targets_and_outputs", QueryTargetsAndOutputsMacro.class)
+                .put("worker", WorkerMacro.class)
+                .put("cc", CcMacro.class)
+                .put("cflags", CcFlagsMacro.class)
+                .put("cppflags", CppFlagsMacro.class)
+                .put("cxx", CxxMacro.class)
+                .put("cxxflags", CxxFlagsMacro.class)
+                .put("cxxppflags", CxxppFlagsMacro.class)
+                .put("ld", LdMacro.class)
+                .put("ldflags-shared", LdflagsSharedMacro.class)
+                .put("ldflags-shared-filter", LdflagsSharedFilterMacro.class)
+                .put("ldflags-static", LdflagsStaticMacro.class)
+                .put("ldflags-static-filter", LdflagsStaticFilterMacro.class)
+                .put("ldflags-static-pic", LdflagsStaticPicMacro.class)
+                .put("ldflags-static-pic-filter", LdflagsStaticPicFilterMacro.class)
+                .put("platform-name", PlatformNameMacro.class)
+                .build(),
+            ImmutableList.of(
+                new BuildTargetMacroTypeCoercer<>(
+                    buildTargetTypeCoercer,
+                    ClasspathMacro.class,
+                    BuildTargetMacroTypeCoercer.TargetOrHost.TARGET,
+                    ClasspathMacro::of),
+                new BuildTargetMacroTypeCoercer<>(
+                    buildTargetTypeCoercer,
+                    ClasspathAbiMacro.class,
+                    BuildTargetMacroTypeCoercer.TargetOrHost.TARGET,
+                    ClasspathAbiMacro::of),
+                new BuildTargetMacroTypeCoercer<>(
+                    buildTargetTypeCoercer,
+                    ExecutableMacro.class,
+                    // TODO(nga): switch to host
+                    BuildTargetMacroTypeCoercer.TargetOrHost.TARGET,
+                    ExecutableMacro::of),
+                new BuildTargetMacroTypeCoercer<>(
+                    buildTargetTypeCoercer,
+                    ExecutableTargetMacro.class,
+                    BuildTargetMacroTypeCoercer.TargetOrHost.TARGET,
+                    ExecutableTargetMacro::of),
+                new EnvMacroTypeCoercer(),
+                new LocationMacroTypeCoercer(buildTargetTypeCoercer),
+                new LocationPlatformMacroTypeCoercer(buildTargetTypeCoercer),
+                new BuildTargetMacroTypeCoercer<>(
+                    buildTargetTypeCoercer,
+                    MavenCoordinatesMacro.class,
+                    BuildTargetMacroTypeCoercer.TargetOrHost.TARGET,
+                    MavenCoordinatesMacro::of),
+                new OutputMacroTypeCoercer(),
+                new AbsoluteOutputMacroTypeCoercer(),
+                new QueryMacroTypeCoercer<>(
+                    queryTypeCoercer, QueryTargetsMacro.class, QueryTargetsMacro::of),
+                new QueryMacroTypeCoercer<>(
+                    queryTypeCoercer, QueryOutputsMacro.class, QueryOutputsMacro::of),
+                new QueryMacroTypeCoercer<>(
+                    queryTypeCoercer, QueryPathsMacro.class, QueryPathsMacro::of),
+                new QueryTargetsAndOutputsMacroTypeCoercer(queryTypeCoercer),
+                new BuildTargetMacroTypeCoercer<>(
+                    buildTargetTypeCoercer,
+                    WorkerMacro.class,
+                    BuildTargetMacroTypeCoercer.TargetOrHost.TARGET,
+                    WorkerMacro::of),
+                new ZeroArgMacroTypeCoercer<>(CcMacro.class, CcMacro.of()),
+                new ZeroArgMacroTypeCoercer<>(CcFlagsMacro.class, CcFlagsMacro.of()),
+                new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
+                    Optional.empty(),
+                    buildTargetsTypeCoercer,
+                    CppFlagsMacro.class,
+                    CppFlagsMacro::of),
+                new ZeroArgMacroTypeCoercer<>(CxxMacro.class, CxxMacro.of()),
+                new ZeroArgMacroTypeCoercer<>(CxxFlagsMacro.class, CxxFlagsMacro.of()),
+                new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
+                    Optional.empty(),
+                    buildTargetsTypeCoercer,
+                    CxxppFlagsMacro.class,
+                    CxxppFlagsMacro::of),
+                new ZeroArgMacroTypeCoercer<>(LdMacro.class, LdMacro.of()),
+                new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
+                    Optional.empty(),
+                    buildTargetsTypeCoercer,
+                    LdflagsSharedMacro.class,
+                    LdflagsSharedMacro::of),
+                new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
+                    Optional.of(patternTypeCoercer),
+                    buildTargetsTypeCoercer,
+                    LdflagsSharedFilterMacro.class,
+                    LdflagsSharedFilterMacro::of),
+                new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
+                    Optional.empty(),
+                    buildTargetsTypeCoercer,
+                    LdflagsStaticMacro.class,
+                    LdflagsStaticMacro::of),
+                new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
+                    Optional.of(patternTypeCoercer),
+                    buildTargetsTypeCoercer,
+                    LdflagsStaticFilterMacro.class,
+                    LdflagsStaticFilterMacro::of),
+                new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
+                    Optional.empty(),
+                    buildTargetsTypeCoercer,
+                    LdflagsStaticPicMacro.class,
+                    LdflagsStaticPicMacro::of),
+                new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
+                    Optional.of(patternTypeCoercer),
+                    buildTargetsTypeCoercer,
+                    LdflagsStaticPicFilterMacro.class,
+                    LdflagsStaticPicFilterMacro::of),
+                new ZeroArgMacroTypeCoercer<>(PlatformNameMacro.class, PlatformNameMacro.of())));
     nonParameterizedTypeCoercers =
         new TypeCoercer<?>[] {
           // special classes
           pathTypeCoercer,
           flavorTypeCoercer,
           sourcePathTypeCoercer,
+          unconfiguredBuildTargetTypeCoercer,
           buildTargetTypeCoercer,
+          buildTargetWithOutputsTypeCoercer,
           buildTargetPatternTypeCoercer,
+
+          // apple link groups
+          linkGroupMappingCoercer,
 
           // identity
           stringTypeCoercer,
-          new IdentityTypeCoercer<>(Boolean.class),
+          booleanTypeCoercer,
 
           // numeric
           intTypeCoercer,
-          new NumberTypeCoercer<>(Double.class),
+          doubleTypeCoercer,
           new NumberTypeCoercer<>(Float.class),
           new NumberTypeCoercer<>(Long.class),
           new NumberTypeCoercer<>(Short.class),
@@ -171,110 +317,14 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
           neededCoverageSpecTypeCoercer,
           new ConstraintTypeCoercer(),
           new VersionTypeCoercer(),
-          new OptionalIntTypeCoercer(),
           queryTypeCoercer,
-          StringWithMacrosTypeCoercer.from(
-              ImmutableMap.<String, Class<? extends Macro>>builder()
-                  .put("classpath", ClasspathMacro.class)
-                  .put("classpath_abi", ClasspathAbiMacro.class)
-                  .put("exe", ExecutableMacro.class)
-                  .put("env", EnvMacro.class)
-                  .put("location", LocationMacro.class)
-                  .put("maven_coords", MavenCoordinatesMacro.class)
-                  .put("output", OutputMacro.class)
-                  .put("query_targets", QueryTargetsMacro.class)
-                  .put("query_outputs", QueryOutputsMacro.class)
-                  .put("query_paths", QueryPathsMacro.class)
-                  .put("query_targets_and_outputs", QueryTargetsAndOutputsMacro.class)
-                  .put("worker", WorkerMacro.class)
-                  .put("cc", CcMacro.class)
-                  .put("cflags", CcFlagsMacro.class)
-                  .put("cppflags", CppFlagsMacro.class)
-                  .put("cxx", CxxMacro.class)
-                  .put("cxxflags", CxxFlagsMacro.class)
-                  .put("cxxppflags", CxxppFlagsMacro.class)
-                  .put("ld", LdMacro.class)
-                  .put("ldflags-shared", LdflagsSharedMacro.class)
-                  .put("ldflags-shared-filter", LdflagsSharedFilterMacro.class)
-                  .put("ldflags-static", LdflagsStaticMacro.class)
-                  .put("ldflags-static-filter", LdflagsStaticFilterMacro.class)
-                  .put("ldflags-static-pic", LdflagsStaticPicMacro.class)
-                  .put("ldflags-static-pic-filter", LdflagsStaticPicFilterMacro.class)
-                  .put("platform-name", PlatformNameMacro.class)
-                  .build(),
-              ImmutableList.of(
-                  new BuildTargetMacroTypeCoercer<>(
-                      buildTargetTypeCoercer, ClasspathMacro.class, ClasspathMacro::of),
-                  new BuildTargetMacroTypeCoercer<>(
-                      buildTargetTypeCoercer, ClasspathAbiMacro.class, ClasspathAbiMacro::of),
-                  new BuildTargetMacroTypeCoercer<>(
-                      buildTargetTypeCoercer, ExecutableMacro.class, ExecutableMacro::of),
-                  new EnvMacroTypeCoercer(),
-                  new LocationMacroTypeCoercer(buildTargetTypeCoercer),
-                  new BuildTargetMacroTypeCoercer<>(
-                      buildTargetTypeCoercer,
-                      MavenCoordinatesMacro.class,
-                      MavenCoordinatesMacro::of),
-                  new OutputMacroTypeCoercer(),
-                  new QueryMacroTypeCoercer<>(
-                      queryTypeCoercer, QueryTargetsMacro.class, QueryTargetsMacro::of),
-                  new QueryMacroTypeCoercer<>(
-                      queryTypeCoercer, QueryOutputsMacro.class, QueryOutputsMacro::of),
-                  new QueryMacroTypeCoercer<>(
-                      queryTypeCoercer, QueryPathsMacro.class, QueryPathsMacro::of),
-                  new QueryTargetsAndOutputsMacroTypeCoercer(queryTypeCoercer),
-                  new BuildTargetMacroTypeCoercer<>(
-                      buildTargetTypeCoercer, WorkerMacro.class, WorkerMacro::of),
-                  new ZeroArgMacroTypeCoercer<>(CcMacro.class, CcMacro.of()),
-                  new ZeroArgMacroTypeCoercer<>(CcFlagsMacro.class, CcFlagsMacro.of()),
-                  new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
-                      Optional.empty(),
-                      buildTargetsTypeCoercer,
-                      CppFlagsMacro.class,
-                      CppFlagsMacro::of),
-                  new ZeroArgMacroTypeCoercer<>(CxxMacro.class, CxxMacro.of()),
-                  new ZeroArgMacroTypeCoercer<>(CxxFlagsMacro.class, CxxFlagsMacro.of()),
-                  new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
-                      Optional.empty(),
-                      buildTargetsTypeCoercer,
-                      CxxppFlagsMacro.class,
-                      CxxppFlagsMacro::of),
-                  new ZeroArgMacroTypeCoercer<>(LdMacro.class, LdMacro.of()),
-                  new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
-                      Optional.empty(),
-                      buildTargetsTypeCoercer,
-                      LdflagsSharedMacro.class,
-                      LdflagsSharedMacro::of),
-                  new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
-                      Optional.of(patternTypeCoercer),
-                      buildTargetsTypeCoercer,
-                      LdflagsSharedFilterMacro.class,
-                      LdflagsSharedFilterMacro::of),
-                  new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
-                      Optional.empty(),
-                      buildTargetsTypeCoercer,
-                      LdflagsStaticMacro.class,
-                      LdflagsStaticMacro::of),
-                  new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
-                      Optional.of(patternTypeCoercer),
-                      buildTargetsTypeCoercer,
-                      LdflagsStaticFilterMacro.class,
-                      LdflagsStaticFilterMacro::of),
-                  new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
-                      Optional.empty(),
-                      buildTargetsTypeCoercer,
-                      LdflagsStaticPicMacro.class,
-                      LdflagsStaticPicMacro::of),
-                  new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
-                      Optional.of(patternTypeCoercer),
-                      buildTargetsTypeCoercer,
-                      LdflagsStaticPicFilterMacro.class,
-                      LdflagsStaticPicFilterMacro::of),
-                  new ZeroArgMacroTypeCoercer<>(PlatformNameMacro.class, PlatformNameMacro.of()))),
+          stringWithMacrosCoercer,
+          new TestRunnerSpecCoercer(stringWithMacrosCoercer),
         };
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public TypeCoercer<?> typeCoercerForType(Type type) {
     if (type instanceof TypeVariable) {
       type = ((TypeVariable<?>) type).getBounds()[0];
@@ -308,12 +358,12 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
         }
       }
       if (selectedTypeCoercer == null
-          && Types.getSupertypes(rawClass)
-              .stream()
+          && DataTransferObject.class.isAssignableFrom(rawClass)
+          && Types.getSupertypes(rawClass).stream()
               .anyMatch(c -> c.getAnnotation(BuckStyleImmutable.class) != null)) {
         selectedTypeCoercer =
             new ImmutableTypeCoercer<>(
-                rawClass, CoercedTypeCache.INSTANCE.getAllParamInfo(this, rawClass).values());
+                getConstructorArgDescriptor((Class<? extends DataTransferObject>) rawClass));
       }
       if (selectedTypeCoercer != null) {
         return selectedTypeCoercer;
@@ -384,21 +434,25 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
     } else if (rawClass.isAssignableFrom(VersionMatchedCollection.class)) {
       return new VersionMatchedCollectionTypeCoercer<>(
           new MapTypeCoercer<>(
-              new BuildTargetTypeCoercer(unconfiguredBuildTargetFactory), new VersionTypeCoercer()),
+              new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer),
+              new VersionTypeCoercer()),
           typeCoercerForType(getSingletonTypeParameter(typeName, actualTypeArguments)));
     } else if (rawClass.isAssignableFrom(Optional.class)) {
       return new OptionalTypeCoercer<>(
           typeCoercerForType(getSingletonTypeParameter(typeName, actualTypeArguments)));
     } else if (rawClass.isAssignableFrom(SelectorList.class)) {
       return new SelectorListCoercer<>(
-          new BuildTargetTypeCoercer(unconfiguredBuildTargetFactory),
-          typeCoercerForType(getSingletonTypeParameter(typeName, actualTypeArguments)),
-          new SelectorListFactory(
-              new SelectorFactory(
-                  new BuildTargetTypeCoercer(unconfiguredBuildTargetFactory)::coerce)));
+          new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer),
+          typeCoercerForType(getSingletonTypeParameter(typeName, actualTypeArguments)));
     } else {
       throw new IllegalArgumentException("Unhandled type: " + typeName);
     }
+  }
+
+  @Override
+  public <T extends DataTransferObject> DataTransferObjectDescriptor<T> getConstructorArgDescriptor(
+      Class<T> dtoType) {
+    return coercedTypeCache.getConstructorArgDescriptor(dtoType);
   }
 
   private <T extends Comparable<T>> TypeCoercer<T> typeCoercerForComparableType(Type type) {
@@ -418,17 +472,8 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
     return actualTypeArguments[0];
   }
 
-  @Override
-  public boolean equals(Object obj) {
-    if (!(obj instanceof DefaultTypeCoercerFactory)) {
-      return false;
-    }
-    return pathExistenceVerificationMode
-        == ((DefaultTypeCoercerFactory) obj).pathExistenceVerificationMode;
-  }
-
-  @Override
-  public int hashCode() {
-    return pathExistenceVerificationMode.hashCode();
+  @VisibleForTesting
+  CoercedTypeCache getCoercedTypeCache() {
+    return coercedTypeCache;
   }
 }

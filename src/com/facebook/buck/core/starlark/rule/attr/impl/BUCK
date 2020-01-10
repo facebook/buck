@@ -1,0 +1,27 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "impl",
+    srcs = glob(
+        ["*.java"],
+    ),
+    tests = [
+        "//test/com/facebook/buck/core/starlark/rule/attr/impl:impl",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/rules/coercer:coercer",
+        "//third-party/java/bazel:bazel",
+        "//third-party/java/guava:guava",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/artifact:artifact",
+        "//src/com/facebook/buck/core/artifact/converter:converter",
+        "//src/com/facebook/buck/core/rules/providers/lib:lib",
+        "//src/com/facebook/buck/core/sourcepath:sourcepath",
+        "//src/com/facebook/buck/core/starlark/rule/attr:attr",
+        "//src/com/facebook/buck/core/starlark/rule/data:data",
+        "//src/com/facebook/buck/rules/coercer:interface",
+        "//third-party/java/bazel:bazel",
+    ],
+)

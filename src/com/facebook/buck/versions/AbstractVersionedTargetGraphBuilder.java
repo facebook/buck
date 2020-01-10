@@ -1,65 +1,83 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.versions;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
+import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
-import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
+import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractVersionedTargetGraphBuilder implements VersionedTargetGraphBuilder {
 
   protected final TypeCoercerFactory typeCoercerFactory;
-  private final UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory;
-  protected final TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets;
+  private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
+  protected final TargetGraphCreationResult unversionedTargetGraphCreationResult;
   protected final long timeout;
   protected final TimeUnit timeUnit;
 
   protected AbstractVersionedTargetGraphBuilder(
       TypeCoercerFactory typeCoercerFactory,
-      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
-      TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets,
+      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
+      TargetGraphCreationResult unversionedTargetGraphCreationResult,
       long timeout,
       TimeUnit timeUnit) {
     this.typeCoercerFactory = typeCoercerFactory;
     this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
-    this.unversionedTargetGraphAndBuildTargets = unversionedTargetGraphAndBuildTargets;
+    this.unversionedTargetGraphCreationResult = unversionedTargetGraphCreationResult;
     this.timeout = timeout;
     this.timeUnit = timeUnit;
   }
 
+  /** @return a flavor to which summarizes the given version selections. */
+  static Flavor getVersionedFlavor(SortedMap<BuildTarget, Version> versions) {
+    Preconditions.checkArgument(!versions.isEmpty());
+    Hasher hasher = Hashing.md5().newHasher();
+    for (Map.Entry<BuildTarget, Version> ent : versions.entrySet()) {
+      hasher.putString(ent.getKey().toString(), Charsets.UTF_8);
+      hasher.putString(ent.getValue().getName(), Charsets.UTF_8);
+    }
+    return InternalFlavor.of("v" + hasher.hash().toString().substring(0, 7));
+  }
+
   protected TargetNode<?> getNode(BuildTarget target) {
-    return unversionedTargetGraphAndBuildTargets.getTargetGraph().get(target);
+    return unversionedTargetGraphCreationResult.getTargetGraph().get(target);
   }
 
   protected Optional<TargetNode<?>> getNodeOptional(BuildTarget target) {
-    return unversionedTargetGraphAndBuildTargets.getTargetGraph().getOptional(target);
+    return unversionedTargetGraphCreationResult.getTargetGraph().getOptional(target);
   }
 
   protected final TargetNode<?> resolveVersions(
@@ -101,7 +119,7 @@ public abstract class AbstractVersionedTargetGraphBuilder implements VersionedTa
         versions.put(depTarget, selectedVersions.get(depTarget));
       }
       if (!versions.isEmpty()) {
-        Flavor versionedFlavor = ParallelVersionedTargetGraphBuilder.getVersionedFlavor(versions);
+        Flavor versionedFlavor = getVersionedFlavor(versions);
         newTarget = node.getBuildTarget().withAppendedFlavors(versionedFlavor);
       }
     }

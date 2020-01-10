@@ -1,0 +1,43 @@
+android_resource(
+    name = "res",
+    package = "com.example",
+    res = ":broken_genrule",
+)
+
+genrule(
+    name = "broken_genrule",
+    out = "res",
+    cmd = "false",
+)
+
+android_binary(
+    name = "apk_under_test_with_broken_dep",
+    keystore = ":keystore",
+    manifest = "AndroidManifest.xml",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":res",
+    ],
+)
+
+keystore(
+    name = "keystore",
+    properties = "debug.keystore.properties",
+    store = "debug.keystore",
+    visibility = ["PUBLIC"],
+)
+
+android_instrumentation_apk(
+    name = "test_apk",
+    apk = ":apk_under_test_with_broken_dep",
+    manifest = "AndroidManifest.xml",
+    deps = [
+    ],
+)
+
+android_instrumentation_test(
+    name = "test",
+    apk = ":test_apk",
+)

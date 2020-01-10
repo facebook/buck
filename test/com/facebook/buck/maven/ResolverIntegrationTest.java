@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.maven;
@@ -26,23 +26,20 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
-import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.features.python.PythonBuckConfig;
 import com.facebook.buck.features.python.toolchain.impl.PythonInterpreterFromConfig;
 import com.facebook.buck.file.RemoteFileDescription;
-import com.facebook.buck.file.downloader.Downloader;
-import com.facebook.buck.file.downloader.impl.ExplodingDownloader;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.jvm.java.PrebuiltJarDescription;
 import com.facebook.buck.maven.aether.Repository;
-import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.PythonDslProjectBuildFileParser;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -108,12 +105,8 @@ public class ResolverIntegrationTest {
     ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
     PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(buckConfig);
 
-    ToolchainProvider toolchainProvider =
-        new ToolchainProviderBuilder()
-            .withToolchain(Downloader.DEFAULT_NAME, new ExplodingDownloader())
-            .build();
     ImmutableSet<DescriptionWithTargetGraph<?>> descriptions =
-        ImmutableSet.of(new RemoteFileDescription(toolchainProvider), new PrebuiltJarDescription());
+        ImmutableSet.of(new RemoteFileDescription(), new PrebuiltJarDescription());
 
     buildFileParser =
         new PythonDslProjectBuildFileParser(
@@ -202,8 +195,8 @@ public class ResolverIntegrationTest {
     HashCode seen = MorePaths.asByteSource(jarFile).hash(Hashing.sha1());
     assertEquals(expected, seen);
 
-    Map<String, Map<String, Object>> rules =
-        buildFileParser.getBuildFileManifest(groupDir.resolve("BUCK")).getTargets();
+    ImmutableMap<String, ImmutableMap<String, Object>> rules =
+        buildFileParser.getManifest(groupDir.resolve("BUCK")).getTargets();
 
     assertEquals(1, rules.size());
     Map<String, Object> rule = Iterables.getOnlyElement(rules.values());
@@ -228,8 +221,8 @@ public class ResolverIntegrationTest {
     resolveWithArtifacts("com.example:with-sources:jar:1.0");
 
     Path groupDir = thirdParty.resolve("example");
-    Map<String, Map<String, Object>> rules =
-        buildFileParser.getBuildFileManifest(groupDir.resolve("BUCK")).getTargets();
+    ImmutableMap<String, ImmutableMap<String, Object>> rules =
+        buildFileParser.getManifest(groupDir.resolve("BUCK")).getTargets();
 
     Map<String, Object> rule = Iterables.getOnlyElement(rules.values());
     assertEquals("with-sources-1.0-sources.jar", rule.get("sourceJar"));
@@ -243,14 +236,14 @@ public class ResolverIntegrationTest {
     Map<String, Object> withDeps =
         Iterables.getOnlyElement(
             buildFileParser
-                .getBuildFileManifest(buckRepoRoot.resolve(exampleDir).resolve("BUCK"))
+                .getManifest(buckRepoRoot.resolve(exampleDir).resolve("BUCK"))
                 .getTargets()
                 .values());
     Path otherDir = thirdPartyRelative.resolve("othercorp");
     Map<String, Object> noDeps =
         Iterables.getOnlyElement(
             buildFileParser
-                .getBuildFileManifest(buckRepoRoot.resolve(otherDir).resolve("BUCK"))
+                .getManifest(buckRepoRoot.resolve(otherDir).resolve("BUCK"))
                 .getTargets()
                 .values());
 
@@ -259,7 +252,7 @@ public class ResolverIntegrationTest {
     assertEquals(1, visibility.size());
     assertEquals(
         ImmutableList.of(
-            String.format("//%s:with-deps", MorePaths.pathWithUnixSeparators(exampleDir))),
+            String.format("//%s:with-deps", PathFormatter.pathWithUnixSeparators(exampleDir))),
         visibility);
     assertNull(noDeps.get("deps"));
 
@@ -268,7 +261,8 @@ public class ResolverIntegrationTest {
     List<String> deps = (List<String>) withDeps.get("deps");
     assertEquals(1, deps.size());
     assertEquals(
-        ImmutableList.of(String.format("//%s:no-deps", MorePaths.pathWithUnixSeparators(otherDir))),
+        ImmutableList.of(
+            String.format("//%s:no-deps", PathFormatter.pathWithUnixSeparators(otherDir))),
         deps);
   }
 
@@ -277,10 +271,8 @@ public class ResolverIntegrationTest {
     resolveWithArtifacts("com.example:deps-in-same-project:jar:1.0");
 
     Path exampleDir = thirdPartyRelative.resolve("example");
-    Map<String, Map<String, Object>> allTargets =
-        buildFileParser
-            .getBuildFileManifest(buckRepoRoot.resolve(exampleDir).resolve("BUCK"))
-            .getTargets();
+    ImmutableMap<String, ImmutableMap<String, Object>> allTargets =
+        buildFileParser.getManifest(buckRepoRoot.resolve(exampleDir).resolve("BUCK")).getTargets();
 
     assertEquals(2, allTargets.size());
 

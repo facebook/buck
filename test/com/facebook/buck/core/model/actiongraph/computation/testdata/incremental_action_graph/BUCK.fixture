@@ -1,0 +1,42 @@
+java_library(
+    name = "thing1",
+    srcs = [
+        "Thing1.java",
+    ],
+    deps = [
+        ":shared_dep",
+    ],
+)
+
+java_library(
+    name = "thing2",
+    srcs = [
+        "Thing2.java",
+    ],
+    deps = [
+        ":shared_dep",
+    ],
+)
+
+cxx_library(
+    name = "shared_dep",
+    srcs = [
+        "SharedDep.cpp",
+    ],
+)
+
+platform(
+    name = "platform",
+    constraint_values = [
+        ":constraint_value",
+    ],
+)
+
+constraint_setting(
+    name = "constraint_setting",
+)
+
+constraint_value(
+    name = "constraint_value",
+    constraint_setting = ":constraint_setting",
+)

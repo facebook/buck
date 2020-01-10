@@ -1,0 +1,21 @@
+load(
+    "//tools/build_rules:java_rules.bzl",
+    "java_library_with_plugins",
+)
+
+java_library_with_plugins(
+    name = "platform",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//third-party/java/guava:guava",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/android/toolchain/ndk:ndk",
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/rules/config:config",
+        "//src/com/facebook/buck/core/rules/platform:platform",
+    ],
+)

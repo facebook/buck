@@ -8,12 +8,12 @@ java_library(
             "*Test.java",
         ],
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/util/config:config",
-    ],
     visibility = ["//test/..."],
     deps = [
         "//third-party/java/guava:guava",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/util/config:config",
     ],
 )
 
@@ -22,8 +22,9 @@ standard_java_test(
     deps = [
         ":testutil",
         "//src/com/facebook/buck/core/exceptions:exceptions",
-        "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/util/config:config",
+        "//test/com/facebook/buck/testutil:testutil",
         "//third-party/java/guava:guava",
         "//third-party/java/hamcrest:java-hamcrest",
         "//third-party/java/ini4j:ini4j",

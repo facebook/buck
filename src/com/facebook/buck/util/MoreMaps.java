@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util;
@@ -57,9 +57,16 @@ public class MoreMaps {
     return map;
   }
 
+  /**
+   * Transform a map to another immutable map by changing keys and keeping values
+   *
+   * @param map Source map to transform
+   * @param transformer Function to apply to source map key to infer resulting map key
+   * @return New immutable map with new keys and corresponding values
+   */
   public static <K1, K2, V> ImmutableMap<K2, V> transformKeys(
       Map<K1, V> map, Function<? super K1, K2> transformer) {
-    ImmutableMap.Builder<K2, V> transformedMap = ImmutableMap.builder();
+    ImmutableMap.Builder<K2, V> transformedMap = ImmutableMap.builderWithExpectedSize(map.size());
     for (Map.Entry<K1, V> ent : map.entrySet()) {
       transformedMap.put(Objects.requireNonNull(transformer.apply(ent.getKey())), ent.getValue());
     }
@@ -90,10 +97,7 @@ public class MoreMaps {
   public static <K extends Comparable<?>, V>
       ImmutableSortedMap<K, ImmutableList<V>> convertMultimapToMapOfLists(
           ImmutableMultimap<K, V> multimap) {
-    return multimap
-        .asMap()
-        .entrySet()
-        .stream()
+    return multimap.asMap().entrySet().stream()
         .collect(
             ImmutableSortedMap.toImmutableSortedMap(
                 Ordering.natural(), e -> e.getKey(), e -> ImmutableList.copyOf(e.getValue())));

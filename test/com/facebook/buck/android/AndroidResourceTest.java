@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -33,8 +33,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
@@ -94,19 +93,11 @@ public class AndroidResourceTest {
         createResourceRule.apply(Paths.get("java/src/com/facebook/base/res/drawable/C.xml"));
 
     BuildRule androidResource1 = builder1.requireRule(buildTarget);
-    SourcePathRuleFinder ruleFinder1 = new SourcePathRuleFinder(builder1);
-    SourcePathResolver pathResolver1 = DefaultSourcePathResolver.from(ruleFinder1);
 
     BuildRule androidResource2 = builder2.requireRule(buildTarget);
-    SourcePathRuleFinder ruleFinder2 = new SourcePathRuleFinder(builder2);
-    SourcePathResolver pathResolver2 = DefaultSourcePathResolver.from(ruleFinder2);
 
-    RuleKey ruleKey1 =
-        new TestDefaultRuleKeyFactory(hashCache, pathResolver1, ruleFinder1)
-            .build(androidResource1);
-    RuleKey ruleKey2 =
-        new TestDefaultRuleKeyFactory(hashCache, pathResolver2, ruleFinder2)
-            .build(androidResource2);
+    RuleKey ruleKey1 = new TestDefaultRuleKeyFactory(hashCache, builder1).build(androidResource1);
+    RuleKey ruleKey2 = new TestDefaultRuleKeyFactory(hashCache, builder2).build(androidResource2);
 
     assertNotEquals(
         "The two android_resource rules should have different rule keys.", ruleKey1, ruleKey2);
@@ -115,12 +106,10 @@ public class AndroidResourceTest {
   @Test
   public void testGetRDotJavaPackageWhenPackageIsSpecified() throws IOException {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
-    BuildTarget buildTarget =
-        BuildTargetFactory.newInstance(
-            projectFilesystem.getRootPath(), "//java/src/com/facebook/base:res");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/src/com/facebook/base:res");
     BuildRuleParams params = TestBuildRuleParams.create();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
+    SourcePathResolverAdapter resolver = ruleFinder.getSourcePathResolver();
     AndroidResource androidResource =
         new AndroidResource(
             buildTarget,
@@ -146,12 +135,10 @@ public class AndroidResourceTest {
   @Test
   public void testGetRDotJavaPackageWhenPackageIsNotSpecified() throws IOException {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
-    BuildTarget buildTarget =
-        BuildTargetFactory.newInstance(
-            projectFilesystem.getRootPath(), "//java/src/com/facebook/base:res");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/src/com/facebook/base:res");
     BuildRuleParams params = TestBuildRuleParams.create();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
+    SourcePathResolverAdapter resolver = ruleFinder.getSourcePathResolver();
     AndroidResource androidResource =
         new AndroidResource(
             buildTarget,
@@ -195,21 +182,20 @@ public class AndroidResourceTest {
     AndroidResource resource =
         (AndroidResource) graphBuilder.requireRule(resourceNode.getBuildTarget());
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     FileHashCache fileHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
     filesystem.writeContentsToPath(
-        "something", pathResolver.getRelativePath(dep.getPathToTextSymbolsFile()));
+        "something",
+        graphBuilder.getSourcePathResolver().getRelativePath(dep.getPathToTextSymbolsFile()));
     RuleKey original =
-        new TestInputBasedRuleKeyFactory(fileHashCache, pathResolver, ruleFinder).build(resource);
+        new TestInputBasedRuleKeyFactory(fileHashCache, graphBuilder).build(resource);
 
     fileHashCache.invalidateAll();
 
     filesystem.writeContentsToPath(
-        "something else", pathResolver.getRelativePath(dep.getPathToTextSymbolsFile()));
-    RuleKey changed =
-        new TestInputBasedRuleKeyFactory(fileHashCache, pathResolver, ruleFinder).build(resource);
+        "something else",
+        graphBuilder.getSourcePathResolver().getRelativePath(dep.getPathToTextSymbolsFile()));
+    RuleKey changed = new TestInputBasedRuleKeyFactory(fileHashCache, graphBuilder).build(resource);
 
     assertThat(original, Matchers.not(Matchers.equalTo(changed)));
   }

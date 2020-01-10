@@ -1,23 +1,24 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.concurrent;
 
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.types.Either;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.Futures;
@@ -72,12 +73,12 @@ public class ResourcePool<R extends AutoCloseable> implements AutoCloseable {
   private final Deque<R> parkedResources;
 
   @GuardedBy("this")
-  private final Deque<SettableFuture<Void>> resourceRequests;
+  private final Deque<SettableFuture<Unit>> resourceRequests;
 
   private final AtomicBoolean closing;
 
   @GuardedBy("this")
-  private @Nullable ListenableFuture<Void> shutdownFuture;
+  private @Nullable ListenableFuture<Unit> shutdownFuture;
 
   @GuardedBy("this")
   private final Set<ListenableFuture<?>> pendingWork;
@@ -124,10 +125,10 @@ public class ResourcePool<R extends AutoCloseable> implements AutoCloseable {
     ListenableFuture<T> futureWork =
         Futures.transformAsync(
             initialSchedule(),
-            new AsyncFunction<Void, T>() {
+            new AsyncFunction<Unit, T>() {
               @Override
-              public ListenableFuture<T> apply(Void input) throws Exception {
-                Either<R, ListenableFuture<Void>> resourceRequest = requestResource();
+              public ListenableFuture<T> apply(Unit input) throws Exception {
+                Either<R, ListenableFuture<Unit>> resourceRequest = requestResource();
                 if (resourceRequest.isLeft()) {
                   R resource = resourceRequest.getLeft();
                   boolean resourceIsDefunct = false;
@@ -161,11 +162,11 @@ public class ResourcePool<R extends AutoCloseable> implements AutoCloseable {
     return Futures.nonCancellationPropagating(futureWork);
   }
 
-  private synchronized ListenableFuture<Void> initialSchedule() {
+  private synchronized ListenableFuture<Unit> initialSchedule() {
     // If we'll (potentially) be allowed to create a resource or there are some parked then we'll
     // take the chance and attempt to run immediately.
     if (allowedToCreateResource() || !parkedResources.isEmpty()) {
-      return Futures.immediateFuture(null);
+      return Futures.immediateFuture(Unit.UNIT);
     }
     // All possible resources are currently occupied. Because we're in a synchronized block, even
     // if one becomes available immediately after this call returns it will simply make this future
@@ -173,7 +174,7 @@ public class ResourcePool<R extends AutoCloseable> implements AutoCloseable {
     return scheduleNewResourceRequest();
   }
 
-  private synchronized Either<R, ListenableFuture<Void>> requestResource() {
+  private synchronized Either<R, ListenableFuture<Unit>> requestResource() {
     Optional<R> resource = obtainResource();
     if (resource.isPresent()) {
       return Either.ofLeft(resource.get());
@@ -181,11 +182,11 @@ public class ResourcePool<R extends AutoCloseable> implements AutoCloseable {
     return Either.ofRight(scheduleNewResourceRequest());
   }
 
-  private synchronized ListenableFuture<Void> scheduleNewResourceRequest() {
+  private synchronized ListenableFuture<Unit> scheduleNewResourceRequest() {
     if (closing.get()) {
       return Futures.immediateCancelledFuture();
     }
-    SettableFuture<Void> resourceFuture = SettableFuture.create();
+    SettableFuture<Unit> resourceFuture = SettableFuture.create();
     resourceRequests.add(resourceFuture);
     return resourceFuture;
   }
@@ -217,7 +218,7 @@ public class ResourcePool<R extends AutoCloseable> implements AutoCloseable {
 
   private synchronized void scheduleNextRequest() {
     while (true) {
-      SettableFuture<Void> nextRequest = resourceRequests.pollFirst();
+      SettableFuture<Unit> nextRequest = resourceRequests.pollFirst();
       // Queue empty.
       if (nextRequest == null) {
         return;
@@ -243,7 +244,7 @@ public class ResourcePool<R extends AutoCloseable> implements AutoCloseable {
   }
 
   @Nullable
-  public synchronized ListenableFuture<Void> getShutdownFullyCompleteFuture() {
+  public synchronized ListenableFuture<Unit> getShutdownFullyCompleteFuture() {
     Preconditions.checkState(
         closing.get(), "This method should not be called before the .close() method is called.");
     return Objects.requireNonNull(shutdownFuture);
@@ -255,7 +256,7 @@ public class ResourcePool<R extends AutoCloseable> implements AutoCloseable {
     closing.set(true);
 
     // Unblock all waiting requests.
-    for (SettableFuture<Void> request : resourceRequests) {
+    for (SettableFuture<Unit> request : resourceRequests) {
       request.set(null);
     }
     resourceRequests.clear();

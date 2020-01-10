@@ -1,0 +1,3 @@
+load("//invalid_dict_type:defs.bzl", "FakeInfo")
+
+FakeInfo()

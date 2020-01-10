@@ -1,5 +1,3 @@
-load("//tools/build_rules:export_files.bzl", "export_files")
-
 java_library(
     name = "moduleclass",
     srcs = glob(["*.java"]),
@@ -22,17 +20,31 @@ java_binary(
     ],
 )
 
-export_files(["known-hash.txt"])
+export_file(
+    name = "known-hash.txt",
+    visibility = [
+        "PUBLIC",
+    ],
+)
 
 # Replace real hash in the module jar with a known value
 genrule(
-    name = "test_module-jar-with-known-hash",
-    out = "test_module.jar",
+    name = "meta-inf",
+    out = "META-INF",
     cmd = " ".join([
-        "$(exe //py/buck/zip:append_with_copy)",
-        "$(location {}) $OUT".format("//test/com/facebook/buck/core/module/impl/moduleclass/test_module:test_module-module"),
-        "META-INF/module-binary-hash.txt $(location :{})".format("known-hash.txt"),
+        "mkdir $OUT && ",
+        "cp $(location :{}) $OUT/module-binary-hash.txt".format("known-hash.txt"),
     ]),
+)
+
+zip_file(
+    name = "test_module-jar-with-known-hash",
+    srcs = [
+        ":meta-inf",
+    ],
+    zip_srcs = [
+        "//test/com/facebook/buck/core/module/impl/moduleclass/test_module:test_module-module",
+    ],
 )
 
 # Copy modules to a place where they can be loaded by plugin manager
@@ -44,13 +56,12 @@ genrule(
 )
 
 # Running tests as a shell script to reconstruct the layout of modules and how they are loaded
-sh_test(
+python_test(
     name = "moduleclass-test",
-    args = [
-        "java",
-        "-Dpf4j.pluginsDir=$(location :copy-modules)",
-        "-jar",
-        "$(location :moduleclass-jar)",
+    srcs = [
+        "//test/com/facebook/buck/core/module/impl:test_app.py",
     ],
-    test = "//test/com/facebook/buck/core/module/impl:run.sh",
+    env = {
+        "CMD": "java -Dpf4j.pluginsDir=$(location :copy-modules) -jar $(location :moduleclass-jar)",
+    },
 )

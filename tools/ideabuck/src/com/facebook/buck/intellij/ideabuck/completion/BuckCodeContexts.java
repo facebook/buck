@@ -1,26 +1,26 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.intellij.ideabuck.completion;
 
 import com.facebook.buck.intellij.ideabuck.highlight.BuckSyntaxHighlighter;
 import com.facebook.buck.intellij.ideabuck.lang.BuckLanguage;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckArgument;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckParameter;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPrimary;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckSingleExpression;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckSimpleExpression;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckStatement;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckString;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckSuite;
@@ -92,9 +92,9 @@ public abstract class BuckCodeContexts {
    * Returns true if the element is at the start of an expression, i.e., in a context where a return
    * value is expected.
    */
-  private static boolean isAtSingleExpression(PsiElement element) {
-    BuckSingleExpression expression =
-        PsiTreeUtil.getParentOfType(element, BuckSingleExpression.class);
+  private static boolean isAtSimpleExpression(PsiElement element) {
+    BuckSimpleExpression expression =
+        PsiTreeUtil.getParentOfType(element, BuckSimpleExpression.class);
     return expression != null
         && expression.getTextRange().getStartOffset() == element.getTextRange().getStartOffset();
   }
@@ -108,18 +108,15 @@ public abstract class BuckCodeContexts {
     if (buckString == null) {
       return false;
     }
-    // Currently, BuckString also includes the '%' formatting directive :-(
-    // This is wrong, but until that gets fixed, make sure this is in the
-    // quoted part of the string and not in some other part of the string.
-    BuckPrimary primary = buckString.getPrimary();
-    if (PsiTreeUtil.isAncestor(primary, element, false)) {
-      return false;
-    }
     return Stream.of(
-            buckString.getSingleQuotedString(),
-            buckString.getDoubleQuotedString(),
-            buckString.getSingleQuotedDocString(),
-            buckString.getDoubleQuotedDocString())
+            buckString.getApostrophedString(),
+            buckString.getApostrophedRawString(),
+            buckString.getTripleApostrophedString(),
+            buckString.getTripleApostrophedRawString(),
+            buckString.getQuotedString(),
+            buckString.getQuotedRawString(),
+            buckString.getTripleQuotedString(),
+            buckString.getTripleQuotedRawString())
         .filter(Objects::nonNull)
         .findAny()
         .filter(parent -> PsiTreeUtil.isAncestor(parent, element, false))
@@ -217,14 +214,14 @@ public abstract class BuckCodeContexts {
   }
 
   /** Any buck expression. */
-  public static class SingleExpression extends BaseTemplateContext {
-    public SingleExpression() {
+  public static class SimpleExpression extends BaseTemplateContext {
+    public SimpleExpression() {
       super("BUCK_EXPRESSION", "Expression", Generic.class);
     }
 
     @Override
     boolean appliesTo(PsiElement element, int offset) {
-      return isAtSingleExpression(element);
+      return isAtSimpleExpression(element);
     }
   }
 

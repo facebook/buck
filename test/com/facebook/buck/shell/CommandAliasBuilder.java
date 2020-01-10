@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.shell;
@@ -26,14 +26,13 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.MacroContainer;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -163,7 +162,7 @@ public class CommandAliasBuilder
 
   public static class BuildResult {
     private final CommandAlias commandAlias;
-    private final SourcePathResolver sourcePathResolver;
+    private final SourcePathResolverAdapter sourcePathResolverAdapter;
     private final ActionGraphBuilder graphBuilder;
     private final CommandAliasDescriptionArg arg;
     private final SourcePathRuleFinder ruleFinder;
@@ -176,9 +175,9 @@ public class CommandAliasBuilder
         CellPathResolver cellRoots) {
       this.commandAlias = commandAlias;
       this.arg = arg;
-      ruleFinder = new SourcePathRuleFinder(graphBuilder);
+      ruleFinder = graphBuilder;
       this.cellRoots = cellRoots;
-      sourcePathResolver = DefaultSourcePathResolver.from(this.ruleFinder);
+      sourcePathResolverAdapter = this.ruleFinder.getSourcePathResolver();
       this.graphBuilder = graphBuilder;
     }
 
@@ -186,12 +185,12 @@ public class CommandAliasBuilder
       return commandAlias;
     }
 
-    SourcePathResolver sourcePathResolver() {
-      return sourcePathResolver;
+    SourcePathResolverAdapter sourcePathResolver() {
+      return sourcePathResolverAdapter;
     }
 
     public String pathOf(BuildTarget target) {
-      return sourcePathResolver
+      return sourcePathResolverAdapter
           .getAbsolutePath(graphBuilder.requireRule(target).getSourcePathToOutput())
           .toString();
     }
@@ -200,7 +199,7 @@ public class CommandAliasBuilder
       return graphBuilder
           .getRuleWithType(target, BinaryBuildRule.class)
           .getExecutableCommand()
-          .getCommandPrefix(sourcePathResolver);
+          .getCommandPrefix(sourcePathResolverAdapter);
     }
 
     public ActionGraphBuilder graphBuilder() {
@@ -220,15 +219,15 @@ public class CommandAliasBuilder
     }
 
     public ImmutableList<String> getCommandPrefix() {
-      return commandAlias.getExecutableCommand().getCommandPrefix(sourcePathResolver);
+      return commandAlias.getExecutableCommand().getCommandPrefix(sourcePathResolverAdapter);
     }
 
     public ImmutableMap<String, String> getEnvironment() {
-      return commandAlias.getExecutableCommand().getEnvironment(sourcePathResolver);
+      return commandAlias.getExecutableCommand().getEnvironment(sourcePathResolverAdapter);
     }
 
     public Iterable<BuildTarget> getRuntimeDeps() {
-      return commandAlias.getRuntimeDeps(ruleFinder).collect(ImmutableList.toImmutableList());
+      return commandAlias.getRuntimeDeps(graphBuilder).collect(ImmutableList.toImmutableList());
     }
   }
 }

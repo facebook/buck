@@ -1,0 +1,25 @@
+EMPTY_CONFIGS = {
+    "Debug": {},
+    "Release": {},
+}
+
+apple_library(
+    name = "Dep3",
+    srcs = [],
+    configs = EMPTY_CONFIGS,
+    frameworks = [],
+    tests = [":Dep3Tests"],
+    visibility = ["PUBLIC"],
+    deps = [],
+)
+
+apple_test(
+    name = "Dep3Tests",
+    srcs = [],
+    configs = EMPTY_CONFIGS,
+    frameworks = [],
+    info_plist = "Test.plist",
+    deps = [
+        ":Dep3",
+    ],
+)

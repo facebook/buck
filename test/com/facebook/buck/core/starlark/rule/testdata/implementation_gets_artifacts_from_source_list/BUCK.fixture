@@ -1,0 +1,11 @@
+load("//:defs.bzl", "source_list_rule", "write_file")
+
+write_file(name = "file")
+
+source_list_rule(
+    name = "with_sources",
+    srcs = [
+        "src.txt",
+        ":file",
+    ],
+)

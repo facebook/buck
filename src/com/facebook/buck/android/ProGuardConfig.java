@@ -1,24 +1,24 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import java.util.Optional;
 
@@ -36,13 +36,12 @@ public class ProGuardConfig {
    * @return The path to the proguard.jar file that is overridden by the current project. If not
    *     specified, the Android platform proguard.jar will be used.
    */
-  public Optional<SourcePath> getProguardJarOverride() {
-    return delegate.getSourcePath(SECTION, PROGUARD_CONFIG, EmptyTargetConfiguration.INSTANCE);
+  public Optional<SourcePath> getProguardJarOverride(TargetConfiguration targetConfiguration) {
+    return delegate.getSourcePath(SECTION, PROGUARD_CONFIG, targetConfiguration);
   }
 
-  public Optional<BuildTarget> getProguardTarget() {
-    return delegate.getMaybeBuildTarget(
-        SECTION, PROGUARD_CONFIG, EmptyTargetConfiguration.INSTANCE);
+  public Optional<BuildTarget> getProguardTarget(TargetConfiguration targetConfiguration) {
+    return delegate.getMaybeBuildTarget(SECTION, PROGUARD_CONFIG, targetConfiguration);
   }
 
   /** @return The upper heap size limit for Proguard if specified. */

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <account-authenticator
 xmlns:android="http://schemas.android.com/apk/res/android"
-android:accountType="buckbuild.com"
+android:accountType="buck.build"
 android:icon="@drawable/exo_icon"
 android:smallIcon="@drawable/exo_icon"
 android:label="@string/exo_app_name" />

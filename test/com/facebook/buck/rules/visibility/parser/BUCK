@@ -1,0 +1,12 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_test(
+    name = "parser",
+    srcs = glob(["*Test.java"]),
+    deps = [
+        "//src/com/facebook/buck/rules/visibility/parser:parser",
+        "//test/com/facebook/buck/core/cell:testutil",
+        "//test/com/facebook/buck/core/model:testutil",
+        "//third-party/java/junit:junit",
+    ],
+)

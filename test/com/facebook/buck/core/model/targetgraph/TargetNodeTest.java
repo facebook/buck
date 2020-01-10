@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.model.targetgraph;
@@ -23,16 +23,24 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.Hint;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.model.impl.ThrowingTargetConfigurationTransformer;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
+import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
+import com.facebook.buck.core.select.impl.ThrowingSelectableConfigurationContext;
+import com.facebook.buck.core.select.impl.ThrowingSelectorListResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -40,9 +48,9 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
-import com.facebook.buck.rules.coercer.ParamInfoException;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -77,8 +85,7 @@ public class TargetNodeTest {
     ImmutableList<String> depsStrings =
         ImmutableList.of("//example/path:one", "//example/path:two");
     ImmutableSet<BuildTarget> depsTargets =
-        depsStrings
-            .stream()
+        depsStrings.stream()
             .map(BuildTargetFactory::newInstance)
             .collect(ImmutableSet.toImmutableSet());
     ImmutableMap<String, Object> rawNode =
@@ -125,12 +132,10 @@ public class TargetNodeTest {
   @Test
   public void targetsWithTheSameRelativePathButNotTheSameCellMightNotBeAbleToSeeEachOther() {
 
-    ProjectFilesystem rootOne = FakeProjectFilesystem.createJavaOnlyFilesystem("/one");
-    BuildTarget buildTargetOne = BuildTargetFactory.newInstance(rootOne.getRootPath(), "//foo:bar");
+    BuildTarget buildTargetOne = BuildTargetFactory.newInstance("aaa//foo:bar");
     TargetNode<ExampleDescriptionArg> targetNodeOne = createTargetNode(buildTargetOne);
 
-    ProjectFilesystem rootTwo = FakeProjectFilesystem.createJavaOnlyFilesystem("/two");
-    BuildTarget buildTargetTwo = BuildTargetFactory.newInstance(rootTwo.getRootPath(), "//foo:bar");
+    BuildTarget buildTargetTwo = BuildTargetFactory.newInstance("bbb//foo:bar");
     TargetNode<ExampleDescriptionArg> targetNodeTwo = createTargetNode(buildTargetTwo);
 
     boolean isVisible = targetNodeOne.isVisibleTo(targetNodeTwo);
@@ -152,9 +157,32 @@ public class TargetNodeTest {
     }
   }
 
+  @Test
+  public void configurationDepsAreCopiedToTargetNode() {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ExampleDescription description = new ExampleDescription();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
+    BuildTarget configurationBuildTarget = BuildTargetFactory.newInstance("//config:bar");
+    TargetNode<?> targetNode =
+        new TargetNodeFactory(new DefaultTypeCoercerFactory())
+            .createFromObject(
+                description,
+                createPopulatedConstructorArg(buildTarget, ImmutableMap.of("name", "bar")),
+                filesystem,
+                buildTarget,
+                DependencyStack.root(),
+                ImmutableSet.of(),
+                ImmutableSortedSet.of(configurationBuildTarget),
+                ImmutableSet.of(),
+                ImmutableSet.of(),
+                createCellRoots(filesystem));
+
+    assertEquals(ImmutableSet.of(configurationBuildTarget), targetNode.getConfigurationDeps());
+  }
+
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractExampleDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+  interface AbstractExampleDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     @Value.NaturalOrder
     ImmutableSortedSet<SourcePath> getSourcePaths();
 
@@ -212,7 +240,7 @@ public class TargetNodeTest {
       ImmutableMap<String, Object> rawNode,
       Set<Path> files)
       throws NoSuchBuildTargetException {
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem(files);
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem(buildTarget.getCell(), files);
 
     ExampleDescription description = new ExampleDescription();
 
@@ -222,7 +250,9 @@ public class TargetNodeTest {
             createPopulatedConstructorArg(buildTarget, rawNode),
             filesystem,
             buildTarget,
+            DependencyStack.root(),
             declaredDeps,
+            ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
             createCellRoots(filesystem));
@@ -230,18 +260,29 @@ public class TargetNodeTest {
 
   private static ExampleDescriptionArg createPopulatedConstructorArg(
       BuildTarget buildTarget, Map<String, Object> instance) throws NoSuchBuildTargetException {
-    ConstructorArgMarshaller marshaller =
-        new DefaultConstructorArgMarshaller(new DefaultTypeCoercerFactory());
+    DefaultTypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory();
+    ConstructorArgMarshaller marshaller = new DefaultConstructorArgMarshaller(coercerFactory);
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    KnownNativeRuleTypes knownRuleTypes =
+        KnownNativeRuleTypes.of(ImmutableList.of(new ExampleDescription()), ImmutableList.of());
+    DataTransferObjectDescriptor<ExampleDescriptionArg> builder =
+        knownRuleTypes.getConstructorArgDescriptor(
+            coercerFactory, knownRuleTypes.getRuleType("example"), ExampleDescriptionArg.class);
     try {
       return marshaller.populate(
           createCellRoots(projectFilesystem),
           projectFilesystem,
+          new ThrowingSelectorListResolver(),
+          new ThrowingTargetConfigurationTransformer(),
+          new ThrowingSelectableConfigurationContext(),
           buildTarget,
-          ExampleDescriptionArg.class,
+          UnconfiguredTargetConfiguration.INSTANCE,
+          DependencyStack.root(),
+          builder,
+          ImmutableSet.builder(),
           ImmutableSet.builder(),
           instance);
-    } catch (ParamInfoException e) {
+    } catch (Exception e) {
       throw new RuntimeException(e);
     }
   }

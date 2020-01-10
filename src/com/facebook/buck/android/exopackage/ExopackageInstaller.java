@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android.exopackage;
@@ -21,7 +21,7 @@ import com.facebook.buck.android.ApkInfo;
 import com.facebook.buck.android.agent.util.AgentUtil;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -63,13 +63,13 @@ public class ExopackageInstaller {
 
   private final ProjectFilesystem projectFilesystem;
   private final BuckEventBus eventBus;
-  private final SourcePathResolver pathResolver;
+  private final SourcePathResolverAdapter pathResolver;
   private final AndroidDevice device;
   private final String packageName;
   private final Path dataRoot;
 
   public ExopackageInstaller(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       ExecutionContext context,
       ProjectFilesystem projectFilesystem,
       String packageName,
@@ -277,9 +277,7 @@ public class ExopackageInstaller {
       String filesType)
       throws Exception {
     ImmutableSortedMap<Path, Path> filesToInstall =
-        wantedFilesToInstall
-            .entrySet()
-            .stream()
+        wantedFilesToInstall.entrySet().stream()
             .filter(entry -> !presentFiles.contains(entry.getKey()))
             .collect(
                 ImmutableSortedMap.toImmutableSortedMap(
@@ -291,16 +289,14 @@ public class ExopackageInstaller {
   private void deleteUnwantedFiles(
       ImmutableSortedSet<Path> presentFiles, ImmutableSet<Path> wantedFiles) {
     ImmutableSortedSet<Path> filesToDelete =
-        presentFiles
-            .stream()
+        presentFiles.stream()
             .filter(p -> !p.getFileName().toString().equals("lock") && !wantedFiles.contains(p))
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
     deleteFiles(filesToDelete);
   }
 
   private void deleteFiles(ImmutableSortedSet<Path> filesToDelete) {
-    filesToDelete
-        .stream()
+    filesToDelete.stream()
         .collect(
             ImmutableListMultimap.toImmutableListMultimap(
                 path -> dataRoot.resolve(path).getParent(), path -> path.getFileName().toString()))
@@ -317,9 +313,7 @@ public class ExopackageInstaller {
             SimplePerfEvent.scope(eventBus, "multi_install_" + filesType);
         AutoCloseable ignored1 = device.createForward()) {
       // Make sure all the directories exist.
-      filesToInstall
-          .keySet()
-          .stream()
+      filesToInstall.keySet().stream()
           .map(p -> dataRoot.resolve(p).getParent())
           .distinct()
           .forEach(
@@ -332,9 +326,7 @@ public class ExopackageInstaller {
               });
       // Plan the installation.
       Map<Path, Path> installPaths =
-          filesToInstall
-              .entrySet()
-              .stream()
+          filesToInstall.entrySet().stream()
               .collect(
                   Collectors.toMap(
                       entry -> dataRoot.resolve(entry.getKey()),

@@ -1,9 +1,10 @@
 prebuilt_jar(
     name = "easymock",
-    binary_jar = "easymock-3.3.1.jar",
+    binary_jar = "easymock-4.0.2.jar",
     licenses = [
         "LICENSE",
     ],
+    source_jar = "easymock-4.0.2-sources.jar",
     visibility = [
         "//test/...",
         "//tools/ideabuck/tests/...",

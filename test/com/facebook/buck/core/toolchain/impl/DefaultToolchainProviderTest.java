@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.toolchain.impl;
@@ -24,6 +24,9 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.toolchain.Toolchain;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainDescriptor;
@@ -35,7 +38,6 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.util.FakeProcessExecutor;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.collect.ImmutableMap;
 import java.util.Collections;
 import java.util.List;
@@ -68,7 +70,9 @@ public class DefaultToolchainProviderTest {
 
     @Override
     public Optional<NoopToolchain> createToolchain(
-        ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
+        ToolchainProvider toolchainProvider,
+        ToolchainCreationContext context,
+        TargetConfiguration toolchainTargetConfiguration) {
       throw exception;
     }
   }
@@ -125,7 +129,8 @@ public class DefaultToolchainProviderTest {
     thrown.expect(ToolchainInstantiationException.class);
     thrown.expectMessage("something unexpected happened");
 
-    toolchainProvider.getByName(NoopToolchain.DEFAULT_NAME);
+    toolchainProvider.getByName(
+        NoopToolchain.DEFAULT_NAME, UnconfiguredTargetConfiguration.INSTANCE);
   }
 
   @Test
@@ -135,14 +140,16 @@ public class DefaultToolchainProviderTest {
 
     ToolchainInstantiationException exception = null;
     try {
-      toolchainProvider.getByName(NoopToolchain.DEFAULT_NAME);
+      toolchainProvider.getByName(
+          NoopToolchain.DEFAULT_NAME, UnconfiguredTargetConfiguration.INSTANCE);
       fail("Toolchain creation should fail");
     } catch (ToolchainInstantiationException e) {
       exception = e;
     }
 
     try {
-      toolchainProvider.getByName(NoopToolchain.DEFAULT_NAME);
+      toolchainProvider.getByName(
+          NoopToolchain.DEFAULT_NAME, UnconfiguredTargetConfiguration.INSTANCE);
       fail("Toolchain creation should fail");
     } catch (ToolchainInstantiationException e) {
       assertSame(exception, e);
@@ -160,7 +167,8 @@ public class DefaultToolchainProviderTest {
 
     thrown.expect(BuckUncheckedExecutionException.class);
 
-    toolchainProvider.getByName(NoopToolchain.DEFAULT_NAME);
+    toolchainProvider.getByName(
+        NoopToolchain.DEFAULT_NAME, UnconfiguredTargetConfiguration.INSTANCE);
   }
 
   @Test
@@ -168,7 +176,9 @@ public class DefaultToolchainProviderTest {
     DefaultToolchainProvider toolchainProvider =
         createProvider(ToolchainFactoryThrowingToolchainInstantiationException.class);
 
-    assertFalse(toolchainProvider.isToolchainPresent(NoopToolchain.DEFAULT_NAME));
+    assertFalse(
+        toolchainProvider.isToolchainPresent(
+            NoopToolchain.DEFAULT_NAME, UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   @Test
@@ -176,9 +186,12 @@ public class DefaultToolchainProviderTest {
     DefaultToolchainProvider toolchainProvider =
         createProvider(ToolchainFactoryThrowingToolchainInstantiationException.class);
 
-    toolchainProvider.getByNameIfPresent(NoopToolchain.DEFAULT_NAME, NoopToolchain.class);
+    toolchainProvider.getByNameIfPresent(
+        NoopToolchain.DEFAULT_NAME, UnconfiguredTargetConfiguration.INSTANCE, NoopToolchain.class);
 
-    assertFalse(toolchainProvider.isToolchainCreated(NoopToolchain.DEFAULT_NAME));
+    assertFalse(
+        toolchainProvider.isToolchainCreated(
+            NoopToolchain.DEFAULT_NAME, UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   @Test
@@ -186,7 +199,9 @@ public class DefaultToolchainProviderTest {
     DefaultToolchainProvider toolchainProvider =
         createProvider(ToolchainFactoryThrowingToolchainInstantiationException.class);
 
-    assertFalse(toolchainProvider.isToolchainCreated(NoopToolchain.DEFAULT_NAME));
+    assertFalse(
+        toolchainProvider.isToolchainCreated(
+            NoopToolchain.DEFAULT_NAME, UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   @Test
@@ -194,9 +209,12 @@ public class DefaultToolchainProviderTest {
     DefaultToolchainProvider toolchainProvider =
         createProvider(ToolchainFactoryThrowingToolchainInstantiationException.class);
 
-    toolchainProvider.getByNameIfPresent(NoopToolchain.DEFAULT_NAME, NoopToolchain.class);
+    toolchainProvider.getByNameIfPresent(
+        NoopToolchain.DEFAULT_NAME, UnconfiguredTargetConfiguration.INSTANCE, NoopToolchain.class);
 
-    assertTrue(toolchainProvider.isToolchainFailed(NoopToolchain.DEFAULT_NAME));
+    assertTrue(
+        toolchainProvider.isToolchainFailed(
+            NoopToolchain.DEFAULT_NAME, UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   @Test
@@ -204,7 +222,9 @@ public class DefaultToolchainProviderTest {
     DefaultToolchainProvider toolchainProvider =
         createProvider(ToolchainFactoryThrowingToolchainInstantiationException.class);
 
-    assertFalse(toolchainProvider.isToolchainFailed(NoopToolchain.DEFAULT_NAME));
+    assertFalse(
+        toolchainProvider.isToolchainFailed(
+            NoopToolchain.DEFAULT_NAME, UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   @Test
@@ -214,7 +234,10 @@ public class DefaultToolchainProviderTest {
 
     assertFalse(
         toolchainProvider
-            .getByNameIfPresent(NoopToolchain.DEFAULT_NAME, NoopToolchain.class)
+            .getByNameIfPresent(
+                NoopToolchain.DEFAULT_NAME,
+                UnconfiguredTargetConfiguration.INSTANCE,
+                NoopToolchain.class)
             .isPresent());
   }
 
@@ -223,10 +246,12 @@ public class DefaultToolchainProviderTest {
     DefaultToolchainProvider toolchainProvider =
         createProvider(ToolchainFactoryThrowingToolchainInstantiationException.class);
 
-    toolchainProvider.getByNameIfPresent(NoopToolchain.DEFAULT_NAME, NoopToolchain.class);
+    toolchainProvider.getByNameIfPresent(
+        NoopToolchain.DEFAULT_NAME, UnconfiguredTargetConfiguration.INSTANCE, NoopToolchain.class);
 
     Optional<ToolchainInstantiationException> exception =
-        toolchainProvider.getToolchainInstantiationException(NoopToolchain.DEFAULT_NAME);
+        toolchainProvider.getToolchainInstantiationException(
+            NoopToolchain.DEFAULT_NAME, UnconfiguredTargetConfiguration.INSTANCE);
 
     assertTrue(exception.isPresent());
     assertEquals(MESSAGE, exception.get().getHumanReadableErrorMessage());

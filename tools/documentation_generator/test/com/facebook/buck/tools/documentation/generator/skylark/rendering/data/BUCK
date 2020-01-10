@@ -1,12 +1,34 @@
-load("//tools/build_rules:export_files.bzl", "export_files")
-
-export_files(
-    [
-        "expected_dummy_function.soy",
-        "expected_dummy_toc.soy",
-        "expected_dummy_function_with_kwargs.soy",
-        "expected_dummy_function_without_args.soy",
-        "expected_dummy_function_with_braces_inside.soy",
+export_file(
+    name = "expected_dummy_function.soy",
+    visibility = [
+        "//tools/documentation_generator/test/...",
     ],
-    visibility = ["//tools/documentation_generator/test/..."],
+)
+
+export_file(
+    name = "expected_dummy_toc.soy",
+    visibility = [
+        "//tools/documentation_generator/test/...",
+    ],
+)
+
+export_file(
+    name = "expected_dummy_function_with_kwargs.soy",
+    visibility = [
+        "//tools/documentation_generator/test/...",
+    ],
+)
+
+export_file(
+    name = "expected_dummy_function_without_args.soy",
+    visibility = [
+        "//tools/documentation_generator/test/...",
+    ],
+)
+
+export_file(
+    name = "expected_dummy_function_with_braces_inside.soy",
+    visibility = [
+        "//tools/documentation_generator/test/...",
+    ],
 )

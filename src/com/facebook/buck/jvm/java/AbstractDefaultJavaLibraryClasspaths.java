@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
@@ -20,14 +20,13 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildRules;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.JarBuildStepsFactory.JavaDependencyInfo;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -61,11 +60,6 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
   }
 
   @Value.Lazy
-  SourcePathRuleFinder getSourcePathRuleFinder() {
-    return new SourcePathRuleFinder(getActionGraphBuilder());
-  }
-
-  @Value.Lazy
   public ImmutableSortedSet<BuildRule> getFirstOrderPackageableDeps() {
     if (shouldCreateSourceOnlyAbi()) {
       // Nothing is packaged based on a source ABI rule
@@ -77,8 +71,7 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
 
   @Value.Lazy
   protected ImmutableSortedSet<SourcePath> getCompileTimeClasspathSourcePaths() {
-    return getCompileTimeClasspathDeps()
-        .stream()
+    return getCompileTimeClasspathDeps().stream()
         .map(BuildRule::getSourcePathToOutput)
         .filter(Objects::nonNull)
         .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
@@ -103,8 +96,7 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
 
   @Value.Lazy
   protected ImmutableSortedSet<BuildRule> getCompileTimeClasspathFullDeps() {
-    return getCompileTimeClasspathUnfilteredFullDeps()
-        .stream()
+    return getCompileTimeClasspathUnfilteredFullDeps().stream()
         .filter(dep -> dep instanceof HasJavaAbi)
         .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }

@@ -9,6 +9,9 @@
   <property name="build.successful.file" value="${build.dir}/successful-build" />
   <property name="classes.dir.name" value="classes" />
   <property name="classes.dir" value="${build.dir}/${classes.dir.name}" />
+  <property name="kotlin.src.dir" value="${basedir}/src/com/facebook/buck/jvm/java/abi/kotlin" />
+  <property name="kotlin.classes.dir.name" value="kotlin_classes" />
+  <property name="kotlin.classes.dir" value="${build.dir}/kotlin/${kotlin.classes.dir.name}" />
   <property name="buck.modules.classes.dir.name" value="buck-modules-classes" />
   <property name="buck.modules.classes.dir" value="${build.dir}/${buck.modules.classes.dir.name}" />
   <property name="buck.modules.annotation.processor.src.dir" value="com/facebook/buck/core/module/annotationprocessor" />
@@ -22,6 +25,8 @@
   <property name="bootstrapper.classes.dir.name" value="bootstrapper/classes" />
   <property name="bootstrapper.classes.dir" value="${build.dir}/${bootstrapper.classes.dir.name}" />
   <property name="bootstrapper.jar" value="${build.dir}/bootstrapper/bootstrapper.jar" />
+  <property name="buckfilesystem.classes.dir" value="${build.dir}/buckfilesystem/classes" />
+  <property name="buckfilesystem.jar" value="${build.dir}/buckfilesystem/buckfilesystem.jar" />
   <property name="tracing-api.src.dir" value="com/facebook/buck/event/api/" />
   <property name="tracing-api.classes.dir.name" value="tracing-api/classes" />
   <property name="tracing-api.classes.dir" value="${build.dir}/${tracing-api.classes.dir.name}" />
@@ -40,6 +45,9 @@
   <property name="javadoc-all.dir" value="${build.dir}/javadoc-all" />
   <property name="lint.outputpath" value="${build.dir}/lint.output" />
   <property name="compiler.outputpath" value="${build.dir}/compiler.output" />
+  <property name="android.annotations.src.dir" value="third-party/java/android/annotations/src" />
+  <property name="android.annotations.classes.dir.name" value="android-annotations/classes" />
+  <property name="android.annotations.classes.dir" value="${build.dir}/${android.annotations.classes.dir.name}" />
 
   <property name="dx.base.dir" value="${basedir}/third-party/java/dx" />
   <property name="dx.src.dir" value="${dx.base.dir}/src" />
@@ -63,6 +71,8 @@
   <property name="aosp.gensrc.dir" value="${build.dir}/aosp-gen" />
 
   <property name="devbuild" value="0" />
+
+  <property name="kotlin.lib" value="${third-party.dir}/java/kotlin" />
 
   <condition property="eclipse.jdt.core.prefs.file"
     value="org.eclipse.jdt.core.prefs"
@@ -118,6 +128,8 @@
     <include name="jackson/jackson-databind-2.9.7.jar" />
     <include name="jackson/jackson-datatype-jdk8-2.9.7.jar" />
     <include name="jackson/jackson-datatype-guava-2.9.7.jar" />
+    <include name="jackson/jackson-module-kotlin-2.9.9.jar" />
+    <include name="kotlin/kotlin-reflect.jar" />
     <include name="android/sdklib-25.3.0.jar" />
     <include name="nailgun/nailgun-server-1.0.0.jar" />
     <include name="jna/jna-4.5.1.jar" />
@@ -136,15 +148,15 @@
   <fileset dir="${third-party.dir}/java" id="third-party.jars">
     <patternset refid="third-party.jars.private"/>
     <include name="ObjCBridge/ObjCBridge.jar" />
-    <include name="aapt2-proto/aapt2-proto-0.3.1.jar" />
+    <include name="aapt2-proto/aapt2-proto-0.4.0.jar" />
     <include name="android/common-25.3.0.jar" />
     <include name="android/layoutlib-api-25.3.0.jar" />
     <include name="android/sdk-common-25.3.0.jar" />
     <include name="aopalliance/aopalliance.jar" />
     <include name="aosp/apksig.jar" />
-    <include name="asm/asm*-7.0.jar" />
+    <include name="asm/asm*-7.1.jar" />
     <include name="bazel/bazel_deploy.jar" />
-    <include name="bundletool/bundletool-0.7.1.jar" />
+    <include name="bundletool/bundletool-0.10.3-fb.jar" />
     <include name="closure-templates/soy-excluding-deps.jar" />
     <include name="commons-compress/commons-compress-1.18.jar" />
     <include name="commons-logging/commons-logging-1.2.jar" />
@@ -157,7 +169,7 @@
     <include name="eclipse/org.eclipse.core.runtime_3.14.0.v20180417-0825.jar"/>
     <include name="eclipse/org.eclipse.equinox.common_3.10.0.v20180412-1130.jar"/>
     <include name="eclipse/org.eclipse.equinox.preferences_3.7.100.v20180510-1129.jar"/>
-    <include name="eclipse/org.eclipse.jdt.core_3.14.0.v20180528-0519.jar"/>
+    <include name="eclipse/org.eclipse.jdt.core_3.16.0.v20181130-1748.jar"/>
     <include name="eclipse/org.eclipse.osgi_3.13.0.v20180409-1500.jar"/>
     <include name="eden/eden.jar" />
     <include name="fbthrift/java-thrift-dependencies.jar" />
@@ -182,7 +194,7 @@
     <include name="icu4j/icu4j-54.1.1.jar" />
     <include name="immutables/builder-2.7.3.jar" />
     <include name="immutables/value-2.7.3.jar" />
-    <include name="infer-annotations/infer-annotations-4.2.jar" />
+    <include name="infer-annotations/infer-annotation-0.17.0.jar" />
     <include name="jacoco/org.jacoco.core-0.8.3.201812281252.jar" />
     <include name="jacoco/org.jacoco.report-0.8.3.201812281252.jar" />
     <include name="jdom/jdom-2.0.6.jar" />
@@ -190,7 +202,9 @@
     <include name="jimfs/jimfs-1.1.jar" />
     <include name="jopt-simple/jopt-simple-4.6.jar" />
     <include name="json-simple/json-simple-1.1.1.jar" />
-    <include name="kotlinx-metadata-jvm/kotlinx-metadata-jvm-0.0.3.jar" />
+    <include name="kotlin/kotlin-stdlib.jar" />
+    <include name="kotlinx-coroutines/kotlinx-coroutines-1.2.1.jar" />
+    <include name="kotlinx-metadata-jvm/kotlinx-metadata-jvm-0.1.0.jar" />
     <include name="jsr/javax.inject-1.jar" />
     <include name="jsr/jsr305.jar" />
     <include name="nuprocess/nuprocess-1.2.4.jar" />
@@ -202,14 +216,14 @@
     <include name="opencensus/opencensus-contrib-grpc-metrics-0.18.0.jar" />
     <include name="oshi/oshi-core-3.3-SNAPSHOT.jar" />
     <include name="pf4j/pf4j-2.0.0-SNAPSHOT.jar" />
-    <include name="protobuf/protobuf-java-3.5.1.jar" />
-    <include name="protobuf/protobuf-java-util-3.5.1.jar" />
+    <include name="protobuf/protobuf-java-3.7.0.jar" />
+    <include name="protobuf/protobuf-java-util-3.7.0.jar" />
     <include name="protobuf/protobuf-lite-3.0.1.jar" />
     <include name="slf4j/slf4j-jdk14-1.7.5.jar" /><!-- redirect slf4j to java.util.logging -->
     <include name="stringtemplate/ST-4.0.8.jar" />
-    <include name="thrift/libthrift-0.11.0.jar" />
+    <include name="thrift/libthrift-0.12.0.jar" />
     <include name="xz-java-1.5/xz-1.5.jar" />
-    <include name="zstd-jni/zstd-jni-1.3.5-2.jar" />
+    <include name="zstd-jni/zstd-jni-1.4.0-1.jar" />
 
     <!-- maven interop -->
     <include name="aether/aether-api-1.0.2.v20150114.jar" />
@@ -231,7 +245,7 @@
     <include name="slf4j/jcl-over-slf4j-1.6.2.jar" />
     <include name="slf4j/slf4j-api-1.7.5.jar" />
   </fileset>
-  
+
   <path id="provided.jars">
 
   </path>
@@ -241,6 +255,7 @@
     <fileset refid="third-party.jars" />
     <path refid="provided.jars" />
     <pathelement location="${classes.dir}" />
+    <pathelement location="${kotlin.classes.dir}" />
     <pathelement location="${dx.classes.dir}" />
     <pathelement location="${bootstrapper.jar}" />
     <pathelement location="${manual.gensrc.classes.dir}" />
@@ -265,6 +280,7 @@
     <pathelement location="${immutables-value-standalone.jar}"/>
     <pathelement location="${immutables-builder-standalone.jar}"/>
     <pathelement location="${pf4j-standalone.jar}"/>
+    <pathelement location="src/com/facebook/buck/core/util/immutables/resources"/>
   </path>
 
   <pathconvert refid="processorpath" property="processorpath" />
@@ -274,6 +290,7 @@
     <pathelement location="${immutables-builder-standalone.jar}"/>
     <pathelement location="${pf4j-standalone.jar}"/>
     <pathelement location="${buck.modules.annotation.processor.jar}"/>
+    <pathelement location="src/com/facebook/buck/core/util/immutables/resources"/>
   </path>
 
   <pathconvert refid="module.processorpath" property="module.processorpath" />
@@ -333,12 +350,19 @@
   <target name="compile-testrunner" depends="checkversion">
     <mkdir dir="${testrunner.classes.dir}" />
     <javac srcdir="${src.dir}"
-           includes="com/facebook/buck/log/AppendableLogRecord.java,com/facebook/buck/testrunner/**,com/facebook/buck/util/concurrent/MoreExecutors.java,com/facebook/buck/jvm/java/runner/**"
            destdir="${testrunner.classes.dir}"
            classpathref="testrunner.classpath"
            debug="on"
            includeAntRuntime="no"
+           source="8"
+           target="8"
+           bootclasspath="third-party/java/jdk/jdk8-rt-stub.jar"
            >
+      <include name="com/facebook/buck/log/AppendableLogRecord.java" />
+      <include name="com/facebook/buck/testrunner/**" />
+      <include name="com/facebook/buck/util/concurrent/MoreExecutors.java" />
+      <include name="com/facebook/buck/jvm/java/runner/**" />
+      <include name="com/facebook/buck/jvm/java/version/JavaVersion.java" />
       <compilerarg value="-Xlint:rawtypes" />
       <compilerarg value="-Xlint:unchecked" />
       <compilerarg value="-Werror" />
@@ -356,12 +380,12 @@
     <compiler destdir="${bootstrapper.classes.dir}" classpathref="bootstrapper-classpath">
       <javac-params>
         <include name="${bootstrapper.src.dir}/**/*.java" />
-        <include name="com/facebook/buck/util/JavaVersion.java" />
         <include name="com/facebook/buck/util/liteinfersupport/Nullable.java" />
         <include name="com/facebook/buck/util/liteinfersupport/PropagatesNullable.java" />
         <include name="com/facebook/buck/jvm/java/plugin/api/*.java" />
         <include name="com/facebook/buck/jvm/java/abi/source/api/*.java" />
         <include name="com/facebook/buck/jvm/java/lang/model/*.java" />
+        <include name="com/facebook/buck/jvm/java/version/JavaVersion.java" />
       </javac-params>
     </compiler>
     <jar destfile="${bootstrapper.jar}">
@@ -374,6 +398,23 @@
       in the bootstrapper. Compiler plugins will have their own copy linked in, but the ClassLoaders
       will end up loading this one instead when they are run inside Buck. -->
       <zipfileset src="${tracing-api.jar}" />
+    </jar>
+  </target>
+
+  <path id="buckfilesystem-classpath">
+    <!-- Do not add dependencies. This jar gets added to the bootclasspath in Java 9+, and ends up
+    in the JVM bootstrap classloader, mixed with other critical JCL types. -->
+  </path>
+
+  <target name="buckfilesystem" depends="checkversion">
+    <mkdir dir="${buckfilesystem.classes.dir}" />
+    <compiler destdir="${buckfilesystem.classes.dir}" classpathref="buckfilesystem-classpath">
+      <javac-params>
+        <include name="com/facebook/buck/core/filesystems/*.java" />
+      </javac-params>
+    </compiler>
+    <jar destfile="${buckfilesystem.jar}">
+      <fileset dir="${buckfilesystem.classes.dir}" />
     </jar>
   </target>
 
@@ -427,9 +468,25 @@
     <copy file="${javac-plugin.jar}" todir="${javac-plugin.location.dir}" />
   </target>
 
-  <target name="compile-aosp" depends="checkversion">
+  <target name="compile-android-annotations" depends="checkversion">
+    <mkdir dir="${android.annotations.classes.dir}" />
+    <compiler
+      srcdir="${android.annotations.src.dir}"
+      destdir="${android.annotations.classes.dir}" />
+  </target>
+
+  <path id="android-annotations.classpath">
+    <path refid="classpath-no-src"/>
+    <pathelement path="${android.annotations.classes.dir}" />
+  </path>
+
+  <target name="compile-aosp" depends="checkversion, compile-android-annotations">
     <mkdir dir="${aosp.classes.dir}" />
-    <compiler srcdir="${aosp.src.dir}" destdir="${aosp.classes.dir}" gensrcdir="${aosp.gensrc.dir}">
+    <compiler
+      srcdir="${aosp.src.dir}"
+      destdir="${aosp.classes.dir}"
+      gensrcdir="${aosp.gensrc.dir}"
+      classpathref="android-annotations.classpath" >
       <compiler-params>
         <!-- suppress ManifestMerger2 warnings -->
         <compilerarg value="-err:-all" compiler="${ecj.compiler}"/>
@@ -499,7 +556,10 @@
       <record name="${compiler.outputpath}" action="stop"/>
       <fail message="Compiler encountered warnings, please, fix them and try again">
         <condition>
-          <resourcecontains resource="${compiler.outputpath}" substring="WARNING"/>
+          <or>
+            <resourcecontains resource="${compiler.outputpath}" substring="WARNING"/>
+            <resourcecontains resource="${compiler.outputpath}" substring="INFO"/>
+          </or>
         </condition>
       </fail>
     </sequential>
@@ -520,7 +580,8 @@
 
   <target name="compile"
           depends="compile-buck-modules-annotation-processor, compile-testrunner, compile-aosp,
-                   compile-manual-gen-src, bootstrapper, package-resources, tracing-api, dx"
+                   compile-manual-gen-src, bootstrapper, buckfilesystem, package-resources,
+                   tracing-api, dx, compile-kotlin"
           description="compile Java source code">
     <mkdir dir="${classes.dir}" />
 
@@ -549,6 +610,14 @@
         </patternset>
       </javac-params>
     </compiler>
+  </target>
+
+  <typedef resource="org/jetbrains/kotlin/ant/antlib.xml" classpath="${kotlin.lib}/kotlin-ant.jar"/>
+  <target name="compile-kotlin">
+      <mkdir dir="${kotlin.classes.dir}" />
+      <kotlinc output="${kotlin.classes.dir}" classpathref="classpath-no-src" noStdlib="true" nowarn="true">
+          <src path="${kotlin.src.dir}" />
+      </kotlinc>
   </target>
 
   <target name="compile-buck-modules-annotation-processor">
@@ -659,13 +728,15 @@
     </build-buck-module-jar>
   </target>
 
-  <target name="build-module-intellij" depends="compile, build-module-python">
+  <target name="build-module-intellij" depends="compile, build-module-python, build-module-filegroup, build-module-ziprules">
     <build-buck-module-jar-with-resources module-name="intellij">
       <module-javac-params>
         <include name="com/facebook/buck/features/project/intellij/**/*.java" />
       </module-javac-params>
       <additional-classpath-entries>
         <include name="python.jar"/>
+        <include name="filegroup.jar" />
+        <include name="ziprules.jar" />
       </additional-classpath-entries>
       <module-resources>
         <include name="com/facebook/buck/features/project/intellij/templates/*.st"/>
@@ -733,10 +804,13 @@
   <target name="build-module-xcode" depends="compile, build-module-halide, build-module-js">
     <build-buck-module-jar-with-resources module-name="xcode">
       <module-javac-params>
+        <include name="com/facebook/buck/features/apple/common/*.java" />
         <include name="com/facebook/buck/features/apple/project/*.java" />
+        <include name="com/facebook/buck/features/apple/projectV2/*.java" />
       </module-javac-params>
       <module-resources>
         <include name="com/facebook/buck/features/apple/project/*.st"/>
+        <include name="com/facebook/buck/features/apple/projectV2/*.st"/>
       </module-resources>
       <additional-classpath-entries>
         <include name="js.jar"/>
@@ -762,6 +836,7 @@
 
   <path id="dx.classpath">
     <fileset refid="dx.jars" />
+    <pathelement path="${android.annotations.classes.dir}" />
   </path>
 
   <target name="dx-check-build">
@@ -823,11 +898,13 @@
   <target name="copy-resources" description="Copy resources used by Buck at runtime to the build directory">
     <copy todir="${classes.dir}">
       <fileset dir="${src.dir}">
+        <include name="com/facebook/buck/features/python/compile.py"/>
         <include name="com/facebook/buck/httpserver/*.stg"/>
         <include name="com/facebook/buck/httpserver/resources/static/*"/>
         <include name="com/facebook/buck/maven/build-file.st"/>
         <include name="com/facebook/buck/python/*.py"/>
         <include name="com/facebook/buck/python/run_inplace.py.in"/>
+        <include name="com/facebook/buck/python/run_inplace_lite.py.in"/>
         <include name="com/facebook/buck/parser/function/BuckPyFunction.stg"/>
         <include name="com/facebook/buck/shell/sh_binary_template"/>
         <include name="com/facebook/buck/jvm/java/FatJar.java" />
@@ -842,11 +919,11 @@
       <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/jacoco/org.jacoco.core-0.8.3.201812281252.jar"/>
       <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/jacoco/org.jacoco.report-0.8.3.201812281252.jar"/>
       <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/plexus/plexus-utils-3.0.20.jar"/>
-      <zipfileset includes="**/*.class" src="${third-party.dir}/java/asm/asm-7.0.jar" />
-      <zipfileset includes="**/*.class" src="${third-party.dir}/java/asm/asm-analysis-7.0.jar" />
-      <zipfileset includes="**/*.class" src="${third-party.dir}/java/asm/asm-commons-7.0.jar" />
-      <zipfileset includes="**/*.class" src="${third-party.dir}/java/asm/asm-tree-7.0.jar" />
-      <zipfileset includes="**/*.class" src="${third-party.dir}/java/asm/asm-util-7.0.jar" />
+      <zipfileset includes="**/*.class" src="${third-party.dir}/java/asm/asm-7.1.jar" />
+      <zipfileset includes="**/*.class" src="${third-party.dir}/java/asm/asm-analysis-7.1.jar" />
+      <zipfileset includes="**/*.class" src="${third-party.dir}/java/asm/asm-commons-7.1.jar" />
+      <zipfileset includes="**/*.class" src="${third-party.dir}/java/asm/asm-tree-7.1.jar" />
+      <zipfileset includes="**/*.class" src="${third-party.dir}/java/asm/asm-util-7.1.jar" />
       <zipfileset includes="**/*.class" src="${third-party.dir}/java/guava/guava-23.3-jre.jar"/>
       <fileset dir="${classes.dir}">
           <include name="com/facebook/buck/jvm/java/coverage/ReportGenerator.class"/>
@@ -922,7 +999,9 @@
     </copy>
     <union id="all.classpath.jars">
       <string value="${classes.dir}" />
+      <string value="${kotlin.classes.dir}" />
       <string value="${manual.gensrc.classes.dir}" />
+      <string value="${android.annotations.classes.dir}" />
       <string value="${aosp.classes.dir}" />
       <string value="${dx.classes.dir}" />
       <string value="${tracing-api.classes.dir}" />
@@ -943,7 +1022,9 @@
     <checksum todir="${build.dir}/checksums" totalproperty="buck.hash.value">
       <fileset dir="${build.dir}">
         <include name="${classes.dir.name}/**"/>
+        <include name="${kotlin.classes.dir.name}/**"/>
         <include name="${manual.gensrc.classes.dir.name}/**"/>
+        <include name="${android.annotations.classes.dir.name}/**"/>
         <include name="${aosp.classes.dir.name}/**"/>
         <include name="${dx.classes.dir.name}/**"/>
         <include name="${tracing-api.classes.dir.name}/**"/>
@@ -960,7 +1041,11 @@
 
   <target name="gen-buck-info">
     <exec executable="python" output="${buck.info.file}" logError="true" failonerror="true">
+      <env key="PYTHONPATH" value="${basedir}" />
+      <env key="PYTHONDONTWRITEBYTECODE" value="1" />
       <arg value="programs/gen_buck_info.py"/>
+      <arg value="--java-version"/>
+      <arg value="${java.version}"/>
     </exec>
   </target>
 
@@ -1031,7 +1116,7 @@
         gensrcdir="@{module-gen-dir}">
         <javac-params>
           <compilerarg value="-processorpath" />
-          <compilerarg value="${module.processorpath}" /> 
+          <compilerarg value="${module.processorpath}" />
           <compilerarg value="${pf4j-annotation-processor-storage-config}" />
           <module-javac-params/>
         </javac-params>
@@ -1082,6 +1167,8 @@
       <mkdir dir="@{destdir}" />
       <record name="@{destdir}/javadoc.log" action="start" />
 
+      <!-- Explicitly set source to 8 to work around JDK-8212233 when run under
+           Java 11.0.2. -->
       <javadoc destdir="@{destdir}"
                access="@{access}"
                classpathref="@{classpathref}"
@@ -1089,6 +1176,7 @@
                failonerror="true"
                additionalparam="${javadoc.doclint}"
                useexternalfile="true"
+               source="8"
                >
         <arg value="-notimestamp"/>
         <fileset dir="${src.dir}">
@@ -1198,4 +1286,3 @@
   <target name="pre-checkin" depends="clean, default, lint"/>
   <target name="all" depends="default, javadoc" />
 </project>
-

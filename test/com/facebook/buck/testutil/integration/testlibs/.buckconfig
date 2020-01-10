@@ -1,0 +1,4 @@
+[repositories]
+
+[ndk]
+  ndk_version = 17

@@ -46,6 +46,7 @@ android_bundle(
 
 android_bundle(
     name = "app_bundle_1",
+    bundle_config_file = "bundle-config.json",
     dex_compression = "jar",
     keystore = "//keystores:debug",
     manifest = "AndroidManifest.xml",
@@ -110,6 +111,7 @@ genrule(
     # Ideally, we'd have a special genrule that made the Android
     # tools available.
     bash = "`dirname $DX`/aapt dump strings $(location :app_with_res_overrides) > $OUT",
+    need_android_tools = True,
 )
 
 android_binary(
@@ -248,6 +250,20 @@ android_binary(
     manifest = "AndroidManifest.xml",
     deps = [
         "//native/cxx:lib",
+        "//res/com/sample/base:base",
+    ],
+)
+
+android_binary(
+    name = "app_cxx_lib_dep_with_constraints_without_cpu_map",
+    cpu_filters = [
+        "armv7",
+        "x86",
+    ],
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//java/com/sample/native:native",
         "//res/com/sample/base:base",
     ],
 )
@@ -789,6 +805,7 @@ genrule(
     name = "check_for_aapt2",
     out = "does-aapt2-exist",
     bash = "test -x `dirname $DX`/aapt2 > $OUT",
+    need_android_tools = True,
 )
 
 android_binary(
@@ -798,6 +815,21 @@ android_binary(
     manifest = "AndroidManifest.xml",
     deps = [
         "//java/com/sample/lib:lib",
+        "//res/com/sample/aapt2:aapt2",
+        "//res/com/sample/base:base",
+    ],
+)
+
+android_binary(
+    name = "app_with_aapt2_locale_filtering",
+    aapt2_locale_filtering = True,
+    aapt_mode = "aapt2",
+    keystore = "//keystores:debug",
+    locales = ["en"],
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//res/com/sample/aapt2:aapt2",
         "//res/com/sample/base:base",
     ],
 )
@@ -821,6 +853,7 @@ genrule(
         "$(exe //third-party/smali:baksmali) d -o $TMP $(location :app_with_aapt2)",
         "cat $TMP/com/*/R*.smali > $OUT",
     ]),
+    need_android_tools = True,
 )
 
 genrule(
@@ -830,6 +863,7 @@ genrule(
     # Ideally, we'd have a special genrule that made the Android
     # tools available.
     bash = "`dirname $DX`/aapt dump resources $(location :app_with_aapt2) > $OUT",
+    need_android_tools = True,
 )
 
 android_instrumentation_apk(
@@ -1008,6 +1042,34 @@ android_binary(
 )
 
 android_binary(
+    name = "app_with_different_merged_libs_per_platform",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    native_library_merge_map = {
+        "liball.so": [".*"],
+    },
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//native/merge_multiplatform:top",
+        "//res/com/sample/base:base",
+    ],
+)
+
+android_binary(
+    name = "app_with_header_only_merged",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    native_library_merge_map = {
+        "liball.so": [".*"],
+    },
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//native/merge_headeronly:top",
+        "//res/com/sample/base:base",
+    ],
+)
+
+android_binary(
     name = "app_with_merge_and_supported_platforms",
     keystore = "//keystores:debug",
     manifest = "AndroidManifest.xml",
@@ -1074,6 +1136,7 @@ genrule(
     # Ideally, we'd have a special genrule that made the Android
     # tools available.
     bash = "`dirname $DX`/aapt dump xmltree $(location :app_with_merged_manifest) AndroidManifest.xml > $OUT",
+    need_android_tools = True,
 )
 
 android_binary(
@@ -1095,6 +1158,13 @@ genrule(
     # Ideally, we'd have a special genrule that made the Android
     # tools available.
     bash = "`dirname $DX`/aapt dump xmltree $(location :app_with_invalid_merged_manifest) AndroidManifest.xml > $OUT",
+    need_android_tools = True,
+)
+
+genrule(
+    name = "dump_classpath",
+    out = "classpath",
+    bash = "echo $(query_targets 'classpath(:app)') > $OUT",
 )
 
 android_binary(
@@ -1109,5 +1179,30 @@ android_binary(
     deps = [
         "//native/cxx:libtest1",
         "//native/cxx:libtest2",
+    ],
+)
+
+android_binary(
+    name = "app_with_exceptions",
+    cpu_filters = [
+        "armv7",
+    ],
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifestNoRes.xml",
+    deps = [
+        "//native/cxx:lib-with-exceptions",
+    ],
+)
+
+android_binary(
+    name = "app_with_min_28",
+    disable_pre_dex = True,
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifestNoRes.xml",
+    manifest_entries = {
+        "min_sdk_version": 28,
+    },
+    deps = [
+        "//java/com/sample/lib:lib",
     ],
 )

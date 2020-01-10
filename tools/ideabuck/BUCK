@@ -1,5 +1,3 @@
-load("//tools/build_rules:java_rules.bzl", "java_test")
-
 # =========================================================
 # 'src' directory layout:
 # =========================================================
@@ -41,20 +39,16 @@ java_library(
 java_library(
     name = "ideabuck-lib",
     srcs = PLUGIN_SOURCE_FILES,
-    exported_deps = [
-        ":api",
-    ],
     provided_deps = [
         "//third-party/java/intellij:intellij-plugin-sdk",
     ],
     source = "1.8",
     target = "1.8",
     visibility = [
-        "//tools/ideabuck/...",
+        "PUBLIC",
     ],
     deps = [
         "//src/com/facebook/buck/event/external:external_lib",
-        "//third-party/java/android:ddmlib",
         "//third-party/java/gson:gson",
         "//third-party/java/ini4j:ini4j",
         "//third-party/java/jackson:jackson-annotations",
@@ -63,6 +57,9 @@ java_library(
         "//third-party/java/jackson:jackson-mrbean",
         "//third-party/java/jetty:jetty",
         "//tools/psi-grammar:grammar",
+    ],
+    exported_deps = [
+        ":api",
     ],
 )
 
@@ -80,6 +77,13 @@ java_library(
     visibility = [
         "PUBLIC",
     ],
+)
+
+java_library(
+    name = "meta-inf",
+    resources = glob(["resources/META-INF/**/*"]),
+    resources_root = "resources/",
+    visibility = ["PUBLIC"],
 )
 
 java_binary(

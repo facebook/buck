@@ -1,29 +1,31 @@
-# Copyright 2018-present Facebook, Inc.
+# Copyright (c) Facebook, Inc. and its affiliates.
 #
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License. You may obtain
-# a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations
-# under the License.
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 from __future__ import print_function
 
 import errno
 import hashlib
+import logging
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 import textwrap
 
-import file_locks
-from tracing import Tracing
+from programs import file_locks
+from programs.tracing import Tracing
 
 
 def get_file_contents_if_exists(path, default=None):
@@ -50,24 +52,104 @@ def makedirs(path):
         # should just swallow the error.
         # This is mostly equivalent to os.makedirs(path, exist_ok=True) in
         # Python 3.
-        if e.errno != errno.EEXIST and os.path.isdir(path):
-            raise
+        if e.errno == errno.EEXIST and os.path.isdir(path):
+            return
+        raise
+
+
+def _is_eden(path):
+    return os.path.isdir(os.path.join(path, ".eden", "root"))
+
+
+def _find_eden_root(project_root):
+    return os.readlink(os.path.join(project_root, ".eden", "root"))
+
+
+def _add_eden_bindmount(eden_root, path):
+    relative_path = os.path.relpath(path, eden_root)
+    logging.debug(
+        "Adding eden mount at {}, path relative to eden {}".format(path, relative_path)
+    )
+    try:
+        subprocess.check_output(["eden", "redirect", "add", relative_path, "bind"])
+    except subprocess.CalledProcessError:
+        logging.warning("Could not add eden redirect for " + path)
+        raise
+
+
+def add_eden_bindmounts(repo_root, buck_out):
+    if not _is_eden(repo_root):
+        return
+
+    add_bindmounts = os.environ.get("NO_BUCK_ADD_EDEN_BINDMOUNTS", "0").strip() == "0"
+    if not add_bindmounts:
+        logging.warning(
+            "Skipping adding eden bindmounts because "
+            + "NO_BUCK_ADD_EDEN_BINDMOUNTS was set"
+        )
+        return
+
+    eden_root = _find_eden_root(repo_root)
+
+    eden_bindmounts = {buck_out}
+    eden_bindmounts_file = os.path.join(repo_root, ".buck-eden-bindmounts")
+    if os.path.exists(eden_bindmounts_file):
+        logging.debug("Reading eden bindmounts from " + eden_bindmounts_file)
+        with open(eden_bindmounts_file, "r") as fin:
+            for bindmount in fin:
+                bindmount = bindmount.strip()
+                if bindmount and not bindmount.startswith("#"):
+                    eden_bindmounts.add(os.path.join(repo_root, bindmount))
+
+    for mount in eden_bindmounts:
+        if os.path.exists(mount):
+            if _is_eden(mount):
+                msg = (
+                    "Eden bindmount at {path} was requested, but it is already a "
+                    "directory within an eden filesystem.\n"
+                    "In order to prevent destructive actions on user data, you "
+                    "must remove this directory yourself.\n"
+                    "Please stop buck with `buck killall`, remove {path}, and run buck "
+                    "again."
+                )
+                logging.warning(msg.format(path=mount))
+            else:
+                logging.debug(
+                    "Eden bindmount at {} already exists, skipping".format(mount)
+                )
+        else:
+            _add_eden_bindmount(eden_root, mount)
 
 
 class BuckProject:
     def __init__(self, root):
         self.root = root
-        self._buck_out = os.path.join(root, "buck-out")
-        buck_out_tmp = os.path.join(self._buck_out, "tmp")
-        makedirs(buck_out_tmp)
+        try:
+            isolated_pos = sys.argv.index("--isolation_prefix")
+            if isolated_pos < len(sys.argv):
+                self.prefix = sys.argv[isolated_pos + 1]
+            else:
+                self.prefix = ""
+        except ValueError:
+            self.prefix = ""
+
+        self._buck_out_dirname = "buck-out"
+        if len(self.prefix) > 0:
+            self._buck_out_dirname = self.prefix + "-" + self._buck_out_dirname
+
+        self._buck_out = os.path.join(self.root, self._buck_out_dirname)
+        add_eden_bindmounts(self.root, self._buck_out)
+
+        self._buck_out_tmp = os.path.join(self._buck_out, "tmp")
+        makedirs(self._buck_out_tmp)
         self._buck_out_log = os.path.join(self._buck_out, "log")
         makedirs(self._buck_out_log)
-        self.tmp_dir = tempfile.mkdtemp(prefix="buck_run.", dir=buck_out_tmp)
+        self.tmp_dir = tempfile.mkdtemp(prefix="buck_run.", dir=self._buck_out_tmp)
 
         # Only created if buckd is used.
         self.buckd_tmp_dir = None
 
-        self.buckd_dir = os.path.join(root, ".buckd")
+        self.buckd_dir = os.path.join(root, self.prefix + ".buckd")
         self.buckd_version_file = os.path.join(self.buckd_dir, "buckd.version")
         self.buckd_pid_file = os.path.join(self.buckd_dir, "pid")
         self.buckd_stdout = os.path.join(self.buckd_dir, "stdout")
@@ -93,7 +175,7 @@ class BuckProject:
         if os.name == "nt":
             return "local:buckd_{0}".format(self.get_root_hash())
         else:
-            return "local:.buckd/sock"
+            return "local:{0}.buckd/sock".format(self.prefix)
 
     def get_running_buckd_version(self):
         return get_file_contents_if_exists(self.buckd_version_file)
@@ -119,17 +201,23 @@ class BuckProject:
     def get_buck_out_log_dir(self):
         return self._buck_out_log
 
+    def get_buck_out_relative_dir(self):
+        return self._buck_out_dirname
+
     def clean_up_buckd(self):
         with Tracing("BuckProject.clean_up_buckd"):
             if os.path.exists(self.buckd_dir):
                 file_locks.rmtree_if_can_lock(self.buckd_dir)
 
+    def create_buckd_dir(self):
+        makedirs(self.buckd_dir)
+
     def create_buckd_tmp_dir(self):
         if self.buckd_tmp_dir is not None:
             return self.buckd_tmp_dir
-        tmp_dir_parent = os.path.join(self.buckd_dir, "tmp")
-        makedirs(tmp_dir_parent)
-        self.buckd_tmp_dir = tempfile.mkdtemp(prefix="buck_run.", dir=tmp_dir_parent)
+        self.buckd_tmp_dir = tempfile.mkdtemp(
+            prefix="buckd_tmp.", dir=self._buck_out_tmp
+        )
         return self.buckd_tmp_dir
 
     def save_buckd_version(self, version):

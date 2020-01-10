@@ -1,27 +1,28 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android.aapt;
 
 import com.facebook.buck.android.AaptStep;
+import com.facebook.buck.android.aapt.RDotTxtEntry.CustomDrawableType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.IdType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -72,6 +73,8 @@ import org.xml.sax.SAXException;
  */
 public class MiniAapt implements Step {
 
+  private static final String GRAYSCALE_SUFFIX = "_g.png";
+
   /** See {@link com.facebook.buck.android.AaptStep} for a list of files that we ignore. */
   public static final ImmutableList<String> IGNORED_FILE_EXTENSIONS = ImmutableList.of("orig");
 
@@ -109,7 +112,7 @@ public class MiniAapt implements Step {
     ANDROID_RESOURCE_INDEX,
   }
 
-  private final SourcePathResolver resolver;
+  private final SourcePathResolverAdapter resolver;
   private final ProjectFilesystem filesystem;
   private final SourcePath resDirectory;
   private final Path pathToOutputFile;
@@ -119,7 +122,7 @@ public class MiniAapt implements Step {
   private final ResourceCollectionType resourceCollectionType;
 
   public MiniAapt(
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       ProjectFilesystem filesystem,
       SourcePath resDirectory,
       Path pathToTextSymbolsFile,
@@ -135,7 +138,7 @@ public class MiniAapt implements Step {
   }
 
   public MiniAapt(
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       ProjectFilesystem filesystem,
       SourcePath resDirectory,
       Path pathToOutputFile,
@@ -336,16 +339,21 @@ public class MiniAapt implements Step {
         isCustomDrawable = root.getNodeName().startsWith(CUSTOM_DRAWABLE_PREFIX);
       }
     } else if (isGrayscaleImageProcessingEnabled) {
-      isGrayscaleImage = filename.endsWith(".g.png");
+      // .g.png is no longer an allowed filename in newer versions of aapt2.
+      isGrayscaleImage = filename.endsWith(".g.png") || filename.endsWith(GRAYSCALE_SUFFIX);
+      if (isGrayscaleImage) {
+        // Trim _g or .g from the resource name
+        resourceName = filename.substring(0, filename.length() - GRAYSCALE_SUFFIX.length());
+      }
     }
 
     DocumentLocation location = DocumentLocation.of(0, 0);
     if (isCustomDrawable) {
       resourceCollector.addCustomDrawableResourceIfNotPresent(
-          RType.DRAWABLE, resourceName, resourceFile, location);
+          RType.DRAWABLE, resourceName, resourceFile, location, CustomDrawableType.CUSTOM);
     } else if (isGrayscaleImage) {
-      resourceCollector.addGrayscaleImageResourceIfNotPresent(
-          RType.DRAWABLE, resourceName, resourceFile, location);
+      resourceCollector.addCustomDrawableResourceIfNotPresent(
+          RType.DRAWABLE, resourceName, resourceFile, location, CustomDrawableType.GRAYSCALE_IMAGE);
     } else {
       resourceCollector.addIntResourceIfNotPresent(
           RType.DRAWABLE, resourceName, resourceFile, location);
@@ -626,9 +634,7 @@ public class MiniAapt implements Step {
     definitionsBuilder.addAll(castResourceCollector.getResources());
     for (Path depRTxt : pathsToSymbolsOfDeps) {
       Iterable<String> lines =
-          filesystem
-              .readLines(depRTxt)
-              .stream()
+          filesystem.readLines(depRTxt).stream()
               .filter(input -> !Strings.isNullOrEmpty(input))
               .collect(Collectors.toList());
       for (String line : lines) {

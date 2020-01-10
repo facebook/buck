@@ -1,35 +1,46 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent.Operation;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfigurationSerializer;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.EventKey;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 public class DirArtifactCacheEvent {
   public static final ArtifactCacheEvent.CacheMode CACHE_MODE = ArtifactCacheEvent.CacheMode.dir;
 
   private DirArtifactCacheEvent() {}
 
-  public static class DirArtifactCacheEventFactory implements ArtifactCacheEventFactory {
+  public static class DirArtifactCacheEventFactory extends AbstractArtifactCacheEventFactory {
+
+    public DirArtifactCacheEventFactory(
+        Function<String, UnconfiguredBuildTargetView> unconfiguredBuildTargetFactory,
+        TargetConfigurationSerializer targetConfigurationSerializer) {
+      super(unconfiguredBuildTargetFactory, targetConfigurationSerializer);
+    }
+
     @Override
     public ArtifactCacheEvent.Started newFetchStartedEvent(ImmutableSet<RuleKey> ruleKeys) {
       return new Started(ArtifactCacheEvent.Operation.FETCH, ruleKeys, Optional.empty());
@@ -43,8 +54,7 @@ public class DirArtifactCacheEvent {
     @Override
     public ArtifactCacheEvent.Started newStoreStartedEvent(
         ImmutableSet<RuleKey> ruleKeys, ImmutableMap<String, String> metadata) {
-      return new Started(
-          ArtifactCacheEvent.Operation.STORE, ruleKeys, ArtifactCacheEvent.getTarget(metadata));
+      return new Started(ArtifactCacheEvent.Operation.STORE, ruleKeys, getTarget(metadata));
     }
 
     @Override
@@ -82,7 +92,7 @@ public class DirArtifactCacheEvent {
     public Started(
         ArtifactCacheEvent.Operation operation,
         ImmutableSet<RuleKey> ruleKeys,
-        Optional<String> target) {
+        Optional<BuildTarget> target) {
       super(
           EventKey.unique(),
           CACHE_MODE,
@@ -103,7 +113,7 @@ public class DirArtifactCacheEvent {
         EventKey eventKey,
         ArtifactCacheEvent.CacheMode cacheMode,
         Operation operation,
-        Optional<String> target,
+        Optional<BuildTarget> target,
         ImmutableSet<RuleKey> ruleKeys,
         ArtifactCacheEvent.InvocationType invocationType,
         Optional<CacheResult> cacheResult) {

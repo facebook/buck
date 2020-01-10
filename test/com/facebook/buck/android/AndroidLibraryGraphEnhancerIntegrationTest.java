@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -43,22 +43,22 @@ public class AndroidLibraryGraphEnhancerIntegrationTest {
   }
 
   @Test
-  public void testPullsResourcesFromDeps() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+  public void testPullsResourcesFromDeps() throws Exception {
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     ProcessResult result = workspace.runBuckBuild("//:lib_with_direct_dep");
     result.assertSuccess();
   }
 
   @Test
-  public void testPullsResourcesFromProvidedDeps() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+  public void testPullsResourcesFromProvidedDeps() throws Exception {
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     ProcessResult result = workspace.runBuckBuild("//:lib_with_provided_dep");
     result.assertSuccess();
   }
 
   @Test
-  public void testDoesNotPullResourcesFromJavaResources() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+  public void testDoesNotPullResourcesFromJavaResources() throws Exception {
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     ProcessResult result = workspace.runBuckBuild("//:lib_with_java_resources_dep");
     result.assertFailure();
     assertThat(
@@ -71,8 +71,8 @@ public class AndroidLibraryGraphEnhancerIntegrationTest {
   }
 
   @Test
-  public void testDoesNotPullResourcesFromLicenses() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+  public void testDoesNotPullResourcesFromLicenses() throws Exception {
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     ProcessResult result = workspace.runBuckBuild("//:lib_with_licenses_dep");
     result.assertFailure();
     assertThat(

@@ -1,0 +1,119 @@
+android_platform(
+    name = "android-x86_64-arm",
+    base_platform = ":android-os",
+    native_platforms = {
+        "arm": ":android-arm",
+        "x86_64": ":android-x86_64",
+    },
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+android_platform(
+    name = "android-x86_32-armv7",
+    base_platform = ":android-os",
+    native_platforms = {
+        "armv7": ":android-armv7",
+        "x86": ":android-x86_32",
+    },
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+android_platform(
+    name = "android-x86_64-arm-armv7",
+    base_platform = ":android-os",
+    native_platforms = {
+        "arm": ":android-arm",
+        "armv7": ":android-armv7",
+        "x86_64": ":android-x86_64",
+    },
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+android_platform(
+    name = "android-platform-x86_64",
+    base_platform = ":android-os",
+    native_platforms = {
+        "x86_64": ":android-x86_64",
+    },
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+platform(
+    name = "android-os",
+    constraint_values = [
+        ":android",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+platform(
+    name = "android-x86_32",
+    constraint_values = [
+        ":android",
+        "buck//config/constraints:x86_32",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+platform(
+    name = "android-x86_64",
+    constraint_values = [
+        ":android",
+        "buck//config/constraints:x86_64",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+platform(
+    name = "android-arm",
+    constraint_values = [
+        ":android",
+        "buck//config/constraints:arm",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+platform(
+    name = "android-armv7",
+    constraint_values = [
+        ":android",
+        "buck//config/constraints:arm",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+constraint_value(
+    name = "android",
+    constraint_setting = "buck//config/constraints:os",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+config_setting(
+    name = "x86_32-config",
+    constraint_values = [
+        "buck//config/constraints:x86_32",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)

@@ -1,5 +1,0 @@
-InvocationInfo {"buildId":"00000000-0001-0000-0000-000000000001","superConsoleEnabled":false,"isDaemon":false,"subCommand":"distbuildcommand","timestampMillis":0000000000001}
-BuildRuleEvent.Finished {"timestamp":1480000000000,"status":"SUCCESS","cacheResult":{"type":"HIT","cacheSource":"http"},"ruleKeys":{"ruleKey":{"hashCode":"HASH1"},"inputRuleKey":null},"outputHash":null,"buildRule":{"name":"//build/rule:one"}}
-BuildRuleEvent.Finished {"timestamp":1480000000000,"status":"SUCCESS","cacheResult":{"type":"HIT","cacheSource":"http"},"ruleKeys":{"ruleKey":{"hashCode":"HASH2"},"inputRuleKey":{"hashCode":"INPUTHASH1"}},"outputHash":null,"buildRule":{"name":"//build/rule:two"}}
-BuildRuleEvent.Finished {"timestamp":1480000000000,"status":"SUCCESS","cacheResult":{"type":"HIT","cacheSource":"http"},"ruleKeys":{"ruleKey":{"hashCode":"HASH3"},"inputRuleKey":null},"outputHash":null,"buildRule":{"name":"//build/rule:extraOne"}}
-BuildRuleEvent.Finished {"timestamp":1480000000000,"status":"SUCCESS","cacheResult":{"type":"HIT","cacheSource":"http"},"ruleKeys":{"ruleKey":{"hashCode":"HASH4"},"inputRuleKey":null},"outputHash":null,"buildRule":{"name":"//build/rule:extraTwo"}}

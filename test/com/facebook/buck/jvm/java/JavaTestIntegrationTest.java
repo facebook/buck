@@ -1,36 +1,54 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasKey;
+import static org.hamcrest.Matchers.iterableWithSize;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.stringContainsInOrder;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.jvm.java.version.JavaVersion;
+import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.Console;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ExitCode;
+import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.json.ObjectMappers;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.io.IOException;
@@ -55,18 +73,32 @@ public class JavaTestIntegrationTest {
     result.assertFailure();
     String stderr = result.getStderr();
 
-    // Javac emits different errors on Windows !?!
     String lookFor;
-    if (Platform.detect() == Platform.WINDOWS) {
-      // Note: javac puts wrong line ending
-      lookFor =
-          "cannot find symbol\n"
-              + "  symbol:   class Nullable\n"
-              + "  location: package javax.annotation"
-              + System.lineSeparator()
-              + "import javax.annotation.Nullable;";
+    if (JavaVersion.getMajorVersion() <= 8) {
+      // Javac emits different errors on Windows !?!
+      if (Platform.detect() == Platform.WINDOWS) {
+        // Note: javac puts wrong line ending
+        lookFor =
+            "cannot find symbol\n"
+                + "  symbol:   class Nullable\n"
+                + "  location: package javax.annotation"
+                + System.lineSeparator()
+                + "import javax.annotation.Nullable;";
+      } else {
+        lookFor =
+            "cannot find symbol" + System.lineSeparator() + "import javax.annotation.Nullable;";
+      }
     } else {
-      lookFor = "cannot find symbol" + System.lineSeparator() + "import javax.annotation.Nullable;";
+      lookFor =
+          "cannot find symbol"
+              + System.lineSeparator()
+              + "  @Nullable private String foobar;"
+              + System.lineSeparator()
+              + "   ^"
+              + System.lineSeparator()
+              + "  symbol:   class Nullable"
+              + System.lineSeparator()
+              + "  location: class com.facebook.buck.example.UsesNullable";
     }
     assertTrue(stderr, stderr.contains(lookFor));
   }
@@ -322,10 +354,26 @@ public class JavaTestIntegrationTest {
             .toSortedSet(Ordering.natural());
     ImmutableSortedSet<Path> expectedPaths =
         ImmutableSortedSet.of(
-            Paths.get("buck-out/gen/lib__top__output/top.jar"),
-            Paths.get("buck-out/gen/lib__direct_dep__output/direct_dep.jar"),
-            Paths.get("buck-out/gen/lib__mid_test#testsjar__output/mid_test#testsjar.jar"),
-            Paths.get("buck-out/gen/lib__transitive_lib__output/transitive_lib.jar"));
+            BuildTargetPaths.getGenPath(
+                    workspace.getProjectFileSystem(),
+                    BuildTargetFactory.newInstance("//:top"),
+                    "lib__%s__output")
+                .resolve("top.jar"),
+            BuildTargetPaths.getGenPath(
+                    workspace.getProjectFileSystem(),
+                    BuildTargetFactory.newInstance("//:direct_dep"),
+                    "lib__%s__output")
+                .resolve("direct_dep.jar"),
+            BuildTargetPaths.getGenPath(
+                    workspace.getProjectFileSystem(),
+                    BuildTargetFactory.newInstance("//:mid_test#testsjar"),
+                    "lib__%s__output")
+                .resolve("mid_test#testsjar.jar"),
+            BuildTargetPaths.getGenPath(
+                    workspace.getProjectFileSystem(),
+                    BuildTargetFactory.newInstance("//:transitive_lib"),
+                    "lib__%s__output")
+                .resolve("transitive_lib.jar"));
     assertEquals(expectedPaths, actualPaths);
   }
 
@@ -335,5 +383,111 @@ public class JavaTestIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "env_macros", temp);
     workspace.setUp();
     workspace.runBuckCommand("test", "//:env").assertSuccess();
+  }
+
+  @Test
+  public void testExternalTestRunnerSpec() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "test_rule_classpath", temp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("test", "external_runner", "false");
+    workspace.runBuckCommand("test", "//:top");
+    Path specOutput =
+        workspace.getPath(
+            workspace.getBuckPaths().getScratchDir().resolve("external_runner_specs.json"));
+    ImmutableList<ImmutableMap<String, Object>> specs =
+        ObjectMappers.readValue(
+            specOutput, new TypeReference<ImmutableList<ImmutableMap<String, Object>>>() {});
+    assertThat(specs, iterableWithSize(1));
+    ImmutableMap<String, Object> spec = specs.get(0);
+    assertThat(spec, hasKey("required_paths"));
+    //noinspection unchecked
+    ImmutableSortedSet<String> requiredPaths =
+        ImmutableSortedSet.<String>naturalOrder()
+            .addAll((Iterable<String>) spec.get("required_paths"))
+            .build();
+    // The runtime classpath of the test should all be present in the required paths
+    MoreAsserts.assertContainsOne(
+        requiredPaths,
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance("//:transitive_lib"), "lib__%s__output")
+            .resolve("transitive_lib.jar")
+            .toString());
+    MoreAsserts.assertContainsOne(
+        requiredPaths,
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance("//:mid_test#testsjar"), "lib__%s__output")
+            .resolve("mid_test#testsjar.jar")
+            .toString());
+  }
+
+  @Test
+  public void testProtocolJavaTestRuleShouldBuildAndGenerateSpec() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "testx_rule", temp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("test", "external_runner", "echo");
+    ProcessResult result = workspace.runBuckCommand("test", "//:some_test");
+    result.assertSuccess();
+    Path specOutput =
+        workspace.getPath(
+            workspace.getBuckPaths().getScratchDir().resolve("external_runner_specs.json"));
+    JsonParser parser = ObjectMappers.createParser(specOutput);
+
+    ArrayNode node = parser.readValueAsTree();
+    JsonNode spec = node.get(0).get("specs");
+
+    assertEquals("spec", spec.get("my").textValue());
+
+    JsonNode other = spec.get("other");
+    assertTrue(other.isArray());
+    assertTrue(other.has(0));
+    assertEquals("stuff", other.get(0).get("complicated").textValue());
+    assertEquals(1, other.get(0).get("integer").intValue());
+    assertEquals(1.2, other.get(0).get("double").doubleValue(), 0);
+    assertTrue(other.get(0).get("boolean").booleanValue());
+
+    String cmd = spec.get("cmd").textValue();
+    DefaultProcessExecutor processExecutor =
+        new DefaultProcessExecutor(Console.createNullConsole());
+    ProcessExecutor.Result processResult =
+        processExecutor.launchAndExecute(
+            ProcessExecutorParams.builder().addCommand(cmd.split(" ")).build());
+    assertEquals(0, processResult.getExitCode());
+  }
+
+  @Test
+  public void testProtocolJavaTestWithJVMArgsRuleShouldBuildAndGenerateSpec() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "testx_rule", temp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("test", "external_runner", "echo");
+    ProcessResult resultWithJVMArgs = workspace.runBuckCommand("test", "//:some_test_with_jvm");
+    resultWithJVMArgs.assertSuccess();
+    Path specOutput =
+        workspace.getPath(
+            workspace.getBuckPaths().getScratchDir().resolve("external_runner_specs.json"));
+    JsonParser parser = ObjectMappers.createParser(specOutput);
+
+    ArrayNode node = parser.readValueAsTree();
+    JsonNode spec = node.get(0).get("specs");
+
+    assertEquals("spec", spec.get("my").textValue());
+
+    JsonNode other = spec.get("other");
+    assertTrue(other.isArray());
+    assertTrue(other.has(0));
+    assertEquals("stuff", other.get(0).get("complicated").textValue());
+    assertEquals(1, other.get(0).get("integer").intValue());
+    assertEquals(1.2, other.get(0).get("double").doubleValue(), 0);
+    assertFalse(other.get(0).get("boolean").booleanValue());
+
+    String cmd = spec.get("cmd").textValue();
+    DefaultProcessExecutor processExecutor =
+        new DefaultProcessExecutor(Console.createNullConsole());
+    ProcessExecutor.Result processResult =
+        processExecutor.launchAndExecute(
+            ProcessExecutorParams.builder().addCommand(cmd.split(" ")).build());
+    assertEquals(0, processResult.getExitCode());
   }
 }

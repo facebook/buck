@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
@@ -27,6 +27,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -76,8 +77,7 @@ public class JarDirectoryStepTest {
   @Rule public TemporaryPaths folder = new TemporaryPaths();
 
   @Test
-  public void shouldNotThrowAnExceptionWhenAddingDuplicateEntries()
-      throws InterruptedException, IOException {
+  public void shouldNotThrowAnExceptionWhenAddingDuplicateEntries() throws IOException {
     Path zipup = folder.newFolder("zipup");
 
     Path first = createZip(zipup.resolve("a.zip"), "example.txt");
@@ -107,8 +107,7 @@ public class JarDirectoryStepTest {
   }
 
   @Test
-  public void shouldNotifyEventBusWhenDuplicateClassesAreFound()
-      throws InterruptedException, IOException {
+  public void shouldNotifyEventBusWhenDuplicateClassesAreFound() throws IOException {
     Path jarDirectory = folder.newFolder("jarDir");
 
     Path first =
@@ -144,7 +143,7 @@ public class JarDirectoryStepTest {
   }
 
   @Test(expected = HumanReadableException.class)
-  public void shouldFailIfMainClassMissing() throws InterruptedException, IOException {
+  public void shouldFailIfMainClassMissing() throws IOException {
     Path zipup = folder.newFolder("zipup");
 
     Path zip = createZip(zipup.resolve("a.zip"), "com/example/Main.class");
@@ -172,8 +171,7 @@ public class JarDirectoryStepTest {
   }
 
   @Test
-  public void shouldNotComplainWhenDuplicateDirectoryNamesAreAdded()
-      throws InterruptedException, IOException {
+  public void shouldNotComplainWhenDuplicateDirectoryNamesAreAdded() throws IOException {
     Path zipup = folder.newFolder();
 
     Path first = createZip(zipup.resolve("first.zip"), "dir/example.txt", "dir/root1file.txt");
@@ -208,8 +206,7 @@ public class JarDirectoryStepTest {
   }
 
   @Test
-  public void entriesFromTheGivenManifestShouldOverrideThoseInTheJars()
-      throws InterruptedException, IOException {
+  public void entriesFromTheGivenManifestShouldOverrideThoseInTheJars() throws IOException {
     String expected = "1.4";
     // Write the manifest, setting the implementation version
     Path tmp = folder.newFolder();
@@ -257,7 +254,7 @@ public class JarDirectoryStepTest {
   }
 
   @Test
-  public void jarsShouldContainDirectoryEntries() throws InterruptedException, IOException {
+  public void jarsShouldContainDirectoryEntries() throws IOException {
     Path zipup = folder.newFolder("dir-zip");
 
     Path subdir = zipup.resolve("dir/subdir");
@@ -342,7 +339,7 @@ public class JarDirectoryStepTest {
   }
 
   @Test
-  public void shouldNotIncludeFilesInBlacklist() throws InterruptedException, IOException {
+  public void shouldNotIncludeFilesInBlacklist() throws IOException {
     Path zipup = folder.newFolder();
     Path first =
         createZip(
@@ -373,8 +370,7 @@ public class JarDirectoryStepTest {
   }
 
   @Test
-  public void shouldNotIncludeFilesInClassesToRemoveFromJar()
-      throws InterruptedException, IOException {
+  public void shouldNotIncludeFilesInClassesToRemoveFromJar() throws IOException {
     Path zipup = folder.newFolder();
     Path first =
         createZip(
@@ -408,7 +404,7 @@ public class JarDirectoryStepTest {
   }
 
   @Test
-  public void timesAreSanitized() throws InterruptedException, IOException {
+  public void timesAreSanitized() throws IOException {
     Path zipup = folder.newFolder("dir-zip");
 
     // Create a jar file with a file and a directory.
@@ -503,7 +499,7 @@ public class JarDirectoryStepTest {
     Path output = folder.newFile("output.jar");
     JarDirectoryStep step =
         new JarDirectoryStep(
-            new FakeProjectFilesystem(folder.getRoot()),
+            new FakeProjectFilesystem(CanonicalCellName.rootCell(), folder.getRoot()),
             JarParameters.builder()
                 .setJarPath(output)
                 .setEntriesToJar(ImmutableSortedSet.of(dir, inputJar))
@@ -544,8 +540,7 @@ public class JarDirectoryStepTest {
   }
 
   private byte[] jarDirectoryAndReadManifestContents(
-      Manifest fromJar, Manifest fromUser, boolean mergeEntries)
-      throws InterruptedException, IOException {
+      Manifest fromJar, Manifest fromUser, boolean mergeEntries) throws IOException {
     // Create a jar with a manifest we'd expect to see merged.
     Path originalJar = folder.newFile("unexpected.jar");
     JarOutputStream ignored = new JarOutputStream(Files.newOutputStream(originalJar), fromJar);

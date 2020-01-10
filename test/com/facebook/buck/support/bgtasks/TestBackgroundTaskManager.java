@@ -1,26 +1,27 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.support.bgtasks;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.util.types.Unit;
+import com.google.common.collect.ImmutableMap;
 import java.util.Map;
-import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Future;
 
 /**
  * Test implementation of {@link BackgroundTaskManager}. Behaves same as single-threaded blocking
@@ -29,36 +30,28 @@ import java.util.Optional;
  */
 public class TestBackgroundTaskManager extends AsyncBackgroundTaskManager {
 
-  private final Map<ManagedBackgroundTask, Optional<Exception>> statuses;
+  private final Map<BackgroundTask<?>, Future<Unit>> tasks;
 
-  public TestBackgroundTaskManager() {
-    super(true, 1);
-    this.statuses = new HashMap<>();
+  public static TestBackgroundTaskManager of() {
+    TestBackgroundTaskManager manager = new TestBackgroundTaskManager();
+    manager.startScheduling();
+    return manager;
+  }
+
+  private TestBackgroundTaskManager() {
+    super(1);
+    tasks = new ConcurrentHashMap<>();
+  }
+
+  public TaskManagerCommandScope getNewScope(BuildId buildId) {
+    return getNewScope(buildId, true);
   }
 
   @Override
-  void runTask(ManagedBackgroundTask managedTask) {
-    BackgroundTask<?> task = managedTask.getTask();
-    try {
-      task.run();
-      statuses.put(managedTask, Optional.empty());
-    } catch (Exception e) {
-      statuses.put(managedTask, Optional.of(e));
-    }
-  }
-
-  /**
-   * Get map of tasks to any exceptions caught. Returns map of client-visible {@link BackgroundTask}
-   * instead of {@link ManagedBackgroundTask}.
-   *
-   * @return Task-exception map
-   */
-  public Map<BackgroundTask<?>, Optional<Exception>> getTaskErrors() {
-    Map<BackgroundTask<?>, Optional<Exception>> output = new HashMap<>();
-    for (Map.Entry<ManagedBackgroundTask, Optional<Exception>> entry : statuses.entrySet()) {
-      output.put(entry.getKey().getTask(), entry.getValue());
-    }
-    return output;
+  Future<Unit> schedule(ManagedBackgroundTask<?> task) {
+    Future<Unit> f = super.schedule(task);
+    tasks.put(task.getTask(), f);
+    return f;
   }
 
   /**
@@ -66,11 +59,7 @@ public class TestBackgroundTaskManager extends AsyncBackgroundTaskManager {
    *
    * @return Task list
    */
-  public List<BackgroundTask<?>> getScheduledTasksToTest() {
-    List<BackgroundTask<?>> output = new ArrayList<>();
-    for (ManagedBackgroundTask mTask : getScheduledTasks()) {
-      output.add(mTask.getTask());
-    }
-    return output;
+  public ImmutableMap<BackgroundTask<?>, Future<Unit>> getScheduledTasksToTest() {
+    return ImmutableMap.copyOf(tasks);
   }
 }

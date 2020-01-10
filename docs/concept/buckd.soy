@@ -1,18 +1,19 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 {namespace buck.buckd}
 
 /***/
@@ -73,17 +74,18 @@ created by text editors.
 <p>
 The Buck daemon process is killed if
 <ul>
-<li>the <code>buck clean</code> command is run.</li>
+<li>the {call buck.cmd_clean /} command is run.</li>
 <li>the <code>.buckd</code> directory in the project root directory is deleted.</li>
 <li>the daemon has been idle for 24 hours.</li>
 </ul>
 </p>
 
 <p>
-You can also kill the Buck daemon explicitly by running <code>buck kill</code> in 
-the directory tree for your project. Note that if&mdash;for some
-reason&mdash;multiple instances of the daemon are running, 
-the <code>buck kill</code> command kills only one of them.
+You can also kill the Buck daemon explicitly by 
+running {call buck.cmd_kill /} in the directory tree for your project.
+Note that if&mdash;for some reason&mdash;multiple instances of the
+daemon are running, the <code>buck kill</code> command kills only one of
+them.
 </p>
 
 <p>

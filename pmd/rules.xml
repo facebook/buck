@@ -11,8 +11,14 @@
   for ruleset definitions. Note that Buck is currently built with PMD 5.0.3.
   -->
 
-  <rule ref="rulesets/java/basic.xml" />
-  <rule ref="rulesets/java/empty.xml" />
+  <rule ref="rulesets/java/basic.xml">
+    <exclude name="CollapsibleIfStatements" />
+  </rule>
+
+  <rule ref="rulesets/java/empty.xml">
+    <exclude name="EmptyCatchBlock" />
+    <exclude name="EmptyWhileStmt" />
+  </rule>
 
   <rule ref="rulesets/java/imports.xml">
     <!--
@@ -56,6 +62,7 @@
     <exclude name="RedundantFieldInitializer" />
     <exclude name="UseStringBufferForStringAppends" />
     <exclude name="SimplifyStartsWith" />
+    <exclude name="PrematureDeclaration" />
   </rule>
 
   <rule name="BuckStyleImmutableMustBePackagePrivate"
@@ -102,6 +109,97 @@ public interface AbstractBaz {
 }
 
   ]]>
+    </example>
+  </rule>
+  <rule name="BuckStyleValueMustNotHaveDefaultsImplicitlyOverridden"
+    message="
+Value types decorated with @BuckStyleValue and @Value.Immutable must have explicit values
+for 'builder', 'copy' and 'prehash', preferably set to the default false.
+Ex: @Value.Immutable(prehash = true, builder = false, copy = false)"
+        class="net.sourceforge.pmd.lang.rule.XPathRule"
+        language="java">
+        <description> Using @Value.Immutable overrides the defaults set in @BuckStyleValue,
+          and that shouldn't be done unintentionally.</description>
+    <priority>1</priority>
+    <properties>
+      <property name="xpath">
+        <value>
+          <![CDATA[
+//Annotation[
+    following-sibling::ClassOrInterfaceDeclaration[
+      preceding-sibling::Annotation//Name/@Image='BuckStyleValue'
+    ]
+  ]/*[
+    Name/@Image='Value.Immutable'
+    and (not(MemberValuePairs/MemberValuePair/@Image="builder")
+         or not(MemberValuePairs/MemberValuePair/@Image="copy")
+         or not(MemberValuePairs/MemberValuePair/@Image="prehash"))
+  ]
+          ]]>
+        </value>
+      </property>
+    </properties>
+    <example>
+      <![CDATA[
+// OK: No @Value.Immutable
+@BuckStyleValue
+abstract class Ok1 {
+}
+
+// OK: Not @BuckStyleValue
+@Value.Immutable(prehash = true)
+@BuckStyleValue
+abstract class Ok2 {
+}
+
+// OK: builder and copy explicitly set to normal
+@Value.Immutable(prehash = true, builder = false, copy = false)
+@BuckStyleValue
+abstract class Ok3 {
+}
+
+// OK: builder and copy explicitly overridden
+@Value.Immutable(prehash = true, builder = true, copy = true)
+@BuckStyleValue
+abstract class Ok4 {
+}
+
+// Bad: builder and copy not specified
+@Value.Immutable
+@BuckStyleValue
+abstract class Bad1 {
+}
+
+// Bad: builder and copy not specified
+@Value.Immutable(prehash = true)
+@BuckStyleValue
+abstract class Bad2 {
+}
+
+// Bad: copy not specified
+@Value.Immutable(prehash = true, builder = true)
+@BuckStyleValue
+abstract class Bad3 {
+}
+
+// Bad: builder not specified
+@Value.Immutable(copy = true, prehash = true)
+@BuckStyleValue
+abstract class Bad3 {
+}
+
+// Bad: prehash not specified
+@Value.Immutable(copy = true, builder = true)
+@BuckStyleValue
+abstract class Bad3 {
+}
+
+// Bad: builder and copy not specified, order reversed
+@BuckStyleValue
+@Value.Immutable(prehash = true)
+abstract class Bad4 {
+}
+      ]]>
     </example>
   </rule>
   <rule name="BuckStyleImmutableNameMustStartWithAbstract"

@@ -1,21 +1,22 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android.aapt;
 
+import com.facebook.buck.android.aapt.RDotTxtEntry.CustomDrawableType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.xml.DocumentLocation;
 import java.io.IOException;
@@ -41,13 +42,11 @@ class AndroidResourceIndexCollector implements ResourceCollector {
 
   @Override
   public void addCustomDrawableResourceIfNotPresent(
-      RDotTxtEntry.RType rType, String name, Path path, DocumentLocation documentLocation) {
-    addResource(rType, name, documentLocation, path);
-  }
-
-  @Override
-  public void addGrayscaleImageResourceIfNotPresent(
-      RDotTxtEntry.RType rType, String name, Path path, DocumentLocation documentLocation) {
+      RDotTxtEntry.RType rType,
+      String name,
+      Path path,
+      DocumentLocation documentLocation,
+      CustomDrawableType drawableType) {
     addResource(rType, name, documentLocation, path);
   }
 
@@ -91,11 +90,6 @@ class AndroidResourceIndexCollector implements ResourceCollector {
             documentLocation.getLineNumber(),
             documentLocation.getColumnNumber(),
             path));
-  }
-
-  @Override
-  public void addResourceIfNotPresent(RDotTxtEntry rDotTxtEntry) {
-    // do nothing -- this method just adds references from rDotTxt files
   }
 
   public SortedSet<AndroidResourceIndexEntry> getResourceIndex() {

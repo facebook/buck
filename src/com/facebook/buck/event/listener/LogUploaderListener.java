@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.event.listener;
@@ -24,7 +24,7 @@ import com.facebook.buck.event.chrome_trace.ChromeTraceBuckConfig;
 import com.facebook.buck.support.bgtasks.BackgroundTask;
 import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskAction;
-import com.facebook.buck.support.bgtasks.TaskManagerScope;
+import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.trace.uploader.launcher.UploaderLauncher;
 import com.facebook.buck.util.trace.uploader.types.CompressionType;
@@ -42,19 +42,22 @@ public class LogUploaderListener implements BuckEventListener {
   private final Path logFilePath;
   private final Path logDirectoryPath;
   private final BuildId buildId;
-  private final TaskManagerScope managerScope;
+  private final TaskManagerCommandScope managerScope;
+  private final String traceKindFile;
 
   public LogUploaderListener(
       ChromeTraceBuckConfig config,
       Path logFilePath,
       Path logDirectoryPath,
       BuildId buildId,
-      TaskManagerScope managerScope) {
+      TaskManagerCommandScope managerScope,
+      String traceKindFile) {
     this.config = config;
     this.logFilePath = logFilePath;
     this.logDirectoryPath = logDirectoryPath;
     this.buildId = buildId;
     this.managerScope = managerScope;
+    this.traceKindFile = traceKindFile;
   }
 
   @Subscribe
@@ -80,7 +83,7 @@ public class LogUploaderListener implements BuckEventListener {
             traceUploadUri.get(), logDirectoryPath, logFilePath, buildId);
     BackgroundTask<LogUploaderListenerCloseArgs> task =
         ImmutableBackgroundTask.<LogUploaderListenerCloseArgs>builder()
-            .setAction(new LogUploaderListenerCloseAction())
+            .setAction(new LogUploaderListenerCloseAction(traceKindFile))
             .setActionArgs(args)
             .setName("LogUploaderListener_close")
             .build();
@@ -92,13 +95,20 @@ public class LogUploaderListener implements BuckEventListener {
    * in background.
    */
   static class LogUploaderListenerCloseAction implements TaskAction<LogUploaderListenerCloseArgs> {
+
+    private final String traceFileKind;
+
+    public LogUploaderListenerCloseAction(String traceFileKind) {
+      this.traceFileKind = traceFileKind;
+    }
+
     @Override
     public void run(LogUploaderListenerCloseArgs args) {
-      Path logFile = args.getLogDirectoryPath().resolve("upload-build-log.log");
+      Path logFile = args.getLogDirectoryPath().resolve("upload_" + traceFileKind + ".log");
       UploaderLauncher.uploadInBackground(
           args.getBuildId(),
           args.getLogFilePath(),
-          "build_log",
+          traceFileKind,
           args.getTraceUploadURI(),
           logFile,
           CompressionType.NONE);

@@ -1,0 +1,26 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "report",
+    srcs = glob(["*.java"]),
+    tests = [
+        "//test/com/facebook/buck/support/build/report:report",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/core/config:config",
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/doctor:doctor",
+        "//src/com/facebook/buck/doctor/config:config",
+        "//src/com/facebook/buck/support/bgtasks:bgtasks",
+        "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/environment:environment",
+        "//src/com/facebook/buck/util/json:json",
+        "//src/com/facebook/buck/util/versioncontrol:value_types",
+        "//src/com/facebook/buck/util/versioncontrol:versioncontrol_generator",
+        "//third-party/java/guava:guava",
+        "//third-party/java/okhttp:okhttp",
+    ],
+)

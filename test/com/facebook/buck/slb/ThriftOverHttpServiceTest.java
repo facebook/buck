@@ -1,24 +1,24 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.slb;
 
-import com.facebook.buck.distributed.thrift.FrontendRequest;
-import com.facebook.buck.distributed.thrift.FrontendRequestType;
-import com.facebook.buck.distributed.thrift.FrontendResponse;
+import com.facebook.buck.frontend.thrift.FrontendRequest;
+import com.facebook.buck.frontend.thrift.FrontendRequestType;
+import com.facebook.buck.frontend.thrift.FrontendResponse;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,8 +39,8 @@ public class ThriftOverHttpServiceTest {
 
   @Before
   public void setUp() {
-    httpService = EasyMock.createMock(HttpService.class);
-    config = ThriftOverHttpServiceConfig.builder().setService(httpService).build();
+    httpService = EasyMock.createNiceMock(HttpService.class);
+    config = ThriftOverHttpServiceConfig.of(httpService);
     service = new ThriftOverHttpServiceImpl<FrontendRequest, FrontendResponse>(config);
   }
 
@@ -48,13 +48,13 @@ public class ThriftOverHttpServiceTest {
   public void testSendValidMessageAndReturnError() throws IOException {
     // TODO(ruibm): Add jetty end to end integration tests for this API.
     FrontendRequest request = new FrontendRequest();
-    request.setType(FrontendRequestType.BUILD_STATUS);
+    request.setType(FrontendRequestType.ANNOUNCEMENT);
 
     FrontendResponse response = new FrontendResponse();
-    response.setType(FrontendRequestType.START_BUILD);
+    response.setType(FrontendRequestType.ANNOUNCEMENT);
 
     Capture<Request.Builder> requestBuilder = EasyMock.newCapture();
-    HttpResponse httpResponse = EasyMock.createMock(HttpResponse.class);
+    HttpResponse httpResponse = EasyMock.createNiceMock(HttpResponse.class);
     EasyMock.expect(httpResponse.statusCode()).andReturn(404).atLeastOnce();
     EasyMock.expect(httpResponse.statusMessage()).andReturn("topspin").atLeastOnce();
     EasyMock.expect(httpResponse.requestUrl()).andReturn("super url").atLeastOnce();
@@ -81,10 +81,10 @@ public class ThriftOverHttpServiceTest {
   @Test
   public void testSendValidMessageAndReturnValidResponse() throws IOException, TException {
     FrontendRequest request = new FrontendRequest();
-    request.setType(FrontendRequestType.BUILD_STATUS);
+    request.setType(FrontendRequestType.ANNOUNCEMENT);
 
     FrontendResponse expectedResponse = new FrontendResponse();
-    expectedResponse.setType(FrontendRequestType.START_BUILD);
+    expectedResponse.setType(FrontendRequestType.ANNOUNCEMENT);
 
     Capture<Request.Builder> requestBuilder = EasyMock.newCapture();
     TSerializer serializer = new TSerializer(config.getThriftProtocol().getFactory());

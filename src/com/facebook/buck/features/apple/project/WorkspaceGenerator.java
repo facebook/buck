@@ -1,21 +1,22 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.apple.project;
 
+import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.MoreProjectFilesystems;
 import com.facebook.buck.io.file.MorePaths;
@@ -53,6 +54,7 @@ class WorkspaceGenerator {
   private final ProjectFilesystem projectFilesystem;
   private final String workspaceName;
   private final Path outputDirectory;
+  private final AppleConfig appleConfig;
   private final SortedMap<String, WorkspaceNode> children;
 
   private static class WorkspaceNode {}
@@ -82,10 +84,14 @@ class WorkspaceGenerator {
   }
 
   public WorkspaceGenerator(
-      ProjectFilesystem projectFilesystem, String workspaceName, Path outputDirectory) {
+      ProjectFilesystem projectFilesystem,
+      String workspaceName,
+      Path outputDirectory,
+      AppleConfig appleConfig) {
     this.projectFilesystem = projectFilesystem;
     this.workspaceName = workspaceName;
     this.outputDirectory = outputDirectory;
+    this.appleConfig = appleConfig;
     this.children = new TreeMap<>();
   }
 
@@ -269,9 +275,15 @@ class WorkspaceGenerator {
             + "<plist version=\"1.0\">\n"
             + "<dict>\n"
             + "\t<key>IDEWorkspaceSharedSettings_AutocreateContextsIfNeeded</key>\n"
-            + "\t<false/>\n"
-            + "</dict>\n"
-            + "</plist>";
+            + "\t<false/>\n";
+
+    if (!appleConfig.shouldUseModernBuildSystem()) {
+      workspaceSettings =
+          workspaceSettings + "\t<key>BuildSystemType</key>\n" + "\t<string>Original</string>\n";
+    }
+
+    workspaceSettings = workspaceSettings + "</dict>\n" + "</plist>";
+
     projectFilesystem.writeContentsToPath(workspaceSettings, workspaceSettingsPath);
     return projectWorkspaceDir;
   }

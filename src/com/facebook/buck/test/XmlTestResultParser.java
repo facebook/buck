@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.test;
@@ -148,21 +148,21 @@ public class XmlTestResultParser {
       long time = Long.parseLong(node.getAttribute("time"));
       String typeString = node.getAttribute("type");
       ResultType type = ResultType.valueOf(typeString);
-
       String message;
       String stacktrace;
       if (type == ResultType.SUCCESS) {
         message = null;
         stacktrace = null;
       } else {
-        message = node.getAttribute("message");
-        stacktrace = node.getAttribute("stacktrace");
+        message = TestXmlUnescaper.ATTRIBUTE_UNESCAPER.unescape(node.getAttribute("message"));
+        stacktrace = TestXmlUnescaper.ATTRIBUTE_UNESCAPER.unescape(node.getAttribute("stacktrace"));
       }
 
       NodeList stdoutElements = node.getElementsByTagName("stdout");
       String stdOut;
       if (stdoutElements.getLength() == 1) {
-        stdOut = stdoutElements.item(0).getTextContent();
+        stdOut =
+            TestXmlUnescaper.CONTENT_UNESCAPER.unescape(stdoutElements.item(0).getTextContent());
       } else {
         stdOut = null;
       }
@@ -170,7 +170,8 @@ public class XmlTestResultParser {
       NodeList stderrElements = node.getElementsByTagName("stderr");
       String stdErr;
       if (stderrElements.getLength() == 1) {
-        stdErr = stderrElements.item(0).getTextContent();
+        stdErr =
+            TestXmlUnescaper.CONTENT_UNESCAPER.unescape(stderrElements.item(0).getTextContent());
       } else {
         stdErr = null;
       }

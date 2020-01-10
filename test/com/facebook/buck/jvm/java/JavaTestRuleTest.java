@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
@@ -23,13 +23,11 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.android.device.TargetDevice;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -48,7 +46,10 @@ public class JavaTestRuleTest {
 
     ImmutableList<String> amended =
         rule.amendVmArgs(
-            vmArgs, createMock(SourcePathResolver.class), Optional.empty(), Optional.empty());
+            vmArgs,
+            createMock(SourcePathResolverAdapter.class),
+            Optional.empty(),
+            Optional.empty());
 
     MoreAsserts.assertListEquals(vmArgs, amended);
   }
@@ -61,7 +62,10 @@ public class JavaTestRuleTest {
     TargetDevice device = new TargetDevice(TargetDevice.Type.EMULATOR, Optional.empty());
     ImmutableList<String> amended =
         rule.amendVmArgs(
-            vmArgs, createMock(SourcePathResolver.class), Optional.of(device), Optional.empty());
+            vmArgs,
+            createMock(SourcePathResolverAdapter.class),
+            Optional.of(device),
+            Optional.empty());
 
     ImmutableList<String> expected = ImmutableList.of("--one", "-Dbuck.device=emulator");
     assertEquals(expected, amended);
@@ -75,7 +79,10 @@ public class JavaTestRuleTest {
     TargetDevice device = new TargetDevice(TargetDevice.Type.REAL_DEVICE, Optional.empty());
     ImmutableList<String> amended =
         rule.amendVmArgs(
-            vmArgs, createMock(SourcePathResolver.class), Optional.of(device), Optional.empty());
+            vmArgs,
+            createMock(SourcePathResolverAdapter.class),
+            Optional.of(device),
+            Optional.empty());
 
     ImmutableList<String> expected = ImmutableList.of("--one", "-Dbuck.device=device");
     assertEquals(expected, amended);
@@ -89,7 +96,10 @@ public class JavaTestRuleTest {
     TargetDevice device = new TargetDevice(TargetDevice.Type.EMULATOR, Optional.of("123"));
     List<String> amended =
         rule.amendVmArgs(
-            vmArgs, createMock(SourcePathResolver.class), Optional.of(device), Optional.empty());
+            vmArgs,
+            createMock(SourcePathResolverAdapter.class),
+            Optional.of(device),
+            Optional.empty());
 
     List<String> expected =
         ImmutableList.of("--one", "-Dbuck.device=emulator", "-Dbuck.device.id=123");
@@ -103,7 +113,10 @@ public class JavaTestRuleTest {
 
     List<String> amended =
         rule.amendVmArgs(
-            vmArgs, createMock(SourcePathResolver.class), Optional.empty(), Optional.of("path"));
+            vmArgs,
+            createMock(SourcePathResolverAdapter.class),
+            Optional.empty(),
+            Optional.of("path"));
 
     List<String> expected = ImmutableList.of("--one", "-Djava.io.tmpdir=path");
     assertEquals(expected, amended);
@@ -112,7 +125,6 @@ public class JavaTestRuleTest {
   @Test
   public void transitiveLibraryDependenciesAreRuntimeDeps() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
 
     FakeJavaLibrary transitiveDep =
         graphBuilder.addToIndex(
@@ -131,7 +143,7 @@ public class JavaTestRuleTest {
             .build(graphBuilder);
 
     assertThat(
-        rule.getRuntimeDeps(ruleFinder).collect(ImmutableSet.toImmutableSet()),
+        rule.getRuntimeDeps(graphBuilder).collect(ImmutableSet.toImmutableSet()),
         Matchers.hasItems(
             rule.getCompiledTestsLibrary().getBuildTarget(),
             firstOrderDep.getBuildTarget(),
@@ -140,9 +152,8 @@ public class JavaTestRuleTest {
 
   private JavaTest newRule(ImmutableList<String> vmArgs) throws NoSuchBuildTargetException {
     ImmutableList<StringWithMacros> vmArgMacros =
-        vmArgs
-            .stream()
-            .map(arg -> StringWithMacros.of(ImmutableList.of(Either.ofLeft(arg))))
+        vmArgs.stream()
+            .map(StringWithMacros::ofConstantString)
             .collect(ImmutableList.toImmutableList());
     return JavaTestBuilder.createBuilder(BuildTargetFactory.newInstance("//example:test"))
         .setVmArgs(vmArgMacros)

@@ -1,22 +1,23 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android.toolchain.ndk.impl;
 
 import com.facebook.buck.android.AndroidBuckConfig;
+import com.facebook.buck.android.AndroidBuckConfig.NdkSearchOrderEntry;
 import com.facebook.buck.android.toolchain.common.BaseAndroidToolchainResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.log.Logger;
@@ -46,7 +47,7 @@ public class AndroidNdkResolver extends BaseAndroidToolchainResolver {
   private static final Logger LOG = Logger.get(AndroidNdkResolver.class);
 
   /** Android NDK versions starting with this number are not supported. */
-  private static final String NDK_MIN_UNSUPPORTED_VERSION = "18";
+  private static final String NDK_MIN_UNSUPPORTED_VERSION = "21";
 
   // Pre r11 NDKs store the version at RELEASE.txt.
   @VisibleForTesting static final String NDK_PRE_R11_VERSION_FILENAME = "RELEASE.TXT";
@@ -90,48 +91,41 @@ public class AndroidNdkResolver extends BaseAndroidToolchainResolver {
   }
 
   private Optional<Path> findNdk(AndroidBuckConfig config) {
-    try {
-      Optional<Path> ndkRepositoryPath =
-          findFirstDirectory(ImmutableList.of(getEnvironmentVariable("ANDROID_NDK_REPOSITORY")));
-      if (ndkRepositoryPath.isPresent()) {
-        return findNdkFromRepository(ndkRepositoryPath.get());
-      }
-    } catch (RuntimeException e) {
-      ndkErrorMessage = Optional.of(e.getMessage());
-    }
-    try {
-      Optional<Path> ndkDirectoryPath =
-          findFirstDirectory(
+    for (NdkSearchOrderEntry searchOrderEntry : config.getNdkSearchOrder()) {
+      ImmutableList<Pair<String, Optional<String>>> ndkRepositoryPaths = ImmutableList.of(),
+          ndkDirectoryPaths = ImmutableList.of();
+      switch (searchOrderEntry) {
+        case ANDROID_NDK_REPOSITORY_ENV:
+          ndkRepositoryPaths =
+              ImmutableList.of(getEnvironmentVariable(searchOrderEntry.entryValue));
+          break;
+        case ANDROID_NDK_ENV:
+        case NDK_HOME_ENV:
+        case ANDROID_NDK_HOME_ENV:
+          ndkDirectoryPaths = ImmutableList.of(getEnvironmentVariable(searchOrderEntry.entryValue));
+          break;
+        case NDK_REPOSITORY_CONFIG:
+          ndkRepositoryPaths =
               ImmutableList.of(
-                  getEnvironmentVariable("ANDROID_NDK"), getEnvironmentVariable("NDK_HOME")));
-      if (ndkDirectoryPath.isPresent()) {
-        return findNdkFromDirectory(ndkDirectoryPath.get());
+                  new Pair<>("ndk.ndk_repository_path", config.getNdkRepositoryPath()));
+          break;
+        case NDK_DIRECTORY_CONFIG:
+          ndkDirectoryPaths = ImmutableList.of(new Pair<>("ndk.ndk_path", config.getNdkPath()));
+          break;
+        default:
+          throw new AssertionError("Unreachable");
       }
-    } catch (RuntimeException e) {
-      ndkErrorMessage = Optional.of(e.getMessage());
-    }
-    try {
-      Optional<Path> ndkRepositoryPath =
-          findFirstDirectory(
-              ImmutableList.of(
-                  new Pair<String, Optional<String>>(
-                      "ndk.ndk_repository_path", config.getNdkRepositoryPath())));
-      if (ndkRepositoryPath.isPresent()) {
-        return findNdkFromRepository(ndkRepositoryPath.get());
+      try {
+        Optional<Path> ndkRepositoryPath = findFirstDirectory(ndkRepositoryPaths);
+        Optional<Path> ndkDirectoryPath = findFirstDirectory(ndkDirectoryPaths);
+        if (ndkRepositoryPath.isPresent()) {
+          return findNdkFromRepository(ndkRepositoryPath.get());
+        } else if (ndkDirectoryPath.isPresent()) {
+          return findNdkFromDirectory(ndkDirectoryPath.get());
+        }
+      } catch (RuntimeException e) {
+        ndkErrorMessage = Optional.of(e.getMessage());
       }
-    } catch (RuntimeException e) {
-      ndkErrorMessage = Optional.of(e.getMessage());
-    }
-    try {
-      Optional<Path> ndkDirectoryPath =
-          findFirstDirectory(
-              ImmutableList.of(
-                  new Pair<String, Optional<String>>("ndk.ndk_path", config.getNdkPath())));
-      if (ndkDirectoryPath.isPresent()) {
-        return findNdkFromDirectory(ndkDirectoryPath.get());
-      }
-    } catch (RuntimeException e) {
-      ndkErrorMessage = Optional.of(e.getMessage());
     }
 
     if (!ndkErrorMessage.isPresent()) {
@@ -180,8 +174,7 @@ public class AndroidNdkResolver extends BaseAndroidToolchainResolver {
 
     VersionStringComparator versionComparator = new VersionStringComparator();
     List<Pair<Path, Optional<String>>> availableNdks =
-        repositoryContents
-            .stream()
+        repositoryContents.stream()
             .filter(Files::isDirectory)
             // Pair of path to version number
             .map(p -> new Pair<>(p, findNdkVersion(p)))
@@ -210,8 +203,7 @@ public class AndroidNdkResolver extends BaseAndroidToolchainResolver {
       }
 
       Optional<Path> targetNdkPath =
-          availableNdks
-              .stream()
+          availableNdks.stream()
               .filter(p -> versionEquals(targetNdkVersion.get(), p.getSecond().get()))
               .map(Pair::getFirst)
               .findFirst();
@@ -219,8 +211,7 @@ public class AndroidNdkResolver extends BaseAndroidToolchainResolver {
         return targetNdkPath;
       }
       targetNdkPath =
-          availableNdks
-              .stream()
+          availableNdks.stream()
               .filter(p -> versionStartsWith(targetNdkVersion.get(), p.getSecond().get()))
               .map(Pair::getFirst)
               .findFirst();
@@ -233,8 +224,7 @@ public class AndroidNdkResolver extends BaseAndroidToolchainResolver {
                   + targetNdkVersion.get()
                   + " is not "
                   + "available. The following versions are available: "
-                  + availableNdks
-                      .stream()
+                  + availableNdks.stream()
                       .map(Pair::getSecond)
                       .map(Optional::get)
                       .collect(Collectors.joining(", ")));

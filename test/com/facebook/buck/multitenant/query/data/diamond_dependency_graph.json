@@ -1,0 +1,107 @@
+[
+  {
+    "commit": "608fd7bdf9",
+    "added": [
+      {
+        "path": "java/com/example",
+        "nodes": {
+          "A": {
+            "attributes": {
+              "srcs": [
+                "A.java"
+              ],
+              "buck.type": "java_library"
+            }
+          },
+          "B": {
+            "attributes": {
+              "srcs": [
+                "B/com/example/B.java"
+              ],
+              "buck.type": "java_library",
+              "resources": [
+                "vector.cpp"
+              ],
+              "tests": []
+            },
+            "deps": [
+              "//java/com/example:A"
+            ]
+          },
+          "C": {
+            "attributes": {
+              "srcs": [
+                ":D",
+                "//java/com/facebook/buck:buck",
+                "vector.cpp",
+                "some_cell//foo/build:rule"
+              ],
+              "buck.type": "cxx_library",
+              "exported_headers": [
+                "vector.h"
+              ],
+              // Values that deliberately do not correspond to build targets.
+              "tests": [
+                "foo",
+                10
+              ]
+            },
+            "deps": [
+              "//java/com/example:A"
+            ]
+          },
+          "D": {
+            "attributes": {
+              "srcs": [
+                "D.java"
+              ],
+              "buck.type": "java_library",
+              "tests": [
+                "//test/com/example:test"
+              ]
+            },
+            "deps": [
+              "//java/com/example:B",
+              "//java/com/example:C"
+            ]
+          }
+        }
+      },
+      {
+        "path": "java/com/facebook/buck",
+        "nodes": {
+          "buck": {
+            "attributes": {
+              "buck.type": "java_binary"
+            }
+          }
+        }
+      },
+      {
+        "path": "empty/build/file",
+        "nodes": [
+          // In practice, we would not expect there to be a build file that
+          // does not define any build rules, but it is certainly possible.
+        ]
+      },
+      {
+        "path": "test/com/example",
+        "nodes": {
+          "script": {
+            "attributes": {
+              "buck.type": "genrule",
+              "tests": [
+                ":test"
+              ]
+            }
+          },
+          "test": {
+            "attributes": {
+              "buck.type": "sh_test"
+            }
+          }
+        }
+      }
+    ]
+  }
+]

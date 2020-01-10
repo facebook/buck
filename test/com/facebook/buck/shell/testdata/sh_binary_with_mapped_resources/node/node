@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 if [[ "$OSTYPE" =~ ^darwin ]]; then
   # This is OS X.
   $BUCK_DEFAULT_RUNTIME_RESOURCES/binaries/os_x_node_executable "$@"

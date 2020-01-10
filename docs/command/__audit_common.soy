@@ -1,0 +1,79 @@
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+{namespace buckaudit}
+
+/***/
+{template .example_ruletypes}
+
+<p>
+The following command line uses <code>buck audit ruletypes</code> with 
+the <code>grep</code> command to print all the build rules that have the 
+string <code>android</code> in their names. 
+</p>
+
+<p>
+<pre class="prettyprint lang-bash">
+{literal}
+buck audit ruletypes | grep android
+{/literal}
+</pre>
+</p>
+
+<p>
+Note that these are not all the rules that Buck provides for Android
+development.  For example, the rules <code>apk_genrule</code> and <code>ndk_library</code> support 
+Android development, but do not themselves contain the string <code>android</code> in their names.
+</p>
+
+{/template}
+
+
+/***/
+{template .example_ruletype}
+
+<p>
+The following command line uses <code>buck audit ruletype</code> to view 
+the arguments supported by the {call buck.remote_file /} rule.
+</p>
+
+<p>
+<pre>
+{literal}
+buck audit ruletype remote_file
+{/literal}
+</pre>
+</p>
+
+<p>
+<pre>
+{literal}
+def remote_file (
+    name,
+    sha1,
+    url,
+    labels = None,
+    licenses = None,
+    out = None,
+    type = None,
+):
+    ...
+{/literal}
+</pre>
+</p>
+
+{/template}
+

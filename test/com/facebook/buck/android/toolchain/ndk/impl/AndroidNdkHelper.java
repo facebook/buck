@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android.toolchain.ndk.impl;
@@ -19,14 +19,21 @@ package com.facebook.buck.android.toolchain.ndk.impl;
 import static org.junit.Assert.assertFalse;
 
 import com.facebook.buck.android.AndroidBuckConfig;
+import com.facebook.buck.android.AndroidTestUtils;
 import com.facebook.buck.android.relinker.Symbols;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
+import com.facebook.buck.android.toolchain.ndk.NdkCompilerType;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformCompiler;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntimeType;
+import com.facebook.buck.android.toolchain.ndk.NdkTargetArchAbi;
+import com.facebook.buck.android.toolchain.ndk.UnresolvedNdkCxxPlatform;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -35,6 +42,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -42,6 +50,7 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.BufferedReader;
 import java.io.File;
@@ -60,30 +69,31 @@ public class AndroidNdkHelper {
 
   private static final Logger LOG = Logger.get(AndroidNdkHelper.class);
 
+  private static final ImmutableMap<String, ImmutableMap<String, String>> NDK_SETTING =
+      ImmutableMap.of("ndk", ImmutableMap.of("ndk_version", AndroidTestUtils.TARGET_NDK_VERSION));
+
   private AndroidNdkHelper() {}
 
   public static final AndroidBuckConfig DEFAULT_CONFIG =
       new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect());
 
   public static Optional<AndroidNdk> detectAndroidNdk(ProjectFilesystem filesystem) {
-    Optional<AndroidNdk> androidNdk;
     try {
-      androidNdk =
-          new AndroidNdkFactory()
-              .createToolchain(
-                  new ToolchainProviderBuilder().build(),
-                  ToolchainCreationContext.of(
-                      EnvVariablesProvider.getSystemEnv(),
-                      FakeBuckConfig.builder().build(),
-                      filesystem,
-                      new DefaultProcessExecutor(new TestConsole()),
-                      new ExecutableFinder(),
-                      TestRuleKeyConfigurationFactory.create()));
+      return new AndroidNdkFactory()
+          .createToolchain(
+              new ToolchainProviderBuilder().build(),
+              ToolchainCreationContext.of(
+                  EnvVariablesProvider.getSystemEnv(),
+                  FakeBuckConfig.builder().setSections(NDK_SETTING).build(),
+                  filesystem,
+                  new DefaultProcessExecutor(new TestConsole()),
+                  new ExecutableFinder(),
+                  TestRuleKeyConfigurationFactory.create()),
+              UnconfiguredTargetConfiguration.INSTANCE);
     } catch (HumanReadableException e) {
       LOG.info(e, "Cannot detect Android NDK");
-      androidNdk = Optional.empty();
+      return Optional.empty();
     }
-    return androidNdk;
   }
 
   public static NdkCxxPlatform getNdkCxxPlatform(ProjectFilesystem filesystem) {
@@ -93,25 +103,30 @@ public class AndroidNdkHelper {
     Path ndkPath = androidNdk.get().getNdkRootPath();
     String ndkVersion = AndroidNdkResolver.findNdkVersionFromDirectory(ndkPath).get();
     String gccVersion = NdkCxxPlatforms.getDefaultGccVersionForNdk(ndkVersion);
+    String clangVersion = NdkCxxPlatforms.getDefaultClangVersionForNdk(ndkVersion);
+    NdkCompilerType compilerType = NdkCxxPlatforms.getDefaultCompilerTypeForNdk(ndkVersion);
+    NdkCxxRuntime cxxRuntime = NdkCxxPlatforms.getDefaultCxxRuntimeForNdk(ndkVersion);
+    String compilerVersion = compilerType == NdkCompilerType.GCC ? gccVersion : clangVersion;
 
-    ImmutableCollection<NdkCxxPlatform> platforms =
+    ImmutableCollection<UnresolvedNdkCxxPlatform> platforms =
         NdkCxxPlatforms.getPlatforms(
                 CxxPlatformUtils.DEFAULT_CONFIG,
                 AndroidNdkHelper.DEFAULT_CONFIG,
                 filesystem,
                 ndkPath,
+                UnconfiguredTargetConfiguration.INSTANCE,
                 NdkCxxPlatformCompiler.builder()
-                    .setType(NdkCxxPlatforms.DEFAULT_COMPILER_TYPE)
-                    .setVersion(gccVersion)
+                    .setType(compilerType)
+                    .setVersion(compilerVersion)
                     .setGccVersion(gccVersion)
                     .build(),
-                NdkCxxPlatforms.DEFAULT_CXX_RUNTIME,
+                cxxRuntime,
                 NdkCxxRuntimeType.DYNAMIC,
                 getDefaultCpuAbis(ndkVersion),
                 Platform.detect())
             .values();
     assertFalse(platforms.isEmpty());
-    return platforms.iterator().next();
+    return platforms.iterator().next().resolve(new TestActionGraphBuilder());
   }
 
   private static Path unzip(Path tmpDir, Path zipPath, String name) throws IOException {
@@ -130,10 +145,10 @@ public class AndroidNdkHelper {
     private final ProcessExecutor executor;
     private final Path tmpDir;
     private final Tool objdump;
-    private final SourcePathResolver resolver;
+    private final SourcePathResolverAdapter resolver;
 
     public SymbolGetter(
-        ProcessExecutor executor, Path tmpDir, Tool objdump, SourcePathResolver resolver) {
+        ProcessExecutor executor, Path tmpDir, Tool objdump, SourcePathResolverAdapter resolver) {
       this.executor = executor;
       this.tmpDir = tmpDir;
       this.objdump = objdump;
@@ -208,6 +223,17 @@ public class AndroidNdkHelper {
     }
   }
 
+  public static SymbolGetter getSymbolGetter(ProjectFilesystem filesystem, TemporaryPaths tmp)
+      throws IOException {
+    NdkCxxPlatform platform = getNdkCxxPlatform(filesystem);
+    Path tmpDir = tmp.newFolder("symbols_tmp");
+    return new SymbolGetter(
+        new DefaultProcessExecutor(new TestConsole()),
+        tmpDir,
+        platform.getObjdump(),
+        new TestActionGraphBuilder().getSourcePathResolver());
+  }
+
   public static class SymbolsAndDtNeeded {
     public final Symbols symbols;
     public final ImmutableSet<String> dtNeeded;
@@ -218,7 +244,7 @@ public class AndroidNdkHelper {
     }
   }
 
-  public static ImmutableSet<String> getDefaultCpuAbis(String ndkVersion) {
+  public static ImmutableSet<NdkTargetArchAbi> getDefaultCpuAbis(String ndkVersion) {
     return NdkCxxPlatforms.getDefaultCpuAbis(ndkVersion);
   }
 }

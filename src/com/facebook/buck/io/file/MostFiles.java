@@ -1,21 +1,22 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.io.file;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
@@ -33,6 +34,7 @@ import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
@@ -54,6 +56,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public final class MostFiles {
+
+  private static final Logger LOG = Logger.get(MostFiles.class);
 
   // Extended attribute bits for directories and symlinks; see:
   // http://unix.stackexchange.com/questions/14705/the-zip-formats-external-file-attribute
@@ -173,43 +177,62 @@ public final class MostFiles {
   public static void deleteRecursivelyWithOptions(
       Path path, EnumSet<DeleteRecursivelyOptions> options) throws IOException {
     try {
-      // Adapted from http://codingjunkie.net/java-7-copy-move/.
-      SimpleFileVisitor<Path> deleteDirVisitor =
-          new SimpleFileVisitor<Path>() {
+      if (!Files.isDirectory(path)) {
+        if (options.contains(DeleteRecursivelyOptions.IGNORE_NO_SUCH_FILE_EXCEPTION)) {
+          if (!Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
+            return;
+          }
+        }
+        if (options.contains(DeleteRecursivelyOptions.DELETE_CONTENTS_ONLY)) {
+          throw new IOException(String.format("Can't delete contents of regular file %s.", path));
+        }
+        Files.delete(path);
+      } else {
+        // Adapted from http://codingjunkie.net/java-7-copy-move/.
+        SimpleFileVisitor<Path> deleteDirVisitor =
+            new SimpleFileVisitor<Path>() {
 
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-                throws IOException {
-              Files.delete(file);
-              return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult postVisitDirectory(Path dir, IOException e) throws IOException {
-              if (e == null) {
-                // Allow leaving the top-level directory in place (e.g. for deleting the contents of
-                // the trash dir but not the trash dir itself)
-                if (!(options.contains(DeleteRecursivelyOptions.DELETE_CONTENTS_ONLY)
-                    && dir.equals(path))) {
-                  try {
-                    Files.delete(dir);
-                  } catch (DirectoryNotEmptyException notEmpty) {
-                    try (Stream<Path> paths = Files.list(dir)) {
-                      throw new IOException(
-                          String.format(
-                              "Could not delete non-empty directory %s. Contents:\n%s",
-                              dir, paths.map(Path::toString).collect(Collectors.joining("\n"))),
-                          notEmpty);
-                    }
-                  }
+              @Override
+              public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                  throws IOException {
+                try {
+                  Files.delete(file);
+                } catch (IOException e) {
+                  LOG.warn("%s, could not delete file", e);
                 }
                 return FileVisitResult.CONTINUE;
-              } else {
-                throw e;
               }
-            }
-          };
-      Files.walkFileTree(path, deleteDirVisitor);
+
+              @Override
+              public FileVisitResult postVisitDirectory(Path dir, IOException e)
+                  throws IOException {
+                if (e == null) {
+                  // Allow leaving the top-level directory in place (e.g. for deleting the contents
+                  // of
+                  // the trash dir but not the trash dir itself)
+                  if (!(options.contains(DeleteRecursivelyOptions.DELETE_CONTENTS_ONLY)
+                      && dir.equals(path))) {
+                    try {
+                      Files.delete(dir);
+                    } catch (DirectoryNotEmptyException notEmpty) {
+                      try (Stream<Path> paths = Files.list(dir)) {
+                        LOG.warn(
+                            String.format(
+                                "Could not delete non-empty directory %s. Contents:\n%s",
+                                dir, paths.map(Path::toString).collect(Collectors.joining("\n"))));
+                      }
+                    } catch (IOException ioException) {
+                      LOG.warn("%s, could not delete directory", ioException);
+                    }
+                  }
+                  return FileVisitResult.CONTINUE;
+                } else {
+                  throw e;
+                }
+              }
+            };
+        Files.walkFileTree(path, deleteDirVisitor);
+      }
     } catch (NoSuchFileException e) {
       if (!options.contains(DeleteRecursivelyOptions.IGNORE_NO_SUCH_FILE_EXCEPTION)) {
         throw e;

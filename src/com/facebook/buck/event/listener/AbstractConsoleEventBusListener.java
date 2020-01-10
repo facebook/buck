@@ -1,18 +1,19 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.event.listener;
 
 import com.facebook.buck.core.build.engine.BuildRuleStatus;
@@ -32,16 +33,17 @@ import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.event.listener.stats.cache.CacheRateStatsKeeper;
+import com.facebook.buck.event.listener.stats.cache.NetworkStatsKeeper;
 import com.facebook.buck.event.listener.stats.cache.NetworkStatsTracker;
 import com.facebook.buck.event.listener.stats.cache.RemoteArtifactUploadStats;
-import com.facebook.buck.event.listener.stats.cache.RemoteDownloadStats;
 import com.facebook.buck.event.listener.stats.parse.ParseStatsTracker;
-import com.facebook.buck.event.listener.stats.stampede.DistBuildStatsTracker;
 import com.facebook.buck.event.listener.util.EventInterval;
+import com.facebook.buck.event.listener.util.ProgressEstimation;
 import com.facebook.buck.event.listener.util.ProgressEstimator;
 import com.facebook.buck.test.TestRuleEvent;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.console.ConsoleUtils;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.i18n.NumberFormatter;
 import com.facebook.buck.util.timing.Clock;
@@ -49,7 +51,6 @@ import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -124,9 +125,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   @Nullable protected volatile BuildEvent.Started buildStarted;
   @Nullable protected volatile BuildEvent.Finished buildFinished;
 
-  @Nullable protected volatile BuildEvent.DistBuildStarted distBuildStarted;
-  @Nullable protected volatile BuildEvent.DistBuildFinished distBuildFinished;
-
   @Nullable protected volatile InstallEvent.Started installStarted;
   @Nullable protected volatile InstallEvent.Finished installFinished;
 
@@ -141,13 +139,11 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   protected final NetworkStatsTracker networkStatsTracker;
   protected final ParseStatsTracker parseStats;
-  protected final DistBuildStatsTracker distStatsTracker;
 
   protected BuildRuleThreadTracker buildRuleThreadTracker;
 
   /** Commands that should print out the build details, if provided */
-  protected final ImmutableSet<String> buildDetailsCommands =
-      ImmutableSet.of("build", "test", "install");
+  protected final ImmutableSet<String> buildDetailsCommands;
 
   private final AtomicBoolean topSlowestRulesLogged = new AtomicBoolean(false);
 
@@ -158,11 +154,11 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       ExecutionEnvironment executionEnvironment,
       boolean showTextInAllCaps,
       int numberOfSlowRulesToShow,
-      boolean showSlowRulesInConsole) {
+      boolean showSlowRulesInConsole,
+      ImmutableSet<String> buildDetailsCommands) {
     this.console = console;
     this.parseStats = new ParseStatsTracker();
     this.networkStatsTracker = new NetworkStatsTracker();
-    this.distStatsTracker = new DistBuildStatsTracker();
     this.clock = clock;
     this.locale = locale;
     this.ansi = console.getAnsi();
@@ -190,13 +186,13 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     this.installFinished = null;
 
     this.buildRuleThreadTracker = new BuildRuleThreadTracker(executionEnvironment);
+    this.buildDetailsCommands = buildDetailsCommands;
   }
 
   public void register(BuckEventBus buildEventBus) {
     buildEventBus.register(this);
     buildEventBus.register(parseStats);
     buildEventBus.register(networkStatsTracker);
-    buildEventBus.register(distStatsTracker);
   }
 
   public static String getBuildDetailsLine(BuildId buildId, String buildDetailsTemplate) {
@@ -229,20 +225,11 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     return minutes == 0 ? String.valueOf(seconds) : String.format("%2$dm %1$s", seconds, minutes);
   }
 
-  /** Local build progress. */
-  protected Optional<Double> getApproximateLocalBuildProgress() {
+  protected Optional<Double> getApproximateBuildProgress() {
     if (progressEstimator.isPresent()) {
       return progressEstimator.get().getApproximateBuildProgress();
     } else {
       return Optional.empty();
-    }
-  }
-
-  protected Optional<Double> getApproximateBuildProgress() {
-    if (distBuildStarted != null && distBuildFinished == null) {
-      return distStatsTracker.getApproximateProgress();
-    } else {
-      return getApproximateLocalBuildProgress();
     }
   }
 
@@ -254,11 +241,21 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     }
   }
 
-  protected Optional<Double> getEstimatedProgressOfParsingBuckFiles() {
+  /** @return Estimated progress of parsing files stage. */
+  protected ProgressEstimation getEstimatedProgressOfParsingBuckFiles() {
     if (progressEstimator.isPresent()) {
       return progressEstimator.get().getEstimatedProgressOfParsingBuckFiles();
     } else {
-      return Optional.empty();
+      return ProgressEstimation.UNKNOWN;
+    }
+  }
+
+  /** @return Estimated progress of parsing files stage. */
+  protected ProgressEstimation getEstimatedProgressOfCreatingActionGraph() {
+    if (progressEstimator.isPresent()) {
+      return progressEstimator.get().getEstimatedProgressOfCreatingActionGraph();
+    } else {
+      return ProgressEstimation.UNKNOWN;
     }
   }
 
@@ -397,7 +394,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       Optional<String> suffix,
       long currentMillis,
       Collection<EventInterval> eventIntervals,
-      Optional<Double> progress,
+      ProgressEstimation progress,
       Optional<Long> minimum,
       ImmutableList.Builder<String> lines) {
     return addLineFromEventInterval(
@@ -419,7 +416,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       Optional<String> suffix,
       long currentMillis,
       EventInterval startAndFinish,
-      Optional<Double> progress,
+      ProgressEstimation progress,
       Optional<Long> minimum,
       ImmutableList.Builder<String> lines) {
     if (!startAndFinish.getStart().isPresent()) {
@@ -444,8 +441,12 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     }
     result += formatElapsedTime(elapsedTime);
 
-    if (progress.isPresent()) {
-      result += isFinished ? " (100%)" : " (" + Math.round(progress.get() * 100) + "%)";
+    if (!isFinished) {
+      if (progress.getProgress().isPresent()) {
+        result += " (" + Math.round(progress.getProgress().get() * 100) + "%)";
+      } else if (progress.getNumber().isPresent()) {
+        result += " (" + progress.getNumber().get() + "/unknown)";
+      }
     }
 
     if (suffix.isPresent()) {
@@ -609,24 +610,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   /** Formats a {@link ConsoleEvent} and adds it to {@code lines}. */
   protected ImmutableList<String> formatConsoleEvent(ConsoleEvent logEvent) {
-    if (logEvent.getMessage() == null) {
-      LOG.error("Got logEvent with null message");
-      return ImmutableList.of();
-    }
-    String formattedLine = "";
-    if (logEvent.containsAnsiEscapeCodes() || logEvent.getLevel().equals(Level.INFO)) {
-      formattedLine = logEvent.getMessage();
-    } else if (logEvent.getLevel().equals(Level.WARNING)) {
-      formattedLine = ansi.asWarningText(logEvent.getMessage());
-    } else if (logEvent.getLevel().equals(Level.SEVERE)) {
-      formattedLine = ansi.asHighlightedFailureText(logEvent.getMessage());
-    }
-    if (!formattedLine.isEmpty()) {
-      // Split log messages at newlines and add each line individually to keep the line count
-      // consistent.
-      return ImmutableList.copyOf(Splitter.on(System.lineSeparator()).split(formattedLine));
-    }
-    return ImmutableList.of();
+    return ConsoleUtils.formatConsoleEvent(logEvent, console.getAnsi());
   }
 
   @Subscribe
@@ -702,11 +686,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   }
 
   @Subscribe
-  public void distBuildStarted(BuildEvent.DistBuildStarted started) {
-    distBuildStarted = started;
-  }
-
-  @Subscribe
   public void ruleCountCalculated(BuildEvent.RuleCountCalculated calculated) {
     ruleCount = OptionalInt.of(calculated.getNumRules());
     progressEstimator.ifPresent(estimator -> estimator.setNumberOfRules(calculated.getNumRules()));
@@ -749,7 +728,8 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
             : convertToAllCapsIfNeeded("Downloading") + "...";
     List<String> columns = new ArrayList<>();
 
-    RemoteDownloadStats downloadStats = networkStatsTracker.getRemoteDownloadStats();
+    NetworkStatsKeeper.RemoteDownloadStats downloadStats =
+        networkStatsTracker.getRemoteDownloadStats();
 
     long remoteDownloadedBytes = downloadStats.getBytes();
     Pair<Double, SizeUnit> redableRemoteDownloadedBytes =
@@ -792,14 +772,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     buildRuleThreadTracker.didResumeBuildRule(resumed);
   }
 
-  @SuppressWarnings("unused")
-  @Subscribe
-  private void resetLocalBuildStats(BuildEvent.Reset reset) {
-    buildRuleThreadTracker.reset();
-    progressEstimator.ifPresent(ProgressEstimator::resetBuildData);
-    numRulesCompleted.set(0);
-  }
-
   @Subscribe
   public void buildRuleSuspended(BuildRuleEvent.Suspended suspended) {
     progressEstimator.ifPresent(ProgressEstimator::didSuspendRule);
@@ -827,13 +799,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     }
 
     buildRuleThreadTracker.didFinishBuildRule(finished);
-  }
-
-  @Subscribe
-  public void distBuildFinished(BuildEvent.DistBuildFinished finished) {
-    if (distBuildFinished == null) {
-      distBuildFinished = finished;
-    }
   }
 
   @Subscribe

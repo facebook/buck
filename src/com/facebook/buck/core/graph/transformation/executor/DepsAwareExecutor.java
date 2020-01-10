@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.graph.transformation.executor;
@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
-import java.util.function.Supplier;
 
 /**
  * A specialized Executor that executes {@link DepsAwareTask}. This executor will attempt to
@@ -53,16 +52,13 @@ public interface DepsAwareExecutor<ResultType, TaskType extends DepsAwareTask<Re
   /** @return true iff {@link #close()} has been called */
   boolean isShutdown();
 
-  /** @return a new {@link DepsAwareTask} that can be executed in this executor */
-  TaskType createTask(Callable<ResultType> callable, Supplier<ImmutableSet<TaskType>> depsSupplier);
-
   /** @return a new {@link DepsAwareTask} with two stages of dependency computation */
   TaskType createThrowingTask(
       Callable<ResultType> callable,
       ThrowingSupplier<ImmutableSet<TaskType>, Exception> prereqSupplier,
       ThrowingSupplier<ImmutableSet<TaskType>, Exception> depsSupplier);
 
-  /** @see #createTask(Callable, Supplier) */
+  /** @return a new {@link DepsAwareTask} that can be executed in this executor */
   TaskType createTask(Callable<ResultType> callable);
 
   /**

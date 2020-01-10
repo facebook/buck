@@ -1,0 +1,18 @@
+java_library(
+    name = "data",
+    srcs = glob(
+        ["*.java"],
+    ),
+    tests = [
+        "//test/com/facebook/buck/core/starlark/rule/data:data",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//third-party/java/guava:guava",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/rules/providers/collect:collect",
+        "//third-party/java/bazel:bazel",
+    ],
+)

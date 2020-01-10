@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.support.cli.args;
@@ -34,9 +34,15 @@ public class GlobalCliOptions {
   public static final String SKYLARK_PROFILE_LONG_ARG = "--skylark-profile-output";
   public static final String VERBOSE_LONG_ARG = "--verbose";
   public static final String VERBOSE_SHORT_ARG = "-v";
+  public static final String HOST_PLATFORM_LONG_ARG = "--host-platform";
   public static final String TARGET_PLATFORMS_LONG_ARG = "--target-platforms";
   public static final String EXCLUDE_INCOMPATIBLE_TARGETS_LONG_ARG =
       "--exclude-incompatible-targets";
+  public static final String REUSE_CURRENT_CONFIG_ARG = "--reuse-current-config";
+  public static final String COMMAND_ARGS_FILE_LONG_ARG = "--command-args-file";
+
+  public static final String COMMAND_ARGS_FILE_HELP =
+      "Serialize any commands that need to be run by the python wrapper to this file.";
 
   /**
    * Contains all options defined in this class. These options are considered global since they are
@@ -56,7 +62,8 @@ public class GlobalCliOptions {
           VERBOSE_LONG_ARG,
           SKYLARK_PROFILE_LONG_ARG,
           TARGET_PLATFORMS_LONG_ARG,
-          EXCLUDE_INCOMPATIBLE_TARGETS_LONG_ARG);
+          EXCLUDE_INCOMPATIBLE_TARGETS_LONG_ARG,
+          REUSE_CURRENT_CONFIG_ARG);
 
   public static boolean isGlobalOption(OptionHandler<?> optionHandler) {
     OptionDef option = optionHandler.option;

@@ -1,21 +1,22 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.io.filesystem;
 
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
@@ -43,7 +44,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.jar.Manifest;
 
-/** An injectable service for interacting with the filesystem relative to the project root. */
+/** An injectable service for interacting with the filesystem relative to the cell root. */
 public interface ProjectFilesystem {
 
   /**
@@ -53,6 +54,12 @@ public interface ProjectFilesystem {
   ProjectFilesystemView asView();
 
   Path getRootPath();
+
+  default FileSystem getFileSystem() {
+    return getRootPath().getFileSystem();
+  }
+
+  ProjectFilesystem createBuckOutProjectFilesystem();
 
   /**
    * @return details about the delegate suitable for writing to a logger. It is recommended that the
@@ -67,6 +74,13 @@ public interface ProjectFilesystem {
   Path resolve(Path path);
 
   Path resolve(String path);
+
+  /**
+   * @return the specified {@code path} resolved against {@link #getRootPath()} to an absolute path.
+   */
+  default Path resolve(ForwardRelativePath path) {
+    return resolve(path.toPath(getFileSystem()));
+  }
 
   /** Construct a relative path between the project root and a given path. */
   Path relativize(Path path);
@@ -156,19 +170,6 @@ public interface ProjectFilesystem {
   void walkRelativeFileTree(
       Path pathRelativeToProjectRoot,
       EnumSet<FileVisitOption> visitOptions,
-      FileVisitor<Path> fileVisitor)
-      throws IOException;
-
-  /**
-   * Walks a project-root relative file tree with a visitor and visit options.
-   *
-   * <p>This is deprecated. Please use {@link ProjectFilesystemView#walkRelativeFileTree(Path,
-   * EnumSet, FileVisitor)} instead.
-   */
-  @Deprecated
-  void walkRelativeFileTree(
-      Path pathRelativeToProjectRoot,
-      EnumSet<FileVisitOption> visitOptions,
       FileVisitor<Path> fileVisitor,
       boolean skipIgnored)
       throws IOException;
@@ -184,12 +185,6 @@ public interface ProjectFilesystem {
   /** Use {@link ProjectFilesystemView#walkFileTree(Path, Set, FileVisitor)} instead */
   @Deprecated
   void walkFileTree(Path root, Set<FileVisitOption> options, FileVisitor<Path> fileVisitor)
-      throws IOException;
-
-  /** Use {@link ProjectFilesystemView#walkFileTree(Path, Set, FileVisitor)} instead */
-  @Deprecated
-  void walkFileTree(
-      Path root, Set<FileVisitOption> options, FileVisitor<Path> fileVisitor, boolean skipIgnored)
       throws IOException;
 
   /** Use {@link ProjectFilesystemView#getFilesUnderPath(Path, EnumSet)} instead */

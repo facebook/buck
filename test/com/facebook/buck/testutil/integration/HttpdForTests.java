@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.testutil.integration;
@@ -44,6 +44,7 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.http.HttpServletRequest;
@@ -77,6 +78,10 @@ public class HttpdForTests implements AutoCloseable {
   private final String localhost;
 
   public HttpdForTests() throws SocketException {
+    this(true);
+  }
+
+  private HttpdForTests(boolean allowedScopedLinkLocal) throws SocketException {
     // Configure the logging for jetty. Which uses a singleton. Ho hum.
     Log.setLog(new JavaUtilLog());
     server = new Server();
@@ -88,7 +93,18 @@ public class HttpdForTests implements AutoCloseable {
     server.addConnector(connector);
 
     handlerList = new HandlerList();
-    localhost = getLocalhostAddress(true).getHostAddress();
+    localhost = getLocalhostAddress(allowedScopedLinkLocal).getHostAddress();
+  }
+
+  /**
+   * Create an instance of {@link HttpdForTests} that does not use '%{scope}' syntax in its
+   * localhost URI. This is done for OkHttp, as it does not support this functionality.
+   *
+   * @return an HttpdForTests instance
+   * @throws SocketException
+   */
+  public static HttpdForTests httpdForOkHttpTests() throws SocketException {
+    return new HttpdForTests(false);
   }
 
   /**
@@ -111,15 +127,25 @@ public class HttpdForTests implements AutoCloseable {
 
     String password = "super_sekret";
 
-    X509Certificate caCert = ClientCertificateHandler.parseCertificate(caPath);
-    X509Certificate serverCert = ClientCertificateHandler.parseCertificate(certificatePath);
-    PrivateKey privateKey = ClientCertificateHandler.parsePrivateKey(keyPath, serverCert);
+    ImmutableList<X509Certificate> caCerts =
+        ClientCertificateHandler.parseCertificates(Optional.of(caPath), true);
+    ClientCertificateHandler.CertificateInfo certInfo =
+        ClientCertificateHandler.parseCertificateChain(Optional.of(certificatePath), true).get();
+    PrivateKey privateKey =
+        ClientCertificateHandler.parsePrivateKey(
+                Optional.of(keyPath), certInfo.getPrimaryCert(), true)
+            .get();
 
     KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
     ks.load(null, password.toCharArray());
+    for (int i = 0; i < caCerts.size(); i++) {
+      ks.setCertificateEntry(String.format("ca%d", i), caCerts.get(i));
+    }
     ks.setKeyEntry(
-        "private", privateKey, password.toCharArray(), new Certificate[] {serverCert, caCert});
-    ks.setCertificateEntry("ca", caCert);
+        "private",
+        privateKey,
+        password.toCharArray(),
+        new Certificate[] {certInfo.getPrimaryCert()});
 
     SslContextFactory sslFactory = new SslContextFactory();
     sslFactory.setKeyStore(ks);
@@ -233,8 +259,7 @@ public class HttpdForTests implements AutoCloseable {
       }
       if (iface.isLoopback()) {
         candidateLoopbacks.addAll(
-            getInetAddresses(iface)
-                .stream()
+            getInetAddresses(iface).stream()
                 .filter(i -> allowScopedLinkLocal || !i.getHostAddress().contains("%"))
                 .collect(ImmutableSet.toImmutableSet()));
       } else {

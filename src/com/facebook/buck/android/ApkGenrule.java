@@ -1,41 +1,43 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
-import com.facebook.buck.android.toolchain.AndroidSdkLocation;
-import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
+import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.HasClasspathEntries;
+import com.facebook.buck.jvm.core.JavaLibrary;
+import com.facebook.buck.jvm.java.JavaLibraryClasspathProvider;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.SourceSet;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
-import com.facebook.buck.shell.Genrule;
+import com.facebook.buck.shell.LegacyGenrule;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -56,7 +58,8 @@ import java.util.stream.Stream;
  * )
  * </pre>
  */
-public class ApkGenrule extends Genrule implements HasInstallableApk, HasRuntimeDeps {
+public class ApkGenrule extends LegacyGenrule
+    implements HasInstallableApk, HasRuntimeDeps, HasClasspathEntries {
 
   @AddToRuleKey private final BuildTargetSourcePath apk;
   private final HasInstallableApk hasInstallableApk;
@@ -67,7 +70,6 @@ public class ApkGenrule extends Genrule implements HasInstallableApk, HasRuntime
       SandboxExecutionStrategy sandboxExecutionStrategy,
       BuildRuleResolver resolver,
       BuildRuleParams params,
-      SourcePathRuleFinder ruleFinder,
       SourceSet srcs,
       Optional<Arg> cmd,
       Optional<Arg> bash,
@@ -76,9 +78,7 @@ public class ApkGenrule extends Genrule implements HasInstallableApk, HasRuntime
       SourcePath apk,
       boolean isCacheable,
       Optional<String> environmentExpansionSeparator,
-      Optional<AndroidPlatformTarget> androidPlatformTarget,
-      Optional<AndroidNdk> androidNdk,
-      Optional<AndroidSdkLocation> androidSdkLocation) {
+      Optional<AndroidTools> androidTools) {
     super(
         buildTarget,
         projectFilesystem,
@@ -94,14 +94,11 @@ public class ApkGenrule extends Genrule implements HasInstallableApk, HasRuntime
         false,
         isCacheable,
         environmentExpansionSeparator,
-        androidPlatformTarget,
-        androidNdk,
-        androidSdkLocation,
-        false);
+        androidTools);
     // TODO(cjhopman): Disallow apk_genrule depending on an apk with exopackage enabled.
     Preconditions.checkState(apk instanceof BuildTargetSourcePath);
     this.apk = (BuildTargetSourcePath) apk;
-    BuildRule rule = ruleFinder.getRule(this.apk);
+    BuildRule rule = resolver.getRule(this.apk);
     Preconditions.checkState(rule instanceof HasInstallableApk);
     this.hasInstallableApk = (HasInstallableApk) rule;
   }
@@ -120,7 +117,7 @@ public class ApkGenrule extends Genrule implements HasInstallableApk, HasRuntime
 
   @Override
   protected void addEnvironmentVariables(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
     super.addEnvironmentVariables(pathResolver, environmentVariablesBuilder);
     // We have to use an absolute path, because genrules are run in a temp directory.
@@ -130,7 +127,32 @@ public class ApkGenrule extends Genrule implements HasInstallableApk, HasRuntime
   }
 
   @Override
-  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
-    return HasInstallableApkSupport.getRuntimeDepsForInstallableApk(this, ruleFinder);
+  public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
+    return HasInstallableApkSupport.getRuntimeDepsForInstallableApk(this, buildRuleResolver);
+  }
+
+  @Override
+  public ImmutableSet<SourcePath> getTransitiveClasspaths() {
+    // This is used primarily for buck audit classpath.
+    return JavaLibraryClasspathProvider.getClasspathsFromLibraries(getTransitiveClasspathDeps());
+  }
+
+  @Override
+  public ImmutableSet<JavaLibrary> getTransitiveClasspathDeps() {
+    return JavaLibraryClasspathProvider.getClasspathDeps(
+        getBuildDeps().stream()
+            .filter(rule -> rule instanceof HasInstallableApk)
+            .collect(ImmutableList.toImmutableList()));
+  }
+
+  @Override
+  public ImmutableSet<SourcePath> getImmediateClasspaths() {
+    return ImmutableSet.of();
+  }
+
+  @Override
+  public ImmutableSet<SourcePath> getOutputClasspaths() {
+    // The apk has no exported deps or classpath contributions of its own
+    return ImmutableSet.of();
   }
 }

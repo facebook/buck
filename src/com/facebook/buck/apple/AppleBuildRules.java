@@ -1,34 +1,37 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.core.description.BaseDescription;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
+import com.facebook.buck.core.util.graph.CycleException;
 import com.facebook.buck.core.util.graph.GraphTraversable;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxLibraryDescription;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -36,6 +39,7 @@ import com.google.common.collect.Iterables;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 /** Helpers for reading properties of Apple target build rules. */
@@ -222,7 +226,7 @@ public final class AppleBuildRules {
           if (node.getDescription() instanceof AppleCustomLinkingDepsDescription) {
             ImmutableSortedSet<BuildTarget> customLinkingDepsTargets =
                 ((AppleCustomLinkingDepsDescription) node.getDescription())
-                    .getCustomLinkingDeps((CommonDescriptionArg) node.getConstructorArg());
+                    .getCustomLinkingDeps((BuildRuleArg) node.getConstructorArg());
             Iterable<TargetNode<?>> nodes = targetGraph.getAll(customLinkingDepsTargets);
             customLinkingDepsBuilder.addAll(nodes);
           }
@@ -314,7 +318,7 @@ public final class AppleBuildRules {
           filteredRules.add(node);
         }
       }
-    } catch (AcyclicDepthFirstPostOrderTraversal.CycleException e) {
+    } catch (CycleException e) {
       // actual load failures and cycle exceptions should have been caught at an earlier stage
       throw new RuntimeException(e);
     }
@@ -389,65 +393,124 @@ public final class AppleBuildRules {
         .toImmutableSet();
   }
 
-  public static <T> ImmutableSet<AppleAssetCatalogDescriptionArg> collectRecursiveAssetCatalogs(
-      XCodeDescriptions xcodeDescriptions,
-      TargetGraph targetGraph,
-      Optional<AppleDependenciesCache> cache,
-      Iterable<TargetNode<T>> targetNodes,
-      RecursiveDependenciesMode mode) {
+  /** Collect recursive asset catalogs */
+  public static <T extends ConstructorArg>
+      ImmutableSet<AppleAssetCatalogDescriptionArg> collectRecursiveAssetCatalogs(
+          XCodeDescriptions xcodeDescriptions,
+          TargetGraph targetGraph,
+          Optional<AppleDependenciesCache> cache,
+          Iterable<TargetNode<T>> targetNodes,
+          RecursiveDependenciesMode mode,
+          Predicate<BuildTarget> filter) {
     return RichStream.from(targetNodes)
         .flatMap(
             input ->
                 getRecursiveTargetNodeDependenciesOfTypes(
-                        xcodeDescriptions,
-                        targetGraph,
-                        cache,
-                        mode,
-                        input,
-                        APPLE_ASSET_CATALOG_DESCRIPTION_CLASSES)
+                    xcodeDescriptions,
+                    targetGraph,
+                    cache,
+                    mode,
+                    input,
+                    APPLE_ASSET_CATALOG_DESCRIPTION_CLASSES)
                     .stream())
+        .filter(targetNode -> filter.test(targetNode.getBuildTarget()))
         .map(input -> (AppleAssetCatalogDescriptionArg) input.getConstructorArg())
         .toImmutableSet();
   }
 
-  public static <T> ImmutableSet<AppleWrapperResourceArg> collectRecursiveWrapperResources(
-      XCodeDescriptions xcodeDescriptions,
-      TargetGraph targetGraph,
-      Optional<AppleDependenciesCache> cache,
-      Iterable<TargetNode<T>> targetNodes,
-      RecursiveDependenciesMode mode) {
+  /** Collect recursive wrapper resources */
+  public static <T extends ConstructorArg>
+      ImmutableSet<AppleWrapperResourceArg> collectRecursiveWrapperResources(
+          XCodeDescriptions xcodeDescriptions,
+          TargetGraph targetGraph,
+          Optional<AppleDependenciesCache> cache,
+          Iterable<TargetNode<T>> targetNodes,
+          RecursiveDependenciesMode mode) {
 
     return RichStream.from(targetNodes)
         .flatMap(
             input ->
                 getRecursiveTargetNodeDependenciesOfTypes(
-                        xcodeDescriptions,
-                        targetGraph,
-                        cache,
-                        mode,
-                        input,
-                        WRAPPER_RESOURCE_DESCRIPTION_CLASSES)
+                    xcodeDescriptions,
+                    targetGraph,
+                    cache,
+                    mode,
+                    input,
+                    WRAPPER_RESOURCE_DESCRIPTION_CLASSES)
                     .stream())
         .map(input -> (AppleWrapperResourceArg) input.getConstructorArg())
         .toImmutableSet();
   }
 
   @SuppressWarnings("unchecked")
-  public static <T> ImmutableSet<T> collectTransitiveBuildRules(
+  public static <T extends ConstructorArg> ImmutableSet<T> collectTransitiveBuildTargetArg(
       XCodeDescriptions xcodeDescriptions,
       TargetGraph targetGraph,
       Optional<AppleDependenciesCache> cache,
       ImmutableSet<Class<? extends BaseDescription<?>>> descriptionClasses,
       Collection<TargetNode<?>> targetNodes,
-      RecursiveDependenciesMode mode) {
+      RecursiveDependenciesMode mode,
+      Predicate<BuildTarget> filter) {
+
+    return collectTransitiveBuildRuleTargetsWithTransform(
+        xcodeDescriptions,
+        targetGraph,
+        cache,
+        descriptionClasses,
+        targetNodes,
+        mode,
+        input -> (T) input.getConstructorArg(),
+        filter);
+  }
+
+  /** Collects transitive target nodes of type included in descriptionClasses */
+  public static <T extends ConstructorArg, V extends TargetNode<T>>
+      ImmutableSet<V> collectTransitiveBuildRuleTargets(
+          XCodeDescriptions xcodeDescriptions,
+          TargetGraph targetGraph,
+          Optional<AppleDependenciesCache> cache,
+          ImmutableSet<Class<? extends BaseDescription<?>>> descriptionClasses,
+          Collection<TargetNode<?>> targetNodes,
+          RecursiveDependenciesMode mode) {
+    ImmutableSet<V> collectedTargets =
+        collectTransitiveBuildRuleTargetsWithTransform(
+            xcodeDescriptions,
+            targetGraph,
+            cache,
+            descriptionClasses,
+            targetNodes,
+            mode,
+            t -> {
+              @SuppressWarnings("unchecked")
+              V castedT = (V) t;
+              return castedT;
+            },
+            Predicates.alwaysTrue());
+    return collectedTargets;
+  }
+
+  /**
+   * Collect the transitive target node dependencies using some RecursiveDependenciesMode. Apply a
+   * transform on the dependencies
+   */
+  public static <T> ImmutableSet<T> collectTransitiveBuildRuleTargetsWithTransform(
+      XCodeDescriptions xcodeDescriptions,
+      TargetGraph targetGraph,
+      Optional<AppleDependenciesCache> cache,
+      ImmutableSet<Class<? extends BaseDescription<?>>> descriptionClasses,
+      Collection<TargetNode<?>> targetNodes,
+      RecursiveDependenciesMode mode,
+      Function<TargetNode<?>, T> transform,
+      Predicate<BuildTarget> filter) {
 
     return RichStream.from(targetNodes)
         .flatMap(
             targetNode ->
                 getRecursiveTargetNodeDependenciesOfTypes(
-                        xcodeDescriptions, targetGraph, cache, mode, targetNode, descriptionClasses)
+                    xcodeDescriptions, targetGraph, cache, mode, targetNode, descriptionClasses)
                     .stream())
-        .map(input -> (T) input.getConstructorArg())
+        .filter(targetNode -> filter.test(targetNode.getBuildTarget()))
+        .map(transform)
         .toImmutableSet();
   }
 

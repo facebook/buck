@@ -1,18 +1,19 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 {namespace ocaml_common}
 
 /***/
@@ -38,8 +39,8 @@ Note: Buck is currently tested with 4.X OCaml series.
   {param desc}
   <p>
     The set of source files to be compiled by this rule. It supports *.ml, *.mli, *.mly, *.mll, and *.c files.
-    (see <a href="https://github.com/facebook/buck/test/com/facebook/buck/ocaml/testdata/ocaml/clib/BUCK.fixture"> this test </a> as C interop example and
-     <a href="https://github.com/facebook/buck/test/com/facebook/buck/ocaml/testdata/ocaml/calc/BUCK.fixture"> this test </a> as parser and lexer example).
+    (see <a href="https://github.com/facebook/buck/tree/master/test/com/facebook/buck/features/ocaml/testdata/ocaml/clib/BUCK.fixture"> this test </a> as C interop example and
+     <a href="https://github.com/facebook/buck/tree/master/test/com/facebook/buck/features/ocaml/testdata/ocaml/calc/BUCK.fixture"> this test </a> as parser and lexer example).
   </p>
   {/param}
 {/call}
@@ -53,7 +54,7 @@ Note: Buck is currently tested with 4.X OCaml series.
   {param desc}
   The set of additional compiler flags to pass to ocaml compiler. It supports
   specifying ppx (see <a
-  href="https://github.com/facebook/buck/test/com/facebook/buck/ocaml/testdata/compiler_flag_macros/BUCK.fixture">
+  href="https://github.com/facebook/buck/tree/master/test/com/facebook/buck/features/ocaml/testdata/compiler_flag_macros/BUCK.fixture">
   for example</a>).
   {/param}
 {/call}
@@ -90,7 +91,7 @@ Note: Buck is currently tested with 4.X OCaml series.
   {param default: 'False' /}
   {param desc}
   Pass <code>True</code> to create native plugin. See <a
-  href="https://github.com/facebook/buck/test/com/facebook/buck/ocaml/testdata/ocaml/ocaml_native_plugin/BUCK.fixture">
+  href="https://github.com/facebook/buck/tree/master/test/com/facebook/buck/features/ocaml/testdata/ocaml/ocaml_native_plugin/BUCK.fixture">
   this test</a> for example.
   {/param}
 {/call}
@@ -100,7 +101,7 @@ Note: Buck is currently tested with 4.X OCaml series.
 {template .more_examples}
 <p>
   For more examples, check out our <a
-  href="https://github.com/facebook/buck/tree/master/test/com/facebook/buck/ocaml/testdata/">
+  href="https://github.com/facebook/buck/tree/master/test/com/facebook/buck/features/ocaml/testdata/">
   integration tests</a>.
 </p>
 {/template}

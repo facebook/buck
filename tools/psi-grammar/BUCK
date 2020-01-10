@@ -1,5 +1,3 @@
-load("//tools/build_rules:java_rules.bzl", "java_test")
-
 # =========================================================
 # Lexers:
 # =========================================================
@@ -43,12 +41,16 @@ MIXIN_SRCS = [
     "src/com/facebook/buck/intellij/ideabuck/lang/BuckLanguage.java",
     "src/com/facebook/buck/intellij/ideabuck/lang/psi/BcfgElementFactory.java",
     "src/com/facebook/buck/intellij/ideabuck/lang/psi/BcfgElementType.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/psi/BuckElementFactory.java",
     "src/com/facebook/buck/intellij/ideabuck/lang/psi/BuckElementType.java",
     "src/com/facebook/buck/intellij/ideabuck/lang/psi/BcfgTokenType.java",
     "src/com/facebook/buck/intellij/ideabuck/lang/psi/BuckTokenType.java",
     "src/com/facebook/buck/intellij/ideabuck/lang/psi/BcfgNamedElement.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/psi/BuckNamedElement.java",
     "src/com/facebook/buck/intellij/ideabuck/lang/psi/impl/BcfgNamedElementImpl.java",
     "src/com/facebook/buck/intellij/ideabuck/lang/psi/impl/BcfgPsiImplUtil.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/psi/impl/BuckNamedElementImpl.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/psi/impl/BuckPsiImplUtil.java",
 ]
 
 # Because GrammarKit resolves mixins from *class* files, not *java*

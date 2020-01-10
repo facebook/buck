@@ -1,18 +1,19 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 {namespace buck.build_rule}
 
 /***/
@@ -29,26 +30,26 @@
 <p>
 A <em>build rule</em> is a procedure for producing output files from
 a set of input files in the context of a specified build
-configuration. Build rules are specified in {call buck.build_file /}s. 
+configuration. Build rules are specified 
+in {call buck.build_file /}s&mdash;typically named BUCK.
 </p>
 
 <p>
-<strong>Note:</strong> A build rule must explicitly specify all of its
-required inputs in its arguments in order for Buck to be able to ensure
-that it can build the output in a way that is deterministic and
-reproducible.
+<strong>Note:</strong> A build rule must explicitly specify, in its
+arguments, all of its required inputs in order for Buck to be able to
+build the rule's output in a way that is deterministic and reproducible.
 </p>
 
 
 <h2>Buck's collection of build rules</h2>
 
 <p>
-Buck comes with a collection of built-in build rules, as there are many
-common procedures when building software. For example, compiling Java
-code against the Android SDK is a common operation, so Buck provides the 
+Buck comes with a collection of built-in build rules for many 
+common build procedures. For example, compiling Java
+code against the Android SDK is a common procedure, so Buck provides the 
 build rule {sp}{call buck.android_library /} to do that.  Similarly,
-the final product of most Android development is an APK, so the build
-rule {sp}{call buck.android_binary /} can be used to create an APK.
+the final product of most Android development is an APK, so you can use the build
+rule {sp}{call buck.android_binary /} to create an APK.
 </p>
 
 <p>
@@ -58,6 +59,38 @@ are: <strong>C++</strong>, <strong>Java</strong>, <strong>Python</strong> (devel
 and <strong>Android</strong>, <strong>iOS</strong>, <strong>.NET</strong> (target platforms).
 Consult the table of contents to locate the build rules that are
 appropriate for your development project.
+</p>
+
+<p>
+You can view a list of Buck's build rules from the command line with the
+command: 
+</p>
+
+<p>
+<pre>
+{literal}
+buck audit ruletypes
+{/literal}
+</pre>
+</p>
+
+<p>
+You can view the arguments supported by a particular rule with the
+command:
+</p>
+
+<p>
+<pre>
+{literal}
+buck audit ruletype &#x3C;rule>
+{/literal}
+</pre>
+</p>
+
+<p>
+Note that the first of these commands uses the <em>plural</em> <code>ruletypes</code>, and 
+the second uses the <em>singular</em> <code>ruletype</code>. For more information, 
+see the {call buck.cmd_audit /} documentation.
 </p>
 
 
@@ -74,20 +107,19 @@ a <code>headers</code> argument.
 
 <p>
 In addition to <code>srcs</code> and <code>headers</code>, 
-some rules provide variants of these arguments&mdash;such 
-as <code>platform_srcs</code> and <code>platform_headers</code>&mdash;to 
-support groups of source files that should be used as inputs only when
+some rules provide variants of these arguments, such 
+as <code>platform_srcs</code> and <code>platform_headers</code>. These
+arguments support groups of source files that should be used as inputs only when
 building for specific platforms. 
-(For more information, see the descriptions 
-for <code>platform_srcs</code> and <code>platform_headers</code> in, 
-for example, the topic for {call buck.cxx_library /}.)
+For more information, see the descriptions for <code>platform_srcs</code> and 
+{sp}<code>platform_headers</code> in, for example, the {call buck.cxx_library /} topic.
 </p>
 
 
 <h3>Package boundaries and access to source files</h3>
 
 <p>
-In Buck, a build file defines a <em>package</em>, which corresponds <em>roughly</em> to 
+In Buck, a BUCK file defines a <em>package</em>, which corresponds <em>roughly</em> to 
 the directory that contains the BUCK file and those subdirectories that do not themselves contain 
 BUCK files. (To learn more, see the {call buck.key_concepts_link}{param rendered_text: 'Key Concepts' /}{/call} topic.)
 </p>
@@ -98,8 +130,8 @@ that source file is in that BUCK file's package. An exception to this
 restriction exists for header files, but only if a rule in the package
 that contains the header file <em>exports</em> that header file using 
 the <code>exported_headers</code> argument.
-(For more information, see the description for <code>exported_headers</code> in, 
-for example, the topic for {call buck.cxx_library /}.)
+For more details, see the description for <code>exported_headers</code> in, 
+for example, the {call buck.cxx_library /} topic.
 </p>
 
 <p>
@@ -114,10 +146,10 @@ take that <code>cxx_library</code> as a <em>dependency</em>.
 </p>
 
 
-<h3>Symlinks: Use with caution if at all</h3>
+<h5>Symlinks: Use with caution if at all</h5>
 
 <p>
-We recommend that you do not use symlinks&mdash;either absolute or
+We recommend that you do <em>not</em> use symlinks&mdash;either absolute or
 relative&mdash;to specify input files to build rules. Although using
 symlinks in this context does sometimes work, it can lead to unexpected
 behavior and errors.
@@ -162,7 +194,8 @@ Buck guarantees that any dependencies that a rule lists that are required
 in order to build that rule are built successfully <em>before</em> Buck
 builds the rule itself. Note though that there can be special 
 cases&mdash;such as {call buck.apple_bundle /}&mdash;where 
-listed dependencies do not actually need to be built before the rule.
+a rule's listed dependencies do not actually need to be built before 
+the rule.
 </p>
 
 
@@ -173,7 +206,7 @@ In order for a build rule to take a dependency on another build rule, the
 build rule on which the dependency is taken must be <em>visible</em> to
 the build rule taking the dependency. A build rule's <code>visibility</code> argument 
 is a list of {call buck.build_target_pattern /}s that specify the rules 
-that can take this rule as a dependency. For more information about the 
+that can take that rule as a dependency. For more information about the 
 concept of visibility in Buck, see 
 the {call buck.concept_link}{param page: 'Visibility' /}{param name: 'Visibility' /}{/call} topic.
 </p>
@@ -183,8 +216,8 @@ the {call buck.concept_link}{param page: 'Visibility' /}{param name: 'Visibility
 
 <p>
 Build rules and their dependencies define a directed acyclic graph
-(DAG). Buck requires this graph to be acyclic because to make it  
-easier to build independent subgraphs in parallel.
+(DAG). Buck requires this graph to be acyclic to make it possible to
+build independent subgraphs in parallel.
 </p>
 
 
@@ -194,8 +227,8 @@ easier to build independent subgraphs in parallel.
 Although Buck provides a rich set of built-in build rules for 
 developers, it is not able to address all possible needs. As an "escape hatch," 
 Buck provides a category of generic build rules called <em>genrules</em>. 
-With a genrule, you can perform arbitrary operations using a shell script. 
-Examples of genrules are:
+With genrules, you can perform arbitrary operations using shell scripts. 
+The genrules supported by Buck are:
 </p>
 
 <ul>
@@ -208,8 +241,8 @@ Examples of genrules are:
 <h3>Multiple output files with genrules</h3>
 
 <p>
-In most cases, a build produces exactly one output file. However, with
-genrules, you can specify an output <em>directory</em> and write
+In most cases, a build rule produces exactly one output file. However,
+with genrules, you can specify an output <em>directory</em> and write
 arbitrary files to that directory.
 </p>
 
@@ -217,11 +250,11 @@ arbitrary files to that directory.
 <h3>Macros</h3>
 
 <p>
-Finally, note that you can define your own functions that generate build
-rules. In general, this should not be something that you need to do, but
-taking advantage of this option might help you add something to Buck's
-build process without editing its source code.  For more details, see 
-the topic <a href="{ROOT}extending/macros.html">Custom Macros</a>.
+Finally, note that you can define functions that generate build rules.
+In general, this should not be something that you need to do, but taking
+advantage of this option might help you add needed functionality to
+Buck's without editing its source code.  For more details, see the
+{sp}<a href="{ROOT}extending/macros.html">Custom Macros</a> topic.
 </p>
 
     {/param}

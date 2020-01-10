@@ -1,39 +1,32 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
-import com.facebook.buck.core.rules.common.BuildableSupport;
-import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
-import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.test.TestResultSummary;
-import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.xml.XmlDomParser;
 import com.google.common.base.Charsets;
@@ -56,14 +49,13 @@ import java.util.Stack;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunnerRule {
+class CxxBoostTest extends CxxTest implements HasRuntimeDeps {
 
   private static final Pattern SUITE_START = Pattern.compile("^Entering test suite \"(.*)\"$");
   private static final Pattern SUITE_END = Pattern.compile("^Leaving test suite \"(.*)\"$");
@@ -73,8 +65,6 @@ class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
       Pattern.compile("^Leaving test case \"(.*)\"(?:; testing time: (\\d+)ms)?$");
 
   private static final Pattern ERROR = Pattern.compile("^.*\\(\\d+\\): error .*");
-
-  private final BuildRule binary;
 
   public CxxBoostTest(
       BuildTarget buildTarget,
@@ -95,6 +85,7 @@ class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
         buildTarget,
         projectFilesystem,
         params,
+        binary,
         executable,
         env,
         args,
@@ -104,18 +95,13 @@ class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
         labels,
         contacts,
         runTestSeparately,
-        testRuleTimeoutMs);
-    this.binary = binary;
+        testRuleTimeoutMs,
+        CxxTestType.BOOST);
   }
 
   @Override
-  public SourcePath getSourcePathToOutput() {
-    return ForwardingBuildTargetSourcePath.of(
-        getBuildTarget(), Objects.requireNonNull(binary.getSourcePathToOutput()));
-  }
-
-  @Override
-  protected ImmutableList<String> getShellCommand(SourcePathResolver pathResolver, Path output) {
+  protected ImmutableList<String> getShellCommand(
+      SourcePathResolverAdapter pathResolver, Path output) {
     return ImmutableList.<String>builder()
         .addAll(getExecutableCommand().getCommandPrefix(pathResolver))
         .add("--log_format=hrf")
@@ -228,36 +214,5 @@ class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
     visitTestSuite(summariesBuilder, messages, stdout, times, "", testSuite);
 
     return summariesBuilder.build();
-  }
-
-  // The C++ test rules just wrap a test binary produced by another rule, so make sure that's
-  // always available to run the test.
-  @Override
-  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
-    return Stream.concat(
-        super.getRuntimeDeps(ruleFinder),
-        BuildableSupport.getDeps(getExecutableCommand(), ruleFinder)
-            .map(BuildRule::getBuildTarget));
-  }
-
-  @Override
-  public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
-      ExecutionContext executionContext,
-      TestRunningOptions testRunningOptions,
-      BuildContext buildContext) {
-    return ExternalTestRunnerTestSpec.builder()
-        .setTarget(getBuildTarget())
-        .setType("boost")
-        .addAllCommand(
-            getExecutableCommand().getCommandPrefix(buildContext.getSourcePathResolver()))
-        .addAllCommand(Arg.stringify(getArgs(), buildContext.getSourcePathResolver()))
-        .putAllEnv(getEnv(buildContext.getSourcePathResolver()))
-        .addAllLabels(getLabels())
-        .addAllContacts(getContacts())
-        .addAllAdditionalCoverageTargets(
-            buildContext
-                .getSourcePathResolver()
-                .getAllAbsolutePaths(getAdditionalCoverageTargets()))
-        .build();
   }
 }

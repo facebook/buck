@@ -1,37 +1,35 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.lua;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
-import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
-import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
+import com.facebook.buck.cxx.toolchain.impl.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.FakeExecutableFinder;
@@ -116,16 +114,15 @@ public class LuaBinaryIntegrationTest {
                     .addAll(
                         cxxPlatform
                             .getCc()
-                            .resolve(resolver)
-                            .getCommandPrefix(
-                                DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver))))
+                            .resolve(resolver, UnconfiguredTargetConfiguration.INSTANCE)
+                            .getCommandPrefix(resolver.getSourcePathResolver()))
                     .add("-includelua.h", "-E", "-")
                     .build())
             .setRedirectInput(ProcessBuilder.Redirect.PIPE)
             .build();
     ProcessExecutor executor = new DefaultProcessExecutor(Console.createNullConsole());
     ProcessExecutor.LaunchedProcess launchedProcess = executor.launchProcess(params);
-    launchedProcess.getOutputStream().close();
+    launchedProcess.getStdin().close();
     int exitCode = executor.waitForLaunchedProcess(launchedProcess).getExitCode();
     luaDevel = exitCode == 0;
     if (starterType == LuaBinaryDescription.StarterType.NATIVE) {
@@ -145,7 +142,9 @@ public class LuaBinaryIntegrationTest {
         ".buckconfig");
     LuaPlatform platform =
         getLuaBuckConfig()
-            .getPlatform(CxxPlatformUtils.DEFAULT_PLATFORM.withFlavor(DefaultCxxPlatforms.FLAVOR));
+            .getPlatform(
+                UnconfiguredTargetConfiguration.INSTANCE,
+                CxxPlatformUtils.DEFAULT_PLATFORM.withFlavor(DefaultCxxPlatforms.FLAVOR));
     assertThat(platform.getStarterType(), Matchers.equalTo(Optional.of(starterType)));
     assertThat(platform.getNativeLinkStrategy(), Matchers.equalTo(nativeLinkStrategy));
   }
@@ -215,7 +214,7 @@ public class LuaBinaryIntegrationTest {
   }
 
   @Test
-  public void nativeExtension() throws Exception {
+  public void nativeExtension() {
     assumeTrue(luaDevel);
     ProcessResult result = workspace.runBuckCommand("run", "//:native").assertSuccess();
     assertThat(
@@ -225,7 +224,7 @@ public class LuaBinaryIntegrationTest {
   }
 
   @Test
-  public void nativeExtensionWithDep() throws Exception {
+  public void nativeExtensionWithDep() {
     assumeThat(starterType, Matchers.not(Matchers.equalTo(LuaBinaryDescription.StarterType.PURE)));
     assumeTrue(luaDevel);
     ProcessResult result = workspace.runBuckCommand("run", "//:native_with_dep").assertSuccess();
@@ -275,14 +274,14 @@ public class LuaBinaryIntegrationTest {
                 "-c",
                 "lua.packager=//:packager",
                 "//:simple"));
-    assertTrue(standaloneFirst.equals(standaloneSecond));
+    assertEquals(standaloneFirst, standaloneSecond);
 
     // Now rebuild again, switching back to in-place, and verify the output matches the original
     // build's output.
     String inplaceSecond =
         workspace.getFileContents(
             workspace.buildAndReturnOutput("-c", "lua.package_style=inplace", "//:simple"));
-    assertTrue(inplaceFirst.equals(inplaceSecond));
+    assertEquals(inplaceFirst, inplaceSecond);
   }
 
   @Test

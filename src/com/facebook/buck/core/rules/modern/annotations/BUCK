@@ -4,6 +4,10 @@ java_library(
     required_for_source_only_abi = True,
     visibility = [
         "//src/com/facebook/buck/core/...",
+        "//src/com/facebook/buck/cxx/...",
         "//src/com/facebook/buck/rules/modern/...",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/rulekey:rulekey",
     ],
 )

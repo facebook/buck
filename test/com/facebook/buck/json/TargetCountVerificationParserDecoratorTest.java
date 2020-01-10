@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.json;
@@ -24,6 +24,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.BuckEventBusForTests.CapturingConsoleEventListener;
 import com.facebook.buck.parser.api.BuildFileManifest;
+import com.facebook.buck.parser.api.ImmutableBuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -42,7 +43,7 @@ public class TargetCountVerificationParserDecoratorTest {
   private CapturingConsoleEventListener capturingConsoleEventListener;
   private Path path;
   private ProjectBuildFileParser parserMock;
-  private ImmutableMap<String, Map<String, Object>> rawTargets;
+  private ImmutableMap<String, ImmutableMap<String, Object>> rawTargets;
   private BuckEventBus eventBus;
 
   @Before
@@ -61,10 +62,10 @@ public class TargetCountVerificationParserDecoratorTest {
     retMap1.put("e", "e");
 
     String[] names = {"a", "b", "c", "d", "e"};
-    ImmutableMap.Builder<String, Map<String, Object>> builder =
+    ImmutableMap.Builder<String, ImmutableMap<String, Object>> builder =
         ImmutableMap.builderWithExpectedSize(names.length);
     for (String name : names) {
-      builder.put(name, retMap1);
+      builder.put(name, ImmutableMap.copyOf(retMap1));
     }
 
     rawTargets = builder.build();
@@ -95,23 +96,23 @@ public class TargetCountVerificationParserDecoratorTest {
   @Test
   public void givenTargetCountExceedingLimitWhenGetBuildFileManifestIsInvokedAWarningIsEmitted()
       throws Exception {
-    EasyMock.expect(parserMock.getBuildFileManifest(path))
-        .andReturn(toBuildFileManifest(this.rawTargets));
+    EasyMock.expect(parserMock.getManifest(path)).andReturn(toBuildFileManifest(this.rawTargets));
 
     TargetCountVerificationParserDecorator parserDelegate = newParserDelegate(3);
     EasyMock.replay(parserMock);
-    parserDelegate.getBuildFileManifest(path);
+    parserDelegate.getManifest(path);
 
     assertWarningIsEmitted();
   }
 
   private BuildFileManifest toBuildFileManifest(
-      ImmutableMap<String, Map<String, Object>> rawTargets) {
-    return BuildFileManifest.of(
+      ImmutableMap<String, ImmutableMap<String, Object>> rawTargets) {
+    return ImmutableBuildFileManifest.of(
         rawTargets,
         ImmutableSortedSet.of(),
         ImmutableMap.of(),
         Optional.empty(),
+        ImmutableList.of(),
         ImmutableList.of());
   }
 
@@ -119,12 +120,11 @@ public class TargetCountVerificationParserDecoratorTest {
   public void
       givenTargetCountNotExceedingLimitWhenGetBuildFileManifestIsInvokedAWarningIsNotEmitted()
           throws Exception {
-    EasyMock.expect(parserMock.getBuildFileManifest(path))
-        .andReturn(toBuildFileManifest(rawTargets));
+    EasyMock.expect(parserMock.getManifest(path)).andReturn(toBuildFileManifest(rawTargets));
 
     TargetCountVerificationParserDecorator parserDelegate = newParserDelegate(6);
     EasyMock.replay(parserMock);
-    parserDelegate.getBuildFileManifest(path);
+    parserDelegate.getManifest(path);
 
     assertWarningIsNotEmitted();
   }

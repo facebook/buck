@@ -1,26 +1,29 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple.toolchain;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.apple.platform_type.ApplePlatformType;
+import com.facebook.buck.core.model.InternalFlavor;
+import java.util.Optional;
 import org.junit.Test;
 
 public class ApplePlatformTest {
@@ -100,5 +103,31 @@ public class ApplePlatformTest {
       assertTrue(platform.getType().isWatch());
       assertTrue(platform.getName().contains("watch"));
     }
+  }
+
+  @Test
+  public void testPlatformFlavorsDetection() {
+    assertTrue(ApplePlatform.isPlatformFlavor(InternalFlavor.of("iphoneos-armv7")));
+    assertFalse(ApplePlatform.isPlatformFlavor(InternalFlavor.of("iphoneos-armv7abc")));
+    assertFalse(ApplePlatform.isPlatformFlavor(InternalFlavor.of("abciphoneos-armv7")));
+    assertFalse(ApplePlatform.isPlatformFlavor(InternalFlavor.of("iphoneosarmv7")));
+    assertTrue(ApplePlatform.isPlatformFlavor(InternalFlavor.of("macosx11.1-x86_64")));
+    assertFalse(ApplePlatform.isPlatformFlavor(InternalFlavor.of("iphoneosssss")));
+  }
+
+  @Test
+  public void testAppleSDKNameExtraction() {
+    assertEquals(
+        ApplePlatform.findAppleSdkName(InternalFlavor.of("watchos-armv7k")),
+        Optional.of("watchos"));
+    assertEquals(
+        ApplePlatform.findAppleSdkName(InternalFlavor.of("iphoneos-armv7abc")), Optional.empty());
+    assertEquals(
+        ApplePlatform.findAppleSdkName(InternalFlavor.of("abciphoneos-armv7")), Optional.empty());
+    assertEquals(
+        ApplePlatform.findAppleSdkName(InternalFlavor.of("iphoneosarmv7")), Optional.empty());
+    assertEquals(
+        ApplePlatform.findAppleSdkName(InternalFlavor.of("iphonesimulator11.1-x86_64")),
+        Optional.of("iphonesimulator11.1"));
   }
 }

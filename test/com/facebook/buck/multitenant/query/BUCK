@@ -1,0 +1,42 @@
+kotlin_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.kt"],
+        exclude = ["*Test.kt"],
+    ),
+    deps = [
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/sourcepath:types",
+        "//src/com/facebook/buck/multitenant/query:query",
+        "//src/com/facebook/buck/multitenant/service:service",
+        "//src/com/facebook/buck/query:query",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/cell:cell",
+    ],
+)
+
+kotlin_test(
+    name = "query",
+    srcs = glob(["*Test.kt"]),
+    friend_paths = [
+        "//src/com/facebook/buck/multitenant/query:query",
+    ],
+    resources = glob(["data/**"]),
+    deps = [
+        ":testutil",
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/model/targetgraph/raw:raw",
+        "//src/com/facebook/buck/core/sourcepath:types",
+        "//src/com/facebook/buck/multitenant/fs:fs",
+        "//src/com/facebook/buck/multitenant/query:query",
+        "//src/com/facebook/buck/multitenant/runner:runner_lib",
+        "//src/com/facebook/buck/multitenant/service:RuleTypeFactory",
+        "//src/com/facebook/buck/multitenant/service:service",
+        "//src/com/facebook/buck/query:query",
+        "//test/com/facebook/buck/core/cell:testutil",
+        "//test/com/facebook/buck/core/cell/nameresolver:testutil",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)

@@ -1,28 +1,28 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.slb;
 
-import static com.facebook.buck.slb.AbstractClientSideSlbConfig.MIN_SAMPLES_TO_REPORT_ERROR_DEFAULT_VALUE;
-
 import com.google.common.base.Preconditions;
+import java.io.IOException;
 import java.net.URI;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
+import javax.annotation.Nullable;
 
 public class ServerHealthState {
   private static final int MAX_STORED_SAMPLES = 100;
@@ -37,9 +37,10 @@ public class ServerHealthState {
   private float lastReportedErrorPercentage;
   private int lastReportedSamples;
   private long lastReportedLatency;
+  private @Nullable IOException lastException;
 
   public ServerHealthState(URI server) {
-    this(server, MAX_STORED_SAMPLES, MIN_SAMPLES_TO_REPORT_ERROR_DEFAULT_VALUE);
+    this(server, MAX_STORED_SAMPLES, ClientSideSlbConfig.MIN_SAMPLES_TO_REPORT_ERROR_DEFAULT_VALUE);
   }
 
   public ServerHealthState(URI server, int minSamplesToReportError) {
@@ -71,6 +72,10 @@ public class ServerHealthState {
       pingLatencies.add(new LatencySample(nowMillis, latencyMillis));
       keepWithinSizeLimit(pingLatencies);
     }
+  }
+
+  public void reportException(IOException exp) {
+    this.lastException = exp;
   }
 
   /**
@@ -170,6 +175,11 @@ public class ServerHealthState {
 
     lastReportedLatency = (count > 0) ? sum / count : -1;
     return lastReportedLatency;
+  }
+
+  @Nullable
+  public IOException getLastException() {
+    return this.lastException;
   }
 
   public String toString(long nowMillis, int timeRangeMillis) {

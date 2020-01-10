@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -20,7 +20,6 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -45,6 +44,12 @@ abstract class AbstractNewPrebuiltCxxLibraryPaths implements PrebuiltCxxLibraryP
   abstract Optional<PatternMatchedCollection<ImmutableList<SourcePath>>> getPlatformHeaderDirs();
 
   abstract Optional<VersionMatchedCollection<ImmutableList<SourcePath>>> getVersionedHeaderDirs();
+
+  abstract Optional<SourcePath> getImportLib();
+
+  abstract Optional<PatternMatchedCollection<SourcePath>> getPlatformImportLib();
+
+  abstract Optional<VersionMatchedCollection<SourcePath>> getVersionedImportLib();
 
   abstract Optional<SourcePath> getSharedLib();
 
@@ -107,10 +112,24 @@ abstract class AbstractNewPrebuiltCxxLibraryPaths implements PrebuiltCxxLibraryP
       Optional<VersionMatchedCollection<SourcePath>> versionedLib) {
     Optional<SourcePath> path =
         getParameter(parameter, lib, cxxPlatform, platformLib, selectedVersions, versionedLib);
-    return path.map(
-        p ->
-            CxxGenruleDescription.fixupSourcePath(
-                graphBuilder, new SourcePathRuleFinder(graphBuilder), cxxPlatform, p));
+    return path.map(p -> CxxGenruleDescription.fixupSourcePath(graphBuilder, cxxPlatform, p));
+  }
+
+  @Override
+  public Optional<SourcePath> getImportLibrary(
+      ProjectFilesystem filesystem,
+      ActionGraphBuilder graphBuilder,
+      CellPathResolver cellRoots,
+      CxxPlatform cxxPlatform,
+      Optional<ImmutableMap<BuildTarget, Version>> selectedVersions) {
+    return getLibrary(
+        graphBuilder,
+        cxxPlatform,
+        selectedVersions,
+        "import_lib",
+        getImportLib(),
+        getPlatformImportLib(),
+        getVersionedImportLib());
   }
 
   @Override
@@ -180,9 +199,6 @@ abstract class AbstractNewPrebuiltCxxLibraryPaths implements PrebuiltCxxLibraryP
             selectedVersions,
             getVersionedHeaderDirs());
     return CxxGenruleDescription.fixupSourcePaths(
-        graphBuilder,
-        new SourcePathRuleFinder(graphBuilder),
-        cxxPlatform,
-        dirs.orElse(ImmutableList.of()));
+        graphBuilder, cxxPlatform, dirs.orElse(ImmutableList.of()));
   }
 }

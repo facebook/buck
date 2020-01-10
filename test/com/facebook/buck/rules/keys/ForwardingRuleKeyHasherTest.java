@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.keys;
@@ -22,12 +22,12 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertSame;
 
+import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
-import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.rules.keys.hasher.ForwardingRuleKeyHasher;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 import com.facebook.buck.util.sha1.Sha1HashCode;
@@ -39,8 +39,8 @@ import org.junit.Test;
 public class ForwardingRuleKeyHasherTest {
 
   private static final RuleKey RULE_KEY_1 = new RuleKey("a002b39af204cdfaa5fdb67816b13867c32ac52c");
-  private static final BuildTarget TARGET_1 =
-      BuildTargetFactory.newInstance(Paths.get("/root"), "//example/base:one");
+  private static final BuildTarget TARGET_1 = BuildTargetFactory.newInstance("//example/base:one");
+
   private static final byte[] BYTE_ARRAY = new byte[] {42, 42};
   private static final Pattern PATTERN = Pattern.compile("42");
 
@@ -141,17 +141,17 @@ public class ForwardingRuleKeyHasherTest {
 
     expect(
             guavaHasher.putArchiveMemberPath(
-                newArchiveMember("42/42", "42/42"), HashCode.fromInt(42)))
+                Paths.get("42/42"), Paths.get("42/42"), HashCode.fromInt(42)))
         .andReturn(guavaHasher);
     expect(
             stringHasher.putArchiveMemberPath(
-                newArchiveMember("42/42", "42/42"), HashCode.fromInt(42)))
+                Paths.get("42/42"), Paths.get("42/42"), HashCode.fromInt(42)))
         .andReturn(stringHasher);
     expect(guavaHasher.hash()).andReturn(hash);
     expect(stringHasher.hash()).andReturn(string);
 
-    expect(guavaHasher.putNonHashingPath("42")).andReturn(guavaHasher);
-    expect(stringHasher.putNonHashingPath("42")).andReturn(stringHasher);
+    expect(guavaHasher.putNonHashingPath(Paths.get("42"))).andReturn(guavaHasher);
+    expect(stringHasher.putNonHashingPath(Paths.get("42"))).andReturn(stringHasher);
     expect(guavaHasher.hash()).andReturn(hash);
     expect(stringHasher.hash()).andReturn(string);
 
@@ -238,12 +238,14 @@ public class ForwardingRuleKeyHasherTest {
         .andReturn(stringHasher);
     expect(guavaHasher.putPath(Paths.get("45"), HashCode.fromInt(45))).andReturn(guavaHasher);
     expect(stringHasher.putPath(Paths.get("45"), HashCode.fromInt(45))).andReturn(stringHasher);
-    expect(guavaHasher.putArchiveMemberPath(newArchiveMember("45", "45"), HashCode.fromInt(45)))
+    expect(guavaHasher.putArchiveMemberPath(Paths.get("45"), Paths.get("45"), HashCode.fromInt(45)))
         .andReturn(guavaHasher);
-    expect(stringHasher.putArchiveMemberPath(newArchiveMember("45", "45"), HashCode.fromInt(45)))
+    expect(
+            stringHasher.putArchiveMemberPath(
+                Paths.get("45"), Paths.get("45"), HashCode.fromInt(45)))
         .andReturn(stringHasher);
-    expect(guavaHasher.putNonHashingPath("45")).andReturn(guavaHasher);
-    expect(stringHasher.putNonHashingPath("45")).andReturn(stringHasher);
+    expect(guavaHasher.putNonHashingPath(Paths.get("45"))).andReturn(guavaHasher);
+    expect(stringHasher.putNonHashingPath(Paths.get("45"))).andReturn(stringHasher);
     expect(guavaHasher.putRuleKey(RULE_KEY_1)).andReturn(guavaHasher);
     expect(stringHasher.putRuleKey(RULE_KEY_1)).andReturn(stringHasher);
     expect(guavaHasher.putRuleType(RuleType.of("45", RuleType.Kind.BUILD))).andReturn(guavaHasher);
@@ -286,9 +288,9 @@ public class ForwardingRuleKeyHasherTest {
         .hash();
     newHasher(guavaHasher, stringHasher).putPath(Paths.get("42/42"), HashCode.fromInt(42)).hash();
     newHasher(guavaHasher, stringHasher)
-        .putArchiveMemberPath(newArchiveMember("42/42", "42/42"), HashCode.fromInt(42))
+        .putArchiveMemberPath(Paths.get("42/42"), Paths.get("42/42"), HashCode.fromInt(42))
         .hash();
-    newHasher(guavaHasher, stringHasher).putNonHashingPath("42").hash();
+    newHasher(guavaHasher, stringHasher).putNonHashingPath(Paths.get("42")).hash();
     newHasher(guavaHasher, stringHasher).putRuleKey(RULE_KEY_1).hash();
     newHasher(guavaHasher, stringHasher).putRuleType(RuleType.of("42", RuleType.Kind.BUILD)).hash();
     newHasher(guavaHasher, stringHasher).putBuildTarget(TARGET_1).hash();
@@ -314,8 +316,8 @@ public class ForwardingRuleKeyHasherTest {
         .putPattern(PATTERN)
         .putSha1(Sha1HashCode.of("a002b39af204cdfaa5fdb67816b13867c32ac52c"))
         .putPath(Paths.get("45"), HashCode.fromInt(45))
-        .putArchiveMemberPath(newArchiveMember("45", "45"), HashCode.fromInt(45))
-        .putNonHashingPath("45")
+        .putArchiveMemberPath(Paths.get("45"), Paths.get("45"), HashCode.fromInt(45))
+        .putNonHashingPath(Paths.get("45"))
         .putRuleKey(RULE_KEY_1)
         .putRuleType(RuleType.of("45", RuleType.Kind.BUILD))
         .putBuildTarget(TARGET_1)

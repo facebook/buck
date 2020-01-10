@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.parser.cache.impl;
@@ -145,7 +145,7 @@ public class HybridCacheStorage implements ParserCacheStorage {
         // TODO(buck_team): The serializeBuildFileManifestToBytes function returns a byte
         // representation
         // of the BuildFileManifest. It is possible to get this from the previous call to
-        // getBuildFileManifest,
+        // getManifest,
         // instead of recalculating it, but that would break the ParserStorage interface
         // encapsulation.
         // I expect this case to happen very rarely, since in most of the cases the cached results
@@ -167,7 +167,7 @@ public class HybridCacheStorage implements ParserCacheStorage {
     } finally {
       if (timer != null) {
         LOG.debug(
-            "Time to complete HybridCacheStorage.getBuildFileManifest method: %d ns.",
+            "Time to complete HybridCacheStorage.getManifest method: %d ns.",
             timer.stop().elapsed(TimeUnit.NANOSECONDS));
       }
     }

@@ -1,18 +1,19 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 {namespace genrule}
 
 /***/
@@ -36,12 +37,7 @@
 
 {param args}
 
-{call buck.arg}
-  {param name: 'name' /}
-  {param desc}
-  The name of the genrule.
-  {/param}
-{/call}
+{call buck.name_arg /}
 
 {call genrule_common.srcs_arg /}
 
@@ -56,8 +52,6 @@
 {call genrule_common.out_arg /}
 
 {call genrule_common.environment_expansion_separator /}
-
-{call genrule_common.no_remote_arg /}
 
 {call buck.arg}
   {param name: 'enable_sandbox' /}
@@ -74,6 +68,18 @@
   Whether the output of the genrule is itself executable. Marking an output as
   executable makes <code>buck run</code> and <code>$(exe ...)</code> macro
   expansion work with this target.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'remote' /}
+  {param default : 'False' /}
+  {param desc}
+  Opts this genrule in to remote execution. Note that it is only safe to
+  execute a genrule remotely if it is completely hermetic and completely
+  and correctly describes its dependencies. Defaults to false. This parameter
+  is unstable. It is subject to removal, default reversal, and other arbitrary
+  changes in the future.
   {/param}
 {/call}
 

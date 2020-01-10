@@ -1,26 +1,27 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.parser.function;
 
+import com.facebook.buck.core.description.arg.DataTransferObject;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.RuleType;
-import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -63,19 +64,20 @@ public class BuckPyFunction {
                   '<',
                   '>'));
   private final TypeCoercerFactory typeCoercerFactory;
-  private final CoercedTypeCache coercedTypeCache;
 
-  public BuckPyFunction(TypeCoercerFactory typeCoercerFactory, CoercedTypeCache coercedTypeCache) {
+  public BuckPyFunction(TypeCoercerFactory typeCoercerFactory) {
     this.typeCoercerFactory = typeCoercerFactory;
-    this.coercedTypeCache = coercedTypeCache;
   }
 
-  public String toPythonFunction(RuleType type, Class<?> dtoClass) {
+  /**
+   * Create a Python function definition for given rule type and parameters described by DTO type.
+   */
+  public String toPythonFunction(RuleType type, Class<? extends DataTransferObject> dtoClass) {
     ImmutableList.Builder<StParamInfo> mandatory = ImmutableList.builder();
     ImmutableList.Builder<StParamInfo> optional = ImmutableList.builder();
     for (ParamInfo param :
         ImmutableSortedSet.copyOf(
-            coercedTypeCache.getAllParamInfo(typeCoercerFactory, dtoClass).values())) {
+            typeCoercerFactory.getConstructorArgDescriptor(dtoClass).getParamInfos().values())) {
       if (isSkippable(param)) {
         continue;
       }
@@ -85,8 +87,12 @@ public class BuckPyFunction {
         mandatory.add(new StParamInfo(param));
       }
     }
-    optional.add(StParamInfo.ofOptionalValue("visibility", "visibility"));
-    optional.add(StParamInfo.ofOptionalValue("within_view", "within_view"));
+    optional.add(
+        StParamInfo.ofOptionalValue(
+            VisibilityAttributes.VISIBILITY, VisibilityAttributes.VISIBILITY));
+    optional.add(
+        StParamInfo.ofOptionalValue(
+            VisibilityAttributes.WITHIN_VIEW, VisibilityAttributes.WITHIN_VIEW));
 
     STGroup group = buckPyFunctionTemplate.get();
     ST st;
@@ -118,12 +124,12 @@ public class BuckPyFunction {
       return true;
     }
 
-    if ("visibility".equals(param.getName())) {
+    if (VisibilityAttributes.VISIBILITY.equals(param.getName())) {
       throw new HumanReadableException(
           "'visibility' parameter must be omitted. It will be passed to the rule at run time.");
     }
 
-    if ("within_view".equals(param.getName())) {
+    if (VisibilityAttributes.WITHIN_VIEW.equals(param.getName())) {
       throw new HumanReadableException(
           "'within_view' parameter must be omitted. It will be passed to the rule at run time.");
     }

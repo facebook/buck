@@ -1,13 +1,20 @@
 [ndk]
   #cpu_abis
   #app_platform
+  ndk_version = 17
 
 [scala]
-  library = //scala:scala-library
-  compiler = //scala:scala-compiler
+  library = buck//third-party/scala:scala-library
+  compiler = buck//third-party/scala:scala-compiler
 
 [kotlin]
-  kotlin_home = kotlin/kotlinc/
+  kotlin_home = kotlinc
 
 [android]
   redex = //tools/redex:redex
+
+# The proguard included in the Android SDK is very old and doesn't support 1.8
+# .class files. In case we use an Android SDK > 23, we must use a newer version of
+# proguard than the one included in the SDK tools itself.
+[tools]
+  proguard = buck//third-party/java/proguard:proguard

@@ -1,0 +1,18 @@
+kotlin_library(
+    name = "kotlin",
+    srcs = glob(
+        ["*.kt"],
+    ),
+    tests = [
+        "//test/com/facebook/buck/jvm/java/abi:abi",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/jvm/java/abi:abi",
+        "//test/com/facebook/buck/jvm/java/abi/...",
+    ],
+    deps = [
+        "//third-party/java/asm:asm",
+        "//third-party/java/jsr:jsr305",
+        "//third-party/java/kotlinx-metadata-jvm:kotlinx-metadata-jvm",
+    ],
+)

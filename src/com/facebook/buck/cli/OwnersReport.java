@@ -1,30 +1,33 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildFileTree;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.PerBuildState;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -150,19 +153,29 @@ final class OwnersReport {
     }
   }
 
-  static Builder builder(Cell rootCell, Parser parser, PerBuildState parserState) {
-    return new Builder(rootCell, parser, parserState);
+  static Builder builder(
+      Cell rootCell,
+      Parser parser,
+      PerBuildState parserState,
+      Optional<TargetConfiguration> targetConfiguration) {
+    return new Builder(rootCell, parser, parserState, targetConfiguration);
   }
 
   static final class Builder {
     private final Cell rootCell;
     private final Parser parser;
     private final PerBuildState parserState;
+    private final Optional<TargetConfiguration> targetConfiguration;
 
-    private Builder(Cell rootCell, Parser parser, PerBuildState parserState) {
+    private Builder(
+        Cell rootCell,
+        Parser parser,
+        PerBuildState parserState,
+        Optional<TargetConfiguration> targetConfiguration) {
       this.rootCell = rootCell;
       this.parser = parser;
       this.parserState = parserState;
+      this.targetConfiguration = targetConfiguration;
     }
 
     private OwnersReport getReportForBasePath(
@@ -170,26 +183,32 @@ final class OwnersReport {
         Cell cell,
         Path basePath,
         Path cellRelativePath) {
-      Path buckFile = cell.getFilesystem().resolve(basePath).resolve(cell.getBuildFileName());
+      Path buckFile =
+          cell.getFilesystem()
+              .resolve(basePath)
+              .resolve(cell.getBuckConfigView(ParserConfig.class).getBuildFileName());
       ImmutableList<TargetNode<?>> targetNodes =
           map.computeIfAbsent(
               buckFile,
               basePath1 -> {
                 try {
-                  return parser.getAllTargetNodes(parserState, cell, basePath1);
+                  return parser.getAllTargetNodesWithTargetCompatibilityFiltering(
+                      parserState, cell, basePath1, targetConfiguration);
                 } catch (BuildFileParseException e) {
                   throw new HumanReadableException(e);
                 }
               });
-      return targetNodes
-          .stream()
+      return targetNodes.stream()
           .map(targetNode -> generateOwnersReport(cell, targetNode, cellRelativePath.toString()))
           .reduce(OwnersReport.emptyReport(), OwnersReport::updatedWith);
     }
 
     private ImmutableSet<Path> getAllBasePathsForPath(
         BuildFileTree buildFileTree, Path cellRelativePath) {
-      if (rootCell.isEnforcingBuckPackageBoundaries(cellRelativePath)) {
+      if (rootCell
+              .getBuckConfigView(ParserConfig.class)
+              .getPackageBoundaryEnforcementPolicy(cellRelativePath)
+          == ParserConfig.PackageBoundaryEnforcement.ENFORCE) {
         return buildFileTree
             .getBasePathOfAncestorTarget(cellRelativePath)
             .map(ImmutableSet::of)
@@ -278,8 +297,7 @@ final class OwnersReport {
             continue;
           }
           report =
-              basePaths
-                  .stream()
+              basePaths.stream()
                   .map(basePath -> getReportForBasePath(map, cell, basePath, cellRelativePath))
                   .reduce(report, OwnersReport::updatedWith);
         }

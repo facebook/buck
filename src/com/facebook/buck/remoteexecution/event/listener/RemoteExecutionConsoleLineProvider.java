@@ -1,24 +1,26 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.remoteexecution.event.listener;
 
 import com.facebook.buck.event.listener.interfaces.AdditionalConsoleLineProvider;
+import com.facebook.buck.remoteexecution.event.LocalFallbackStats;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent.State;
+import com.facebook.buck.remoteexecution.event.RemoteExecutionStatsProvider;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -26,17 +28,20 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 /** Provides output lines to the console about the current state of Remote Execution. */
 public class RemoteExecutionConsoleLineProvider implements AdditionalConsoleLineProvider {
 
   private final RemoteExecutionStatsProvider statsProvider;
   private final String sessionIdInfo;
+  private final boolean isDebug;
 
   public RemoteExecutionConsoleLineProvider(
-      RemoteExecutionStatsProvider statsProvider, String sessionIdInfo) {
+      RemoteExecutionStatsProvider statsProvider, String sessionIdInfo, boolean isDebug) {
     this.statsProvider = statsProvider;
     this.sessionIdInfo = sessionIdInfo;
+    this.isDebug = isDebug;
   }
 
   @Override
@@ -47,26 +52,56 @@ public class RemoteExecutionConsoleLineProvider implements AdditionalConsoleLine
     if (!hasFirstRemoteActionStarted(actionsPerState)) {
       return lines.build();
     }
+    if (isDebug) {
+      String metadataLine = String.format("[RE] Metadata: Session ID=[%s]", sessionIdInfo);
+      lines.add(metadataLine);
 
-    String metadataLine = String.format("[RE] Metadata: Session ID=[%s]", sessionIdInfo);
-    lines.add(metadataLine);
+      String actionsLine =
+          String.format(
+              "[RE] Actions: Local=%d Remote=[%s]",
+              getLocallyBuiltRules(statsProvider.getTotalRulesBuilt(), actionsPerState),
+              getStatesString(actionsPerState));
+      lines.add(actionsLine);
 
-    String actionsLine =
-        String.format(
-            "[RE] Actions: Local=%d Remote=[%s]",
-            getLocallyBuiltRules(statsProvider.getTotalRulesBuilt(), actionsPerState),
-            getStatesString(actionsPerState));
-    lines.add(actionsLine);
+      String casLine =
+          String.format(
+              "[RE] CAS: Upl=[Count:%d Size=%s] Dwl=[Count:%d Size=%s]",
+              statsProvider.getCasUploads(),
+              prettyPrintSize(statsProvider.getCasUploadSizeBytes()),
+              statsProvider.getCasDownloads(),
+              prettyPrintSize(statsProvider.getCasDownloadSizeBytes()));
+      lines.add(casLine);
 
-    String casLine =
-        String.format(
-            "[RE] CAS: Upl=[Count:%d Size=%s] Dwl=[Count:%d Size=%s]",
-            statsProvider.getCasUploads(),
-            prettyPrintSize(statsProvider.getCasUploadSizeBytes()),
-            statsProvider.getCasDownloads(),
-            prettyPrintSize(statsProvider.getCasDownloadSizeBytes()));
-    lines.add(casLine);
-
+      long remoteCpuMs = statsProvider.getRemoteCpuTimeMs();
+      long minutesCpu = TimeUnit.MILLISECONDS.toMinutes(remoteCpuMs);
+      String metricsLine =
+          String.format(
+              "[RE] Metrics: CPU %d:%02d minutes",
+              minutesCpu,
+              TimeUnit.MILLISECONDS.toSeconds(remoteCpuMs)
+                  - TimeUnit.MINUTES.toSeconds(minutesCpu));
+      lines.add(metricsLine);
+    }
+    if (statsProvider.getTotalRemoteTimeMs() > 0) {
+      long remoteTotalMs = statsProvider.getTotalRemoteTimeMs();
+      long minutesTotal = TimeUnit.MILLISECONDS.toMinutes(remoteTotalMs);
+      lines.add(
+          String.format(
+              "Building with Remote Execution [RE]. Used %d:%02d minutes of total time.",
+              minutesTotal,
+              TimeUnit.MILLISECONDS.toSeconds(remoteTotalMs)
+                  - TimeUnit.MINUTES.toSeconds(minutesTotal)));
+      int waitingActions = 0;
+      for (State state : RemoteExecutionActionEvent.State.values()) {
+        if (!RemoteExecutionActionEvent.isTerminalState(state)) {
+          waitingActions += actionsPerState.getOrDefault(state, 0);
+        }
+      }
+      lines.add(
+          String.format(
+              "[RE] Waiting on %d remote actions. Completed %d actions remotely.",
+              waitingActions, actionsPerState.getOrDefault(State.ACTION_SUCCEEDED, 0)));
+    }
     LocalFallbackStats localFallbackStats = statsProvider.getLocalFallbackStats();
     if (localFallbackStats.getLocallyExecutedRules() > 0) {
       float percentageRetry =
@@ -74,7 +109,7 @@ public class RemoteExecutionConsoleLineProvider implements AdditionalConsoleLine
               / localFallbackStats.getTotalExecutedRules();
       lines.add(
           String.format(
-              "[RE] LocalFallback: [fallback_rate=%.2f%% remote=%d local=%d]",
+              "[RE] Some actions failed remotely, retrying locally. LocalFallback: [fallback_rate=%.2f%% remote=%d local=%d]",
               percentageRetry,
               localFallbackStats.getTotalExecutedRules()
                   - localFallbackStats.getLocallyExecutedRules(),

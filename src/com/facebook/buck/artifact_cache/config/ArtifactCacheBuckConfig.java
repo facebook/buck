@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.artifact_cache.config;
@@ -91,7 +91,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
 
   private static final URI DEFAULT_HTTP_URL = URI.create("http://localhost:8080/");
   private static final String DEFAULT_HTTP_CACHE_MODE = CacheReadMode.READWRITE.name();
-  private static final long DEFAULT_HTTP_CACHE_TIMEOUT_SECONDS = 3L;
+  private static final long DEFAULT_HTTP_CACHE_TIMEOUT_SECONDS = 30L;
   private static final String DEFAULT_HTTP_MAX_CONCURRENT_WRITES = "1";
   private static final String DEFAULT_HTTP_WRITE_SHUTDOWN_TIMEOUT_SECONDS = "1800"; // 30 minutes
   private static final String DEFAULT_HTTP_CACHE_ERROR_MESSAGE =
@@ -137,9 +137,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   public static final String MULTI_CHECK = "multi_check";
   private static final int DEFAULT_MULTI_FETCH_LIMIT = 100;
 
-  private static final String DOWNLOAD_HEAVY_BUILD_CACHE_FETCH_THREADS =
-      "download_heavy_build_http_cache_fetch_threads";
-  private static final int DEFAULT_DOWNLOAD_HEAVY_BUILD_CACHE_FETCH_THREADS = 20;
+  private static final String ENV_VAR_SUFFIX = "_env_var";
 
   private final ProjectFilesystem projectFilesystem;
   private final BuckConfig buckConfig;
@@ -168,12 +166,6 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   @Override
   public BuckConfig getDelegate() {
     return buckConfig;
-  }
-
-  public int getDownloadHeavyBuildHttpFetchConcurrency() {
-    return Math.min(
-        buckConfig.getView(ResourcesConfig.class).getMaximumResourceAmounts().getNetworkIO(),
-        getDownloadHeavyBuildHttpCacheFetchThreads());
   }
 
   public int getHttpFetchConcurrency() {
@@ -250,8 +242,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   }
 
   public boolean hasAtLeastOneWriteableRemoteCache() {
-    return getHttpCacheEntries()
-        .stream()
+    return getHttpCacheEntries().stream()
         .anyMatch(entry -> entry.getCacheReadMode().equals(CacheReadMode.READWRITE));
   }
 
@@ -269,8 +260,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   }
 
   public ImmutableSet<ArtifactCacheMode> getArtifactCacheModes() {
-    return getArtifactCacheModesRaw()
-        .stream()
+    return getArtifactCacheModesRaw().stream()
         .map(
             input -> {
               try {
@@ -300,8 +290,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
 
     // Enforce some sanity checks on the config:
     //  - we don't want multiple writeable dir caches pointing to the same directory
-    dirCacheEntries
-        .stream()
+    dirCacheEntries.stream()
         .filter(isDirCacheEntryWriteable)
         .collect(Collectors.groupingBy(DirCacheEntry::getCacheDir))
         .forEach(
@@ -391,9 +380,25 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   }
 
   /**
+   * If true, fail if client TLS certificate or key paths are unspecified, don't exist, are not the
+   * right format or have expired
+   */
+  public boolean getClientTlsCertRequired() {
+    return buckConfig.getBooleanValue(CACHE_SECTION_NAME, "http_client_tls_cert_required", false);
+  }
+
+  /**
+   * If true, use TLS client authentication certificate, private key and extra trusted certificates
+   * also for CLIENT_SLB mode alive pings.
+   */
+  public boolean getClientTlsForSlb() {
+    return buckConfig.getBooleanValue(CACHE_SECTION_NAME, "http_client_tls_for_slb", false);
+  }
+
+  /**
    * Gets the path to a PEM encoded X509 certificate to use as the TLS client certificate for HTTP
-   * cache requests, from the content of the env var specified in http_client_tls_cert_env_var if
-   * set or the field value
+   * cache requests from the content of the env var specified in http_client_tls_cert_env_var if set
+   * or the field value
    *
    * <p>Both the key and certificate must be set for client TLS certificates to be used
    */
@@ -402,7 +407,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   }
 
   /**
-   * Gets the path to a PEM encoded PCKS#8 key to use as the TLS client key for HTTP cache requests,
+   * Gets the path to a PEM encoded PCKS#8 key to use as the TLS client key for HTTP cache requests
    * from the content of the env var specified in http_client_tls_key_env_var if set or the field
    * value. This may be a file that contains both the private key and the certificate if both
    * objects are newline delimited.
@@ -411,6 +416,17 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
    */
   public Optional<Path> getClientTlsKey() {
     return getPathWithEnv("http_client_tls_key");
+  }
+
+  /**
+   * Gets the path to a file containing PEM encoded X509 certificates to use as an additional list
+   * of trusted certificates from the content of the env var specified in http_client_tls_ca_env_var
+   * if set or the field value.
+   *
+   * <p>Both the key and certificate must be set for client TLS certificates to be used
+   */
+  public Optional<Path> getClientTlsTrustedCertificates() {
+    return getPathWithEnv("http_client_tls_ca");
   }
 
   /** Thread pools that are available for task execution. */
@@ -590,18 +606,6 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   }
 
   /**
-   * Number of cache fetch threads to be used by download heavy builds, such as the synchronized
-   * build phase of Stampede, which almost entirely consists of cache fetches.
-   *
-   * @return
-   */
-  private int getDownloadHeavyBuildHttpCacheFetchThreads() {
-    return buckConfig
-        .getInteger(CACHE_SECTION_NAME, DOWNLOAD_HEAVY_BUILD_CACHE_FETCH_THREADS)
-        .orElse(DEFAULT_DOWNLOAD_HEAVY_BUILD_CACHE_FETCH_THREADS);
-  }
-
-  /**
    * @return field value or content of environment variable specified in field
    *     "${section}.${field}_env_var" if this environment variable exists and does not just contain
    *     0 or more whitespaces
@@ -609,11 +613,19 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   public static Optional<String> getStringOrEnvironmentVariable(
       BuckConfig buckConfig, String section, String field) {
     Optional<String> defaultValue = buckConfig.getValue(section, field);
-    Optional<String> envVariable = buckConfig.getValue(section, field + "_env_var");
+    Optional<String> envVariable = buckConfig.getValue(section, getEnvVarFieldNameForField(field));
     if (!envVariable.isPresent()) {
       return defaultValue;
     }
     String envValue = buckConfig.getEnvironment().getOrDefault(envVariable.get(), "").trim();
     return envValue.isEmpty() ? defaultValue : Optional.of(envValue);
+  }
+
+  /**
+   * @param field
+   * @return append the {@value #ENV_VAR_SUFFIX} to the {field}
+   */
+  public static String getEnvVarFieldNameForField(String field) {
+    return field + ENV_VAR_SUFFIX;
   }
 }

@@ -1,24 +1,28 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.remoteexecution.grpc;
 
 import build.bazel.remote.execution.v2.Command.EnvironmentVariable;
 import build.bazel.remote.execution.v2.OutputFile.Builder;
+import build.bazel.remote.execution.v2.Platform;
+import build.bazel.remote.execution.v2.Platform.Property;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
+import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -28,8 +32,11 @@ import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -86,19 +93,14 @@ public class GrpcProtocol implements Protocol {
 
     @Override
     public ImmutableList<String> getCommand() {
-      return command
-          .getArgumentsList()
-          .asByteStringList()
-          .stream()
+      return command.getArgumentsList().asByteStringList().stream()
           .map(ByteString::toStringUtf8)
           .collect(ImmutableList.toImmutableList());
     }
 
     @Override
     public ImmutableMap<String, String> getEnvironment() {
-      return command
-          .getEnvironmentVariablesList()
-          .stream()
+      return command.getEnvironmentVariablesList().stream()
           .collect(
               ImmutableMap.toImmutableMap(
                   EnvironmentVariable::getName, EnvironmentVariable::getValue));
@@ -106,20 +108,14 @@ public class GrpcProtocol implements Protocol {
 
     @Override
     public ImmutableList<String> getOutputFiles() {
-      return command
-          .getOutputFilesList()
-          .asByteStringList()
-          .stream()
+      return command.getOutputFilesList().asByteStringList().stream()
           .map(ByteString::toStringUtf8)
           .collect(ImmutableList.toImmutableList());
     }
 
     @Override
     public ImmutableList<String> getOutputDirectories() {
-      return command
-          .getOutputDirectoriesList()
-          .asByteStringList()
-          .stream()
+      return command.getOutputDirectoriesList().asByteStringList().stream()
           .map(ByteString::toStringUtf8)
           .collect(ImmutableList.toImmutableList());
     }
@@ -193,18 +189,14 @@ public class GrpcProtocol implements Protocol {
 
     @Override
     public Collection<DirectoryNode> getDirectoriesList() {
-      return directory
-          .getDirectoriesList()
-          .stream()
+      return directory.getDirectoriesList().stream()
           .map(GrpcDirectoryNode::new)
           .collect(Collectors.toList());
     }
 
     @Override
     public Collection<SymlinkNode> getSymlinksList() {
-      return directory
-          .getSymlinksList()
-          .stream()
+      return directory.getSymlinksList().stream()
           .map(GrpcSymlinkNode::new)
           .collect(Collectors.toList());
     }
@@ -256,6 +248,23 @@ public class GrpcProtocol implements Protocol {
     @Override
     public Digest getDigest() {
       return new GrpcDigest(directoryNode.getDigest());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      GrpcDirectoryNode that = (GrpcDirectoryNode) o;
+      return directoryNode.equals(that.directoryNode);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(directoryNode);
     }
   }
 
@@ -349,17 +358,27 @@ public class GrpcProtocol implements Protocol {
   public Command newCommand(
       ImmutableList<String> command,
       ImmutableSortedMap<String, String> commandEnvironment,
-      Set<Path> outputs) {
+      Set<Path> outputs,
+      WorkerRequirements workerRequirements) {
     List<String> outputStrings =
         outputs.stream().map(Path::toString).sorted().collect(Collectors.toList());
 
+    Platform.Builder platformBuilder = Platform.newBuilder();
+    platformBuilder.addProperties(
+        Property.newBuilder()
+            .setName("SIZE")
+            .setValue(workerRequirements.getWorkerSize().name())
+            .build());
+    platformBuilder.addProperties(
+        Property.newBuilder()
+            .setName("PLATFORM")
+            .setValue(workerRequirements.getPlatformType().name())
+            .build());
     return new GrpcCommand(
         build.bazel.remote.execution.v2.Command.newBuilder()
             .addAllArguments(command)
             .addAllEnvironmentVariables(
-                commandEnvironment
-                    .entrySet()
-                    .stream()
+                commandEnvironment.entrySet().stream()
                     .map(
                         entry ->
                             EnvironmentVariable.newBuilder()
@@ -369,6 +388,7 @@ public class GrpcProtocol implements Protocol {
                     .collect(Collectors.toList()))
             .addAllOutputFiles(outputStrings)
             .addAllOutputDirectories(outputStrings)
+            .setPlatform(platformBuilder.build())
             .build());
   }
 
@@ -423,12 +443,14 @@ public class GrpcProtocol implements Protocol {
 
   @Override
   public Directory newDirectory(
-      List<DirectoryNode> children, Collection<FileNode> files, Collection<SymlinkNode> symlinks) {
+      List<DirectoryNode> directories,
+      Collection<FileNode> files,
+      Collection<SymlinkNode> symlinks) {
     return new GrpcDirectory(
         build.bazel.remote.execution.v2.Directory.newBuilder()
             .addAllFiles(files.stream().map(GrpcProtocol::get).collect(Collectors.toList()))
             .addAllDirectories(
-                children.stream().map(GrpcProtocol::get).collect(Collectors.toList()))
+                directories.stream().map(GrpcProtocol::get).collect(Collectors.toList()))
             .addAllSymlinks(symlinks.stream().map(GrpcProtocol::get).collect(Collectors.toList()))
             .build());
   }
@@ -493,6 +515,15 @@ public class GrpcProtocol implements Protocol {
   @Override
   public HashFunction getHashFunction() {
     return HASHER;
+  }
+
+  @Override
+  public MessageDigest getMessageDigest() {
+    try {
+      return MessageDigest.getInstance("SHA-1");
+    } catch (NoSuchAlgorithmException e) {
+      throw new BuckUncheckedExecutionException("SHA-1 Digest verification not available");
+    }
   }
 
   private static build.bazel.remote.execution.v2.DirectoryNode get(DirectoryNode directoryNode) {

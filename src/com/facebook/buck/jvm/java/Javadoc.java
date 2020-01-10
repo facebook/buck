@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
@@ -129,8 +129,7 @@ public class Javadoc extends AbstractBuildRuleWithDeclaredAndExtraDeps implement
             getProjectFilesystem(),
             Joiner.on("\n")
                 .join(
-                    sources
-                        .stream()
+                    sources.stream()
                         .map(context.getSourcePathResolver()::getAbsolutePath)
                         .map(Path::toString)
                         .iterator()),
@@ -143,8 +142,7 @@ public class Javadoc extends AbstractBuildRuleWithDeclaredAndExtraDeps implement
     Joiner.on(File.pathSeparator)
         .appendTo(
             argsBuilder,
-            getBuildDeps()
-                .stream()
+            getBuildDeps().stream()
                 .filter(HasClasspathEntries.class::isInstance)
                 .flatMap(rule -> ((HasClasspathEntries) rule).getTransitiveClasspaths().stream())
                 .map(context.getSourcePathResolver()::getAbsolutePath)

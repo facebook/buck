@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.go;
@@ -32,6 +32,7 @@ public class GoBuckConfig {
   private static final String PROJECT_PATH = "project_path";
   private static final String DEFAULT_PLATFORM = "default_platform";
   private static final String PREFIX = "prefix";
+  private static final String GENSYMABIS = "gensymabis";
 
   public GoBuckConfig(BuckConfig delegate) {
     this.delegate = delegate;
@@ -58,7 +59,7 @@ public class GoBuckConfig {
    */
   Path getDefaultPackageName(BuildTarget target) {
     Path prefix = Paths.get(delegate.getValue(SECTION, PREFIX).orElse(""));
-    return prefix.resolve(target.getBasePath());
+    return prefix.resolve(target.getCellRelativeBasePath().getPath().toPathDefaultFileSystem());
   }
 
   /**
@@ -86,5 +87,20 @@ public class GoBuckConfig {
   Optional<Path> getProjectPath() {
     Optional<String> path = delegate.getValue(SECTION, PROJECT_PATH);
     return path.map(pathStr -> Paths.get(pathStr));
+  }
+
+  /**
+   * Get "gensymabis" flag. Since go 1.12 we need to generate symabi file that is passed to compile
+   * step:
+   * https://github.com/golang/proposal/blob/master/design/27539-internal-abi.md#implementation
+   *
+   * <p>This is only for migration purposes and should be removed with next release
+   */
+  boolean getGensymabis() {
+    Optional<String> gensymabis = delegate.getValue(SECTION, GENSYMABIS);
+    if (gensymabis.isPresent()) {
+      return Boolean.valueOf(gensymabis.get());
+    }
+    return false;
   }
 }

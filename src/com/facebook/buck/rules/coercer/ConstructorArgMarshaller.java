@@ -1,29 +1,32 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.TargetConfigurationTransformer;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.List;
@@ -33,16 +36,18 @@ import java.util.Set;
 
 /**
  * Used to derive information from the constructor args returned by {@link
- * com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph} instances. There are two
- * major uses this information is put to: populating the DTO object from the deserialized JSON maps,
- * which are outputted by the functions added to Buck's core build file parsing script. The second
- * function of this class is to generate those functions.
+ * com.facebook.buck.core.rules.DescriptionWithTargetGraph} instances. There are two major uses this
+ * information is put to: populating the DTO object from the deserialized JSON maps, which are
+ * outputted by the functions added to Buck's core build file parsing script. The second function of
+ * this class is to generate those functions.
  */
 public interface ConstructorArgMarshaller {
 
   /**
-   * Use the information contained in the {@code params} to fill in the public fields and settable
-   * properties of {@code dto}. The following rules are used:
+   * Creates a constructor argument using raw attributes that may contain configurable attributes.
+   *
+   * <p>Use the information contained in the {@code params} to fill in the public fields and
+   * settable properties of {@code dto}. The following rules are used:
    *
    * <ul>
    *   <li>Boolean values are set to true or false.
@@ -59,33 +64,24 @@ public interface ConstructorArgMarshaller {
    * if none is set. This is typically {@link Optional#empty()}, but in the case of collections is
    * an empty collection.
    *
-   * @param dtoClass The type of the immutable constructor dto to be populated.
+   * @param hostConfiguration
    * @param declaredDeps A builder to be populated with the declared dependencies.
-   * @return The fully populated DTO.
-   */
-  <T> T populate(
-      CellPathResolver cellRoots,
-      ProjectFilesystem filesystem,
-      BuildTarget buildTarget,
-      Class<T> dtoClass,
-      ImmutableSet.Builder<BuildTarget> declaredDeps,
-      Map<String, ?> instance)
-      throws ParamInfoException;
-
-  /**
-   * Creates a constructor argument using raw attributes that may contain configurable attributes.
-   *
    * @param attributes configured attributes that cannot contain selectable values (instances of
    *     {@link SelectorList})
+   * @return The fully populated DTO.
    */
-  <T> T populateWithConfiguringAttributes(
+  <T extends ConstructorArg> T populate(
       CellPathResolver cellPathResolver,
       ProjectFilesystem filesystem,
       SelectorListResolver selectorListResolver,
+      TargetConfigurationTransformer targetConfigurationTransformer,
       SelectableConfigurationContext configurationContext,
       BuildTarget buildTarget,
-      Class<T> dtoClass,
+      TargetConfiguration hostConfiguration,
+      DependencyStack dependencyStack,
+      DataTransferObjectDescriptor<T> constructorArgDescriptor,
       ImmutableSet.Builder<BuildTarget> declaredDeps,
-      ImmutableMap<String, ?> attributes)
+      ImmutableSet.Builder<BuildTarget> configurationDeps,
+      Map<String, ?> attributes)
       throws CoerceFailedException;
 }

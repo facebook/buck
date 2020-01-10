@@ -1,29 +1,32 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.io.filesystem.impl;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
 import com.facebook.buck.io.filesystem.GlobPatternMatcher;
 import com.facebook.buck.io.filesystem.PathMatcher;
+import com.facebook.buck.io.filesystem.ProjectFilesystemDelegatePair;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.io.filesystem.RecursiveFileMatcher;
 import com.facebook.buck.io.windowsfs.WindowsFS;
+import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
@@ -56,25 +59,31 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
 
   @Override
   public DefaultProjectFilesystem createProjectFilesystem(
-      Path root, Config config, Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo) {
-    BuckPaths buckPaths = getConfiguredBuckPaths(root, config, embeddedCellBuckOutInfo);
+      CanonicalCellName cellName,
+      Path root,
+      Config config,
+      Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo) {
+    BuckPaths buckPaths = getConfiguredBuckPaths(cellName, root, config, embeddedCellBuckOutInfo);
+    ProjectFilesystemDelegatePair delegatePair =
+        ProjectFilesystemDelegateFactory.newInstance(root, config);
     return new DefaultProjectFilesystem(
-        root.getFileSystem(),
         root,
         extractIgnorePaths(root, config, buckPaths, embeddedCellBuckOutInfo),
         buckPaths,
-        ProjectFilesystemDelegateFactory.newInstance(root, config),
+        delegatePair.getGeneralDelegate(),
+        delegatePair,
         getWindowsFSInstance());
   }
 
   @Override
-  public DefaultProjectFilesystem createProjectFilesystem(Path root, Config config) {
-    return createProjectFilesystem(root, config, Optional.empty());
+  public DefaultProjectFilesystem createProjectFilesystem(
+      CanonicalCellName cellName, Path root, Config config) {
+    return createProjectFilesystem(cellName, root, config, Optional.empty());
   }
 
   @Override
-  public DefaultProjectFilesystem createProjectFilesystem(Path root) {
-    return createProjectFilesystem(root, new Config());
+  public DefaultProjectFilesystem createProjectFilesystem(CanonicalCellName cellName, Path root) {
+    return createProjectFilesystem(cellName, root, new Config());
   }
 
   private static ImmutableSet<PathMatcher> extractIgnorePaths(
@@ -140,21 +149,57 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
     }
   }
 
-  private static BuckPaths getConfiguredBuckPaths(
-      Path rootPath, Config config, Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo) {
-    BuckPaths buckPaths = BuckPaths.createDefaultBuckPaths(rootPath);
-    Optional<String> configuredBuckOut = config.getValue("project", "buck_out");
-    if (embeddedCellBuckOutInfo.isPresent()) {
-      Path cellBuckOut = embeddedCellBuckOutInfo.get().getCellBuckOut();
-      buckPaths =
-          buckPaths
-              .withConfiguredBuckOut(rootPath.relativize(cellBuckOut))
-              .withBuckOut(rootPath.relativize(cellBuckOut));
-    } else if (configuredBuckOut.isPresent()) {
-      buckPaths =
-          buckPaths.withConfiguredBuckOut(
-              rootPath.getFileSystem().getPath(configuredBuckOut.get()));
+  private static Path getConfiguredBuckOut(
+      Optional<String> configuredBuckOut, Path buckOutPath, Path rootPath) {
+    // You currently cannot truly configure the BuckOut directory today.
+    // The use of ConfiguredBuckOut and project.buck_out here is IMHO
+    // confusingly "partial" support for this feature.
+    //
+    // Language Services chose to hack around this limitation so we could run
+    // Buck in an isolated, separate BuckOut. But that requires
+    // us to ensure any ConfiguredBuckOut is a relative path underneath our
+    // top-level BuckOut (which happily enough, FBCode already does for their current
+    // use: "buck-out/dev"). We enforce that relativity here in a disgusting way.
+    String buckOut = buckOutPath.toString();
+    if (configuredBuckOut.isPresent()) {
+      String value = configuredBuckOut.get();
+      if (value.startsWith(BuckConstant.DEFAULT_BUCK_OUT_DIR_NAME)
+          && buckOut != BuckConstant.DEFAULT_BUCK_OUT_DIR_NAME) {
+        value = value.replace(BuckConstant.DEFAULT_BUCK_OUT_DIR_NAME, buckOut);
+      }
+
+      return rootPath.getFileSystem().getPath(value);
     }
+
+    return buckOutPath;
+  }
+
+  private static BuckPaths getConfiguredBuckPaths(
+      CanonicalCellName cellName,
+      Path rootPath,
+      Config config,
+      Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo) {
+    boolean buckOutIncludeTargetConfigHash =
+        config.getBooleanValue(
+            "project",
+            "buck_out_include_target_config_hash",
+            BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_COFIG_HASH);
+    BuckPaths buckPaths =
+        BuckPaths.createDefaultBuckPaths(cellName, rootPath, buckOutIncludeTargetConfigHash);
+    Optional<String> configuredProjectBuckOut = config.get("project", "buck_out");
+
+    if (embeddedCellBuckOutInfo.isPresent()) {
+      Path buckOut = embeddedCellBuckOutInfo.get().getCellBuckOut();
+      buckOut = rootPath.relativize(buckOut);
+      buckPaths = buckPaths.withConfiguredBuckOut(buckOut).withBuckOut(buckOut);
+    } else {
+      Path buckOut = buckPaths.getBuckOut();
+      if (configuredProjectBuckOut.isPresent()) {
+        buckOut = getConfiguredBuckOut(configuredProjectBuckOut, buckOut, rootPath);
+        buckPaths = buckPaths.withConfiguredBuckOut(buckOut);
+      }
+    }
+
     return buckPaths;
   }
 
@@ -176,11 +221,11 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
   }
 
   @Override
-  public DefaultProjectFilesystem createOrThrow(Path path) {
+  public DefaultProjectFilesystem createOrThrow(CanonicalCellName cellName, Path path) {
     try {
       // toRealPath() is necessary to resolve symlinks, allowing us to later
       // check whether files are inside or outside of the project without issue.
-      return createProjectFilesystem(path.toRealPath().normalize());
+      return createProjectFilesystem(cellName, path.toRealPath().normalize());
     } catch (IOException e) {
       throw new HumanReadableException(
           String.format(

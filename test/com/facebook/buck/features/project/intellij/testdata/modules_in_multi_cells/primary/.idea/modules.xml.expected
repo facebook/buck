@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/../secondary/java/com/crosscell/___secondary_java_com_crosscell.iml" filepath="$PROJECT_DIR$/../secondary/java/com/crosscell/___secondary_java_com_crosscell.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/java/com/sample/app/java_com_sample_app.iml" filepath="$PROJECT_DIR$/java/com/sample/app/java_com_sample_app.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/java/com/sample/lib/java_com_sample_lib.iml" filepath="$PROJECT_DIR$/java/com/sample/lib/java_com_sample_lib.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/project_root.iml" filepath="$PROJECT_DIR$/project_root.iml" />
+      <module fileurl="file://$PROJECT_DIR$/res/com/sample/base/res_com_sample_base.iml" filepath="$PROJECT_DIR$/res/com/sample/base/res_com_sample_base.iml" group="modules" />
+    </modules>
+  </component>
+</project>

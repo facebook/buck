@@ -22,12 +22,14 @@ java_library(
         ["*.java"],
         exclude = ["*Test.java"],
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/support/bgtasks:bgtasks",
-    ],
     visibility = ["//test/..."],
     deps = [
+        "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/util/types:types",
         "//third-party/java/guava:guava",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/support/bgtasks:bgtasks",
     ],
 )

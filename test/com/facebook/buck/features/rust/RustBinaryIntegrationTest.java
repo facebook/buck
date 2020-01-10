@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.rust;
@@ -20,6 +20,8 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
@@ -28,6 +30,7 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -56,9 +59,11 @@ public class RustBinaryIntegrationTest {
     buildLog.assertTargetBuiltLocally("//:xyzzy");
     workspace.resetBuildLogFile();
 
-    ProcessExecutor.Result result =
-        workspace.runCommand(
-            workspace.resolve("buck-out/gen/xyzzy#binary,default/xyzzy").toString());
+    Path binary =
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance("//:xyzzy#binary,default"), "%s")
+            .resolve("xyzzy");
+    ProcessExecutor.Result result = workspace.runCommand(binary.toString());
     assertThat(result.getExitCode(), Matchers.equalTo(0));
     assertThat(result.getStdout().get(), containsString("Hello, world!"));
     assertThat(result.getStderr().get(), Matchers.blankString());
@@ -77,8 +82,12 @@ public class RustBinaryIntegrationTest {
     buildLog.assertTargetBuiltLocally("//:xyzzy");
     workspace.resetBuildLogFile();
 
-    ProcessExecutor.Result result =
-        workspace.runCommand(workspace.resolve("buck-out/gen/xyzzy#binary/xyzzy").toString());
+    Path binary =
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance("//:xyzzy#binary"), "%s")
+            .resolve("xyzzy");
+
+    ProcessExecutor.Result result = workspace.runCommand(binary.toString());
     assertThat(result.getExitCode(), Matchers.equalTo(0));
     assertThat(result.getStdout().get(), containsString("Hello, world!"));
     assertThat(result.getStderr().get(), Matchers.blankString());
@@ -132,8 +141,8 @@ public class RustBinaryIntegrationTest {
 
     File output =
         workspace
-            .resolve(
-                "buck-out/gen/xyzzy#default,save-analysis/save-analysis/xyzzy-bf3e2606cfd1e9e1.json")
+            .getGenPath(BuildTargetFactory.newInstance("//:xyzzy#default,save-analysis"), "%s")
+            .resolve("save-analysis/xyzzy-bf3e2606cfd1e9e1.json")
             .toFile();
 
     workspace.runBuckBuild("//:xyzzy#save-analysis").assertSuccess();
@@ -160,8 +169,8 @@ public class RustBinaryIntegrationTest {
 
     File output =
         workspace
-            .resolve(
-                "buck-out/gen/xyzzy#default,save-analysis/save-analysis/xyzzy-bf3e2606cfd1e9e1.json")
+            .getGenPath(BuildTargetFactory.newInstance("//:xyzzy#default,save-analysis"), "%s")
+            .resolve("save-analysis/xyzzy-bf3e2606cfd1e9e1.json")
             .toFile();
 
     workspace
@@ -191,8 +200,7 @@ public class RustBinaryIntegrationTest {
         workspace.runBuckBuild("//:xyzzy").assertSuccess().getStderr(),
         Matchers.allOf(
             containsString("warning: constant item is never used: `foo`"),
-            containsString(
-                "warning: constant `foo` should have an upper case name such as `FOO`")));
+            containsString("warning: constant `foo` should have an upper case name")));
 
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally("//:xyzzy");
@@ -205,14 +213,17 @@ public class RustBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);
     workspace.setUp();
 
+    Path binary =
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance("//:xyzzy_aliased#binary,default"), "%s")
+            .resolve("xyzzy");
+
     workspace.runBuckBuild("//:xyzzy_aliased").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally("//:xyzzy_aliased");
     workspace.resetBuildLogFile();
 
-    ProcessExecutor.Result result =
-        workspace.runCommand(
-            workspace.resolve("buck-out/gen/xyzzy_aliased#binary,default/xyzzy").toString());
+    ProcessExecutor.Result result = workspace.runCommand(binary.toString());
     assertThat(result.getExitCode(), Matchers.equalTo(0));
     assertThat(result.getStdout().get(), containsString("Hello, world!"));
     assertThat(result.getStderr().get(), Matchers.blankString());
@@ -224,18 +235,144 @@ public class RustBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);
     workspace.setUp();
 
+    Path binary =
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance("//:xyzzy_crate_root#binary,default"), "%s")
+            .resolve("xyzzy_crate_root");
+
     workspace.runBuckBuild("//:xyzzy_crate_root").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally("//:xyzzy_crate_root");
     workspace.resetBuildLogFile();
 
-    ProcessExecutor.Result result =
-        workspace.runCommand(
-            workspace
-                .resolve("buck-out/gen/xyzzy_crate_root#binary,default/xyzzy_crate_root")
-                .toString());
+    ProcessExecutor.Result result = workspace.runCommand(binary.toString());
     assertThat(result.getExitCode(), Matchers.equalTo(0));
     assertThat(result.getStdout().get(), containsString("Another top-level source"));
+    assertThat(result.getStderr().get(), Matchers.blankString());
+  }
+
+  @Test
+  public void simpleBinaryIncremental() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);
+    workspace.setUp();
+    BuckBuildLog buildLog;
+
+    workspace
+        .runBuckCommand("build", "-c", "rust#default.incremental=opt", "//:xyzzy#check")
+        .assertSuccess();
+    buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//:xyzzy#check");
+
+    workspace
+        .runBuckCommand("build", "-c", "rust#default.incremental=dev", "//:xyzzy")
+        .assertSuccess();
+    buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//:xyzzy");
+
+    assertTrue(
+        Files.isDirectory(workspace.resolve("buck-out/tmp/rust-incremental/dev/binary/default")));
+    assertTrue(
+        Files.isDirectory(workspace.resolve("buck-out/tmp/rust-incremental/opt/check/default")));
+  }
+
+  @Test
+  public void simpleBinaryEdition2015() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "editions", tmp);
+    workspace.setUp();
+
+    RustAssumptions.assumeVersion(workspace, "1.31");
+
+    Path binary =
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance("//:bin2015#binary,default"), "%s")
+            .resolve("bin2015");
+
+    workspace.runBuckBuild("//:bin2015").assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//:bin2015");
+    workspace.resetBuildLogFile();
+
+    ProcessExecutor.Result result = workspace.runCommand(binary.toString());
+    assertThat(result.getExitCode(), Matchers.equalTo(0));
+    assertThat(result.getStdout().get(), containsString("Common called"));
+    assertThat(result.getStderr().get(), Matchers.blankString());
+  }
+
+  @Test
+  public void simpleBinaryEdition2018() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "editions", tmp);
+    workspace.setUp();
+
+    RustAssumptions.assumeVersion(workspace, "1.31");
+
+    Path binary =
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance("//:bin2018#binary,default"), "%s")
+            .resolve("bin2018");
+
+    workspace.runBuckBuild("//:bin2018").assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//:bin2018");
+    workspace.resetBuildLogFile();
+
+    ProcessExecutor.Result result = workspace.runCommand(binary.toString());
+    assertThat(result.getExitCode(), Matchers.equalTo(0));
+    assertThat(result.getStdout().get(), containsString("Common called"));
+    assertThat(result.getStderr().get(), Matchers.blankString());
+  }
+
+  @Test
+  public void simpleBinaryEdition2015Default() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "editions", tmp);
+    workspace.setUp();
+
+    RustAssumptions.assumeVersion(workspace, "1.31");
+
+    Path binary =
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance("//:bin2015-default#binary,default"), "%s")
+            .resolve("bin2015_default");
+
+    workspace
+        .runBuckCommand("build", "-c", "rust.default_edition=2015", "//:bin2015-default")
+        .assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//:bin2015-default");
+    workspace.resetBuildLogFile();
+
+    ProcessExecutor.Result result = workspace.runCommand(binary.toString());
+    assertThat(result.getExitCode(), Matchers.equalTo(0));
+    assertThat(result.getStdout().get(), containsString("Common called"));
+    assertThat(result.getStderr().get(), Matchers.blankString());
+  }
+
+  @Test
+  public void simpleBinaryEdition2018Default() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "editions", tmp);
+    workspace.setUp();
+
+    RustAssumptions.assumeVersion(workspace, "1.31");
+
+    Path binary =
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance("//:bin2018-default#binary,default"), "%s")
+            .resolve("bin2018_default");
+
+    workspace
+        .runBuckCommand("build", "-c", "rust.default_edition=2018", "//:bin2018-default")
+        .assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//:bin2018-default");
+    workspace.resetBuildLogFile();
+
+    ProcessExecutor.Result result = workspace.runCommand(binary.toString());
+    assertThat(result.getExitCode(), Matchers.equalTo(0));
+    assertThat(result.getStdout().get(), containsString("Common called"));
     assertThat(result.getStderr().get(), Matchers.blankString());
   }
 
@@ -245,16 +382,157 @@ public class RustBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_generated", tmp);
     workspace.setUp();
 
+    Path binary =
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance("//:thing#binary,default"), "%s")
+            .resolve("thing");
+
     workspace.runBuckBuild("//:thing").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally("//:thing");
     workspace.resetBuildLogFile();
 
-    ProcessExecutor.Result result =
-        workspace.runCommand(
-            workspace.resolve("buck-out/gen/thing#binary,default/thing").toString());
+    ProcessExecutor.Result result = workspace.runCommand(binary.toString());
     assertThat(result.getExitCode(), Matchers.equalTo(0));
     assertThat(result.getStdout().get(), containsString("info is: this is generated info"));
+    assertThat(result.getStderr().get(), Matchers.blankString());
+  }
+
+  @Test
+  public void binaryWithGeneratedMain() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_generated", tmp);
+    workspace.setUp();
+
+    Path binary =
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance("//:generated_top#binary,default"), "%s")
+            .resolve("generated_top");
+
+    workspace.runBuckBuild("//:generated_top").assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//:generated_top");
+    workspace.resetBuildLogFile();
+
+    ProcessExecutor.Result result = workspace.runCommand(binary.toString());
+    assertThat(result.getExitCode(), Matchers.equalTo(0));
+    assertThat(result.getStdout().get(), containsString("generated main, included I WAS INCLUDED"));
+    assertThat(result.getStderr().get(), Matchers.blankString());
+  }
+
+  @Test
+  public void binaryWithGeneratedMainCrateRoot() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_generated", tmp);
+    workspace.setUp();
+
+    Path binary =
+        workspace
+            .getGenPath(
+                BuildTargetFactory.newInstance("//:generated_top_crateroot#binary,default"), "%s")
+            .resolve("generated_top_crateroot");
+
+    workspace.runBuckBuild("//:generated_top_crateroot").assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//:generated_top_crateroot");
+    workspace.resetBuildLogFile();
+
+    ProcessExecutor.Result result = workspace.runCommand(binary.toString());
+    assertThat(result.getExitCode(), Matchers.equalTo(0));
+    assertThat(result.getStdout().get(), containsString("generated main, included I WAS INCLUDED"));
+    assertThat(result.getStderr().get(), Matchers.blankString());
+  }
+
+  @Test
+  public void binaryWithSubdirGeneratedMain() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_generated", tmp);
+    workspace.setUp();
+
+    Path binary =
+        workspace
+            .getGenPath(
+                BuildTargetFactory.newInstance("//subdir:subdir_generated_top#binary,default"),
+                "%s")
+            .resolve("subdir_generated_top");
+
+    workspace.runBuckBuild("//subdir:subdir_generated_top").assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//subdir:subdir_generated_top");
+    workspace.resetBuildLogFile();
+
+    ProcessExecutor.Result result = workspace.runCommand(binary.toString());
+    assertThat(result.getExitCode(), Matchers.equalTo(0));
+    assertThat(result.getStdout().get(), containsString("generated main, included I WAS INCLUDED"));
+    assertThat(result.getStderr().get(), Matchers.blankString());
+  }
+
+  @Test
+  public void binaryWithSubdirGeneratedMainCrateRoot() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_generated", tmp);
+    workspace.setUp();
+
+    Path binary =
+        workspace
+            .getGenPath(
+                BuildTargetFactory.newInstance(
+                    "//subdir:subdir_generated_top_crateroot#binary,default"),
+                "%s")
+            .resolve("subdir_generated_top_crateroot");
+
+    workspace.runBuckBuild("//subdir:subdir_generated_top_crateroot").assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//subdir:subdir_generated_top_crateroot");
+    workspace.resetBuildLogFile();
+
+    ProcessExecutor.Result result = workspace.runCommand(binary.toString());
+    assertThat(result.getExitCode(), Matchers.equalTo(0));
+    assertThat(result.getStdout().get(), containsString("generated main, included I WAS INCLUDED"));
+    assertThat(result.getStderr().get(), Matchers.blankString());
+  }
+
+  @Test
+  public void binaryWithGeneratedModule() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_generated", tmp);
+    workspace.setUp();
+
+    Path binary =
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance("//:gen_submod#binary,default"), "%s")
+            .resolve("gen_submod");
+
+    workspace.runBuckBuild("//:gen_submod").assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//:gen_submod");
+    workspace.resetBuildLogFile();
+
+    ProcessExecutor.Result result = workspace.runCommand(binary.toString());
+    assertThat(result.getExitCode(), Matchers.equalTo(0));
+    assertThat(result.getStdout().get(), containsString("info: this is generated info"));
+    assertThat(result.getStderr().get(), Matchers.blankString());
+  }
+
+  @Test
+  public void binaryWithSubdirGeneratedModule() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_generated", tmp);
+    workspace.setUp();
+
+    Path binary =
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance("//subdir:subbin#binary,default"), "%s")
+            .resolve("subbin");
+
+    workspace.runBuckBuild("//subdir:subbin").assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//subdir:subbin");
+    workspace.resetBuildLogFile();
+
+    ProcessExecutor.Result result = workspace.runCommand(binary.toString());
+    assertThat(result.getExitCode(), Matchers.equalTo(0));
+    assertThat(result.getStdout().get(), containsString("info: this is generated info"));
     assertThat(result.getStderr().get(), Matchers.blankString());
   }
 
@@ -414,6 +692,32 @@ public class RustBinaryIntegrationTest {
         workspace.runBuckCommand("run", "//:hello_alias").assertSuccess().getStdout(),
         Matchers.allOf(
             containsString("Hello, world!"), containsString("I have a message to deliver to you")));
+  }
+
+  @Test
+  public void binaryWithNamedLibrary() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace.runBuckCommand("run", "//:hello-renamed").assertSuccess().getStdout(),
+        Matchers.allOf(
+            containsString("Hello, world!"), containsString("I have a message to deliver to you")));
+  }
+
+  @Test
+  public void binaryWithMultiNamedLibrary() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace.runBuckCommand("run", "//:hello-multi-renamed").assertSuccess().getStdout(),
+        Matchers.allOf(
+            containsString("Hello, world!"),
+            containsString("I have a message to deliver to you"),
+            containsString("New thing")));
   }
 
   @Test
@@ -747,5 +1051,70 @@ public class RustBinaryIntegrationTest {
             .getStdout(),
         // Make sure we get a working executable
         containsString("Hello"));
+  }
+
+  @Test
+  public void simpleBinaryCrossCell() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "multi_cell", tmp);
+    workspace.setUp();
+
+    workspace
+        .runBuckCommand("build", "--config", "rust.unflavored_binaries=true", "cell//:thinguser")
+        .assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("cell//:thinguser");
+    workspace.resetBuildLogFile();
+
+    String binary =
+        "cell/"
+            + BuildTargetPaths.getGenPath(
+                    workspace.getProjectFileSystem(),
+                    BuildTargetFactory.newInstance("//:thinguser#binary"),
+                    "%s")
+                .resolve("thinguser");
+
+    workspace.runCommand(binary);
+  }
+
+  @Test
+  public void simpleBinaryWithMacroExpansion() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "macro_args", tmp);
+    workspace.setUp();
+
+    workspace.runBuckBuild("//:binary-args").assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//:binary-args");
+    workspace.resetBuildLogFile();
+
+    Path binary =
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance("//:binary-args#binary,default"), "%s")
+            .resolve("binary_args");
+
+    ProcessExecutor.Result result = workspace.runCommand(binary.toString());
+    assertThat(result.getExitCode(), Matchers.equalTo(0));
+    assertThat(result.getStdout().get(), Matchers.blankString());
+    assertThat(result.getStderr().get(), Matchers.blankString());
+  }
+
+  @Test
+  public void rustBinaryEnv() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "env_test", tmp);
+    workspace.setUp();
+
+    workspace.runBuckBuild("//:env-binary").assertSuccess();
+
+    Path binary =
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance("//:env-binary#binary,default"), "%s")
+            .resolve("env_binary");
+
+    ProcessExecutor.Result result = workspace.runCommand(binary.toString());
+    assertThat(result.getExitCode(), Matchers.equalTo(0));
+    assertThat(result.getStdout().get(), containsString("My FOO something else"));
+    assertThat(result.getStderr().get(), Matchers.blankString());
   }
 }

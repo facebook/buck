@@ -1,21 +1,22 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx.toolchain.objectfile;
 
+import com.facebook.buck.util.ObjectFileCommonModificationDate;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -40,11 +41,15 @@ public class Machos {
   // Map segment load command
   static final int LC_SEGMENT = 0x1;
   // Symbol table load command
-  static final int LC_SYMTAB = 0x2;
+  public static final int LC_SYMTAB = 0x2;
   // UUID load command
   static final int LC_UUID = 0x1B;
   // Map 64 bit segment load command
   static final int LC_SEGMENT_64 = 0x19;
+
+  static final int LC_REQ_DYLD = 0x80000000;
+  static final int LC_DYLD_INFO = 0x22;
+  public static final int LC_DYLD_INFO_ONLY = (0x22 | LC_REQ_DYLD);
 
   // http://www.opensource.apple.com/source/xnu/xnu-1699.32.7/EXTERNAL_HEADERS/mach-o/stab.h
   // Description of object file STAB entries
@@ -105,12 +110,10 @@ public class Machos {
     int stringTableSize = 0;
     boolean symbolTableSegmentFound = false;
     int segmentSizePosition = 0;
-    int segmentSize = 0;
+    long segmentSize = 0;
     boolean linkEditSegmentFound = false;
     int segmentFileSizePosition = 0;
-    int segmentFileSize = 0;
     int segment64FileSizePosition = 0;
-    long segment64FileSize = 0;
 
     int commandsCount = header.getCommandsCount();
     for (int i = 0; i < commandsCount; i++) {
@@ -135,7 +138,7 @@ public class Machos {
             /* vm size */ ObjectFileScrubbers.getLittleEndianInt(map);
             /* segment file offset */ ObjectFileScrubbers.getLittleEndianInt(map);
             segmentFileSizePosition = map.position();
-            segmentFileSize = ObjectFileScrubbers.getLittleEndianInt(map);
+            segmentSize = ObjectFileScrubbers.getLittleEndianInt(map);
             /* maximum vm protection */ ObjectFileScrubbers.getLittleEndianInt(map);
             /* initial vm protection */ ObjectFileScrubbers.getLittleEndianInt(map);
             /* number of sections */ ObjectFileScrubbers.getLittleEndianInt(map);
@@ -145,7 +148,6 @@ public class Machos {
               throw new MachoException("multiple map segment commands map string table");
             }
             segmentSizePosition = segmentFileSizePosition;
-            segmentSize = segmentFileSize;
           }
           break;
         case LC_SEGMENT_64:
@@ -157,7 +159,7 @@ public class Machos {
             /* vm size */ ObjectFileScrubbers.getLittleEndianLong(map);
             /* segment file offset */ ObjectFileScrubbers.getLittleEndianLong(map);
             segment64FileSizePosition = map.position();
-            segment64FileSize = ObjectFileScrubbers.getLittleEndianLong(map);
+            segmentSize = ObjectFileScrubbers.getLittleEndianLong(map);
             /* maximum vm protection */ ObjectFileScrubbers.getLittleEndianInt(map);
             /* initial vm protection */ ObjectFileScrubbers.getLittleEndianInt(map);
             /* number of sections */ ObjectFileScrubbers.getLittleEndianInt(map);
@@ -167,10 +169,6 @@ public class Machos {
               throw new MachoException("multiple map segment commands map string table");
             }
             segmentSizePosition = segment64FileSizePosition;
-            if (segment64FileSize > Ints.MAX_POWER_OF_TWO) {
-              throw new MachoException("map segment file size too big");
-            }
-            segmentSize = (int) segment64FileSize;
           }
           break;
       }
@@ -182,15 +180,19 @@ public class Machos {
       that name, there is nothing to scrub.*/
       return;
     }
+    if (stringTableSize == 0) {
+      return;
+    }
+
+    if (!isValidFilesize(header, segmentSize)) {
+      throw new MachoException("32bit map segment file size too big");
+    }
 
     if (!symbolTableSegmentFound) {
       throw new MachoException("LC_SYMTAB command not found");
     }
     if (stringTableOffset + stringTableSize != size) {
       throw new MachoException("String table does not end at end of file");
-    }
-    if (stringTableSize == 0) {
-      return;
     }
     if (segmentSizePosition == 0 || segmentSize == 0) {
       throw new MachoException("LC_SEGMENT or LC_SEGMENT_64 command for string table not found");
@@ -275,13 +277,26 @@ public class Machos {
     ObjectFileScrubbers.putLittleEndianInt(map, newStringTableSize);
 
     map.position(segmentSizePosition);
-    ObjectFileScrubbers.putLittleEndianInt(
-        map, segmentSize + (newStringTableSize - stringTableSize));
+    long newSize = segmentSize + (newStringTableSize - stringTableSize);
+    if (isValidFilesize(header, newSize)) {
+      if (header.getIs64Bit()) {
+        ObjectFileScrubbers.putLittleEndianLong(map, newSize);
+      } else {
+        ObjectFileScrubbers.putLittleEndianInt(map, (int) newSize);
+      }
+    } else {
+      throw new MachoException("32bit scrubbed map segment file size too big");
+    }
 
     file.truncate(currentStringTableOffset);
   }
 
-  private static MachoHeader getHeader(MappedByteBuffer map) throws MachoException {
+  private static boolean isValidFilesize(MachoHeader header, long filesize) {
+    return (header.getIs64Bit() || filesize <= Integer.MAX_VALUE);
+  }
+
+  /** Returns the Mach-O header provided the file is Mach-O, otherwise throws an exception. */
+  protected static MachoHeader getHeader(MappedByteBuffer map) throws MachoException {
     byte[] magic = ObjectFileScrubbers.getBytes(map, MH_MAGIC.length);
     boolean is64bit;
     if (Arrays.equals(MH_MAGIC, magic) || Arrays.equals(MH_CIGAM, magic)) {

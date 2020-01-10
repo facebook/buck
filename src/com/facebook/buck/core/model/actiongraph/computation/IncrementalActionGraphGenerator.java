@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.model.actiongraph.computation;
@@ -19,14 +19,12 @@ package com.facebook.buck.core.model.actiongraph.computation;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -127,11 +125,10 @@ public class IncrementalActionGraphGenerator {
       ActionGraphBuilder graphBuilder,
       Set<UnflavoredBuildTarget> allUnflavoredTargetsInNewGraph,
       Set<UnflavoredBuildTarget> invalidUnflavoredTargets) {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     int totalRuleCount = 0;
     int reusedRuleCount = 0;
-    for (BuildRule buildRule : lastActionGraphBuilder.getBuildRules()) {
+    for (BuildRule buildRule :
+        Objects.requireNonNull(lastActionGraphBuilder).getSuccessfullyConstructedBuildRules()) {
       UnflavoredBuildTarget unflavoredTarget =
           buildRule.getBuildTarget().getUnflavoredBuildTarget();
       if (!invalidUnflavoredTargets.contains(unflavoredTarget)
@@ -141,7 +138,7 @@ public class IncrementalActionGraphGenerator {
         // Update build rule resolvers for all reused rules. Build rules may use build rule
         // resolvers to locate and construct other build rules during construction. Furthermore, if
         // we didn't update them, we'd leak previous action graphs.
-        buildRule.updateBuildRuleResolver(graphBuilder, ruleFinder, pathResolver);
+        buildRule.updateBuildRuleResolver(graphBuilder);
 
         reusedRuleCount++;
       }
@@ -234,8 +231,14 @@ public class IncrementalActionGraphGenerator {
       Optional<TargetNode<?>> previousTargetNode =
           lastTargetGraph.getExactOptional(targetNode.getBuildTarget());
       if (previousTargetNode.isPresent()) {
-        Preconditions.checkState(
-            lastActionGraphBuilder.getRuleOptional(targetNode.getBuildTarget()).isPresent());
+        if (targetNode.getBuildTarget().getTargetConfiguration()
+            != ConfigurationForConfigurationTargets.INSTANCE) {
+          // Config nodes don't appear on action graphs
+          Preconditions.checkState(
+              lastActionGraphBuilder.getRuleOptional(targetNode.getBuildTarget()).isPresent(),
+              "Target not found in previous action graph: %s",
+              targetNode.getBuildTarget());
+        }
         // If the target node has changed, then invalidate parent chains, as ancestors might
         // generate their subgraphs differently given the change.
         if (!targetNode.equals(previousTargetNode.get())) {

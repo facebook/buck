@@ -6,9 +6,6 @@ java_library(
         ["*.java"],
         exclude = glob(["*Test.java"]),
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/cxx/toolchain:toolchain",
-    ],
     visibility = [
         "PUBLIC",
     ],
@@ -20,7 +17,8 @@ java_library(
         "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/core/toolchain/tool/impl:impl",
         "//src/com/facebook/buck/core/toolchain/toolprovider/impl:impl",
-        "//src/com/facebook/buck/cxx/toolchain/linker:linker",
+        "//src/com/facebook/buck/cxx/toolchain/impl:impl",
+        "//src/com/facebook/buck/cxx/toolchain/linker/impl:impl",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/util/config:config",
         "//src/com/facebook/buck/util/environment:platform",
@@ -29,6 +27,10 @@ java_library(
         "//test/com/facebook/buck/core/toolchain/impl:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//third-party/java/guava:guava",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/cxx/config:config",
+        "//src/com/facebook/buck/cxx/toolchain:toolchain",
     ],
 )
 

@@ -13,12 +13,12 @@ large_dynamics(
 )
 
 for (i, c) in [(0, "a"), (1, "b"), (2, "c"), (3, "d")]:
-  large_dynamics(
-    name = "large_" + str(i),
-    first_ref = ":large_dynamic",
-    second_ref = ":large_dynamic" if i == 0 else ":large_" + str(i - 1),
-    value = c,
-  )
+    large_dynamics(
+        name = "large_" + str(i),
+        first_ref = ":large_dynamic",
+        second_ref = ":large_dynamic" if i == 0 else ":large_" + str(i - 1),
+        value = c,
+    )
 
 large_dynamics(
     name = "huge_dynamic",

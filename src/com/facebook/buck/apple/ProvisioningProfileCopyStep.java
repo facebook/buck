@@ -1,23 +1,24 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple;
 
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
+import com.dd.plist.NSString;
 import com.dd.plist.PropertyListFormatException;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
@@ -119,8 +120,7 @@ class ProvisioningProfileCopyStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     Optional<ImmutableMap<String, NSObject>> entitlements;
     String prefix;
     if (entitlementsPlist.isPresent()) {
@@ -208,6 +208,26 @@ class ProvisioningProfileCopyStep implements Step {
     // Copy the actual .mobileprovision.
     filesystem.copy(provisioningProfileSource, provisioningProfileDestination, CopySourceMode.FILE);
 
+    // Add additional keys to Info.plist file
+    StepExecutionResult updateInfoPlistResult =
+        (new PlistProcessStep(
+                filesystem,
+                infoPlist,
+                Optional.empty(),
+                infoPlist,
+                getInfoPlistAdditionalKeys(bundleID, bestProfile.get()),
+                ImmutableMap.of(),
+                PlistProcessStep.OutputFormat.BINARY))
+            .execute(context);
+    if (updateInfoPlistResult != StepExecutionResults.SUCCESS) {
+      String message = "An error ocurred when tried to add additional keys to Info.plist";
+      if (dryRunResultsPath.isPresent()) {
+        LOG.warn(message);
+      } else {
+        throw new HumanReadableException(message);
+      }
+    }
+
     // Merge the entitlements with the profile, and write out.
     if (entitlementsPlist.isPresent()) {
       return (new PlistProcessStep(
@@ -249,5 +269,29 @@ class ProvisioningProfileCopyStep implements Step {
   public ListenableFuture<Optional<ProvisioningProfileMetadata>>
       getSelectedProvisioningProfileFuture() {
     return selectedProvisioningProfileFuture;
+  }
+
+  private ImmutableMap<String, NSObject> getInfoPlistAdditionalKeys(
+      String bundleID, ProvisioningProfileMetadata bestProfile) throws IOException {
+    ImmutableMap.Builder<String, NSObject> keys = ImmutableMap.builder();
+
+    // Get bundle type and restrict additional keys based on it
+    String bundleType =
+        AppleInfoPlistParsing.getBundleTypeFromPlistStream(
+                infoPlist, filesystem.getInputStreamForRelativePath(infoPlist))
+            .get();
+    if ("APPL".equalsIgnoreCase(bundleType.toString())) {
+      // Skip additional keys for watchOS bundles (property keys whitelist)
+      Optional<Boolean> isWatchOSApp =
+          AppleInfoPlistParsing.isWatchOSAppFromPlistStream(
+              infoPlist, filesystem.getInputStreamForRelativePath(infoPlist));
+      if (!isWatchOSApp.isPresent() || !isWatchOSApp.get()) {
+        // Construct AppID using the Provisioning Profile info (app prefix)
+        String appID = bestProfile.getAppID().getFirst() + "." + bundleID;
+        keys.put("ApplicationIdentifier", new NSString(appID));
+      }
+    }
+
+    return keys.build();
   }
 }

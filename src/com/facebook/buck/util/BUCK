@@ -13,24 +13,8 @@ java_library(
     ],
 )
 
-EXCEPTION_SRCS = glob(["exceptions/*.java"])
-
-java_library(
-    name = "exceptions",
-    srcs = EXCEPTION_SRCS,
-    tests = [
-        "//test/com/facebook/buck/util:util",
-    ],
-    visibility = ["PUBLIC"],
-    deps = [
-        "//src/com/facebook/buck/util/string:string",
-        "//third-party/java/jsr:jsr305",
-    ],
-)
-
 IO_SRCS = [
-    "AbstractCharsetProcessListener.java",
-    "AbstractDirectoryCleanerArgs.java",
+    "DirectoryCleanerArgs.java",
     "AnsiEnvironmentChecking.java",
     "DefaultFilteredDirectoryCopier.java",
     "DirectoryCleaner.java",
@@ -39,7 +23,6 @@ IO_SRCS = [
     "ListeningCharsetEncoder.java",
     "NamedTemporaryDirectory.java",
     "PkillProcessManager.java",
-    "SimpleProcessListener.java",
     "TimeFormat.java",
     "UnixUserIdFetcher.java",
     "UserIdFetcher.java",
@@ -52,7 +35,6 @@ java_immutables_library(
     ],
     visibility = ["PUBLIC"],
     deps = [
-        ":exceptions",
         ":process_executor",
         ":util",
         "//src/com/facebook/buck/core/exceptions:exceptions",
@@ -67,8 +49,8 @@ java_immutables_library(
 )
 
 PROCESS_EXECUTOR_SRCS = [
-    "AbstractProcessExecutorParams.java",
-    "AbstractProcessResourceConsumption.java",
+    "ProcessExecutorParams.java",
+    "ProcessResourceConsumption.java",
     "Ansi.java",
     "BgProcessKiller.java",
     "CapturingPrintStream.java",
@@ -76,6 +58,7 @@ PROCESS_EXECUTOR_SRCS = [
     "ContextualProcessExecutor.java",
     "DefaultProcessExecutor.java",
     "DirtyPrintStreamDecorator.java",
+    "DuplicatingConsole.java",
     "ForwardingProcessListener.java",
     "InputStreamConsumer.java",
     "Libc.java",
@@ -109,54 +92,12 @@ java_immutables_library(
     ],
 )
 
-PACKAGED_RESOURCE_SRCS = [
-    "PackagedResource.java",
-]
-
-java_library(
-    name = "packaged_resource",
-    srcs = PACKAGED_RESOURCE_SRCS,
-    visibility = [
-        "PUBLIC",
-    ],
-    deps = [
-        "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/io/filesystem:filesystem",
-        "//src/com/facebook/buck/util:util",
-        "//src/com/facebook/buck/util/string:string",
-        "//src/com/facebook/buck/util/unarchive:unarchive",
-        "//third-party/java/guava:guava",
-    ],
-)
-
-ISOLATED_SRCS = [
-    "JavaVersion.java",
-]
-
-java_library(
-    name = "isolated",
-    srcs = ISOLATED_SRCS,
-    visibility = [
-        "PUBLIC",
-    ],
-    deps = [
-        # Do NOT add any deps here. This library is used by code that cannot depend on the rest of Buck.
-    ],
-)
-
 java_immutables_library(
     name = "util",
     srcs = glob(
         ["*.java"],
-        exclude = CONSTANT_SRCS + EXCEPTION_SRCS + IO_SRCS +
-                  PACKAGED_RESOURCE_SRCS + PROCESS_EXECUTOR_SRCS + ISOLATED_SRCS,
+        exclude = CONSTANT_SRCS + IO_SRCS + PROCESS_EXECUTOR_SRCS,
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/util/function:function",
-        "//src/com/facebook/buck/util/types:types",
-        "//third-party/java/guava:guava",
-        "//third-party/java/jackson:jackson-databind",
-    ],
     tests = [
         "//test/com/facebook/buck/util:util",
     ],
@@ -164,9 +105,7 @@ java_immutables_library(
         "PUBLIC",
     ],
     deps = [
-        ":exceptions",
         "//src/com/facebook/buck/core/exceptions:exceptions",
-        "//src/com/facebook/buck/core/exceptions/handler:handler",
         "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/util/environment:platform",
@@ -175,5 +114,12 @@ java_immutables_library(
         "//third-party/java/guava:guava",
         "//third-party/java/infer-annotations:infer-annotations",
         "//third-party/java/jackson:jackson-annotations",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/util:util",
+        "//src/com/facebook/buck/util/function:function",
+        "//src/com/facebook/buck/util/types:types",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jackson:jackson-databind",
     ],
 )

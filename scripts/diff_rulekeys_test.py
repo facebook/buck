@@ -1,23 +1,30 @@
-# Copyright 2018-present Facebook, Inc.
+# Copyright (c) Facebook, Inc. and its affiliates.
 #
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License. You may obtain
-# a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations
-# under the License.
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import gzip
+import itertools
 import os
 import tempfile
 import unittest
 
 from diff_rulekeys import *
+
+
+if sys.version_info[0] == 2:
+    zip_longest = itertools.izip_longest
+else:
+    zip_longest = itertools.zip_longest
 
 
 class MockFile(object):
@@ -41,7 +48,7 @@ class TestRuleKeyDiff(unittest.TestCase):
         list_diff = KeyValueDiff()
         l = ["a", "b", "c"]
         r = ["b", "d", "c"]
-        for l, r in map(None, l, r):
+        for l, r in zip_longest(l, r):
             list_diff.append(l, r)
         self.assertEqual(list_diff.diff(), ["-[a]", "+[d]"])
 
@@ -49,7 +56,7 @@ class TestRuleKeyDiff(unittest.TestCase):
         list_diff = KeyValueDiff()
         l = ["a", "b", "c"]
         r = ["c", "d", "b"]
-        for l, r in map(None, l, r):
+        for l, r in zip_longest(l, r):
             list_diff.append(l, r)
         self.assertEqual(
             list_diff.diff(),
@@ -64,7 +71,7 @@ class TestRuleKeyDiff(unittest.TestCase):
         list_diff = KeyValueDiff()
         l = ["a", "b", "b", "c"]
         r = ["c", "b", "b", "b"]
-        for l, r in map(None, l, r):
+        for l, r in zip_longest(l, r):
             list_diff.append(l, r)
         self.assertEqual(
             list_diff.diff(),
@@ -399,12 +406,14 @@ class TestRuleKeyDiff(unittest.TestCase):
             ),
         )
 
-        expected = [
-            "//:left missing from right",
-            "//:right missing from left",
-            "//:top left:aa != right:bb",
-        ]
-        self.assertEqual(result, expected)
+        expected = sorted(
+            [
+                "//:left missing from right",
+                "//:right missing from left",
+                "//:top left:aa != right:bb",
+            ]
+        )
+        self.assertEqual(sorted(result), expected)
 
     @unittest.skipUnless(os.name == "posix", "This test fails on windows")
     def testParseGzippedFile(self):
@@ -413,7 +422,7 @@ class TestRuleKeyDiff(unittest.TestCase):
         ]
         with tempfile.NamedTemporaryFile(suffix=".gz") as file_path:
             with gzip.open(file_path.name, "wb") as f:
-                f.write("\n".join(lines))
+                f.write("\n".join(lines).encode("utf-8"))
 
             result = compute_rulekey_mismatches(
                 RuleKeyStructureInfo(file_path.name),
@@ -439,7 +448,7 @@ def makeRuleKeyLine(
     srcs = srcs or {"JavaLib1.java": "aabb"}
     deps = deps or []
     srcs_t = ":".join(
-        ["path({p}:{h}):key(srcs)".format(p=p, h=h) for p, h in srcs.iteritems()]
+        ["path({p}:{h}):key(srcs)".format(p=p, h=h) for p, h in srcs.items()]
     )
     deps_t = ":".join(["ruleKey(sha1={h}):key(deps)".format(h=h) for h in deps])
     template = (

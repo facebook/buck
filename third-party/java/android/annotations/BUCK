@@ -1,0 +1,10 @@
+java_library(
+    name = "annotations",
+    srcs = glob(["src/**/*.java"]),
+    licenses = [
+        "LICENSE",
+        "NOTICE",
+    ],
+    required_for_source_only_abi = True,
+    visibility = ["PUBLIC"],
+)

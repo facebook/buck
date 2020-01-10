@@ -1,28 +1,43 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.core.cell;
 
-import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.UnflavoredBuildTarget;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.model.CellRelativePath;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
 
 public interface CellPathResolver {
+
+  /**
+   * Provides access to the {@link CellNameResolver} for this cell. This is to assist in migration
+   * to the new name/path resolvers.
+   */
+  CellNameResolver getCellNameResolver();
+
+  /**
+   * Provides access to the {@link NewCellPathResolver}. This is to assist in migration to the new
+   * name/path resolvers.
+   */
+  NewCellPathResolver getNewCellPathResolver();
+
   /**
    * @param cellName name of cell, Optional.empty() for root cell.
    * @return Absolute path to the physical location of the cell, or {@code Optional.empty()} if the
@@ -41,16 +56,16 @@ public interface CellPathResolver {
    * @return Absolute path to the physical location of the cell that contains the provided target
    * @throws AssertionError if cell is not known
    */
-  Path getCellPathOrThrow(BuildTarget buildTarget);
+  Path getCellPathOrThrow(CanonicalCellName cellName);
+
+  /** Resolve a cell-relative path to an absolute path. */
+  Path resolveCellRelativePath(CellRelativePath cellRelativePath);
 
   /**
-   * @return Absolute path to the physical location of the cell that contains the provided target
-   * @throws AssertionError if cell is not known
+   * @return absolute paths to all cells this resolver knows about. The key is the name of the cell
+   *     in the root cell's config (this is not necessarily the canonical name).
    */
-  Path getCellPathOrThrow(UnflavoredBuildTarget buildTarget);
-
-  /** @return absolute paths to all cells this resolver knows about. */
-  ImmutableMap<String, Path> getCellPaths();
+  ImmutableMap<String, Path> getCellPathsByRootCellExternalName();
 
   /**
    * Returns a cell name that can be used to refer to the cell at the given path.

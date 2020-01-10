@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -30,7 +30,7 @@ import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.BashStep;
@@ -39,8 +39,8 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.Escaper;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.json.ObjectMappers;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -196,16 +196,14 @@ public class ResourcesFilter extends AbstractBuildRule
 
     ImmutableList.Builder<Path> filteredResDirectoriesBuilder = ImmutableList.builder();
     ImmutableSet<Path> whitelistedStringPaths =
-        whitelistedStringDirs
-            .stream()
+        whitelistedStringDirs.stream()
             .map(
                 sourcePath ->
                     getProjectFilesystem()
                         .relativize(context.getSourcePathResolver().getAbsolutePath(sourcePath)))
             .collect(ImmutableSet.toImmutableSet());
     ImmutableList<Path> resPaths =
-        resDirectories
-            .stream()
+        resDirectories.stream()
             .map(
                 sourcePath ->
                     getProjectFilesystem()
@@ -284,9 +282,11 @@ public class ResourcesFilter extends AbstractBuildRule
 
   @VisibleForTesting
   void addPostFilterCommandSteps(
-      Arg command, SourcePathResolver sourcePathResolver, ImmutableList.Builder<Step> steps) {
+      Arg command,
+      SourcePathResolverAdapter sourcePathResolverAdapter,
+      ImmutableList.Builder<Step> steps) {
     ImmutableList.Builder<String> commandLineBuilder = new ImmutableList.Builder<>();
-    command.appendToCommandLine(commandLineBuilder::add, sourcePathResolver);
+    command.appendToCommandLine(commandLineBuilder::add, sourcePathResolverAdapter);
     commandLineBuilder.add(Escaper.escapeAsBashString(getFilterResourcesDataPath()));
     commandLineBuilder.add(Escaper.escapeAsBashString(getRDotJsonPath()));
     String commandLine = Joiner.on(' ').join(commandLineBuilder.build());
@@ -374,11 +374,9 @@ public class ResourcesFilter extends AbstractBuildRule
   }
 
   @Override
-  public BuildOutput initializeFromDisk(SourcePathResolver pathResolver) throws IOException {
+  public BuildOutput initializeFromDisk(SourcePathResolverAdapter pathResolver) throws IOException {
     ImmutableList<Path> stringFiles =
-        getProjectFilesystem()
-            .readLines(getStringFilesPath())
-            .stream()
+        getProjectFilesystem().readLines(getStringFilesPath()).stream()
             .map(Paths::get)
             .collect(ImmutableList.toImmutableList());
     return new BuildOutput(stringFiles);

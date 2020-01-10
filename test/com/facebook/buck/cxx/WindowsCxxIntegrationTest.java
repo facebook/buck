@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -54,7 +54,7 @@ public class WindowsCxxIntegrationTest {
   }
 
   @Test
-  public void testFilenameIsFilteredOut() throws IOException {
+  public void testFilenameIsFilteredOut() {
     ProcessResult runResult = workspace.runBuckCommand("build", "//simple:simple#windows-x86_64");
     runResult.assertSuccess();
     final String input = "simple.cpp";
@@ -67,7 +67,7 @@ public class WindowsCxxIntegrationTest {
   }
 
   @Test
-  public void simpleBinary64() throws IOException {
+  public void simpleBinary64() {
     ProcessResult runResult = workspace.runBuckCommand("run", "//app:hello#windows-x86_64");
     runResult.assertSuccess();
     assertThat(runResult.getStdout(), Matchers.containsString("The process is 64bits"));
@@ -76,20 +76,20 @@ public class WindowsCxxIntegrationTest {
   }
 
   @Test
-  public void simpleBinary64WithDebugFull() throws IOException {
+  public void simpleBinary64WithDebugFull() {
     ProcessResult runResult = workspace.runBuckCommand("build", "//app:pdb");
     runResult.assertSuccess();
   }
 
   @Test
-  public void simpleBinaryWithLib() throws IOException {
+  public void simpleBinaryWithLib() {
     ProcessResult runResult = workspace.runBuckCommand("run", "//app_lib:app_lib#windows-x86_64");
     runResult.assertSuccess();
     assertThat(runResult.getStdout(), Matchers.containsString("BUCK ON WINDOWS"));
   }
 
   @Test
-  public void simpleBinaryWithWholeLib() throws IOException {
+  public void simpleBinaryWithWholeLib() {
     ProcessResult runResult =
         workspace.runBuckCommand("run", "//app_wholelib:app_wholelib#windows-x86_64");
     runResult.assertSuccess();
@@ -151,7 +151,47 @@ public class WindowsCxxIntegrationTest {
   }
 
   @Test
-  public void errorVerifyHeaders() throws IOException {
+  public void implibOutputAccessible() {
+    workspace.runBuckCommand("build", "//implib:implib_copy").assertSuccess();
+    assertTrue(Files.exists(workspace.resolve("buck-out/gen/implib/implib_copy/implib_copy.lib")));
+  }
+
+  @Test
+  public void simpleBinaryWithPrebuiltDll() throws IOException {
+    ProcessResult appResult =
+        workspace.runBuckCommand("build", "//implib_prebuilt:app#windows-x86_64");
+    appResult.assertSuccess();
+
+    ProcessResult runResult =
+        workspace.runBuckCommand("run", "//implib_prebuilt:app#windows-x86_64");
+    runResult.assertSuccess();
+
+    ProcessResult logResult = workspace.runBuckCommand("build", "//implib_prebuilt:log");
+    logResult.assertSuccess();
+    Path outputPath = workspace.resolve("buck-out/gen/implib_prebuilt/log/log.txt");
+    String outputPathContents = workspace.getFileContents(outputPath);
+    assertThat(outputPathContents, Matchers.containsString("a + (a * b)"));
+    assertThat(outputPathContents, Matchers.containsString("Hello, world!"));
+  }
+
+  @Test
+  public void simpleCrossCellBinaryWithPrebuiltDll() throws IOException {
+    ProcessResult appResult =
+        workspace.runBuckCommand("build", "implib_prebuilt_cell2//:app#windows-x86_64");
+    appResult.assertSuccess();
+
+    ProcessResult runResult =
+        workspace.runBuckCommand("run", "implib_prebuilt_cell2//:app#windows-x86_64");
+    runResult.assertSuccess();
+
+    ProcessResult logResult = workspace.runBuckCommand("build", "implib_prebuilt_cell2//:log");
+    logResult.assertSuccess();
+    Path outputPath = workspace.resolve("implib_prebuilt/cell2/buck-out/gen/log/log.txt");
+    assertThat(workspace.getFileContents(outputPath), Matchers.containsString("a + (a * b)"));
+  }
+
+  @Test
+  public void errorVerifyHeaders() {
     ProcessResult result;
     result =
         workspace.runBuckBuild(
@@ -170,7 +210,7 @@ public class WindowsCxxIntegrationTest {
   }
 
   @Test
-  public void errorVerifyNestedHeaders() throws IOException {
+  public void errorVerifyNestedHeaders() {
     ProcessResult result;
     result =
         workspace.runBuckBuild(
@@ -193,7 +233,7 @@ public class WindowsCxxIntegrationTest {
   }
 
   @Test
-  public void errorVerifyNestedHeadersWithCycle() throws IOException {
+  public void errorVerifyNestedHeadersWithCycle() {
     ProcessResult result;
     result =
         workspace.runBuckBuild(
@@ -213,5 +253,15 @@ public class WindowsCxxIntegrationTest {
                     + "header_check\\untracked_header.h, which is included by: %n"
                     + "header_check\\untracked_header_includer.h, which is included by: %n"
                     + "header_check\\parent_header.h")));
+  }
+
+  @Test
+  public void compilationDatabaseCanBeBuilt() {
+    workspace.runBuckBuild("//app:hello#compilation-database,windows-x86_64").assertSuccess();
+    workspace.runBuckBuild("//app_asm:app_asm#compilation-database,windows-x86_64").assertSuccess();
+    workspace.runBuckBuild("//app_lib:app_lib#compilation-database,windows-x86_64").assertSuccess();
+    workspace.runBuckBuild("//lib:lib#compilation-database,windows-x86_64,static").assertSuccess();
+    workspace.runBuckBuild("//lib:lib#compilation-database,windows-x86_64,shared").assertSuccess();
+    workspace.runBuckBuild("//lib:lib#compilation-database,windows-x86_64").assertSuccess();
   }
 }

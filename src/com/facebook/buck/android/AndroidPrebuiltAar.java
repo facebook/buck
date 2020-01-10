@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -20,6 +20,7 @@ import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -43,6 +44,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
 
   private final UnzipAar unzipAar;
   private final SourcePath nativeLibsDirectory;
+  private final boolean useSystemLibraryLoader;
   private final PrebuiltJar prebuiltJar;
 
   // TODO(cjhopman): It's silly that this is pretending to be a java library.
@@ -58,7 +60,8 @@ public class AndroidPrebuiltAar extends AndroidLibrary
       CompileToJarStepFactory configuredCompiler,
       Iterable<PrebuiltJar> exportedDeps,
       boolean requiredForSourceAbi,
-      Optional<String> mavenCoords) {
+      Optional<String> mavenCoords,
+      boolean useSystemLibraryLoader) {
     super(
         androidLibraryBuildTarget,
         projectFilesystem,
@@ -86,27 +89,36 @@ public class AndroidPrebuiltAar extends AndroidLibrary
             .build(),
         /* providedDeps */ ImmutableSortedSet.of(),
         ImmutableSortedSet.of(),
+        /* runtimeDeps */ ImmutableSortedSet.of(),
         JavaAbis.getClassAbiJar(androidLibraryBuildTarget),
         /* sourceOnlyAbiJar */ null,
         mavenCoords,
         Optional.of(
             ExplicitBuildTargetSourcePath.of(
                 unzipAar.getBuildTarget(), unzipAar.getAndroidManifest())),
+        Optional.empty(),
         /* tests */ ImmutableSortedSet.of(),
         /* requiredForSourceAbi */ requiredForSourceAbi,
         UnusedDependenciesAction.IGNORE,
         Optional.empty(),
         null,
         false,
+        false,
         false);
     this.unzipAar = unzipAar;
     this.prebuiltJar = prebuiltJar;
     this.nativeLibsDirectory = nativeLibsDirectory;
+    this.useSystemLibraryLoader = useSystemLibraryLoader;
   }
 
   @Override
   public String getRDotJavaPackage() {
     return unzipAar.getRDotJavaPackage();
+  }
+
+  @Override
+  public boolean useDependencyFileRuleKeys() {
+    return false;
   }
 
   @Override
@@ -134,7 +146,11 @@ public class AndroidPrebuiltAar extends AndroidLibrary
   @Override
   public void addToCollector(AndroidPackageableCollector collector) {
     super.addToCollector(collector);
-    collector.addNativeLibsDirectory(getBuildTarget(), nativeLibsDirectory);
+    if (useSystemLibraryLoader) {
+      collector.addNativeLibsDirectoryForSystemLoader(getBuildTarget(), nativeLibsDirectory);
+    } else {
+      collector.addNativeLibsDirectory(getBuildTarget(), nativeLibsDirectory);
+    }
 
     collector.addResourceDirectory(getBuildTarget(), getRes());
     collector.addAssetsDirectory(getBuildTarget(), getAssets());
@@ -152,7 +168,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
   // use this interface to access the underlying R.java package, so make sure it's available when
   // a dependent is building against us.
   @Override
-  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
+  public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
     return Stream.of(unzipAar.getBuildTarget());
   }
 }

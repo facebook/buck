@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -19,7 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -69,7 +69,7 @@ public abstract class CxxToolFlags implements AddsToRuleKey {
       platformFlags = platformFlags.addAll(part.getPlatformFlags());
       ruleFlags = ruleFlags.addAll(part.getRuleFlags());
     }
-    return IterableCxxToolFlags.of(platformFlags.build(), ruleFlags.build());
+    return ImmutableIterableCxxToolFlags.of(platformFlags.build(), ruleFlags.build());
   }
 }
 
@@ -104,9 +104,8 @@ abstract class AbstractExplicitCxxToolFlags extends CxxToolFlags {
  *
  * <p>This improves sharing and reduce copying and memory pressure.
  */
-@Value.Immutable
-@BuckStyleTuple
-abstract class AbstractIterableCxxToolFlags extends CxxToolFlags {
+@BuckStyleValue
+abstract class IterableCxxToolFlags extends CxxToolFlags {
   @Override
   @AddToRuleKey
   public abstract ImmutableList<Arg> getPlatformFlags();

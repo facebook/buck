@@ -50,22 +50,33 @@ LINE_COMMENT=#[^\r\n]*
 
 ANY_ESCAPE_SEQUENCE = \\[^]
 
-ONE_OR_TWO_DOUBLE_QUOTES = (\"[^\\\"]) | (\"\\[^]) | (\"\"[^\\\"]) | (\"\"\\[^])
-THREE_DOUBLE_QUOTES = (\"\"\")
-DOUBLE_QUOTED_DOC_STRING_CHARS = [^\\\"] | {ANY_ESCAPE_SEQUENCE} | {ONE_OR_TWO_DOUBLE_QUOTES}
+APOSTROPHED_STRING = \'([^\\\'\r\n]|\\[^\r\n]|\\[\r\n])*\'?
+APOSTROPHED_RAW_STRING = r\'[^\'\r\n]*\'?
 
-ONE_OR_TWO_SINGLE_QUOTES = (\'[^\\\']) | (\'\\[^]) | (\'\'[^\\\']) | (\'\'\\[^])
-THREE_SINGLE_QUOTES = (\'\'\')
-SINGLE_QUOTED_DOC_STRING_CHARS = [^\\\'] | {ANY_ESCAPE_SEQUENCE} | {ONE_OR_TWO_SINGLE_QUOTES}
+QUOTED_STRING = \"([^\\\"\r\n]|\\[^\r\n]|\\[\r\n])*\"?
+QUOTED_RAW_STRING = r\"[^\"\r\n]*\"?
 
-DOUBLE_QUOTED_DOC_STRING = {THREE_DOUBLE_QUOTES} {DOUBLE_QUOTED_DOC_STRING_CHARS}* {THREE_DOUBLE_QUOTES}?
-SINGLE_QUOTED_DOC_STRING = {THREE_SINGLE_QUOTES} {SINGLE_QUOTED_DOC_STRING_CHARS}* {THREE_SINGLE_QUOTES}?
-DOUBLE_QUOTED_STRING=\"([^\\\"\r\n]|\\[^\r\n])*\"?
-SINGLE_QUOTED_STRING='([^\\'\r\n]|\\[^\r\n])*'?
+THREE_APOSTROPHES = \'\'\'
+TRIPLE_APOSTROPHED_STRING_PIECES = {ANY_ESCAPE_SEQUENCE} | [^\\\'] | (\'[^\']) | (\'\'[^\'])
+TRIPLE_APOSTROPHED_STRING = {THREE_APOSTROPHES} {TRIPLE_APOSTROPHED_STRING_PIECES}* {THREE_APOSTROPHES}?
+TRIPLE_APOSTROPHED_RAW_STRING_PIECES = [^\'] | (\'[^\']) | (\'\'[^\'])
+TRIPLE_APOSTROPHED_RAW_STRING = r{THREE_APOSTROPHES} {TRIPLE_APOSTROPHED_RAW_STRING_PIECES}* {THREE_APOSTROPHES}?
+
+THREE_QUOTES = \"\"\"
+TRIPLE_QUOTED_STRING_PIECES = {ANY_ESCAPE_SEQUENCE} | [^\\\"] | (\"[^\"]) | (\"\"[^\"])
+TRIPLE_QUOTED_STRING = {THREE_QUOTES} {TRIPLE_QUOTED_STRING_PIECES}* {THREE_QUOTES}?
+TRIPLE_QUOTED_RAW_STRING_PIECES = [^\"] | (\"[^\"]) | (\"\"[^\"])
+TRIPLE_QUOTED_RAW_STRING = r{THREE_QUOTES} {TRIPLE_QUOTED_RAW_STRING_PIECES}* {THREE_QUOTES}?
 
 UPDATE_OPS=\+=|-=|\*=|"/"=|"//"=|%=|&=|\|=|\^=|<<=|>>=
-NUMBER=-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]*)?
-IDENTIFIER=[a-zA-Z_]([a-zA-Z0-9_])*
+
+HEX_LITERAL = 0[xX][0-9A-Fa-f]+
+OCTAL_LITERAL = 0[oO][0-7]+
+DECIMAL_LITERAL = 0|([1-9][0-9]*)
+
+// TODO: Starlark says identifiers can be:
+// "unicode letters, digits, and underscores, not starting with a digit"
+IDENTIFIER_TOKEN=[a-zA-Z_]([a-zA-Z0-9_])*
 
 %x INDENTED
 
@@ -140,8 +151,6 @@ IDENTIFIER=[a-zA-Z_]([a-zA-Z0-9_])*
   "with"                      { return WITH; }
   "yield"                     { return YIELD; }
 
-  "glob"                      { return GLOB; }
-
   "("                         {
                                 unmatchedPair++;
                                 return L_PARENTHESES;
@@ -170,13 +179,19 @@ IDENTIFIER=[a-zA-Z_]([a-zA-Z0-9_])*
 
   {BOOLEAN}                   { return BOOLEAN; }
   {UPDATE_OPS}                { return UPDATE_OPS; }
-  {DOUBLE_QUOTED_DOC_STRING}  { return DOUBLE_QUOTED_DOC_STRING; }
-  {SINGLE_QUOTED_DOC_STRING}  { return SINGLE_QUOTED_DOC_STRING; }
+  {APOSTROPHED_STRING}             { return APOSTROPHED_STRING; }
+  {APOSTROPHED_RAW_STRING}         { return APOSTROPHED_RAW_STRING; }
+  {TRIPLE_APOSTROPHED_STRING}      { return TRIPLE_APOSTROPHED_STRING; }
+  {TRIPLE_APOSTROPHED_RAW_STRING}  { return TRIPLE_APOSTROPHED_RAW_STRING; }
+  {QUOTED_STRING}                  { return QUOTED_STRING; }
+  {QUOTED_RAW_STRING}              { return QUOTED_RAW_STRING; }
+  {TRIPLE_QUOTED_STRING}           { return TRIPLE_QUOTED_STRING; }
+  {TRIPLE_QUOTED_RAW_STRING}       { return TRIPLE_QUOTED_RAW_STRING; }
   {LINE_COMMENT}              { return LINE_COMMENT; }
-  {DOUBLE_QUOTED_STRING}      { return DOUBLE_QUOTED_STRING; }
-  {SINGLE_QUOTED_STRING}      { return SINGLE_QUOTED_STRING; }
-  {NUMBER}                    { return NUMBER; }
-  {IDENTIFIER}                { return IDENTIFIER; }
+  {HEX_LITERAL}               { return HEX_LITERAL; }
+  {OCTAL_LITERAL}             { return OCTAL_LITERAL; }
+  {DECIMAL_LITERAL}           { return DECIMAL_LITERAL; }
+  {IDENTIFIER_TOKEN}          { return IDENTIFIER_TOKEN; }
 
   [^]                         { return BAD_CHARACTER; }
   <<EOF>>                     {
@@ -192,7 +207,14 @@ IDENTIFIER=[a-zA-Z_]([a-zA-Z0-9_])*
 <INDENTED> {
   [ ]                         { currentIndent++; }
   [\t]                        { currentIndent += 8 - currentIndent % 8; }
-  {EOL}                       { currentIndent = 0; }
+  {EOL}                       {
+                                if (currentIndent > 0) {
+                                  yypushback(yylength());
+                                  currentIndent = 0;
+                                  return INDENT;
+                                }
+                                return DEDENT;
+                              }
   [^]                         {
                                 yypushback(1);
                                 int top = stack.isEmpty() ? 0 : stack.peek();
@@ -205,10 +227,15 @@ IDENTIFIER=[a-zA-Z_]([a-zA-Z0-9_])*
                                   return DEDENT;
                                 } else {
                                   yybegin(YYINITIAL);
+                                  return WHITE_SPACE;
                                 }
                               }
   <<EOF>>                     {
                                 yybegin(YYINITIAL);
+                                if (currentIndent > 0) {
+                                  currentIndent = 0;
+                                  return INDENT;
+                                }
                               }
 }
 

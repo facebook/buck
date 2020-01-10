@@ -1,25 +1,26 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 {namespace buckquery}
 
 /**
  * @param section The section the entry is in.
  */
 {template .section_link}
-<a href="{ROOT}command/query.html#{$section}"><code>buck query {$section}</code></a>
+<a href="{ROOT}command/query.html#{$section}"><code>buck query {$section}()</code></a>
 {/template}
 
 /***/
@@ -29,6 +30,32 @@
 {/call}
 {/template}
 
+/***/
+{template .set}
+{call .section_link}
+  {param section: 'set' /}
+{/call}
+{/template}
+
+/***/
+{template .example_multiple_targets}
+
+<p>
+The following command line returns the target <code>main</code> in the build file in
+the root of the Buck project and all the targets from the build file in
+the <code>myclass</code> subdirectory of the root.
+</p>
+
+<p>
+<pre>
+{literal}
+buck query "set( '//:main' '//myclass:' )"
+{/literal}
+</pre>
+</p>
+
+
+{/template}
 
 /***/
 {template .example_buildfile_owner}
@@ -52,4 +79,61 @@ then returns the build files, such as <code>foo/bar/BUCK</code>, that define
 those targets. 
 </p>
 {/template}
+
+
+/***/
+{template .example_macro_query_targets_deps}
+
+<p>
+The following example adds an <code>apk_genrule</code> to the BUCK file that is used in 
+the <a href="https://github.com/fbsamples/bucksamples">cross-platform Buck sample</a> from 
+GitHub. The genrule, <code>string_param</code>, writes the transitive closure of dependencies
+for the android_binary rule, <code>demo-app</code>, to the file <code>deps.txt</code>.
+</p>
+
+<p>
+<pre>
+{literal}
+android_binary(
+  name = 'demo-app',
+  manifest = 'AndroidManifest.xml',
+  keystore = '//android/keystores:debug',
+  deps = [
+    '//android/java/com/facebook/buck/demo:lib',
+  ],
+)
+
+apk_genrule(
+  name = 'string_param',
+  apk  = ':demo-app',
+  srcs = [ '//android/java/com/facebook/buck/demo:lib' ],
+  cmd = 'mkdir $OUT; echo deps: $(query_targets deps(//android:demo-app)) > $OUT/deps.txt',
+  out = 'out-dir'
+)
+{/literal}
+</pre>
+</p>
+
+{/template}
+
+
+/***/
+{template .example_rdeps}
+
+<p>
+The following example, returns the targets in the 
+{sp}<a href="https://en.wikipedia.org/wiki/Transitive_closure">transitive closure</a>{sp}
+of <code>//foo:bar</code> that depend directly on <code>//example:baz</code>. 
+</p>
+
+<p>
+<pre>
+{literal}
+buck query "rdeps('//foo:bar', '//example:baz', 1)"
+{/literal}
+</pre>
+</p>
+
+{/template}
+
 

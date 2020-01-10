@@ -1,0 +1,48 @@
+java_test_runner(
+    name = "runner",
+    srcs = ["SomeRunner.java"],
+    main_class = "test.SomeRunner",
+)
+
+java_test(
+    name = "some_test",
+    srcs = ["SomeTest.java"],
+    runner = ":runner",
+    specs = {
+        "my": "spec",
+        "other": [
+            {
+                "complicated": "stuff",
+                "integer": 1,
+                "double": 1.2,
+                "boolean": True,
+            },
+        ],
+        "cmd": "java -jar $(abs_output testbin) $(abs_output classnames)",
+    },
+    deps = [
+        "buck//third-party/java/junit:junit",
+    ],
+)
+
+java_test(
+    name = "some_test_with_jvm",
+    srcs = ["SomeTest.java"],
+    runner = ":runner",
+    specs = {
+        "my": "spec",
+        "other": [
+            {
+                "complicated": "stuff",
+                "integer": 1,
+                "double": 1.2,
+                "boolean": False,
+            },
+        ],
+        "cmd": "cat $(abs_output jvm-args)",
+    },
+    vm_args = ["-DHasVMArgs"],
+    deps = [
+        "buck//third-party/java/junit:junit",
+    ],
+)

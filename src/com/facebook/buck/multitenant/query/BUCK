@@ -1,0 +1,22 @@
+kotlin_library(
+    name = "query",
+    srcs = glob(["*.kt"]),
+    tests = [
+        "//test/com/facebook/buck/multitenant/query:query",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/multitenant/...",
+        "//test/com/facebook/buck/multitenant/...",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/model/targetgraph/raw:raw",
+        "//src/com/facebook/buck/core/parser/buildtargetpattern:buildtargetpattern",
+        "//src/com/facebook/buck/core/sourcepath:types",
+        "//src/com/facebook/buck/multitenant/collect:collect",
+        "//src/com/facebook/buck/multitenant/fs:fs",
+        "//src/com/facebook/buck/multitenant/service:service",
+        "//src/com/facebook/buck/query:query",
+        "//third-party/java/guava:guava",
+    ],
+)

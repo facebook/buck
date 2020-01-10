@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
@@ -27,25 +27,26 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.ExportDependencies;
 import com.facebook.buck.core.rules.attr.HasPostBuildSteps;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
+import com.facebook.buck.core.test.rule.ExternalTestSpec;
 import com.facebook.buck.core.test.rule.TestRule;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.BuildCellRelativePath;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.JavaLibrary;
+import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
@@ -60,16 +61,13 @@ import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.XmlTestResultParser;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.selectors.TestSelectorList;
-import com.facebook.buck.util.ZipFileTraversal;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
-import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -86,8 +84,6 @@ import java.util.SortedSet;
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.stream.Stream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 import javax.annotation.Nullable;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
@@ -129,6 +125,8 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private final TestType testType;
 
+  private final int targetJavaVersion;
+
   private final Optional<Long> testRuleTimeoutMs;
 
   private final Optional<Long> testCaseTimeoutMs;
@@ -142,6 +140,8 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private static final Logger LOG = Logger.get(JavaTest.class);
 
   @Nullable private ImmutableList<JUnitStep> junits;
+
+  @Nullable private JUnitStep externalJunitStep;
 
   private final boolean runTestSeparately;
 
@@ -158,6 +158,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Set<String> labels,
       Set<String> contacts,
       TestType testType,
+      String targetLevel,
       Tool javaRuntimeLauncher,
       List<Arg> vmArgs,
       Map<String, String> nativeLibsEnvironment,
@@ -178,6 +179,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.labels = ImmutableSet.copyOf(labels);
     this.contacts = ImmutableSet.copyOf(contacts);
     this.testType = testType;
+    this.targetJavaVersion = JavaVersion.getMajorVersionFromString(targetLevel);
     this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.testCaseTimeoutMs = testCaseTimeoutMs;
     this.env = env;
@@ -211,7 +213,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private JUnitStep getJUnitStep(
       ExecutionContext executionContext,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       TestRunningOptions options,
       Optional<Path> outDir,
       Optional<Path> robolectricLogPath,
@@ -232,6 +234,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     TestSelectorList testSelectorList = options.getTestSelectorList();
     JUnitJvmArgs args =
         JUnitJvmArgs.builder()
+            .setTargetJavaVersion(targetJavaVersion)
             .setTestType(testType)
             .setDirectoryForTestResults(outDir)
             .setClasspathFile(getClassPathFile())
@@ -241,7 +244,11 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             .setDebugEnabled(executionContext.isDebugEnabled())
             .setPathToJavaAgent(options.getPathToJavaAgent())
             .setBuildId(buildId)
-            .setBuckModuleBaseSourceCodePath(getBuildTarget().getBasePath())
+            .setBuckModuleBaseSourceCodePath(
+                getBuildTarget()
+                    .getCellRelativeBasePath()
+                    .getPath()
+                    .toPath(getProjectFilesystem().getFileSystem()))
             .setStdOutLogLevel(stdOutLogLevel)
             .setStdErrLogLevel(stdErrLogLevel)
             .setRobolectricLogPath(robolectricLogPath)
@@ -344,7 +351,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   ImmutableList<String> amendVmArgs(
       ImmutableList<String> existingVmArgs,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       Optional<TargetDevice> targetDevice,
       Optional<String> javaTempDir) {
     ImmutableList.Builder<String> vmArgs = ImmutableList.builder();
@@ -360,7 +367,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
    */
   protected void onAmendVmArgs(
       ImmutableList.Builder<String> vmArgsBuilder,
-      @SuppressWarnings("unused") SourcePathResolver pathResolver,
+      @SuppressWarnings("unused") SourcePathResolverAdapter pathResolver,
       Optional<TargetDevice> targetDevice) {
     if (!targetDevice.isPresent()) {
       return;
@@ -394,7 +401,9 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Callable<TestResults> interpretTestResults(
-      ExecutionContext context, SourcePathResolver pathResolver, boolean isUsingTestSelectors) {
+      ExecutionContext context,
+      SourcePathResolverAdapter pathResolver,
+      boolean isUsingTestSelectors) {
     ImmutableSet<String> contacts = getContacts();
     return () -> {
       // It is possible that this rule was not responsible for running any tests because all tests
@@ -449,9 +458,9 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     };
   }
 
-  private Set<String> getClassNamesForSources(SourcePathResolver pathResolver) {
+  private Set<String> getClassNamesForSources(SourcePathResolverAdapter pathResolver) {
     if (compiledClassFileFinder == null) {
-      compiledClassFileFinder = new CompiledClassFileFinder(this, pathResolver);
+      compiledClassFileFinder = new CompiledClassFileFinder(compiledTestsLibrary, pathResolver);
     }
     return compiledClassFileFinder.getClassNamesForSources();
   }
@@ -503,117 +512,6 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return ImmutableSortedSet.of();
   }
 
-  @VisibleForTesting
-  static class CompiledClassFileFinder {
-
-    private final Set<String> classNamesForSources;
-
-    CompiledClassFileFinder(JavaTest rule, SourcePathResolver pathResolver) {
-      Path outputPath;
-      SourcePath outputSourcePath = rule.getSourcePathToOutput();
-      if (outputSourcePath != null) {
-        outputPath = pathResolver.getAbsolutePath(outputSourcePath);
-      } else {
-        outputPath = null;
-      }
-      classNamesForSources =
-          getClassNamesForSources(
-              rule.compiledTestsLibrary.getJavaSrcs(),
-              outputPath,
-              rule.getProjectFilesystem(),
-              pathResolver);
-    }
-
-    public Set<String> getClassNamesForSources() {
-      return classNamesForSources;
-    }
-
-    /**
-     * When a collection of .java files is compiled into a directory, that directory will have a
-     * subfolder structure that matches the package structure of the input .java files. In general,
-     * the .java files will be 1:1 with the .class files with two notable exceptions: (1) There will
-     * be an additional .class file for each inner/anonymous class generated. These types of classes
-     * are easy to identify because they will contain a '$' in the name. (2) A .java file that
-     * defines multiple top-level classes (yes, this can exist:
-     * http://stackoverflow.com/questions/2336692/java-multiple-class-declarations-in-one-file) will
-     * generate multiple .class files that do not have '$' in the name. In this method, we perform a
-     * strict check for (1) and use a heuristic for (2). It is possible to filter out the type (2)
-     * situation with a stricter check that aligns the package directories of the .java files and
-     * the .class files, but it is a pain to implement. If this heuristic turns out to be
-     * insufficient in practice, then we can fix it.
-     *
-     * @param sources paths to .java source files that were passed to javac
-     * @param jarFilePath jar where the generated .class files were written
-     */
-    @VisibleForTesting
-    static ImmutableSet<String> getClassNamesForSources(
-        Set<SourcePath> sources,
-        @Nullable Path jarFilePath,
-        ProjectFilesystem projectFilesystem,
-        SourcePathResolver resolver) {
-      if (jarFilePath == null) {
-        return ImmutableSet.of();
-      }
-
-      Set<String> sourceClassNames = Sets.newHashSetWithExpectedSize(sources.size());
-      try {
-        JavaPaths.getExpandedSourcePaths(
-                sources
-                    .stream()
-                    .map(resolver::getAbsolutePath)
-                    .collect(ImmutableList.toImmutableList()))
-            .stream()
-            .map(MorePaths::getNameWithoutExtension)
-            .forEach(sourceClassNames::add);
-      } catch (IOException e) {
-        throw new BuckUncheckedExecutionException(
-            e, "When determining possible java test class names.");
-      }
-
-      ImmutableSet.Builder<String> testClassNames = ImmutableSet.builder();
-      Path jarFile = projectFilesystem.getPathForRelativePath(jarFilePath);
-      ZipFileTraversal traversal =
-          new ZipFileTraversal(jarFile) {
-
-            @Override
-            public void visit(ZipFile zipFile, ZipEntry zipEntry) {
-              String name = new File(zipEntry.getName()).getName();
-
-              // Ignore non-.class files.
-              if (!name.endsWith(".class")) {
-                return;
-              }
-
-              // As a heuristic for case (2) as described in the Javadoc, make sure the name of the
-              // .class file matches the name of a .java/.scala/.xxx file.
-              String nameWithoutDotClass = name.substring(0, name.length() - ".class".length());
-              if (!sourceClassNames.contains(nameWithoutDotClass)) {
-                return;
-              }
-
-              // Make sure it is a .class file that corresponds to a top-level .class file and not
-              // an
-              // inner class.
-              if (!name.contains("$")) {
-                String fullyQualifiedNameWithDotClassSuffix = zipEntry.getName().replace('/', '.');
-                String className =
-                    fullyQualifiedNameWithDotClassSuffix.substring(
-                        0, fullyQualifiedNameWithDotClassSuffix.length() - ".class".length());
-                testClassNames.add(className);
-              }
-            }
-          };
-      try {
-        traversal.traverse();
-      } catch (IOException e) {
-        // There's nothing sane to do here. The jar file really should exist.
-        throw new RuntimeException(e);
-      }
-
-      return testClassNames.build();
-    }
-  }
-
   @Override
   public boolean runTestSeparately() {
     return runTestSeparately;
@@ -624,7 +522,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
+  public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
     return Stream.concat(
             // By the end of the build, all the transitive Java library dependencies *must* be
             // available on disk, so signal this requirement via the {@link HasRuntimeDeps}
@@ -643,9 +541,9 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
+  public ExternalTestSpec getExternalTestRunnerSpec(
       ExecutionContext executionContext, TestRunningOptions options, BuildContext buildContext) {
-    JUnitStep jUnitStep =
+    externalJunitStep =
         getJUnitStep(
             executionContext,
             buildContext.getSourcePathResolver(),
@@ -654,13 +552,21 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             Optional.empty(),
             getClassNamesForSources(buildContext.getSourcePathResolver()));
     return ExternalTestRunnerTestSpec.builder()
+        .setCwd(getProjectFilesystem().getRootPath())
         .setTarget(getBuildTarget())
         .setType("junit")
-        .setCommand(jUnitStep.getShellCommandInternal(executionContext))
-        .setEnv(jUnitStep.getEnvironmentVariables(executionContext))
+        .setCommand(externalJunitStep.getShellCommandInternal(executionContext))
+        .setEnv(externalJunitStep.getEnvironmentVariables(executionContext))
         .setLabels(getLabels())
         .setContacts(getContacts())
+        .addAllRequiredPaths(getRuntimeClasspath(buildContext))
+        .addRequiredPaths(externalJunitStep.getClasspathArgfile())
         .build();
+  }
+
+  @Override
+  public void onPreTest(BuildContext buildContext) throws IOException {
+    Preconditions.checkNotNull(externalJunitStep).ensureClasspathArgfile();
   }
 
   @Override
@@ -676,30 +582,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             new AbstractExecutionStep("write classpath file") {
               @Override
               public StepExecutionResult execute(ExecutionContext context) throws IOException {
-                ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
-                if (unbundledResourcesRoot.isPresent()) {
-                  builder.add(
-                      buildContext
-                          .getSourcePathResolver()
-                          .getAbsolutePath(unbundledResourcesRoot.get()));
-                }
-                ImmutableSet<Path> classpathEntries =
-                    builder
-                        .addAll(
-                            compiledTestsLibrary
-                                .getTransitiveClasspaths()
-                                .stream()
-                                .map(buildContext.getSourcePathResolver()::getAbsolutePath)
-                                .collect(ImmutableSet.toImmutableSet()))
-                        .addAll(
-                            additionalClasspathEntriesProvider
-                                .map(
-                                    e ->
-                                        e.getAdditionalClasspathEntries(
-                                            buildContext.getSourcePathResolver()))
-                                .orElse(ImmutableList.of()))
-                        .addAll(getBootClasspathEntries())
-                        .build();
+                ImmutableSet<Path> classpathEntries = getRuntimeClasspath(buildContext);
                 getProjectFilesystem()
                     .writeLinesToPath(
                         Iterables.transform(classpathEntries, Object::toString),
@@ -710,7 +593,29 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .build();
   }
 
+  /**
+   * @return a set of paths to the files which must be passed as the classpath to the java process
+   *     when this test is executed
+   */
+  protected ImmutableSet<Path> getRuntimeClasspath(BuildContext buildContext) {
+    ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
+    unbundledResourcesRoot.ifPresent(
+        sourcePath ->
+            builder.add(buildContext.getSourcePathResolver().getAbsolutePath(sourcePath)));
+    return builder
+        .addAll(
+            compiledTestsLibrary.getTransitiveClasspaths().stream()
+                .map(buildContext.getSourcePathResolver()::getAbsolutePath)
+                .collect(ImmutableSet.toImmutableSet()))
+        .addAll(
+            additionalClasspathEntriesProvider
+                .map(e -> e.getAdditionalClasspathEntries(buildContext.getSourcePathResolver()))
+                .orElse(ImmutableList.of()))
+        .addAll(getBootClasspathEntries())
+        .build();
+  }
+
   public interface AdditionalClasspathEntriesProvider {
-    ImmutableList<Path> getAdditionalClasspathEntries(SourcePathResolver resolver);
+    ImmutableList<Path> getAdditionalClasspathEntries(SourcePathResolverAdapter resolver);
   }
 }

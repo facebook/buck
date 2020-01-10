@@ -1,23 +1,25 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.io.filesystem;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.BuckConstant;
+import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 
@@ -25,14 +27,28 @@ import org.immutables.value.Value;
 @BuckStyleImmutable
 abstract class AbstractBuckPaths {
 
-  public static BuckPaths createDefaultBuckPaths(Path rootPath) {
-    return BuckPaths.of(
-        rootPath.getFileSystem().getPath(BuckConstant.getBuckOutputPath().toString()));
+  /**
+   * Default value for {@link #shouldIncludeTargetConfigHash()} when it is not specified by user.
+   */
+  public static final boolean DEFAULT_BUCK_OUT_INCLUDE_TARGET_COFIG_HASH = false;
+
+  public static BuckPaths createDefaultBuckPaths(
+      CanonicalCellName cellName, Path rootPath, boolean buckOutIncludeTargetConfigHash) {
+    Path buckOut = rootPath.getFileSystem().getPath(BuckConstant.getBuckOutputPath().toString());
+    return BuckPaths.of(cellName, buckOut, buckOut, buckOutIncludeTargetConfigHash);
   }
+
+  @Value.Parameter
+  public abstract CanonicalCellName getCellName();
 
   /** The relative path to the directory where Buck will generate its files. */
   @Value.Parameter
   public abstract Path getBuckOut();
+
+  @Value.Check
+  protected void checkBuckOut() {
+    Preconditions.checkArgument(!getBuckOut().isAbsolute());
+  }
 
   /**
    * The relative path to the directory where Buck will generate its files. This is used when
@@ -40,10 +56,12 @@ abstract class AbstractBuckPaths {
    * support configuring all output paths. However, for now, only certain paths below will use this
    * path.
    */
-  @Value.Default
-  public Path getConfiguredBuckOut() {
-    return getBuckOut();
-  }
+  @Value.Parameter
+  public abstract Path getConfiguredBuckOut();
+
+  /** Whether to include the target configuration hash on buck-out. */
+  @Value.Parameter
+  public abstract boolean shouldIncludeTargetConfigHash();
 
   /** The version the buck output directory was created for */
   @Value.Derived
@@ -74,6 +92,11 @@ abstract class AbstractBuckPaths {
   @Value.Derived
   public Path getLogDir() {
     return getBuckOut().resolve("log");
+  }
+
+  @Value.Derived
+  public Path getJournalDir() {
+    return getLogDir().resolve("journal");
   }
 
   @Value.Derived

@@ -1,0 +1,42 @@
+def define_toolchain(**kwargs):
+    cxx_toolchain(
+        archiver_type = "bsd",
+        compiler_type = "clang",
+        linker_type = "gnu",
+        shared_library_interface_type = "enabled",
+        object_file_extension = "object",
+        static_library_extension = "static",
+        shared_library_extension = "so",
+        shared_library_versioned_extension_format = "%s.shared",
+        use_header_map = True,
+        visibility = ["PUBLIC"],
+        **kwargs
+    )
+
+# The tools themselves are defined in another file to ensure that parse time deps are handled
+# correctly.
+define_toolchain(
+    name = "good",
+    archiver = "//tools:archiver",
+    assembler = "//tools:unimplemented",
+    c_compiler = "//tools:compiler",
+    cxx_compiler = "//tools:compiler",
+    linker = "//tools:linker",
+    nm = "//tools:unimplemented",
+    objcopy_for_shared_library_interface = "//tools:unimplemented",
+    ranlib = "//tools:ranlib",
+    strip = "//tools:strip",
+)
+
+define_toolchain(
+    name = "bad",
+    archiver = "//tools:unimplemented",
+    assembler = "//tools:unimplemented",
+    c_compiler = "//tools:unimplemented",
+    cxx_compiler = "//tools:unimplemented",
+    linker = "//tools:unimplemented",
+    nm = "//tools:unimplemented",
+    objcopy_for_shared_library_interface = "//tools:unimplemented",
+    ranlib = "//tools:unimplemented",
+    strip = "//tools:unimplemented",
+)

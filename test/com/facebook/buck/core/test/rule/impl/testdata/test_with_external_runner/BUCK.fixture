@@ -1,0 +1,18 @@
+sh_binary(
+    name = "runner_binary",
+    main = "runner.sh",
+)
+
+external_test_runner(
+    name = "external_runner",
+    binary = ":runner_binary",
+)
+
+java_library(
+    name = "runner_library",
+)
+
+external_test_runner(
+    name = "invalid_external_runner",
+    binary = ":runner_library",
+)

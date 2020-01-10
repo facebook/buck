@@ -5,5 +5,8 @@ prebuilt_jar(
         "LICENSE.txt",
     ],
     source_jar = "commons-math3-3.6.1-sources.jar",
-    visibility = ["//third-party/java/jmh/..."],
+    visibility = [
+        "//test/...",
+        "//third-party/java/jmh/...",
+    ],
 )

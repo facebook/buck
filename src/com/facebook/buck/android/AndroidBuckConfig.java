@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -19,18 +19,23 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.toolchain.ndk.NdkCompilerType;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntimeType;
+import com.facebook.buck.android.toolchain.ndk.NdkTargetArchAbi;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -39,11 +44,37 @@ public class AndroidBuckConfig {
 
   private static final String CONFIG_ENTRY_IN_SDK_PATH_SEARCH_ORDER = "<CONFIG>";
 
+  /** Values acceptable for ndk.ndk_search_order. */
+  public enum NdkSearchOrderEntry {
+    ANDROID_NDK_REPOSITORY_ENV("ANDROID_NDK_REPOSITORY"),
+    ANDROID_NDK_ENV("ANDROID_NDK"),
+    NDK_HOME_ENV("NDK_HOME"),
+    ANDROID_NDK_HOME_ENV("ANDROID_NDK_HOME"),
+    NDK_REPOSITORY_CONFIG("<NDK_REPOSITORY_CONFIG>"),
+    NDK_DIRECTORY_CONFIG("<NDK_DIRECTORY_CONFIG>"),
+    ;
+    public final String entryValue;
+
+    NdkSearchOrderEntry(String entryValue) {
+      this.entryValue = entryValue;
+    }
+  }
+
   private static final ImmutableList<String> DEFAULT_SDK_PATH_SEARCH_ORDER =
       ImmutableList.of("ANDROID_SDK", "ANDROID_HOME", CONFIG_ENTRY_IN_SDK_PATH_SEARCH_ORDER);
+  private static final ImmutableList<NdkSearchOrderEntry> DEFAULT_NDK_SEARCH_ORDER =
+      ImmutableList.of(
+          NdkSearchOrderEntry.ANDROID_NDK_REPOSITORY_ENV,
+          NdkSearchOrderEntry.ANDROID_NDK_ENV,
+          NdkSearchOrderEntry.NDK_HOME_ENV,
+          NdkSearchOrderEntry.NDK_REPOSITORY_CONFIG,
+          NdkSearchOrderEntry.NDK_DIRECTORY_CONFIG);
 
   private static final String ANDROID_SECTION = "android";
   private static final String REDEX = "redex";
+
+  public static final ImmutableSet<String> VALID_ABI_KEYS =
+      ImmutableSet.of("arm", "armv7", "arm64", "x86", "x86_64");
 
   private final BuckConfig delegate;
   private final Platform platform;
@@ -53,12 +84,42 @@ public class AndroidBuckConfig {
     this.platform = platform;
   }
 
-  public Optional<String> getAndroidTarget() {
+  /** Whether to skip crunching pngs by default in aapt2 compile. */
+  public Optional<Boolean> getSkipCrunchPngsDefault() {
+    return delegate.getBoolean("android", "aapt_compile_skip_crunch_pngs_default");
+  }
+
+  /** Whether to fail (vs warn) on legacy aapt2 compile errors. */
+  public boolean getFailOnLegacyAaptErrors() {
+    return delegate.getBoolean("android", "aapt_fail_on_legacy_errors").orElse(false);
+  }
+
+  /** Whether to disable resource removal in aapt2. */
+  public boolean getAaptNoResourceRemoval() {
+    return delegate.getBoolean("android", "aapt_no_resource_removal").orElse(false);
+  }
+
+  public Optional<String> getAndroidCompileSdkVersion() {
+    Optional<String> compileSdkVersion = delegate.getValue("android", "compile_sdk_version");
+    return compileSdkVersion.isPresent() ? compileSdkVersion : getAndroidTarget();
+  }
+
+  /** @deprecated Renamed to {@link #getAndroidCompileSdkVersion()} to make the purpose clearer. */
+  @Deprecated
+  private Optional<String> getAndroidTarget() {
     return delegate.getValue("android", "target");
   }
 
   public Optional<String> getBuildToolsVersion() {
     return delegate.getValue("android", "build_tools_version");
+  }
+
+  /**
+   * Returns the path to the adb executable overridden by the current project. If not specified, the
+   * adb executable in android.sdk_path/platform-tools will be used.
+   */
+  public Optional<Path> getAdbOverride() {
+    return delegate.getPath("android", "adb");
   }
 
   public Integer getAdbTimeout() {
@@ -110,6 +171,40 @@ public class AndroidBuckConfig {
     return delegate.getValue("ndk", "ndk_repository_path");
   }
 
+  /**
+   * Defines the order of search of the Android NDK.
+   *
+   * <p>The order is the list of elements that can either be {@code <NDK_REPOSITORY_CONFIG>} to
+   * indicate the entry {@code ndk.ndk_repo_path} from {@code .buckconfig}, {@code
+   * <NDK_DIRECTORY_CONFIG>} to indicate the entry {@code ndk.ndk_path} from {@code .buckconfig}, or
+   * the name of an environment variable that contains path to Android NDK ({@code ANDROID_NDK},
+   * {@code NDK_HOME} or {@code ANDROID_NDK_REPOSITORY}).
+   *
+   * <p>If nothing is specified in {@code .buckconfig} the default order is: {@code
+   * ANDROID_NDK_REPOSITORY}, {@code ANDROID_NDK}, {@code NDK_HOME}, {@code
+   * <NDK_REPOSITORY_CONFIG>}, {@code <NDK_DIRECTORY_CONFIG>}
+   */
+  public ImmutableList<NdkSearchOrderEntry> getNdkSearchOrder() {
+    return delegate
+        .getOptionalListWithoutComments("ndk", "ndk_search_order")
+        .map(
+            configEntries ->
+                ImmutableList.copyOf(
+                    Iterables.transform(configEntries, this::convertNdkSearchEntry)))
+        .orElse(DEFAULT_NDK_SEARCH_ORDER);
+  }
+
+  private NdkSearchOrderEntry convertNdkSearchEntry(String configEntry) {
+    for (NdkSearchOrderEntry searchOrderEntry : NdkSearchOrderEntry.values()) {
+      if (configEntry.equals(searchOrderEntry.entryValue)) {
+        return searchOrderEntry;
+      }
+    }
+    throw new HumanReadableException(
+        "Unknown ndk.ndk_search_order entry: %s. Supported values: %s",
+        configEntry, ImmutableList.of(NdkSearchOrderEntry.values()));
+  }
+
   public Optional<String> getNdkCpuAbiFallbackAppPlatform() {
     return delegate.getValue("ndk", "app_platform");
   }
@@ -118,8 +213,14 @@ public class AndroidBuckConfig {
     return delegate.getMap("ndk", "app_platform_per_cpu_abi");
   }
 
-  public Optional<ImmutableSet<String>> getNdkCpuAbis() {
-    return delegate.getOptionalListWithoutComments("ndk", "cpu_abis").map(ImmutableSet::copyOf);
+  public Optional<ImmutableSet<NdkTargetArchAbi>> getNdkCpuAbis() {
+    return delegate
+        .getOptionalListWithoutComments("ndk", "cpu_abis")
+        .map(
+            abis ->
+                abis.stream()
+                    .map(NdkTargetArchAbi::fromBuckconfigValue)
+                    .collect(ImmutableSet.toImmutableSet()));
   }
 
   public Optional<NdkCompilerType> getNdkCompiler() {
@@ -181,6 +282,17 @@ public class AndroidBuckConfig {
         : getNdkCpuAbiFallbackAppPlatform();
   }
 
+  /** Gets the ndk_toolchain target for the abi if it is specified in the config. */
+  public Optional<BuildTarget> getNdkCxxToolchainTargetForAbi(
+      String cpuAbi, TargetConfiguration targetConfiguration) {
+    ImmutableMap<String, String> platformMap =
+        delegate.getMap("ndk", "toolchain_target_per_cpu_abi");
+    platformMap.keySet().forEach(key -> Verify.verify(VALID_ABI_KEYS.contains(key)));
+    Optional<String> platformTarget = Optional.ofNullable(platformMap.get(cpuAbi));
+    return platformTarget.map(
+        target -> delegate.getBuildTargetForFullyQualifiedTarget(target, targetConfiguration));
+  }
+
   /**
    * Returns the path to the platform specific aapt executable that is overridden by the current
    * project. If not specified, the Android platform aapt will be used.
@@ -190,20 +302,23 @@ public class AndroidBuckConfig {
   }
 
   /**
-   * Returns the path to the platform specific aapt2 executable that is overridden by the current
-   * project. If not specified, the Android platform aapt will be used.
+   * Returns the tool provider to the platform specific aapt2 executable that is overridden by the
+   * current project. If not specified, the Android platform aapt will be used.
    */
-  public Optional<Supplier<Tool>> getAapt2Override() {
-    return getToolOverride("aapt2");
+  public Optional<ToolProvider> getAapt2Override() {
+    return getToolProvider("aapt2");
   }
 
-  public Optional<BuildTarget> getRedexTarget() {
-    return delegate.getMaybeBuildTarget(ANDROID_SECTION, REDEX, EmptyTargetConfiguration.INSTANCE);
+  public Optional<BuildTarget> getRedexTarget(TargetConfiguration targetConfiguration) {
+    return delegate.getMaybeBuildTarget(ANDROID_SECTION, REDEX, targetConfiguration);
   }
 
-  public Tool getRedexTool(BuildRuleResolver buildRuleResolver) {
+  public Tool getRedexTool(
+      BuildRuleResolver buildRuleResolver, TargetConfiguration targetConfiguration) {
     Optional<Tool> redexBinary =
-        delegate.getView(ToolConfig.class).getTool(ANDROID_SECTION, REDEX, buildRuleResolver);
+        delegate
+            .getView(ToolConfig.class)
+            .getTool(ANDROID_SECTION, REDEX, buildRuleResolver, targetConfiguration);
     if (!redexBinary.isPresent()) {
       throw new HumanReadableException(
           "Requested running ReDex but the path to the tool"
@@ -213,20 +328,25 @@ public class AndroidBuckConfig {
     return redexBinary.get();
   }
 
+  private Optional<ToolProvider> getToolProvider(String tool) {
+    String platformDir = getPlatformDir();
+    if (platformDir == null) {
+      return Optional.empty();
+    }
+
+    return delegate
+        .getView(ToolConfig.class)
+        .getToolProvider("tools", tool, value -> Paths.get(value, platformDir, tool));
+  }
+
   private Optional<Supplier<Tool>> getToolOverride(String tool) {
     Optional<String> pathString = delegate.getValue("tools", tool);
     if (!pathString.isPresent()) {
       return Optional.empty();
     }
 
-    String platformDir;
-    if (platform == Platform.LINUX) {
-      platformDir = "linux";
-    } else if (platform == Platform.MACOS) {
-      platformDir = "mac";
-    } else if (platform == Platform.WINDOWS) {
-      platformDir = "windows";
-    } else {
+    String platformDir = getPlatformDir();
+    if (platformDir == null) {
       return Optional.empty();
     }
 
@@ -240,5 +360,16 @@ public class AndroidBuckConfig {
           Preconditions.checkState(optionalTool.isPresent());
           return optionalTool.get();
         });
+  }
+
+  private String getPlatformDir() {
+    if (platform == Platform.LINUX) {
+      return "linux";
+    } else if (platform == Platform.MACOS) {
+      return "mac";
+    } else if (platform == Platform.WINDOWS) {
+      return "windows";
+    }
+    return null;
   }
 }

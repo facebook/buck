@@ -1,31 +1,30 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.core.util.graph.AbstractBottomUpTraversal;
-import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
+import com.facebook.buck.core.util.graph.AbstractBreadthFirstThrowingTraversal;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.util.Escaper;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -41,8 +40,10 @@ public class Dot<T> {
   private final Function<T, String> nodeToName;
   private final Function<T, String> nodeToTypeName;
   private final Function<T, ImmutableSortedMap<String, String>> nodeToAttributes;
-  private final boolean bfsSorted;
+  private final OutputOrder outputOrder;
   private final Predicate<T> shouldContainNode;
+  private final boolean compactMode;
+  private final Map<T, Integer> nodeToNodeId;
   private static final Map<String, String> typeColors;
 
   static {
@@ -72,10 +73,11 @@ public class Dot<T> {
 
     private final DirectedAcyclicGraph<T> graph;
     private final String graphName;
+    private boolean compactMode;
     private Function<T, String> nodeToName;
     private Function<T, String> nodeToTypeName;
     private Function<T, ImmutableSortedMap<String, String>> nodeToAttributes;
-    private boolean bfsSorted;
+    private OutputOrder outputOrder;
     private Predicate<T> shouldContainNode;
 
     private Builder(DirectedAcyclicGraph<T> graph, String graphName) {
@@ -83,7 +85,7 @@ public class Dot<T> {
       this.graphName = graphName;
       nodeToName = Object::toString;
       nodeToTypeName = Object::toString;
-      bfsSorted = false;
+      outputOrder = OutputOrder.SORTED;
       shouldContainNode = node -> true;
       nodeToAttributes = node -> ImmutableSortedMap.of();
     }
@@ -98,13 +100,18 @@ public class Dot<T> {
       return this;
     }
 
-    public Builder<T> setBfsSorted(boolean sorted) {
-      bfsSorted = sorted;
+    public Builder<T> setOutputOrder(OutputOrder outputOrder) {
+      this.outputOrder = outputOrder;
       return this;
     }
 
     public Builder<T> setNodesToFilter(Predicate<T> pred) {
       shouldContainNode = pred;
+      return this;
+    }
+
+    public Builder<T> setCompactMode(boolean value) {
+      compactMode = value;
       return this;
     }
 
@@ -131,60 +138,78 @@ public class Dot<T> {
     this.graphName = builder.graphName;
     this.nodeToName = builder.nodeToName;
     this.nodeToTypeName = builder.nodeToTypeName;
-    this.bfsSorted = builder.bfsSorted;
+    this.outputOrder = builder.outputOrder;
     this.shouldContainNode = builder.shouldContainNode;
     this.nodeToAttributes = builder.nodeToAttributes;
+    this.compactMode = builder.compactMode;
+    this.nodeToNodeId = new HashMap<>();
+  }
+
+  private String getNodeId(T node) {
+    if (!this.nodeToNodeId.containsKey(node)) {
+      this.nodeToNodeId.put(node, this.nodeToNodeId.size() + 1);
+    }
+    return String.valueOf(this.nodeToNodeId.get(node));
   }
 
   /** Writes out the graph in dot format to the given output */
   public void writeOutput(Appendable output) throws IOException {
     // Sorting the edges to have deterministic output and be able to test this.
-    ImmutableSet.Builder<String> builder = ImmutableSet.builder();
     output.append("digraph ").append(graphName).append(" {");
     output.append(System.lineSeparator());
 
-    if (bfsSorted) {
-      for (T root : ImmutableSortedSet.copyOf(graph.getNodesWithNoIncomingEdges())) {
-        new AbstractBreadthFirstTraversal<T>(root) {
+    switch (outputOrder) {
+      case BFS:
+        {
+          new AbstractBreadthFirstThrowingTraversal<T, IOException>(
+              graph.getNodesWithNoIncomingEdges()) {
 
-          @Override
-          public Iterable<T> visit(T node) {
-            if (!shouldContainNode.test(node)) {
-              return ImmutableSet.of();
+            @Override
+            public Iterable<T> visit(T node) throws IOException {
+              ImmutableSortedSet<T> deps =
+                  ImmutableSortedSet.copyOf(graph.getOutgoingNodesFor(node));
+              if (shouldContainNode.test(node)) {
+                output.append(
+                    printNode(
+                        node,
+                        Dot.this::getNodeId,
+                        nodeToName,
+                        nodeToTypeName,
+                        nodeToAttributes,
+                        compactMode));
+                for (T dep : Sets.filter(deps, shouldContainNode::test)) {
+                  output.append(printEdge(node, dep, nodeToName, Dot.this::getNodeId, compactMode));
+                }
+              }
+              return deps;
             }
-            builder.add(printNode(node, nodeToName, nodeToTypeName, nodeToAttributes));
-            ImmutableSortedSet<T> nodes =
-                ImmutableSortedSet.copyOf(
-                    Sets.filter(graph.getOutgoingNodesFor(node), shouldContainNode::test));
-            for (T sink : nodes) {
-              builder.add(printEdge(node, sink, nodeToName));
-            }
-            return nodes;
-          }
-        }.start();
-      }
-    } else {
-      ImmutableSortedSet.Builder<String> sortedSetBuilder = ImmutableSortedSet.naturalOrder();
-      new AbstractBottomUpTraversal<T, RuntimeException>(graph) {
-
-        @Override
-        public void visit(T node) {
-          if (!shouldContainNode.test(node)) {
-            return;
-          }
-          sortedSetBuilder.add(printNode(node, nodeToName, nodeToTypeName, nodeToAttributes));
-          for (T sink : Sets.filter(graph.getOutgoingNodesFor(node), shouldContainNode::test)) {
-            sortedSetBuilder.add(printEdge(node, sink, nodeToName));
-          }
+          }.start();
+          break;
         }
-      }.traverse();
-
-      builder.addAll(sortedSetBuilder.build());
+      case SORTED:
+        {
+          for (T node : ImmutableSortedSet.copyOf(graph.getNodes())) {
+            if (shouldContainNode.test(node)) {
+              output.append(
+                  printNode(
+                      node,
+                      Dot.this::getNodeId,
+                      nodeToName,
+                      nodeToTypeName,
+                      nodeToAttributes,
+                      compactMode));
+              for (T dep :
+                  Sets.filter(
+                      ImmutableSortedSet.copyOf(graph.getOutgoingNodesFor(node)),
+                      shouldContainNode::test)) {
+                output.append(printEdge(node, dep, nodeToName, Dot.this::getNodeId, compactMode));
+              }
+            }
+          }
+          break;
+        }
     }
 
-    for (String line : builder.build()) {
-      output.append(line);
-    }
     output.append("}");
     output.append(System.lineSeparator());
   }
@@ -214,30 +239,55 @@ public class Dot<T> {
 
   private static <T> String printNode(
       T node,
+      Function<T, String> nodeToId,
       Function<T, String> nodeToName,
       Function<T, String> nodeToTypeName,
-      Function<T, ImmutableSortedMap<String, String>> nodeToAttributes) {
+      Function<T, ImmutableSortedMap<String, String>> nodeToAttributes,
+      boolean compactMode) {
     String source = nodeToName.apply(node);
     String sourceType = nodeToTypeName.apply(node);
     String extraAttributes = "";
     ImmutableSortedMap<String, String> nodeAttributes = nodeToAttributes.apply(node);
+
+    String labelAttribute = "";
+    if (compactMode) {
+      labelAttribute = ",label=" + escape(source);
+      source = nodeToId.apply(node); // Don't need to escape numeric IDs
+    } else {
+      source = escape(source);
+    }
+
     if (!nodeAttributes.isEmpty()) {
       extraAttributes =
           ","
-              + nodeAttributes
-                  .entrySet()
-                  .stream()
+              + nodeAttributes.entrySet().stream()
                   .map(entry -> escape("buck_" + entry.getKey()) + "=" + escape(entry.getValue()))
                   .collect(Collectors.joining(","));
     }
     return String.format(
-        "  %s [style=filled,color=%s%s];%n",
-        escape(source), Dot.colorFromType(sourceType), extraAttributes);
+        "  %s [style=filled,color=%s%s%s];%n",
+        source, Dot.colorFromType(sourceType), labelAttribute, extraAttributes);
   }
 
-  private static <T> String printEdge(T sourceN, T sinkN, Function<T, String> nodeToName) {
-    String sourceName = nodeToName.apply(sourceN);
-    String sinkName = nodeToName.apply(sinkN);
-    return String.format("  %s -> %s;%n", escape(sourceName), escape(sinkName));
+  private static <T> String printEdge(
+      T sourceN,
+      T sinkN,
+      Function<T, String> nodeToName,
+      Function<T, String> nodeToId,
+      boolean compactMode) {
+    // Don't need to escape the names in compact mode because they're just numbers
+    String sourceName = compactMode ? nodeToId.apply(sourceN) : escape(nodeToName.apply(sourceN));
+    String sinkName = compactMode ? nodeToId.apply(sinkN) : escape(nodeToName.apply(sinkN));
+
+    return String.format("  %s -> %s;%n", sourceName, sinkName);
+  }
+
+  /** How to print the dot graph. */
+  public enum OutputOrder {
+    /** Generate the dot output in the order of a breadth-first traversal of the graph. */
+    BFS,
+
+    /** Generate the dot output in the sorted natural order of the nodes. */
+    SORTED,
   }
 }

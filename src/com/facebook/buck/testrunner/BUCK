@@ -4,6 +4,15 @@ java_library(
         "BaseRunner.java",
         "CheckDependency.java",
         "TestResult.java",
+        "TestXmlEscaper.java",
+    ],
+    source = "8",
+    target = "8",
+    tests = [
+        "//test/com/facebook/buck/testrunner:testrunner",
+    ],
+    visibility = [
+        "//test/com/facebook/buck/testrunner:testrunner",
     ],
     deps = [
         "//src/com/facebook/buck/test/result/type:type",
@@ -54,6 +63,8 @@ java_library(
         "InstrumentationTestRunner.java",
     ],
     required_for_source_only_abi = True,
+    source = "8",
+    target = "8",
     tests = [
         "//test/com/facebook/buck/testrunner:testrunner",
     ],
@@ -68,6 +79,11 @@ java_library(
     srcs = [
         "TestNGMain.java",
         "TestNGRunner.java",
+    ],
+    source = "8",
+    target = "8",
+    visibility = [
+        "//test/com/facebook/buck/rules/modern:subclass_exclusion",
     ],
     deps = [
         ":base",
@@ -95,20 +111,16 @@ java_binary(
 
 # Strip out classes we don't want automatically added to the classpath for
 # tests, leaving just the extra buck classes.
-genrule(
+zip_file(
     name = "testrunner-bin-fixed",
-    srcs = [
-        ":testrunner-bin",
-    ],
     out = "testrunner-bin-fixed.jar",
-    cmd = " ".join([
-        "$(exe //py/buck/zip:munger)",
-        "--input=$(location :testrunner-bin)",
-        "--output=$OUT",
-        "--exclude=",
-        "--include=com/facebook/buck/",
-    ]),
+    entries_to_exclude = [
+        "^(?!com/facebook/buck/).*",
+    ],
     visibility = [
         "PUBLIC",
+    ],
+    zip_srcs = [
+        ":testrunner-bin",
     ],
 )

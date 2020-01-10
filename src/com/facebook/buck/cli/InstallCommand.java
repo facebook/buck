@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
@@ -29,9 +29,11 @@ import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleInfoPlistParsing;
 import com.facebook.buck.apple.device.AppleDeviceHelper;
 import com.facebook.buck.apple.simulator.AppleCoreSimulatorServiceController;
+import com.facebook.buck.apple.simulator.AppleDeviceController;
 import com.facebook.buck.apple.simulator.AppleSimulator;
 import com.facebook.buck.apple.simulator.AppleSimulatorController;
 import com.facebook.buck.apple.simulator.AppleSimulatorDiscovery;
+import com.facebook.buck.apple.simulator.ImmutableAppleDevice;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.cli.UninstallCommand.UninstallOptions;
 import com.facebook.buck.command.Build;
@@ -39,6 +41,8 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.impl.DescriptionCache;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -46,29 +50,28 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasInstallHelpers;
 import com.facebook.buck.core.rules.attr.NoopInstallable;
 import com.facebook.buck.core.rules.common.InstallTrigger;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.core.util.Optionals;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParsingContext;
-import com.facebook.buck.parser.TargetNodeSpec;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
+import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.facebook.buck.step.AdbOptions;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
+import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.MoreExceptions;
-import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.UnixUserIdFetcher;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.infer.annotation.Assertions;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
@@ -90,6 +93,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.Option;
 
@@ -100,7 +104,7 @@ public class InstallCommand extends BuildCommand {
   private static final long APPLE_SIMULATOR_WAIT_MILLIS = 20000;
   private static final ImmutableList<String> APPLE_SIMULATOR_APPS =
       ImmutableList.of("Simulator.app", "iOS Simulator.app");
-  private static final String DEFAULT_APPLE_SIMULATOR_NAME = "iPhone 5s";
+  private static final String DEFAULT_APPLE_SIMULATOR_NAME = "iPhone 6s";
   private static final String DEFAULT_APPLE_TV_SIMULATOR_NAME = "Apple TV";
   private static final InstallResult FAILURE =
       InstallResult.builder().setExitCode(ExitCode.RUN_ERROR).build();
@@ -205,10 +209,13 @@ public class InstallCommand extends BuildCommand {
   public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     assertArguments(params);
 
+    ListeningProcessExecutor processExecutor = new ListeningProcessExecutor();
     BuildRunResult buildRunResult;
     try (CommandThreadManager pool =
             new CommandThreadManager("Install", getConcurrencyLimit(params.getBuckConfig()));
-        TriggerCloseable triggerCloseable = new TriggerCloseable(params)) {
+        TriggerCloseable triggerCloseable = new TriggerCloseable(params);
+        BuildPrehook prehook = getPrehook(processExecutor, params)) {
+      prehook.startPrehookScript();
       // Get the helper targets if present
       ImmutableSet<String> installHelperTargets;
       try {
@@ -221,7 +228,7 @@ public class InstallCommand extends BuildCommand {
       }
 
       // Build the targets
-      buildRunResult = run(params, pool, installHelperTargets);
+      buildRunResult = run(params, pool, Function.identity(), installHelperTargets);
       ExitCode exitCode = buildRunResult.getExitCode();
       if (exitCode != ExitCode.SUCCESS) {
         return exitCode;
@@ -270,11 +277,10 @@ public class InstallCommand extends BuildCommand {
     Build build = getBuild();
     ExitCode exitCode = ExitCode.SUCCESS;
 
+    SourcePathResolverAdapter pathResolver = build.getGraphBuilder().getSourcePathResolver();
     for (BuildTarget buildTarget : buildRunResult.getBuildTargets()) {
 
       BuildRule buildRule = build.getGraphBuilder().requireRule(buildTarget);
-      SourcePathResolver pathResolver =
-          DefaultSourcePathResolver.from(new SourcePathRuleFinder(build.getGraphBuilder()));
 
       if (buildRule instanceof HasInstallableApk) {
         exitCode =
@@ -334,14 +340,13 @@ public class InstallCommand extends BuildCommand {
 
   private ImmutableSet<String> getInstallHelperTargets(
       CommandRunnerParams params, ListeningExecutorService executor)
-      throws IOException, InterruptedException, BuildFileParseException {
+      throws InterruptedException, BuildFileParseException {
 
     ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
     ParsingContext parsingContext =
-        ParsingContext.builder(params.getCell(), executor)
-            .setProfilingEnabled(getEnableParserProfiling())
-            .setApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode())
-            .build();
+        createParsingContext(params.getCell(), executor)
+            .withApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode())
+            .withExcludeUnsupportedTargets(false);
     ImmutableSet.Builder<String> installHelperTargets = ImmutableSet.builder();
     // TODO(cjhopman): This shouldn't be doing parsing outside of the normal parse stage.
     // The first step to that would be to move the Apple install helpers to be deps available from
@@ -351,17 +356,24 @@ public class InstallCommand extends BuildCommand {
       // TODO(markwang): Cache argument parsing
       TargetNodeSpec spec =
           parseArgumentsAsTargetNodeSpecs(
-                  params.getCell().getCellPathResolver(), params.getBuckConfig(), getArguments())
+                  params.getCell(),
+                  params.getClientWorkingDir(),
+                  getArguments(),
+                  params.getBuckConfig())
               .get(index);
 
       BuildTarget target =
           FluentIterable.from(
-                  params.getParser().resolveTargetSpecs(parsingContext, ImmutableList.of(spec)))
+                  params
+                      .getParser()
+                      .resolveTargetSpecs(
+                          parsingContext, ImmutableList.of(spec), params.getTargetConfiguration()))
               .transformAndConcat(Functions.identity())
               .first()
               .get();
 
-      TargetNode<?> node = params.getParser().getTargetNode(parsingContext, target);
+      TargetNode<?> node =
+          params.getParser().getTargetNode(parsingContext, target, DependencyStack.top(target));
 
       if (node != null
           && node.getRuleType()
@@ -370,7 +382,8 @@ public class InstallCommand extends BuildCommand {
           if (ApplePlatform.needsInstallHelper(flavor.getName())) {
             AppleConfig appleConfig = params.getBuckConfig().getView(AppleConfig.class);
 
-            Optional<BuildTarget> deviceHelperTarget = appleConfig.getAppleDeviceHelperTarget();
+            Optional<BuildTarget> deviceHelperTarget =
+                appleConfig.getAppleDeviceHelperTarget(params.getTargetConfiguration());
             Optionals.addIfPresent(
                 Optionals.bind(
                     deviceHelperTarget,
@@ -389,7 +402,7 @@ public class InstallCommand extends BuildCommand {
   private ExitCode installApk(
       HasInstallableApk hasInstallableApk,
       ExecutionContext executionContext,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       CommandRunnerParams params)
       throws InterruptedException {
     AndroidDevicesHelper adbHelper = executionContext.getAndroidDevicesHelper().get();
@@ -460,16 +473,25 @@ public class InstallCommand extends BuildCommand {
       AppleBundle appleBundle,
       ProjectFilesystem projectFilesystem,
       ProcessExecutor processExecutor,
-      SourcePathResolver pathResolver)
+      SourcePathResolverAdapter pathResolver)
       throws IOException, InterruptedException, NoSuchBuildTargetException {
     String platformName = appleBundle.getPlatformName();
+    AppleConfig appleConfig = params.getBuckConfig().getView(AppleConfig.class);
     if (isSimulator(platformName)) {
-      return installAppleBundleForSimulator(
-          params, appleBundle, pathResolver, projectFilesystem, processExecutor);
+      if (appleConfig.useIdb())
+        return installAppleBundleForSimulatorIdb(
+            params, appleBundle, pathResolver, projectFilesystem, processExecutor);
+      else
+        return installAppleBundleForSimulator(
+            params, appleBundle, pathResolver, projectFilesystem, processExecutor);
     }
     if (isDevice(platformName)) {
-      return installAppleBundleForDevice(
-          params, appleBundle, projectFilesystem, processExecutor, pathResolver);
+      if (appleConfig.useIdb())
+        return installAppleBundleForDeviceIbd(
+            params, appleBundle, projectFilesystem, processExecutor, pathResolver);
+      else
+        return installAppleBundleForDevice(
+            params, appleBundle, projectFilesystem, processExecutor, pathResolver);
     }
     params
         .getConsole()
@@ -478,17 +500,134 @@ public class InstallCommand extends BuildCommand {
     return FAILURE;
   }
 
+  private InstallResult installAppleBundleForDeviceIbd(
+      CommandRunnerParams params,
+      AppleBundle appleBundle,
+      ProjectFilesystem projectFilesystem,
+      ProcessExecutor processExecutor,
+      SourcePathResolverAdapter pathResolver)
+      throws IOException, InterruptedException {
+
+    AppleConfig appleConfig = params.getBuckConfig().getView(AppleConfig.class);
+    AppleDeviceController appleDeviceController =
+        new AppleDeviceController(processExecutor, appleConfig.getIdbPath());
+    Console console = params.getConsole();
+
+    // Choose the physical device
+    ImmutableSet<ImmutableAppleDevice> physicalDevices = appleDeviceController.getPhysicalDevices();
+    if (physicalDevices.isEmpty()) {
+      console.printBuildFailure("Could not find any physical devices connected");
+      return FAILURE;
+    }
+
+    ImmutableAppleDevice chosenDevice = null;
+    if (targetDeviceOptions().getSerialNumber().isPresent()) {
+      String udidPrefix =
+          Assertions.assertNotNull(targetDeviceOptions().getSerialNumber().get()).toLowerCase();
+      for (ImmutableAppleDevice physicalDevice : physicalDevices) {
+        if (physicalDevice.getUdid().startsWith(udidPrefix)) {
+          chosenDevice = physicalDevice;
+          break;
+        }
+      }
+      if (chosenDevice == null) {
+        console.printBuildFailure(
+            String.format(
+                "Cannot install %s to the device %s (no connected devices with that UDID/prefix)",
+                appleBundle.getFullyQualifiedName(), udidPrefix));
+        return FAILURE;
+      }
+    } else {
+      if (physicalDevices.size() > 1) {
+        LOG.info(
+            "More than one connected device found, and no device ID specified.  A device will be"
+                + " arbitrarily picked.");
+      }
+      chosenDevice = physicalDevices.iterator().next();
+    }
+
+    // Install the bundle
+    if (!appleDeviceController
+        .installBundle(
+            chosenDevice.getUdid(),
+            pathResolver.getAbsolutePath(
+                Objects.requireNonNull(appleBundle.getSourcePathToOutput())))
+        .isPresent()) {
+      params
+          .getConsole()
+          .printBuildFailure(
+              String.format(
+                  "Cannot install %s (could not install bundle %s in physical device %s)",
+                  appleBundle.getFullyQualifiedName(),
+                  pathResolver.getAbsolutePath(appleBundle.getSourcePathToOutput()),
+                  chosenDevice.getName()));
+      return FAILURE;
+    }
+
+    // Launching the bundle
+    if (run) {
+      // Get the bundleID
+      Optional<String> appleBundleId = getAppleBundleId(appleBundle, projectFilesystem);
+      if (!appleBundleId.isPresent()) {
+        params
+            .getConsole()
+            .printBuildFailure(
+                String.format(
+                    "Cannot install %s (could not get bundle ID from %s)",
+                    appleBundle.getFullyQualifiedName(), appleBundle.getInfoPlistPath()));
+        return FAILURE;
+      }
+
+      // Launching
+      if (!appleDeviceController.launchInstalledBundle(
+          chosenDevice.getUdid(), appleBundleId.get())) {
+        params
+            .getConsole()
+            .printBuildFailure(
+                String.format(
+                    "Cannot launch %s (failed to launch bundle ID %s)",
+                    appleBundle.getFullyQualifiedName(), appleBundleId.get()));
+        return FAILURE;
+      }
+      params
+          .getBuckEventBus()
+          .post(
+              ConsoleEvent.info(
+                  params
+                      .getConsole()
+                      .getAnsi()
+                      .asHighlightedSuccessText(
+                          "Successfully launched %s%s. To debug, run: lldb -p"),
+                  getArguments().get(0),
+                  waitForDebugger ? " (waiting for debugger)" : ""));
+    } else {
+      params
+          .getBuckEventBus()
+          .post(
+              ConsoleEvent.info(
+                  params
+                      .getConsole()
+                      .getAnsi()
+                      .asHighlightedSuccessText(
+                          "Successfully installed %s. (Use `buck install -r %s` to run and -w to have the app waiting for debugger.)"),
+                  getArguments().get(0),
+                  getArguments().get(0)));
+    }
+    return InstallResult.builder().setExitCode(ExitCode.SUCCESS).build();
+  }
+
   private InstallResult installAppleBundleForDevice(
       CommandRunnerParams params,
       AppleBundle appleBundle,
       ProjectFilesystem projectFilesystem,
       ProcessExecutor processExecutor,
-      SourcePathResolver pathResolver)
+      SourcePathResolverAdapter pathResolver)
       throws IOException {
     AppleConfig appleConfig = params.getBuckConfig().getView(AppleConfig.class);
 
     Path helperPath;
-    Optional<BuildTarget> helperTarget = appleConfig.getAppleDeviceHelperTarget();
+    Optional<BuildTarget> helperTarget =
+        appleConfig.getAppleDeviceHelperTarget(params.getTargetConfiguration());
     if (helperTarget.isPresent()) {
       ActionGraphBuilder graphBuilder = getBuild().getGraphBuilder();
       BuildRule buildRule = graphBuilder.requireRule(helperTarget.get());
@@ -649,10 +788,148 @@ public class InstallCommand extends BuildCommand {
     }
   }
 
+  /** Installs an Apple Bundle in an Apple simulator using idb */
+  private InstallResult installAppleBundleForSimulatorIdb(
+      CommandRunnerParams params,
+      AppleBundle appleBundle,
+      SourcePathResolverAdapter pathResolver,
+      ProjectFilesystem projectFilesystem,
+      ProcessExecutor processExecutor)
+      throws IOException, InterruptedException {
+
+    AppleConfig appleConfig = params.getBuckConfig().getView(AppleConfig.class);
+    AppleDeviceController appleDeviceController =
+        new AppleDeviceController(processExecutor, appleConfig.getIdbPath());
+
+    // Choose the simulator
+    Optional<ImmutableAppleDevice> simulator =
+        getAppleSimulatorForBundleIdb(appleBundle, processExecutor, appleConfig.getIdbPath());
+    if (!simulator.isPresent()) {
+      params
+          .getConsole()
+          .printBuildFailure(
+              String.format(
+                  "Cannot install %s (there are no simulators booted or could not find the given simulator %s or could not find the default simulator %s)",
+                  appleBundle.getFullyQualifiedName(),
+                  deviceOptions.getSerialNumber().orElse("")
+                      + deviceOptions.getSimulatorName().orElse(""),
+                  DEFAULT_APPLE_SIMULATOR_NAME));
+      return FAILURE;
+    }
+
+    // Boot the simulator
+    if (simulator.get().getState().toLowerCase().equals("shutdown")) {
+      LOG.debug("Starting up simulator %s", simulator.get());
+
+      if (!appleDeviceController.bootSimulator(simulator.get().getUdid())) {
+        params
+            .getConsole()
+            .printBuildFailure(
+                String.format(
+                    "Cannot install %s (could not start simulator %s)",
+                    appleBundle.getFullyQualifiedName(), simulator.get().getName()));
+        return FAILURE;
+      }
+
+      LOG.debug(
+          "Simulator started. Installing Apple bundle %s in simulator %s",
+          appleBundle, simulator.get());
+    } else {
+      LOG.debug("Simulator %s already running", simulator.get());
+    }
+
+    // Install the bundle
+    if (!appleDeviceController
+        .installBundle(
+            simulator.get().getUdid(),
+            pathResolver.getAbsolutePath(
+                Objects.requireNonNull(appleBundle.getSourcePathToOutput())))
+        .isPresent()) {
+      params
+          .getConsole()
+          .printBuildFailure(
+              String.format(
+                  "Cannot install %s (could not install bundle %s in simulator %s)",
+                  appleBundle.getFullyQualifiedName(),
+                  pathResolver.getAbsolutePath(appleBundle.getSourcePathToOutput()),
+                  simulator.get().getName()));
+      return FAILURE;
+    }
+
+    // Brings the simulator to the front
+    appleDeviceController.bringSimulatorToFront(simulator.get().getUdid());
+
+    // Launching the bundle
+    if (run) {
+      // Get the bundleID
+      Optional<String> appleBundleId = getAppleBundleId(appleBundle, projectFilesystem);
+      if (!appleBundleId.isPresent()) {
+        params
+            .getConsole()
+            .printBuildFailure(
+                String.format(
+                    "Cannot install %s (could not get bundle ID from %s)",
+                    appleBundle.getFullyQualifiedName(), appleBundle.getInfoPlistPath()));
+        return FAILURE;
+      }
+
+      // Launching
+      Optional<String> debugCommand = Optional.empty();
+      if (waitForDebugger) {
+        debugCommand =
+            appleDeviceController.startDebugServer(simulator.get().getUdid(), appleBundleId.get());
+        if (!debugCommand.isPresent()) {
+          LOG.error("Could not start the debugserver");
+          return FAILURE;
+        }
+      } else {
+        if (!appleDeviceController.launchInstalledBundle(
+            simulator.get().getUdid(), appleBundleId.get())) {
+          params
+              .getConsole()
+              .printBuildFailure(
+                  String.format(
+                      "Cannot launch %s (failed to launch bundle ID %s)",
+                      appleBundle.getFullyQualifiedName(), appleBundleId.get()));
+          return FAILURE;
+        }
+      }
+      String debugOptionMessage =
+          waitForDebugger
+              ? "(waiting for debugger) Run lldb and then "
+                  + debugCommand.get()
+                  + " to run the debugger."
+              : "";
+      params
+          .getBuckEventBus()
+          .post(
+              ConsoleEvent.info(
+                  params
+                      .getConsole()
+                      .getAnsi()
+                      .asHighlightedSuccessText("Successfully launched %s. %s"),
+                  getArguments().get(0),
+                  debugOptionMessage));
+    } else {
+      params
+          .getBuckEventBus()
+          .post(
+              ConsoleEvent.info(
+                  params
+                      .getConsole()
+                      .getAnsi()
+                      .asHighlightedSuccessText(
+                          "Successfully installed %s. (Use `buck install -r %s` to run.)"),
+                  getArguments().get(0),
+                  getArguments().get(0)));
+    }
+    return InstallResult.builder().setExitCode(ExitCode.SUCCESS).build();
+  }
+
   private InstallResult installAppleBundleForSimulator(
       CommandRunnerParams params,
       AppleBundle appleBundle,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       ProjectFilesystem projectFilesystem,
       ProcessExecutor processExecutor)
       throws IOException, InterruptedException {
@@ -839,13 +1116,7 @@ public class InstallCommand extends BuildCommand {
 
     LOG.debug("Launching Apple bundle %s in simulator %s", appleBundle, appleSimulator);
 
-    Optional<String> appleBundleId;
-    try (InputStream bundlePlistStream =
-        projectFilesystem.getInputStreamForRelativePath(appleBundle.getInfoPlistPath())) {
-      appleBundleId =
-          AppleInfoPlistParsing.getBundleIdFromPlistStream(
-              appleBundle.getInfoPlistPath(), bundlePlistStream);
-    }
+    Optional<String> appleBundleId = getAppleBundleId(appleBundle, projectFilesystem);
     if (!appleBundleId.isPresent()) {
       params
           .getConsole()
@@ -891,6 +1162,104 @@ public class InstallCommand extends BuildCommand {
         .setExitCode(ExitCode.SUCCESS)
         .setLaunchedPid(launchedPid.get())
         .build();
+  }
+
+  /**
+   * Given a bundle, determines the simulator for which this bundle will be installed in
+   *
+   * @return the chosen simulator
+   */
+  private Optional<ImmutableAppleDevice> getAppleSimulatorForBundleIdb(
+      AppleBundle appleBundle, ProcessExecutor processExecutor, Path idbPath) {
+    LOG.debug("Choosing simulator for %s", appleBundle);
+
+    Optional<ImmutableAppleDevice> simulatorByUdid = Optional.empty();
+    Optional<ImmutableAppleDevice> simulatorByName = Optional.empty();
+    Optional<ImmutableAppleDevice> bootedSimulator = Optional.empty();
+    Optional<ImmutableAppleDevice> defaultSimulator = Optional.empty();
+
+    boolean wantUdid = deviceOptions.getSerialNumber().isPresent();
+    boolean wantName = deviceOptions.getSimulatorName().isPresent();
+
+    AppleDeviceController appleDeviceController =
+        new AppleDeviceController(processExecutor, idbPath);
+
+    for (ImmutableAppleDevice simulator : appleDeviceController.getSimulators()) {
+      if (wantUdid
+          && deviceOptions
+              .getSerialNumber()
+              .get()
+              .toLowerCase(Locale.US)
+              .equals(simulator.getUdid().toLowerCase(Locale.US))) {
+        LOG.debug("Got UDID match (%s): %s", deviceOptions.getSerialNumber().get(), simulator);
+        simulatorByUdid = Optional.of(simulator);
+        // We shouldn't need to keep looking.
+        break;
+      } else if (wantName
+          && deviceOptions
+              .getSimulatorName()
+              .get()
+              .toLowerCase(Locale.US)
+              .equals(simulator.getName().toLowerCase(Locale.US))) {
+        LOG.debug("Got name match (%s): %s", simulator.getName(), simulator);
+        simulatorByName = Optional.of(simulator);
+        // We assume the simulators are sorted by OS version, so we'll keep
+        // looking for a more recent simulator with this name.
+      } else {
+        switch (appleDeviceController.getDeviceKind(simulator)) {
+          case MOBILE:
+            if (isIPhoneSimulator(appleBundle.getPlatformName())) {
+              if (simulator.getName().equals(DEFAULT_APPLE_SIMULATOR_NAME)) {
+                LOG.debug("Got default match (%s): %s", DEFAULT_APPLE_SIMULATOR_NAME, simulator);
+                defaultSimulator = Optional.of(simulator);
+              }
+              if (simulator.getState().toLowerCase().equals("booted")) {
+                bootedSimulator = Optional.of(simulator);
+              }
+            }
+            break;
+
+          case TV:
+            if (isAppleTVSimulator(appleBundle.getPlatformName())) {
+              if (simulator.getName().equals(DEFAULT_APPLE_TV_SIMULATOR_NAME)) {
+                LOG.debug("Got default match (%s): %s", DEFAULT_APPLE_TV_SIMULATOR_NAME, simulator);
+                defaultSimulator = Optional.of(simulator);
+              }
+              if (simulator.getState().toLowerCase().equals("booted")) {
+                bootedSimulator = Optional.of(simulator);
+              }
+            }
+            break;
+
+          case WATCH:
+            break;
+        }
+      }
+    }
+
+    if (wantUdid) {
+      if (simulatorByUdid.isPresent()) {
+        return simulatorByUdid;
+      } else {
+        LOG.warn(
+            "Asked to find simulator with UDID %s, but couldn't find one.",
+            deviceOptions.getSerialNumber().get());
+        return Optional.empty();
+      }
+    } else if (wantName) {
+      if (simulatorByName.isPresent()) {
+        return simulatorByName;
+      } else {
+        LOG.warn(
+            "Asked to find simulator with name %s, but couldn't find one.",
+            deviceOptions.getSimulatorName().get());
+        return Optional.empty();
+      }
+    } else if (bootedSimulator.isPresent()) {
+      return bootedSimulator;
+    } else {
+      return defaultSimulator;
+    }
   }
 
   private Optional<AppleSimulator> getAppleSimulatorForBundle(
@@ -959,6 +1328,26 @@ public class InstallCommand extends BuildCommand {
     } else {
       return defaultSimulator;
     }
+  }
+
+  /**
+   * Gets the bundle ID of the installed bundle (the identifier of the bundle)
+   *
+   * @return the BundleId
+   */
+  private Optional<String> getAppleBundleId(
+      AppleBundle appleBundle, ProjectFilesystem projectFilesystem) {
+    Optional<String> appleBundleId = Optional.empty();
+    try (InputStream bundlePlistStream =
+        projectFilesystem.getInputStreamForRelativePath(appleBundle.getInfoPlistPath())) {
+      appleBundleId =
+          AppleInfoPlistParsing.getBundleIdFromPlistStream(
+              appleBundle.getInfoPlistPath(), bundlePlistStream);
+    } catch (IOException e) {
+      e.printStackTrace();
+      LOG.error("Could not get apple bundle ID");
+    }
+    return appleBundleId;
   }
 
   @Override

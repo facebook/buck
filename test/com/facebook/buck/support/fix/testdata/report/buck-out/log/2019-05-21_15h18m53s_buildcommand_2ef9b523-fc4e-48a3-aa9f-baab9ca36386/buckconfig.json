@@ -1,0 +1,1 @@
+{"settings":{"dummy":{},"repositories":{"buck":".","bazel_skylib":"./third-party/skylark/bazel-skylib","testlib":"test/com/facebook/buck/testutil/integration/testlibs"},"alias":{"buck":"//programs:buck"},"parser":{"default_build_file_syntax":"skylark","enable_configurable_attributes":"true"},"foo":{"bar":"baz"}}}

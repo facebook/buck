@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
@@ -26,6 +26,7 @@ import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.ListeningProcessExecutor.LaunchedProcess;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.json.ObjectMappers;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Closer;
 import java.io.ByteArrayOutputStream;
@@ -67,6 +68,8 @@ class BuildPrehook implements AutoCloseable {
 
   /** Start the build prehook script. */
   synchronized void startPrehookScript() throws IOException {
+    Optional<ImmutableList<String>> interpreterAndArgs =
+        buckConfig.getView(BuildBuckConfig.class).getBuildPrehookScriptInterpreterAndArgs();
     Optional<String> pathToPrehookScript =
         buckConfig.getView(BuildBuckConfig.class).getPathToBuildPrehookScript();
     if (!pathToPrehookScript.isPresent()) {
@@ -83,6 +86,8 @@ class BuildPrehook implements AutoCloseable {
         ImmutableMap.<String, String>builder().putAll(environment);
     ImmutableMap<String, ImmutableMap<String, String>> values =
         buckConfig.getConfig().getRawConfig().getValues();
+    // TODO(T45094593): Make this use the buckconfig.json that we already write out in each build's
+    // logs
     Path tempFile = serializeIntoJsonFile("buckconfig_", values);
     Path argumentsFile = serializeIntoJsonFile("arguments_", arguments);
     environmentBuilder.put("BUCKCONFIG_FILE", tempFile.toString());
@@ -96,6 +101,7 @@ class BuildPrehook implements AutoCloseable {
 
     ProcessExecutorParams processExecutorParams =
         ProcessExecutorParams.builder()
+            .addAllCommand(interpreterAndArgs.orElse(ImmutableList.of()))
             .addCommand(pathToScript)
             .setEnvironment(environmentBuilder.build())
             .setDirectory(cell.getFilesystem().getRootPath())

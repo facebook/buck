@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.remoteexecution.grpc;
@@ -22,18 +22,17 @@ import build.bazel.remote.execution.v2.ActionResult;
 import build.bazel.remote.execution.v2.ExecuteRequest;
 import build.bazel.remote.execution.v2.ExecuteResponse;
 import build.bazel.remote.execution.v2.ExecutionGrpc.ExecutionImplBase;
-import com.facebook.buck.core.model.BuildId;
-import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.DefaultBuckEventBus;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.remoteexecution.MetadataProviderFactory;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
-import com.facebook.buck.remoteexecution.RemoteExecutionService.ExecutionResult;
+import com.facebook.buck.remoteexecution.RemoteExecutionServiceClient.ExecutionHandle;
+import com.facebook.buck.remoteexecution.RemoteExecutionServiceClient.ExecutionResult;
 import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.remoteexecution.util.LocalContentAddressedStorage;
+import com.facebook.buck.remoteexecution.util.OutputsMaterializer.FilesystemFileMaterializer;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -42,11 +41,8 @@ import com.google.longrunning.Operation;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import io.grpc.BindableService;
-import io.grpc.ManagedChannel;
-import io.grpc.Server;
 import io.grpc.Status.Code;
-import io.grpc.inprocess.InProcessChannelBuilder;
-import io.grpc.inprocess.InProcessServerBuilder;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -54,53 +50,28 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class GrpcRemoteExecutionClientsTest {
   @Rule public TemporaryPaths temporaryPaths = new TemporaryPaths();
-  private BuckEventBus eventBus;
-  private Server server;
+  @Rule public ExpectedException expectedException = ExpectedException.none();
 
+  private List<BindableService> services = new ArrayList<>();
   private RemoteExecutionClients clients;
 
-  private List<BindableService> services;
-
-  @Before
-  public void setUp() throws Exception {
-    services = new ArrayList<>();
-    eventBus = new DefaultBuckEventBus(new DefaultClock(), new BuildId("dontcare"));
-  }
-
   public void setupServer() throws IOException {
-    String serverName = "uniquish-" + new Random().nextLong();
-
-    InProcessServerBuilder serverBuilder =
-        InProcessServerBuilder.forName(serverName).directExecutor();
-    for (BindableService service : services) {
-      serverBuilder.addService(service);
-    }
-
-    server = serverBuilder.build().start();
-    ManagedChannel channel = InProcessChannelBuilder.forName(serverName).directExecutor().build();
-
-    clients =
-        new GrpcRemoteExecutionClients(
-            "buck", channel, channel, MetadataProviderFactory.emptyMetadataProvider(), eventBus);
+    clients = new TestRemoteExecutionClients(services);
   }
 
   @After
   public void tearDown() throws Exception {
     clients.close();
-    server.shutdownNow().awaitTermination(3, TimeUnit.SECONDS);
   }
 
   @Test
@@ -140,11 +111,46 @@ public class GrpcRemoteExecutionClientsTest {
     ExecutionResult executionResult =
         clients
             .getRemoteExecutionService()
-            .execute(clients.getProtocol().computeDigest("".getBytes(Charsets.UTF_8)), "")
+            .execute(
+                clients.getProtocol().computeDigest("".getBytes(Charsets.UTF_8)),
+                "",
+                MetadataProviderFactory.emptyMetadataProvider())
+            .getResult()
             .get();
 
     assertEquals(0, executionResult.getExitCode());
     assertEquals(stderr, executionResult.getStderr().get());
+  }
+
+  @Test
+  public void testExecuteCancel() throws Exception {
+    AtomicReference<StreamObserver<Operation>> responseObserverCapture = new AtomicReference<>();
+
+    services.add(
+        new ExecutionImplBase() {
+          @Override
+          public void execute(ExecuteRequest request, StreamObserver<Operation> responseObserver) {
+            responseObserverCapture.set(responseObserver);
+          }
+        });
+
+    setupServer();
+
+    ExecutionHandle executionResult =
+        clients
+            .getRemoteExecutionService()
+            .execute(
+                clients.getProtocol().computeDigest("".getBytes(Charsets.UTF_8)),
+                "",
+                MetadataProviderFactory.emptyMetadataProvider());
+
+    responseObserverCapture.get().onNext(Operation.newBuilder().setDone(false).build());
+
+    executionResult.cancel();
+
+    // Check that the server is notified of cancellation.
+    expectedException.expect(StatusRuntimeException.class);
+    responseObserverCapture.get().onNext(Operation.newBuilder().setDone(false).build());
   }
 
   @Test
@@ -156,27 +162,33 @@ public class GrpcRemoteExecutionClientsTest {
     Path workDir = root.resolve("work");
     Files.createDirectories(workDir);
     LocalContentAddressedStorage storage =
-        new LocalContentAddressedStorage(cacheDir, new GrpcProtocol());
-    services.add(new LocalBackedCasImpl(storage));
-    services.add(new LocalBackedByteStreamImpl(storage));
+        new LocalContentAddressedStorage(
+            cacheDir, new GrpcProtocol(), BuckEventBusForTests.newInstance());
+    services.add(new LocalBackedCasServer(storage));
+    services.add(new LocalBackedByteStreamServer(storage));
 
     setupServer();
 
-    Map<Digest, UploadDataSupplier> requiredData = new HashMap<>();
+    List<UploadDataSupplier> requiredData = new ArrayList<>();
 
     String data1 = "data1";
     Digest digest1 = protocol.computeDigest(data1.getBytes(Charsets.UTF_8));
-    requiredData.put(digest1, () -> new ByteArrayInputStream(data1.getBytes(Charsets.UTF_8)));
+    requiredData.add(
+        UploadDataSupplier.of(
+            "data1", digest1, () -> new ByteArrayInputStream(data1.getBytes(Charsets.UTF_8))));
 
     String data2 = "data2";
     Digest digest2 = protocol.computeDigest(data2.getBytes(Charsets.UTF_8));
-    requiredData.put(digest2, () -> new ByteArrayInputStream(data2.getBytes(Charsets.UTF_8)));
+    requiredData.add(
+        UploadDataSupplier.of(
+            "data2", digest2, () -> new ByteArrayInputStream(data2.getBytes(Charsets.UTF_8))));
 
-    clients.getContentAddressedStorage().addMissing(ImmutableMap.copyOf(requiredData)).get();
+    clients.getContentAddressedStorage().addMissing(requiredData).get();
 
     clients
         .getContentAddressedStorage()
-        .materializeOutputs(ImmutableList.of(), ImmutableList.of(), workDir)
+        .materializeOutputs(
+            ImmutableList.of(), ImmutableList.of(), new FilesystemFileMaterializer(workDir))
         .get();
 
     assertEquals(ImmutableMap.of(), getDirectoryContents(workDir));
@@ -190,7 +202,7 @@ public class GrpcRemoteExecutionClientsTest {
             ImmutableList.of(
                 protocol.newOutputFile(out1, digest1, false),
                 protocol.newOutputFile(out2, digest2, false)),
-            workDir)
+            new FilesystemFileMaterializer(workDir))
         .get();
 
     assertEquals(ImmutableMap.of(out1, data1, out2, data2), getDirectoryContents(workDir));

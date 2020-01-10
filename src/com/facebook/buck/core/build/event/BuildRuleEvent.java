@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.build.event;
@@ -109,7 +109,8 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
       Optional<Pair<Long, Long>> ruleKeyCacheCheckTimestamps,
       Optional<Pair<Long, Long>> inputRuleKeyCacheCheckTimestamps,
       Optional<Pair<Long, Long>> manifestRuleKeyCacheCheckTimestamps,
-      Optional<Pair<Long, Long>> buildTimestamps) {
+      Optional<Pair<Long, Long>> buildTimestamps,
+      Optional<String> strategyResult) {
     return new Finished(
         beginning,
         ruleKeys,
@@ -126,7 +127,8 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
         ruleKeyCacheCheckTimestamps,
         inputRuleKeyCacheCheckTimestamps,
         manifestRuleKeyCacheCheckTimestamps,
-        buildTimestamps);
+        buildTimestamps,
+        strategyResult);
   }
 
   public static StartedRuleKeyCalc ruleKeyCalculationStarted(
@@ -250,6 +252,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     private final Optional<Pair<Long, Long>> inputRuleKeyCacheCheckTimestamps;
     private final Optional<Pair<Long, Long>> manifestRuleKeyCacheCheckTimestamps;
     private final Optional<Pair<Long, Long>> buildTimestamps;
+    private final Optional<String> strategyResult;
 
     private Finished(
         BeginningBuildRuleEvent beginning,
@@ -267,7 +270,8 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
         Optional<Pair<Long, Long>> ruleKeyCacheCheckTimestamps,
         Optional<Pair<Long, Long>> inputRuleKeyCacheCheckTimestamps,
         Optional<Pair<Long, Long>> manifestRuleKeyCacheCheckTimestamps,
-        Optional<Pair<Long, Long>> buildTimestamps) {
+        Optional<Pair<Long, Long>> buildTimestamps,
+        Optional<String> strategyResult) {
       super(beginning);
       this.status = status;
       this.cacheResult = cacheResult;
@@ -284,6 +288,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
       this.inputRuleKeyCacheCheckTimestamps = inputRuleKeyCacheCheckTimestamps;
       this.manifestRuleKeyCacheCheckTimestamps = manifestRuleKeyCacheCheckTimestamps;
       this.buildTimestamps = buildTimestamps;
+      this.strategyResult = strategyResult;
     }
 
     @JsonView(JsonViews.MachineReadableLog.class)
@@ -364,6 +369,11 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     @JsonIgnore
     public Optional<Pair<Long, Long>> getBuildTimestamps() {
       return buildTimestamps;
+    }
+
+    @JsonView(JsonViews.MachineReadableLog.class)
+    public Optional<String> getStrategyResult() {
+      return strategyResult;
     }
 
     @JsonIgnore
@@ -502,6 +512,11 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     @Override
     protected String getValueString() {
       return rule.toString();
+    }
+
+    @JsonView(JsonViews.MachineReadableLog.class)
+    public BuildRule getRule() {
+      return rule;
     }
   }
 

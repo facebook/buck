@@ -1,0 +1,9 @@
+{
+  "//example:four": [
+    "//example:four-application-tests",
+    "//example:four-tests"
+  ],
+  "//example:two": [
+    "//example:one-tests"
+  ]
+}

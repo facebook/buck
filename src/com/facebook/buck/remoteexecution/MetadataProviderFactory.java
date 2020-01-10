@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.remoteexecution;
@@ -20,11 +20,15 @@ import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.log.TraceInfoProvider;
 import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
 import com.facebook.buck.remoteexecution.proto.BuckInfo;
+import com.facebook.buck.remoteexecution.proto.CasClientInfo;
+import com.facebook.buck.remoteexecution.proto.ClientActionInfo;
 import com.facebook.buck.remoteexecution.proto.CreatorInfo;
 import com.facebook.buck.remoteexecution.proto.RESessionID;
 import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
 import com.facebook.buck.remoteexecution.proto.TraceInfo;
+import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 /** Static class providing factory methods for instances of MetadataProviders. */
 public class MetadataProviderFactory {
@@ -45,6 +49,12 @@ public class MetadataProviderFactory {
       }
 
       @Override
+      public RemoteExecutionMetadata.Builder getBuilderForAction(
+          String actionDigest, String ruleName) {
+        return RemoteExecutionMetadata.newBuilder();
+      }
+
+      @Override
       public RemoteExecutionMetadata getForAction(String actionDigest, String ruleName) {
         return get();
       }
@@ -55,28 +65,50 @@ public class MetadataProviderFactory {
    * @return Metadata provider that provides minimal amount information that should be passed along
    *     remote execution requests.
    */
-  public static MetadataProvider minimalMetadataProviderForBuild(BuildId buildId, String username) {
+  public static MetadataProvider minimalMetadataProviderForBuild(
+      BuildId buildId,
+      String username,
+      String repository,
+      String scheduleType,
+      String reSessionLabel,
+      String tenantId,
+      String auxiliaryBuildTag,
+      String projectPrefix) {
     return new MetadataProvider() {
       final RemoteExecutionMetadata metadata;
-      RemoteExecutionMetadata.Builder builder;
 
       {
         // TODO(msienkiewicz): Allow overriding RE Session ID, client type, username with config
         // flags/env vars.
         String reSessionIDRaw = RE_SESSION_ID_PREFIX + UUID.randomUUID();
         RESessionID reSessionID = RESessionID.newBuilder().setId(reSessionIDRaw).build();
-        BuckInfo buckInfo = BuckInfo.newBuilder().setBuildId(buildId.toString()).build();
+        BuckInfo buckInfo =
+            BuckInfo.newBuilder()
+                .setBuildId(buildId.toString())
+                .setAuxiliaryBuildTag(auxiliaryBuildTag)
+                .setProjectPrefix(projectPrefix)
+                .build();
         CreatorInfo creatorInfo =
             CreatorInfo.newBuilder()
                 .setClientType(DEFAULT_CLIENT_TYPE)
                 .setUsername(username)
                 .build();
-        builder =
+        CasClientInfo casClientInfo = CasClientInfo.newBuilder().setName("buck").build();
+        ClientActionInfo clientActionInfo =
+            ClientActionInfo.newBuilder()
+                .setRepository(repository)
+                .setScheduleType(scheduleType)
+                .setReSessionLabel(reSessionLabel)
+                .setTenantId(tenantId)
+                .build();
+        metadata =
             RemoteExecutionMetadata.newBuilder()
                 .setReSessionId(reSessionID)
                 .setBuckInfo(buckInfo)
-                .setCreatorInfo(creatorInfo);
-        metadata = builder.build();
+                .setCreatorInfo(creatorInfo)
+                .setCasClientInfo(casClientInfo)
+                .setClientActionInfo(clientActionInfo)
+                .build();
       }
 
       @Override
@@ -85,14 +117,20 @@ public class MetadataProviderFactory {
       }
 
       @Override
-      public RemoteExecutionMetadata getForAction(String actionDigest, String ruleName) {
-        BuckInfo buckInfo =
-            BuckInfo.newBuilder()
-                .setBuildId(get().getBuckInfo().getBuildId())
-                .setRuleName(ruleName)
-                .build();
+      public RemoteExecutionMetadata.Builder getBuilderForAction(
+          String actionDigest, String ruleName) {
+        // NOTE: Do NOT try to optimize this by storing the builder and applying updates to it
+        // directly. This would require locking for the duration of update and copying into a fresh
+        // RemoteExecutionMetadata.Builder object.
+        RemoteExecutionMetadata.Builder builder = metadata.toBuilder();
+        BuckInfo buckInfo = builder.getBuckInfo().toBuilder().setRuleName(ruleName).build();
         builder.setBuckInfo(buckInfo);
-        return builder.build();
+        return builder;
+      }
+
+      @Override
+      public RemoteExecutionMetadata getForAction(String actionDigest, String ruleName) {
+        return getBuilderForAction(actionDigest, ruleName).build();
       }
     };
   }
@@ -109,13 +147,47 @@ public class MetadataProviderFactory {
       }
 
       @Override
-      public RemoteExecutionMetadata getForAction(String actionDigest, String ruleName) {
+      public RemoteExecutionMetadata.Builder getBuilderForAction(
+          String actionDigest, String ruleName) {
         TraceInfo traceInfo =
             TraceInfo.newBuilder()
                 .setTraceId(traceInfoProvider.getTraceId())
                 .setEdgeId(traceInfoProvider.getEdgeId(actionDigest))
                 .build();
-        return metadataProvider.get().toBuilder().setTraceInfo(traceInfo).build();
+        return metadataProvider.getBuilderForAction(actionDigest, ruleName).setTraceInfo(traceInfo);
+      }
+
+      @Override
+      public RemoteExecutionMetadata getForAction(String actionDigest, String ruleName) {
+        return getBuilderForAction(actionDigest, ruleName).build();
+      }
+    };
+  }
+
+  /** Wraps the argument MetadataProvider with worker requirements info */
+  public static MetadataProvider wrapForRuleWithWorkerRequirements(
+      MetadataProvider metadataProvider, Supplier<WorkerRequirements> requirementsSupplier) {
+    return new MetadataProvider() {
+      @Override
+      public RemoteExecutionMetadata get() {
+        return metadataProvider
+            .get()
+            .toBuilder()
+            .setWorkerRequirements(requirementsSupplier.get())
+            .build();
+      }
+
+      @Override
+      public RemoteExecutionMetadata.Builder getBuilderForAction(
+          String actionDigest, String ruleName) {
+        return metadataProvider
+            .getBuilderForAction(actionDigest, ruleName)
+            .setWorkerRequirements(requirementsSupplier.get());
+      }
+
+      @Override
+      public RemoteExecutionMetadata getForAction(String actionDigest, String ruleName) {
+        return getBuilderForAction(actionDigest, ruleName).build();
       }
     };
   }

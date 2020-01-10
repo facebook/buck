@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.ocaml;
@@ -47,11 +47,9 @@ public class OcamlDependencyGraphGenerator {
     // Two copies of dependencies as .cmo can map to .ml or .re
 
     return Stream.concat(
-            sortedDeps
-                .stream()
+            sortedDeps.stream()
                 .map(input -> replaceObjExtWithSourceExt(input, false /* isReason */)),
-            sortedDeps
-                .stream()
+            sortedDeps.stream()
                 .map(input -> replaceObjExtWithSourceExt(input, true /* isReason */)))
         .collect(ImmutableList.toImmutableList());
   }
@@ -79,9 +77,7 @@ public class OcamlDependencyGraphGenerator {
 
           // Two copies of dependencies as .cmo can map to .ml or .re
           ImmutableList<Path> dependencies =
-              Splitter.on(OCAML_DEPS_SEPARATOR)
-                  .trimResults()
-                  .splitToList(sourceAndDeps.get(1))
+              Splitter.on(OCAML_DEPS_SEPARATOR).trimResults().splitToList(sourceAndDeps.get(1))
                   .stream()
                   .filter(input -> !input.isEmpty())
                   .flatMap(

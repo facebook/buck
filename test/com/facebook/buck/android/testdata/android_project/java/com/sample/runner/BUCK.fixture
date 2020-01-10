@@ -1,0 +1,109 @@
+java_test_runner(
+    name = "test_runner",
+    srcs = ["TestRunner.java"],
+    main_class = "test.TestRunner",
+)
+
+robolectric_test(
+    name = "robolectric_with_runner",
+    srcs = [
+        "TestWithRunner.java",
+    ],
+    runner = ":test_runner",
+    specs = {
+        "my": "spec",
+        "other": [
+            {
+                "complicated": "stuff",
+                "integer": 1,
+                "double": 1.2,
+                "boolean": True,
+            },
+        ],
+        "cmd": "java -jar $(abs_output testbin) $(abs_output classnames)",
+    },
+    deps = [
+        "buck//third-party/java/junit:junit",
+        "buck//third-party/java/robolectric:robolectric",
+        "//res/com/sample/asset_only:asset_only",
+        "//res/com/sample/title:title",
+        "//res/com/sample/top:top",
+    ],
+)
+
+java_test_runner(
+    name = "test_runner_with_runtime_dep",
+    srcs = ["TestRunnerWithRuntimeDep.java"],
+    main_class = "test.TestRunnerWithRuntimeDep",
+)
+
+robolectric_test(
+    name = "robolectric_with_runner_runtime_dep",
+    srcs = [
+        "TestWithRunner.java",
+    ],
+    robolectric_runtime_dependency = "buck//third-party/java/testng:testng",
+    runner = ":test_runner_with_runtime_dep",
+    specs = {
+        "my": "spec",
+        "other": [
+            {
+                "complicated": "stuff",
+                "integer": 1,
+                "double": 1.2,
+                "boolean": False,
+            },
+        ],
+        "cmd": "java -jar $(abs_output testbin) $(abs_output classnames)",
+    },
+    deps = [
+        "buck//third-party/java/junit:junit",
+        "buck//third-party/java/robolectric:robolectric",
+        "//res/com/sample/asset_only:asset_only",
+        "//res/com/sample/title:title",
+        "//res/com/sample/top:top",
+    ],
+)
+
+robolectric_test(
+    name = "robolectric_without_runner_runtime_dep_failed",
+    srcs = [
+        "TestWithRunner.java",
+    ],
+    runner = ":test_runner_with_runtime_dep",
+    specs = {
+        "my": "spec",
+        "other": [
+            {
+                "complicated": "stuff",
+                "integer": 1,
+                "double": 1.2,
+                "boolean": True,
+            },
+        ],
+        "cmd": "java -jar $(abs_output testbin) $(abs_output classnames)",
+    },
+    deps = [
+        "buck//third-party/java/junit:junit",
+        "buck//third-party/java/robolectric:robolectric",
+        "//res/com/sample/asset_only:asset_only",
+        "//res/com/sample/title:title",
+        "//res/com/sample/top:top",
+    ],
+)
+
+robolectric_test(
+    name = "robolectric_with_binary_resources",
+    srcs = [
+        "TestWithRunner.java",
+    ],
+    runner = ":test_runner",
+    use_binary_resources = True,
+    deps = [
+        "buck//third-party/java/junit:junit",
+        "buck//third-party/java/robolectric:robolectric",
+        "//res/com/sample/asset_only:asset_only",
+        "//res/com/sample/title:title",
+        "//res/com/sample/top:top",
+    ],
+)

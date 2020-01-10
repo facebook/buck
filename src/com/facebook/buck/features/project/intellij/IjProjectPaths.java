@@ -1,22 +1,25 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.features.project.intellij;
 
+import com.facebook.buck.features.project.intellij.model.IjLibrary;
 import com.facebook.buck.features.project.intellij.model.IjModule;
 import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -58,7 +61,7 @@ public class IjProjectPaths {
 
   /** @return path relative to module path, prefixed with $MODULE_DIR$ */
   public String getModuleQualifiedPath(Path path, IjModule module) {
-    String relativePath = MorePaths.pathWithUnixSeparators(getModuleRelativePath(path, module));
+    String relativePath = PathFormatter.pathWithUnixSeparators(getModuleRelativePath(path, module));
     if (relativePath.isEmpty()) {
       return MODULE_DIR;
     } else {
@@ -68,7 +71,12 @@ public class IjProjectPaths {
 
   /** @return path relative to module dir, for a path relative to the project root */
   public Path getModuleRelativePath(Path path, IjModule module) {
-    return getModuleDir(module).relativize(path);
+    return MorePaths.relativizeWithDotDotSupport(getModuleDir(module), path);
+  }
+
+  /** @return path where the XML describing the IntelliJ library will be written to. */
+  public Path getLibraryXmlFilePath(IjLibrary library) {
+    return getLibrariesDir().resolve(Util.normalizeIntelliJName(library.getName()) + ".xml");
   }
 
   /**
@@ -78,17 +86,18 @@ public class IjProjectPaths {
    *     IntelliJ format.
    */
   static String toRelativeString(Path path, Path moduleLocationBasePath) {
-    String moduleRelativePath = moduleLocationBasePath.relativize(path).toString();
+    String moduleRelativePath =
+        MorePaths.relativizeWithDotDotSupport(moduleLocationBasePath, path).toString();
     if (moduleRelativePath.isEmpty()) {
       return "";
     } else {
-      return "/" + MorePaths.pathWithUnixSeparators(moduleRelativePath);
+      return "/" + PathFormatter.pathWithUnixSeparators(moduleRelativePath);
     }
   }
 
   /** @return path relative to project root, prefixed with $PROJECT_DIR$ */
   public String getProjectQualifiedPath(Path path) {
-    String projectRelativePath = MorePaths.pathWithUnixSeparators(getProjectRelativePath(path));
+    String projectRelativePath = PathFormatter.pathWithUnixSeparators(getProjectRelativePath(path));
     if (projectRelativePath.isEmpty()) {
       return PROJECT_DIR;
     } else {
@@ -98,7 +107,8 @@ public class IjProjectPaths {
 
   /** @return path relative to project root */
   public Path getProjectRelativePath(Path path) {
-    return projectRootPath.toAbsolutePath().relativize(path.toAbsolutePath());
+    return MorePaths.relativizeWithDotDotSupport(
+        projectRootPath.toAbsolutePath(), path.toAbsolutePath());
   }
 
   /** @return url string for qualified path */

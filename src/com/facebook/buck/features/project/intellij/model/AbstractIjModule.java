@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.project.intellij.model;
@@ -21,7 +21,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.features.project.intellij.IjDependencyListBuilder;
 import com.facebook.buck.features.project.intellij.Util;
 import com.facebook.buck.features.project.intellij.model.folders.IjFolder;
-import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -39,7 +39,8 @@ abstract class AbstractIjModule implements IjProjectElement {
   @Override
   @Value.Derived
   public String getName() {
-    return Util.intelliJModuleNameFromPath(MorePaths.pathWithUnixSeparators(getModuleBasePath()));
+    return Util.intelliJModuleNameFromPath(
+        PathFormatter.pathWithUnixSeparators(getModuleBasePath()));
   }
 
   @Override
@@ -61,8 +62,8 @@ abstract class AbstractIjModule implements IjProjectElement {
 
   public abstract Optional<IjModuleAndroidFacet> getAndroidFacet();
 
-  /** @return a set of classpaths that the module requires to index correctly. */
-  public abstract ImmutableSet<Path> getExtraClassPathDependencies();
+  /** @return a set of IjLibrary that the module requires to index all symbols correctly. */
+  public abstract ImmutableSet<IjLibrary> getExtraLibraryDependencies();
 
   /** @return a set of module paths that the module requires to index correctly. */
   public abstract ImmutableSet<Path> getExtraModuleDependencies();
@@ -77,17 +78,6 @@ abstract class AbstractIjModule implements IjProjectElement {
   public abstract Optional<Path> getMetaInfDirectory();
 
   public abstract Optional<Path> getCompilerOutputPath();
-
-  @Value.Check
-  protected void allRulesAreChildrenOfBasePath() {
-    Path moduleBasePath = getModuleBasePath();
-    for (BuildTarget target : getTargets()) {
-      Path targetBasePath = target.getBasePath();
-      Preconditions.checkArgument(
-          targetBasePath.startsWith(moduleBasePath),
-          "A module cannot be composed of targets which are outside of its base path.");
-    }
-  }
 
   @Value.Check
   protected void checkDependencyConsistency() {

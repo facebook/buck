@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.file.downloader.impl;
@@ -102,6 +102,72 @@ public class MavenUrlDecoderTest {
 
     URI expected =
         new URI("http://foo.bar/org/apache/karaf/apache-karaf/3.0.8/apache-karaf-3.0.8.pex");
+
+    assertEquals(expected, seen);
+  }
+
+  @Test
+  public void parseMvnUrlWithDefaultDomainAndSoType() throws URISyntaxException {
+    URI seen =
+        MavenUrlDecoder.toHttpUrl(
+            Optional.of("http://foo.bar"),
+            new URI("mvn:com.almworks.sqlite4java:libsqlite4java-linux-amd64:so:1.0.392"));
+
+    URI expected =
+        new URI(
+            "http://foo.bar/com/almworks/sqlite4java/libsqlite4java-linux-amd64/1.0.392/libsqlite4java-linux-amd64-1.0.392.so");
+
+    assertEquals(expected, seen);
+  }
+
+  @Test
+  public void parseMvnUrlWithDefaultDomainAndDylibType() throws URISyntaxException {
+    URI seen =
+        MavenUrlDecoder.toHttpUrl(
+            Optional.of("http://foo.bar"),
+            new URI("mvn:com.almworks.sqlite4java:libsqlite4java-osx:dylib:1.0.392"));
+
+    URI expected =
+        new URI(
+            "http://foo.bar/com/almworks/sqlite4java/libsqlite4java-osx/1.0.392/libsqlite4java-osx-1.0.392.dylib");
+
+    assertEquals(expected, seen);
+  }
+
+  @Test
+  public void parseMvnUrlWithDefaultDomainAndDllType() throws URISyntaxException {
+    URI seen =
+        MavenUrlDecoder.toHttpUrl(
+            Optional.of("http://foo.bar"),
+            new URI("mvn:com.almworks.sqlite4java:sqlite4java-win32-x64:dll:1.0.392"));
+
+    URI expected =
+        new URI(
+            "http://foo.bar/com/almworks/sqlite4java/sqlite4java-win32-x64/1.0.392/sqlite4java-win32-x64-1.0.392.dll");
+
+    assertEquals(expected, seen);
+  }
+
+  @Test
+  public void parseMvnUrlWithDefaultDomainAndEggType() throws URISyntaxException {
+    URI seen =
+        MavenUrlDecoder.toHttpUrl(
+            Optional.of("http://foo.bar"), new URI("mvn:org.apache.karaf:apache-karaf:egg:3.0.8"));
+
+    URI expected =
+        new URI("http://foo.bar/org/apache/karaf/apache-karaf/3.0.8/apache-karaf-3.0.8.egg");
+
+    assertEquals(expected, seen);
+  }
+
+  @Test
+  public void parseMvnUrlWithDefaultDomainAndWhlType() throws URISyntaxException {
+    URI seen =
+        MavenUrlDecoder.toHttpUrl(
+            Optional.of("http://foo.bar"), new URI("mvn:org.apache.karaf:apache-karaf:whl:3.0.8"));
+
+    URI expected =
+        new URI("http://foo.bar/org/apache/karaf/apache-karaf/3.0.8/apache-karaf-3.0.8.whl");
 
     assertEquals(expected, seen);
   }

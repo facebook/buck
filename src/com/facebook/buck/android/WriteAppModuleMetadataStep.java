@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -31,6 +31,7 @@ import com.google.common.collect.TreeMultimap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Optional;
@@ -40,51 +41,62 @@ import java.util.SortedSet;
 public class WriteAppModuleMetadataStep implements Step {
   private final Path metadataOutput;
   private final ImmutableMultimap<APKModule, Path> apkModuleToJarPathMap;
+  private final Optional<ImmutableMultimap<APKModule, String>> apkModuleToNativeLibraryMap;
   private final APKModuleGraph apkModuleGraph;
   private final ProjectFilesystem filesystem;
   private final Optional<Path> proguardFullConfigFile;
   private final Optional<Path> proguardMappingFile;
   private final boolean skipProguard;
+  private final boolean shouldIncludeClasses;
 
   public static final String CLASS_SECTION_HEADER = "CLASSES";
   public static final String TARGETS_SECTION_HEADER = "TARGETS";
   public static final String DEPS_SECTION_HEADER = "DEPS";
+  public static final String LIBRARIES_SECTION_HEADER = "LIBRARIES";
   public static final String MODULE_INDENTATION = "  ";
   public static final String ITEM_INDENTATION = "    ";
 
   private WriteAppModuleMetadataStep(
       Path metadataOutput,
       ImmutableMultimap<APKModule, Path> apkModuleToJarPathMap,
+      Optional<ImmutableMultimap<APKModule, String>> apkModuleToNativeLibraryMap,
       APKModuleGraph apkModuleGraph,
       ProjectFilesystem filesystem,
       Optional<Path> proguardFullConfigFile,
       Optional<Path> proguardMappingFile,
-      boolean skipProguard) {
+      boolean skipProguard,
+      boolean shouldIncludeClasses) {
     this.metadataOutput = metadataOutput;
     this.apkModuleToJarPathMap = apkModuleToJarPathMap;
+    this.apkModuleToNativeLibraryMap = apkModuleToNativeLibraryMap;
     this.apkModuleGraph = apkModuleGraph;
     this.filesystem = filesystem;
     this.proguardFullConfigFile = proguardFullConfigFile;
     this.proguardMappingFile = proguardMappingFile;
     this.skipProguard = skipProguard;
+    this.shouldIncludeClasses = shouldIncludeClasses;
   }
 
   public static WriteAppModuleMetadataStep writeModuleMetadata(
       Path metadataOut,
       ImmutableMultimap<APKModule, Path> apkModuleToJarPathMap,
+      Optional<ImmutableMultimap<APKModule, String>> apkModuleToNativeLibraryMap,
       APKModuleGraph apkModuleGraph,
       ProjectFilesystem filesystem,
       Optional<Path> proguardFullConfigFile,
       Optional<Path> proguardMappingFile,
-      boolean skipProguard) {
+      boolean skipProguard,
+      boolean shouldIncludeClasses) {
     return new WriteAppModuleMetadataStep(
         metadataOut,
         apkModuleToJarPathMap,
+        apkModuleToNativeLibraryMap,
         apkModuleGraph,
         filesystem,
         proguardFullConfigFile,
         proguardMappingFile,
-        skipProguard);
+        skipProguard,
+        shouldIncludeClasses);
   }
 
   @Override
@@ -94,11 +106,13 @@ public class WriteAppModuleMetadataStep implements Step {
       ProguardTranslatorFactory translatorFactory =
           ProguardTranslatorFactory.create(
               filesystem, proguardFullConfigFile, proguardMappingFile, skipProguard);
-      ImmutableMultimap<APKModule, String> moduleToClassesMap =
-          APKModuleGraph.getAPKModuleToClassesMap(
-              apkModuleToJarPathMap, translatorFactory.createObfuscationFunction(), filesystem);
-      TreeMultimap<APKModule, String> orderedModuleToClassesMap =
-          sortModuleToStringsMultimap(moduleToClassesMap);
+      TreeMultimap<APKModule, String> orderedModuleToClassesMap = null;
+      if (shouldIncludeClasses) {
+        ImmutableMultimap<APKModule, String> moduleToClassesMap =
+            APKModuleGraph.getAPKModuleToClassesMap(
+                apkModuleToJarPathMap, translatorFactory.createObfuscationFunction(), filesystem);
+        orderedModuleToClassesMap = sortModuleToStringsMultimap(moduleToClassesMap);
+      }
 
       TreeMultimap<APKModule, String> orderedModuleToTargetsMap =
           TreeMultimap.create(
@@ -109,18 +123,32 @@ public class WriteAppModuleMetadataStep implements Step {
         }
       }
 
+      TreeMultimap<APKModule, String> orderedModuleToLibrariesMap =
+          TreeMultimap.create(Comparator.comparing(APKModule::getName), Ordering.natural());
+      if (apkModuleToNativeLibraryMap.isPresent()) {
+        orderedModuleToLibrariesMap.putAll(apkModuleToNativeLibraryMap.get());
+      }
+
       // Module to module deps map is already sorted
       SortedMap<APKModule, ? extends SortedSet<APKModule>> moduleToDepsMap =
           apkModuleGraph.toOutgoingEdgesMap();
 
-      // Write metdata lines to output
+      // Write metadata lines to output
       LinkedList<String> metadataLines = new LinkedList<>();
-      metadataLines.add(CLASS_SECTION_HEADER);
-      writeModuleToStringsMultimap(orderedModuleToClassesMap, metadataLines);
+      if (orderedModuleToClassesMap != null) {
+        metadataLines.add(CLASS_SECTION_HEADER);
+        writeModuleToStringsMultimap(orderedModuleToClassesMap, metadataLines);
+      }
       metadataLines.add(TARGETS_SECTION_HEADER);
       writeModuleToStringsMultimap(orderedModuleToTargetsMap, metadataLines);
       metadataLines.add(DEPS_SECTION_HEADER);
       writeModuleToModulesMap(moduleToDepsMap, metadataLines);
+
+      // Add libraries metadata
+      if (apkModuleToNativeLibraryMap.isPresent()) {
+        metadataLines.add(LIBRARIES_SECTION_HEADER);
+        writeModuleToStringsMultimap(orderedModuleToLibrariesMap, metadataLines);
+      }
       filesystem.writeLinesToPath(metadataLines, metadataOutput);
 
       return StepExecutionResults.SUCCESS;

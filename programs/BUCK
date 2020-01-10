@@ -1,10 +1,9 @@
+load("@buck_bazel_skylib//lib:dicts.bzl", "dicts")
 load(
     "//tools/build_rules:module_rules.bzl",
     "convert_modules_to_external_resources",
     "convert_modules_to_resources",
-    "get_module_binary",
 )
-load("@bazel_skylib//lib:dicts.bzl", "dicts")
 load("//tools/build_rules:python_rules.bzl", "interpreter_override_args")
 load(":defs.bzl", "get_gen_buck_info_command")
 
@@ -23,9 +22,17 @@ python_library(
     name = "buck_version",
     srcs = [
         "buck_version.py",
+        "buck_version_mercurial.py",
     ],
     deps = [
         ":subprocutils",
+    ],
+)
+
+python_library(
+    name = "java_version",
+    srcs = [
+        "java_version.py",
     ],
 )
 
@@ -35,6 +42,7 @@ python_binary(
     visibility = ["PUBLIC"],
     deps = [
         ":buck_version",
+        ":java_version",
     ],
 )
 
@@ -45,8 +53,29 @@ python_binary(
 # trying to generate the Buck version UID, this should work, since the
 # in-repo Buck we're using to build this already implicitly adds the
 # same Buck version UID to it's rule key.  But still... gross.
+#
+# For releases, both OSS and not, we accept a number of configuration (-c) options
+# and we build in a clean repo anyways, so in those cases it /is/ idempotent.
+#
+# One downside of this: If you don't rebuild the buck you're building with in between
+# runs (say, by using ant), this rule won't re-run, and the --version of your .pex will
+# be wrong. The upside of that is that this script can be slow, and for most cases
+# skipping that leads to a better developer experience. Unfortunately if one makes
+# a lot of changes, then rebuilds buck and tries to run that pex, the old buckd
+# won't restart because the versions match. In that case, we have a buck-local rule
+# that depends on //programs:buck, which /does/ force VCS info to be regenerated each
+# time that buck.pex changes in any substantial way.
+# That's what gen_local_buck_package_info and buck-local is for
 genrule(
     name = "gen_buck_package_info",
+    out = "buck_package_info.json",
+    cmd = get_gen_buck_info_command(":gen_buck_info"),
+)
+
+genrule(
+    name = "gen_local_buck_package_info",
+    # Depend on :buck binary so that we're invalidated and run if buck.pex changes
+    srcs = [":buck"],
     out = "buck_package_info.json",
     cmd = get_gen_buck_info_command(":gen_buck_info"),
 )
@@ -64,16 +93,19 @@ genrule(
 RESOURCES_NOT_AFFECTING_BUILD_ARTIFACTS = {
     "android_agent_path": "//assets/android:agent.apk",
     "buck_build_type_info": ":gen_build_type_info",
-    "buck_package_info": ":gen_buck_package_info",
-    "fix_script": "//programs/fixes/source_only_abi:fix",
     "jacoco_agent_jar": "//third-party/java/jacoco:agent",
+    "legacy_fix_script": "//programs/fixes/source_only_abi:fix",
     # The name of this resource is important, since it needs to have this filename in the PEX.
     "libjcocoa.dylib": "//third-party/java/ObjCBridge:libjcocoa.dylib",
     "logging_config_file": "//config:logging.properties",
+    "path_to_isolated_trampoline": "//src/com/facebook/buck/rules/modern/builders:trampoline",
     "report_generator_jar": "//src/com/facebook/buck/jvm/java/coverage:report-generator",
     "testrunner_classes": "//src/com/facebook/buck/testrunner:testrunner-bin-fixed",
-    "path_to_isolated_trampoline": "//src/com/facebook/buck/rules/modern/builders:trampoline",
 }
+
+# The name of the version info flag. If trying to do a deeper build, we need to ensure
+# that we invalidate the version info more often.
+RESOURCES_VERSION_INFO_NAME = "buck_package_info"
 
 # These resources contain code that can affect the content of build artifacts.
 # This list needs to be updated whenever there are new libraries that can affect build artifacts.
@@ -83,13 +115,14 @@ RESOURCES_NOT_AFFECTING_BUILD_ARTIFACTS = {
 RESOURCES_AFFECTING_BUILD_ARTIFACTS = {
     "bootstrapper_jar": "//src/com/facebook/buck/cli/bootstrapper:bootstrapper",
     "buck_server": "//src/com/facebook/buck/cli:main-fixed",
+    "buckfilesystem_jar": "//src/com/facebook/buck/core/filesystems:filesystems",
     "dx": "//third-party/java/dx:etc_dx",
     "native_exopackage_fake_path": "//assets/android:native-exopackage-fakes.apk",
     "path_to_pathlib_py": "//third-party/py/pathlib:pathlib.py",
     "path_to_pywatchman": "//third-party/py/pywatchman:pywatchman-archive",
     "path_to_sh_binary_template": "//src/com/facebook/buck/shell:sh_binary_template",
-    "path_to_typing": "//third-party/py:typing-archive",
     "path_to_six_py": "//third-party/py/six:six.py",
+    "path_to_typing": "//third-party/py:typing-archive",
 }
 
 BUCK_MODULES = {
@@ -140,6 +173,7 @@ python_library(
         "buck_repo.py",
         "buck_tool.py",
         "file_locks.py",
+        "java_lookup.py",
         "timing.py",
         "tracing.py",
     ],
@@ -159,8 +193,38 @@ python_library(
     ],
 )
 
+# Simple container libs to hold the resources needed to identify buck's version
+python_library(
+    name = "buck_committed_version",
+    srcs = [],
+    resources = {RESOURCES_VERSION_INFO_NAME: ":gen_buck_package_info"},
+)
+
+python_library(
+    name = "buck_local_version",
+    srcs = [],
+    resources = {RESOURCES_VERSION_INFO_NAME: ":gen_local_buck_package_info"},
+)
+
 python_binary(
     name = "buck",
+    build_args = interpreter_override_args(),
+    main = "buck.py",
+    visibility = [
+        "//scripts/...",
+        "//test/...",
+        "//tools/...",
+    ],
+    deps = [
+        ":buck_committed_version",
+        ":bucklib",
+        ":java_version",
+        ":subprocutils",
+    ],
+)
+
+python_binary(
+    name = "buck-local",
     build_args = interpreter_override_args(),
     main = "buck.py",
     visibility = [
@@ -170,7 +234,9 @@ python_binary(
         "//tools/...",
     ],
     deps = [
+        ":buck_local_version",
         ":bucklib",
+        ":java_version",
         ":subprocutils",
     ],
 )

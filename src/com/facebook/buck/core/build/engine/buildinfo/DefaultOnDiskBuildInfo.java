@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.build.engine.buildinfo;
@@ -19,15 +19,14 @@ package com.facebook.buck.core.build.engine.buildinfo;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.util.RichStream;
-import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import com.facebook.buck.util.json.ObjectMappers;
-import com.facebook.buck.util.sha1.Sha1HashCode;
+import com.facebook.buck.util.stream.RichStream;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -36,6 +35,7 @@ import com.google.common.collect.Ordering;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -44,8 +44,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.SortedSet;
 
 /**
  * Utility for reading the metadata associated with a build rule's output. This is metadata that
@@ -61,6 +63,7 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
   private final ProjectFilesystem projectFilesystem;
   private final BuildInfoStore buildInfoStore;
   private final Path metadataDirectory;
+  private final Path artifactMetadataFilePath;
 
   public DefaultOnDiskBuildInfo(
       BuildTarget target, ProjectFilesystem projectFilesystem, BuildInfoStore buildInfoStore) {
@@ -69,11 +72,37 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
     this.buildInfoStore = buildInfoStore;
     this.metadataDirectory =
         BuildInfo.getPathToArtifactMetadataDirectory(target, projectFilesystem);
+    this.artifactMetadataFilePath =
+        BuildInfo.getPathToArtifactMetadataFile(target, projectFilesystem);
   }
 
   @Override
   public Optional<String> getValue(String key) {
-    return projectFilesystem.readFileIfItExists(metadataDirectory.resolve(key));
+    if (key.equals(BuildInfo.MetadataKey.DEP_FILE)) {
+      return projectFilesystem.readFileIfItExists(metadataDirectory.resolve(key));
+    }
+
+    Optional<String> artifactMetadata =
+        projectFilesystem.readFileIfItExists(artifactMetadataFilePath);
+
+    if (!artifactMetadata.isPresent()) {
+      return artifactMetadata;
+    }
+
+    try {
+      ImmutableMap<String, String> json =
+          ObjectMappers.readValue(
+              artifactMetadata.get(), new TypeReference<ImmutableMap<String, String>>() {});
+      return Optional.ofNullable(json.get(key));
+    } catch (IOException e) {
+      LOG.warn(
+          e,
+          "Failed to get %s from file %s with metadata %s.",
+          key,
+          artifactMetadataFilePath.toString(),
+          artifactMetadata.get());
+      return Optional.empty();
+    }
   }
 
   @Override
@@ -142,25 +171,10 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
   }
 
   @Override
-  public Optional<Sha1HashCode> getHash(String key) {
-    Optional<String> optionalValue = getValue(key);
-    if (optionalValue.isPresent()) {
-      String value = optionalValue.get();
-      try {
-        return Optional.of(Sha1HashCode.of(value));
-      } catch (IllegalArgumentException e) {
-        LOG.error(e, "DefaultOnDiskBuildInfo.getHash(%s): Cannot transform %s to SHA1", key, value);
-        return Optional.empty();
-      }
-    } else {
-      LOG.warn("DefaultOnDiskBuildInfo.getHash(%s): Hash not found", key);
-      return Optional.empty();
-    }
-  }
-
-  @Override
   public ImmutableSortedSet<Path> getOutputPaths() {
+    // Recorded paths always use unix file separators, convert this to the appropriate separators
     return RichStream.from(getValues(BuildInfo.MetadataKey.RECORDED_PATHS).get())
+        .map(path -> path.replace("/", File.separator))
         .map(Paths::get)
         .concat(RichStream.of(metadataDirectory))
         .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
@@ -168,29 +182,34 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
 
   @Override
   public ImmutableSortedSet<Path> getPathsForArtifact() throws IOException {
-    ImmutableSortedSet.Builder<Path> paths = ImmutableSortedSet.naturalOrder();
-    for (Path path : getOutputPaths()) {
-      paths.add(path);
+    return getRecursivePaths(getOutputPaths());
+  }
+
+  private ImmutableSortedSet<Path> getRecursivePaths(ImmutableSortedSet<Path> paths)
+      throws IOException {
+    ImmutableSortedSet.Builder<Path> allPaths = ImmutableSortedSet.naturalOrder();
+    for (Path path : paths) {
+      allPaths.add(path);
       projectFilesystem.walkRelativeFileTree(
           path,
           new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
                 throws IOException {
-              paths.add(dir);
+              allPaths.add(dir);
               return super.preVisitDirectory(dir, attrs);
             }
 
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
                 throws IOException {
-              paths.add(file);
+              allPaths.add(file);
               return super.visitFile(file, attrs);
             }
           },
           false);
     }
-    return paths.build();
+    return allPaths.build();
   }
 
   @Override
@@ -223,54 +242,100 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
   }
 
   @Override
-  public void writeOutputHashes(FileHashCache fileHashCache) throws IOException {
-    ImmutableSortedSet<Path> pathsForArtifact = getPathsForArtifact();
+  public void calculateOutputSizeAndWriteMetadata(
+      FileHashLoader fileHashLoader,
+      ImmutableSortedSet<Path> recordedPaths,
+      Predicate<Long> shouldWriteOutputHashes)
+      throws IOException {
+    // Convert all recorded paths to use unix file separators
+    String recordedPathsString =
+        toJson(
+            recordedPaths.stream()
+                .map(Object::toString)
+                .map(path -> path.replace(File.separator, "/"))
+                .collect(ImmutableList.toImmutableList()));
+    ImmutableMap.Builder<String, String> artifactMetadataJson = ImmutableMap.builder();
+    artifactMetadataJson.put(BuildInfo.MetadataKey.RECORDED_PATHS, recordedPathsString);
 
-    // Grab and record the output hashes in the build metadata so that cache hits avoid re-hashing
-    // file contents.  Since we use output hashes for input-based rule keys and for detecting
-    // non-determinism, we would spend a lot of time re-hashing output paths -- potentially in
-    // serialized in a single step. So, do the hashing here to distribute the workload across
-    // several threads and cache the results.
-    ImmutableSortedMap.Builder<String, String> outputHashes = ImmutableSortedMap.naturalOrder();
-    Hasher hasher = Hashing.sha1().newHasher();
-    for (Path path : pathsForArtifact) {
-      String pathString = path.toString();
-      HashCode fileHash = fileHashCache.get(projectFilesystem, path);
-      hasher.putBytes(pathString.getBytes(Charsets.UTF_8));
-      hasher.putBytes(fileHash.asBytes());
-      outputHashes.put(pathString, fileHash.toString());
+    ImmutableSortedSet<Path> outputPaths = getRecursivePaths(recordedPaths);
+    long outputSize = getOutputSize(outputPaths);
+    artifactMetadataJson.put(BuildInfo.MetadataKey.OUTPUT_SIZE, String.valueOf(outputSize));
+    projectFilesystem.writeContentsToPath(
+        String.valueOf(outputSize),
+        metadataDirectory.resolve(BuildInfo.MetadataKey.ARTIFACT_METADATA));
+    if (shouldWriteOutputHashes.apply(outputSize)) {
+      // Grab and record the output hashes in the build metadata so that cache hits avoid re-hashing
+      // file contents.  Since we use output hashes for input-based rule keys and for detecting
+      // non-determinism, we would spend a lot of time re-hashing output paths -- potentially in
+      // serialized in a single step. So, do the hashing here to distribute the workload across
+      // several threads and cache the results.
+      ImmutableSortedMap.Builder<String, String> outputHashes = ImmutableSortedMap.naturalOrder();
+      Hasher hasher = Hashing.sha1().newHasher();
+      for (Path path : outputPaths) {
+        String pathString = path.toString();
+        HashCode fileHash = fileHashLoader.get(projectFilesystem, path);
+        hasher.putBytes(pathString.getBytes(Charsets.UTF_8));
+        hasher.putBytes(fileHash.asBytes());
+        outputHashes.put(pathString, fileHash.toString());
+      }
+
+      artifactMetadataJson.put(
+          BuildInfo.MetadataKey.RECORDED_PATH_HASHES,
+          ObjectMappers.WRITER.writeValueAsString(outputHashes.build()));
+      artifactMetadataJson.put(BuildInfo.MetadataKey.OUTPUT_HASH, hasher.hash().toString());
     }
 
     projectFilesystem.writeContentsToPath(
-        ObjectMappers.WRITER.writeValueAsString(outputHashes.build()),
-        metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATH_HASHES));
-
-    projectFilesystem.writeContentsToPath(
-        hasher.hash().toString(), metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_HASH));
+        ObjectMappers.WRITER.writeValueAsString(artifactMetadataJson.build()),
+        artifactMetadataFilePath);
   }
 
   @Override
-  public void validateArtifact(Set<Path> extractedFiles) {
+  public void validateArtifact(Set<Path> extractedFiles) throws IOException {
     // TODO(bertrand): It would be good to validate OUTPUT_HASH and RECORDED_PATH_HASHES, but we
     // don't compute them if the artifact size exceeds the input rule key threshold.
-    validateArtifactHasKey(extractedFiles, BuildInfo.MetadataKey.RECORDED_PATHS);
-    validateArtifactHasKey(extractedFiles, BuildInfo.MetadataKey.OUTPUT_SIZE);
+    Optional<String> artifactMetadataFile =
+        projectFilesystem.readFileIfItExists(artifactMetadataFilePath);
+
+    Preconditions.checkState(artifactMetadataFile.isPresent());
+    ImmutableMap<String, String> artifactMetadata =
+        ObjectMappers.readValue(
+            artifactMetadataFile.get(), new TypeReference<ImmutableMap<String, String>>() {});
+    Preconditions.checkState(artifactMetadata.containsKey(BuildInfo.MetadataKey.RECORDED_PATHS));
+    Preconditions.checkState(artifactMetadata.containsKey(BuildInfo.MetadataKey.OUTPUT_SIZE));
+
+    // Check that the output_size of all RECORDED_PATHS matches OUTPUT_SIZE
+    long outputSize =
+        Long.parseLong(
+            Objects.requireNonNull(artifactMetadata.get(BuildInfo.MetadataKey.OUTPUT_SIZE)));
+    long realSize = getOutputSize(getPathsForArtifact());
+    if (realSize != outputSize) {
+      LOG.warn(
+          "Target (%s) Artifact output size (%s) doesn't match artifactMetadata OUTPUT_SIZE (%s).",
+          buildTarget.getFullyQualifiedName(), realSize, outputSize);
+    }
   }
 
-  private void validateArtifactHasKey(Set<Path> extractedFiles, String key) {
-    Preconditions.checkState(
-        !extractedFiles.isEmpty(), "Did not extract any files, expected file for key '%s'", key);
-    Path expectedFile =
-        extractedFiles
-            .iterator()
-            .next()
-            .getFileSystem()
-            .getPath(MorePaths.pathWithUnixSeparators(metadataDirectory.resolve(key)));
-    Preconditions.checkState(
-        extractedFiles.contains(expectedFile),
-        "Artifact missing artifactMetadata for key %s (expected: '%s', found: %s)",
-        key,
-        expectedFile,
-        extractedFiles);
+  private long getOutputSize(SortedSet<Path> paths) throws IOException {
+    long size = 0;
+    for (Path path : paths) {
+      if (projectFilesystem.isFile(path)
+          && !path.endsWith(BuildInfo.MetadataKey.RECORDED_PATHS)
+          && !path.endsWith(BuildInfo.MetadataKey.OUTPUT_SIZE)
+          && !path.endsWith(BuildInfo.MetadataKey.OUTPUT_HASH)
+          && !path.endsWith(BuildInfo.MetadataKey.RECORDED_PATH_HASHES)
+          && !path.endsWith(BuildInfo.MetadataKey.ARTIFACT_METADATA)) {
+        size += projectFilesystem.getFileSize(path);
+      }
+    }
+    return size;
+  }
+
+  private String toJson(Object value) {
+    try {
+      return ObjectMappers.WRITER.writeValueAsString(value);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 }

@@ -1,0 +1,15 @@
+go_binary(
+    name = "cli",
+    srcs = ["main.go"],
+    deps = [":lib"],
+)
+
+cgo_library(
+    name = "lib",
+    package_name = "lib",
+    srcs = ["cgosrc.go"],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/prebuilt_cxx_lib/cxx:lib",
+    ],
+)

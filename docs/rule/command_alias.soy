@@ -1,18 +1,19 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 {namespace buck.command_alias}
 
 /***/
@@ -22,41 +23,49 @@
     {param navid: 'rule_command_alias' /}
     {param prettify: true /}
     {param description}
-    A rule for wrapping binary rules, and add fixed arguments or environment variables.
+    A rule for wrapping binary rules, and add fixed arguments or 
+    environment variables.
     {/param}
     {param content}
 {call buck.rule}
 {param status: 'UNFROZEN' /}
 {param overview}
     <p>
-        This rule allows to wrap other build rules that create binaries and to pre-apply command
-        line arguments and environment variables.
+        The <code>command_alias</code> rule enables you to wrap build 
+        rules that create binaries and to pre-apply command-line 
+        arguments and environment variables.
     </p>
     <p>
-        Examples include providing a command written in a scripting language, and running it with a
-        specific interpreter, or transparently wrapping sub-commands of a binary.
+        Example uses include running a command written in a scripting 
+        language with a specific interpreter, and transparently wrapping 
+        sub-commands of a binary.
     </p>
     <p>
-        A <code>command_alias</code> rule can be referenced in the <code>cmd</code> parameter of
-        a <code>genrule</code> by using the <code>exe</code> macro:
-        <br/>
-        <code>$(exe{sp}//path/to:target)</code></p>
+        You can reference a <code>command_alias</code> target in 
+        the <code>cmd</code> parameter of a {call buck.genrule /} by 
+        using the <code>exe</code> macro: 
+    </p>
+        
+<p>
+<pre>
+{literal}
+$(exe //path/to:target)
+{/literal}
+</pre>
+</p>
+
 {/param}
 
 {param args}
-{call buck.arg}
-    {param name: 'name' /}
-    {param desc}
-    The name of the rule.
-    {/param}
-{/call}
+
+{call buck.name_arg /}
 
 {call buck.arg}
     {param name: 'exe'/}
     {param default: 'None'/}
     {param desc}
     A {call buck.build_target /} for a rule that outputs
-    an executable, such as an <code>sh_binary</code>.
+    an executable, such as an {call buck.sh_binary /}.
     {/param}
 {/call}
 
@@ -65,7 +74,7 @@
     {{param default: '{}' /}}
     {param desc}
     <p>A mapping from platforms to {call buck.build_target /}.
-        Allows to override <code>exe</code> per host platform.</p>
+        enables you to override <code>exe</code> per host platform.</p>
 
     <p>If present, <code>exe</code> will be used as a fallback on host platforms that are not
         specified in <code>platform_exe</code>.</p>
@@ -75,7 +84,7 @@
         the mapping.</p>
 
     <p>Valid platforms are all values of the{sp}
-        <a href="https://buckbuild.com/javadoc/com/facebook/buck/util/environment/Platform.html">
+        <a href="https://buck.build/javadoc/com/facebook/buck/util/environment/Platform.html">
             <code>Platform</code> enum
         </a>:
     </p>
@@ -92,9 +101,11 @@
     {param name: 'args' /}
     {param default: 'None' /}
     {param desc}
-    A string of args that will be passed to the executable represented by <code>exe</code> on
-    startup. Arguments support {call buck.string_parameter_macros /} (only{sp}
-    <code>$(location ...)</code> and <code>$(exe ...)</code> are supported at the moment).
+    A string of arguments that is passed to the executable specified by
+    {sp}<code>exe</code> at startup. These arguments support a subset of 
+    Buck's {call buck.string_parameter_macros /}. Only the 
+    {sp}<code>$(location ...)</code> and <code>$(exe ...)</code>{sp} 
+    macros are supported currently.
     {/param}
 {/call}
 

@@ -11,6 +11,7 @@ java_test(
         "//src/com/facebook/buck/manifestservice:manifestservice",
         "//src/com/facebook/buck/slb:slb",
         "//src/com/facebook/buck/util/timing:timing",
+        "//src/com/facebook/buck/util/types:types",
         "//test/com/facebook/buck/core/config:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//third-party/java/easymock:easymock",

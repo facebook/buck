@@ -1,40 +1,37 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
-import com.facebook.buck.core.rules.modern.annotations.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.CustomFieldBehavior;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.modern.DefaultFieldInputs;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.net.URISyntaxException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -50,9 +47,6 @@ import org.immutables.value.Value;
 @Value.Immutable(copy = true)
 @BuckStyleImmutable
 abstract class AbstractJavacOptions implements AddsToRuleKey {
-
-  // Default combined source and target level.
-  public static final String TARGETED_JAVA_VERSION = "7";
 
   /** The method in which the compiler output is spooled. */
   public enum SpoolMode {
@@ -92,21 +86,20 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
 
   @Value.Default
   @AddToRuleKey
-  public String getSourceLevel() {
-    return TARGETED_JAVA_VERSION;
-  }
-
-  @VisibleForTesting
-  @Value.Default
-  @AddToRuleKey
-  public String getTargetLevel() {
-    return TARGETED_JAVA_VERSION;
+  public JavacLanguageLevelOptions getLanguageLevelOptions() {
+    return JavacLanguageLevelOptions.DEFAULT;
   }
 
   @Value.Default
   @AddToRuleKey
-  public AnnotationProcessingParams getAnnotationProcessingParams() {
-    return AnnotationProcessingParams.EMPTY;
+  public JavacPluginParams getJavaAnnotationProcessorParams() {
+    return JavacPluginParams.EMPTY;
+  }
+
+  @Value.Default
+  @AddToRuleKey
+  public JavacPluginParams getStandardJavacPluginParams() {
+    return JavacPluginParams.EMPTY;
   }
 
   @AddToRuleKey
@@ -164,14 +157,30 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
     return options;
   }
 
+  /**
+   * @return a list of {@code SourcePaths} for a particular source level extracted from {@link
+   *     #getSourceToBootclasspath } or empty list if bootclasspath for a this source level is not
+   *     defined.
+   */
+  public ImmutableList<SourcePath> getSourceLevelBootclasspath() {
+    ImmutableList<PathSourcePath> bootclasspath =
+        getSourceToBootclasspath().get(getLanguageLevelOptions().getSourceLevel());
+
+    if (bootclasspath != null) {
+      return ImmutableList.copyOf(bootclasspath); // upcast to ImmutableList<SourcePath>
+    } else {
+      return ImmutableList.of();
+    }
+  }
+
   public void appendOptionsTo(
       OptionsConsumer optionsConsumer,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       ProjectFilesystem filesystem) {
 
     // Add some standard options.
-    optionsConsumer.addOptionValue("source", getSourceLevel());
-    optionsConsumer.addOptionValue("target", getTargetLevel());
+    optionsConsumer.addOptionValue("source", getLanguageLevelOptions().getSourceLevel());
+    optionsConsumer.addOptionValue("target", getLanguageLevelOptions().getTargetLevel());
 
     // Set the sourcepath to stop us reading source files out of jars by mistake.
     optionsConsumer.addOptionValue("sourcepath", "");
@@ -189,11 +198,10 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
       optionsConsumer.addOptionValue("bootclasspath", getBootclasspath().get());
     } else {
       ImmutableList<PathSourcePath> bootclasspath =
-          getSourceToBootclasspath().get(getSourceLevel());
+          getSourceToBootclasspath().get(getLanguageLevelOptions().getSourceLevel());
       if (bootclasspath != null) {
         String bcp =
-            bootclasspath
-                .stream()
+            bootclasspath.stream()
                 .map(pathResolver::getAbsolutePath)
                 .map(filesystem::relativize)
                 .map(Path::toString)
@@ -202,37 +210,19 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
       }
     }
 
+    ImmutableList.Builder<ResolvedJavacPluginProperties> allPluginsBuilder =
+        ImmutableList.builder();
     // Add annotation processors.
-    AnnotationProcessingParams annotationProcessingParams = getAnnotationProcessingParams();
+    JavacPluginParams annotationProcessingParams = getJavaAnnotationProcessorParams();
     if (!annotationProcessingParams.isEmpty()) {
       ImmutableList<ResolvedJavacPluginProperties> annotationProcessors =
-          annotationProcessingParams.getModernProcessors();
-
-      // Specify processorpath to search for processors.
-      optionsConsumer.addOptionValue(
-          "processorpath",
-          annotationProcessors
-              .stream()
-              .map(properties -> properties.getClasspath(pathResolver, filesystem))
-              .flatMap(Arrays::stream)
-              .distinct()
-              .map(
-                  url -> {
-                    try {
-                      return url.toURI();
-                    } catch (URISyntaxException e) {
-                      throw new RuntimeException(e);
-                    }
-                  })
-              .map(Paths::get)
-              .map(Path::toString)
-              .collect(Collectors.joining(File.pathSeparator)));
+          annotationProcessingParams.getPluginProperties();
+      allPluginsBuilder.addAll(annotationProcessors);
 
       // Specify names of processors.
       optionsConsumer.addOptionValue(
           "processor",
-          annotationProcessors
-              .stream()
+          annotationProcessors.stream()
               .map(ResolvedJavacPluginProperties::getProcessorNames)
               .flatMap(Collection::stream)
               .collect(Collectors.joining(",")));
@@ -248,6 +238,28 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
     } else {
       // Disable automatic annotation processor lookup
       optionsConsumer.addFlag("proc:none");
+    }
+
+    JavacPluginParams standardJavacPluginParams = getStandardJavacPluginParams();
+    if (!standardJavacPluginParams.isEmpty()) {
+      ImmutableList<ResolvedJavacPluginProperties> javacPlugins =
+          standardJavacPluginParams.getPluginProperties();
+      allPluginsBuilder.addAll(javacPlugins);
+
+      for (ResolvedJavacPluginProperties properties : javacPlugins) {
+        optionsConsumer.addFlag("Xplugin:" + properties.getProcessorNames().first());
+      }
+
+      // Add plugin parameters.
+      optionsConsumer.addExtras(standardJavacPluginParams.getParameters());
+    }
+
+    // Specify classpath to include javac plugins and annotation processors.
+    ImmutableList<ResolvedJavacPluginProperties> allPlugins = allPluginsBuilder.build();
+    if (!allPlugins.isEmpty()) {
+      optionsConsumer.addOptionValue(
+          "processorpath",
+          ResolvedJavacPluginProperties.getJoinedClasspath(pathResolver, filesystem, allPlugins));
     }
 
     // Add extra arguments.

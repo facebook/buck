@@ -1,0 +1,19 @@
+apple_binary(
+    name = "Binary",
+    srcs = ["main.c"],
+    deps = [":A"],
+)
+
+apple_library(
+    name = "A",
+    srcs = ["a.c"],
+    preferred_linkage = "shared",
+    soname = "Hello.dylib",
+)
+
+apple_library(
+    name = "B",
+    srcs = ["b.c"],
+    preferred_linkage = "shared",
+    soname = "Hello.dylib",
+)

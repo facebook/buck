@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
@@ -53,7 +53,6 @@ public class HelpCommandIntegrationTest {
             "  cache          makes calls to the artifact cache",
             "  cachedelete    Delete artifacts from the local and remote cache",
             "  clean          deletes any generated files and caches",
-            "  distbuild      attaches to a distributed build (experimental)",
             "  doctor         debug and fix issues of Buck commands",
             "  fetch          downloads remote resources to your local machine",
             "  fix            attempts to fix errors encountered in the previous build",
@@ -65,7 +64,7 @@ public class HelpCommandIntegrationTest {
             "  parser-cache   Load and save state of the parser cache",
             "  project        generates project configuration files for an IDE",
             "  publish        builds and publishes a library to a central repository",
-            "  query          provides facilities to query information about the target nodes graph",
+            "  query          provides facilities to query information about the configured target nodes graph",
             "  rage           debug and fix issues of Buck commands",
             "  root           prints the absolute path to the root of the current buck project",
             "  run            runs a target as a command",
@@ -74,6 +73,7 @@ public class HelpCommandIntegrationTest {
             "  targets        prints the list of buildable targets",
             "  test           builds and runs the tests for the specified target",
             "  uninstall      uninstalls an APK",
+            "  uquery         provides facilities to query information about the unconfigured target nodes graph",
             "  verify-caches  Verify contents of internal Buck in-memory caches.",
             "",
             "Options:",

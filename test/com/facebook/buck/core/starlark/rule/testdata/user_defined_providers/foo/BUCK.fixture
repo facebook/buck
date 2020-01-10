@@ -1,0 +1,45 @@
+load("//:defs.bzl", "content_info", "does_not_require_provider", "non_root_rule", "requires_provider", "root_rule")
+
+root_rule(
+    name = "root",
+)
+
+non_root_rule(
+    name = "middle",
+    dep = ":root",
+)
+
+non_root_rule(
+    name = "leaf",
+    dep = ":middle",
+)
+
+content_info(
+    name = "does_not_provide_content_info",
+    ci = False,
+)
+
+content_info(
+    name = "provides_content_info",
+    ci = True,
+)
+
+does_not_require_provider(
+    name = "does_not_require_content_info_missing",
+    dep = ":does_not_provide_content_info",
+)
+
+requires_provider(
+    name = "requires_content_info_missing",
+    dep = ":does_not_provide_content_info",
+)
+
+does_not_require_provider(
+    name = "does_not_require_content_info",
+    dep = ":provides_content_info",
+)
+
+requires_provider(
+    name = "requires_content_info",
+    dep = ":provides_content_info",
+)

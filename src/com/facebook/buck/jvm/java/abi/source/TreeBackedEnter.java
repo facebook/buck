@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java.abi.source;
@@ -215,17 +215,17 @@ class TreeBackedEnter {
       // elements.
       List<? extends Element> fromTree =
           ((ClassTree) path.getLeaf())
-              .getMembers()
-              .stream()
-              // Top level blocks (static initializers and anonymous blocks) are only used at
-              // runtime, so we can safely skip them for ABI generation purposes. In Java 9 and
-              // later, it's actually necessary to skip them, as getElement will attempt to
-              // attribute the parent class node when given block nodes, effectively doing an
-              // analyze compiler phase, which we need to avoid. In Java 8 and earlier, getElement
-              // just returns null in these cases.
-              .filter(tree -> tree.getKind() != Kind.BLOCK)
-              .map(tree -> javacTrees.getElement(new TreePath(path, tree)))
-              .collect(Collectors.toList());
+              .getMembers().stream()
+                  // Top level blocks (static initializers and anonymous blocks) are only used at
+                  // runtime, so we can safely skip them for ABI generation purposes. In Java 9 and
+                  // later, it's actually necessary to skip them, as getElement will attempt to
+                  // attribute the parent class node when given block nodes, effectively doing an
+                  // analyze compiler phase, which we need to avoid. In Java 8 and earlier,
+                  // getElement
+                  // just returns null in these cases.
+                  .filter(tree -> tree.getKind() != Kind.BLOCK)
+                  .map(tree -> javacTrees.getElement(new TreePath(path, tree)))
+                  .collect(Collectors.toList());
       Set<? extends Element> fromTreeSet = new HashSet<>(fromTree);
 
       List<Element> result = new ArrayList<>();

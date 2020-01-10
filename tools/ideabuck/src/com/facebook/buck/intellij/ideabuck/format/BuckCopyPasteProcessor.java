@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.intellij.ideabuck.format;
@@ -19,10 +19,12 @@ package com.facebook.buck.intellij.ideabuck.format;
 import com.facebook.buck.intellij.ideabuck.api.BuckTargetLocator;
 import com.facebook.buck.intellij.ideabuck.build.BuckBuildUtil;
 import com.facebook.buck.intellij.ideabuck.lang.BuckFile;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckArgument;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckTypes;
 import com.facebook.buck.intellij.ideabuck.util.BuckPsiUtils;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableSet;
 import com.intellij.codeInsight.editorActions.CopyPastePreProcessor;
 import com.intellij.lang.ASTNode;
 import com.intellij.openapi.editor.Document;
@@ -44,9 +46,12 @@ import com.intellij.psi.impl.source.tree.TreeElement;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.PsiShortNamesCache;
 import com.intellij.psi.tree.IElementType;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.psi.util.PsiUtilCore;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.jetbrains.annotations.Nullable;
@@ -57,6 +62,10 @@ public class BuckCopyPasteProcessor implements CopyPastePreProcessor {
       Pattern.compile("^(package|import)?\\s*([\\w\\./]*);?\\s*$");
   private static final Pattern SOLVED_DEPENDENCY_PATTERN =
       Pattern.compile("^\\s*[\\w/-]*:[\\w-]+\\s*$");
+
+  /** Names of arguments to apply the copy/paste processor. */
+  private static final Set<String> ARGUMENTS_TO_SORT =
+      ImmutableSet.of("exported_deps", "provided_deps", "deps", "visibility");
 
   @Nullable
   @Override
@@ -85,7 +94,7 @@ public class BuckCopyPasteProcessor implements CopyPastePreProcessor {
     // A simple test of the element type
     boolean isQuotedString =
         BuckPsiUtils.hasElementType(
-            elementNode, BuckTypes.SINGLE_QUOTED_STRING, BuckTypes.DOUBLE_QUOTED_STRING);
+            elementNode, BuckTypes.QUOTED_STRING, BuckTypes.APOSTROPHED_STRING);
     // isQuotedString will be true if the caret is under the left quote, the right quote,
     // or anywhere in between. But pasting with caret under the left quote acts differently than
     // pasting in other isQuotedString positions: Text will be inserted before the quotes, not
@@ -106,27 +115,20 @@ public class BuckCopyPasteProcessor implements CopyPastePreProcessor {
         }
       }
 
-      PsiElement property = BuckPsiUtils.findAncestorWithType(element, BuckTypes.ARGUMENT);
-      if (checkPropertyName(property)) {
+      BuckArgument buckArgument = PsiTreeUtil.getParentOfType(element, BuckArgument.class);
+      if (checkArgumentName(buckArgument)) {
         return formatPasteText(text, element, project, inQuotedString);
       }
     }
     return text;
   }
 
-  protected boolean checkPropertyName(PsiElement property) {
-    if (property == null) {
-      return false;
-    }
-    PsiElement leftValue = property.getFirstChild();
-    if (leftValue == null || leftValue.getNode().getElementType() != BuckTypes.PROPERTY_LVALUE) {
-      return false;
-    }
-    leftValue = leftValue.getFirstChild();
-    if (leftValue == null || leftValue.getNode().getElementType() != BuckTypes.IDENTIFIER) {
-      return false;
-    }
-    return leftValue.getText().equals("deps") || leftValue.getText().equals("visibility");
+  boolean checkArgumentName(@Nullable BuckArgument buckArgument) {
+    return Optional.ofNullable(buckArgument)
+        .map(BuckArgument::getIdentifier)
+        .map(PsiElement::getText)
+        .map(ARGUMENTS_TO_SORT::contains)
+        .orElse(false);
   }
 
   /**

@@ -1,0 +1,5 @@
+[apple]
+  modulemap_mode = umbrella_directory
+
+[cxx]
+  default_platform = iphonesimulator-x86_64

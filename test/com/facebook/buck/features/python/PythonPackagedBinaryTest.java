@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.python;
@@ -21,12 +21,11 @@ import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
@@ -42,13 +41,12 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -85,17 +83,21 @@ public class PythonPackagedBinaryTest {
             new HashedFileTool(
                 PathSourcePath.of(projectFilesystem, Paths.get("dummy_path_to_pex_runner"))),
             ".pex",
-            new PythonEnvironment(Paths.get("fake_python"), PythonVersion.of("CPython", "2.7")),
+            new PythonEnvironment(
+                Paths.get("fake_python"),
+                PythonVersion.of("CPython", "2.7"),
+                PythonBuckConfig.SECTION,
+                UnconfiguredTargetConfiguration.INSTANCE),
             "main",
-            PythonPackageComponents.of(
-                ImmutableMap.of(
-                    Paths.get(main), PathSourcePath.of(projectFilesystem, mainSrc),
-                    Paths.get(mod1), PathSourcePath.of(projectFilesystem, src1),
-                    Paths.get(mod2), PathSourcePath.of(projectFilesystem, src2)),
-                ImmutableMap.of(),
-                ImmutableMap.of(),
-                ImmutableMultimap.of(),
-                Optional.empty()),
+            new PythonPackageComponents.Builder()
+                .putModules(
+                    target,
+                    PythonMappedComponents.of(
+                        ImmutableSortedMap.of(
+                            Paths.get(main), PathSourcePath.of(projectFilesystem, mainSrc),
+                            Paths.get(mod1), PathSourcePath.of(projectFilesystem, src1),
+                            Paths.get(mod2), PathSourcePath.of(projectFilesystem, src2))))
+                .build(),
             ImmutableSortedSet.of(),
             /* cache */ true,
             /* legacyOutputPath */ false);
@@ -106,8 +108,7 @@ public class PythonPackagedBinaryTest {
 
   @Test
   public void testRuleKeysFromModuleLayouts() throws IOException {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
 
     // Create two different sources, which we'll swap in as different modules.
     Path main = tmpDir.newFile().toPath();
@@ -133,7 +134,7 @@ public class PythonPackagedBinaryTest {
     // across different python libraries.
     RuleKey pair1 =
         getRuleKeyForModuleLayout(
-            new TestDefaultRuleKeyFactory(hashCache, resolver, ruleFinder),
+            new TestDefaultRuleKeyFactory(hashCache, ruleFinder),
             ruleFinder,
             "main.py",
             mainRelative,
@@ -143,7 +144,7 @@ public class PythonPackagedBinaryTest {
             source2Relative);
     RuleKey pair2 =
         getRuleKeyForModuleLayout(
-            new TestDefaultRuleKeyFactory(hashCache, resolver, ruleFinder),
+            new TestDefaultRuleKeyFactory(hashCache, ruleFinder),
             ruleFinder,
             "main.py",
             mainRelative,
@@ -153,7 +154,7 @@ public class PythonPackagedBinaryTest {
             source1Relative);
     RuleKey pair3 =
         getRuleKeyForModuleLayout(
-            new TestDefaultRuleKeyFactory(hashCache, resolver, ruleFinder),
+            new TestDefaultRuleKeyFactory(hashCache, ruleFinder),
             ruleFinder,
             "main.py",
             mainRelative,
@@ -163,7 +164,7 @@ public class PythonPackagedBinaryTest {
             source1Relative);
     RuleKey pair4 =
         getRuleKeyForModuleLayout(
-            new TestDefaultRuleKeyFactory(hashCache, resolver, ruleFinder),
+            new TestDefaultRuleKeyFactory(hashCache, ruleFinder),
             ruleFinder,
             "main.py",
             mainRelative,

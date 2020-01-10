@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.parser;
@@ -210,10 +210,10 @@ public class ParserIntegrationTest {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("targets", "//:gr");
-    result.assertExitCode("missing name should error", ExitCode.PARSE_ERROR);
-    assertThat(result.getStderr(), containsString("genrule"));
-    assertThat(result.getStderr(), containsString("gr"));
-    assertThat(result.getStderr(), containsString("out"));
+    result.assertExitCode("missing name should error", ExitCode.BUILD_ERROR);
+    assertThat(
+        result.getStderr(),
+        containsString("One and only one of 'out' or 'outs' must be present in genrule"));
   }
 
   @Test
@@ -250,6 +250,48 @@ public class ParserIntegrationTest {
     processResult = workspace.runBuckCommand("build", "//java2:foo");
     processResult.assertFailure();
     assertThat(processResult.getStderr(), containsString("can only be referenced from"));
+  }
+
+  @Test
+  public void packageVisibilityIsEnforced() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "package_visibility", temporaryFolder);
+    workspace.setUp();
+
+    workspace.runBuckCommand("build", "//:should_pass").assertSuccess();
+    workspace.runBuckCommand("build", "//:should_pass_2").assertSuccess();
+
+    ProcessResult processResult = workspace.runBuckCommand("build", "//:should_fail");
+    processResult.assertFailure();
+    assertThat(processResult.getStderr(), containsString("which is not visible"));
+
+    workspace.runBuckCommand("build", "//bar:should_pass").assertSuccess();
+
+    processResult = workspace.runBuckCommand("build", "//bar:should_fail");
+    processResult.assertFailure();
+    assertThat(processResult.getStderr(), containsString("which is not visible"));
+  }
+
+  @Test
+  public void parentPackageVisibilityIsEnforced() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "package_inheritance", temporaryFolder);
+    workspace.setUp();
+
+    workspace.runBuckCommand("build", "//:should_pass").assertSuccess();
+    workspace.runBuckCommand("build", "//:should_pass_2").assertSuccess();
+
+    ProcessResult processResult = workspace.runBuckCommand("build", "//:should_fail");
+    processResult.assertFailure();
+    assertThat(processResult.getStderr(), containsString("which is not visible"));
+
+    workspace.runBuckCommand("build", "//bar:should_pass").assertSuccess();
+
+    processResult = workspace.runBuckCommand("build", "//bar:should_fail");
+    processResult.assertFailure();
+    assertThat(processResult.getStderr(), containsString("which is not visible"));
   }
 
   static class BigFileTree {
@@ -398,6 +440,13 @@ public class ParserIntegrationTest {
         "NameError: global name 'java_library' is not defined",
         "extension.bzl\", line 5",
         "BUCK\", line 5");
+    assertParseFailedWithSubstrings(
+        workspace.runBuckBuild(
+            "//python/native_in_build_file:main",
+            "-c",
+            "parser.disable_implicit_native_rules=true"),
+        "AttributeError: 'native' object has no attribute 'java_library'",
+        "BUCK\", line 1");
     workspace
         .runBuckBuild(
             "//python/native_in_extension_bzl:main",
@@ -451,6 +500,14 @@ public class ParserIntegrationTest {
         "name 'java_library' is not defined",
         "extension.bzl\", line 5",
         "BUCK\", line 4");
+    assertParseFailedWithSubstrings(
+        workspace.runBuckBuild(
+            "//skylark/native_in_build_file:main",
+            "-c",
+            "parser.polyglot_parsing_enabled=true",
+            "-c",
+            "parser.disable_implicit_native_rules=true"),
+        "BUCK:2:1: type 'native (a language module)' has no method java_library");
     workspace
         .runBuckBuild(
             "//skylark/native_in_extension_bzl:main",

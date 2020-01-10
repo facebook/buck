@@ -1,16 +1,16 @@
-# Copyright 2016-present Facebook, Inc.
+# Copyright (c) Facebook, Inc. and its affiliates.
 #
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License. You may obtain
-# a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations
-# under the License.
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import os
 import platform
@@ -23,7 +23,9 @@ import tempfile
 def run_buck_process(command, cwd=None):
     root_directory = os.getcwd()
     cwd = cwd or root_directory
-    buck_path = os.path.join(root_directory, "buck-out", "gen", "programs", "buck.pex")
+    buck_path = os.getenv("TEST_BUCK")
+    if not buck_path:
+        raise Exception("TEST_BUCK environment variable must be set for tests")
     if platform.system() == "Windows":
         args = ["python", buck_path] + list(command)
     else:
@@ -77,9 +79,9 @@ class ProjectWorkspace(object):
         # Copy output through to unittest's output so failures are easy to debug. Can't just
         # provide sys.stdout/sys.stderr to Popen because unittest has replaced the streams with
         # things that aren't directly compatible with Popen.
-        sys.stdout.write(stdout)
+        sys.stdout.write(stdout.decode("utf8"))
         sys.stdout.flush()
-        sys.stderr.write(stderr)
+        sys.stderr.write(stderr.decode("utf8"))
         sys.stderr.flush()
 
         return proc.returncode

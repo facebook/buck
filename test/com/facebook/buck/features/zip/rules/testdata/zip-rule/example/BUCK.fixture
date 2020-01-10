@@ -24,7 +24,7 @@ zip_file(
 
 zip_file(
     name = "unrolled",
-    srcs = [":source-jar"],
+    zip_srcs = [":source-jar"],
 )
 
 zip_file(
@@ -34,16 +34,6 @@ zip_file(
         "source-2.0-sources.jar",
     ],
     zip_srcs = ["source-1.0-sources.jar"],
-)
-
-zip_file(
-    name = "zipbreak",
-    srcs = [
-        "cake.txt",
-        "source-1.0-sources.jar",
-    ],
-    merge_source_zips = False,
-    zip_srcs = [":source-jar"],
 )
 
 zip_file(
@@ -62,20 +52,24 @@ zip_file(
     name = "excludecake",
     srcs = [
         "cake.txt",
-        "source-1.0-sources.jar",
     ],
     entries_to_exclude = ["ca.e.*"],
+    zip_srcs = [
+        "source-1.0-sources.jar",
+    ],
 )
 
 zip_file(
     name = "excludenothing",
     srcs = [
         "cake.txt",
-        "source-1.0-sources.jar",
     ],
     entries_to_exclude = [
         "this.is.not.a.match",
         "neither.is.this",
+    ],
+    zip_srcs = [
+        "source-1.0-sources.jar",
     ],
 )
 
@@ -129,12 +123,27 @@ zip_file(
     ],
 )
 
-zip_file(
-    name = "zip2",
+genrule(
+    name = "zip2_gen",
     srcs = [
         "duplicates/cake.txt",
     ],
-    flatten = True,
+    out = "cake.txt",
+    cmd = "cp duplicates/cake.txt $OUT",
+)
+
+zip_file(
+    name = "zip2",
+    srcs = [
+        ":zip2_gen",
+    ],
+)
+
+zip_file(
+    name = "zip3",
+    srcs = [
+        "cake.txt",
+    ],
 )
 
 zip_file(
@@ -150,5 +159,43 @@ zip_file(
     zip_srcs = [
         ":zip2",
         ":zip1",
+    ],
+)
+
+zip_file(
+    name = "copy-zip-with-empty-dir",
+    zip_srcs = [
+        "zip-with-empty-dir.zip",
+    ],
+)
+
+zip_file(
+    name = "fail_on_duplicates",
+    on_duplicate_entry = "fail",
+    zip_srcs = [
+        ":zip1",
+        ":zip2",
+    ],
+)
+
+zip_file(
+    name = "append_duplicates",
+    srcs = [
+        "cake.txt",
+    ],
+    on_duplicate_entry = "append",
+    zip_srcs = [
+        ":zip1",
+        ":zip3",
+    ],
+)
+
+zip_file(
+    name = "overwrite_mixed_duplicates",
+    srcs = [
+        "cake.txt",
+    ],
+    zip_srcs = [
+        ":zip2",
     ],
 )

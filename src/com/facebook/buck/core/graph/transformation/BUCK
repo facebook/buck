@@ -1,16 +1,12 @@
 java_library(
     name = "transformation",
     srcs = glob(["*.java"]),
-    tests = [
-        "//test/com/facebook/buck/core/graph/transformation:transformation_stackuse",
-        "//test/com/facebook/buck/core/graph/transformation:transformation_unit",
-    ],
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/core/graph/transformation/executor:executor",
-        "//src/com/facebook/buck/core/util/log:log",
-        "//src/com/facebook/buck/util:util",
         "//third-party/java/guava:guava",
-        "//third-party/java/jsr:jsr305",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/graph/transformation/model:model",
     ],
 )

@@ -1,0 +1,18 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "lib",
+    srcs = glob(["*.java"]),
+    tests = [
+        "//test/com/facebook/buck/core/rules/providers/lib:lib",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/core/rules/actions/lib/args:args",
+        "//src/com/facebook/buck/core/starlark/rule/args:args",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/artifact:artifact",
+        "//src/com/facebook/buck/core/rules/providers/impl:impl",
+    ],
+)

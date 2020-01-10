@@ -1,0 +1,11 @@
+java_library(
+    name = "lib",
+    srcs = [
+        "A.java",
+    ],
+    compatible_with = select({
+        "DEFAULT": [
+            "//config:linux_config",
+        ],
+    }),
+)

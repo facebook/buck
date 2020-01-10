@@ -6,10 +6,6 @@ load(
 java_immutables_library(
     name = "step",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//src/com/facebook/buck/android/device:device",
-        "//src/com/facebook/buck/core/build/execution/context:context",
-    ],
     tests = [
         "//test/com/facebook/buck/step:step",
     ],
@@ -19,6 +15,7 @@ java_immutables_library(
         "//src/com/facebook/buck/android/device:device",
         "//src/com/facebook/buck/core/cell:cell",
         "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/rulekey:rulekey",
         "//src/com/facebook/buck/core/toolchain:toolchain",
         "//src/com/facebook/buck/core/util/log:log",
@@ -26,14 +23,19 @@ java_immutables_library(
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/filesystem:filesystem",
-        "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/concurrent:concurrent",
-        "//src/com/facebook/buck/util/environment:environment",
         "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/json:json",
+        "//src/com/facebook/buck/util/string:string",
         "//src/com/facebook/buck/worker:worker_process",
         "//third-party/java/bazel:bazel",
         "//third-party/java/jackson:jackson-annotations",
+        "//third-party/java/remote-apis:remote-apis",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/android/device:device",
+        "//src/com/facebook/buck/core/build/execution/context:context",
     ],
 )

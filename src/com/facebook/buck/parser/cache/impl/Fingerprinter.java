@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.parser.cache.impl;
@@ -21,6 +21,7 @@ import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
@@ -80,21 +81,21 @@ public final class Fingerprinter {
    *
    * @param fs the {@link ProjectFilesystem} that we use to calculate the strong fingerprint.
    * @param includes the list of included build files for which we calculate the strong fingerprint.
-   * @param fileHashCache the {@link FileHashCache} object to use to get the content hash of the
+   * @param fileHashLoader the {@link FileHashCache} object to use to get the content hash of the
    *     loaded files.
    * @return a strong fingerprint - {@link HashCode} that represent a unique hash value.
    * @throws IOException can throw if there is a problem getting the content of the main BUCK build
    *     spec or an included file.
    */
   public static HashCode getStrongFingerprint(
-      ProjectFilesystem fs, ImmutableSortedSet<String> includes, FileHashCache fileHashCache)
+      ProjectFilesystem fs, ImmutableSortedSet<String> includes, FileHashLoader fileHashLoader)
       throws IOException {
     Hasher hasher = Hashing.sha256().newHasher();
 
     for (String value : includes) {
       Path value_path = fs.getPath(value);
       hasher.putString(fs.relativize(value_path).toString(), StandardCharsets.UTF_8);
-      hasher.putBytes(fileHashCache.get(value_path).asBytes());
+      hasher.putBytes(fileHashLoader.get(value_path).asBytes());
     }
 
     return hasher.hash();

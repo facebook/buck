@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.project.intellij;
@@ -147,9 +147,7 @@ public class IjProjectTemplateDataPreparer {
           continue;
         }
         Optional<Path> firstJavaFile =
-            folder
-                .getInputs()
-                .stream()
+            folder.getInputs().stream()
                 .filter(input -> input.getFileName().toString().endsWith(".java"))
                 .findFirst();
         if (firstJavaFile.isPresent()) {
@@ -164,9 +162,7 @@ public class IjProjectTemplateDataPreparer {
   private ImmutableSet<IjModule> createModulesToBeWritten(IjModuleGraph graph) {
     Path rootModuleBasePath = Paths.get(projectConfig.getProjectRoot());
     boolean hasRootModule =
-        graph
-            .getModules()
-            .stream()
+        graph.getModules().stream()
             .anyMatch(module -> rootModuleBasePath.equals(module.getModuleBasePath()));
 
     ImmutableSet<IjModule> supplementalModules = ImmutableSet.of();
@@ -211,8 +207,7 @@ public class IjProjectTemplateDataPreparer {
         .forEach(
             (contentRoot, contentRootFolders) -> {
               List<IjSourceFolder> sourceFolders =
-                  contentRootFolders
-                      .stream()
+                  contentRootFolders.stream()
                       .map(transformToFolder)
                       .sorted()
                       .collect(ImmutableList.toImmutableList());
@@ -298,14 +293,12 @@ public class IjProjectTemplateDataPreparer {
   }
 
   public ImmutableSet<IjSourceFolder> getGeneratedSourceFolders(IjModule module) {
-    return module
-        .getGeneratedSourceCodeFolders()
-        .stream()
+    return module.getGeneratedSourceCodeFolders().stream()
         .map(new IjFolderToIjSourceFolderTransform(module))
         .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 
-  public ImmutableSet<DependencyEntry> getDependencies(IjModule module) {
+  public ImmutableSet<IjDependencyListBuilder.DependencyEntry> getDependencies(IjModule module) {
     ImmutableMap<IjProjectElement, DependencyType> deps = moduleGraph.getDepsFor(module);
     IjDependencyListBuilder dependencyListBuilder = new IjDependencyListBuilder();
 
@@ -334,8 +327,7 @@ public class IjProjectTemplateDataPreparer {
   public ImmutableSortedSet<ModuleIndexEntry> getModuleIndexEntries() {
     String moduleGroupName = projectConfig.getModuleGroupName();
     boolean needToPutModuleToGroup = !moduleGroupName.isEmpty();
-    return modulesToBeWritten
-        .stream()
+    return modulesToBeWritten.stream()
         .map(
             module -> {
               Path moduleOutputFilePath = projectPaths.getModuleImlFilePath(module);

@@ -1,22 +1,22 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.util.cache.impl;
 
 import com.facebook.buck.event.AbstractBuckEvent;
-import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.cache.FileHashCacheEngine;
 import com.facebook.buck.util.cache.HashCodeAndFileType;
@@ -78,14 +78,13 @@ class LimitedFileHashCacheEngine implements FileHashCacheEngine {
     private ImmutableMap<Path, HashCode> loadJarContentsHashes() {
       try {
         return new DefaultJarContentHasher(filesystem, path)
-            .getContentHashes()
-            .entrySet()
-            .stream()
-            .collect(
-                ImmutableMap.toImmutableMap(
-                    entry -> entry.getKey(), entry -> entry.getValue().getHashCode()));
+            .getContentHashes().entrySet().stream()
+                .collect(
+                    ImmutableMap.toImmutableMap(
+                        entry -> entry.getKey(), entry -> entry.getValue().getHashCode()));
       } catch (IOException e) {
-        throw new RuntimeException(e);
+        throw new RuntimeException(
+            String.format("Error while getting jar content hashes for %s", path), e);
       }
     }
 
@@ -214,14 +213,15 @@ class LimitedFileHashCacheEngine implements FileHashCacheEngine {
   }
 
   @Override
-  public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
-    Path relativeFilePath = archiveMemberPath.getArchivePath().normalize();
-    Preconditions.checkState(isArchive(relativeFilePath), relativeFilePath + " is not an archive.");
+  public HashCode getForArchiveMember(Path archiveRelativePath, Path memberPath)
+      throws IOException {
+    Path relativeFilePath = archiveRelativePath.normalize();
+    Preconditions.checkState(
+        isArchive(relativeFilePath), "%s is not an archive.", relativeFilePath);
     Data data = fileSystemMap.get(relativeFilePath);
-    Path memberPath = archiveMemberPath.getMemberPath();
     HashCode hashCode = data.getJarContentsHashes().get(memberPath);
     if (hashCode == null) {
-      throw new NoSuchFileException(archiveMemberPath.toString());
+      throw new NoSuchFileException(archiveRelativePath.toString());
     }
     return hashCode;
   }

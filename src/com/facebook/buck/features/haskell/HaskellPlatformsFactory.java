@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.haskell;
@@ -21,8 +21,9 @@ import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.SystemToolProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
+import com.facebook.buck.cxx.toolchain.impl.DefaultCxxPlatforms;
+import com.facebook.buck.cxx.toolchain.impl.LegacyToolchainProvider;
 import com.facebook.buck.io.ExecutableFinder;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Paths;
@@ -41,10 +42,11 @@ public class HaskellPlatformsFactory {
   }
 
   private HaskellPlatform getPlatform(String section, UnresolvedCxxPlatform unresolvedCxxPlatform) {
-    CxxPlatform cxxPlatform = unresolvedCxxPlatform.getLegacyTotallyUnsafe();
+    CxxPlatform cxxPlatform = LegacyToolchainProvider.getLegacyTotallyUnsafe(unresolvedCxxPlatform);
 
     return HaskellPlatform.builder()
-        .setHaskellVersion(HaskellVersion.of(haskellBuckConfig.getCompilerMajorVersion(section)))
+        .setHaskellVersion(
+            ImmutableHaskellVersion.of(haskellBuckConfig.getCompilerMajorVersion(section)))
         .setCompiler(getCompiler(section))
         .setCompilerFlags(haskellBuckConfig.getCompilerFlags(section).orElse(ImmutableList.of()))
         .setLinker(getLinker(section))
@@ -52,8 +54,10 @@ public class HaskellPlatformsFactory {
         .setPackager(getPackager(section))
         .setHaddock(getHaddock(section))
         .setShouldCacheLinks(haskellBuckConfig.getShouldCacheLinks(section))
+        .setShouldUseArgsfile(haskellBuckConfig.getShouldUseArgsfile(section))
         .setShouldUsedOldBinaryOutputLocation(
             haskellBuckConfig.getShouldUsedOldBinaryOutputLocation(section))
+        .setSupportExposePackage(haskellBuckConfig.getSupportExposePackage(section))
         .setPackageNamePrefix(haskellBuckConfig.getPackageNamePrefix(section))
         .setGhciScriptTemplate(haskellBuckConfig.getGhciScriptTemplate(section))
         .setGhciIservScriptTemplate(haskellBuckConfig.getGhciIservScriptTemplate(section))
@@ -89,13 +93,12 @@ public class HaskellPlatformsFactory {
       Optional<ToolProvider> toolProviderFromConfig, String source, String systemName) {
     return toolProviderFromConfig.orElseGet(
         () ->
-            SystemToolProvider.builder()
-                .setExecutableFinder(executableFinder)
-                .setSourcePathConverter(buckConfig::getPathSourcePath)
-                .setName(Paths.get(systemName))
-                .setEnvironment(buckConfig.getEnvironment())
-                .setSource(source)
-                .build());
+            SystemToolProvider.of(
+                executableFinder,
+                buckConfig::getPathSourcePath,
+                Paths.get(systemName),
+                buckConfig.getEnvironment(),
+                Optional.of(source)));
   }
 
   private ToolProvider getCompiler(String section) {

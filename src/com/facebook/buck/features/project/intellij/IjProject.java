@@ -1,27 +1,23 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.project.intellij;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.targetgraph.impl.TargetGraphAndTargets;
-import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.features.project.intellij.aggregation.DefaultAggregationModuleFactory;
 import com.facebook.buck.features.project.intellij.lang.android.AndroidManifestParser;
 import com.facebook.buck.features.project.intellij.lang.java.ParsingJavaPackageFinder;
@@ -34,36 +30,30 @@ import com.facebook.buck.jvm.java.JavaFileParser;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.Set;
 
 /** Top-level class for IntelliJ project generation. */
 public class IjProject {
 
-  private final TargetGraphAndTargets targetGraphAndTargets;
+  private final TargetGraph targetGraph;
   private final JavaPackageFinder javaPackageFinder;
   private final JavaFileParser javaFileParser;
-  private final ActionGraphBuilder graphBuilder;
-  private final SourcePathResolver sourcePathResolver;
-  private final SourcePathRuleFinder ruleFinder;
   private final ProjectFilesystem projectFilesystem;
   private final IjProjectConfig projectConfig;
   private final ProjectFilesystem outFilesystem;
   private final IJProjectCleaner cleaner;
 
   public IjProject(
-      TargetGraphAndTargets targetGraphAndTargets,
+      TargetGraph targetGraph,
       JavaPackageFinder javaPackageFinder,
       JavaFileParser javaFileParser,
-      ActionGraphBuilder graphBuilder,
       ProjectFilesystem projectFilesystem,
       IjProjectConfig projectConfig,
       ProjectFilesystem outFilesystem) {
-    this.targetGraphAndTargets = targetGraphAndTargets;
+    this.targetGraph = targetGraph;
     this.javaPackageFinder = javaPackageFinder;
     this.javaFileParser = javaFileParser;
-    this.graphBuilder = graphBuilder;
-    this.ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    this.sourcePathResolver = DefaultSourcePathResolver.from(this.ruleFinder);
     this.projectFilesystem = projectFilesystem;
     this.projectConfig = projectConfig;
     this.outFilesystem = outFilesystem;
@@ -104,18 +94,18 @@ public class IjProject {
    * @throws IOException
    */
   private ImmutableSet<BuildTarget> performWriteOrUpdate(boolean updateOnly) throws IOException {
-    final Set<BuildTarget> requiredBuildTargets = Sets.newConcurrentHashSet();
+    final Optional<Set<BuildTarget>> requiredBuildTargets =
+        projectConfig.isSkipBuildEnabled()
+            ? Optional.empty()
+            : Optional.of(Sets.newConcurrentHashSet());
+    IjProjectSourcePathResolver sourcePathResolver = new IjProjectSourcePathResolver(targetGraph);
     IjLibraryFactory libraryFactory =
         new DefaultIjLibraryFactory(
             new DefaultIjLibraryFactoryResolver(
-                projectFilesystem,
-                sourcePathResolver,
-                graphBuilder,
-                ruleFinder,
-                requiredBuildTargets));
+                projectFilesystem, sourcePathResolver, requiredBuildTargets));
     IjModuleFactoryResolver moduleFactoryResolver =
         new DefaultIjModuleFactoryResolver(
-            graphBuilder, sourcePathResolver, ruleFinder, projectFilesystem, requiredBuildTargets);
+            sourcePathResolver, projectFilesystem, requiredBuildTargets, targetGraph);
     SupportedTargetTypeRegistry typeRegistry =
         new SupportedTargetTypeRegistry(
             projectFilesystem, moduleFactoryResolver, projectConfig, javaPackageFinder);
@@ -124,7 +114,7 @@ public class IjProject {
         IjModuleGraphFactory.from(
             projectFilesystem,
             projectConfig,
-            targetGraphAndTargets.getTargetGraph(),
+            targetGraph,
             libraryFactory,
             new DefaultIjModuleFactory(projectFilesystem, typeRegistry),
             new DefaultAggregationModuleFactory(typeRegistry));
@@ -144,6 +134,7 @@ public class IjProject {
     IntellijModulesListParser modulesParser = new IntellijModulesListParser();
     IjProjectWriter writer =
         new IjProjectWriter(
+            targetGraph,
             templateDataPreparer,
             projectConfig,
             projectFilesystem,
@@ -165,7 +156,7 @@ public class IjProject {
       cleaner.writeFilesToKeepToFile(projectConfig.getGeneratedFilesListFilename().get());
     }
 
-    return ImmutableSet.copyOf(requiredBuildTargets);
+    return requiredBuildTargets.map(ImmutableSet::copyOf).orElse(ImmutableSet.of());
   }
 
   /**

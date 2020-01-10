@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_test")
+load("//tools/build_rules:java_rules.bzl", "java_test")
 
 java_test(
     name = "impl",
@@ -6,7 +6,6 @@ java_test(
     deps = [
         ":testutil",
         "//src/com/facebook/buck/cli:cli",
-        "//src/com/facebook/buck/core/build/distributed/synchronization/impl:impl",
         "//src/com/facebook/buck/core/build/engine/cache/manager:manager",
         "//src/com/facebook/buck/core/build/event:event",
         "//src/com/facebook/buck/core/model/impl:impl",
@@ -15,14 +14,15 @@ java_test(
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/file:rules",
+        "//src/com/facebook/buck/rules/modern:modern",
         "//src/com/facebook/buck/shell:rules",
         "//src/com/facebook/buck/step/fs:fs",
         "//src/com/facebook/buck/util/cache/impl:impl",
         "//src/com/facebook/buck/util/json:json",
+        "//src/com/facebook/buck/util/stream:stream",
         "//src/com/facebook/buck/util/zip:zip",
         "//test/com/facebook/buck/artifact_cache:testutil",
         "//test/com/facebook/buck/core/build/context:testutil",
-        "//test/com/facebook/buck/core/build/distributed/synchronization/impl:testutil",
         "//test/com/facebook/buck/core/build/engine/cache/manager:testutil",
         "//test/com/facebook/buck/core/build/engine/manifest:testutil",
         "//test/com/facebook/buck/core/model:testutil",
@@ -54,15 +54,6 @@ java_library(
         ["*.java"],
         exclude = ["*Test.java"],
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/core/build/distributed/synchronization:synchronization",
-        "//src/com/facebook/buck/core/build/engine/delegate:delegate",
-        "//src/com/facebook/buck/core/build/engine/impl:impl",
-        "//src/com/facebook/buck/core/rules/build/strategy:strategy",
-        "//src/com/facebook/buck/rules/keys:keys",
-        "//third-party/java/guava:guava",
-        "//third-party/java/jsr:jsr305",
-    ],
     visibility = [
         "//test/...",
     ],
@@ -70,8 +61,18 @@ java_library(
         "//src/com/facebook/buck/core/build/engine/cache/manager:manager",
         "//src/com/facebook/buck/core/build/engine/config:config",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
+        "//test/com/facebook/buck/core/cell:testutil",
+        "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/rules/keys/config:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/util/concurrent:testutil",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/build/engine/delegate:delegate",
+        "//src/com/facebook/buck/core/build/engine/impl:impl",
+        "//src/com/facebook/buck/core/rules/build/strategy:strategy",
+        "//src/com/facebook/buck/rules/keys:keys",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
     ],
 )

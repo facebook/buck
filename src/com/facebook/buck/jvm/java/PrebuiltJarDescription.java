@@ -1,39 +1,36 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -66,29 +63,28 @@ public class PrebuiltJarDescription
       BuildRuleParams params,
       PrebuiltJarDescriptionArg args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     if (JavaAbis.isClassAbiTarget(buildTarget)) {
       return CalculateClassAbi.of(
-          buildTarget, ruleFinder, projectFilesystem, params, args.getBinaryJar());
+          buildTarget, graphBuilder, projectFilesystem, args.getBinaryJar());
     }
-
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     BuildRule prebuilt =
         new PrebuiltJar(
             buildTarget,
             projectFilesystem,
             params,
-            pathResolver,
+            graphBuilder.getSourcePathResolver(),
             args.getBinaryJar(),
             args.getSourceJar(),
             args.getGwtJar(),
             args.getJavadocUrl(),
             args.getMavenCoords(),
             args.getProvided(),
-            args.getRequiredForSourceOnlyAbi());
+            args.getRequiredForSourceOnlyAbi(),
+            args.getGenerateAbi(),
+            args.getNeverMarkAsUnusedDependency());
 
     BuildTarget gwtTarget = buildTarget.withAppendedFlavors(JavaLibrary.GWT_MODULE_FLAVOR);
     BuildRuleParams gwtParams =
@@ -118,11 +114,11 @@ public class PrebuiltJarDescription
       input = arg.getBinaryJar();
     }
 
-    class ExistingOuputs extends AbstractBuildRuleWithDeclaredAndExtraDeps {
+    class ExistingOutputs extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       @AddToRuleKey private final SourcePath source;
       private final Path output;
 
-      protected ExistingOuputs(
+      protected ExistingOutputs(
           BuildTarget buildTarget,
           ProjectFilesystem projectFilesystem,
           BuildRuleParams params,
@@ -162,7 +158,7 @@ public class PrebuiltJarDescription
         return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
       }
     }
-    return new ExistingOuputs(buildTarget, projectFilesystem, params, input);
+    return new ExistingOutputs(buildTarget, projectFilesystem, params, input);
   }
 
   @Override
@@ -173,7 +169,7 @@ public class PrebuiltJarDescription
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractPrebuiltJarDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps, MaybeRequiredForSourceOnlyAbiArg {
+      extends BuildRuleArg, HasDeclaredDeps, MaybeRequiredForSourceOnlyAbiArg {
     SourcePath getBinaryJar();
 
     Optional<SourcePath> getSourceJar();
@@ -196,6 +192,17 @@ public class PrebuiltJarDescription
       // often a source of annotations and constants. To ease migration to ABI generation from
       // source without deps, we have them present during ABI gen by default.
       return true;
+    }
+
+    // TODO T55723624 remove this
+    @Value.Default
+    default boolean getGenerateAbi() {
+      return true;
+    }
+
+    @Value.Default
+    default boolean getNeverMarkAsUnusedDependency() {
+      return false;
     }
   }
 }

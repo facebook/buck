@@ -1,22 +1,22 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.parser.api;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -30,7 +30,6 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.function.Function;
-import org.immutables.value.Value;
 
 /** Utility class to convert parser-created objects to equivalent POJO-typed objects */
 public class BuildFileManifestPojoizer {
@@ -40,20 +39,21 @@ public class BuildFileManifestPojoizer {
    * result of the transformation is supposed to be a POJO class accepted by {@link
    * BuildFileManifest} protocol.
    */
-  @BuckStyleImmutable
-  @Value.Immutable(builder = false, copy = false)
-  public abstract static class AbstractPojoTransformer {
+  @BuckStyleValue
+  public abstract static class PojoTransformer {
 
     /**
      * Return a type that transformer is able to transform from; the real object should be
      * assignable to this class, so base classes and interfaces can be used too
      */
-    @Value.Parameter
     public abstract Class<?> getClazz();
 
     /** Function that transforms a parser object to POJO object */
-    @Value.Parameter
     public abstract Function<Object, Object> getTransformFunction();
+
+    public static PojoTransformer of(Class<?> clazz, Function<Object, Object> transformFunction) {
+      return ImmutablePojoTransformer.of(clazz, transformFunction);
+    }
   }
 
   private BuildFileManifestPojoizer() {
@@ -87,13 +87,12 @@ public class BuildFileManifestPojoizer {
    * BuildFileManifestPojoizer#convertToPojo} so {@link BuildFileManifestPojoizer} should be
    * constructed beforehand.
    */
-  public BuildFileManifestPojoizer addPojoTransformer(
-      BuildFileManifestPojoizer.AbstractPojoTransformer customTransformer) {
+  public BuildFileManifestPojoizer addPojoTransformer(PojoTransformer customTransformer) {
     transformers.add(customTransformer);
     return this;
   }
 
-  private List<AbstractPojoTransformer> transformers = new ArrayList<>(8);
+  private List<PojoTransformer> transformers = new ArrayList<>(8);
 
   /**
    * Recursively convert parser-created objects into equivalent POJO objects. All collections are
@@ -113,7 +112,7 @@ public class BuildFileManifestPojoizer {
   public Object convertToPojo(Object parserObj) {
     // if none of user transformers matched, apply default transformations
     for (int i = transformers.size() - 1; i >= 0; i--) {
-      BuildFileManifestPojoizer.AbstractPojoTransformer transformer = transformers.get(i);
+      PojoTransformer transformer = transformers.get(i);
       if (transformer.getClazz().isInstance(parserObj)) {
         return transformer.getTransformFunction().apply(parserObj);
       }

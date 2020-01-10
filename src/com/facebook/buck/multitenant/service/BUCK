@@ -1,0 +1,43 @@
+kotlin_library(
+    name = "service",
+    srcs = glob(["*.kt"]),
+    tests = [
+        "//test/com/facebook/buck/multitenant/service:service",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/multitenant/...",
+        "//test/com/facebook/buck/multitenant/...",
+    ],
+    deps = [
+        ":RuleTypeFactory",
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/model/targetgraph/raw:raw",
+        "//src/com/facebook/buck/core/parser/buildtargetpattern:buildtargetpattern",
+        "//src/com/facebook/buck/io/pathformat:pathformat",
+        "//src/com/facebook/buck/multitenant/cache:cache",
+        "//src/com/facebook/buck/multitenant/collect:collect",
+        "//src/com/facebook/buck/multitenant/fs:fs",
+        "//src/com/facebook/buck/rules/visibility:visibility",
+        "//third-party/java/fastutil:fastutil",
+        "//third-party/java/guava:guava",
+        "//third-party/java/vavr:vavr",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/util/json:json",
+        "//third-party/java/kotlinx-coroutines:kotlinx-coroutines",
+    ],
+)
+
+# This rule is only visible within this package by design. See Javadoc.
+java_library(
+    name = "RuleTypeFactory",
+    srcs = [
+        "RuleTypeFactory.java",
+    ],
+    visibility = [
+        "//test/com/facebook/buck/multitenant/...",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/model:model",
+    ],
+)

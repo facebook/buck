@@ -32,6 +32,17 @@ java_library(
 )
 
 java_library(
+    name = "bar_with_runtime_dep",
+    srcs = ["Bar.java"],
+    visibility = [
+        "PUBLIC",
+    ],
+    runtime_deps = [
+        "buck//third-party/java/jsr:jsr305",
+    ],
+)
+
+java_library(
     name = "meh",
     srcs = ["Meh.java"],
 )
@@ -97,11 +108,79 @@ java_library(
 )
 
 java_library(
+    name = "bar_with_dep_and_fail_option",
+    srcs = ["Bar.java"],
+    on_unused_dependencies = "fail",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "buck//third-party/java/jsr:jsr305",
+    ],
+)
+
+java_library(
     name = "bar_with_exported_provided_dep",
     srcs = ["Bar.java"],
     exported_provided_deps = [
         "buck//third-party/java/jsr:jsr305",
     ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+java_library(
+    name = "bar_with_dep_marked_as_never_unused",
+    srcs = ["Bar.java"],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":dep_marked_as_never_unused",
+    ],
+)
+
+java_library(
+    name = "dep_marked_as_never_unused",
+    srcs = ["Meh.java"],
+    never_mark_as_unused_dependency = True,
+)
+
+java_library(
+    name = "res_dep",
+    srcs = [],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [":res"],
+)
+
+java_library(
+    name = "barmeh_with_unused_dep",
+    srcs = ["BarMeh.java"],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":dep_with_exported_dep",
+        ":meh",
+    ],
+)
+
+java_library(
+    name = "dep_with_exported_dep",
+    srcs = [],
+    exported_deps = [
+        ":meh",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+android_resource(
+    name = "res",
     visibility = [
         "PUBLIC",
     ],

@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
@@ -34,6 +34,9 @@ import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -55,6 +58,7 @@ import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.shell.GenruleBuilder;
+import com.facebook.buck.testutil.CloseableResource;
 import com.facebook.buck.testutil.FakeOutputStream;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -98,10 +102,13 @@ public class TargetsCommandTest {
   private ListeningExecutorService executor;
   private CapturingConsoleEventListener capturingConsoleEventListener;
 
-  private SortedSet<TargetNode<?>> buildTargetNodes(
-      ProjectFilesystem filesystem, String buildTarget) {
+  @Rule
+  public CloseableResource<DepsAwareExecutor<? super ComputeResult, ?>> depsAwareExecutor =
+      CloseableResource.of(() -> DefaultDepsAwareExecutor.of(4));
+
+  private SortedSet<TargetNode<?>> buildTargetNodes(String buildTarget) {
     SortedSet<TargetNode<?>> buildRules = new TreeSet<>();
-    BuildTarget target = BuildTargetFactory.newInstance(filesystem.getRootPath(), buildTarget);
+    BuildTarget target = BuildTargetFactory.newInstance(buildTarget);
     TargetNode<?> node = JavaLibraryBuilder.createBuilder(target).build();
     buildRules.add(node);
     return buildRules;
@@ -127,6 +134,7 @@ public class TargetsCommandTest {
     targetsCommand = new TargetsCommand();
     params =
         CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
+            depsAwareExecutor.get(),
             console,
             cell,
             artifactCache,
@@ -147,7 +155,7 @@ public class TargetsCommandTest {
   @Test
   public void testJsonOutputForBuildTarget() throws IOException, BuildFileParseException {
     // run `buck targets` on the build file and parse the observed JSON.
-    SortedSet<TargetNode<?>> nodes = buildTargetNodes(filesystem, "//:test-library");
+    SortedSet<TargetNode<?>> nodes = buildTargetNodes("//:test-library");
 
     targetsCommand.printJsonForTargets(
         params, executor, nodes, ImmutableMap.of(), ImmutableSet.of());
@@ -217,7 +225,7 @@ public class TargetsCommandTest {
   @Test
   public void testJsonOutputForMissingBuildTarget() throws BuildFileParseException {
     // nonexistent target should not exist.
-    SortedSet<TargetNode<?>> buildRules = buildTargetNodes(filesystem, "//:nonexistent");
+    SortedSet<TargetNode<?>> buildRules = buildTargetNodes("//:nonexistent");
     targetsCommand.printJsonForTargets(
         params, executor, buildRules, ImmutableMap.of(), ImmutableSet.of());
 
@@ -229,11 +237,11 @@ public class TargetsCommandTest {
   }
 
   @Test
-  public void testPrintNullDelimitedTargets() throws UnsupportedEncodingException {
+  public void printTargets() throws UnsupportedEncodingException {
     Iterable<String> targets = ImmutableList.of("//foo:bar", "//foo:baz");
     FakeOutputStream fakeStream = new FakeOutputStream();
     PrintStream printStream = new PrintStream(fakeStream);
-    TargetsCommand.printNullDelimitedTargets(targets, printStream);
+    TargetsCommand.printTargets(targets, "\0", printStream);
     printStream.flush();
     assertEquals("//foo:bar\0//foo:baz\0", fakeStream.toString(Charsets.UTF_8.name()));
   }
@@ -276,7 +284,8 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.empty(),
             false,
-            "BUCK");
+            "BUCK",
+            filesystem);
     assertTrue(matchingBuildRules.isEmpty());
 
     // Only test-android-library target depends on the referenced file.
@@ -288,7 +297,8 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.empty(),
             false,
-            "BUCK");
+            "BUCK",
+            filesystem);
     assertEquals(ImmutableSet.of("//javatest:test-java-library"), matchingBuildRules.keySet());
 
     // The test-android-library target indirectly depends on the referenced file,
@@ -301,7 +311,8 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.empty(),
             false,
-            "BUCK");
+            "BUCK",
+            filesystem);
     assertEquals(
         ImmutableSet.of("//javatest:test-java-library", "//javasrc:java-library"),
         matchingBuildRules.keySet());
@@ -315,7 +326,8 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.empty(),
             false,
-            "BUCK");
+            "BUCK",
+            filesystem);
     assertEquals(
         ImmutableSet.of("//javatest:test-java-library", "//javasrc:java-library"),
         matchingBuildRules.keySet());
@@ -331,13 +343,20 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.empty(),
             false,
-            "BUCK");
+            "BUCK",
+            filesystem);
     assertEquals(ImmutableSet.of("//javatest:test-java-library"), matchingBuildRules.keySet());
 
     // If no referenced file, means this filter is disabled, we can find all targets.
     matchingBuildRules =
         targetsCommand.getMatchingNodes(
-            targetGraph, Optional.empty(), Optional.empty(), Optional.empty(), false, "BUCK");
+            targetGraph,
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            false,
+            "BUCK",
+            filesystem);
     assertEquals(
         ImmutableSet.of("//javatest:test-java-library", "//javasrc:java-library", "//empty:empty"),
         matchingBuildRules.keySet());
@@ -350,7 +369,8 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.of(ImmutableSet.of(JavaTestDescription.class, JavaLibraryDescription.class)),
             false,
-            "BUCK");
+            "BUCK",
+            filesystem);
     assertEquals(
         ImmutableSet.of("//javatest:test-java-library", "//javasrc:java-library"),
         matchingBuildRules.keySet());
@@ -363,7 +383,8 @@ public class TargetsCommandTest {
             Optional.of(ImmutableSet.of(BuildTargetFactory.newInstance("//javasrc:java-library"))),
             Optional.of(ImmutableSet.of(JavaTestDescription.class, JavaLibraryDescription.class)),
             false,
-            "BUCK");
+            "BUCK",
+            filesystem);
     assertEquals(ImmutableSet.of("//javasrc:java-library"), matchingBuildRules.keySet());
 
     // Only filter by BuildTarget
@@ -374,7 +395,8 @@ public class TargetsCommandTest {
             Optional.of(ImmutableSet.of(BuildTargetFactory.newInstance("//javasrc:java-library"))),
             Optional.empty(),
             false,
-            "BUCK");
+            "BUCK",
+            filesystem);
     assertEquals(ImmutableSet.of("//javasrc:java-library"), matchingBuildRules.keySet());
 
     // Filter by BuildTarget and Referenced Files
@@ -385,7 +407,8 @@ public class TargetsCommandTest {
             Optional.of(ImmutableSet.of(BuildTargetFactory.newInstance("//javasrc:java-library"))),
             Optional.empty(),
             false,
-            "BUCK");
+            "BUCK",
+            filesystem);
     assertEquals(ImmutableSet.<String>of(), matchingBuildRules.keySet());
   }
 
@@ -410,7 +433,8 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.empty(),
             false,
-            "BUCK");
+            "BUCK",
+            filesystem);
     assertTrue(matchingBuildRules.isEmpty());
 
     // The AppleLibrary matches the referenced file.
@@ -421,7 +445,8 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.empty(),
             false,
-            "BUCK");
+            "BUCK",
+            filesystem);
     assertEquals(ImmutableSet.of("//foo:lib"), matchingBuildRules.keySet());
   }
 
@@ -454,7 +479,8 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.empty(),
             false,
-            "BUCK");
+            "BUCK",
+            filesystem);
     assertTrue(matchingBuildRules.isEmpty());
 
     // Both AppleLibrary nodes, AppleBundle, and AppleTest match the referenced file.
@@ -465,7 +491,8 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.empty(),
             false,
-            "BUCK");
+            "BUCK",
+            filesystem);
     assertEquals(ImmutableSet.of("//foo:lib", "//foo:xctest"), matchingBuildRules.keySet());
 
     // The test AppleLibrary, AppleBundle and AppleTest match the referenced file.
@@ -476,7 +503,8 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.empty(),
             false,
-            "BUCK");
+            "BUCK",
+            filesystem);
     assertEquals(ImmutableSet.of("//foo:xctest"), matchingBuildRules.keySet());
   }
 
@@ -508,7 +536,8 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.empty(),
             false,
-            "BUCK");
+            "BUCK",
+            projectFilesystem);
     assertEquals(ImmutableSet.of(androidResourceTarget.toString()), matchingBuildRules.keySet());
 
     // Specifying a resource with the same string-like common prefix, but not under the above
@@ -520,7 +549,8 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.empty(),
             false,
-            "BUCK");
+            "BUCK",
+            projectFilesystem);
     assertTrue(matchingBuildRules.isEmpty());
 
     // Specifying a resource with the same string-like common prefix, but not under the above
@@ -532,7 +562,8 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.empty(),
             false,
-            "BUCK");
+            "BUCK",
+            projectFilesystem);
     assertEquals(
         ImmutableSet.of(androidResourceTarget.toString(), genTarget.toString()),
         matchingBuildRules.keySet());
@@ -597,7 +628,8 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.empty(),
             true,
-            "BUCK");
+            "BUCK",
+            filesystem);
     assertTrue(matchingBuildRules.isEmpty());
 
     // Test1, test2 and the library depend on the referenced file.
@@ -608,7 +640,8 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.empty(),
             true,
-            "BUCK");
+            "BUCK",
+            filesystem);
     assertEquals(ImmutableSet.of("//foo:lib", "//foo:xctest1"), matchingBuildRules.keySet());
 
     // Test1, test2 and the library depend on the referenced file.
@@ -619,7 +652,8 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.empty(),
             true,
-            "BUCK");
+            "BUCK",
+            filesystem);
     assertEquals(
         ImmutableSet.of("//foo:lib", "//foo:xctest1", "//foo:xctest2"),
         matchingBuildRules.keySet());
@@ -632,7 +666,8 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.empty(),
             true,
-            "BUCK");
+            "BUCK",
+            filesystem);
     assertEquals(
         ImmutableSet.of(
             "//foo:lib",
@@ -650,7 +685,8 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.empty(),
             true,
-            "BUCK");
+            "BUCK",
+            filesystem);
     assertEquals(
         ImmutableSet.of(
             "//foo:lib",

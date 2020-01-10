@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.io.watchman;
@@ -22,9 +22,10 @@ import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.io.filesystem.PathMatcher;
-import com.facebook.buck.io.watchman.AbstractWatchmanPathEvent.Kind;
+import com.facebook.buck.io.watchman.WatchmanEvent.Type;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.MostExecutors;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -33,8 +34,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import java.io.IOException;
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -168,11 +169,11 @@ public class WatchmanWatcher {
     Map<String, Object> sinceParams = new LinkedHashMap<>();
     sinceParams.put("expression", Lists.newArrayList("not", excludeAnyOf));
     sinceParams.put("empty_on_fresh_instance", true);
-    sinceParams.put("fields", Lists.newArrayList("name", "exists", "new"));
+    sinceParams.put("fields", Lists.newArrayList("name", "exists", "new", "type"));
     if (watchPrefix.isPresent()) {
       sinceParams.put("relative_root", watchPrefix.get());
     }
-    return WatchmanQuery.of(watchRoot, sinceParams);
+    return ImmutableWatchmanQuery.of(watchRoot, sinceParams);
   }
 
   @VisibleForTesting
@@ -201,7 +202,7 @@ public class WatchmanWatcher {
     buckEventBus.post(WatchmanStatusEvent.started());
 
     try {
-      List<Callable<Void>> watchmanQueries = new ArrayList<>();
+      List<Callable<Unit>> watchmanQueries = new ArrayList<>();
       for (Path cellPath : queries.keySet()) {
         watchmanQueries.add(
             () -> {
@@ -226,14 +227,14 @@ public class WatchmanWatcher {
                       perfEvent);
                 }
               }
-              return null;
+              return Unit.UNIT;
             });
       }
 
       // Run all of the Watchman queries in parallel. This can be significant if you have a lot of
       // cells.
-      List<Future<Void>> futures = executorService.invokeAll(watchmanQueries);
-      for (Future<Void> future : futures) {
+      List<Future<Unit>> futures = executorService.invokeAll(watchmanQueries);
+      for (Future<Unit> future : futures) {
         try {
           future.get();
         } catch (ExecutionException e) {
@@ -283,7 +284,7 @@ public class WatchmanWatcher {
               query, timeoutMillis);
           postWatchEvent(
               buckEventBus,
-              WatchmanOverflowEvent.of(
+              ImmutableWatchmanOverflowEvent.of(
                   cellPath,
                   "Timed out after "
                       + TimeUnit.MILLISECONDS.toSeconds(timeoutMillis)
@@ -300,7 +301,8 @@ public class WatchmanWatcher {
           LOG.debug(e, "Error in Watchman output. Posting an overflow event to flush the caches");
           postWatchEvent(
               buckEventBus,
-              WatchmanOverflowEvent.of(cellPath, "Watchman error occurred: " + e.getMessage()));
+              ImmutableWatchmanOverflowEvent.of(
+                  cellPath, "Watchman error occurred: " + e.getMessage()));
           throw e;
         }
 
@@ -331,7 +333,8 @@ public class WatchmanWatcher {
             case POST_OVERFLOW_EVENT:
               postWatchEvent(
                   buckEventBus,
-                  WatchmanOverflowEvent.of(cellPath, "Watchman has been initialized recently."));
+                  ImmutableWatchmanOverflowEvent.of(
+                      cellPath, "Watchman has been initialized recently."));
               break;
           }
           filesHaveChanged.set(true);
@@ -339,60 +342,92 @@ public class WatchmanWatcher {
         }
 
         List<Map<String, Object>> files = (List<Map<String, Object>>) response.get("files");
-        if (files != null) {
-          if (files.size() > OVERFLOW_THRESHOLD) {
-            LOG.warn(
-                "Posting overflow event: too many files changed: %d > %d",
-                files.size(), OVERFLOW_THRESHOLD);
-            postWatchEvent(
-                buckEventBus, WatchmanOverflowEvent.of(cellPath, "Too many files changed."));
-            filesHaveChanged.set(true);
-            return;
-          }
-          if (files.size() < TRACE_CHANGES_THRESHOLD) {
-            perfEvent.appendFinishedInfo("files", files);
-          } else {
-            perfEvent.appendFinishedInfo("files_sample", files.subList(0, TRACE_CHANGES_THRESHOLD));
-          }
-
-          for (Map<String, Object> file : files) {
-            String fileName = (String) file.get("name");
-            if (fileName == null) {
-              LOG.warn("Filename missing from watchman file response %s", file);
-              postWatchEvent(
-                  buckEventBus,
-                  WatchmanOverflowEvent.of(cellPath, "Filename missing from watchman response."));
-              filesHaveChanged.set(true);
-              return;
-            }
-            Boolean fileNew = (Boolean) file.get("new");
-            Kind kind = WatchmanPathEvent.Kind.MODIFY;
-            if (fileNew != null && fileNew) {
-              kind = WatchmanPathEvent.Kind.CREATE;
-            }
-            Boolean fileExists = (Boolean) file.get("exists");
-            if (fileExists != null && !fileExists) {
-              kind = WatchmanPathEvent.Kind.DELETE;
-            }
-            postWatchEvent(buckEventBus, WatchmanPathEvent.of(cellPath, kind, Paths.get(fileName)));
-          }
-
-          if (!files.isEmpty() || freshInstanceAction == FreshInstanceAction.NONE) {
-            filesHaveChanged.set(true);
-          }
-
-          LOG.debug("Posted %d Watchman events.", files.size());
-        } else {
+        if (files == null) {
           if (freshInstanceAction == FreshInstanceAction.NONE) {
             filesHaveChanged.set(true);
           }
+          return;
+        }
+        LOG.debug("Watchman indicated %d changes", files.size());
+        if (files.size() > OVERFLOW_THRESHOLD) {
+          LOG.warn(
+              "Posting overflow event: too many files changed: %d > %d",
+              files.size(), OVERFLOW_THRESHOLD);
+          postWatchEvent(
+              buckEventBus, ImmutableWatchmanOverflowEvent.of(cellPath, "Too many files changed."));
+          filesHaveChanged.set(true);
+          return;
+        }
+        if (files.size() < TRACE_CHANGES_THRESHOLD) {
+          perfEvent.appendFinishedInfo("files", files);
+        } else {
+          perfEvent.appendFinishedInfo("files_sample", files.subList(0, TRACE_CHANGES_THRESHOLD));
+        }
+
+        FileSystem fileSystem = cellPath.getFileSystem();
+        List<WatchmanMultiplePathEvent.Change> changes = new ArrayList<>(files.size());
+        for (Map<String, Object> file : files) {
+          String fileName = (String) file.get("name");
+          if (fileName == null) {
+            LOG.warn("Filename missing from watchman file response %s", file);
+            postWatchEvent(
+                buckEventBus,
+                ImmutableWatchmanOverflowEvent.of(
+                    cellPath, "Filename missing from watchman response."));
+            filesHaveChanged.set(true);
+            return;
+          }
+          Boolean fileNew = (Boolean) file.get("new");
+          WatchmanEvent.Kind kind = WatchmanEvent.Kind.MODIFY;
+          if (fileNew != null && fileNew) {
+            kind = WatchmanEvent.Kind.CREATE;
+          }
+          Boolean fileExists = (Boolean) file.get("exists");
+          if (fileExists != null && !fileExists) {
+            kind = WatchmanEvent.Kind.DELETE;
+          }
+
+          // Following legacy behavior, everything we get from Watchman is interpreted as file
+          // changes unless explicitly specified with `type` field
+          WatchmanEvent.Type type = Type.FILE;
+          String stype = (String) file.get("type");
+          if (stype != null) {
+            switch (stype) {
+              case "d":
+                type = Type.DIRECTORY;
+                break;
+              case "l":
+                type = Type.SYMLINK;
+                break;
+            }
+          }
+
+          Path filePath = fileSystem.getPath(fileName);
+
+          changes.add(ImmutableChange.of(type, filePath, kind));
+
+          if (type != WatchmanEvent.Type.DIRECTORY) {
+            // WatchmanPathEvent is sent for everything but directories - this is legacy
+            // behavior and we want to keep it.
+            // TODO(buck_team): switch everything to use WatchmanMultiplePathEvent and retire
+            // WatchmanPathEvent
+            postWatchEvent(buckEventBus, ImmutableWatchmanPathEvent.of(cellPath, kind, filePath));
+          }
+        }
+
+        if (!changes.isEmpty()) {
+          postWatchEvent(buckEventBus, ImmutableWatchmanMultiplePathEvent.of(cellPath, changes));
+        }
+
+        if (!files.isEmpty() || freshInstanceAction == FreshInstanceAction.NONE) {
+          filesHaveChanged.set(true);
         }
       }
     } catch (InterruptedException e) {
       String message = "The communication with watchman daemon has been interrupted.";
       LOG.warn(e, message);
       // Events may have been lost, signal overflow.
-      postWatchEvent(buckEventBus, WatchmanOverflowEvent.of(cellPath, message));
+      postWatchEvent(buckEventBus, ImmutableWatchmanOverflowEvent.of(cellPath, message));
       Threads.interruptCurrentThread();
       throw e;
     } catch (IOException e) {
@@ -400,7 +435,7 @@ public class WatchmanWatcher {
           "There was an error while communicating with the watchman daemon: " + e.getMessage();
       LOG.error(e, message);
       // Events may have been lost, signal overflow.
-      postWatchEvent(buckEventBus, WatchmanOverflowEvent.of(cellPath, message));
+      postWatchEvent(buckEventBus, ImmutableWatchmanOverflowEvent.of(cellPath, message));
       throw e;
     }
   }
@@ -411,7 +446,10 @@ public class WatchmanWatcher {
 
     // Post analogous Status events for logging/status.
     if (event instanceof WatchmanOverflowEvent) {
-      eventBus.post(WatchmanStatusEvent.overflow(((WatchmanOverflowEvent) event).getReason()));
+      WatchmanOverflowEvent overflowEvent = (WatchmanOverflowEvent) event;
+
+      eventBus.post(
+          WatchmanStatusEvent.overflow(overflowEvent.getReason(), overflowEvent.getCellPath()));
     } else if (event instanceof WatchmanPathEvent) {
       WatchmanPathEvent pathEvent = (WatchmanPathEvent) event;
       switch (pathEvent.getKind()) {

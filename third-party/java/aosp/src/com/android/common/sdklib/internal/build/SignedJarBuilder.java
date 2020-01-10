@@ -124,7 +124,7 @@ public class SignedJarBuilder {
   public SignedJarBuilder(OutputStream out, PrivateKey key, X509Certificate certificate)
       throws IOException, NoSuchAlgorithmException {
     mOutputJar = new JarOutputStream(new BufferedOutputStream(out));
-    mOutputJar.setLevel(9);
+    mOutputJar.setLevel(4);
     mKey = key;
     mCertificate = certificate;
 

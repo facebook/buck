@@ -5,6 +5,6 @@ fun main(args: Array<String>) {
     JavaClass()
 }
 
-fun out(num1: Int) : Float {
+fun out(num1: Int): Float {
     return num1 / .66f
 }

@@ -1,18 +1,19 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.features.haskell;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
@@ -28,7 +29,7 @@ import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -120,9 +121,7 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(BuildableSupport.getDepsCollection(ghcPkg, ruleFinder))
                     .addAll(
-                        depPackages
-                            .values()
-                            .stream()
+                        depPackages.values().stream()
                             .flatMap(pkg -> pkg.getDeps(ruleFinder))
                             .iterator())
                     .addAll(
@@ -148,7 +147,7 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
   }
 
   private WriteFileStep getWriteRegistrationFileStep(
-      SourcePathResolver resolver, Path registrationFile, Path packageDb) {
+      SourcePathResolverAdapter resolver, Path registrationFile, Path packageDb) {
     Map<String, String> entries = new LinkedHashMap<>();
 
     entries.put("name", packageInfo.getName());
@@ -187,19 +186,21 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     }
     entries.put("library-dirs", Joiner.on(", ").join(libDirs));
 
-    if (Linker.LinkableDepType.STATIC == depType) {
-      entries.put("hs-libraries", Joiner.on(", ").join(libs));
-    } else {
+    if (Linker.LinkableDepType.SHARED == depType) {
+      // ghc expects the filename to be something like `libfoo-ghc8.x.y.so` but
+      // we have `libfoo.so`.
       entries.put("extra-libraries", Joiner.on(", ").join(libs));
+    } else {
+      // the filename can be either `libfoo.a` or `libfoo_p.a` depending on
+      // if profiling is enabled.
+      entries.put("hs-libraries", Joiner.on(", ").join(libs));
     }
 
     entries.put("depends", Joiner.on(", ").join(depPackages.keySet()));
 
     return new WriteFileStep(
         getProjectFilesystem(),
-        entries
-            .entrySet()
-            .stream()
+        entries.entrySet().stream()
             .map(input -> input.getKey() + ": " + input.getValue())
             .collect(Collectors.joining(System.lineSeparator())),
         registrationFile,
@@ -225,9 +226,9 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     Path packageDb = getPackageDb();
     steps.add(
         RmStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    context.getBuildCellRootPath(), getProjectFilesystem(), packageDb))
-            .withRecursive(true));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), packageDb),
+            true));
     buildableContext.recordArtifact(packageDb);
 
     // Create the registration file.
@@ -258,9 +259,7 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
             ghcPkgCmd,
             ImmutableMap.of(
                 "GHC_PACKAGE_PATH",
-                depPackages
-                    .values()
-                    .stream()
+                depPackages.values().stream()
                     .map(
                         input ->
                             context
@@ -294,12 +293,14 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   private class GhcPkgStep extends ShellStep {
 
-    private final SourcePathResolver resolver;
+    private final SourcePathResolverAdapter resolver;
     private final ImmutableList<String> args;
     private final ImmutableMap<String, String> env;
 
     public GhcPkgStep(
-        SourcePathResolver resolver, ImmutableList<String> args, ImmutableMap<String, String> env) {
+        SourcePathResolverAdapter resolver,
+        ImmutableList<String> args,
+        ImmutableMap<String, String> env) {
       super(getProjectFilesystem().getRootPath());
       this.resolver = resolver;
       this.args = args;

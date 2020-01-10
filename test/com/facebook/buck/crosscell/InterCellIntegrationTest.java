@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.crosscell;
@@ -35,12 +35,12 @@ import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -49,6 +49,7 @@ import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.TestParserFactory;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.testutil.CloseableResource;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
@@ -56,8 +57,8 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.DefaultProcessExecutor;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -90,6 +91,10 @@ public class InterCellIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
   @Rule public ExpectedException thrown = ExpectedException.none();
+
+  @Rule
+  public CloseableResource<DepsAwareExecutor<? super ComputeResult, ?>> executor =
+      CloseableResource.of(() -> DefaultDepsAwareExecutor.of(4));
 
   @Test
   public void ensureThatNormalBuildsWorkAsExpected() throws IOException {
@@ -273,7 +278,7 @@ public class InterCellIntegrationTest {
         prepare("inter-cell/java/primary", "inter-cell/java/secondary");
     ProjectWorkspace primary = cells.getFirst();
 
-    String systemBootclasspath = Bootclasspath.getSystemBootclasspath();
+    String systemBootclasspath = Bootclasspath.getJdk8StubJarPath();
     ProcessResult result =
         primary.runBuckBuild(
             "//:java-binary",
@@ -372,11 +377,10 @@ public class InterCellIntegrationTest {
     registerCell(secondary, "primary", primary);
 
     // We could just do a build, but that's a little extreme since all we need is the target graph
-    Parser parser = TestParserFactory.create(primary.asCell().getBuckConfig());
+    Parser parser = TestParserFactory.create(executor.get(), primary.asCell());
 
     Cell primaryCell = primary.asCell();
-    BuildTarget namedTarget =
-        BuildTargetFactory.newInstance(primaryCell.getFilesystem().getRootPath(), targetName);
+    BuildTarget namedTarget = BuildTargetFactory.newInstance(targetName);
 
     // It's enough that this parses cleanly.
     parser.buildTargetGraph(
@@ -614,8 +618,8 @@ public class InterCellIntegrationTest {
   }
 
   @Test
-  public void testCrossCellAndroidLibrary() throws InterruptedException, IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+  public void testCrossCellAndroidLibrary() throws IOException {
+    AssumeAndroidPlatform.getForDefaultFilesystem().assumeSdkIsAvailable();
 
     Pair<ProjectWorkspace, ProjectWorkspace> cells =
         prepare("inter-cell/android/primary", "inter-cell/android/secondary");
@@ -628,8 +632,8 @@ public class InterCellIntegrationTest {
 
   @Test
   public void testCrossCellAndroidLibraryMerge() throws IOException, InterruptedException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
+    AssumeAndroidPlatform.getForDefaultFilesystem().assumeSdkIsAvailable();
+    AssumeAndroidPlatform.getForDefaultFilesystem().assumeNdkIsAvailable();
 
     Pair<ProjectWorkspace, ProjectWorkspace> cells =
         prepare("inter-cell/android/primary", "inter-cell/android/secondary");
@@ -641,15 +645,14 @@ public class InterCellIntegrationTest {
         secondary, ImmutableMap.of("ndk", ImmutableMap.of("cpu_abis", "x86")));
 
     NdkCxxPlatform platform = AndroidNdkHelper.getNdkCxxPlatform(primary.asCell().getFilesystem());
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
+    TestActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     Path tmpDir = tmp.newFolder("merging_tmp");
     SymbolGetter syms =
         new SymbolGetter(
             new DefaultProcessExecutor(new TestConsole()),
             tmpDir,
             platform.getObjdump(),
-            pathResolver);
+            graphBuilder.getSourcePathResolver());
     SymbolsAndDtNeeded info;
     Path apkPath = primary.buildAndReturnOutput("//apps/sample:app_with_merged_cross_cell_libs");
 
@@ -673,8 +676,8 @@ public class InterCellIntegrationTest {
 
   @Test
   public void testCrossCellDependencyMerge() throws IOException, InterruptedException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
+    AssumeAndroidPlatform.getForDefaultFilesystem().assumeSdkIsAvailable();
+    AssumeAndroidPlatform.getForDefaultFilesystem().assumeNdkIsAvailable();
 
     Pair<ProjectWorkspace, ProjectWorkspace> cells =
         prepare("inter-cell/android/primary", "inter-cell/android/secondary");
@@ -686,15 +689,14 @@ public class InterCellIntegrationTest {
         secondary, ImmutableMap.of("ndk", ImmutableMap.of("cpu_abis", "x86")));
 
     NdkCxxPlatform platform = AndroidNdkHelper.getNdkCxxPlatform(primary.asCell().getFilesystem());
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
+    TestActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     Path tmpDir = tmp.newFolder("merging_tmp");
     SymbolGetter syms =
         new SymbolGetter(
             new DefaultProcessExecutor(new TestConsole()),
             tmpDir,
             platform.getObjdump(),
-            pathResolver);
+            graphBuilder.getSourcePathResolver());
     SymbolsAndDtNeeded info;
     Path apkPath = primary.buildAndReturnOutput("//apps/sample:app_with_merged_cross_cell_deps");
 
@@ -767,7 +769,7 @@ public class InterCellIntegrationTest {
   }
 
   @Test
-  public void testCrossCellCleanCommand() throws IOException, InterruptedException {
+  public void testCrossCellCleanCommand() throws IOException {
     Pair<ProjectWorkspace, ProjectWorkspace> cells =
         prepare("inter-cell/export-file/primary", "inter-cell/export-file/secondary");
     ProjectWorkspace primary = cells.getFirst();

@@ -2,8 +2,8 @@
 
 prebuilt_jar(
     name = "scala-library",
-    binary_jar = "scala-library-2.11.7.jar",
-    maven_coords='org.scala-lang:scala-library:jar:2.11.7',
+    binary_jar = "scala-library-2.13.0.jar",
+    maven_coords = "org.scala-lang:scala-library:jar:2.13.0",
     visibility = [
         "PUBLIC",
     ],
@@ -11,16 +11,16 @@ prebuilt_jar(
 
 prebuilt_jar(
     name = "scala-reflect",
-    binary_jar = "scala-reflect-2.11.7.jar",
-    deps = [":scala-library"],
+    binary_jar = "scala-reflect-2.13.0.jar",
     visibility = [
         "PUBLIC",
     ],
+    deps = [":scala-library"],
 )
 
 prebuilt_jar(
     name = "scala-compiler-lib",
-    binary_jar = "scala-compiler-2.11.7.jar",
+    binary_jar = "scala-compiler-2.13.0.jar",
     deps = [
         ":scala-library",
         ":scala-reflect",
@@ -30,8 +30,8 @@ prebuilt_jar(
 java_binary(
     name = "scala-compiler",
     main_class = "scala.tools.nsc.Main",
-    deps = [":scala-compiler-lib"],
     visibility = [
         "PUBLIC",
     ],
+    deps = [":scala-compiler-lib"],
 )

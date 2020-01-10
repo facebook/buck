@@ -1,0 +1,18 @@
+java_library(
+    name = "coercer",
+    srcs = glob(
+        ["*.java"],
+    ),
+    tests = [
+        "//test/com/facebook/buck/core/test/rule:rule",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/rules/args:args",
+        "//third-party/java/guava:guava",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/test/rule:rule",
+        "//src/com/facebook/buck/rules/macros:macros",
+    ],
+)

@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.zip;
@@ -20,6 +20,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
@@ -44,6 +45,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -51,6 +53,9 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.List;
+import java.util.jar.JarFile;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
@@ -94,6 +99,55 @@ public class ZipStepTest {
     try (ZipArchive zipArchive = new ZipArchive(out, false)) {
       assertEquals(
           ImmutableSet.of("file1.txt", "file2.txt", "file3.txt"), zipArchive.getFileNames());
+    }
+  }
+
+  @Test
+  public void handlesLargeFiles() throws Exception {
+    Path parent = tmp.newFolder("zipstep");
+    Path out = parent.resolve("output.zip");
+
+    Path toZip = tmp.newFolder("zipdir");
+    long entrySize = 4_500_000_000L; // More than 2**32 so zip64 extension needs to be used.
+    try (OutputStream outputStream = Files.newOutputStream(toZip.resolve("file1.bin"))) {
+      byte[] writeBuffer = new byte[64_000];
+      long written = 0;
+      while (written != entrySize) {
+        int toWrite = (int) Math.min(writeBuffer.length, entrySize - written);
+        outputStream.write(writeBuffer, 0, toWrite);
+        written += toWrite;
+      }
+    }
+    Files.createFile(toZip.resolve("file2.bin")); // To test file offset > 2**32.
+
+    ZipStep step =
+        new ZipStep(
+            filesystem,
+            Paths.get("zipstep/output.zip"),
+            ImmutableSet.of(),
+            false,
+            ZipCompressionLevel.NONE,
+            Paths.get("zipdir"));
+    assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
+
+    try (ZipInputStream zipInputStream = new ZipInputStream(Files.newInputStream(out))) {
+      ZipEntry entry = zipInputStream.getNextEntry();
+      assertEquals("file1.bin", entry.getName());
+      assertEquals(entrySize, ByteStreams.exhaust(zipInputStream));
+      entry = zipInputStream.getNextEntry();
+      assertEquals("file2.bin", entry.getName());
+      assertEquals(0, ByteStreams.exhaust(zipInputStream));
+      assertNull(zipInputStream.getNextEntry());
+    }
+
+    // JarFile reads files differently than ZipInputStream, test that both work.
+    try (JarFile jarFile = new JarFile(out.toFile())) {
+      List<ZipEntry> entries = jarFile.stream().collect(Collectors.toList());
+      assertEquals(2, entries.size());
+      assertEquals("file1.bin", entries.get(0).getName());
+      assertEquals(entrySize, ByteStreams.exhaust(jarFile.getInputStream(entries.get(0))));
+      assertEquals("file2.bin", entries.get(1).getName());
+      assertEquals(0, ByteStreams.exhaust(jarFile.getInputStream(entries.get(1))));
     }
   }
 
@@ -250,7 +304,7 @@ public class ZipStepTest {
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
     try (ZipArchive zipArchive = new ZipArchive(out, false)) {
-      assertEquals(ImmutableSet.of("", "foo/", "bar/"), zipArchive.getDirNames());
+      assertEquals(ImmutableSet.of("", "foo", "bar"), zipArchive.getDirNames());
     }
 
     // Directories should be stored, not deflated as this sometimes causes issues

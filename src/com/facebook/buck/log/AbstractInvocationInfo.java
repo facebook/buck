@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.log;
@@ -100,12 +100,24 @@ abstract class AbstractInvocationInfo {
   @JsonView(JsonViews.MachineReadableLog.class)
   public abstract boolean getIsRemoteExecution();
 
+  @Value.Parameter
+  @JsonView(JsonViews.MachineReadableLog.class)
+  public abstract String getRepository();
+
+  @Value.Parameter
+  @JsonView(JsonViews.MachineReadableLog.class)
+  public abstract String getWatchmanVersion();
+
   public Path getLogDirectoryPath() {
     return getBuckLogDir().resolve(getLogDirectoryName());
   }
 
   public Path getLogFilePath() {
     return getLogDirectoryPath().resolve(BuckConstant.BUCK_LOG_FILE_NAME);
+  }
+
+  public Path getSimpleConsoleOutputFilePath() {
+    return getLogDirectoryPath().resolve(BuckConstant.BUCK_SIMPLE_CONSOLE_LOG_FILE_NAME);
   }
 
   private String getLogDirectoryName() {

@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
@@ -45,9 +45,9 @@ public class CommandLineTargetNodeSpecParserIntegrationTest {
     workspace.runBuckBuild("//simple/...").assertSuccess();
     ImmutableSet<BuildTarget> targets =
         ImmutableSet.of(
-            BuildTargetFactory.newInstance(workspace.getDestPath(), "//simple:simple"),
-            BuildTargetFactory.newInstance(workspace.getDestPath(), "//simple/foo:foo"),
-            BuildTargetFactory.newInstance(workspace.getDestPath(), "//simple/bar:bar"));
+            BuildTargetFactory.newInstance("//simple:simple"),
+            BuildTargetFactory.newInstance("//simple/foo:foo"),
+            BuildTargetFactory.newInstance("//simple/bar:bar"));
     for (BuildTarget target : targets) {
       workspace.getBuildLog().assertTargetBuiltLocally(target);
     }
@@ -85,7 +85,7 @@ public class CommandLineTargetNodeSpecParserIntegrationTest {
     processResult.assertFailure();
     assertThat(
         processResult.getStderr(),
-        Matchers.containsString("//simple/.... references non-existent directory simple"));
+        Matchers.containsString("The /... pattern must occur at the end of the command"));
   }
 
   @Test
@@ -96,7 +96,7 @@ public class CommandLineTargetNodeSpecParserIntegrationTest {
     workspace.runBuckBuild("//simple:").assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//simple:simple");
     assertEquals(
-        ImmutableSet.of(BuildTargetFactory.newInstance(workspace.getDestPath(), "//simple:simple")),
+        ImmutableSet.of(BuildTargetFactory.newInstance("//simple:simple")),
         workspace.getBuildLog().getAllTargets());
   }
 
@@ -141,8 +141,8 @@ public class CommandLineTargetNodeSpecParserIntegrationTest {
     workspace.runBuckBuild("multialias").assertSuccess();
     ImmutableSet<BuildTarget> targets =
         ImmutableSet.of(
-            BuildTargetFactory.newInstance(workspace.getDestPath(), "//simple:simple"),
-            BuildTargetFactory.newInstance(workspace.getDestPath(), "//simple/foo:foo"));
+            BuildTargetFactory.newInstance("//simple:simple"),
+            BuildTargetFactory.newInstance("//simple/foo:foo"));
     for (BuildTarget target : targets) {
       workspace.getBuildLog().assertTargetBuiltLocally(target);
     }

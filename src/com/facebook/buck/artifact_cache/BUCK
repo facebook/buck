@@ -1,6 +1,7 @@
 load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 
 PUBLIC_API_SOURCES = [
+    "AbstractArtifactCacheEventFactory.java",
     "AbstractArtifactInfo.java",
     "AbstractCacheResult.java",
     "AbstractCacheCountersSummary.java",
@@ -27,9 +28,6 @@ PUBLIC_API_SOURCES = [
 java_immutables_library(
     name = "artifact_cache",
     srcs = PUBLIC_API_SOURCES,
-    exported_deps = [
-        "//src/com/facebook/buck/artifact_cache/config:config",
-    ],
     tests = [
         "//test/com/facebook/buck/artifact_cache:artifact_cache",
     ],
@@ -38,7 +36,6 @@ java_immutables_library(
     ],
     deps = [
         "//src/com/facebook/buck/core/config:config",
-        "//src/com/facebook/buck/core/exceptions/handler:handler",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/rulekey:rulekey",
         "//src/com/facebook/buck/core/util/log:log",
@@ -51,9 +48,9 @@ java_immutables_library(
         "//src/com/facebook/buck/log/views:views",
         "//src/com/facebook/buck/rules/keys:keys",
         "//src/com/facebook/buck/slb:slb",
-        "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:io",
         "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/stream:stream",
         "//src/com/facebook/buck/util/zip:zip",
         "//third-party/java/commons-compress:commons-compress",
         "//third-party/java/guava:guava",
@@ -61,6 +58,11 @@ java_immutables_library(
         "//third-party/java/jackson:jackson-databind",
         "//third-party/java/okhttp:okhttp-tls",
         "//third-party/java/zstd-jni:zstd-jni",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/artifact_cache/config:config",
+        "//src/com/facebook/buck/core/cell:cell",
+        "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
     ],
 )
 
@@ -101,6 +103,7 @@ java_immutables_library(
     ],
     visibility = [
         "//src/com/facebook/buck/cli:cli",
+        "//src/com/facebook/buck/support/state:state",
         "//test/com/facebook/buck/artifact_cache/...",
         "//test/com/facebook/buck/httpserver:httpserver_cache_integration_test",
     ],
@@ -122,11 +125,11 @@ java_immutables_library(
         "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/slb:slb",
         "//src/com/facebook/buck/support/bgtasks:bgtasks",
-        "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/randomizedtrial:randomizedtrial",
         "//src/com/facebook/buck/util/sha1:sha1",
         "//src/com/facebook/buck/util/sqlite:sqlite",
+        "//src/com/facebook/buck/util/stream:stream",
         "//src/com/facebook/buck/util/timing:timing",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
@@ -160,7 +163,6 @@ java_binary(
         "//src/com/facebook/buck/slb:slb",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/test/result/type:type",
-        "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:io",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
@@ -209,7 +211,6 @@ java_library(
         "//src/com/facebook/buck/slb:slb",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/test/result/type:type",
-        "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:io",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",

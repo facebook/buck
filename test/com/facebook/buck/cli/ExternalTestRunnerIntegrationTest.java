@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
@@ -25,6 +25,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeFalse;
 
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.cxx.CxxToolchainUtilsForTests;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.testutil.ProcessResult;
@@ -57,7 +58,7 @@ public class ExternalTestRunnerIntegrationTest {
   }
 
   @Test
-  public void runPass() throws IOException {
+  public void runPass() {
     // sh_test doesn't support Windows
     assumeFalse(isWindowsOs);
     ProcessResult result =
@@ -68,7 +69,7 @@ public class ExternalTestRunnerIntegrationTest {
   }
 
   @Test
-  public void runCoverage() throws IOException {
+  public void runCoverage() {
     String externalTestRunner =
         isWindowsOs ? "test_runner_coverage.bat" : "test_runner_coverage.py";
     ProcessResult result =
@@ -104,9 +105,23 @@ public class ExternalTestRunnerIntegrationTest {
 
     result.assertSuccess();
     if (isWindowsOs) {
-      assertTrue(result.getStdout().trim().endsWith("\\buck-out\\gen\\dir\\cpp_binary.exe"));
+      assertTrue(
+          result
+              .getStdout()
+              .trim()
+              .endsWith(
+                  workspace
+                      .getGenPath(BuildTargetFactory.newInstance("//dir:cpp_binary"), "%s.exe")
+                      .toString()));
     } else {
-      assertTrue(result.getStdout().trim().endsWith("/buck-out/gen/dir/cpp_binary"));
+      assertTrue(
+          result
+              .getStdout()
+              .trim()
+              .endsWith(
+                  workspace
+                      .getGenPath(BuildTargetFactory.newInstance("//dir:cpp_binary"), "%s")
+                      .toString()));
     }
   }
 
@@ -124,14 +139,28 @@ public class ExternalTestRunnerIntegrationTest {
 
     result.assertSuccess();
     if (isWindowsOs) {
-      assertTrue(result.getStdout().trim().endsWith("\\buck-out\\gen\\dir\\cpp_binary.exe"));
+      assertTrue(
+          result
+              .getStdout()
+              .trim()
+              .endsWith(
+                  workspace
+                      .getGenPath(BuildTargetFactory.newInstance("//dir:cpp_binary"), "%s.exe")
+                      .toString()));
     } else {
-      assertTrue(result.getStdout().trim().endsWith("/buck-out/gen/dir/cpp_binary"));
+      assertTrue(
+          result
+              .getStdout()
+              .trim()
+              .endsWith(
+                  workspace
+                      .getGenPath(BuildTargetFactory.newInstance("//dir:cpp_binary"), "%s")
+                      .toString()));
     }
   }
 
   @Test
-  public void runFail() throws IOException {
+  public void runFail() {
     // sh_test doesn't support Windows
     assumeFalse(isWindowsOs);
     ProcessResult result =
@@ -142,7 +171,7 @@ public class ExternalTestRunnerIntegrationTest {
   }
 
   @Test
-  public void extraArgs() throws IOException {
+  public void extraArgs() {
     // sh_test doesn't support Windows
     assumeFalse(isWindowsOs);
     ProcessResult result =
@@ -158,7 +187,7 @@ public class ExternalTestRunnerIntegrationTest {
   }
 
   @Test
-  public void runJavaTest() throws IOException {
+  public void runJavaTest() {
     String externalTestRunner = isWindowsOs ? "test_runner.bat" : "test_runner.py";
     ProcessResult result =
         workspace.runBuckCommand(
@@ -171,7 +200,7 @@ public class ExternalTestRunnerIntegrationTest {
         Joiner.on(System.lineSeparator())
                 .join(
                     "(?s).*<\\?xml version=\"1.1\" encoding=\"UTF-8\" standalone=\"no\"\\?>",
-                    "<testcase name=\"SimpleTest\" runner_capabilities=\"simple_test_selector\">",
+                    "<testcase name=\"SimpleTest\" runner_capabilities=\"simple_test_selector\" testprotocol=\"1.0\">",
                     "  <test name=\"passingTest\" success=\"true\" suite=\"SimpleTest\" "
                         + "time=\"\\d*\" type=\"SUCCESS\">",
                     "    <stdout>passed!",
@@ -179,7 +208,7 @@ public class ExternalTestRunnerIntegrationTest {
                     "  </test>",
                     "</testcase>",
                     "<\\?xml version=\"1.1\" encoding=\"UTF-8\" standalone=\"no\"\\?>",
-                    "<testcase name=\"SimpleTest2\" runner_capabilities=\"simple_test_selector\">",
+                    "<testcase name=\"SimpleTest2\" runner_capabilities=\"simple_test_selector\" testprotocol=\"1.0\">",
                     "  <test name=\"passingTest\" success=\"true\" suite=\"SimpleTest2\" "
                         + "time=\"\\d*\" type=\"SUCCESS\">",
                     "    <stdout>passed!",
@@ -191,7 +220,7 @@ public class ExternalTestRunnerIntegrationTest {
   }
 
   @Test
-  public void numberOfJobsIsPassedToExternalRunner() throws IOException {
+  public void numberOfJobsIsPassedToExternalRunner() {
     // sh_test doesn't support Windows
     assumeFalse(isWindowsOs);
     ProcessResult result =
@@ -207,7 +236,7 @@ public class ExternalTestRunnerIntegrationTest {
   }
 
   @Test
-  public void numberOfJobsInExtraArgsIsPassedToExternalRunner() throws IOException {
+  public void numberOfJobsInExtraArgsIsPassedToExternalRunner() {
     // sh_test doesn't support Windows
     assumeFalse(isWindowsOs);
     ProcessResult result =
@@ -235,8 +264,7 @@ public class ExternalTestRunnerIntegrationTest {
   }
 
   @Test
-  public void numberOfJobsInExtraArgsWithShortNotationIsPassedToExternalRunner()
-      throws IOException {
+  public void numberOfJobsInExtraArgsWithShortNotationIsPassedToExternalRunner() {
     // sh_test doesn't support Windows
     assumeFalse(isWindowsOs);
     ProcessResult result =
@@ -264,7 +292,7 @@ public class ExternalTestRunnerIntegrationTest {
   }
 
   @Test
-  public void numberOfJobsWithUtilizationRatioAppliedIsPassedToExternalRunner() throws IOException {
+  public void numberOfJobsWithUtilizationRatioAppliedIsPassedToExternalRunner() {
     // sh_test doesn't support Windows
     assumeFalse(isWindowsOs);
     ProcessResult result =
@@ -282,7 +310,7 @@ public class ExternalTestRunnerIntegrationTest {
   }
 
   @Test
-  public void numberOfJobsWithTestThreadsIsPassedToExternalRunner() throws IOException {
+  public void numberOfJobsWithTestThreadsIsPassedToExternalRunner() {
     // sh_test doesn't support Windows
     assumeFalse(isWindowsOs);
     ProcessResult result =

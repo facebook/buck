@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.crosscell;
@@ -23,11 +23,16 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.TestParserFactory;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.testutil.CloseableResource;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -50,6 +55,10 @@ public class IntraCellIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
+  @Rule
+  public CloseableResource<DepsAwareExecutor<? super ComputeResult, ?>> executor =
+      CloseableResource.of(() -> DefaultDepsAwareExecutor.of(4));
+
   @Test
   @Ignore
   public void shouldTreatACellBoundaryAsAHardBuckPackageBoundary() {}
@@ -65,21 +74,16 @@ public class IntraCellIntegrationTest {
     // We don't need to do a build. It's enough to just parse these things.
     Cell cell = workspace.asCell();
 
-    Parser parser = TestParserFactory.create(cell.getBuckConfig());
+    Parser parser = TestParserFactory.create(executor.get(), cell);
 
     // This parses cleanly
     parser.buildTargetGraph(
         ParsingContext.builder(
                 cell, MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()))
             .build(),
-        ImmutableSet.of(
-            BuildTargetFactory.newInstance(
-                cell.getFilesystem().getRootPath(), "//just-a-directory:rule")));
+        ImmutableSet.of(BuildTargetFactory.newInstance("//just-a-directory:rule")));
 
-    Cell childCell =
-        cell.getCell(
-            BuildTargetFactory.newInstance(
-                workspace.getDestPath().resolve("child-repo"), "//:child-target"));
+    Cell childCell = cell.getCell(BuildTargetFactory.newInstance("child//:child-target").getCell());
 
     try {
       // Whereas, because visibility is limited to the same cell, this won't.
@@ -87,9 +91,7 @@ public class IntraCellIntegrationTest {
           ParsingContext.builder(
                   childCell, MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()))
               .build(),
-          ImmutableSet.of(
-              BuildTargetFactory.newInstance(
-                  childCell.getFilesystem().getRootPath(), "child//:child-target")));
+          ImmutableSet.of(BuildTargetFactory.newInstance("child//:child-target")));
       fail("Didn't expect parsing to work because of visibility");
     } catch (HumanReadableException e) {
       // This is expected
@@ -101,19 +103,18 @@ public class IntraCellIntegrationTest {
   public void allOutputsShouldBePlacedInTheSameRootOutputDirectory() {}
 
   @Test
-  public void testEmbeddedBuckOut() throws IOException, InterruptedException {
+  public void testEmbeddedBuckOut() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "intracell/visibility", tmp);
     workspace.setUp();
     Cell cell = workspace.asCell();
-    assertEquals(cell.getFilesystem().getBuckPaths().getGenDir().toString(), "buck-out/gen");
-    Cell childCell =
-        cell.getCell(
-            BuildTargetFactory.newInstance(
-                workspace.getDestPath().resolve("child-repo"), "//:child-target"));
+    assertEquals(
+        cell.getFilesystem().getBuckPaths().getGenDir().toString(),
+        MorePaths.pathWithPlatformSeparators("buck-out/gen"));
+    Cell childCell = cell.getCell(BuildTargetFactory.newInstance("child//:child-target").getCell());
     assertEquals(
         childCell.getFilesystem().getBuckPaths().getGenDir().toString(),
-        "../buck-out/cells/child/gen");
+        MorePaths.pathWithPlatformSeparators("../buck-out/cells/child/gen"));
   }
 
   @Test

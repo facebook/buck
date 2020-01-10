@@ -1,25 +1,27 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.model.targetgraph;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
@@ -27,7 +29,11 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ImmutableBuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
+import com.facebook.buck.core.rules.config.registry.impl.ConfigurationRuleRegistryFactory;
+import com.facebook.buck.core.rules.providers.collect.impl.LegacyProviderInfoCollectionImpl;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -38,7 +44,7 @@ import com.facebook.buck.rules.coercer.PathTypeCoercer.PathExistenceVerification
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.query.QueryCache;
 import com.facebook.buck.rules.query.QueryUtils;
-import com.facebook.buck.rules.visibility.VisibilityPatternParser;
+import com.facebook.buck.rules.visibility.parser.VisibilityPatternParser;
 import com.facebook.buck.versions.Version;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -52,7 +58,7 @@ import java.util.Optional;
  */
 public abstract class AbstractNodeBuilder<
     TArgBuilder,
-    TArg,
+    TArg extends BuildRuleArg,
     TDescription extends DescriptionWithTargetGraph<TArg>,
     TBuildRule extends BuildRule> {
   protected static final TypeCoercerFactory TYPE_COERCER_FACTORY = new DefaultTypeCoercerFactory();
@@ -130,13 +136,22 @@ public abstract class AbstractNodeBuilder<
     builtArg =
         QueryUtils.withProvidedDepsQuery(
             builtArg, target, cache, graphBuilder, cellRoots, targetGraph);
+    builtArg =
+        QueryUtils.withModuleBlacklistQuery(
+            builtArg, target, cache, graphBuilder, cellRoots, targetGraph);
 
     @SuppressWarnings("unchecked")
     TBuildRule rule =
         (TBuildRule)
             description.createBuildRule(
                 ImmutableBuildRuleCreationContextWithTargetGraph.of(
-                    targetGraph, graphBuilder, filesystem, cellRoots, toolchainProvider),
+                    targetGraph,
+                    graphBuilder,
+                    filesystem,
+                    cellRoots,
+                    toolchainProvider,
+                    ConfigurationRuleRegistryFactory.createRegistry(targetGraph),
+                    LegacyProviderInfoCollectionImpl.of()),
                 target,
                 params,
                 builtArg);
@@ -155,9 +170,14 @@ public abstract class AbstractNodeBuilder<
               populatedArg,
               filesystem,
               target,
+              DependencyStack.root(),
               getDepsFromArg(populatedArg),
+              ImmutableSortedSet.of(),
               ImmutableSet.of(
-                  VisibilityPatternParser.parse(null, VisibilityPatternParser.VISIBILITY_PUBLIC)),
+                  VisibilityPatternParser.parse(
+                      null,
+                      filesystem.getRootPath().resolve("BUCK"),
+                      VisibilityPatternParser.VISIBILITY_PUBLIC)),
               ImmutableSet.of(),
               cellRoots)
           .withSelectedVersions(selectedVersions);

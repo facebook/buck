@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.ocaml;
@@ -23,16 +23,16 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.toolchain.Compiler;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
@@ -56,14 +56,13 @@ public class OcamlBuildRulesGenerator {
   private final ProjectFilesystem projectFilesystem;
   private final BuildRuleParams params;
   private final ActionGraphBuilder graphBuilder;
-  private final SourcePathRuleFinder ruleFinder;
-  private final SourcePathResolver pathResolver;
+  private final SourcePathResolverAdapter pathResolver;
   private final OcamlBuildContext ocamlContext;
   private final ImmutableMap<Path, ImmutableList<Path>> mlInput;
   private final ImmutableList<SourcePath> cInput;
 
   private final Compiler cCompiler;
-  private final Compiler cxxCompiler;
+  private final Linker cxxLinker;
   private final boolean bytecodeOnly;
   private final boolean buildNativePlugin;
 
@@ -73,27 +72,24 @@ public class OcamlBuildRulesGenerator {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      SourcePathResolver pathResolver,
-      SourcePathRuleFinder ruleFinder,
       ActionGraphBuilder graphBuilder,
       OcamlBuildContext ocamlContext,
       ImmutableMap<Path, ImmutableList<Path>> mlInput,
       ImmutableList<SourcePath> cInput,
       Compiler cCompiler,
-      Compiler cxxCompiler,
+      Linker cxxLinker,
       boolean bytecodeOnly,
       boolean buildNativePlugin) {
     this.buildTarget = buildTarget;
     this.projectFilesystem = projectFilesystem;
     this.params = params;
-    this.pathResolver = pathResolver;
-    this.ruleFinder = ruleFinder;
+    this.pathResolver = graphBuilder.getSourcePathResolver();
     this.graphBuilder = graphBuilder;
     this.ocamlContext = ocamlContext;
     this.mlInput = mlInput;
     this.cInput = cInput;
     this.cCompiler = cCompiler;
-    this.cxxCompiler = cxxCompiler;
+    this.cxxLinker = cxxLinker;
     this.bytecodeOnly = bytecodeOnly;
     this.buildNativePlugin = buildNativePlugin;
     this.cleanRule = generateCleanBuildRule(buildTarget, projectFilesystem, params, ocamlContext);
@@ -113,7 +109,7 @@ public class OcamlBuildRulesGenerator {
 
     if (!this.bytecodeOnly) {
       ImmutableList<SourcePath> cmxFiles = generateMLNativeCompilation(mlInput);
-      nativeCompileDeps.addAll(ruleFinder.filterBuildRuleInputs(cmxFiles));
+      nativeCompileDeps.addAll(graphBuilder.filterBuildRuleInputs(cmxFiles));
       BuildRule nativeLink =
           generateNativeLinking(
               ImmutableList.<SourcePath>builder()
@@ -123,7 +119,7 @@ public class OcamlBuildRulesGenerator {
     }
 
     ImmutableList<SourcePath> cmoFiles = generateMLBytecodeCompilation(mlInput);
-    bytecodeCompileDeps.addAll(ruleFinder.filterBuildRuleInputs(cmoFiles));
+    bytecodeCompileDeps.addAll(graphBuilder.filterBuildRuleInputs(cmoFiles));
     BuildRule bytecodeLink =
         generateBytecodeLinking(
             ImmutableList.<SourcePath>builder()
@@ -182,28 +178,28 @@ public class OcamlBuildRulesGenerator {
               Suppliers.ofInstance(
                   ImmutableSortedSet.<BuildRule>naturalOrder()
                       // Depend on the rule that generates the sources and headers we're compiling.
-                      .addAll(ruleFinder.filterBuildRuleInputs(cSrc))
+                      .addAll(graphBuilder.filterBuildRuleInputs(cSrc))
                       // Add any deps from the C/C++ preprocessor input.
-                      .addAll(cxxPreprocessorInput.getDeps(graphBuilder, ruleFinder))
+                      .addAll(cxxPreprocessorInput.getDeps(graphBuilder))
                       // Add the clean rule, to ensure that any shared output folders shared with
                       // OCaml build artifacts are properly cleaned.
                       .add(this.cleanRule)
                       // Add deps from the C compiler, since we're calling it.
-                      .addAll(BuildableSupport.getDepsCollection(cCompiler, ruleFinder))
+                      .addAll(BuildableSupport.getDepsCollection(cCompiler, graphBuilder))
                       .addAll(params.getDeclaredDeps().get())
                       .addAll(
                           RichStream.from(ocamlContext.getCCompileFlags())
-                              .flatMap(f -> BuildableSupport.getDeps(f, ruleFinder))
+                              .flatMap(f -> BuildableSupport.getDeps(f, graphBuilder))
                               .toImmutableList())
                       .build()));
 
       Path outputPath = ocamlContext.getCOutput(pathResolver.getRelativePath(cSrc));
       OcamlCCompile compileRule =
           new OcamlCCompile(
-              createCCompileBuildTarget(buildTarget, name),
               projectFilesystem,
               cCompileParams,
               new OcamlCCompileStep.Args(
+                  createCCompileBuildTarget(buildTarget, name),
                   cCompiler.getEnvironment(pathResolver),
                   cCompiler.getCommandPrefix(pathResolver),
                   ocamlContext.getOcamlCompiler().get(),
@@ -259,22 +255,16 @@ public class OcamlBuildRulesGenerator {
         params
             .withDeclaredDeps(
                 ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(ruleFinder.filterBuildRuleInputs(allInputs))
+                    .addAll(graphBuilder.filterBuildRuleInputs(allInputs))
                     .addAll(
-                        ocamlContext
-                            .getNativeLinkableInput()
-                            .getArgs()
-                            .stream()
-                            .flatMap(arg -> BuildableSupport.getDeps(arg, ruleFinder))
+                        ocamlContext.getNativeLinkableInput().getArgs().stream()
+                            .flatMap(arg -> BuildableSupport.getDeps(arg, graphBuilder))
                             .iterator())
                     .addAll(
-                        ocamlContext
-                            .getCLinkableInput()
-                            .getArgs()
-                            .stream()
-                            .flatMap(arg -> BuildableSupport.getDeps(arg, ruleFinder))
+                        ocamlContext.getCLinkableInput().getArgs().stream()
+                            .flatMap(arg -> BuildableSupport.getDeps(arg, graphBuilder))
                             .iterator())
-                    .addAll(BuildableSupport.getDepsCollection(cxxCompiler, ruleFinder))
+                    .addAll(BuildableSupport.getDepsCollection(cxxLinker, graphBuilder))
                     .build())
             .withoutExtraDeps();
 
@@ -288,8 +278,8 @@ public class OcamlBuildRulesGenerator {
             projectFilesystem,
             linkParams,
             allInputs,
-            cxxCompiler.getEnvironment(pathResolver),
-            cxxCompiler.getCommandPrefix(pathResolver),
+            cxxLinker.getEnvironment(pathResolver),
+            cxxLinker.getCommandPrefix(pathResolver),
             ocamlContext.getOcamlCompiler().get(),
             flags.build(),
             ocamlContext.getOcamlInteropIncludesDir(),
@@ -316,16 +306,16 @@ public class OcamlBuildRulesGenerator {
         params
             .withDeclaredDeps(
                 ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(ruleFinder.filterBuildRuleInputs(allInputs))
+                    .addAll(graphBuilder.filterBuildRuleInputs(allInputs))
                     .addAll(ocamlContext.getBytecodeLinkDeps())
                     .addAll(
                         Stream.concat(
                                 ocamlContext.getBytecodeLinkableInput().getArgs().stream(),
                                 ocamlContext.getCLinkableInput().getArgs().stream())
-                            .flatMap(arg -> BuildableSupport.getDeps(arg, ruleFinder))
+                            .flatMap(arg -> BuildableSupport.getDeps(arg, graphBuilder))
                             .filter(rule -> !(rule instanceof OcamlBuild))
                             .iterator())
-                    .addAll(BuildableSupport.getDepsCollection(cxxCompiler, ruleFinder))
+                    .addAll(BuildableSupport.getDepsCollection(cxxLinker, graphBuilder))
                     .build())
             .withoutExtraDeps();
 
@@ -339,8 +329,8 @@ public class OcamlBuildRulesGenerator {
             projectFilesystem,
             linkParams,
             allInputs,
-            cxxCompiler.getEnvironment(pathResolver),
-            cxxCompiler.getCommandPrefix(pathResolver),
+            cxxLinker.getEnvironment(pathResolver),
+            cxxLinker.getCommandPrefix(pathResolver),
             ocamlContext.getOcamlBytecodeCompiler().get(),
             flags.build(),
             ocamlContext.getOcamlInteropIncludesDir(),
@@ -478,7 +468,7 @@ public class OcamlBuildRulesGenerator {
                     .add(this.cleanRule)
                     .addAll(deps)
                     .addAll(ocamlContext.getNativeCompileDeps())
-                    .addAll(BuildableSupport.getDepsCollection(cCompiler, ruleFinder))
+                    .addAll(BuildableSupport.getDepsCollection(cCompiler, graphBuilder))
                     .build()));
 
     String outputFileName = getMLNativeOutputName(name);
@@ -557,7 +547,7 @@ public class OcamlBuildRulesGenerator {
                     .addAll(params.getDeclaredDeps().get())
                     .addAll(deps)
                     .addAll(ocamlContext.getBytecodeCompileDeps())
-                    .addAll(BuildableSupport.getDepsCollection(cCompiler, ruleFinder))
+                    .addAll(BuildableSupport.getDepsCollection(cCompiler, graphBuilder))
                     .build()));
 
     String outputFileName = getMLBytecodeOutputName(name);

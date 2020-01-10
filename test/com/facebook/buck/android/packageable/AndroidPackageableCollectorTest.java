@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android.packageable;
@@ -48,14 +48,12 @@ import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.io.ExecutableFinder;
@@ -186,8 +184,7 @@ public class AndroidPackageableCollectorTest {
                 JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.of(DEFAULT_JAVAC_OPTIONS))
             .build();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph, toolchainProvider);
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
 
     AndroidBinary binaryRule = (AndroidBinary) graphBuilder.requireRule(binaryTarget);
     NdkLibrary ndkLibraryRule = (NdkLibrary) graphBuilder.requireRule(ndkLibrary.getBuildTarget());
@@ -216,10 +213,7 @@ public class AndroidPackageableCollectorTest {
             + "substantial regression in the startup time for the fb4a app.",
         pathResolver,
         ImmutableSet.of(graphBuilder.getRule(jsr305Target).getSourcePathToOutput()),
-        packageableCollection
-            .getPathsToThirdPartyJars()
-            .values()
-            .stream()
+        packageableCollection.getPathsToThirdPartyJars().values().stream()
             .collect(ImmutableSet.toImmutableSet()));
     assertResolvedEquals(
         "Because assets directory was passed an AndroidResourceRule it should be added to the "
@@ -229,10 +223,7 @@ public class AndroidPackageableCollectorTest {
             DefaultBuildTargetSourcePath.of(
                 manifestTarget.withAppendedFlavors(
                     AndroidResourceDescription.ASSETS_SYMLINK_TREE_FLAVOR))),
-        packageableCollection
-            .getAssetsDirectories()
-            .values()
-            .stream()
+        packageableCollection.getAssetsDirectories().values().stream()
             .collect(ImmutableSet.toImmutableSet()));
     assertResolvedEquals(
         "Because a native library was declared as a dependency, it should be added to the "
@@ -276,11 +267,10 @@ public class AndroidPackageableCollectorTest {
   @Test
   public void testGetAndroidResourceDeps() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     BuildRule c =
         graphBuilder.addToIndex(
             AndroidResourceRuleBuilder.newBuilder()
-                .setRuleFinder(ruleFinder)
+                .setRuleFinder(graphBuilder)
                 .setBuildTarget(BuildTargetFactory.newInstance("//:c"))
                 .setRes(FakeSourcePath.of("res_c"))
                 .setRDotJavaPackage("com.facebook")
@@ -289,7 +279,7 @@ public class AndroidPackageableCollectorTest {
     BuildRule b =
         graphBuilder.addToIndex(
             AndroidResourceRuleBuilder.newBuilder()
-                .setRuleFinder(ruleFinder)
+                .setRuleFinder(graphBuilder)
                 .setBuildTarget(BuildTargetFactory.newInstance("//:b"))
                 .setRes(FakeSourcePath.of("res_b"))
                 .setRDotJavaPackage("com.facebook")
@@ -299,7 +289,7 @@ public class AndroidPackageableCollectorTest {
     BuildRule d =
         graphBuilder.addToIndex(
             AndroidResourceRuleBuilder.newBuilder()
-                .setRuleFinder(ruleFinder)
+                .setRuleFinder(graphBuilder)
                 .setBuildTarget(BuildTargetFactory.newInstance("//:d"))
                 .setRes(FakeSourcePath.of("res_d"))
                 .setRDotJavaPackage("com.facebook")
@@ -309,7 +299,7 @@ public class AndroidPackageableCollectorTest {
     AndroidResource a =
         graphBuilder.addToIndex(
             AndroidResourceRuleBuilder.newBuilder()
-                .setRuleFinder(ruleFinder)
+                .setRuleFinder(graphBuilder)
                 .setBuildTarget(BuildTargetFactory.newInstance("//:a"))
                 .setRes(FakeSourcePath.of("res_a"))
                 .setRDotJavaPackage("com.facebook")
@@ -322,8 +312,7 @@ public class AndroidPackageableCollectorTest {
     // Note that a topological sort for a DAG is not guaranteed to be unique, but we order nodes
     // within the same depth of the search.
     ImmutableList<BuildTarget> result =
-        ImmutableList.of(a, d, b, c)
-            .stream()
+        ImmutableList.of(a, d, b, c).stream()
             .map(BuildRule::getBuildTarget)
             .collect(ImmutableList.toImmutableList());
 
@@ -365,12 +354,11 @@ public class AndroidPackageableCollectorTest {
   @Test
   public void testGetAndroidResourceDepsWithDuplicateResourcePaths() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     PathSourcePath resPath = FakeSourcePath.of("res");
     AndroidResource res1 =
         graphBuilder.addToIndex(
             AndroidResourceRuleBuilder.newBuilder()
-                .setRuleFinder(ruleFinder)
+                .setRuleFinder(graphBuilder)
                 .setBuildTarget(BuildTargetFactory.newInstance("//:res1"))
                 .setRes(resPath)
                 .setRDotJavaPackage("com.facebook")
@@ -379,7 +367,7 @@ public class AndroidPackageableCollectorTest {
     AndroidResource res2 =
         graphBuilder.addToIndex(
             AndroidResourceRuleBuilder.newBuilder()
-                .setRuleFinder(ruleFinder)
+                .setRuleFinder(graphBuilder)
                 .setBuildTarget(BuildTargetFactory.newInstance("//:res2"))
                 .setRes(resPath)
                 .setRDotJavaPackage("com.facebook")
@@ -389,7 +377,7 @@ public class AndroidPackageableCollectorTest {
     BuildRule b =
         graphBuilder.addToIndex(
             AndroidResourceRuleBuilder.newBuilder()
-                .setRuleFinder(ruleFinder)
+                .setRuleFinder(graphBuilder)
                 .setBuildTarget(BuildTargetFactory.newInstance("//:b"))
                 .setRes(resBPath)
                 .setRDotJavaPackage("com.facebook")
@@ -399,7 +387,7 @@ public class AndroidPackageableCollectorTest {
     AndroidResource a =
         graphBuilder.addToIndex(
             AndroidResourceRuleBuilder.newBuilder()
-                .setRuleFinder(ruleFinder)
+                .setRuleFinder(graphBuilder)
                 .setBuildTarget(BuildTargetFactory.newInstance("//:a"))
                 .setRes(resAPath)
                 .setRDotJavaPackage("com.facebook")
@@ -425,8 +413,6 @@ public class AndroidPackageableCollectorTest {
   @Test
   public void testGraphForAndroidBinaryExcludesKeystoreDeps() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
 
     BuildTarget androidLibraryKeystoreTarget =
         BuildTargetFactory.newInstance("//java/com/keystore/base:base");
@@ -464,18 +450,16 @@ public class AndroidPackageableCollectorTest {
         "Classpath entries should include facebook/base but not keystore/base.",
         ImmutableSet.of(
             BuildTargetPaths.getGenPath(
-                    androidBinary.getProjectFilesystem(), androidLibraryTarget, "lib__%s__output/")
+                    androidBinary.getProjectFilesystem(), androidLibraryTarget, "lib__%s__output")
                 .resolve(androidLibraryTarget.getShortNameAndFlavorPostfix() + ".jar")),
-        packageableCollection
-            .getClasspathEntriesToDex()
-            .stream()
-            .map(pathResolver::getRelativePath)
+        packageableCollection.getClasspathEntriesToDex().stream()
+            .map(graphBuilder.getSourcePathResolver()::getRelativePath)
             .collect(ImmutableSet.toImmutableSet()));
   }
 
   private void assertResolvedEquals(
       String message,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       ImmutableSet<SourcePath> expected,
       ImmutableSet<SourcePath> actual) {
     assertEquals(

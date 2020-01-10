@@ -17,6 +17,12 @@ genrule(
 )
 
 genrule(
+    name = "echo_classpath_binary",
+    out = "out",
+    cmd = "echo $(query_targets \"classpath(:app)\") > $OUT",
+)
+
+genrule(
     name = "echo_with_ap_dep_is_proc",
     out = "out",
     bash = "echo $(query_targets \"attrfilter(annotation_processor_deps, //annotations:proc-lib, classpath(:lib_a))\") > $OUT",
@@ -51,7 +57,7 @@ genrule(
     name = "echo_with_deps_to_file",
     out = "out",
     bash = "echo $(@query_targets \"deps(:app)\") | cut -c 2- | xargs -I % cp % $OUT",
-    cmd_exe = "echo $(@query_targets \"deps(:app)\") | %{cp $_.substring(1) $OUT}",
+    cmd_exe = "cmd /V:ON /c \"set LOC=$(@query_targets deps(:app)) & copy !LOC:~1! $OUT\"",
     enable_sandbox = True,
 )
 
@@ -127,6 +133,12 @@ genrule(
     cmd = "echo $(query_targets_and_outputs \"labels(provided_deps, //other:exporter)\") > $OUT",
 )
 
+genrule(
+    name = "echo_deps_of_a_with_select",
+    out = "out",
+    cmd = "echo $(query_targets \"deps(//:lib_a_with_select)\") > $OUT",
+)
+
 java_library(
     name = "lib_a",
     srcs = ["A.java"],
@@ -136,6 +148,24 @@ java_library(
         "//annotations:proc-lib",
         #add_import_to_lib_a ':lib_c',
     ],
+)
+
+java_library(
+    name = "lib_a_with_select",
+    srcs = ["A.java"],
+    deps = [
+        ":lib_b",
+    ] + select({
+        ":condition": [":lib_d"],
+        "DEFAULT": [],
+    }),
+)
+
+config_setting(
+    name = "condition",
+    values = {
+        "option.name": "value",
+    },
 )
 
 java_library(

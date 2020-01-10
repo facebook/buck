@@ -1,0 +1,52 @@
+genrule(
+    name = "g",
+    out = "out.txt",
+    cmd = select({
+        # Please keep space before `>` for Windows compat
+        ":buckconfig": "echo from-buckconfig> $OUT",
+        ":cmdline": "echo from-cmdline> $OUT",
+        "DEFAULT": "echo default> $OUT",
+    }),
+)
+
+constraint_setting(
+    name = "where",
+)
+
+constraint_value(
+    name = "c-buckconfig",
+    constraint_setting = ":where",
+)
+
+constraint_value(
+    name = "c-cmdline",
+    constraint_setting = ":where",
+)
+
+config_setting(
+    name = "buckconfig",
+    constraint_values = [
+        ":c-buckconfig",
+    ],
+)
+
+config_setting(
+    name = "cmdline",
+    constraint_values = [
+        ":c-cmdline",
+    ],
+)
+
+platform(
+    name = "p-buckconfig",
+    constraint_values = [
+        ":c-buckconfig",
+    ],
+)
+
+platform(
+    name = "p-cmdline",
+    constraint_values = [
+        ":c-cmdline",
+    ],
+)

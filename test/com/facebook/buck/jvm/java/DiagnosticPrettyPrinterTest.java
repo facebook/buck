@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
@@ -31,7 +31,7 @@ import org.junit.Test;
 public class DiagnosticPrettyPrinterTest {
 
   @Test
-  public void ifThereAreNoLineNumbersOnlyTheFormattedMessageIsReturned() throws Exception {
+  public void ifThereAreNoLineNumbersOnlyTheFormattedMessageIsReturned() {
     String message = "Something has gone wrong.";
 
     String formatted =
@@ -47,7 +47,7 @@ public class DiagnosticPrettyPrinterTest {
   }
 
   @Test
-  public void ifThereAreNoLineNumbersAllLinesOfTheFormattedMessageAreReturned() throws Exception {
+  public void ifThereAreNoLineNumbersAllLinesOfTheFormattedMessageAreReturned() {
     String summary = "Something has gone wrong";
     String remainder = "Very, very wrong";
 
@@ -65,7 +65,7 @@ public class DiagnosticPrettyPrinterTest {
   }
 
   @Test
-  public void ifThereAreLineNumbersErrorContextIsDisplayed() throws Exception {
+  public void ifThereAreLineNumbersErrorContextIsDisplayed() {
     String code = MoreStrings.linesToText("some line of", "code with an", "error");
     //                           123
     String formatted =
@@ -75,8 +75,7 @@ public class DiagnosticPrettyPrinterTest {
   }
 
   @Test
-  public void errorContextIsDisplayedAfterTheSummaryButBeforeTheRemainderOfTheMessage()
-      throws Exception {
+  public void errorContextIsDisplayedAfterTheSummaryButBeforeTheRemainderOfTheMessage() {
     String code = MoreStrings.linesToText("some line of", "code with an", "error");
     //                           123
     String formatted =

@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
@@ -36,7 +36,6 @@ public class BuckCommand extends AbstractContainerCommand {
     // TODO(nga): rename to `cache delete`
     @SubCommand(name = "cachedelete", impl = CacheDeleteCommand.class),
     @SubCommand(name = "clean", impl = CleanCommand.class),
-    @SubCommand(name = "distbuild", impl = DistBuildCommand.class),
     @SubCommand(name = "doctor", impl = DoctorCommand.class),
     @SubCommand(name = "fetch", impl = FetchCommand.class),
     @SubCommand(name = "fix", impl = FixCommand.class),
@@ -44,6 +43,7 @@ public class BuckCommand extends AbstractContainerCommand {
     @SubCommand(name = "install", impl = InstallCommand.class),
     @SubCommand(name = "kill", impl = KillCommand.class),
     @SubCommand(name = "killall", impl = KillAllCommand.class),
+    @SubCommand(name = "perf", impl = PerfCommand.class),
     @SubCommand(name = "project", impl = ProjectCommand.class),
     @SubCommand(name = "publish", impl = PublishCommand.class),
     @SubCommand(name = "query", impl = QueryCommand.class),
@@ -54,6 +54,7 @@ public class BuckCommand extends AbstractContainerCommand {
     @SubCommand(name = "targets", impl = TargetsCommand.class),
     @SubCommand(name = "test", impl = TestCommand.class),
     @SubCommand(name = "uninstall", impl = UninstallCommand.class),
+    @SubCommand(name = "uquery", impl = UnconfiguredQueryCommand.class),
     @SubCommand(name = "verify-caches", impl = VerifyCachesCommand.class),
   })
   @Nullable

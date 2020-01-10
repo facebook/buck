@@ -15,6 +15,7 @@ java_immutables_library(
         "//src-gen:thrift",
         "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/exceptions:exceptions",
+        "//src/com/facebook/buck/core/io:io",
         "//src/com/facebook/buck/core/util/immutables:immutables",
         "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/counters:counters",

@@ -1,23 +1,25 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.event.listener.stats.cache;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent.StoreType;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEventStoreData;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 import org.junit.Assert;
@@ -36,7 +38,9 @@ public class RemoteCacheUploadStatsTest {
 
     HttpArtifactCacheEvent.Scheduled scheduledEventOne =
         HttpArtifactCacheEvent.newStoreScheduledEvent(
-            Optional.of("fake"), ImmutableSet.of(), StoreType.ARTIFACT);
+            Optional.of(BuildTargetFactory.newInstance("//target:fake")),
+            ImmutableSet.of(),
+            StoreType.ARTIFACT);
 
     uploadStats.processScheduledEvent(scheduledEventOne);
     Assert.assertEquals(1, uploadStats.getScheduledCount());
@@ -57,10 +61,14 @@ public class RemoteCacheUploadStatsTest {
     // Schedule, start, finish, events two and three
     HttpArtifactCacheEvent.Scheduled scheduledEventTwo =
         HttpArtifactCacheEvent.newStoreScheduledEvent(
-            Optional.of("fake"), ImmutableSet.of(), StoreType.ARTIFACT);
+            Optional.of(BuildTargetFactory.newInstance("//target:fake")),
+            ImmutableSet.of(),
+            StoreType.ARTIFACT);
     HttpArtifactCacheEvent.Scheduled scheduledEventThree =
         HttpArtifactCacheEvent.newStoreScheduledEvent(
-            Optional.of("fake"), ImmutableSet.of(), StoreType.ARTIFACT);
+            Optional.of(BuildTargetFactory.newInstance("//target:fake")),
+            ImmutableSet.of(),
+            StoreType.ARTIFACT);
     uploadStats.processScheduledEvent(scheduledEventTwo);
     uploadStats.processScheduledEvent(scheduledEventTwo);
     Assert.assertEquals(3, uploadStats.getScheduledCount());

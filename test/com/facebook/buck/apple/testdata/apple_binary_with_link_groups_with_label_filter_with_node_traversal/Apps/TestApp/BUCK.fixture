@@ -1,0 +1,57 @@
+apple_binary(
+    name = "App",
+    srcs = ["main.c"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    # By not specifying a link group but setting a link_group_map,
+    # all ungrouped libs will be linked into the binary.
+    link_group_map = [
+        # All libs which have a label that matches the regex "product.*"
+        # will be treated as the root node to be grouped using "node"
+        # traversal to the "product" group.
+        (
+            "product",
+            [("//Apps/Libs:Root", "node", "label:product.*")],
+        ),
+    ],
+    linker_flags = [
+        # As symbols from C will be used by the dylib, we need
+        # to ensure they end up in the binary (as they're not
+        # directly referenced).
+        "-Wl,-all_load",
+    ],
+    deps = [
+        ":ProductDylib",
+        "//Apps/Libs:Root",
+    ],
+)
+
+apple_library(
+    name = "ProductDylib",
+    srcs = ["dummy.c"],
+    link_group = "product",
+    # In the real world, the link group definition must be the same
+    # across the binary and the dylibs. This would be achieved by
+    # a single definition in a .bzl file.
+    link_group_map = [
+        (
+            "product",
+            [("//Apps/Libs:Root", "node", "label:product.*")],
+        ),
+    ],
+    link_style = "static",
+    # To make the binary runnable, an rpath must be added via exported_linker_flags.
+    linker_flags = [
+        "-Wl,-all_load",
+        # As we're bundling the bottom of the dep tree into the app,
+        # we're creating a circular dep here, so need to break it
+        # by using runtime symbol lookup for the undefined symbols.
+        "-Wl,-undefined,dynamic_lookup",
+    ],
+    preferred_linkage = "shared",
+    soname = "Product.dylib",
+    deps = [
+        "//Apps/Libs:Root",
+    ],
+)

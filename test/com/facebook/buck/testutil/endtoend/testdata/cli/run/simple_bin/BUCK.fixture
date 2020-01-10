@@ -1,0 +1,21 @@
+cxx_binary(
+    name = "broken",
+    srcs = ["broken.cpp"],
+)
+
+cxx_binary(
+    name = "main",
+    srcs = ["main.cpp"],
+    compiler_flags = ["-DEXIT_CODE=" + read_config("user", "exit_code", "0")],
+)
+
+python_library(
+    name = "main_py_lib",
+    srcs = ["main.py"],
+)
+
+python_binary(
+    name = "main_py",
+    main_module = "run.simple_bin.main",
+    deps = [":main_py_lib"],
+)

@@ -1,0 +1,3 @@
+load("//not_assigned:defs.bzl", "fake_info")
+
+fake_info()

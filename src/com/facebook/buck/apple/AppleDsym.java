@@ -1,18 +1,19 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.apple;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
@@ -23,9 +24,11 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasPostBuildSteps;
 import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
+import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -42,9 +45,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import java.util.Comparator;
 import java.util.SortedSet;
-import java.util.stream.Stream;
 
 /** Creates dSYM bundle for the given _unstripped_ binary. */
 public class AppleDsym extends AbstractBuildRule
@@ -64,7 +65,7 @@ public class AppleDsym extends AbstractBuildRule
   @AddToRuleKey(stringify = true)
   private final Path dsymOutputPath;
 
-  private ImmutableSortedSet<BuildRule> buildDeps;
+  private BuildableSupport.DepsSupplier depsSupplier;
 
   private final boolean isCacheable;
 
@@ -85,11 +86,7 @@ public class AppleDsym extends AbstractBuildRule
     this.additionalSymbolDeps = additionalSymbolDeps;
     this.dsymOutputPath = dsymOutputPath;
     this.isCacheable = isCacheable;
-    this.buildDeps =
-        Stream.concat(
-                Stream.of(this.unstrippedBinarySourcePath), this.additionalSymbolDeps.stream())
-            .flatMap(sourcePathRuleFinder.FILTER_BUILD_RULE_INPUTS)
-            .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()));
+    this.depsSupplier = BuildableSupport.buildDepsSupplier(this, sourcePathRuleFinder);
     checkFlavorCorrectness(buildTarget);
   }
 
@@ -143,9 +140,9 @@ public class AppleDsym extends AbstractBuildRule
     Path dwarfFileFolder = dsymOutputPath.resolve(DSYM_DWARF_FILE_FOLDER);
     return ImmutableList.of(
         RmStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    context.getBuildCellRootPath(), getProjectFilesystem(), dsymOutputPath))
-            .withRecursive(true),
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), dsymOutputPath),
+            true),
         new DsymStep(
             getProjectFilesystem(),
             dsymutil.getEnvironment(context.getSourcePathResolver()),
@@ -167,12 +164,21 @@ public class AppleDsym extends AbstractBuildRule
   public ImmutableList<Step> getPostBuildSteps(BuildContext context) {
     return ImmutableList.of(
         new RegisterDebugSymbolsStep(
-            unstrippedBinarySourcePath, lldb, context.getSourcePathResolver(), dsymOutputPath));
+            getProjectFilesystem(),
+            unstrippedBinarySourcePath,
+            lldb,
+            context.getSourcePathResolver(),
+            dsymOutputPath));
   }
 
   @Override
   public SortedSet<BuildRule> getBuildDeps() {
-    return buildDeps;
+    return depsSupplier.get();
+  }
+
+  @Override
+  public void updateBuildRuleResolver(BuildRuleResolver ruleResolver) {
+    this.depsSupplier = BuildableSupport.buildDepsSupplier(this, ruleResolver);
   }
 
   @Override

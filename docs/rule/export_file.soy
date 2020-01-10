@@ -1,18 +1,19 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 {namespace buck.export_file}
 
 /***/
@@ -29,8 +30,8 @@
 {call buck.rule}
 {param status: 'UNFROZEN' /}
 {param overview}
-  <p><b>Warning:</b> this build rule is deprecated.
-  Use {call buck.ruleLink}{param name : 'filegroup' /}{/call} instead.</p>
+  <p><b>Warning:</b> this build rule is deprecated for folders.
+  Use {call buck.ruleLink}{param name : 'filegroup' /}{/call} instead. It is still supported for individual files.</p>
   <p>An <code>export_file()</code> takes a single file or folder and exposes it so other rules can
   use it.</p>
 {/param}
@@ -40,10 +41,9 @@
 {call buck.arg}
   {param name: 'name' /}
   {param desc}
-    A descriptive name for the rule.  If this is the only parameter to the{sp}
-    <code>export_file()</code> code, this must be the path to the file.
-  {/param}
-{/call}
+    The <em>short name</em> for this {call buck.build_target /}.  If
+    this is the only parameter, this must also be the path to the file.
+    {/param} {/call}
 
 {call buck.arg}
   {param name: 'src' /}

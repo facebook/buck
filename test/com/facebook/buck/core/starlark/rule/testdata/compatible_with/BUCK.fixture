@@ -1,0 +1,31 @@
+load("//:defs.bzl", "write_file")
+
+constraint_setting(
+    name = "color",
+)
+
+constraint_value(
+    name = "red-c",
+    constraint_setting = ":color",
+)
+
+config_setting(
+    name = "red",
+    constraint_values = [
+        ":red-c",
+    ],
+)
+
+platform(
+    name = "red-p",
+    constraint_values = [
+        ":red-c",
+    ],
+)
+
+write_file(
+    name = "file",
+    compatible_with = [
+        ":red",
+    ],
+)

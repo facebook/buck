@@ -1,0 +1,7 @@
+java_library(
+    name = "pathformat",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+)

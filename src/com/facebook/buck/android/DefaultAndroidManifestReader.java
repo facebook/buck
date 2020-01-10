@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -67,9 +67,14 @@ public class DefaultAndroidManifestReader implements AndroidManifestReader {
   private static final String XPATH_INSTRUMENTATION_TEST_RUNNER =
       "/manifest/instrumentation/@android:name";
 
+  /** XPath expression to get the target package. */
+  private static final String XPATH_TARGET_PACKAGE =
+      "/manifest/instrumentation/@android:targetPackage";
+
   private final XPathExpression packageExpression;
   private final XPathExpression versionCodeExpression;
   private final XPathExpression instrumentationTestRunnerExpression;
+  private final XPathExpression targetPackageExpression;
   private final XPathExpression launchableActivitiesExpression;
   private final Document doc;
 
@@ -83,6 +88,7 @@ public class DefaultAndroidManifestReader implements AndroidManifestReader {
       xPath.setNamespaceContext(androidNamespaceContext);
       launchableActivitiesExpression = xPath.compile(XPATH_LAUNCHER_ACTIVITIES);
       packageExpression = xPath.compile(XPATH_PACKAGE);
+      targetPackageExpression = xPath.compile(XPATH_TARGET_PACKAGE);
       versionCodeExpression = xPath.compile(XPATH_VERSION_CODE);
       instrumentationTestRunnerExpression = xPath.compile(XPATH_INSTRUMENTATION_TEST_RUNNER);
     } catch (XPathExpressionException | SAXException e) {
@@ -129,6 +135,15 @@ public class DefaultAndroidManifestReader implements AndroidManifestReader {
   public String getInstrumentationTestRunner() {
     try {
       return (String) instrumentationTestRunnerExpression.evaluate(doc, XPathConstants.STRING);
+    } catch (XPathExpressionException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Override
+  public String getTargetPackage() {
+    try {
+      return (String) targetPackageExpression.evaluate(doc, XPathConstants.STRING);
     } catch (XPathExpressionException e) {
       throw new RuntimeException(e);
     }

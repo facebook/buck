@@ -1,16 +1,16 @@
-# Copyright 2018-present Facebook, Inc.
+# Copyright (c) Facebook, Inc. and its affiliates.
 #
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License. You may obtain
-# a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations
-# under the License.
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 from __future__ import print_function
 
@@ -20,15 +20,16 @@ import os
 import os.path
 import sys
 
-from buck_tool import BuckTool, platform_path
-from subprocutils import which
-from tracing import Tracing
+from programs.buck_tool import BuckTool, platform_path
+from programs.subprocutils import which
+from programs.tracing import Tracing
+
 
 # If you're looking for JAVA_CLASSPATHS, they're now defined in the programs/classpaths file.
 
 RESOURCES = {
     "android_agent_path": "assets/android/agent.apk",
-    "fix_script": "programs/fixes/source_only_abi/autofix_source_only_abi_warnings.py",
+    "legacy_fix_script": "programs/fixes/source_only_abi/autofix_source_only_abi_warnings.py",
     "buck_server": "bin/buck",
     "buck_build_type_info": "config/build_type/LOCAL_ANT/type.txt",
     "dx": "third-party/java/dx/etc/dx",
@@ -127,6 +128,9 @@ class BuckRepo(BuckTool):
 
     def _get_bootstrap_classpath(self):
         return self._join_buck_dir("ant-out/bootstrapper/bootstrapper.jar")
+
+    def _get_buckfilesystem_classpath(self):
+        return self._join_buck_dir("ant-out/buckfilesystem/buckfilesystem.jar")
 
     def _unpack_modules(self):
         pass

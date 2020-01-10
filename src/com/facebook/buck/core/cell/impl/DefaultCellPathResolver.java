@@ -1,23 +1,26 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.cell.impl;
 
 import com.facebook.buck.core.cell.AbstractCellPathResolver;
 import com.facebook.buck.core.cell.CellName;
+import com.facebook.buck.core.cell.NewCellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.util.config.Config;
@@ -35,25 +38,28 @@ import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 import org.immutables.value.Value;
 
-@Value.Immutable(builder = false, copy = false)
+@BuckStyleValue
 public abstract class DefaultCellPathResolver extends AbstractCellPathResolver {
 
   private static final Logger LOG = Logger.get(DefaultCellPathResolver.class);
 
-  static final String REPOSITORIES_SECTION = "repositories";
+  public static final String REPOSITORIES_SECTION = "repositories";
 
-  @Value.Parameter
   public abstract Path getRoot();
 
   @Override
-  @Value.Parameter
-  public abstract ImmutableMap<String, Path> getCellPaths();
+  public abstract ImmutableMap<String, Path> getCellPathsByRootCellExternalName();
 
+  @Override
+  public abstract CellNameResolver getCellNameResolver();
+
+  @Override
+  public abstract NewCellPathResolver getNewCellPathResolver();
+
+  /** This gives the names as they are specified in the root cell. */
   @Value.Lazy
-  public ImmutableMap<Path, String> getCanonicalNames() {
-    return getCellPaths()
-        .entrySet()
-        .stream()
+  public ImmutableMap<Path, String> getExternalNamesInRootCell() {
+    return getCellPathsByRootCellExternalName().entrySet().stream()
         .collect(
             Collectors.collectingAndThen(
                 Collectors.toMap(
@@ -65,7 +71,7 @@ public abstract class DefaultCellPathResolver extends AbstractCellPathResolver {
 
   @Value.Lazy
   public ImmutableMap<CellName, Path> getPathMapping() {
-    return bootstrapPathMapping(getRoot(), getCellPaths());
+    return bootstrapPathMapping(getRoot(), getCellPathsByRootCellExternalName());
   }
 
   @Value.Lazy
@@ -76,22 +82,34 @@ public abstract class DefaultCellPathResolver extends AbstractCellPathResolver {
 
   private static ImmutableMap<String, ? extends Path> sortCellPaths(
       Map<String, ? extends Path> cellPaths) {
-    return cellPaths
-        .entrySet()
-        .stream()
+    return cellPaths.entrySet().stream()
         .sorted(Comparator.comparing(Map.Entry::getValue))
         .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));
   }
 
-  public static DefaultCellPathResolver of(Path root, Map<String, ? extends Path> cellPaths) {
-    return ImmutableDefaultCellPathResolver.of(root, sortCellPaths(cellPaths));
+  public static DefaultCellPathResolver create(
+      Path root,
+      Map<String, ? extends Path> cellPaths,
+      CellNameResolver cellNameResolver,
+      NewCellPathResolver newCellPathResolver) {
+    return ImmutableDefaultCellPathResolver.of(
+        root, sortCellPaths(cellPaths), cellNameResolver, newCellPathResolver);
   }
 
-  public static DefaultCellPathResolver of(Path root, Config config) {
-    return ImmutableDefaultCellPathResolver.of(
+  /**
+   * Creates a DefaultCellPathResolver using the mappings in the provided {@link Config}. This is
+   * the preferred way to create a DefaultCellPathResolver.
+   */
+  public static DefaultCellPathResolver create(Path root, Config config) {
+    NewCellPathResolver newCellPathResolver = CellMappingsFactory.create(root, config);
+    CellNameResolver cellNameResolver =
+        CellMappingsFactory.createCellNameResolver(root, config, newCellPathResolver);
+    return ImmutableDefaultCellPathResolver.create(
         root,
         sortCellPaths(
-            getCellPathsFromConfigRepositoriesSection(root, config.get(REPOSITORIES_SECTION))));
+            getCellPathsFromConfigRepositoriesSection(root, config.get(REPOSITORIES_SECTION))),
+        cellNameResolver,
+        newCellPathResolver);
   }
 
   static ImmutableMap<String, Path> getCellPathsFromConfigRepositoriesSection(
@@ -145,7 +163,7 @@ public abstract class DefaultCellPathResolver extends AbstractCellPathResolver {
   @Override
   public Optional<Path> getCellPath(Optional<String> cellName) {
     if (cellName.isPresent()) {
-      return Optional.ofNullable(getCellPaths().get(cellName.get()));
+      return Optional.ofNullable(getCellPathsByRootCellExternalName().get(cellName.get()));
     } else {
       return Optional.of(getRoot());
     }
@@ -156,7 +174,7 @@ public abstract class DefaultCellPathResolver extends AbstractCellPathResolver {
     if (cellPath.equals(getRoot())) {
       return Optional.empty();
     } else {
-      String name = getCanonicalNames().get(cellPath);
+      String name = getExternalNamesInRootCell().get(cellPath);
       if (name == null) {
         throw new IllegalArgumentException("Unknown cell path: " + cellPath);
       }

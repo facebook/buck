@@ -3,9 +3,21 @@ load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
 java_library_with_plugins(
     name = "impl",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//src/com/facebook/buck/core/toolchain:toolchain",
-        "//src/com/facebook/buck/cxx/toolchain:toolchain",
-    ],
     visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/core/rules/modern/annotations:annotations",
+        "//src/com/facebook/buck/core/toolchain/tool/impl:impl",
+        "//src/com/facebook/buck/core/toolchain/toolprovider/impl:impl",
+        "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/cxx/toolchain/linker/impl:impl",
+        "//src/com/facebook/buck/rules/modern:modern",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/toolchain:toolchain",
+        "//src/com/facebook/buck/core/toolchain/toolprovider:toolprovider",
+        "//src/com/facebook/buck/cxx/config:config",
+        "//src/com/facebook/buck/cxx/toolchain:toolchain",
+        "//src/com/facebook/buck/cxx/toolchain/linker:linker",
+    ],
 )

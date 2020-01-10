@@ -1,30 +1,31 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.cli.BuildCommand.BuildRunResult;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.support.fix.BuckRunSpec;
+import com.facebook.buck.support.fix.ImmutableBuckRunSpec;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ForwardingProcessListener;
@@ -33,9 +34,11 @@ import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.io.Closeable;
 import java.nio.file.Files;
@@ -44,7 +47,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
-import javax.annotation.Nullable;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.Option;
@@ -59,14 +61,6 @@ public final class RunCommand extends AbstractCommand {
    * </pre>
    */
   @Argument private List<String> noDashArguments = new ArrayList<>();
-
-  @Nullable
-  @Option(
-      name = "--command-args-file",
-      usage =
-          "Serialize the command, args, and environment for running the target to this file, for consumption by the python wrapper.",
-      hidden = true)
-  private String commandArgsFile;
 
   @Option(name = "--", handler = ConsumeAllOptionsHandler.class)
   private List<String> withDashArguments = new ArrayList<>();
@@ -113,16 +107,19 @@ public final class RunCommand extends AbstractCommand {
 
     // Make sure the target is built.
     BuildCommand buildCommand = new BuildCommand(ImmutableList.of(target.toString()));
+    BuildRunResult buildResult;
     try (Closeable contextCloser = buildCommand.prepareExecutionContext(params)) {
-      ExitCode exitCode = buildCommand.runWithoutHelp(params);
-      if (exitCode != ExitCode.SUCCESS) {
-        return exitCode;
+      buildResult = buildCommand.runWithoutHelpInternal(params);
+      if (buildResult.getExitCode() != ExitCode.SUCCESS) {
+        return buildResult.getExitCode();
       }
     }
 
     Build build = buildCommand.getBuild();
-    BuildRule targetRule;
-    targetRule = build.getGraphBuilder().requireRule(target);
+    ImmutableSet<BuildTarget> buildTargets = buildResult.getBuildTargets();
+    Preconditions.checkState(buildTargets.size() == 1, "built targets: %s", buildTargets);
+    BuildTarget buildTarget = buildTargets.asList().get(0);
+    BuildRule targetRule = build.getGraphBuilder().requireRule(buildTarget);
     BinaryBuildRule binaryBuildRule = null;
     if (targetRule instanceof BinaryBuildRule) {
       binaryBuildRule = (BinaryBuildRule) targetRule;
@@ -145,8 +142,7 @@ public final class RunCommand extends AbstractCommand {
     // command.
     //
     // If we haven't received a command args file, we assume it's fine to just run in-process.
-    SourcePathResolver resolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(build.getGraphBuilder()));
+    SourcePathResolverAdapter resolver = build.getGraphBuilder().getSourcePathResolver();
     Tool executable = binaryBuildRule.getExecutableCommand();
     if (commandArgsFile == null) {
       ListeningProcessExecutor processExecutor = new ListeningProcessExecutor();
@@ -178,16 +174,14 @@ public final class RunCommand extends AbstractCommand {
               .addAll(executable.getCommandPrefix(resolver))
               .addAll(getTargetArguments())
               .build();
-      ImmutableMap<String, Object> cmd =
-          ImmutableMap.of(
-              "path", argv.get(0),
-              "argv", argv,
-              "envp",
-                  ImmutableMap.<String, String>builder()
-                      .putAll(params.getEnvironment())
-                      .putAll(executable.getEnvironment(resolver))
-                      .build(),
-              "cwd", params.getCell().getFilesystem().getRootPath());
+      ImmutableMap<String, String> envp =
+          ImmutableMap.<String, String>builder()
+              .putAll(params.getEnvironment())
+              .putAll(executable.getEnvironment(resolver))
+              .build();
+      BuckRunSpec cmd =
+          ImmutableBuckRunSpec.of(
+              argv, envp, params.getCell().getFilesystem().getRootPath(), false);
       Files.write(Paths.get(commandArgsFile), ObjectMappers.WRITER.writeValueAsBytes(cmd));
       return ExitCode.SUCCESS;
     }

@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java.abi.source;
@@ -147,15 +147,15 @@ public class TreeBackedProcessorWrapperTest {
     testCompiler.setAllowCompilationErrors(true);
     runTestProcessor(
         (annotations, roundEnv) -> {
-          messager.printMessage(
-              Diagnostic.Kind.ERROR, "Foo", elements.getTypeElement("com.example.buck.Foo"));
+          if (!roundEnv.processingOver()) {
+            messager.printMessage(
+                Diagnostic.Kind.ERROR, "Foo", elements.getTypeElement("com.example.buck.Foo"));
+          }
           return false;
         });
 
     assertThat(
-        testCompiler
-            .getDiagnosticMessages()
-            .stream()
+        testCompiler.getDiagnosticMessages().stream()
             .map(message -> message.substring(message.indexOf("Foo.java")))
             .collect(Collectors.toList()),
         Matchers.contains(
@@ -188,7 +188,7 @@ public class TreeBackedProcessorWrapperTest {
 
               @Override
               public SourceVersion getSupportedSourceVersion() {
-                return SourceVersion.RELEASE_8;
+                return SourceVersion.latestSupported();
               }
 
               @Override

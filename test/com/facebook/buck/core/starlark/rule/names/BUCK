@@ -1,0 +1,9 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+standard_java_test(
+    name = "names",
+    deps = [
+        "//src/com/facebook/buck/core/starlark/rule/names:names",
+        "//third-party/java/junit:junit",
+    ],
+)

@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -21,6 +21,8 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -29,15 +31,17 @@ import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.impl.SymlinkTree;
+import com.facebook.buck.core.rules.impl.MappedSymlinkTree;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -98,6 +102,7 @@ public class AndroidResourceDescriptionTest {
 
     AndroidResourceDescription description =
         new AndroidResourceDescription(
+            createToolchainProviderForAndroidResource(),
             new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect()));
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot().toPath());
@@ -115,6 +120,13 @@ public class AndroidResourceDescriptionTest {
                 FakeSourcePath.of(filesystem, "res/_file"),
                 Paths.get("dirs/values/strings.xml"),
                 FakeSourcePath.of(filesystem, "res/dirs/values/strings.xml"))));
+  }
+
+  private static ToolchainProvider createToolchainProviderForAndroidResource() {
+    return new ToolchainProviderBuilder()
+        .withToolchain(
+            AndroidPlatformTarget.DEFAULT_NAME, AndroidTestUtils.createAndroidPlatformTarget())
+        .build();
   }
 
   @Test
@@ -161,7 +173,8 @@ public class AndroidResourceDescriptionTest {
 
   @Test
   public void testResourceRulesCreateSymlinkTrees() {
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem(tmpFolder.getRoot().toPath());
+    FakeProjectFilesystem filesystem =
+        new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmpFolder.getRoot().toPath());
     filesystem.mkdirs(Paths.get("res"));
     filesystem.mkdirs(Paths.get("assets"));
     filesystem.createNewFile(Paths.get("res/file1.txt"));
@@ -198,7 +211,7 @@ public class AndroidResourceDescriptionTest {
                 target.withAppendedFlavors(
                     AndroidResourceDescription.ASSETS_SYMLINK_TREE_FLAVOR))));
     assertThat(
-        ((SymlinkTree) deps.get(0)).getLinks(),
+        ((MappedSymlinkTree) deps.get(0)).getLinks(),
         is(
             equalTo(
                 ImmutableSortedMap.of(
@@ -216,7 +229,7 @@ public class AndroidResourceDescriptionTest {
                 target.withAppendedFlavors(
                     AndroidResourceDescription.RESOURCES_SYMLINK_TREE_FLAVOR))));
     assertThat(
-        ((SymlinkTree) deps.get(1)).getLinks(),
+        ((MappedSymlinkTree) deps.get(1)).getLinks(),
         is(
             equalTo(
                 ImmutableSortedMap.of(

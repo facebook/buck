@@ -1,0 +1,5 @@
+load(":defs.bzl", "copy_file")
+
+copy_file(name = "copy_executable.sh", dep = "//:echo_executable.sh", exe = True)
+
+copy_file(name = "copy_with_out.sh", dep = "//:echo_with_out.sh")

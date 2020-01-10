@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.haskell;
@@ -42,12 +42,11 @@ public class HaskellBinaryIntegrationTest {
   public static Collection<Object[]> data() {
     return ImmutableList.copyOf(
         new Object[][] {
-          {Linker.LinkableDepType.STATIC},
-          {Linker.LinkableDepType.STATIC_PIC},
-          {Linker.LinkableDepType.SHARED},
+          {Linker.LinkableDepType.STATIC}, {Linker.LinkableDepType.SHARED},
         });
   }
 
+  private HaskellVersion version;
   private ProjectWorkspace workspace;
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
@@ -66,7 +65,7 @@ public class HaskellBinaryIntegrationTest {
     assumeThat(Platform.detect(), Matchers.not(Platform.WINDOWS));
 
     // Verify that the system contains a compiler.
-    HaskellVersion version = HaskellTestUtils.assumeSystemCompiler();
+    version = HaskellTestUtils.assumeSystemCompiler();
 
     // Setup the workspace.
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "binary_test", tmp);
@@ -77,14 +76,14 @@ public class HaskellBinaryIntegrationTest {
   }
 
   @Test
-  public void simple() throws IOException {
+  public void simple() {
     ProcessResult result = workspace.runBuckCommand("run", "//:foo#default," + getLinkFlavor());
     result.assertSuccess();
     assertThat(result.getStdout(), Matchers.equalTo("5"));
   }
 
   @Test
-  public void ghcLinkerFlags() throws IOException {
+  public void ghcLinkerFlags() {
     ProcessResult result =
         workspace.runBuckCommand(
             "run", "//:foo_rtsflags#default," + getLinkFlavor(), "-- +RTS -A512m -RTS");
@@ -93,7 +92,7 @@ public class HaskellBinaryIntegrationTest {
   }
 
   @Test
-  public void dependency() throws IOException {
+  public void dependency() {
     ProcessResult result =
         workspace.runBuckCommand("run", "//:dependent#default," + getLinkFlavor());
     result.assertSuccess();
@@ -101,14 +100,24 @@ public class HaskellBinaryIntegrationTest {
   }
 
   @Test
-  public void foreign() throws IOException {
+  public void mutuallyRecursive() {
+    // .hs-boot doesn't work well with -i (empty import directory list) for ghc <8
+    assumeThat(version.getMajorVersion(), Matchers.greaterThanOrEqualTo(8));
+    ProcessResult result =
+        workspace.runBuckCommand("run", "//:mutually_recursive#default," + getLinkFlavor());
+    result.assertSuccess();
+    assertThat(result.getStdout(), Matchers.equalTo("55\n"));
+  }
+
+  @Test
+  public void foreign() {
     ProcessResult result = workspace.runBuckCommand("run", "//:foreign#default," + getLinkFlavor());
     result.assertSuccess();
     assertThat(result.getStdout(), Matchers.equalTo("hello world"));
   }
 
   @Test
-  public void cxxGenrule() throws IOException {
+  public void cxxGenrule() {
     ProcessResult result =
         workspace.runBuckCommand(
             "run", "-c", "cxx.cppflags=-some-flag", "//:gen_main#default," + getLinkFlavor());
@@ -117,7 +126,7 @@ public class HaskellBinaryIntegrationTest {
   }
 
   @Test
-  public void cHeader() throws IOException {
+  public void cHeader() {
     ProcessResult result =
         workspace.runBuckCommand("run", "//:hs_header#default," + getLinkFlavor());
     result.assertSuccess();
@@ -125,7 +134,7 @@ public class HaskellBinaryIntegrationTest {
   }
 
   @Test
-  public void buildError() throws IOException {
+  public void buildError() {
     ProcessResult result = workspace.runBuckBuild("//:error#default," + getLinkFlavor());
     result.assertFailure();
   }

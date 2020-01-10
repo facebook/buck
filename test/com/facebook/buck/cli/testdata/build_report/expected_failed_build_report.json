@@ -4,13 +4,16 @@
     "//:rule_with_output" : {
       "success" : true,
       "type" : "BUILT_LOCALLY",
-      "output" : "buck-out/gen/rule_with_output/rule_with_output.txt"
+      "output" : "<OUTPUT_PREFIX>rule_with_output.txt",
+      "outputs" : {
+        "DEFAULT" : [ "<OUTPUT_PREFIX>rule_with_output.txt" ]
+      }
     },
     "//:failing_rule" : {
       "success" : false
     }
   },
   "failures" : {
-    "//:failing_rule" : "Command failed with exit code 2.\nstderr: \n    When running <genrule>.\n    When building rule //:failing_rule."
+    "//:failing_rule" : "Command failed with exit code 2.\n\ncommand: [/bin/bash, -e, %s]\n\nstderr: \n    When running <genrule>.\n    When building rule //:failing_rule."
   }
 }

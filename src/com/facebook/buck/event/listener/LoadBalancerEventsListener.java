@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.event.listener;
@@ -21,13 +21,8 @@ import com.facebook.buck.counters.IntegerCounter;
 import com.facebook.buck.counters.SamplingCounter;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.slb.LoadBalancedServiceEvent;
-import com.facebook.buck.slb.LoadBalancedServiceEventData;
 import com.facebook.buck.slb.LoadBalancerPingEvent;
-import com.facebook.buck.slb.LoadBalancerPingEventData;
-import com.facebook.buck.slb.PerServerData;
-import com.facebook.buck.slb.PerServerPingData;
 import com.facebook.buck.slb.ServerHealthManagerEvent;
-import com.facebook.buck.slb.ServerHealthManagerEventData;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
@@ -52,8 +47,8 @@ public class LoadBalancerEventsListener implements BuckEventListener {
 
   @Subscribe
   public void onLoadBalancerPingEvent(LoadBalancerPingEvent event) {
-    LoadBalancerPingEventData data = event.getData();
-    for (PerServerPingData perServerData : data.getPerServerData()) {
+    LoadBalancerPingEvent.LoadBalancerPingEventData data = event.getData();
+    for (LoadBalancerPingEvent.PerServerPingData perServerData : data.getPerServerData()) {
       ServerCounters counters = getServerCounters(perServerData.getServer());
       counters.getPingRequestCount().inc();
       if (perServerData.getException().isPresent()) {
@@ -75,13 +70,13 @@ public class LoadBalancerEventsListener implements BuckEventListener {
 
   @Subscribe
   public void onServerHealthManagerEvent(ServerHealthManagerEvent event) {
-    ServerHealthManagerEventData data = event.getData();
+    ServerHealthManagerEvent.ServerHealthManagerEventData data = event.getData();
     IntegerCounter noHealthyServersCounter = getNoHealthyServerCounter(data.getServerPoolName());
     if (data.noHealthyServersAvailable()) {
       noHealthyServersCounter.inc();
     }
 
-    for (PerServerData perServerData : data.getPerServerData()) {
+    for (ServerHealthManagerEvent.PerServerData perServerData : data.getPerServerData()) {
       ServerCounters counters = getServerCounters(perServerData.getServer());
       if (perServerData.isServerUnhealthy()) {
         counters.getServerNotHealthyCount().inc();
@@ -94,7 +89,7 @@ public class LoadBalancerEventsListener implements BuckEventListener {
 
   @Subscribe
   public void onLoadBalancedServiceEvent(LoadBalancedServiceEvent event) {
-    LoadBalancedServiceEventData data = event.getData();
+    LoadBalancedServiceEvent.LoadBalancedServiceEventData data = event.getData();
     ServerCounters counters = getServerCounters(data.getServer());
     counters.getRequestCount().inc();
     if (data.getRequestSizeBytes().isPresent()) {

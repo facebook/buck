@@ -1,0 +1,17 @@
+apple_binary(
+    name = "AppBinary",
+    srcs = ["App.m"],
+    entitlements_file = "Entitlements.plist",
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/AppKit.framework",
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    headers = ["App.h"],
+)
+
+apple_bundle(
+    name = "App",
+    binary = ":AppBinary",
+    extension = "app",
+    info_plist = "Info.plist",
+)

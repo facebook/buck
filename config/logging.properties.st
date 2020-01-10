@@ -1,7 +1,5 @@
 # java.util.logging.LogManager configuration properties for Buck
 #
-# Also see logging.test.properties, which controls logging in unit tests.
-#
 # See http://docs.oracle.com/javase/7/docs/api/java/util/logging/LogManager.html
 # for docs on the keys and values in this file.
 

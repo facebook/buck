@@ -1,34 +1,36 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.doctor;
 
+import com.facebook.buck.core.util.Optionals;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.doctor.config.BuildLogEntry;
 import com.facebook.buck.doctor.config.DoctorConfig;
+import com.facebook.buck.doctor.config.ImmutableSourceControlInfo;
+import com.facebook.buck.doctor.config.ImmutableUserLocalConfiguration;
 import com.facebook.buck.doctor.config.SourceControlInfo;
 import com.facebook.buck.doctor.config.UserLocalConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.LogConfigPaths;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.Optionals;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.config.Configs;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.versioncontrol.FullVersionControlStats;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.google.common.annotations.VisibleForTesting;
@@ -43,6 +45,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -91,7 +94,7 @@ public abstract class AbstractReport {
     }
     FullVersionControlStats versionControlStats = versionControlStatsOptional.get();
     return Optional.of(
-        SourceControlInfo.of(
+        ImmutableSourceControlInfo.of(
             versionControlStats.getCurrentRevisionId(),
             versionControlStats.getBaseBookmarks(),
             Optional.of(versionControlStats.getBranchedFromMasterRevisionId()),
@@ -134,7 +137,7 @@ public abstract class AbstractReport {
     Optional<FileChangesIgnoredReport> fileChangesIgnoredReport = getFileChangesIgnoredReport();
 
     UserLocalConfiguration userLocalConfiguration =
-        UserLocalConfiguration.of(
+        ImmutableUserLocalConfiguration.of(
             isNoBuckCheckPresent(), getLocalConfigs(), getConfigOverrides(selectedBuilds));
 
     ImmutableSet<Path> includedPaths =
@@ -146,6 +149,7 @@ public abstract class AbstractReport {
                   Optionals.addIfPresent(input.getMachineReadableLogFile(), result);
                   Optionals.addIfPresent(input.getRuleKeyDiagKeysFile(), result);
                   Optionals.addIfPresent(input.getRuleKeyDiagGraphFile(), result);
+                  Optionals.addIfPresent(input.getConfigJsonFile(), result);
                   result.add(input.getRelativePath());
                   return result.build();
                 })
@@ -165,7 +169,7 @@ public abstract class AbstractReport {
             .setHighlightedBuildIds(
                 RichStream.from(selectedBuilds)
                     .map(BuildLogEntry::getBuildId)
-                    .flatMap(Optionals::toStream)
+                    .flatMap(RichStream::from)
                     .toOnceIterable())
             .setBuildEnvironmentDescription(buildEnvironmentDescription)
             .setSourceControlInfo(sourceControlInfo)
@@ -199,7 +203,8 @@ public abstract class AbstractReport {
       return ImmutableMap.of();
     }
     List<String> args = entry.getCommandArgs().get();
-    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+    Map<String, String> configOverrides = new HashMap<>();
+
     for (int i = 0; i < args.size(); i++) {
       if (args.get(i).equals("--config") || args.get(i).equals("-c")) {
         i++;
@@ -207,10 +212,11 @@ public abstract class AbstractReport {
           break;
         }
         String[] pieces = args.get(i).split("=", 2);
-        builder.put(pieces[0], pieces.length == 2 ? pieces[1] : "");
+        // If duplicate entries exist, latter one will override previous one
+        configOverrides.put(pieces[0], pieces.length == 2 ? pieces[1] : "");
       }
     }
-    return builder.build();
+    return ImmutableMap.copyOf(configOverrides);
   }
 
   private ImmutableMap<Path, String> getLocalConfigs() {
@@ -219,15 +225,12 @@ public abstract class AbstractReport {
     ImmutableList<Path> overrideFiles;
     try {
       overrideFiles =
-          Configs.getDefaultConfigurationFiles(rootPath)
-              .stream()
+          Configs.getDefaultConfigurationFiles(rootPath).stream()
               .filter(f -> !f.equals(Configs.getMainConfigurationFile(rootPath)))
               .filter(
                   config -> {
                     try {
-                      return Configs.parseConfigFile(rootPath.resolve(config))
-                              .values()
-                              .stream()
+                      return Configs.parseConfigFile(rootPath.resolve(config)).values().stream()
                               .mapToLong(Map::size)
                               .sum()
                           != 0;

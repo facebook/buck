@@ -38,3 +38,17 @@ cxx_binary(
     name = "failing_c_rule",
     srcs = ["failure.c"],
 )
+
+genrule(
+    name = "rule_with_multiple_outputs",
+    outs = {
+        "output1": [
+            "out1.txt",
+        ],
+        "output2": [
+            "out2.txt",
+        ],
+    },
+    bash = "echo something> $OUT/out1.txt && echo another>$OUT/out2.txt",
+    cmd_exe = "(echo something)> %OUT%\\out1.txt && (echo another)> %OUT%\\out2.txt",
+)

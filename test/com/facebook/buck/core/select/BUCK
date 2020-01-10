@@ -6,16 +6,18 @@ java_library(
         ["*.java"],
         exclude = ["*Test.java"],
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/core/select:select",
-        "//src/com/facebook/buck/rules/coercer:coercer",
-    ],
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/select/impl:impl",
         "//test/com/facebook/buck/core/cell:testutil",
+        "//test/com/facebook/buck/core/model:testutil",
         "//third-party/java/guava:guava",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/select:select",
+        "//src/com/facebook/buck/rules/coercer:coercer",
     ],
 )
 
@@ -25,6 +27,7 @@ java_test(
     deps = [
         "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/testutil/integration:util",
+        "//test/com/facebook/buck/util:testutil",
         "//third-party/java/junit:junit",
     ],
 )

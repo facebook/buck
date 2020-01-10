@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.parser;
@@ -21,20 +21,27 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.impl.FilesystemBackedBuildFileTree;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.counters.Counter;
 import com.facebook.buck.counters.IntegerCounter;
 import com.facebook.buck.counters.TagSetCounter;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ParsingEvent;
+import com.facebook.buck.io.watchman.WatchmanEvent.Kind;
 import com.facebook.buck.io.watchman.WatchmanOverflowEvent;
 import com.facebook.buck.io.watchman.WatchmanPathEvent;
 import com.facebook.buck.parser.api.BuildFileManifest;
+import com.facebook.buck.parser.api.PackageFileManifest;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.util.concurrent.AutoCloseableLock;
 import com.facebook.buck.util.concurrent.AutoCloseableReadWriteLock;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
@@ -43,6 +50,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.MapDifference;
 import com.google.common.eventbus.Subscribe;
@@ -55,6 +63,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
@@ -95,22 +104,25 @@ public class DaemonicParserState {
   static final float DEFAULT_LOAD_FACTOR = 0.75f;
 
   /** Stateless view of caches on object that conforms to {@link PipelineNodeCache.Cache}. */
-  private class DaemonicCacheView<T> implements PipelineNodeCache.Cache<BuildTarget, T> {
+  private class DaemonicCacheView<K, T> implements PipelineNodeCache.Cache<K, T> {
 
-    private final Class<T> type;
+    protected final DaemonicCellState.CellCacheType<K, T> type;
 
-    private DaemonicCacheView(Class<T> type) {
+    private DaemonicCacheView(DaemonicCellState.CellCacheType<K, T> type) {
       this.type = type;
     }
 
     @Override
-    public Optional<T> lookupComputedNode(Cell cell, BuildTarget target, BuckEventBus eventBus)
+    public Optional<T> lookupComputedNode(Cell cell, K target, BuckEventBus eventBus)
         throws BuildTargetException {
       invalidateIfProjectBuildFileParserStateChanged(cell);
-      Path buildFile = cell.getAbsolutePathToBuildFileUnsafe(target);
+      Path buildFile =
+          cell.getBuckConfigView(ParserConfig.class)
+              .getAbsolutePathToBuildFileUnsafe(
+                  cell, type.convertToUnconfiguredBuildTargetView(target));
       invalidateIfBuckConfigOrEnvHasChanged(cell, buildFile, eventBus);
 
-      DaemonicCellState.Cache<T> state = getCache(cell);
+      DaemonicCellState.Cache<K, T> state = getCache(cell);
       if (state == null) {
         return Optional.empty();
       }
@@ -119,7 +131,7 @@ public class DaemonicParserState {
 
     @Override
     public T putComputedNodeIfNotPresent(
-        Cell cell, BuildTarget target, T targetNode, BuckEventBus eventBus)
+        Cell cell, K target, T targetNode, boolean targetIsConfiguration, BuckEventBus eventBus)
         throws BuildTargetException {
 
       // Verify we don't invalidate the build file at this point, as, at this point, we should have
@@ -129,17 +141,24 @@ public class DaemonicParserState {
           "Unexpected invalidation due to build file parser state change for %s %s",
           cell.getRoot(),
           target);
-      Path buildFile = cell.getAbsolutePathToBuildFileUnsafe(target);
+      Path buildFile =
+          cell.getBuckConfigView(ParserConfig.class)
+              .getAbsolutePathToBuildFileUnsafe(
+                  cell, type.convertToUnconfiguredBuildTargetView(target));
       Preconditions.checkState(
           !invalidateIfBuckConfigOrEnvHasChanged(cell, buildFile, eventBus),
           "Unexpected invalidation due to config/env change for %s %s",
           cell.getRoot(),
           target);
 
+      if (targetIsConfiguration) {
+        configurationBuildFiles.add(buildFile);
+      }
+
       return getOrCreateCache(cell).putComputedNodeIfNotPresent(target, targetNode);
     }
 
-    private @Nullable DaemonicCellState.Cache<T> getCache(Cell cell) {
+    private @Nullable DaemonicCellState.Cache<K, T> getCache(Cell cell) {
       DaemonicCellState cellState = getCellState(cell);
       if (cellState == null) {
         return null;
@@ -147,8 +166,8 @@ public class DaemonicParserState {
       return cellState.getCache(type);
     }
 
-    private DaemonicCellState.Cache<T> getOrCreateCache(Cell cell) {
-      return getOrCreateCellState(cell).getOrCreateCache(type);
+    private DaemonicCellState.Cache<K, T> getOrCreateCache(Cell cell) {
+      return getOrCreateCellState(cell).getCache(type);
     }
   }
 
@@ -166,7 +185,7 @@ public class DaemonicParserState {
       if (state == null) {
         return Optional.empty();
       }
-      return state.lookupRawNodes(buildFile);
+      return state.lookupBuildFileManifest(buildFile);
     }
 
     /**
@@ -174,13 +193,15 @@ public class DaemonicParserState {
      * entries from the raw nodes (these are intended for the cache as they contain information
      * about what other files to invalidate entries on).
      *
-     * @param cell cell
-     * @param buildFile build file
      * @return previous nodes for the file if the cache contained it, new ones otherwise.
      */
     @Override
     public BuildFileManifest putComputedNodeIfNotPresent(
-        Cell cell, Path buildFile, BuildFileManifest manifest, BuckEventBus eventBus)
+        Cell cell,
+        Path buildFile,
+        BuildFileManifest manifest,
+        boolean targetIsConfiguration,
+        BuckEventBus eventBus)
         throws BuildTargetException {
       Preconditions.checkState(buildFile.isAbsolute());
       // Technically this leads to inconsistent state if the state change happens after rawNodes
@@ -192,45 +213,106 @@ public class DaemonicParserState {
 
       ImmutableSet.Builder<Path> dependentsOfEveryNode = ImmutableSet.builder();
 
-      manifest
-          .getIncludes()
-          .forEach(
-              includedPath ->
-                  dependentsOfEveryNode.add(cell.getFilesystem().resolve(includedPath)));
+      addAllIncludes(dependentsOfEveryNode, manifest.getIncludes(), cell);
 
-      // We also know that the rules all depend on the default includes for the cell.
-      BuckConfig buckConfig = cell.getBuckConfig();
-      Iterable<String> defaultIncludes =
-          buckConfig.getView(ParserConfig.class).getDefaultIncludes();
-      for (String include : defaultIncludes) {
-        dependentsOfEveryNode.add(resolveIncludePath(cell, include, cell.getCellPathResolver()));
+      if (cell.getBuckConfig().getView(ParserConfig.class).getEnablePackageFiles()) {
+        // Add the PACKAGE file in the build file's directory and parent directory as dependents,
+        // regardless of whether they currently exist. If a PACKAGE file is added, we need to
+        // invalidate all relevant nodes.
+        Path packageFile = PackagePipeline.getPackageFileFromBuildFile(cell, buildFile);
+        ImmutableSet<Path> parentPackageFiles =
+            PackagePipeline.getAllParentPackageFiles(cell, packageFile);
+        dependentsOfEveryNode.add(packageFile).addAll(parentPackageFiles);
       }
 
       return getOrCreateCellState(cell)
-          .putRawNodesIfNotPresentAndStripMetaEntries(
+          .putBuildFileManifestIfNotPresent(
               buildFile,
               manifest,
               dependentsOfEveryNode.build(),
               manifest.getEnv().orElse(ImmutableMap.of()));
     }
+  }
+
+  /** Stateless view of caches on object that conforms to {@link PipelineNodeCache.Cache}. */
+  private class DaemonicPackageCache implements PipelineNodeCache.Cache<Path, PackageFileManifest> {
+
+    @Override
+    public Optional<PackageFileManifest> lookupComputedNode(
+        Cell cell, Path packageFile, BuckEventBus eventBus) throws BuildTargetException {
+      Preconditions.checkState(packageFile.isAbsolute());
+      invalidateIfProjectBuildFileParserStateChanged(cell);
+      invalidateIfBuckConfigOrEnvHasChanged(cell, packageFile, eventBus);
+
+      DaemonicCellState state = getCellState(cell);
+      if (state == null) {
+        return Optional.empty();
+      }
+      return state.lookupPackageFileManifest(packageFile);
+    }
 
     /**
-     * Resolves a path of an include string like {@code repo//foo/macro_defs} to a filesystem path.
+     * Insert item into the cache if it was not already there.
+     *
+     * @return previous manifest for the file if the cache contained it, new ones otherwise.
      */
-    private Path resolveIncludePath(Cell cell, String include, CellPathResolver cellPathResolver) {
-      // Default includes are given as "cell//path/to/file". They look like targets
-      // but they are not. However, I bet someone will try and treat it like a
-      // target, so find the owning cell if necessary, and then fully resolve
-      // the path against the owning cell's root.
-      Matcher matcher = INCLUDE_PATH_PATTERN.matcher(include);
-      Preconditions.checkState(matcher.matches());
-      Optional<String> cellName = Optional.ofNullable(matcher.group(1));
-      String includePath = matcher.group(2);
-      return cellPathResolver
-          .getCellPath(cellName)
-          .map(cellPath -> cellPath.resolve(includePath))
-          .orElseGet(() -> cell.getFilesystem().resolve(includePath));
+    @Override
+    public PackageFileManifest putComputedNodeIfNotPresent(
+        Cell cell,
+        Path packageFile,
+        PackageFileManifest manifest,
+        boolean targetIsConfiguration,
+        BuckEventBus eventBus)
+        throws BuildTargetException {
+      ImmutableSet.Builder<Path> packageDependents = ImmutableSet.builder();
+
+      addAllIncludes(packageDependents, manifest.getIncludes(), cell);
+
+      return getOrCreateCellState(cell)
+          .putPackageFileManifestIfNotPresent(
+              packageFile,
+              manifest,
+              packageDependents.build(),
+              manifest.getEnv().orElse(ImmutableMap.of()));
     }
+  }
+
+  /** Add all the includes from the manifest and Buck defaults. */
+  private static void addAllIncludes(
+      ImmutableSet.Builder<Path> dependents,
+      ImmutableSortedSet<String> manifestIncludes,
+      Cell cell) {
+    manifestIncludes.forEach(
+        includedPath -> dependents.add(cell.getFilesystem().resolve(includedPath)));
+
+    // We also know that the all manifests depend on the default includes for the cell.
+    // Note: This is a bad assumption. While both the project build file and package parsers set
+    // the default includes of the ParserConfig, it is not required and this assumption may not
+    // always hold.
+    BuckConfig buckConfig = cell.getBuckConfig();
+    Iterable<String> defaultIncludes = buckConfig.getView(ParserConfig.class).getDefaultIncludes();
+    for (String include : defaultIncludes) {
+      dependents.add(resolveIncludePath(cell, include, cell.getCellPathResolver()));
+    }
+  }
+
+  /**
+   * Resolves a path of an include string like {@code repo//foo/macro_defs} to a filesystem path.
+   */
+  private static Path resolveIncludePath(
+      Cell cell, String include, CellPathResolver cellPathResolver) {
+    // Default includes are given as "cell//path/to/file". They look like targets
+    // but they are not. However, I bet someone will try and treat it like a
+    // target, so find the owning cell if necessary, and then fully resolve
+    // the path against the owning cell's root.
+    Matcher matcher = INCLUDE_PATH_PATTERN.matcher(include);
+    Preconditions.checkState(matcher.matches());
+    Optional<String> cellName = Optional.ofNullable(matcher.group(1));
+    String includePath = matcher.group(2);
+    return cellPathResolver
+        .getCellPath(cellName)
+        .map(cellPath -> cellPath.resolve(includePath))
+        .orElseGet(() -> cell.getFilesystem().resolve(includePath));
   }
 
   private final TagSetCounter cacheInvalidatedByEnvironmentVariableChangeCounter;
@@ -249,9 +331,27 @@ public class DaemonicParserState {
   @GuardedBy("cellStateLock")
   private final ConcurrentMap<Path, DaemonicCellState> cellPathToDaemonicState;
 
-  private final LoadingCache<Class<?>, DaemonicCacheView<?>> typedNodeCaches =
-      CacheBuilder.newBuilder().build(CacheLoader.from(cls -> new DaemonicCacheView<>(cls)));
+  private final DaemonicCacheView<BuildTarget, TargetNode<?>> targetNodeCache =
+      new DaemonicCacheView<>(DaemonicCellState.TARGET_NODE_CACHE_TYPE);
+  private final DaemonicCacheView<UnconfiguredBuildTargetView, UnconfiguredTargetNode>
+      rawTargetNodeCache = new DaemonicCacheView<>(DaemonicCellState.RAW_TARGET_NODE_CACHE_TYPE);
+
+  /**
+   * Build files that contain configuration targets.
+   *
+   * <p>Changes in configuration targets are handled differently from the changes in build targets.
+   * Whenever there is a change in configuration targets the state in all cells is reset. Parser
+   * state doesn't provide information about dependencies among build rules and configuration rules
+   * and changes in configuration rules can affect build targets (including build targets in other
+   * cells).
+   */
+  // TODO: remove logic around this field when proper tracking of dependencies on
+  // configuration rules is implemented
+  private final Set<Path> configurationBuildFiles = ConcurrentHashMap.newKeySet();
+
   private final DaemonicRawCacheView rawNodeCache;
+
+  private final DaemonicPackageCache packageFileCache;
 
   private final int parsingThreads;
 
@@ -298,7 +398,8 @@ public class DaemonicParserState {
                   @Override
                   public BuildFileTree load(Cell cell) {
                     return new FilesystemBackedBuildFileTree(
-                        cell.getFilesystem(), cell.getBuildFileName());
+                        cell.getFilesystem(),
+                        cell.getBuckConfigView(ParserConfig.class).getBuildFileName());
                   }
                 });
     this.cachedIncludes = new ConcurrentHashMap<>();
@@ -306,6 +407,7 @@ public class DaemonicParserState {
         new ConcurrentHashMap<>(DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR, parsingThreads);
 
     this.rawNodeCache = new DaemonicRawCacheView();
+    this.packageFileCache = new DaemonicPackageCache();
 
     this.cachedStateLock = new AutoCloseableReadWriteLock();
     this.cellStateLock = new AutoCloseableReadWriteLock();
@@ -315,23 +417,41 @@ public class DaemonicParserState {
     return buildFileTrees;
   }
 
+  /** Type-safe accessor to one of state caches */
+  static final class CacheType<K, T> {
+    private final Function<DaemonicParserState, DaemonicCacheView<K, T>> getCacheView;
+
+    public CacheType(Function<DaemonicParserState, DaemonicCacheView<K, T>> getCacheView) {
+      this.getCacheView = getCacheView;
+    }
+  }
+
+  public static final CacheType<BuildTarget, TargetNode<?>> TARGET_NODE_CACHE_TYPE =
+      new CacheType<>(state -> state.targetNodeCache);
+  public static final CacheType<UnconfiguredBuildTargetView, UnconfiguredTargetNode>
+      RAW_TARGET_NODE_CACHE_TYPE = new CacheType<>(state -> state.rawTargetNodeCache);
+
   /**
    * Retrieve the cache view for caching a particular type.
    *
    * <p>Note that the output type is not constrained to the type of the Class object to allow for
    * types with generics. Care should be taken to ensure that the correct class object is passed in.
    */
-  @SuppressWarnings("unchecked")
-  public <T> PipelineNodeCache.Cache<BuildTarget, T> getOrCreateNodeCache(Class<?> cacheType) {
-    try {
-      return (PipelineNodeCache.Cache<BuildTarget, T>) typedNodeCaches.get(cacheType);
-    } catch (ExecutionException e) {
-      throw new IllegalStateException("typedNodeCaches CacheLoader should not throw.", e);
-    }
+  public <K, T> PipelineNodeCache.Cache<K, T> getOrCreateNodeCache(CacheType<K, T> cacheType) {
+    return cacheType.getCacheView.apply(this);
   }
 
   public PipelineNodeCache.Cache<Path, BuildFileManifest> getRawNodeCache() {
     return rawNodeCache;
+  }
+
+  public PipelineNodeCache.Cache<Path, PackageFileManifest> getPackageFileCache() {
+    return packageFileCache;
+  }
+
+  @VisibleForTesting
+  PipelineNodeCache.Cache<BuildTarget, TargetNode<?>> getTargetNodeCache() {
+    return targetNodeCache;
   }
 
   @Nullable
@@ -372,16 +492,16 @@ public class DaemonicParserState {
     Path path = event.getPath();
     Path fullPath = event.getCellPath().resolve(event.getPath());
 
-    try (AutoCloseableLock readLock = cellStateLock.readLock()) {
-      for (DaemonicCellState state : cellPathToDaemonicState.values()) {
-        try {
-          // We only care about creation and deletion events because modified should result in a
-          // rule key change.  For parsing, these are the only events we need to care about.
-          if (isPathCreateOrDeleteEvent(event)) {
+    // We only care about creation and deletion events because modified should result in a
+    // rule key change.  For parsing, these are the only events we need to care about.
+    if (isPathCreateOrDeleteEvent(event)) {
+      try (AutoCloseableLock readLock = cellStateLock.readLock()) {
+        for (DaemonicCellState state : cellPathToDaemonicState.values()) {
+          try {
             Cell cell = state.getCell();
             BuildFileTree buildFiles = buildFileTrees.get(cell);
 
-            if (fullPath.endsWith(cell.getBuildFileName())) {
+            if (fullPath.endsWith(cell.getBuckConfigView(ParserConfig.class).getBuildFileName())) {
               LOG.debug(
                   "Build file %s changed, invalidating build file tree for cell %s",
                   fullPath, cell);
@@ -392,26 +512,45 @@ public class DaemonicParserState {
             // Added or removed files can affect globs, so invalidate the package build file
             // "containing" {@code path} unless its filename matches a temp file pattern.
             if (!cell.getFilesystem().isIgnored(path)) {
-              invalidateContainingBuildFile(cell, buildFiles, path);
+              invalidateContainingBuildFile(state, cell, buildFiles, path);
             } else {
               LOG.debug(
                   "Not invalidating the owning build file of %s because it is a temporary file.",
                   fullPath);
             }
-          }
-        } catch (ExecutionException | UncheckedExecutionException e) {
-          try {
-            Throwables.throwIfInstanceOf(e, BuildFileParseException.class);
-            Throwables.throwIfUnchecked(e);
-            throw new RuntimeException(e);
-          } catch (BuildFileParseException bfpe) {
-            LOG.warn("Unable to parse already parsed build file.", bfpe);
+          } catch (ExecutionException | UncheckedExecutionException e) {
+            try {
+              Throwables.throwIfInstanceOf(e, BuildFileParseException.class);
+              Throwables.throwIfUnchecked(e);
+              throw new RuntimeException(e);
+            } catch (BuildFileParseException bfpe) {
+              LOG.warn("Unable to parse already parsed build file.", bfpe);
+            }
           }
         }
       }
     }
 
-    invalidatePath(fullPath);
+    if (configurationBuildFiles.contains(fullPath) || configurationRulesDependOn(path)) {
+      invalidateAllCaches();
+    } else {
+      invalidatePath(fullPath);
+    }
+  }
+
+  /**
+   * Check whether at least one build file in {@link #configurationBuildFiles} depends on the given
+   * file.
+   */
+  private boolean configurationRulesDependOn(Path path) {
+    try (AutoCloseableLock readLock = cellStateLock.readLock()) {
+      for (DaemonicCellState state : cellPathToDaemonicState.values()) {
+        if (state.pathDependentPresentIn(path, configurationBuildFiles)) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   public void invalidatePath(Path path) {
@@ -432,7 +571,8 @@ public class DaemonicParserState {
    * @param path A {@link Path}, relative to the project root and "contained" within the build file
    *     to find and invalidate.
    */
-  private void invalidateContainingBuildFile(Cell cell, BuildFileTree buildFiles, Path path) {
+  private void invalidateContainingBuildFile(
+      DaemonicCellState state, Cell cell, BuildFileTree buildFiles, Path path) {
     LOG.verbose("Invalidating rules dependent on change to %s in cell %s", path, cell);
     Set<Path> packageBuildFiles = new HashSet<>();
 
@@ -445,7 +585,8 @@ public class DaemonicParserState {
 
     // If we're *not* enforcing package boundary checks, it's possible for multiple ancestor
     // packages to reference the same file
-    if (!cell.isEnforcingBuckPackageBoundaries(path)) {
+    if (cell.getBuckConfigView(ParserConfig.class).getPackageBoundaryEnforcementPolicy(path)
+        != ParserConfig.PackageBoundaryEnforcement.ENFORCE) {
       while (packageBuildFile.isPresent() && packageBuildFile.get().getParent() != null) {
         packageBuildFile =
             buildFiles.getBasePathOfAncestorTarget(packageBuildFile.get().getParent());
@@ -465,13 +606,10 @@ public class DaemonicParserState {
     buildFilesInvalidatedByFileAddOrRemoveCounter.inc(packageBuildFiles.size());
     pathsAddedOrRemovedInvalidatingBuildFiles.add(path.toString());
 
-    DaemonicCellState state;
-    try (AutoCloseableLock readLock = cellStateLock.readLock()) {
-      state = cellPathToDaemonicState.get(cell.getRoot());
-    }
     // Invalidate all the packages we found.
     for (Path buildFile : packageBuildFiles) {
-      invalidatePath(state, buildFile.resolve(cell.getBuildFileName()));
+      invalidatePath(
+          state, buildFile.resolve(cell.getBuckConfigView(ParserConfig.class).getBuildFileName()));
     }
   }
 
@@ -491,8 +629,7 @@ public class DaemonicParserState {
   }
 
   public static boolean isPathCreateOrDeleteEvent(WatchmanPathEvent event) {
-    return event.getKind() == WatchmanPathEvent.Kind.CREATE
-        || event.getKind() == WatchmanPathEvent.Kind.DELETE;
+    return event.getKind() == Kind.CREATE || event.getKind() == Kind.DELETE;
   }
 
   private boolean invalidateIfBuckConfigOrEnvHasChanged(
@@ -553,7 +690,7 @@ public class DaemonicParserState {
     try (AutoCloseableLock writeLock = cachedStateLock.writeLock()) {
       cachedIncludes.put(cell.getRoot(), defaultIncludes);
     }
-    if (invalidateCellCaches(cell) && invalidatedByDefaultIncludesChange) {
+    if (invalidateCellCaches(cell)) {
       LOG.warn(
           "Invalidating cache on default includes change (%s != %s)", expected, defaultIncludes);
       cacheInvalidatedByDefaultIncludesChangeCounter.inc();
@@ -582,6 +719,7 @@ public class DaemonicParserState {
       boolean invalidated = !cellPathToDaemonicState.isEmpty();
       cellPathToDaemonicState.clear();
       buildFileTrees.invalidateAll();
+      configurationBuildFiles.clear();
       if (invalidated) {
         LOG.debug("Cache data invalidated.");
       } else {

@@ -1,18 +1,19 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 {namespace cxx_library}
 
 /***/
@@ -36,22 +37,22 @@ and also provides flags that specify how those files should be built.
 
 
 <h3>Building requires a specified top-level target</h3>
- 
+
 <p>
-Whether a Buck command builds the <code>cxx_library</code>  is 
-determined by the inclusion of a top-level target, such as 
-a {call buck.cxx_binary /} or {call buck.android_binary /}, that 
+Whether a Buck command builds the <code>cxx_library</code>  is
+determined by the inclusion of a top-level target, such as
+a {call buck.cxx_binary /} or {call buck.android_binary /}, that
 transitively depends on the <code>cxx_library</code>. The set of
-targets specified to the Buck command (<code>buck build</code>, <code>buck run</code>, etc) must 
-include one of these top-level targets in order for Buck to build 
-the <code>cxx_library</code>. Note that you could specify the top-level target 
-implicitly using a {call buck.build_target_pattern /} or you could also specify 
+targets specified to the Buck command (<code>buck build</code>, <code>buck run</code>, etc) must
+include one of these top-level targets in order for Buck to build
+the <code>cxx_library</code>. Note that you could specify the top-level target
+implicitly using a {call buck.build_target_pattern /} or you could also specify
 the top-level target using an {call buckconfig.alias /} defined in <code>.buckconfig</code>.
 </p>
 
 <p>
 <em>How</em> Buck builds the library also depends on the specified top-level target.
-For example, a C/C++ binary (<code>cxx_binary</code>) would require a static non-PIC build of the library, 
+For example, a C/C++ binary (<code>cxx_binary</code>) would require a static non-PIC build of the library,
 whereas an Android APK (<code>android_binary</code>) would require a shared PIC-enabled build.
 (PIC stands for position-independent code.)
 </p>
@@ -60,13 +61,13 @@ whereas an Android APK (<code>android_binary</code>) would require a shared PIC-
 <h4>Dependencies of the cxx_library also require a top-level target</h4>
 
 <p>
-Similarly, in order for Buck to build a target that 
-the <code>cxx_library</code> depends on, such as a {call buck.cxx_genrule /}, 
-you must specify in the Buck command a top-level target that depends on 
-the <code>cxx_library</code>.  For example, you could specify 
-to {call buck.cmd_build /} a <code>cxx_binary</code> that 
+Similarly, in order for Buck to build a target that
+the <code>cxx_library</code> depends on, such as a {call buck.cxx_genrule /},
+you must specify in the Buck command a top-level target that depends on
+the <code>cxx_library</code>.  For example, you could specify
+to {call buck.cmd_build /} a <code>cxx_binary</code> that
 depends on the <code>cxx_library</code>. If you specify as
-your build target the <code>cxx_library</code> itself, the build targets 
+your build target the <code>cxx_library</code> itself, the build targets
 that the <code>cxx_library</code> depends on <em>might not be built</em>.
 </p>
 
@@ -74,12 +75,7 @@ that the <code>cxx_library</code> depends on <em>might not be built</em>.
 
 {param args}
 
-{call buck.arg}
-  {param name: 'name' /}
-  {param desc}
-  The name of the rule.
-  {/param}
-{/call}
+{call buck.name_arg /}
 
 {call cxx_common.srcs_arg /}
 
@@ -90,6 +86,8 @@ that the <code>cxx_library</code> depends on <em>might not be built</em>.
 {call cxx_common.platform_headers_arg /}
 
 {call cxx_common.exported_headers_arg /}
+
+{call cxx_common.exported_header_style_arg /}
 
 {call cxx_common.exported_platform_headers_arg /}
 
@@ -139,6 +137,12 @@ that the <code>cxx_library</code> depends on <em>might not be built</em>.
 
 {call cxx_common.raw_headers_arg /}
 
+{call cxx_common.include_directories_arg /}
+
+{call cxx_common.public_include_directories_arg /}
+
+{call cxx_common.public_system_include_directories_arg /}
+
 {call buck.arg}
   {param name : 'soname' /}
   {param default : 'None' /}
@@ -161,6 +165,8 @@ that the <code>cxx_library</code> depends on <em>might not be built</em>.
 {call cxx_common.reexport_all_header_dependencies_arg /}
 
 {call cxx_common.exported_deps_arg /}
+
+{call cxx_common.exported_platform_deps_arg /}
 
 {call cxx_common.precompiled_header_arg /}
 

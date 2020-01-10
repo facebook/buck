@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.js;
@@ -26,7 +26,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
@@ -80,19 +80,20 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
+    SourcePathResolverAdapter sourcePathResolverAdapter = context.getSourcePathResolver();
     SourcePath jsOutputDir = getSourcePathToOutput();
     SourcePath sourceMapFile = getSourcePathToSourceMap();
     SourcePath resourcesDir = getSourcePathToResources();
     SourcePath miscDirPath = getSourcePathToMisc();
 
     ObjectBuilder jobArgs =
-        getJobArgs(sourcePathResolver, jsOutputDir, sourceMapFile, resourcesDir, miscDirPath);
+        getJobArgs(
+            sourcePathResolverAdapter, jsOutputDir, sourceMapFile, resourcesDir, miscDirPath);
 
-    buildableContext.recordArtifact(sourcePathResolver.getRelativePath(jsOutputDir));
-    buildableContext.recordArtifact(sourcePathResolver.getRelativePath(sourceMapFile));
-    buildableContext.recordArtifact(sourcePathResolver.getRelativePath(resourcesDir));
-    buildableContext.recordArtifact(sourcePathResolver.getRelativePath(miscDirPath));
+    buildableContext.recordArtifact(sourcePathResolverAdapter.getRelativePath(jsOutputDir));
+    buildableContext.recordArtifact(sourcePathResolverAdapter.getRelativePath(sourceMapFile));
+    buildableContext.recordArtifact(sourcePathResolverAdapter.getRelativePath(resourcesDir));
+    buildableContext.recordArtifact(sourcePathResolverAdapter.getRelativePath(miscDirPath));
 
     return ImmutableList.<Step>builder()
         .addAll(
@@ -100,7 +101,7 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
                 BuildCellRelativePath.fromCellRelativePath(
                     context.getBuildCellRootPath(),
                     getProjectFilesystem(),
-                    sourcePathResolver.getRelativePath(
+                    sourcePathResolverAdapter.getRelativePath(
                         JsUtil.relativeToOutputRoot(
                             getBuildTarget(), getProjectFilesystem(), "")))))
         .add(
@@ -108,29 +109,33 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
                 BuildCellRelativePath.fromCellRelativePath(
                     context.getBuildCellRootPath(),
                     getProjectFilesystem(),
-                    sourcePathResolver.getRelativePath(jsOutputDir))),
+                    sourcePathResolverAdapter.getRelativePath(jsOutputDir))),
             MkdirStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
                     context.getBuildCellRootPath(),
                     getProjectFilesystem(),
-                    sourcePathResolver.getRelativePath(sourceMapFile).getParent())),
+                    sourcePathResolverAdapter.getRelativePath(sourceMapFile).getParent())),
             MkdirStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
                     context.getBuildCellRootPath(),
                     getProjectFilesystem(),
-                    sourcePathResolver.getRelativePath(resourcesDir))),
+                    sourcePathResolverAdapter.getRelativePath(resourcesDir))),
             MkdirStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
                     context.getBuildCellRootPath(),
                     getProjectFilesystem(),
-                    sourcePathResolver.getRelativePath(miscDirPath))),
+                    sourcePathResolverAdapter.getRelativePath(miscDirPath))),
             JsUtil.jsonWorkerShellStepAddingFlavors(
-                worker, jobArgs, getBuildTarget(), sourcePathResolver, getProjectFilesystem()))
+                worker,
+                jobArgs,
+                getBuildTarget(),
+                sourcePathResolverAdapter,
+                getProjectFilesystem()))
         .build();
   }
 
   private ObjectBuilder getJobArgs(
-      SourcePathResolver sourcePathResolver,
+      SourcePathResolverAdapter sourcePathResolverAdapter,
       SourcePath jsOutputDir,
       SourcePath sourceMapFile,
       SourcePath resourcesDir,
@@ -139,17 +144,18 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
     ImmutableSortedSet<Flavor> flavors = getBuildTarget().getFlavors();
 
     return JsonBuilder.object()
-        .addString("assetsDirPath", sourcePathResolver.getAbsolutePath(resourcesDir).toString())
+        .addString(
+            "assetsDirPath", sourcePathResolverAdapter.getAbsolutePath(resourcesDir).toString())
         .addString(
             "bundlePath",
-            String.format("%s/%s", sourcePathResolver.getAbsolutePath(jsOutputDir), bundleName))
+            String.format(
+                "%s/%s", sourcePathResolverAdapter.getAbsolutePath(jsOutputDir), bundleName))
         .addString("command", "bundle")
         .addArray("entryPoints", entryPoints.stream().collect(JsonBuilder.toArrayOfStrings()))
         .addArray(
             "libraries",
-            libraries
-                .stream()
-                .map(sourcePathResolver::getAbsolutePath)
+            libraries.stream()
+                .map(sourcePathResolverAdapter::getAbsolutePath)
                 .map(Path::toString)
                 .collect(JsonBuilder.toArrayOfStrings()))
         .addString("platform", JsUtil.getPlatformString(flavors))
@@ -160,9 +166,10 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
                 .map(mode -> JsUtil.getValueForFlavor(RAM_BUNDLE_STRINGS, mode)))
         .addBoolean("release", flavors.contains(JsFlavors.RELEASE))
         .addString("rootPath", getProjectFilesystem().getRootPath().toString())
-        .addString("sourceMapPath", sourcePathResolver.getAbsolutePath(sourceMapFile).toString())
-        .addString("miscDirPath", sourcePathResolver.getAbsolutePath(miscDirPath).toString())
-        .addRaw("extraData", extraJson.map(a -> Arg.stringify(a, sourcePathResolver)));
+        .addString(
+            "sourceMapPath", sourcePathResolverAdapter.getAbsolutePath(sourceMapFile).toString())
+        .addString("miscDirPath", sourcePathResolverAdapter.getAbsolutePath(miscDirPath).toString())
+        .addRaw("extraData", extraJson.map(a -> Arg.stringify(a, sourcePathResolverAdapter)));
   }
 
   @Override

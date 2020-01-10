@@ -1,28 +1,27 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.apple.clang.ModuleMapMode;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
@@ -33,17 +32,16 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.function.Predicate;
 
 public class CxxPreprocessables {
 
@@ -64,14 +62,6 @@ public class CxxPreprocessables {
       @Override
       public Iterable<String> includeArgs(Preprocessor pp, Iterable<String> includeRoots) {
         return pp.systemIncludeArgs(includeRoots);
-      }
-    },
-
-    /** Headers should be included with `-iquote`. */
-    IQUOTE {
-      @Override
-      public Iterable<String> includeArgs(Preprocessor pp, Iterable<String> includeRoots) {
-        return pp.quoteIncludeArgs(includeRoots);
       }
     },
 
@@ -108,42 +98,31 @@ public class CxxPreprocessables {
   }
 
   /**
-   * Find and return the {@link CxxPreprocessorInput} objects from {@link CxxPreprocessorDep} found
-   * while traversing the dependencies starting from the {@link BuildRule} objects given.
+   * Find and return the {@link CxxPreprocessorInput} objects from {@link CxxPreprocessorDep} found.
    */
   public static Collection<CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
       CxxPlatform cxxPlatform,
       ActionGraphBuilder graphBuilder,
-      Iterable<? extends BuildRule> inputs,
-      Predicate<Object> traverse) {
-
+      Iterable<? extends CxxPreprocessorDep> inputs) {
     // We don't really care about the order we get back here, since headers shouldn't
-    // conflict.  However, we want something that's deterministic, so sort by build
-    // target.
+    // conflict.  However, we want something that's deterministic, so maintain the insertion order.
     Map<BuildTarget, CxxPreprocessorInput> deps = new LinkedHashMap<>();
-
-    // Build up the map of all C/C++ preprocessable dependencies.
-    new AbstractBreadthFirstTraversal<BuildRule>(inputs) {
-      @Override
-      public Iterable<BuildRule> visit(BuildRule rule) {
-        if (rule instanceof CxxPreprocessorDep) {
-          CxxPreprocessorDep dep = (CxxPreprocessorDep) rule;
-          deps.putAll(dep.getTransitiveCxxPreprocessorInput(cxxPlatform, graphBuilder));
-          return ImmutableSet.of();
-        }
-        return traverse.test(rule) ? rule.getBuildDeps() : ImmutableSet.of();
-      }
-    }.start();
-
-    // Grab the cxx preprocessor inputs and return them.
+    for (CxxPreprocessorDep input : inputs) {
+      deps.putAll(input.getTransitiveCxxPreprocessorInput(cxxPlatform, graphBuilder));
+    }
     return deps.values();
   }
 
-  public static Collection<CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
+  /**
+   * Find and return the {@link CxxPreprocessorInput} objects from {@link CxxPreprocessorDep} found
+   * from a list of all deps.
+   */
+  public static Collection<CxxPreprocessorInput> getTransitiveCxxPreprocessorInputFromDeps(
       CxxPlatform cxxPlatform,
       ActionGraphBuilder graphBuilder,
-      Iterable<? extends BuildRule> inputs) {
-    return getTransitiveCxxPreprocessorInput(cxxPlatform, graphBuilder, inputs, x -> false);
+      Iterable<? extends BuildRule> deps) {
+    return getTransitiveCxxPreprocessorInput(
+        cxxPlatform, graphBuilder, FluentIterable.from(deps).filter(CxxPreprocessorDep.class));
   }
 
   /**
@@ -154,20 +133,23 @@ public class CxxPreprocessables {
   public static HeaderSymlinkTree createHeaderSymlinkTreeBuildRule(
       BuildTarget target,
       ProjectFilesystem filesystem,
-      SourcePathRuleFinder ruleFinder,
       Path root,
       ImmutableMap<Path, SourcePath> links,
       HeaderMode headerMode) {
     switch (headerMode) {
       case SYMLINK_TREE_WITH_HEADER_MAP:
-        return HeaderSymlinkTreeWithHeaderMap.create(target, filesystem, root, links, ruleFinder);
-      case SYMLINK_TREE_WITH_MODULEMAP:
-        return HeaderSymlinkTreeWithModuleMap.create(target, filesystem, root, links, ruleFinder);
+        return HeaderSymlinkTreeWithHeaderMap.create(target, filesystem, root, links);
+      case SYMLINK_TREE_WITH_UMBRELLA_HEADER_MODULEMAP:
+        return HeaderSymlinkTreeWithModuleMap.create(
+            target, filesystem, root, links, ModuleMapMode.UMBRELLA_HEADER);
+      case SYMLINK_TREE_WITH_UMBRELLA_DIRECTORY_MODULEMAP:
+        return HeaderSymlinkTreeWithModuleMap.create(
+            target, filesystem, root, links, ModuleMapMode.UMBRELLA_DIRECTORY);
       case HEADER_MAP_ONLY:
-        return new DirectHeaderMap(target, filesystem, root, links, ruleFinder);
+        return new DirectHeaderMap(target, filesystem, root, links);
       default:
       case SYMLINK_TREE_ONLY:
-        return new HeaderSymlinkTree(target, filesystem, root, links, ruleFinder);
+        return new HeaderSymlinkTree(target, filesystem, root, links);
     }
   }
 

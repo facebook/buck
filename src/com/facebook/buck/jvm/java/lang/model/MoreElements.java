@@ -1,24 +1,28 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java.lang.model;
 
+import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.util.liteinfersupport.Nullable;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Stream;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -33,13 +37,60 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
 
 /**
  * More utility functions for working with {@link Element}s, along the lines of those found on
  * {@link javax.lang.model.util.Elements}.
  */
 public final class MoreElements {
+  private static Method getAllPackageElementsMethod;
+
+  static {
+    try {
+      if (JavaVersion.getMajorVersion() >= 9) {
+        getAllPackageElementsMethod =
+            Elements.class.getMethod("getAllPackageElements", CharSequence.class);
+      }
+    } catch (NoSuchMethodException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   private MoreElements() {}
+
+  /** Get a package by name, even if it has no members. */
+  @Nullable
+  public static PackageElement getPackageElementEvenIfEmpty(
+      Elements elements, CharSequence packageName) {
+    if (JavaVersion.getMajorVersion() <= 8) {
+      // In Java 8 and earlier, {@link
+      // javax.lang.model.util.Elements#getPackageElement(CharSequence)} returns
+      // packages even if they have no members.
+      return elements.getPackageElement(packageName);
+    } else {
+      try {
+        // In Java 9 and later, only the new {@link
+        // javax.lang.model.util.Elements#getPackageElement(ModuleElement, CharSequence)},
+        // which {@link javax.lang.mode.util.Elements#getAllPackageElements} calls, returns empty
+        // packages.
+        @SuppressWarnings("unchecked")
+        Set<? extends PackageElement> packages =
+            (Set<? extends PackageElement>)
+                getAllPackageElementsMethod.invoke(elements, packageName);
+        if (packages.isEmpty()) {
+          return null;
+        }
+        if (packages.size() > 1) {
+          // TODO(jtorkkola): Add proper Java 9+ module support.
+          throw new IllegalStateException("Found more than one package matching " + packageName);
+        }
+        return packages.iterator().next();
+      } catch (IllegalAccessException | InvocationTargetException e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
 
   @Nullable
   public static TypeElement getSuperclass(TypeElement type) {
@@ -57,8 +108,7 @@ public final class MoreElements {
   }
 
   public static Stream<TypeElement> getInterfaces(TypeElement type) {
-    return type.getInterfaces()
-        .stream()
+    return type.getInterfaces().stream()
         .filter(it -> it.getKind() == TypeKind.DECLARED || it.getKind() == TypeKind.ERROR)
         .map(it -> (TypeElement) ((DeclaredType) it).asElement());
   }

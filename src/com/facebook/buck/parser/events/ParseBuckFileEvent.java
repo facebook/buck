@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.parser.events;
@@ -19,7 +19,7 @@ package com.facebook.buck.parser.events;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.WorkAdvanceEvent;
-import com.facebook.buck.parser.api.ProjectBuildFileParser;
+import com.facebook.buck.parser.api.FileParser;
 import com.google.common.base.Objects;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -27,10 +27,10 @@ import java.util.Optional;
 /** Base class for events about parsing build files */
 public abstract class ParseBuckFileEvent extends AbstractBuckEvent implements WorkAdvanceEvent {
   private final Path buckFilePath;
-  private final Class<? extends ProjectBuildFileParser> parserClass;
+  private final Class<? extends FileParser<?>> parserClass;
 
   protected ParseBuckFileEvent(
-      EventKey eventKey, Path buckFilePath, Class<? extends ProjectBuildFileParser> parserClass) {
+      EventKey eventKey, Path buckFilePath, Class<? extends FileParser<?>> parserClass) {
     super(eventKey);
     this.buckFilePath = buckFilePath;
     this.parserClass = parserClass;
@@ -42,7 +42,7 @@ public abstract class ParseBuckFileEvent extends AbstractBuckEvent implements Wo
   }
 
   /** @return Java class of parser implementation used to parse this build file */
-  public Class<? extends ProjectBuildFileParser> getParserClass() {
+  public Class<? extends FileParser<?>> getParserClass() {
     return parserClass;
   }
 
@@ -55,11 +55,12 @@ public abstract class ParseBuckFileEvent extends AbstractBuckEvent implements Wo
    * Create an event when parsing of build file starts
    *
    * @param buckFilePath Path to a build file that is about to start parsing
+   * @param parser Parser being used to parse this file
    * @param parserClass Java class of a parser implementation
    */
   public static Started started(
-      Path buckFilePath, Class<? extends ProjectBuildFileParser> parserClass) {
-    return new Started(buckFilePath, parserClass);
+      Path buckFilePath, ParserKind parser, Class<? extends FileParser<?>> parserClass) {
+    return new Started(buckFilePath, parser, parserClass);
   }
 
   /**
@@ -78,13 +79,22 @@ public abstract class ParseBuckFileEvent extends AbstractBuckEvent implements Wo
 
   /** The event raised when build file parsing is started */
   public static class Started extends ParseBuckFileEvent {
-    protected Started(Path buckFilePath, Class<? extends ProjectBuildFileParser> parserClass) {
+    private final ParserKind parser;
+
+    protected Started(
+        Path buckFilePath, ParserKind parser, Class<? extends FileParser<?>> parserClass) {
       super(EventKey.unique(), buckFilePath, parserClass);
+      this.parser = parser;
     }
 
     @Override
     public String getEventName() {
       return "ParseBuckFileStarted";
+    }
+
+    /** @return The {@link ParserKind} that was used to parse this file. */
+    public ParserKind getParserKind() {
+      return parser;
     }
   }
 
@@ -93,6 +103,7 @@ public abstract class ParseBuckFileEvent extends AbstractBuckEvent implements Wo
     private final int rulesCount;
     private final long processedBytes;
     private final Optional<String> profile;
+    private final ParserKind parserKind;
 
     protected Finished(
         Started started, int rulesCount, long processedBytes, Optional<String> profile) {
@@ -100,6 +111,7 @@ public abstract class ParseBuckFileEvent extends AbstractBuckEvent implements Wo
       this.rulesCount = rulesCount;
       this.processedBytes = processedBytes;
       this.profile = profile;
+      this.parserKind = started.getParserKind();
     }
 
     @Override
@@ -121,6 +133,11 @@ public abstract class ParseBuckFileEvent extends AbstractBuckEvent implements Wo
       return profile;
     }
 
+    /** @return The {@link ParserKind} that was used to parse this file. */
+    public ParserKind getParserKind() {
+      return parserKind;
+    }
+
     @Override
     public boolean equals(Object o) {
       if (!super.equals(o)) {
@@ -135,5 +152,11 @@ public abstract class ParseBuckFileEvent extends AbstractBuckEvent implements Wo
     public int hashCode() {
       return Objects.hashCode(super.hashCode(), getNumRules());
     }
+  }
+
+  /** The kind of parser used to parse a particular build file. */
+  public enum ParserKind {
+    PYTHON_DSL,
+    SKYLARK,
   }
 }

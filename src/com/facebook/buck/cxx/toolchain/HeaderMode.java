@@ -1,21 +1,22 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx.toolchain;
 
+import com.facebook.buck.apple.clang.ModuleMapMode;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorConvertible;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -34,9 +35,16 @@ public enum HeaderMode implements FlavorConvertible {
   SYMLINK_TREE_WITH_HEADER_MAP,
   /**
    * Creates the tree of symbolic links of headers and creates a module map that references the
-   * symbolic links to the headers.
+   * symbolic links to the headers. The generated module map will refer to an umbrella header, with
+   * the same name as the library.
    */
-  SYMLINK_TREE_WITH_MODULEMAP,
+  SYMLINK_TREE_WITH_UMBRELLA_HEADER_MODULEMAP,
+  /**
+   * Creates the tree of symbolic links of headers and creates a module map that references the
+   * symbolic links to the headers. The generated module map will refer to an umbrella directory,
+   * avoiding the need for a valid and complete umbrella header.
+   */
+  SYMLINK_TREE_WITH_UMBRELLA_DIRECTORY_MODULEMAP,
   ;
 
   private final Flavor flavor;
@@ -53,5 +61,41 @@ public enum HeaderMode implements FlavorConvertible {
   @Override
   public Flavor getFlavor() {
     return flavor;
+  }
+
+  /**
+   * Returns the appropriate header mode for module map mode.
+   *
+   * @param moduleMapMode The module map mode to convert.
+   * @return The equivalent header mode.
+   */
+  public static HeaderMode forModuleMapMode(ModuleMapMode moduleMapMode) {
+    switch (moduleMapMode) {
+      case UMBRELLA_HEADER:
+        return SYMLINK_TREE_WITH_UMBRELLA_HEADER_MODULEMAP;
+      case UMBRELLA_DIRECTORY:
+        return SYMLINK_TREE_WITH_UMBRELLA_DIRECTORY_MODULEMAP;
+    }
+
+    throw new RuntimeException("Unexpected value of enum ModuleMapMode");
+  }
+
+  /**
+   * Returns whether or not the header mode will include a module map.
+   *
+   * @return true if the header mode will include a module map, otherwise false.
+   */
+  public boolean includesModuleMap() {
+    switch (this) {
+      case SYMLINK_TREE_ONLY:
+      case SYMLINK_TREE_WITH_HEADER_MAP:
+      case HEADER_MAP_ONLY:
+        return false;
+      case SYMLINK_TREE_WITH_UMBRELLA_HEADER_MODULEMAP:
+      case SYMLINK_TREE_WITH_UMBRELLA_DIRECTORY_MODULEMAP:
+        return true;
+    }
+
+    throw new RuntimeException("Unexpected value of enum HeaderMode");
   }
 }

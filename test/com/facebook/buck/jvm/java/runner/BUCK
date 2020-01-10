@@ -4,6 +4,7 @@ standard_java_test(
     name = "runner",
     deps = [
         "//src/com/facebook/buck/jvm/java/runner:runner",
+        "//src/com/facebook/buck/jvm/java/version:version",
         "//test/com/facebook/buck/testutil:testutil",
         "//third-party/java/guava:guava",
         "//third-party/java/junit:junit",

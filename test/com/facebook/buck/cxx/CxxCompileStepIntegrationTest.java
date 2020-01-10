@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -25,17 +25,15 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.Compiler;
-import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
-import com.facebook.buck.cxx.toolchain.MungingDebugPathSanitizer;
+import com.facebook.buck.cxx.toolchain.PrefixMapDebugPathSanitizer;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.TestExecutionContext;
@@ -44,7 +42,6 @@ import com.facebook.buck.testutil.TestConsole;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -58,17 +55,17 @@ public class CxxCompileStepIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-  private void assertCompDir(Path compDir, Optional<String> failure) throws Exception {
+  private void assertCompDir(Optional<String> failure) throws Exception {
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     CxxPlatform platform =
         CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
     // Build up the paths to various files the archive step will use.
     BuildRuleResolver resolver = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
-    Compiler compiler = platform.getCc().resolve(resolver);
-    ImmutableList<String> compilerCommandPrefix = compiler.getCommandPrefix(pathResolver);
+    Compiler compiler =
+        platform.getCc().resolve(resolver, UnconfiguredTargetConfiguration.INSTANCE);
+    ImmutableList<String> compilerCommandPrefix =
+        compiler.getCommandPrefix(resolver.getSourcePathResolver());
     Path output = filesystem.resolve(Paths.get("output.o"));
     Path depFile = filesystem.resolve(Paths.get("output.dep"));
     Path relativeInput = Paths.get("input.c");
@@ -80,8 +77,7 @@ public class CxxCompileStepIntegrationTest {
     ImmutableList.Builder<String> compilerArguments = ImmutableList.builder();
     compilerArguments.add("-g");
 
-    DebugPathSanitizer sanitizer =
-        new MungingDebugPathSanitizer(200, File.separatorChar, compDir, ImmutableBiMap.of());
+    DebugPathSanitizer sanitizer = new PrefixMapDebugPathSanitizer(".", ImmutableBiMap.of());
 
     // Build an archive step.
     CxxPreprocessAndCompileStep step =
@@ -94,10 +90,12 @@ public class CxxCompileStepIntegrationTest {
             CxxSource.Type.C,
             new CxxPreprocessAndCompileStep.ToolCommand(
                 compilerCommandPrefix, compilerArguments.build(), ImmutableMap.of()),
-            HeaderPathNormalizer.empty(pathResolver),
+            resolver.getSourcePathResolver(),
+            HeaderPathNormalizer.empty(),
             sanitizer,
             scratchDir,
             true,
+            ImmutableList.of(),
             compiler,
             Optional.empty());
 
@@ -125,8 +123,7 @@ public class CxxCompileStepIntegrationTest {
 
   @Test
   public void updateCompilationDir() throws Exception {
-    assertCompDir(Paths.get("."), Optional.empty());
-    assertCompDir(Paths.get("blah"), Optional.empty());
+    assertCompDir(Optional.empty());
   }
 
   @Test
@@ -137,10 +134,10 @@ public class CxxCompileStepIntegrationTest {
 
     // Build up the paths to various files the archive step will use.
     BuildRuleResolver resolver = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
-    Compiler compiler = platform.getCc().resolve(resolver);
-    ImmutableList<String> compilerCommandPrefix = compiler.getCommandPrefix(pathResolver);
+    Compiler compiler =
+        platform.getCc().resolve(resolver, UnconfiguredTargetConfiguration.INSTANCE);
+    ImmutableList<String> compilerCommandPrefix =
+        compiler.getCommandPrefix(resolver.getSourcePathResolver());
     Path output = filesystem.resolve(Paths.get("output.o"));
     Path depFile = filesystem.resolve(Paths.get("output.dep"));
     Path relativeInput = Paths.get("input.c");
@@ -163,10 +160,12 @@ public class CxxCompileStepIntegrationTest {
             CxxSource.Type.C,
             new CxxPreprocessAndCompileStep.ToolCommand(
                 compilerCommandPrefix, compilerArguments.build(), ImmutableMap.of()),
-            HeaderPathNormalizer.empty(pathResolver),
+            resolver.getSourcePathResolver(),
+            HeaderPathNormalizer.empty(),
             CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
             scratchDir,
             true,
+            ImmutableList.of(),
             compiler,
             Optional.empty());
 

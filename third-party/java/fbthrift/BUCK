@@ -11,10 +11,10 @@ prebuilt_jar(
     visibility = [
         "//src-gen:thrift",
         "//src-gen/com/facebook/remoteexecution/...",
-        "//src/com/facebook/buck/eden/...",
+        "//src/com/facebook/buck/edenfs/...",
         "//src/com/facebook/buck/remoteexecution/...",
         "//src/com/facebook/buck/rules/modern/builders/...",
-        "//test/com/facebook/buck/eden/...",
+        "//test/com/facebook/buck/edenfs/...",
         "//test/com/facebook/buck/remoteexecution/...",
         "//third-party/java/eden/...",
     ],

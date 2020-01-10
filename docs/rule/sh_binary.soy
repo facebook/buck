@@ -1,18 +1,19 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 {namespace sh_binary}
 
 /***/
@@ -34,12 +35,7 @@
 
 {param args}
 
-{call buck.arg}
-  {param name: 'name' /}
-  {param desc}
-  The name of the sh_binary.
-  {/param}
-{/call}
+{call buck.name_arg /}
 
 {call buck.arg}
   {param name: 'main' /}
@@ -56,11 +52,26 @@
     A list of files or build rules that this rule requires in order to run. These could be things such as
     random data files.
 
-    These files are made available in a directory at run time and are placed relative to
-    their original location in the project repository.
+    <p>
+    When the script runs, the <code>$BUCK_DEFAULT_RUNTIME_RESOURCES</code>
+    environment variable specifies the directory that contains these resources.
+    This directory's location is determined entirely by Buck; the script should
+    not assume the directory's location.
+    </p>
 
-    This directory's location is determined entirely by Buck; the script should not assume the directory's location.
-    The location is provided to the script in the <code>$BUCK_PROJECT_ROOT</code> environment variable.
+    <p>
+    The <code>$BUCK_EXTERNAL_RUNTIME_RESOURCES</code> variable is also defined.
+    Resources that are targets from external cells are placed in this
+    directory.
+    </p>
+
+    <p>
+    The resources are also made available in a tree structure that mirrors
+    their locations in the source and <code>buck-out</code> trees. The
+    environment variable <code>$BUCK_PROJECT_ROOT</code> specifies a directory
+    that contains all the resources, laid out in their locations relative to
+    the original buck project root.
+    </p>
   {/param}
 {/call}
 
@@ -90,7 +101,7 @@ $ echo "I'm a datafile" > data.dat
 # Create a simple script that prints out the resource
 $ cat > script.sh
 #!/bin/sh
-cat $BUCK_PROJECT_ROOT/data.dat
+cat $BUCK_DEFAULT_RUNTIME_RESOURCES/data.dat
 
 # Make sure the script is executable
 $ chmod u+x script.sh

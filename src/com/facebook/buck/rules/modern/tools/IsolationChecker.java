@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.modern.tools;
@@ -19,15 +19,15 @@ package com.facebook.buck.rules.modern.tools;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rulekey.CustomFieldBehaviorTag;
+import com.facebook.buck.core.rulekey.CustomFieldSerializationTag;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.modern.annotations.CustomClassBehaviorTag;
-import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
-import com.facebook.buck.core.rules.modern.annotations.DefaultFieldSerialization;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.CustomBehaviorUtils;
@@ -41,10 +41,11 @@ import com.facebook.buck.rules.modern.impl.AbstractValueVisitor;
 import com.facebook.buck.rules.modern.impl.DefaultClassInfoFactory;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfoFactory;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfos.ExcludedValueTypeInfo;
-import com.facebook.buck.rules.modern.tools.CachedErrors.Builder;
+import com.facebook.buck.rules.modern.tools.ImmutableCachedErrors.Builder;
 import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.TypeToken;
@@ -53,6 +54,7 @@ import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -71,7 +73,7 @@ import java.util.stream.Stream;
  * required toolchains and referenced paths outside of the known cells.
  */
 public class IsolationChecker {
-  private final SourcePathResolver pathResolver;
+  private final SourcePathResolverAdapter pathResolver;
   private final ImmutableMap<Path, Optional<String>> cellMap;
   private final FailureReporter reporter;
   private final Path rootCellPath;
@@ -89,12 +91,10 @@ public class IsolationChecker {
 
   public IsolationChecker(
       SourcePathRuleFinder ruleFinder, CellPathResolver cellResolver, FailureReporter reporter) {
-    this.pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    this.pathResolver = ruleFinder.getSourcePathResolver();
     this.rootCellPath = cellResolver.getCellPathOrThrow(Optional.empty());
     this.cellMap =
-        cellResolver
-            .getKnownRoots()
-            .stream()
+        cellResolver.getKnownRoots().stream()
             .collect(ImmutableMap.toImmutableMap(root -> root, cellResolver::getCanonicalCellName));
     this.reporter = reporter;
   }
@@ -152,7 +152,7 @@ public class IsolationChecker {
         Field field,
         T value,
         ValueTypeInfo<T> valueTypeInfo,
-        Optional<CustomFieldBehavior> behavior,
+        List<Class<? extends CustomFieldBehaviorTag>> behavior,
         Visitor fieldVisitor);
 
     <T extends AddsToRuleKey> void check(T value, ClassInfo<T> classInfo, Visitor dynamicVisitor);
@@ -168,10 +168,12 @@ public class IsolationChecker {
         Field field,
         T value,
         ValueTypeInfo<T> valueTypeInfo,
-        Optional<CustomFieldBehavior> behavior,
+        List<Class<? extends CustomFieldBehaviorTag>> behavior,
         Visitor fieldVisitor) {
-      if (behavior.isPresent()) {
-        if (CustomBehaviorUtils.get(behavior.get(), DefaultFieldSerialization.class).isPresent()) {
+      Optional<CustomFieldSerializationTag> serializerTag =
+          CustomBehaviorUtils.get(CustomFieldSerializationTag.class, behavior);
+      if (serializerTag.isPresent()) {
+        if (serializerTag.get() instanceof DefaultFieldSerialization) {
           @SuppressWarnings("unchecked")
           ValueTypeInfo<T> typeInfo =
               (ValueTypeInfo<T>)
@@ -180,20 +182,21 @@ public class IsolationChecker {
           return;
         }
 
-        Optional<?> serializerTag =
-            CustomBehaviorUtils.get(behavior.get(), CustomFieldSerialization.class);
-        if (serializerTag.isPresent()) {
-          @SuppressWarnings("unchecked")
-          CustomFieldSerialization<T> customSerializer =
-              (CustomFieldSerialization<T>) serializerTag.get();
-          customSerializer.serialize(value, fieldVisitor);
-          return;
-        }
+        Verify.verify(
+            serializerTag.get() instanceof CustomFieldSerialization,
+            "Unrecognized serialization behavior %s.",
+            serializerTag.get().getClass().getName());
+
+        @SuppressWarnings("unchecked")
+        CustomFieldSerialization<T> customSerializer =
+            (CustomFieldSerialization<T>) serializerTag.get();
+        customSerializer.serialize(value, fieldVisitor);
+        return;
       }
 
       if (valueTypeInfo instanceof ExcludedValueTypeInfo) {
         throw new HumanReadableException(
-            "Can't serialize excluded field %s with type %s (instance type %s)",
+            "Can't serialize excluded field [%s] with type [%s] (instance type [%s])",
             field.getName(),
             field.getGenericType(),
             value == null ? "<null>" : value.getClass().getName());
@@ -271,7 +274,7 @@ public class IsolationChecker {
       VisitorDelegate delegate) {
     CachedErrors results = resultsCache.get(instance);
     if (results == null) {
-      Builder builder = CachedErrors.builder();
+      Builder builder = ImmutableCachedErrors.builder();
       Visitor visitor =
           new Visitor(
               "",
@@ -305,17 +308,14 @@ public class IsolationChecker {
         Field field,
         T value,
         ValueTypeInfo<T> valueTypeInfo,
-        Optional<CustomFieldBehavior> behavior,
+        List<Class<? extends CustomFieldBehaviorTag>> behavior,
         Visitor fieldVisitor) {
-      if (behavior.isPresent()) {
-        Optional<?> serializerTag =
-            CustomBehaviorUtils.get(behavior.get(), CustomFieldInputs.class);
-        if (serializerTag.isPresent()) {
-          @SuppressWarnings("unchecked")
-          CustomFieldInputs<T> customFieldInputs = (CustomFieldInputs<T>) serializerTag.get();
-          customFieldInputs.getInputs(value, fieldVisitor::visitSourcePath);
-          return;
-        }
+      Optional<?> inputsTag = CustomBehaviorUtils.get(CustomFieldInputs.class, behavior);
+      if (inputsTag.isPresent()) {
+        @SuppressWarnings("unchecked")
+        CustomFieldInputs<T> customFieldInputs = (CustomFieldInputs<T>) inputsTag.get();
+        customFieldInputs.getInputs(value, fieldVisitor::visitSourcePath);
+        return;
       }
       valueTypeInfo.visit(value, fieldVisitor);
     }
@@ -386,7 +386,7 @@ public class IsolationChecker {
         Field field,
         T value,
         ValueTypeInfo<T> valueTypeInfo,
-        Optional<CustomFieldBehavior> behavior) {
+        List<Class<? extends CustomFieldBehaviorTag>> behavior) {
       Visitor fieldVisitor =
           new Visitor(String.format("%s.%s", breadcrumbs, field.getName()), delegate, handler);
       try {

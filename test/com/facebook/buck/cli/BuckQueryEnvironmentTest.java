@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
@@ -24,11 +24,16 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.model.QueryTarget;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.BuckEventBusForTests.CapturingConsoleEventListener;
@@ -38,19 +43,19 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.Parser;
-import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TestParserFactory;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
-import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.testutil.CloseableResource;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -64,6 +69,8 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import org.hamcrest.CoreMatchers;
 import org.junit.After;
@@ -78,6 +85,10 @@ public class BuckQueryEnvironmentTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
+  @Rule
+  public CloseableResource<DepsAwareExecutor<? super ComputeResult, ?>> depsAwareExecutor =
+      CloseableResource.of(() -> DefaultDepsAwareExecutor.of(4));
+
   private BuckQueryEnvironment buckQueryEnvironment;
   private Path cellRoot;
   private ListeningExecutorService executor;
@@ -86,7 +97,7 @@ public class BuckQueryEnvironmentTest {
   private CapturingConsoleEventListener capturingConsoleEventListener;
 
   private QueryTarget createQueryBuildTarget(String baseName, String shortName) {
-    return QueryBuildTarget.of(BuildTargetFactory.newInstance(cellRoot, baseName, shortName));
+    return QueryBuildTarget.of(BuildTargetFactory.newInstance(baseName, shortName));
   }
 
   private static ThrowingCloseableMemoizedSupplier<ManifestService, IOException>
@@ -116,37 +127,42 @@ public class BuckQueryEnvironmentTest {
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     ParserConfig parserConfig = cell.getBuckConfig().getView(ParserConfig.class);
     PerBuildStateFactory perBuildStateFactory =
-        PerBuildStateFactory.createFactory(
+        new PerBuildStateFactory(
             typeCoercerFactory,
             new DefaultConstructorArgMarshaller(typeCoercerFactory),
             knownRuleTypesProvider,
             new ParserPythonInterpreterProvider(parserConfig, executableFinder),
-            cell.getBuckConfig(),
             WatchmanFactory.NULL_WATCHMAN,
             eventBus,
             getManifestSupplier(),
             new FakeFileHashCache(ImmutableMap.of()),
-            new ParsingUnconfiguredBuildTargetFactory());
-    Parser parser = TestParserFactory.create(cell.getBuckConfig(), perBuildStateFactory, eventBus);
+            new ParsingUnconfiguredBuildTargetViewFactory(),
+            UnconfiguredTargetConfiguration.INSTANCE);
+    Parser parser =
+        TestParserFactory.create(depsAwareExecutor.get(), cell, perBuildStateFactory, eventBus);
     parserState =
         perBuildStateFactory.create(
             ParsingContext.builder(cell, executor)
                 .setSpeculativeParsing(SpeculativeParsing.ENABLED)
                 .build(),
-            parser.getPermState(),
-            ImmutableList.of());
+            parser.getPermState());
 
     TargetPatternEvaluator targetPatternEvaluator =
         new TargetPatternEvaluator(
-            cell, FakeBuckConfig.builder().build(), parser, /* enableProfiling */ false, false);
-    OwnersReport.Builder ownersReportBuilder = OwnersReport.builder(cell, parser, parserState);
+            cell,
+            cell.getRoot(),
+            FakeBuckConfig.builder().build(),
+            parser,
+            ParsingContext.builder(cell, executor).build(),
+            Optional.empty());
+    OwnersReport.Builder ownersReportBuilder =
+        OwnersReport.builder(cell, parser, parserState, Optional.empty());
     buckQueryEnvironment =
         BuckQueryEnvironment.from(
             cell,
             ownersReportBuilder,
             parser,
             parserState,
-            executor,
             targetPatternEvaluator,
             eventBus,
             TYPE_COERCER_FACTORY);
@@ -161,34 +177,42 @@ public class BuckQueryEnvironmentTest {
 
   @Test
   public void testResolveSingleTargets() throws QueryException {
-    ImmutableSet<QueryTarget> targets;
+    Set<QueryTarget> targets;
     ImmutableSet<QueryTarget> expectedTargets;
 
     targets = buckQueryEnvironment.getTargetsMatchingPattern("//example:six");
-    expectedTargets = ImmutableSortedSet.of(createQueryBuildTarget("//example", "six"));
+    expectedTargets =
+        new ImmutableSortedSet.Builder<>(QueryTarget::compare)
+            .add(createQueryBuildTarget("//example", "six"))
+            .build();
     assertThat(targets, is(equalTo(expectedTargets)));
 
     targets = buckQueryEnvironment.getTargetsMatchingPattern("//example/app:seven");
-    expectedTargets = ImmutableSortedSet.of(createQueryBuildTarget("//example/app", "seven"));
+    expectedTargets =
+        new ImmutableSortedSet.Builder<>(QueryTarget::compare)
+            .add(createQueryBuildTarget("//example/app", "seven"))
+            .build();
     assertThat(targets, is(equalTo(expectedTargets)));
   }
 
   @Test
   public void testResolveTargetPattern() throws QueryException {
     ImmutableSet<QueryTarget> expectedTargets =
-        ImmutableSortedSet.of(
-            createQueryBuildTarget("//example", "one"),
-            createQueryBuildTarget("//example", "two"),
-            createQueryBuildTarget("//example", "three"),
-            createQueryBuildTarget("//example", "four"),
-            createQueryBuildTarget("//example", "five"),
-            createQueryBuildTarget("//example", "six"),
-            createQueryBuildTarget("//example", "application-test-lib"),
-            createQueryBuildTarget("//example", "test-lib-lib"),
-            createQueryBuildTarget("//example", "one-tests"),
-            createQueryBuildTarget("//example", "four-tests"),
-            createQueryBuildTarget("//example", "four-application-tests"),
-            createQueryBuildTarget("//example", "six-tests"));
+        new ImmutableSortedSet.Builder<>(QueryTarget::compare)
+            .add(
+                createQueryBuildTarget("//example", "one"),
+                createQueryBuildTarget("//example", "two"),
+                createQueryBuildTarget("//example", "three"),
+                createQueryBuildTarget("//example", "four"),
+                createQueryBuildTarget("//example", "five"),
+                createQueryBuildTarget("//example", "six"),
+                createQueryBuildTarget("//example", "application-test-lib"),
+                createQueryBuildTarget("//example", "test-lib-lib"),
+                createQueryBuildTarget("//example", "one-tests"),
+                createQueryBuildTarget("//example", "four-tests"),
+                createQueryBuildTarget("//example", "four-application-tests"),
+                createQueryBuildTarget("//example", "six-tests"))
+            .build();
     assertThat(
         buckQueryEnvironment.getTargetsMatchingPattern("//example:"), is(equalTo(expectedTargets)));
   }

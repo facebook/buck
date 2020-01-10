@@ -1,0 +1,28 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "fix",
+    srcs = glob(["*.java"]),
+    tests = [
+        "//test/com/facebook/buck/support/fix:fix",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/config:config",
+        "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/doctor/config:config",
+        "//src/com/facebook/buck/log:log",
+        "//src/com/facebook/buck/util:constants",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/json:json",
+        "//third-party/java/stringtemplate:stringtemplate",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/doctor:doctor",
+        "//third-party/java/jackson:jackson-annotations",
+        "//third-party/java/jackson:jackson-databind",
+    ],
+)

@@ -1,25 +1,25 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.versions;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
-import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
@@ -31,9 +31,9 @@ import java.util.stream.Collectors;
 
 public class QueryTargetTranslator implements TargetTranslator<Query> {
 
-  private final UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory;
+  private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
 
-  public QueryTargetTranslator(UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory) {
+  public QueryTargetTranslator(UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory) {
     this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
   }
 
@@ -45,7 +45,7 @@ public class QueryTargetTranslator implements TargetTranslator<Query> {
   @Override
   public Optional<Query> translateTargets(
       CellPathResolver cellPathResolver,
-      String targetBaseName,
+      BaseName targetBaseName,
       TargetNodeTranslator translator,
       Query query) {
 
@@ -67,8 +67,7 @@ public class QueryTargetTranslator implements TargetTranslator<Query> {
     // A pattern matching all of the build targets in the query string.
     Pattern targetsPattern =
         Pattern.compile(
-            targets
-                .stream()
+            targets.stream()
                 .map(Object::toString)
                 .map(Pattern::quote)
                 .collect(Collectors.joining("|")));
@@ -83,7 +82,7 @@ public class QueryTargetTranslator implements TargetTranslator<Query> {
       BuildTarget target =
           unconfiguredBuildTargetFactory
               .createForBaseName(cellPathResolver, targetBaseName, matcher.group())
-              .configure(EmptyTargetConfiguration.INSTANCE);
+              .configure(query.getTargetConfiguration());
       Optional<BuildTarget> translated =
           translator.translate(cellPathResolver, targetBaseName, target);
       builder.append(translated.orElse(target).getFullyQualifiedName());
@@ -92,8 +91,6 @@ public class QueryTargetTranslator implements TargetTranslator<Query> {
     builder.append(queryString, lastEnd, queryString.length());
     String newQuery = builder.toString();
 
-    return queryString.equals(newQuery)
-        ? Optional.empty()
-        : Optional.of(Query.of(newQuery, query.getBaseName(), query.getResolvedQuery()));
+    return queryString.equals(newQuery) ? Optional.empty() : Optional.of(query.withQuery(newQuery));
   }
 }

@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.parser.api;
@@ -30,7 +30,7 @@ import java.nio.file.Path;
  * <p>This decorator makes it easy to write decorators that are supposed to modify the behavior of a
  * subset of {@link ProjectBuildFileParser} methods.
  */
-public class ForwardingProjectBuildFileParserDecorator implements ProjectBuildFileParser {
+public abstract class ForwardingProjectBuildFileParserDecorator implements ProjectBuildFileParser {
 
   protected final ProjectBuildFileParser delegate;
 
@@ -39,9 +39,9 @@ public class ForwardingProjectBuildFileParserDecorator implements ProjectBuildFi
   }
 
   @Override
-  public BuildFileManifest getBuildFileManifest(Path buildFile)
+  public BuildFileManifest getManifest(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
-    return delegate.getBuildFileManifest(buildFile);
+    return delegate.getManifest(buildFile);
   }
 
   @Override

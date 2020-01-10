@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -22,11 +22,12 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.DefaultFilteredDirectoryCopier;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.FilteredDirectoryCopier;
@@ -145,7 +146,7 @@ public class FilterResourcesSteps {
       // Create filtered copies of all resource directories. These will be passed to aapt instead.
       filteredDirectoryCopier.copyDirs(
           filesystem, inResDirToOutResDirMap, getFilteringPredicate(context));
-      return StepExecutionResult.of(0);
+      return StepExecutionResults.SUCCESS;
     }
 
     @Override
@@ -166,7 +167,7 @@ public class FilterResourcesSteps {
       if (canDownscale(context) && filterByDensity) {
         scaleUnmatchedDrawables(context);
       }
-      return StepExecutionResult.of(0);
+      return StepExecutionResults.SUCCESS;
     }
 
     @Override
@@ -213,7 +214,7 @@ public class FilterResourcesSteps {
     if (localeFilterEnabled || enableStringWhitelisting) {
       pathPredicates.add(
           path -> {
-            String filePath = MorePaths.pathWithUnixSeparators(path);
+            String filePath = PathFormatter.pathWithUnixSeparators(path);
             Matcher matcher = NON_ENGLISH_STRINGS_FILE_PATH.matcher(filePath);
             if (!matcher.matches() || !filePath.endsWith(localizedStringFileName)) {
               return true;
@@ -261,15 +262,16 @@ public class FilterResourcesSteps {
     Collection<Path> drawables =
         drawableFinder.findDrawables(inResDirToOutResDirMap.values(), filesystem);
     for (Path drawable : drawables) {
-      if (drawable.toString().endsWith(".xml")) {
+      String drawableFileName = drawable.getFileName().toString();
+      if (drawableFileName.endsWith(".xml")) {
         // Skip SVG and network drawables.
         continue;
       }
-      if (drawable.toString().endsWith(".9.png")) {
+      if (drawableFileName.endsWith(".9.png")) {
         // Skip nine-patch for now.
         continue;
       }
-      if (drawable.toString().endsWith(".webp")) {
+      if (drawableFileName.endsWith(".webp")) {
         // Skip webp for now.
         continue;
       }
@@ -281,26 +283,37 @@ public class FilterResourcesSteps {
       Objects.requireNonNull(targetDensities);
       if (!targetDensities.contains(density)) {
 
-        // Replace density qualifier with target density using regular expression to match
-        // the qualifier in the context of a path to a drawable.
-        String fromDensity = (density == ResourceFilters.Density.NO_QUALIFIER ? "" : "-") + density;
-        Path destination =
-            Paths.get(
-                MorePaths.pathWithUnixSeparators(drawable)
-                    .replaceFirst(
-                        "((?:^|/)drawable[^/]*)" + Pattern.quote(fromDensity) + "(-|$|/)",
-                        "$1-" + targetDensity + "$2"));
-
         double factor = targetDensity.value() / density.value();
         if (factor >= 1.0) {
           // There is no point in up-scaling, or converting between drawable and drawable-mdpi.
           continue;
         }
 
+        Path tmpFile = filesystem.createTempFile("scaled_", drawableFileName);
+        Objects.requireNonNull(imageScaler);
+        imageScaler.scale(factor, drawable, tmpFile, context);
+
+        long oldSize = filesystem.getFileSize(drawable);
+        long newSize = filesystem.getFileSize(tmpFile);
+        if (newSize > oldSize) {
+          // Don't keep the new one if it is larger than the old one.
+          filesystem.deleteFileAtPath(tmpFile);
+          continue;
+        }
+
+        // Replace density qualifier with target density using regular expression to match
+        // the qualifier in the context of a path to a drawable.
+        String fromDensity = (density == ResourceFilters.Density.NO_QUALIFIER ? "" : "-") + density;
+        Path destination =
+            Paths.get(
+                PathFormatter.pathWithUnixSeparators(drawable)
+                    .replaceFirst(
+                        "((?:^|/)drawable[^/]*)" + Pattern.quote(fromDensity) + "(-|$|/)",
+                        "$1-" + targetDensity + "$2"));
+
         // Make sure destination folder exists and perform downscaling.
         filesystem.createParentDirs(destination);
-        Objects.requireNonNull(imageScaler);
-        imageScaler.scale(factor, drawable, destination, context);
+        filesystem.move(tmpFile, destination);
 
         // Delete source file.
         filesystem.deleteFileAtPath(drawable);
@@ -337,7 +350,7 @@ public class FilterResourcesSteps {
             new SimpleFileVisitor<Path>() {
               @Override
               public FileVisitResult visitFile(Path path, BasicFileAttributes attributes) {
-                String unixPath = MorePaths.pathWithUnixSeparators(path);
+                String unixPath = PathFormatter.pathWithUnixSeparators(path);
                 if (DRAWABLE_PATH_PATTERN.matcher(unixPath).matches()
                     && !DRAWABLE_EXCLUDE_PATTERN.matcher(unixPath).matches()) {
                   // The path is normalized so that the value can be matched against patterns.

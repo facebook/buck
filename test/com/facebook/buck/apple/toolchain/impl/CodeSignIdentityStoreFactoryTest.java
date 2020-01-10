@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple.toolchain.impl;
@@ -50,19 +50,33 @@ public class CodeSignIdentityStoreFactoryTest {
                 + "\"iPhone Developer: Foo Bar (12345ABCDE)\" (CSSMERR_TP_CERT_EXPIRED)\n"
                 + "  3) BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB "
                 + "\"iPhone Developer: Foo Bar (54321EDCBA)\"\n"
-                + "     3 valid identities found\n",
+                + "  4) CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC "
+                + "\"Apple Development: Fizz Buzz (12345AAAAA)\"\n"
+                + "  5) DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD "
+                + "\"Apple Development: Fizz Buzz (AAAAA12345)\" (CSSMERR_TP_CERT_REVOKED)\n"
+                + "  6) FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF "
+                + "\"Apple Development: Fizz Buzz (54321BBBBB)\" (CSSMERR_TP_CERT_EXPIRED)\n"
+                + "     6 valid identities found\n",
             "");
+
     FakeProcessExecutor processExecutor =
         new FakeProcessExecutor(ImmutableMap.of(processExecutorParams, process));
     CodeSignIdentityStore store =
         CodeSignIdentityStoreFactory.fromSystem(processExecutor, ImmutableList.of("unused"));
+
     ImmutableList<CodeSignIdentity> expected =
         ImmutableList.of(
             CodeSignIdentity.builder()
                 .setFingerprint(
                     CodeSignIdentity.toFingerprint("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"))
                 .setSubjectCommonName("iPhone Developer: Foo Bar (54321EDCBA)")
+                .build(),
+            CodeSignIdentity.builder()
+                .setFingerprint(
+                    CodeSignIdentity.toFingerprint("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"))
+                .setSubjectCommonName("Apple Development: Fizz Buzz (12345AAAAA)")
                 .build());
+
     assertThat(store.getIdentitiesSupplier().get(), equalTo(expected));
   }
 

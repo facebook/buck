@@ -1,65 +1,155 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.model;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.log.views.JsonViews;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonView;
+import com.google.common.base.Joiner;
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
-import java.util.Optional;
+import com.google.common.collect.Sets;
+import java.util.Objects;
 import java.util.Set;
 import javax.annotation.concurrent.ThreadSafe;
 
 @ThreadSafe
-public interface BuildTarget extends Comparable<BuildTarget> {
+@JsonAutoDetect(
+    fieldVisibility = JsonAutoDetect.Visibility.NONE,
+    getterVisibility = JsonAutoDetect.Visibility.NONE,
+    isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+    setterVisibility = JsonAutoDetect.Visibility.NONE)
+public class BuildTarget implements Comparable<BuildTarget>, DependencyStack.Element {
 
-  UnconfiguredBuildTarget getUnconfiguredBuildTarget();
+  private final UnconfiguredBuildTargetView unconfiguredBuildTargetView;
+  private final TargetConfiguration targetConfiguration;
+  private final int hash;
 
-  UnflavoredBuildTarget getUnflavoredBuildTarget();
+  private BuildTarget(
+      UnconfiguredBuildTargetView unconfiguredBuildTargetView,
+      TargetConfiguration targetConfiguration) {
+    this.unconfiguredBuildTargetView = unconfiguredBuildTargetView;
+    this.targetConfiguration = targetConfiguration;
+    this.hash = Objects.hash(unconfiguredBuildTargetView, targetConfiguration);
+  }
 
-  ImmutableSortedSet<Flavor> getFlavors();
+  static BuildTarget of(
+      UnconfiguredBuildTargetView unconfiguredBuildTargetView,
+      TargetConfiguration targetConfiguration) {
+    return new BuildTarget(unconfiguredBuildTargetView, targetConfiguration);
+  }
 
-  TargetConfiguration getTargetConfiguration();
+  public UnconfiguredBuildTargetView getUnconfiguredBuildTargetView() {
+    return unconfiguredBuildTargetView;
+  }
 
-  Optional<String> getCell();
+  public UnflavoredBuildTarget getUnflavoredBuildTarget() {
+    return unconfiguredBuildTargetView.getUnflavoredBuildTarget();
+  }
 
-  Path getCellPath();
+  public ImmutableSortedSet<Flavor> getFlavors() {
+    return unconfiguredBuildTargetView.getFlavors();
+  }
 
-  String getBaseName();
+  public TargetConfiguration getTargetConfiguration() {
+    return targetConfiguration;
+  }
 
-  Path getBasePath();
+  @JsonProperty("cell")
+  public CanonicalCellName getCell() {
+    return unconfiguredBuildTargetView.getCell();
+  }
 
-  String getShortName();
+  public BaseName getBaseName() {
+    return unconfiguredBuildTargetView.getBaseName();
+  }
+
+  public CellRelativePath getCellRelativeBasePath() {
+    return unconfiguredBuildTargetView.getCellRelativeBasePath();
+  }
+
+  @JsonProperty("baseName")
+  @JsonView(JsonViews.MachineReadableLog.class)
+  private String getBaseNameString() {
+    return getBaseName().toString();
+  }
+
+  @JsonProperty("shortName")
+  @JsonView(JsonViews.MachineReadableLog.class)
+  public String getShortName() {
+    return unconfiguredBuildTargetView.getShortName();
+  }
 
   /**
-   * If this build target were //third_party/java/guava:guava-latest, then this would return
+   * If this build target were cell//third_party/java/guava:guava-latest, then this would return
    * "guava-latest". Note that the flavor of the target is included here.
    */
-  String getShortNameAndFlavorPostfix();
+  public String getShortNameAndFlavorPostfix() {
+    return unconfiguredBuildTargetView.getShortNameAndFlavorPostfix();
+  }
 
-  String getFlavorPostfix();
+  /** An empty string when there are no flavors, or hash followed by comma-separated flavors. */
+  public String getFlavorPostfix() {
+    if (getFlavors().isEmpty()) {
+      return "";
+    }
+    return "#" + getFlavorsAsString();
+  }
+
+  @JsonProperty("flavor")
+  @JsonView(JsonViews.MachineReadableLog.class)
+  protected String getFlavorsAsString() {
+    return Joiner.on(",").join(getFlavors());
+  }
 
   /**
-   * If this build target is //third_party/java/guava:guava-latest, then this would return
+   * If this build target is cell//third_party/java/guava:guava-latest, then this would return
+   * "cell//third_party/java/guava:guava-latest".
+   */
+  public String getFullyQualifiedName() {
+    return unconfiguredBuildTargetView.getFullyQualifiedName();
+  }
+
+  /**
+   * If this build target is cell//third_party/java/guava:guava-latest, then this would return
    * "//third_party/java/guava:guava-latest".
    */
-  String getFullyQualifiedName();
+  public String getCellRelativeName() {
+    return unconfiguredBuildTargetView.getCellRelativeName();
+  }
 
-  boolean isFlavored();
+  public boolean isFlavored() {
+    return unconfiguredBuildTargetView.isFlavored();
+  }
 
-  BuildTarget withShortName(String shortName);
+  /** @return {@link #getFullyQualifiedName()} */
+  @Override
+  public String toString() {
+    return getFullyQualifiedName();
+  }
+
+  public BuildTarget withShortName(String shortName) {
+    return BuildTarget.of(
+        unconfiguredBuildTargetView.withShortName(shortName), targetConfiguration);
+  }
 
   /**
    * Verifies that this build target has no flavors.
@@ -67,23 +157,78 @@ public interface BuildTarget extends Comparable<BuildTarget> {
    * @return this build target
    * @throws IllegalStateException if a build target has flavors
    */
-  BuildTarget assertUnflavored();
+  public BuildTarget assertUnflavored() {
+    unconfiguredBuildTargetView.assertUnflavored();
+    return this;
+  }
 
-  BuildTarget withoutFlavors(Set<Flavor> flavors);
+  public BuildTarget withoutFlavors(Set<Flavor> flavors) {
+    return withFlavors(Sets.difference(getFlavors(), flavors));
+  }
 
-  BuildTarget withoutFlavors(Flavor... flavors);
+  public BuildTarget withoutFlavors(Flavor... flavors) {
+    return withoutFlavors(ImmutableSet.copyOf(flavors));
+  }
 
-  BuildTarget withoutFlavors();
+  /** A copy of this build target but without any flavors. */
+  public BuildTarget withoutFlavors() {
+    if (getFlavors().isEmpty()) {
+      return this;
+    }
 
-  BuildTarget withFlavors(Flavor... flavors);
+    return BuildTarget.of(unconfiguredBuildTargetView.withoutFlavors(), targetConfiguration);
+  }
 
-  BuildTarget withFlavors(Iterable<? extends Flavor> flavors);
+  public BuildTarget withFlavors(Flavor... flavors) {
+    return withFlavors(ImmutableSet.copyOf(flavors));
+  }
 
-  BuildTarget withAppendedFlavors(Set<Flavor> flavors);
+  public BuildTarget withFlavors(Iterable<? extends Flavor> flavors) {
+    return BuildTarget.of(unconfiguredBuildTargetView.withFlavors(flavors), targetConfiguration);
+  }
 
-  BuildTarget withAppendedFlavors(Flavor... flavors);
+  public BuildTarget withAppendedFlavors(Set<Flavor> flavors) {
+    return withFlavors(Sets.union(getFlavors(), flavors));
+  }
 
-  BuildTarget withUnflavoredBuildTarget(UnflavoredBuildTarget target);
+  public BuildTarget withAppendedFlavors(Flavor... flavors) {
+    return withAppendedFlavors(ImmutableSet.copyOf(flavors));
+  }
 
-  BuildTarget withoutCell();
+  /** Keep flavors and configuration, replace everything else. */
+  public BuildTarget withUnflavoredBuildTarget(UnflavoredBuildTarget target) {
+    return BuildTarget.of(
+        unconfiguredBuildTargetView.withUnflavoredBuildTarget(target), targetConfiguration);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    BuildTarget that = (BuildTarget) o;
+    return hash == that.hash
+        && unconfiguredBuildTargetView.equals(that.unconfiguredBuildTargetView)
+        && targetConfiguration.equals(that.targetConfiguration);
+  }
+
+  @Override
+  public int hashCode() {
+    return hash;
+  }
+
+  @Override
+  public int compareTo(BuildTarget that) {
+    if (this == that) {
+      return 0;
+    }
+
+    return ComparisonChain.start()
+        .compare(unconfiguredBuildTargetView, that.unconfiguredBuildTargetView)
+        .compare(targetConfiguration, that.targetConfiguration)
+        .result();
+  }
 }

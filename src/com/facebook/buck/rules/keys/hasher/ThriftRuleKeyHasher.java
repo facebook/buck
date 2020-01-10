@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.keys.hasher;
@@ -23,7 +23,6 @@ import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.log.thrift.rulekeys.ByteArray;
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
@@ -84,6 +83,11 @@ public class ThriftRuleKeyHasher implements RuleKeyHasher<FullRuleKey> {
   }
 
   @Override
+  public RuleKeyHasher<FullRuleKey> putKeyPath(Path key) {
+    return push(Value.key(new Key(key.toString())));
+  }
+
+  @Override
   public RuleKeyHasher<FullRuleKey> putNull() {
     return push(Value.nullValue(new NullValue()));
   }
@@ -130,18 +134,17 @@ public class ThriftRuleKeyHasher implements RuleKeyHasher<FullRuleKey> {
   }
 
   @Override
-  public RuleKeyHasher<FullRuleKey> putArchiveMemberPath(ArchiveMemberPath path, HashCode hash) {
+  public RuleKeyHasher<FullRuleKey> putArchiveMemberPath(
+      Path relativeArchivePath, Path archiveMemberPath, HashCode hash) {
     return push(
         Value.archiveMemberPath(
             new com.facebook.buck.log.thrift.rulekeys.ArchiveMemberPath(
-                path.getArchivePath().toString(),
-                path.getMemberPath().toString(),
-                hash.toString())));
+                relativeArchivePath.toString(), archiveMemberPath.toString(), hash.toString())));
   }
 
   @Override
-  public RuleKeyHasher<FullRuleKey> putNonHashingPath(String path) {
-    return push(Value.path(new NonHashedPath(path)));
+  public RuleKeyHasher<FullRuleKey> putNonHashingPath(Path path) {
+    return push(Value.path(new NonHashedPath(path.toString())));
   }
 
   @Override

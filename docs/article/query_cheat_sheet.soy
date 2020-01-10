@@ -1,18 +1,19 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 {namespace buck.query_cheat_sheet}
 
 /**
@@ -38,7 +39,7 @@
 /***/
 {template .soyweb}
   {call buck.page}
-    {param title: 'Buck query - Cheat Sheet' /}
+    {param title: 'Buck Cheat Sheet' /}
     {param navid: 'article_query_cheat_sheet' /}
     {param prettify: true /}
     {param description}
@@ -46,39 +47,127 @@
     {/param}
     {param content}
 
-<p>
-<strong>Note</strong>: For a complete description of the <code>buck query</code> language with
-many additional examples, see the {call buck.cmd_query /} reference page.
-</p>
+    <p>
+    This section provides example command lines that you can use to
+    obtain information about Buck and about your build. These techniques
+    can help you to understand how your build works and to troubleshoot
+    issues with your build.
+    </p>
+
+    <p>
+    Most of these examples use the {call buck.cmd_query /}, {call buck.cmd_targets /},
+    and {call buck.cmd_audit /} commands.  For more information and examples,
+    see the reference pages for those commands.
+    </p>
 
 <hr/>
 
-<ul style="line-height:0.5em">
+<ul>
+  <li>
+
+    <a href="#list-all-rules">
+      How do I get a list of all the rules that Buck supports from the
+      command line?
+    </a>
+  </li>
+
+  <li>
+    <a href="#list-args-for-rule">
+      How do I see the arguments for a given rule from the command line?
+    </a>
+  </li>
+
   <li>
     <a href="#find-existing-targets">
       How do I find all the targets for a package?
     </a>
   </li>
+
+  <li>
+    <a href="#query-multiple-targets">
+      How do I specify more than one target to <code>buck query</code>?
+    </a>
+  </li>
+
   <li>
     <a href="#output-target-attributes">
-      How do I get the attribute names and values for targets that
+      How do I get the attribute names and values for the targets that
       result from a query?
     </a>
   </li>
+
   <li>
-    <a href="#find-dependencies">
-      How do I find the dependencies for a target?
+    <a href="#queries-in-rules">
+      How do I perform a query <em>inside</em> of a rule?
     </a>
   </li>
+
+  <li>
+    <a href="#find-dependencies">
+      How do I find the dependencies for a target, that is, the targets
+      on which a specified target depends?
+    </a>
+  </li>
+
+  <li>
+    <a href="#find-reverse-dependencies">
+      How do I find the reverse-dependencies for a target, that is, the
+      targets that <em>depend on</em> a specified target?
+    </a>
+  </li>
+
   <li>
     <a href="#find-buildfile-owner">
-      How do I find buildfile that contains the target that owns a
+      How do I find the build file that contains the target that owns a
       source file?
     </a>
   </li>
 </ul>
 
 <hr><br/>
+
+
+{call .faq}
+  {param id: 'list-all-rules' /}
+  {param question}
+    <p>
+      How do I get a list of all the rules that Buck supports, <em>from
+      the command line</em>, so that I can process them
+      with <code>grep</code>, <code>sed</code>, etc?
+    </p>
+  {/param}
+
+  {param shortAnswer}
+    <p>
+      Use {call buck.cmd_audit /} with the <code>ruletypes</code> (plural)
+      subcommand, which returns an alphabetized list of all the
+      rules that Buck supports.
+    </p>
+
+{call buckaudit.example_ruletypes /}
+
+  {/param}
+{/call}
+
+
+{call .faq}
+  {param id: 'list-args-for-rule' /}
+  {param question}
+    <p>
+      How do I see the arguments for a rule from the command line?
+    </p>
+  {/param}
+
+  {param shortAnswer}
+    <p>
+      Use {call buck.cmd_audit /} with the <code>ruletype</code> (singular)
+      subcommand followed by the name of the rule.
+    </p>
+
+{call buckaudit.example_ruletype /}
+
+  {/param}
+{/call}
 
 {call .faq}
   {param id: 'find-existing-targets' /}
@@ -103,13 +192,27 @@ buck query //path/to/dir/...
   {/param}
   {param longAnswer}
     <p>
-      The <code>buck query</code> command can accept a {call buck.build_target_pattern /} as a 
-      parameter. If you specify a build target pattern, Buck evaluates this 
+      The <code>buck query</code> command can accept a {call buck.build_target_pattern /} as a
+      parameter. If you specify a build target pattern, Buck evaluates this
       pattern and shows all the build targets that match it.
     </p>
   {/param}
 {/call}
 
+{call .faq}
+  {param id: 'query-multiple-targets' /}
+  {param question}
+    <p>
+      How do I specify more than one target to <code>buck query</code>?
+    </p>
+  {/param}
+
+  {param shortAnswer}
+  Use the {call buckquery.set /} operator.
+  {call buckquery.example_multiple_targets /}
+  {/param}
+
+{/call}
 
 {call .faq}
   {param id: 'output-target-attributes' /}
@@ -169,6 +272,39 @@ buck query "deps(//foo:bar)" --output-attributes 'name' 'exported_headers'
 
 
 {call .faq}
+  {param id: 'queries-in-rules' /}
+  {param question}
+    <p>
+      How do I perform a query <em>inside</em> of a rule?
+    </p>
+  {/param}
+
+  {param shortAnswer}
+    <p>
+      Use <strong>{call buck.string_parameter_macros /}</strong>,
+      specifically, the <em>query</em> macros:
+    </p>
+
+<p>
+<pre>
+{literal}
+$(query_targets "queryfunction(//:foo)")
+$(query_outputs "queryfunction(//:foo)")
+$(query_targets_and_outputs [SEPARATOR] "queryfunction(//:foo)")
+{/literal}
+</pre>
+</p>
+
+    <p>
+      Note, however, that the query macros are supported only
+      for {call buck.genrule /} and {call buck.apk_genrule /}.
+    </p>
+  {/param}
+
+{/call}
+
+
+{call .faq}
   {param id: 'find-dependencies' /}
   {param question}
     <p>
@@ -197,7 +333,7 @@ buck query "deps(set('//foo:bar' '//foo:lib' '//foo/baz:util'))"
     <p>
       The <a href="{ROOT}command/query.html#deps">deps</a> operator finds
       the dependencies of the specified targets. The first argument
-      represents the targets of interest. This can be a 
+      represents the targets of interest. This can be a
       single {call buck.build_target /} or {call buck.build_target_pattern /},
       or a set of these.
     </p>
@@ -210,6 +346,28 @@ buck query "deps(set('//foo:bar' '//foo:lib' '//foo/baz:util'))"
       set of transitive dependencies.
     </p>
   {/param}
+{/call}
+
+
+{call .faq}
+  {param id: 'find-reverse-dependencies' /}
+  {param question}
+    <p>
+      How do I find the reverse-dependencies for a target, that is, the
+      targets that <em>depend on</em> a specified target?
+    </p>
+  {/param}
+
+  {param shortAnswer}
+    <p>
+    Use the <code>buck query</code> {call buck.cmd_link}{param name: 'query' /}{param section: 'rdeps'/}{/call}{sp} 
+    (reverse dependencies) operator.
+    </p>
+
+{call buckquery.example_rdeps /}
+
+  {/param}
+
 {/call}
 
 

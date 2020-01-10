@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.js;
@@ -29,7 +29,9 @@ import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.model.impl.TargetConfigurationHasher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.PredicateMatcher;
@@ -69,6 +71,10 @@ public class JsRulesIntegrationTest {
     workspace.setUp();
     projectFilesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
     genPath = projectFilesystem.getBuckPaths().getGenDir();
+    if (projectFilesystem.getBuckPaths().shouldIncludeTargetConfigHash()) {
+      genPath =
+          genPath.resolve(TargetConfigurationHasher.hash(UnconfiguredTargetConfiguration.INSTANCE));
+    }
   }
 
   @Test
@@ -236,8 +242,8 @@ public class JsRulesIntegrationTest {
   }
 
   @Test
-  public void androidApplicationsContainsJsAndResources() throws InterruptedException, IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+  public void androidApplicationsContainsJsAndResources() throws IOException {
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
 
     BuildTarget target = BuildTargetFactory.newInstance("//android/apps/sample:app");
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
@@ -250,8 +256,8 @@ public class JsRulesIntegrationTest {
   }
 
   @Test
-  public void bundleWithAndroidLibraryDependency() throws IOException, InterruptedException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+  public void bundleWithAndroidLibraryDependency() throws IOException {
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
 
     workspace.runBuckBuild("//js:bundle-with-android-lib#android,release").assertSuccess();
     workspace.verify(Paths.get("android_library_bundle.expected"), genPath);
@@ -292,7 +298,7 @@ public class JsRulesIntegrationTest {
   }
 
   @Test
-  public void sourcemapCanBeAccessedWithoutDependingOnBundle() throws IOException {
+  public void sourcemapCanBeAccessedWithoutDependingOnBundle() {
     workspace.runBuckBuild("//js:genrule-using-only-sourcemap").assertSuccess();
   }
 
@@ -344,9 +350,8 @@ public class JsRulesIntegrationTest {
   }
 
   @Test
-  public void apkContainsGenruleOutputAndBundleResources()
-      throws IOException, InterruptedException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+  public void apkContainsGenruleOutputAndBundleResources() throws IOException {
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
 
     BuildTarget target = BuildTargetFactory.newInstance("//android/apps/sample:app_with_genrule");
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
@@ -366,7 +371,7 @@ public class JsRulesIntegrationTest {
   }
 
   @Test
-  public void genruleSourcemapCanBeAccessedWithoutDependingOnBundle() throws IOException {
+  public void genruleSourcemapCanBeAccessedWithoutDependingOnBundle() {
     workspace.runBuckBuild("//js:genrule-using-only-sourcemap-of-bundle-genrule").assertSuccess();
   }
 

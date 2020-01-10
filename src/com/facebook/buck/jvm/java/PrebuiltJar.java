@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
@@ -33,14 +33,14 @@ import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
-import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.JavaAbiInfo;
+import com.facebook.buck.jvm.core.JavaClassHashesProvider;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.rules.modern.impl.ModernBuildableSupport;
 import com.facebook.buck.step.Step;
@@ -60,12 +60,11 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
-@BuildsAnnotationProcessor
 public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements AndroidPackageable,
         ExportDependencies,
-        HasClasspathEntries,
         InitializableFromDisk<JavaLibrary.Data>,
         JavaLibrary,
         MaybeRequiredForSourceOnlyAbi,
@@ -84,23 +83,28 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final Optional<String> mavenCoords;
   @AddToRuleKey private final boolean provided;
   @AddToRuleKey private final boolean requiredForSourceOnlyAbi;
+  @AddToRuleKey private final boolean generateAbi;
+  @AddToRuleKey private final boolean neverMarkAsUnusedDependency;
   private final Supplier<ImmutableSet<SourcePath>> transitiveClasspathsSupplier;
   private final Supplier<ImmutableSet<JavaLibrary>> transitiveClasspathDepsSupplier;
 
-  private final BuildOutputInitializer<Data> buildOutputInitializer;
+  private final BuildOutputInitializer<JavaLibrary.Data> buildOutputInitializer;
+  private JavaClassHashesProvider javaClassHashesProvider;
 
   public PrebuiltJar(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       SourcePath binaryJar,
       Optional<SourcePath> sourceJar,
       Optional<SourcePath> gwtJar,
       Optional<String> javadocUrl,
       Optional<String> mavenCoords,
       boolean provided,
-      boolean requiredForSourceOnlyAbi) {
+      boolean requiredForSourceOnlyAbi,
+      boolean generateAbi,
+      boolean neverMarkAsUnusedDependency) {
     super(buildTarget, projectFilesystem, params);
     this.binaryJar = binaryJar;
     this.sourceJar = sourceJar;
@@ -109,8 +113,10 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.mavenCoords = mavenCoords;
     this.provided = provided;
     this.requiredForSourceOnlyAbi = requiredForSourceOnlyAbi;
+    this.generateAbi = generateAbi;
+    this.neverMarkAsUnusedDependency = neverMarkAsUnusedDependency;
 
-    transitiveClasspathsSupplier =
+    this.transitiveClasspathsSupplier =
         MoreSuppliers.memoize(
             () ->
                 JavaLibraryClasspathProvider.getClasspathsFromLibraries(
@@ -134,12 +140,16 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     Path fileName = resolver.getRelativePath(binaryJar).getFileName();
     String fileNameWithJarExtension =
         String.format("%s.jar", MorePaths.getNameWithoutExtension(fileName));
-    copiedBinaryJar =
+    this.copiedBinaryJar =
         BuildTargetPaths.getGenPath(
-            getProjectFilesystem(), getBuildTarget(), "__%s__/" + fileNameWithJarExtension);
+            getProjectFilesystem(), buildTarget, "__%s__/" + fileNameWithJarExtension);
     this.javaAbiInfo = new DefaultJavaAbiInfo(getSourcePathToOutput());
 
-    buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
+    this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
+
+    this.javaClassHashesProvider =
+        new DefaultJavaClassHashesProvider(
+            ExplicitBuildTargetSourcePath.of(buildTarget, getPathToClassHashes()));
   }
 
   @Override
@@ -173,17 +183,19 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public void invalidateInitializeFromDiskState() {
     javaAbiInfo.invalidate();
+    javaClassHashesProvider.invalidate();
   }
 
   @Override
-  public JavaLibrary.Data initializeFromDisk(SourcePathResolver pathResolver) throws IOException {
+  public JavaLibrary.Data initializeFromDisk(SourcePathResolverAdapter pathResolver)
+      throws IOException {
     // Warm up the jar contents. We just wrote the thing, so it should be in the filesystem cache
     javaAbiInfo.load(pathResolver);
     return JavaLibraryRules.initializeFromDisk(getBuildTarget(), getProjectFilesystem());
   }
 
   @Override
-  public BuildOutputInitializer<Data> getBuildOutputInitializer() {
+  public BuildOutputInitializer<JavaLibrary.Data> getBuildOutputInitializer() {
     return buildOutputInitializer;
   }
 
@@ -257,11 +269,21 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
+  public boolean neverMarkAsUnusedDependency() {
+    return neverMarkAsUnusedDependency;
+  }
+
+  @Override
+  public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
+    return Stream.of();
+  }
+
+  @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    SourcePathResolver resolver = context.getSourcePathResolver();
+    SourcePathResolverAdapter resolver = context.getSourcePathResolver();
 
     // Create a copy of the JAR in case it was generated by another rule.
     Path resolvedBinaryJar = resolver.getAbsolutePath(binaryJar);
@@ -308,8 +330,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     }
     buildableContext.recordArtifact(copiedBinaryJar);
 
-    Path pathToClassHashes =
-        JavaLibraryRules.getPathToClassHashes(getBuildTarget(), getProjectFilesystem());
+    Path pathToClassHashes = getPathToClassHashes();
     buildableContext.recordArtifact(pathToClassHashes);
 
     JavaLibraryRules.addAccumulateClassNamesStep(
@@ -321,6 +342,10 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
         pathToClassHashes);
 
     return steps.build();
+  }
+
+  private Path getPathToClassHashes() {
+    return JavaLibraryRules.getPathToClassHashes(getBuildTarget(), getProjectFilesystem());
   }
 
   @Override
@@ -347,7 +372,21 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
+  public Optional<BuildTarget> getAbiJar() {
+    if (!generateAbi) {
+      return Optional.of(getBuildTarget());
+    }
+
+    return JavaLibrary.super.getAbiJar();
+  }
+
+  @Override
   public Optional<String> getMavenCoords() {
     return mavenCoords;
+  }
+
+  @Override
+  public JavaClassHashesProvider getClassHashesProvider() {
+    return javaClassHashesProvider;
   }
 }

@@ -1,22 +1,23 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.toolchain.Compiler;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
@@ -24,6 +25,7 @@ import com.facebook.buck.cxx.toolchain.DependencyTrackingMode;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.Console;
@@ -38,6 +40,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
@@ -61,6 +64,7 @@ class CxxPreprocessAndCompileStep implements Step {
   private final Path input;
   private final CxxSource.Type inputType;
   private final ToolCommand command;
+  private final SourcePathResolverAdapter pathResolver;
   private final HeaderPathNormalizer headerPathNormalizer;
   private final DebugPathSanitizer sanitizer;
   private final Compiler compiler;
@@ -70,6 +74,7 @@ class CxxPreprocessAndCompileStep implements Step {
   private final Path scratchDir;
 
   private final boolean useArgfile;
+  private final ImmutableList<String> preArgfileArgs;
 
   private static final FileLastModifiedDateContentsScrubber FILE_LAST_MODIFIED_DATE_SCRUBBER =
       new FileLastModifiedDateContentsScrubber();
@@ -87,10 +92,12 @@ class CxxPreprocessAndCompileStep implements Step {
       Path input,
       CxxSource.Type inputType,
       ToolCommand command,
+      SourcePathResolverAdapter pathResolver,
       HeaderPathNormalizer headerPathNormalizer,
       DebugPathSanitizer sanitizer,
       Path scratchDir,
       boolean useArgfile,
+      ImmutableList<String> preArgfileArgs,
       Compiler compiler,
       Optional<CxxLogInfo> cxxLogInfo) {
     this.filesystem = filesystem;
@@ -100,10 +107,12 @@ class CxxPreprocessAndCompileStep implements Step {
     this.input = input;
     this.inputType = inputType;
     this.command = command;
+    this.pathResolver = pathResolver;
     this.headerPathNormalizer = headerPathNormalizer;
     this.sanitizer = sanitizer;
     this.scratchDir = scratchDir;
     this.useArgfile = useArgfile;
+    this.preArgfileArgs = preArgfileArgs;
     this.compiler = compiler;
     this.cxxLogInfo = cxxLogInfo;
   }
@@ -170,7 +179,7 @@ class CxxPreprocessAndCompileStep implements Step {
         .addAll(
             compiler.outputArgs(
                 useUnixPathSeparator
-                    ? MorePaths.pathWithUnixSeparators(output.toString())
+                    ? PathFormatter.pathWithUnixSeparators(output.toString())
                     : output.toString()))
         .add("-c")
         .addAll(
@@ -179,7 +188,7 @@ class CxxPreprocessAndCompileStep implements Step {
                 .orElseGet(ImmutableList::of))
         .add(
             useUnixPathSeparator
-                ? MorePaths.pathWithUnixSeparators(input.toString())
+                ? PathFormatter.pathWithUnixSeparators(input.toString())
                 : input.toString())
         .build();
   }
@@ -189,14 +198,25 @@ class CxxPreprocessAndCompileStep implements Step {
     ProcessExecutorParams.Builder builder = makeSubprocessBuilder(context);
 
     if (useArgfile) {
+      Path argfilePath = getArgfile();
       filesystem.writeLinesToPath(
           Iterables.transform(
               getArguments(context.getAnsi().isAnsiTerminal()), Escaper.ARGFILE_ESCAPER::apply),
-          getArgfile());
+          argfilePath);
+
+      String argfilePathString;
+      if (context.getPlatform().getType().isWindows()) {
+        // argfiles can be rather lengthy in... length
+        argfilePathString = MorePaths.getWindowsLongPathString(argfilePath);
+      } else {
+        argfilePathString = argfilePath.toString();
+      }
+
       builder.setCommand(
           ImmutableList.<String>builder()
               .addAll(command.getCommandPrefix())
-              .add("@" + getArgfile())
+              .addAll(preArgfileArgs)
+              .add("@" + argfilePathString)
               .build());
     } else {
       builder.setCommand(
@@ -208,7 +228,9 @@ class CxxPreprocessAndCompileStep implements Step {
 
     ProcessExecutorParams params = builder.build();
 
-    LOG.debug("Running command (pwd=%s): %s", params.getDirectory(), getDescription(context));
+    if (LOG.isVerboseEnabled()) {
+      LOG.verbose("Running command (pwd=%s): %s", params.getDirectory(), getDescription(context));
+    }
 
     ProcessExecutor.Result result =
         new DefaultProcessExecutor(Console.createNullConsole()).launchAndExecute(params);
@@ -216,7 +238,11 @@ class CxxPreprocessAndCompileStep implements Step {
     String err = getSanitizedStderr(result, context);
     result =
         new ProcessExecutor.Result(
-            result.getExitCode(), result.isTimedOut(), result.getStdout(), Optional.of(err));
+            result.getExitCode(),
+            result.isTimedOut(),
+            result.getStdout(),
+            Optional.of(err),
+            result.getCommand());
     processResult(result, context);
     return result;
   }
@@ -262,8 +288,7 @@ class CxxPreprocessAndCompileStep implements Step {
       List<String> errorLines = includesAndErrors.getOrDefault(false, Collections.emptyList());
 
       includeLines =
-          includeLines
-              .stream()
+          includeLines.stream()
               .map(CxxPreprocessAndCompileStep::parseShowIncludeLine)
               .collect(Collectors.toList());
       writeSrcAndIncludes(includeLines, depFile.get());
@@ -277,8 +302,7 @@ class CxxPreprocessAndCompileStep implements Step {
       List<String> errorLines = includesAndErrors.getOrDefault(false, Collections.emptyList());
 
       includeLines =
-          includeLines
-              .stream()
+          includeLines.stream()
               .map(CxxPreprocessAndCompileStep::parseShowHeadersLine)
               .collect(Collectors.toList());
       writeSrcAndIncludes(includeLines, depFile.get());
@@ -311,7 +335,7 @@ class CxxPreprocessAndCompileStep implements Step {
         new CxxErrorTransformer(
             filesystem, context.shouldReportAbsolutePaths(), headerPathNormalizer);
     return errorLines
-        .map(cxxErrorTransformer::transformLine)
+        .map((line) -> cxxErrorTransformer.transformLine(pathResolver, line))
         .collect(Collectors.joining(System.lineSeparator()));
   }
 
@@ -346,23 +370,35 @@ class CxxPreprocessAndCompileStep implements Step {
   @Override
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
-    LOG.debug("%s %s -> %s", operation.toString().toLowerCase(), input, output);
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("%s %s -> %s", operation.toString().toLowerCase(), input, output);
+    }
 
     ProcessExecutor.Result result = executeCompilation(context);
     int exitCode = result.getExitCode();
 
-    // If the compilation completed successfully and we didn't effect debug-info normalization
-    // through #line directive modification, perform the in-place update of the compilation per
-    // above.  This locates the relevant debug section and swaps out the expanded actual
-    // compilation directory with the one we really want.
-    if (exitCode == 0 && shouldSanitizeOutputBinary()) {
+    if (exitCode == 0) {
       Path path = filesystem.getRootPath().toAbsolutePath().resolve(output);
-      sanitizer.restoreCompilationDirectory(path, filesystem.getRootPath().toAbsolutePath());
-      FILE_LAST_MODIFIED_DATE_SCRUBBER.scrubFileWithPath(path);
+
+      // Guarantee that the output file exists
+      if (!Files.exists(path)) {
+        LOG.warn("Execution has exitCode 0 but output file does not exist: %s", path);
+      }
+
+      // If the compilation completed successfully and we didn't effect debug-info normalization
+      // through #line directive modification, perform the in-place update of the compilation per
+      // above.  This locates the relevant debug section and swaps out the expanded actual
+      // compilation directory with the one we really want.
+      if (shouldSanitizeOutputBinary()) {
+        sanitizer.restoreCompilationDirectory(path, filesystem.getRootPath().toAbsolutePath());
+        FILE_LAST_MODIFIED_DATE_SCRUBBER.scrubFileWithPath(path);
+      }
     }
 
     if (exitCode != 0) {
-      LOG.debug("error %d %s %s", exitCode, operation.toString().toLowerCase(), input);
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("error %d %s %s", exitCode, operation.toString().toLowerCase(), input);
+      }
     }
 
     return StepExecutionResult.of(result);

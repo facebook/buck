@@ -1,0 +1,4 @@
+android_library(
+    name = "android_library_resource_union_library",
+    resource_union_package = "com.test.custom",
+)

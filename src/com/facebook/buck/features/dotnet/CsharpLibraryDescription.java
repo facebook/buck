@@ -1,29 +1,29 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.dotnet;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasSrcs;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.types.Either;
@@ -64,19 +64,23 @@ public class CsharpLibraryDescription
         params,
         context
             .getToolchainProvider()
-            .getByName(DotnetToolchain.DEFAULT_NAME, DotnetToolchain.class)
+            .getByName(
+                DotnetToolchain.DEFAULT_NAME,
+                buildTarget.getTargetConfiguration(),
+                DotnetToolchain.class)
             .getCsharpCompiler()
-            .resolve(context.getActionGraphBuilder()),
+            .resolve(context.getActionGraphBuilder(), buildTarget.getTargetConfiguration()),
         args.getDllName(),
         args.getSrcs(),
         refsAsRules.build(),
         args.getResources(),
-        args.getFrameworkVer());
+        args.getFrameworkVer(),
+        args.getCompilerFlags());
   }
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractCsharpLibraryDescriptionArg extends CommonDescriptionArg, HasSrcs {
+  interface AbstractCsharpLibraryDescriptionArg extends BuildRuleArg, HasSrcs {
     FrameworkVersion getFrameworkVer();
 
     ImmutableMap<String, SourcePath> getResources();
@@ -88,5 +92,7 @@ public class CsharpLibraryDescription
 
     // We may have system-provided references ("System.Core.dll") or other build targets
     ImmutableList<Either<BuildTarget, String>> getDeps();
+
+    ImmutableList<String> getCompilerFlags();
   }
 }

@@ -1,18 +1,19 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.android.relinker;
 
 import com.facebook.buck.android.AndroidLinkableMetadata;
@@ -23,16 +24,15 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildRuleDependencyVisitors;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.core.util.graph.TopologicalSort;
 import com.facebook.buck.cxx.CxxLink;
-import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
@@ -67,9 +67,8 @@ import java.util.regex.Pattern;
  * linker to only export those symbols that are referenced by a higher library.
  */
 public class NativeRelinker {
-  private final BuildRuleParams buildRuleParams;
   private final BuildTarget buildTarget;
-  private final SourcePathResolver resolver;
+  private final SourcePathResolverAdapter resolver;
   private final CxxBuckConfig cxxBuckConfig;
   private final ImmutableMap<AndroidLinkableMetadata, SourcePath> relinkedLibs;
   private final ImmutableMap<AndroidLinkableMetadata, SourcePath> relinkedLibsAssets;
@@ -83,9 +82,8 @@ public class NativeRelinker {
   public NativeRelinker(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams buildRuleParams,
       CellPathResolver cellPathResolver,
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       SourcePathRuleFinder ruleFinder,
       CxxBuckConfig cxxBuckConfig,
       ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
@@ -100,7 +98,6 @@ public class NativeRelinker {
         !linkableLibs.isEmpty() || !linkableLibsAssets.isEmpty(),
         "There should be at least one native library to relink.");
 
-    this.buildRuleParams = buildRuleParams;
     this.resolver = resolver;
     this.cxxBuckConfig = cxxBuckConfig;
     this.nativePlatforms = nativePlatforms;
@@ -236,7 +233,6 @@ public class NativeRelinker {
   private RelinkerRule makeRelinkerRule(
       TargetCpuType cpuType, SourcePath source, ImmutableList<RelinkerRule> relinkerDeps) {
     String libname = resolver.getAbsolutePath(source).getFileName().toString();
-    BuildRuleParams relinkerParams = buildRuleParams.copyAppendingExtraDeps(relinkerDeps);
     BuildRule baseRule = ruleFinder.getRule(source).orElse(null);
     ImmutableList<Arg> linkerArgs = ImmutableList.of();
     Linker linker = null;
@@ -252,7 +248,6 @@ public class NativeRelinker {
             InternalFlavor.of(Flavor.replaceInvalidCharacters(cpuType.toString())),
             InternalFlavor.of(Flavor.replaceInvalidCharacters(libname))),
         projectFilesystem,
-        relinkerParams,
         resolver,
         cellPathResolver,
         ruleFinder,

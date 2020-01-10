@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.network;
@@ -22,13 +22,14 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.distributed.thrift.FrontendRequest;
-import com.facebook.buck.distributed.thrift.FrontendRequestType;
-import com.facebook.buck.distributed.thrift.FrontendResponse;
-import com.facebook.buck.distributed.thrift.LogRequestType;
-import com.facebook.buck.distributed.thrift.ScribeData;
+import com.facebook.buck.frontend.thrift.FrontendRequest;
+import com.facebook.buck.frontend.thrift.FrontendRequestType;
+import com.facebook.buck.frontend.thrift.FrontendResponse;
+import com.facebook.buck.frontend.thrift.LogRequestType;
+import com.facebook.buck.frontend.thrift.ScribeData;
 import com.facebook.buck.slb.ThriftException;
 import com.facebook.buck.slb.ThriftService;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.FutureCallback;
@@ -133,7 +134,7 @@ public class ThriftScribeLoggerTest {
       throws IOException, ExecutionException, InterruptedException {
     logger = new ThriftScribeLogger(createDefaultListener(), executorService);
     logger.close();
-    ListenableFuture<Void> future = logger.log("topspin", Lists.newArrayList("down the line"));
+    ListenableFuture<Unit> future = logger.log("topspin", Lists.newArrayList("down the line"));
     assertTrue(future.isDone());
     future.get();
   }
@@ -164,10 +165,10 @@ public class ThriftScribeLoggerTest {
     };
   }
 
-  private FutureCallback<Void> getCallback(boolean shouldSucceed) {
-    return new FutureCallback<Void>() {
+  private FutureCallback<Unit> getCallback(boolean shouldSucceed) {
+    return new FutureCallback<Unit>() {
       @Override
-      public void onSuccess(@Nullable Void result) {
+      public void onSuccess(@Nullable Unit result) {
         assertTrue(shouldSucceed);
       }
 

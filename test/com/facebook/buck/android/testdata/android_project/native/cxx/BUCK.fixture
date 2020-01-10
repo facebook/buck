@@ -128,3 +128,52 @@ cxx_library(
         "PUBLIC",
     ],
 )
+
+cxx_library(
+    name = "lib-with-platform-deps",
+    srcs = [
+        "lib.cpp",
+    ],
+    headers = [
+        "lib.h",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = select({
+        "//:x86_32-config": [":x86-only-2"],
+        "DEFAULT": [],
+    }),
+)
+
+cxx_library(
+    name = "x86-only-2",
+    srcs = ["x86-only.c"],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+cxx_library(
+    name = "lib-with-exceptions",
+    srcs = glob(["lib3.cpp"]),
+    compiler_flags = ["-fexceptions"],
+    link_style = "static",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+cxx_library(
+    name = "lib-shared",
+    srcs = [
+        "lib.cpp",
+    ],
+    headers = [
+        "lib.h",
+    ],
+    link_style = "shared",
+    visibility = [
+        "PUBLIC",
+    ],
+)

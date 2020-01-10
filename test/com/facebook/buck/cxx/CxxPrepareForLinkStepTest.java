@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -19,16 +19,15 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -52,8 +51,6 @@ public class CxxPrepareForLinkStepTest {
   public void testCreateCxxPrepareForLinkStep() {
     Path dummyPath = Paths.get("dummy");
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(buildRuleResolver));
 
     // Setup some dummy values for inputs to the CxxLinkStep
     ImmutableList<Arg> dummyArgs =
@@ -68,9 +65,12 @@ public class CxxPrepareForLinkStepTest {
             ImmutableList.of(StringArg.of("-filelist"), StringArg.of(dummyPath.toString())),
             dummyPath,
             dummyArgs,
-            CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(buildRuleResolver),
+            CxxPlatformUtils.DEFAULT_PLATFORM
+                .getLd()
+                .resolve(buildRuleResolver, UnconfiguredTargetConfiguration.INSTANCE),
+            CanonicalCellName.rootCell(),
             dummyPath,
-            pathResolver);
+            buildRuleResolver.getSourcePathResolver());
 
     assertThat(cxxPrepareForLinkStepSupportFileList.size(), Matchers.equalTo(2));
     Step firstStep = cxxPrepareForLinkStepSupportFileList.get(0);
@@ -86,9 +86,12 @@ public class CxxPrepareForLinkStepTest {
             ImmutableList.of(),
             dummyPath,
             dummyArgs,
-            CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(buildRuleResolver),
+            CxxPlatformUtils.DEFAULT_PLATFORM
+                .getLd()
+                .resolve(buildRuleResolver, UnconfiguredTargetConfiguration.INSTANCE),
+            CanonicalCellName.rootCell(),
             dummyPath,
-            pathResolver);
+            buildRuleResolver.getSourcePathResolver());
 
     assertThat(cxxPrepareForLinkStepNoSupportFileList.size(), Matchers.equalTo(1));
     assertThat(
@@ -152,8 +155,6 @@ public class CxxPrepareForLinkStepTest {
     ExecutionContext context = TestExecutionContext.newInstance();
 
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(buildRuleResolver));
 
     // Setup some dummy values for inputs to the CxxLinkStep
     ImmutableList<Arg> args =
@@ -175,9 +176,12 @@ public class CxxPrepareForLinkStepTest {
             ImmutableList.of(StringArg.of("-filelist"), StringArg.of(fileListPath.toString())),
             output,
             args,
-            CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(buildRuleResolver),
+            CxxPlatformUtils.DEFAULT_PLATFORM
+                .getLd()
+                .resolve(buildRuleResolver, UnconfiguredTargetConfiguration.INSTANCE),
+            CanonicalCellName.rootCell(),
             currentCellPath,
-            pathResolver);
+            buildRuleResolver.getSourcePathResolver());
 
     for (Step step : steps) {
       step.execute(context);
@@ -188,7 +192,7 @@ public class CxxPrepareForLinkStepTest {
 
     ImmutableList<String> expectedArgFileContents =
         ImmutableList.<String>builder()
-            .add("-o", MorePaths.pathWithUnixSeparators(output))
+            .add("-o", PathFormatter.pathWithUnixSeparators(output))
             .add("-rpath")
             .add("hello")
             .add("a.o")
@@ -200,7 +204,8 @@ public class CxxPrepareForLinkStepTest {
             .build();
 
     ImmutableList<String> expectedFileListContents =
-        ImmutableList.of(Paths.get("libb.a").toAbsolutePath().toString());
+        ImmutableList.of(
+            PathFormatter.pathWithUnixSeparators(Paths.get("libb.a").toAbsolutePath()));
 
     checkContentsOfFile(argFilePath, expectedArgFileContents);
     checkContentsOfFile(fileListPath, expectedFileListContents);
@@ -215,8 +220,6 @@ public class CxxPrepareForLinkStepTest {
     ExecutionContext context = TestExecutionContext.newInstance();
 
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(buildRuleResolver));
 
     // Setup some dummy values for inputs to the CxxLinkStep
     ImmutableList<Arg> args =
@@ -241,9 +244,12 @@ public class CxxPrepareForLinkStepTest {
             ImmutableList.of(),
             output,
             args,
-            CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(buildRuleResolver),
+            CxxPlatformUtils.DEFAULT_PLATFORM
+                .getLd()
+                .resolve(buildRuleResolver, UnconfiguredTargetConfiguration.INSTANCE),
+            CanonicalCellName.rootCell(),
             currentCellPath,
-            pathResolver);
+            buildRuleResolver.getSourcePathResolver());
 
     for (Step step : steps) {
       step.execute(context);
@@ -256,7 +262,7 @@ public class CxxPrepareForLinkStepTest {
 
     ImmutableList<String> expectedArgFileContents =
         ImmutableList.<String>builder()
-            .add("-o", MorePaths.pathWithUnixSeparators(output))
+            .add("-o", PathFormatter.pathWithUnixSeparators(output))
             .add("-rpath")
             .add(isWindows ? "\"\\\"hello\\\"\"" : "'\"hello\"'")
             .add(isWindows ? "'a.o'" : "''\\''a.o'\\'''")
@@ -266,8 +272,10 @@ public class CxxPrepareForLinkStepTest {
                 isWindows
                     ? "\"/Library/Application Support/blabla\""
                     : "'/Library/Application Support/blabla'")
-            .add(FakeSourcePath.of("libb.a").toString())
-            .add(FakeSourcePath.of("buck-out/gen/mylib#default,static/libmylib.lib").toString())
+            .add(PathFormatter.pathWithUnixSeparators(FakeSourcePath.of("libb.a").toString()))
+            .add(
+                PathFormatter.pathWithUnixSeparators(
+                    FakeSourcePath.of("buck-out/gen/mylib#default,static/libmylib.lib").toString()))
             .build();
 
     checkContentsOfFile(argFilePath, expectedArgFileContents);

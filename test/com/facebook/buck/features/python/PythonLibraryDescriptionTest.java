@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.python;
@@ -20,12 +20,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
-import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -45,22 +48,31 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
 import com.facebook.buck.shell.GenruleBuilder;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.testutil.CloseableResource;
+import com.facebook.buck.util.stream.RichStream;
+import com.facebook.buck.versions.AsyncVersionedTargetGraphBuilder;
 import com.facebook.buck.versions.FixedVersionSelector;
-import com.facebook.buck.versions.ParallelVersionedTargetGraphBuilder;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionedAliasBuilder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.concurrent.ForkJoinPool;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class PythonLibraryDescriptionTest {
+
+  @Rule
+  public CloseableResource<DepsAwareExecutor<? super ComputeResult, ?>> executor =
+      CloseableResource.of(() -> DefaultDepsAwareExecutor.of(4));
 
   @Test
   public void baseModule() {
@@ -78,11 +90,17 @@ public class PythonLibraryDescriptionTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(normalTargetGraph);
     PythonLibrary normal = normalBuilder.build(graphBuilder, filesystem, normalTargetGraph);
     assertEquals(
-        ImmutableMap.of(target.getBasePath().resolve(sourceName), source),
-        normal
-            .getPythonPackageComponents(
-                PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
-            .getModules());
+        Optional.of(
+            PythonMappedComponents.of(
+                ImmutableSortedMap.of(
+                    target
+                        .getCellRelativeBasePath()
+                        .getPath()
+                        .toPath(filesystem.getFileSystem())
+                        .resolve(sourceName),
+                    source))),
+        normal.getPythonModules(
+            PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder));
 
     // Run *with* a base module set and verify it gets used to build the main module path.
     String baseModule = "blah";
@@ -96,11 +114,11 @@ public class PythonLibraryDescriptionTest {
     PythonLibrary withBaseModule =
         withBaseModuleBuilder.build(graphBuilder, filesystem, withBaseModuleTargetGraph);
     assertEquals(
-        ImmutableMap.of(Paths.get(baseModule).resolve(sourceName), source),
-        withBaseModule
-            .getPythonPackageComponents(
-                PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
-            .getModules());
+        Optional.of(
+            PythonMappedComponents.of(
+                ImmutableSortedMap.of(Paths.get(baseModule).resolve(sourceName), source))),
+        withBaseModule.getPythonModules(
+            PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder));
   }
 
   @Test
@@ -131,10 +149,10 @@ public class PythonLibraryDescriptionTest {
     PythonLibrary library = builder.build(graphBuilder, filesystem, targetGraph);
     assertThat(
         library
-            .getPythonPackageComponents(
+            .getPythonModules(
                 PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
-            .getModules()
-            .values(),
+            .map(modules -> modules.getComponents().values())
+            .orElseGet(ImmutableSet::of),
         Matchers.contains(pyPlatformMatchedSource, cxxPlatformMatchedSource));
   }
 
@@ -166,10 +184,10 @@ public class PythonLibraryDescriptionTest {
     PythonLibrary library = builder.build(graphBuilder, filesystem, targetGraph);
     assertThat(
         library
-            .getPythonPackageComponents(
+            .getPythonResources(
                 PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
-            .getResources()
-            .values(),
+            .map(modules -> modules.getComponents().values())
+            .orElseGet(ImmutableSet::of),
         Matchers.contains(pyPlatformMatchedSource, cxxPlatformMatchedSource));
   }
 
@@ -198,28 +216,28 @@ public class PythonLibraryDescriptionTest {
                         SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of(unmatchedSource)))
                     .build());
     TargetGraph targetGraph =
-        ParallelVersionedTargetGraphBuilder.transform(
+        AsyncVersionedTargetGraphBuilder.transform(
                 new FixedVersionSelector(
                     ImmutableMap.of(
                         builder.getTarget(),
                         ImmutableMap.of(depBuilder.getTarget(), Version.of("1.0")))),
-                TargetGraphAndBuildTargets.of(
+                ImmutableTargetGraphCreationResult.of(
                     TargetGraphFactory.newInstance(
                         transitiveDepBuilder.build(), depBuilder.build(), builder.build()),
                     ImmutableSet.of(builder.getTarget())),
-                new ForkJoinPool(),
+                executor.get(),
                 new DefaultTypeCoercerFactory(),
-                new ParsingUnconfiguredBuildTargetFactory(),
+                new ParsingUnconfiguredBuildTargetViewFactory(),
                 20)
             .getTargetGraph();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     PythonLibrary library = (PythonLibrary) graphBuilder.requireRule(builder.getTarget());
     assertThat(
         library
-            .getPythonPackageComponents(
+            .getPythonModules(
                 PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
-            .getModules()
-            .values(),
+            .map(modules -> modules.getComponents().values())
+            .orElseGet(ImmutableSet::of),
         Matchers.contains(matchedSource));
   }
 
@@ -248,28 +266,28 @@ public class PythonLibraryDescriptionTest {
                         SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of(unmatchedSource)))
                     .build());
     TargetGraph targetGraph =
-        ParallelVersionedTargetGraphBuilder.transform(
+        AsyncVersionedTargetGraphBuilder.transform(
                 new FixedVersionSelector(
                     ImmutableMap.of(
                         builder.getTarget(),
                         ImmutableMap.of(depBuilder.getTarget(), Version.of("1.0")))),
-                TargetGraphAndBuildTargets.of(
+                ImmutableTargetGraphCreationResult.of(
                     TargetGraphFactory.newInstance(
                         transitiveDepBuilder.build(), depBuilder.build(), builder.build()),
                     ImmutableSet.of(builder.getTarget())),
-                new ForkJoinPool(),
+                executor.get(),
                 new DefaultTypeCoercerFactory(),
-                new ParsingUnconfiguredBuildTargetFactory(),
+                new ParsingUnconfiguredBuildTargetViewFactory(),
                 20)
             .getTargetGraph();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     PythonLibrary library = (PythonLibrary) graphBuilder.requireRule(builder.getTarget());
     assertThat(
         library
-            .getPythonPackageComponents(
+            .getPythonResources(
                 PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
-            .getResources()
-            .values(),
+            .map(modules -> modules.getComponents().values())
+            .orElseGet(ImmutableSet::of),
         Matchers.contains(matchedSource));
   }
 
@@ -288,11 +306,12 @@ public class PythonLibraryDescriptionTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     CxxGenrule src = (CxxGenrule) graphBuilder.requireRule(srcBuilder.getTarget());
     PythonLibrary library = (PythonLibrary) graphBuilder.requireRule(libraryBuilder.getTarget());
-    PythonPackageComponents components =
-        library.getPythonPackageComponents(
-            PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
     assertThat(
-        components.getModules().values(),
+        library
+            .getPythonModules(
+                PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
+            .map(modules -> modules.getComponents().values())
+            .orElseGet(ImmutableSet::of),
         Matchers.contains(src.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)));
   }
 
@@ -333,7 +352,7 @@ public class PythonLibraryDescriptionTest {
   }
 
   @Test
-  public void excludingTransitiveNativeDepsUsingMergedNativeLinkStrategy() {
+  public void excludingTransitiveNativeDepsUsingMergedNativeLinkStrategy() throws IOException {
     CxxLibraryBuilder cxxDepBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("dep.c"))));
@@ -370,8 +389,14 @@ public class PythonLibraryDescriptionTest {
     cxxBuilder.build(graphBuilder);
     libBuilder.build(graphBuilder);
     PythonBinary binary = binaryBuilder.build(graphBuilder);
+    ImmutableSet<Path> nativeLibs =
+        binary
+            .getComponents()
+            .resolve(graphBuilder.getSourcePathResolver())
+            .getAllNativeLibraries()
+            .keySet();
     assertThat(
-        Iterables.transform(binary.getComponents().getNativeLibraries().keySet(), Object::toString),
+        Iterables.transform(nativeLibs, Object::toString),
         Matchers.containsInAnyOrder("libdep.so", "libcxx.so"));
   }
 }

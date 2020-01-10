@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.kotlin;
@@ -21,7 +21,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -40,26 +39,26 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 
 public class KotlinLibraryIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
+  @Rule public Timeout timeout = Timeout.seconds(240);
+
   private ProjectWorkspace workspace;
 
   @Before
-  public void setUp() throws IOException, InterruptedException {
+  public void setUp() throws IOException {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "kotlin_library_description", tmp);
     workspace.setUp();
-
-    Path kotlincPath = TestDataHelper.getTestDataScenario(this, "kotlinc");
-    MostFiles.copyRecursively(kotlincPath, tmp.newFolder("kotlinc"));
-
+    workspace.addTemplateToWorkspace(Paths.get("test/com/facebook/buck/toolchains/kotlin"));
     KotlinTestAssumptions.assumeCompilerAvailable(workspace.asCell().getBuckConfig());
   }
 
   @Test
-  public void shouldCompileKotlinClass() throws Exception {
+  public void shouldCompileKotlinClass() {
     ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/good:example");
     buildResult.assertSuccess("Build should have succeeded.");
   }
@@ -96,7 +95,7 @@ public class KotlinLibraryIntegrationTest {
           ImmutableSet.of(
               "META-INF/",
               "META-INF/MANIFEST.MF",
-              "META-INF/main.kotlin_module",
+              "META-INF/com.example.ap.kotlinapgenjava.example.kotlin_module",
               "com/",
               "com/example/",
               "com/example/ap/",
@@ -130,8 +129,7 @@ public class KotlinLibraryIntegrationTest {
     workspace.writeContentsToPath(amendedBuckconfig, ".buckconfig");
   }
 
-  @Test(timeout = 100000)
-  public void shouldAnnotationProcessClassesUsingKapt() throws Exception {
+  public void shouldAnnotationProcessClassesUsingKapt() {
     ProcessResult buildResult =
         workspace.runBuckCommand(
             "build", "//com/example/ap/annotation-processing-tool-kapt:kotlin");
@@ -139,7 +137,7 @@ public class KotlinLibraryIntegrationTest {
   }
 
   @Test
-  public void shouldAnnotationProcessClassesUsingJavac() throws Exception {
+  public void shouldAnnotationProcessClassesUsingJavac() {
     ProcessResult buildResult =
         workspace.runBuckCommand(
             "build", "//com/example/ap/annotation-processing-tool-javac:kotlin");
@@ -147,26 +145,61 @@ public class KotlinLibraryIntegrationTest {
   }
 
   @Test
-  public void shouldCompileLibraryWithDependencyOnAnother() throws Exception {
+  public void shouldAnnotationProcessClassesUsingJavacWhenNoKotlinSources() {
+    ProcessResult buildResult =
+        workspace.runBuckCommand(
+            "build", "//com/example/ap/annotation-processing-tool-javac:java_sources_only");
+    buildResult.assertSuccess("Build should have succeeded.");
+  }
+
+  @Test
+  public void shouldCompileLibraryWithDependencyOnAnother() {
     ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/child:child");
     buildResult.assertSuccess("Build should have succeeded.");
   }
 
   @Test
-  public void shouldFailToCompileInvalidKotlinCode() throws Exception {
+  public void shouldCompileLibraryWithDependencyOnAnotherUsingSourceAbi() throws IOException {
+    ProcessResult buildResult =
+        workspace.runBuckBuild(
+            "-c", "kotlin.abi_generation_mode=source", "//com/example/child:child");
+    workspace.getBuildLog().assertTargetBuiltLocally("//com/example/good:example#source-abi");
+    buildResult.assertSuccess("Build should have succeeded.");
+  }
+
+  @Test
+  public void shouldCompileUsingSourceAbiAndCache() throws IOException {
+    workspace.runBuckBuild("-c", "kotlin.abi_generation_mode=source", "//com/example/child:child");
+    workspace.getBuildLog().assertTargetBuiltLocally("//com/example/good:example#source-abi");
+    workspace.runBuckCommand("clean", "--keep-cache");
+    ProcessResult buildResult =
+        workspace.runBuckBuild(
+            "-c", "kotlin.abi_generation_mode=source", "//com/example/child:child");
+    buildResult.assertSuccess("Build should have succeeded.");
+  }
+
+  @Test
+  public void shouldFailToCompileInvalidKotlinCode() {
     ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/bad:fail");
     buildResult.assertFailure();
   }
 
   @Test
-  public void shouldCompileMixedJavaAndKotlinSources() throws Exception {
+  public void shouldCompileMixedJavaAndKotlinSources() {
     ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/mixed:example");
     buildResult.assertSuccess("Build should have succeeded.");
   }
 
   @Test
-  public void shouldCompileKotlinSrcZip() throws Exception {
+  public void shouldCompileKotlinSrcZip() {
     ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/zip:zip");
+    buildResult.assertSuccess("Build should have succeeded.");
+  }
+
+  @Test
+  public void shouldPassApoptionsToKapt() {
+    ProcessResult buildResult =
+        workspace.runBuckCommand("build", "//com/example/ap/kapt-apoptions:kotlin");
     buildResult.assertSuccess("Build should have succeeded.");
   }
 }

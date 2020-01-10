@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -26,18 +26,15 @@ import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -51,8 +48,6 @@ import org.junit.Test;
 public class AaptPackageResourcesTest {
 
   private ActionGraphBuilder graphBuilder;
-  private SourcePathRuleFinder ruleFinder;
-  private SourcePathResolver pathResolver;
   private BuildTarget aaptTarget;
   private FakeProjectFilesystem filesystem;
 
@@ -98,8 +93,6 @@ public class AaptPackageResourcesTest {
     resource1 = (AndroidResource) graphBuilder.requireRule(resourceNode.getBuildTarget());
     resource2 = (AndroidResource) graphBuilder.requireRule(resourceNode2.getBuildTarget());
 
-    ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     aaptTarget = BuildTargetFactory.newInstance("//foo:bar");
 
     hashCache = new FakeFileHashCache(new HashMap<>());
@@ -207,7 +200,7 @@ public class AaptPackageResourcesTest {
             filesystem,
             ImmutableSortedSet.of(resource1, resource2),
             ImmutableSortedSet.of(resource1, resource2),
-            ruleFinder,
+            graphBuilder,
             ImmutableList.of(resource1.getRes(), resource2.getRes()),
             ImmutableSet.of(),
             ImmutableSet.of(),
@@ -224,7 +217,7 @@ public class AaptPackageResourcesTest {
             filesystem,
             ImmutableSortedSet.of(resource1, resource2),
             ImmutableSortedSet.of(resource1, resource2),
-            ruleFinder,
+            graphBuilder,
             ImmutableList.of(resource1.getRes(), resource2.getRes()),
             ImmutableSet.of(),
             ImmutableSet.of("some_locale"),
@@ -255,13 +248,12 @@ public class AaptPackageResourcesTest {
   }
 
   private RuleKey calculateRuleKey(AaptConstructorArgs constructorArgs) {
-    return new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+    return new TestDefaultRuleKeyFactory(hashCache, graphBuilder)
         .build(
             new AaptPackageResources(
                 aaptTarget,
                 filesystem,
                 TestAndroidPlatformTargetFactory.create(),
-                ruleFinder,
                 graphBuilder,
                 constructorArgs.manifest,
                 ImmutableList.of(),
@@ -269,6 +261,7 @@ public class AaptPackageResourcesTest {
                 constructorArgs.hasAndroidResourceDeps,
                 false,
                 false,
-                constructorArgs.manifestEntries));
+                constructorArgs.manifestEntries,
+                ImmutableList.of()));
   }
 }

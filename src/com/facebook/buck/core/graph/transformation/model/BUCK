@@ -1,0 +1,13 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "model",
+    srcs = glob(["*.java"]),
+    tests = [
+        "//test/com/facebook/buck/core/graph/transformation/model:model",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//third-party/java/guava:guava",
+    ],
+)

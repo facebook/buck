@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -23,17 +23,10 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
@@ -55,14 +48,10 @@ public class DexProducedFromJavaLibraryTest {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
 
     FakeJavaLibrary javaLibRule =
         new FakeJavaLibrary(
-            BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:lib"),
-            filesystem,
-            ImmutableSortedSet.of());
+            BuildTargetFactory.newInstance("//foo:lib"), filesystem, ImmutableSortedSet.of());
     graphBuilder.addToIndex(javaLibRule);
     Path jarLibOutput =
         BuildTargetPaths.getGenPath(filesystem, javaLibRule.getBuildTarget(), "%s.jar");
@@ -70,7 +59,7 @@ public class DexProducedFromJavaLibraryTest {
 
     FakeJavaLibrary javaBarRule =
         new FakeJavaLibrary(
-            BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:bar"),
+            BuildTargetFactory.newInstance("//foo:bar"),
             filesystem,
             ImmutableSortedSet.of(javaLibRule)) {
           @Override
@@ -84,7 +73,7 @@ public class DexProducedFromJavaLibraryTest {
     javaBarRule.setOutputFile(jarBarOutput.toString());
 
     BuildContext context =
-        FakeBuildContext.withSourcePathResolver(pathResolver)
+        FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver())
             .withBuildCellRootPath(filesystem.getRootPath());
     FakeBuildableContext buildableContext = new FakeBuildableContext();
 
@@ -95,23 +84,16 @@ public class DexProducedFromJavaLibraryTest {
             "%s.dex.jar");
     createFiles(filesystem, dexOutput.toString(), jarLibOutput.toString(), jarBarOutput.toString());
 
-    BuildTarget buildTarget =
-        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:bar#d8");
-
-    BuildRuleParams params = TestBuildRuleParams.create();
-
-    ImmutableSortedSet<BuildRule> desugarDeps = ImmutableSortedSet.of(javaLibRule);
-
     DexProducedFromJavaLibrary preDex =
         new DexProducedFromJavaLibrary(
-            buildTarget,
+            BuildTargetFactory.newInstance("//foo:bar#d8"),
             filesystem,
+            graphBuilder,
             TestAndroidPlatformTargetFactory.create(),
-            params,
             javaBarRule,
             DxStep.D8,
             1,
-            desugarDeps);
+            ImmutableSortedSet.of(javaLibRule));
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
     DxStep dxStep = null;
     for (Step step : steps) {

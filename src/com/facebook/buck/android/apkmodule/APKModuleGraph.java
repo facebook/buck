@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android.apkmodule;
@@ -29,6 +29,7 @@ import com.facebook.buck.jvm.java.classes.ClasspathTraversal;
 import com.facebook.buck.jvm.java.classes.ClasspathTraverser;
 import com.facebook.buck.jvm.java.classes.DefaultClasspathTraverser;
 import com.facebook.buck.jvm.java.classes.FileLike;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
@@ -188,13 +189,35 @@ public class APKModuleGraph implements AddsToRuleKey {
   }
 
   public ImmutableSortedMap<APKModule, ImmutableSortedSet<APKModule>> toOutgoingEdgesMap() {
-    return getAPKModules()
-        .stream()
+    return getAPKModules().stream()
         .collect(
             ImmutableSortedMap.toImmutableSortedMap(
                 Ordering.natural(),
                 module -> module,
                 module -> ImmutableSortedSet.copyOf(getGraph().getOutgoingNodesFor(module))));
+  }
+
+  /**
+   * Utility method for flattening a list of queries into the a list of the build targets they
+   * resolve to.
+   *
+   * @param queries list of queries, they are expected to have already been resolved
+   * @return list of build targets queries resolve to joined together
+   */
+  public static Optional<List<BuildTarget>> extractTargetsFromQueries(
+      Optional<List<Query>> queries) {
+    if (!queries.isPresent()) {
+      return Optional.empty();
+    }
+
+    ImmutableList<BuildTarget> targets =
+        queries.get().stream()
+            .map(query -> Optional.ofNullable(query.getResolvedQuery()))
+            .filter(resolution -> resolution.isPresent())
+            .flatMap(resolution -> resolution.get().stream())
+            .collect(ImmutableList.toImmutableList());
+
+    return Optional.of(targets);
   }
 
   private Optional<Map<String, List<BuildTarget>>> generateSeedConfigMap() {
@@ -582,7 +605,12 @@ public class APKModuleGraph implements AddsToRuleKey {
     String replacementPattern = "[/\\\\#-]";
     String shortName =
         androidModuleTarget.getShortNameAndFlavorPostfix().replaceAll(replacementPattern, ".");
-    String name = androidModuleTarget.getBasePath().toString().replaceAll(replacementPattern, ".");
+    String name =
+        androidModuleTarget
+            .getCellRelativeBasePath()
+            .getPath()
+            .toString()
+            .replaceAll(replacementPattern, ".");
     if (name.endsWith(shortName)) {
       // return just the base path, ignoring the target name that is the same as its parent
       return name;

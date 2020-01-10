@@ -15,6 +15,7 @@ buck_module(
         "//src/com/facebook/buck/core/util/immutables:immutables",
         "//src/com/facebook/buck/cxx:rules",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
+        "//src/com/facebook/buck/cxx/toolchain/impl:impl",
         "//src/com/facebook/buck/cxx/toolchain/linker:linker",
         "//src/com/facebook/buck/cxx/toolchain/nativelink:nativelink",
         "//src/com/facebook/buck/io:io",
@@ -25,7 +26,6 @@ buck_module(
         "//src/com/facebook/buck/shell:steps",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/fs:fs",
-        "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/versions:translator",
         "//src/com/facebook/buck/versions:versions",
         "//third-party/java/guava:guava",
@@ -37,6 +37,7 @@ buck_module(
     visibility = [
         "//src/com/facebook/buck/cli:main",
         "//src/com/facebook/buck/features/apple/project:",
+        "//src/com/facebook/buck/features/apple/projectV2:",
         "//test/...",
     ],
 )

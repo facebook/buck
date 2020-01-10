@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -35,6 +35,7 @@ class DexSplitMode implements AddsToRuleKey {
           ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
           DexStore.JAR,
           /* linearAllocHardLimit */ 0,
+          /* splitDexLibLimit */ 0,
           /* primaryDexPatterns */ ImmutableSet.of(),
           /* primaryDexClassesFile */ Optional.empty(),
           /* primaryDexScenarioFile */ Optional.empty(),
@@ -49,6 +50,12 @@ class DexSplitMode implements AddsToRuleKey {
    */
   static final long DEFAULT_LINEAR_ALLOC_HARD_LIMIT = 4 * 1024 * 1024;
 
+  /**
+   * Limit the maximum number of pre-dexed libraries that are input to each dex group rule. The
+   * default of 0 sets no limit, producing a single dex group per APK module.
+   */
+  static final int DEFAULT_DEX_GROUP_LIB_LIMIT = 0;
+
   @AddToRuleKey private final boolean shouldSplitDex;
 
   @AddToRuleKey private final DexStore dexStore;
@@ -56,6 +63,8 @@ class DexSplitMode implements AddsToRuleKey {
   @AddToRuleKey private final ZipSplitter.DexSplitStrategy dexSplitStrategy;
 
   @AddToRuleKey private final long linearAllocHardLimit;
+
+  @AddToRuleKey private final int dexGroupLibLimit;
 
   @AddToRuleKey private final ImmutableSortedSet<String> primaryDexPatterns;
 
@@ -145,6 +154,7 @@ class DexSplitMode implements AddsToRuleKey {
       DexSplitStrategy dexSplitStrategy,
       DexStore dexStore,
       long linearAllocHardLimit,
+      int dexGroupLibLimit,
       Collection<String> primaryDexPatterns,
       Optional<SourcePath> primaryDexClassesFile,
       Optional<SourcePath> primaryDexScenarioFile,
@@ -156,6 +166,7 @@ class DexSplitMode implements AddsToRuleKey {
     this.dexSplitStrategy = dexSplitStrategy;
     this.dexStore = dexStore;
     this.linearAllocHardLimit = linearAllocHardLimit;
+    this.dexGroupLibLimit = dexGroupLibLimit;
     this.primaryDexPatterns = ImmutableSortedSet.copyOf(primaryDexPatterns);
     this.primaryDexClassesFile = primaryDexClassesFile;
     this.primaryDexScenarioFile = primaryDexScenarioFile;
@@ -163,6 +174,33 @@ class DexSplitMode implements AddsToRuleKey {
     this.secondaryDexHeadClassesFile = secondaryDexHeadClassesFile;
     this.secondaryDexTailClassesFile = secondaryDexTailClassesFile;
     this.allowRDotJavaInSecondaryDex = allowRDotJavaInSecondaryDex;
+  }
+
+  public DexSplitMode(
+      boolean shouldSplitDex,
+      DexSplitStrategy dexSplitStrategy,
+      DexStore dexStore,
+      long linearAllocHardLimit,
+      Collection<String> primaryDexPatterns,
+      Optional<SourcePath> primaryDexClassesFile,
+      Optional<SourcePath> primaryDexScenarioFile,
+      boolean isPrimaryDexScenarioOverflowAllowed,
+      Optional<SourcePath> secondaryDexHeadClassesFile,
+      Optional<SourcePath> secondaryDexTailClassesFile,
+      boolean allowRDotJavaInSecondaryDex) {
+    this(
+        shouldSplitDex,
+        dexSplitStrategy,
+        dexStore,
+        linearAllocHardLimit,
+        DEFAULT_DEX_GROUP_LIB_LIMIT,
+        primaryDexPatterns,
+        primaryDexClassesFile,
+        primaryDexScenarioFile,
+        isPrimaryDexScenarioOverflowAllowed,
+        secondaryDexHeadClassesFile,
+        secondaryDexTailClassesFile,
+        allowRDotJavaInSecondaryDex);
   }
 
   public DexStore getDexStore() {
@@ -180,6 +218,10 @@ class DexSplitMode implements AddsToRuleKey {
 
   public long getLinearAllocHardLimit() {
     return linearAllocHardLimit;
+  }
+
+  public int getDexGroupLibLimit() {
+    return dexGroupLibLimit;
   }
 
   public ImmutableSet<String> getPrimaryDexPatterns() {

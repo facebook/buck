@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -57,13 +57,13 @@ public class GenerateStringResourcesIntegrationTest {
   }
 
   @Test
-  public void testExpectedOutputsAreAllAvailable() throws InterruptedException, IOException {
+  public void testExpectedOutputsAreAllAvailable() throws IOException {
     String buildTarget =
         String.format(
             "%s#%s",
             AAPT1_BUILD_TARGET,
             AndroidBinaryResourcesGraphEnhancer.GENERATE_STRING_RESOURCES_FLAVOR);
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     workspace.enableDirCache();
     workspace.runBuckBuild(buildTarget).assertSuccess();
     workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
@@ -76,10 +76,9 @@ public class GenerateStringResourcesIntegrationTest {
   }
 
   @Test
-  public void testExpectedOutputsAreAllAvailableWithAapt2()
-      throws InterruptedException, IOException {
+  public void testExpectedOutputsAreAllAvailableWithAapt2() throws IOException {
     // TODO(dreiss): Remove this when aapt2 is everywhere.
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     ProcessResult foundAapt2 = workspace.runBuckBuild("//apps/sample:check_for_aapt2");
     Assume.assumeTrue(foundAapt2.getExitCode().getCode() == 0);
     String buildTarget =
@@ -87,7 +86,6 @@ public class GenerateStringResourcesIntegrationTest {
             "%s#%s",
             AAPT2_BUILD_TARGET,
             AndroidBinaryResourcesGraphEnhancer.GENERATE_STRING_RESOURCES_FLAVOR);
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
     workspace.enableDirCache();
     Path output = workspace.buildAndReturnOutput(buildTarget);
     verifyOutput(output, ImmutableSet.of("0000/values/strings.xml", "0001/values/strings.xml"));
@@ -97,9 +95,7 @@ public class GenerateStringResourcesIntegrationTest {
     // verify <output_dir>/<hex_res_dir>/values/strings.xml files
     assertTrue(filesystem.exists(output));
     assertThat(
-        filesystem
-            .getFilesUnderPath(filesystem.relativize(output))
-            .stream()
+        filesystem.getFilesUnderPath(filesystem.relativize(output)).stream()
             .map(path -> MorePaths.relativize(filesystem.relativize(output), path).toString())
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())),
         is(expectedFilePaths));

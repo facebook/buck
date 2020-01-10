@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
@@ -30,6 +30,8 @@ import java.util.Map;
 import java.util.Optional;
 
 public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
+  public static final String ROOT_CELL_IDENTIFIER = "_";
+
   @Override
   public void writeFile(
       ClassUsageTracker tracker,
@@ -79,19 +81,21 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
 
   /**
    * Try to convert an absolute path to a path rooted in a cell, represented by an absolute path
-   * where the first directory element is the cell name. For example, if the absolute path is <code>
-   * /foo/bar/buck-out/gen/baz/a.jar</code> and there exists a cell in the config <code>
-   * cell2 = /foo/bar</code> then the path returned will be <code>/cell2/buck-out/gen/baz/a.jar
-   * </code>. If the given absolute path is not relative to any of the cell roots in the resolver,
-   * Optional.empty() is returned.
+   * where the first directory element is the cell name (or "_" for the root cell). For example, if
+   * the absolute path is <code>/foo/bar/buck-out/gen/baz/a.jar</code> and there exists a cell in
+   * the config <code>cell2 = /foo/bar</code> then the path returned will be <code>
+   * /cell2/buck-out/gen/baz/a.jar</code>. If the given absolute path is not relative to any of the
+   * cell roots in the resolver, Optional.empty() is returned.
    */
   private static Optional<Path> getCrossCellPath(Path jarAbsolutePath, CellPathResolver resolver) {
-    for (Map.Entry<String, Path> cellEntry : resolver.getCellPaths().entrySet()) {
-      Path cellRoot = cellEntry.getValue();
+    // TODO(cjhopman): This is wrong if a cell ends up depending on something in another cell that
+    // it doesn't have a mapping for :o
+    for (Path cellRoot : resolver.getKnownRoots()) {
       if (jarAbsolutePath.startsWith(cellRoot)) {
         Path relativePath = cellRoot.relativize(jarAbsolutePath);
+        Optional<String> cellName = resolver.getCanonicalCellName(cellRoot);
         // We use an absolute path to represent a path rooted in another cell
-        Path cellNameRoot = cellRoot.getRoot().resolve(cellEntry.getKey());
+        Path cellNameRoot = cellRoot.getRoot().resolve(cellName.orElse(ROOT_CELL_IDENTIFIER));
         return Optional.of(cellNameRoot.resolve(relativePath));
       }
     }

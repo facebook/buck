@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.model.impl;
@@ -21,58 +21,22 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 import com.facebook.buck.core.model.BuildFileTree;
-import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.ConfigBuilder;
-import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
 import java.util.Optional;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
 public class FilesystemBackedBuildFileTreeTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
-
-  @Test
-  @Ignore("Remove when test passes on OS X (the case preserving file system hurts us)")
-  public void testCanConstructBuildFileTreeFromFilesystemOnOsX() throws IOException {
-    Path tempDir = tmp.getRoot();
-    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tempDir);
-
-    Path command = tempDir.resolve("src/com/facebook/buck/command");
-    Files.createDirectories(command);
-    Path notbuck = tempDir.resolve("src/com/facebook/buck/notbuck");
-    Files.createDirectories(notbuck);
-
-    // Although these next two lines create a file and a directory, the OS X filesystem is often
-    // case insensitive. As we run File.listFiles only the directory entry is returned. Thanks OS X.
-    touch(tempDir.resolve("src/com/facebook/BUCK"));
-    touch(tempDir.resolve("src/com/facebook/buck/BUCK"));
-    touch(tempDir.resolve("src/com/facebook/buck/command/BUCK"));
-    touch(tempDir.resolve("src/com/facebook/buck/notbuck/BUCK"));
-
-    BuildFileTree buildFiles = new FilesystemBackedBuildFileTree(filesystem, "BUCK");
-    Iterable<Path> allChildren =
-        buildFiles.getChildPaths(
-            BuildTargetFactory.newInstance(tmp.getRoot(), "src", "com/facebook"));
-    assertEquals(ImmutableSet.of(Paths.get("buck")), ImmutableSet.copyOf(allChildren));
-
-    Iterable<Path> subChildren =
-        buildFiles.getChildPaths(
-            BuildTargetFactory.newInstance(tmp.getRoot(), "//src", "/com/facebook/buck"));
-    assertEquals(
-        ImmutableSet.of(Paths.get("command"), Paths.get("notbuck")),
-        ImmutableSet.copyOf(subChildren));
-  }
 
   @Test
   public void testCanConstructBuildFileTreeFromFilesystem() throws IOException {
@@ -92,17 +56,6 @@ public class FilesystemBackedBuildFileTreeTest {
     touch(tempDir.resolve("src/com/example/some/directory/BUCK"));
 
     BuildFileTree buildFiles = new FilesystemBackedBuildFileTree(filesystem, "BUCK");
-    Collection<Path> allChildren =
-        buildFiles.getChildPaths(BuildTargetFactory.newInstance("//src/com/example:example"));
-    assertEquals(
-        ImmutableSet.of(Paths.get("build"), Paths.get("some/directory")),
-        ImmutableSet.copyOf(allChildren));
-
-    Iterable<Path> subChildren =
-        buildFiles.getChildPaths(BuildTargetFactory.newInstance("//src/com/example/build:build"));
-    assertEquals(
-        ImmutableSet.of(Paths.get("command"), Paths.get("notbuck")),
-        ImmutableSet.copyOf(subChildren));
 
     assertEquals(
         Paths.get("src/com/example"),
@@ -132,10 +85,6 @@ public class FilesystemBackedBuildFileTreeTest {
     Config config = ConfigBuilder.createFromText("[project]", "ignore = foo/bar");
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tempDir, config);
     BuildFileTree buildFiles = new FilesystemBackedBuildFileTree(filesystem, "BUCK");
-
-    Collection<Path> children =
-        buildFiles.getChildPaths(BuildTargetFactory.newInstance(tempDir, "//foo", "foo"));
-    assertEquals(ImmutableSet.of(Paths.get("baz")), children);
 
     Path ancestor = buildFiles.getBasePathOfAncestorTarget(Paths.get("foo/bar/xyzzy")).get();
     assertEquals(Paths.get("foo"), ancestor);

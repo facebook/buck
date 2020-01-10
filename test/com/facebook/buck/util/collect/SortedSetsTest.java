@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.collect;
@@ -19,6 +19,8 @@ package com.facebook.buck.util.collect;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -210,7 +212,7 @@ public class SortedSetsTest {
     assertArrayEquals(
         new Object[] {"a", "b", "c", "d", "e", "f", null}, Arrays.copyOfRange(toFill, 0, 7));
     SortedSets.union(empty, empty).toArray(toFill);
-    assertEquals(null, toFill[0]);
+    assertNull(toFill[0]);
   }
 
   @Test
@@ -224,17 +226,17 @@ public class SortedSetsTest {
       "PMD.UseAssertEqualsInsteadOfAssertTrue") // The exact call and ordering matters here, so
   // explicity call equals rather than assertEquals.
   public void equals() {
-    assertTrue(abc.equals(SortedSets.union(abc, empty)));
-    assertTrue(abc.equals(SortedSets.union(empty, abc)));
-    assertTrue(SortedSets.union(abc, empty).equals(abc));
-    assertTrue(SortedSets.union(empty, abc).equals(abc));
-    assertTrue(SortedSets.union(abcdef, abc).equals(abcdef));
-    assertTrue(SortedSets.union(abc, abcdef).equals(abcdef));
-    assertTrue(abcdef.equals(SortedSets.union(abcdef, abc)));
-    assertTrue(abcdef.equals(SortedSets.union(abc, abcdef)));
+    assertEquals(abc, SortedSets.union(abc, empty));
+    assertEquals(abc, SortedSets.union(empty, abc));
+    assertEquals(SortedSets.union(abc, empty), abc);
+    assertEquals(SortedSets.union(empty, abc), abc);
+    assertEquals(SortedSets.union(abcdef, abc), abcdef);
+    assertEquals(SortedSets.union(abc, abcdef), abcdef);
+    assertEquals(abcdef, SortedSets.union(abcdef, abc));
+    assertEquals(abcdef, SortedSets.union(abc, abcdef));
 
-    assertFalse(abc.equals(SortedSets.union(abc, abcdef)));
-    assertFalse(SortedSets.union(abc, abcdef).equals(abc));
+    assertNotEquals(abc, SortedSets.union(abc, abcdef));
+    assertNotEquals(SortedSets.union(abc, abcdef), abc);
   }
 
   @Test

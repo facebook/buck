@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.parser.cache.impl;
@@ -43,7 +43,7 @@ public class RemoteManifestServiceCacheStorage implements ParserCacheStorage {
   private final ManifestService manifestService;
 
   private RemoteManifestServiceCacheStorage(
-      ManifestService manifestService, AbstractParserCacheConfig parserConfig) {
+      ManifestService manifestService, ParserCacheConfig parserConfig) {
     this.cacheAccessMode = parserConfig.getRemoteCacheAccessMode();
     this.manifestService = manifestService;
   }
@@ -60,12 +60,11 @@ public class RemoteManifestServiceCacheStorage implements ParserCacheStorage {
    * Static factory for creating {@code RemoteManifestServiceCacheStorage} objects.
    *
    * @param manifestService the {@link ManifestService} object.
-   * @param parserConfig the {@link com.facebook.buck.parser.cache.impl.AbstractParserCacheConfig}
-   *     object.
+   * @param parserConfig the {@link ParserCacheConfig} object.
    * @return a new instance of fully instantiated remote cache object.
    */
   public static RemoteManifestServiceCacheStorage of(
-      ManifestService manifestService, AbstractParserCacheConfig parserConfig) {
+      ManifestService manifestService, ParserCacheConfig parserConfig) {
     Preconditions.checkState(parserConfig.isRemoteParserCacheEnabled());
     return new RemoteManifestServiceCacheStorage(manifestService, parserConfig);
   }
@@ -158,7 +157,7 @@ public class RemoteManifestServiceCacheStorage implements ParserCacheStorage {
     } finally {
       timer.stop();
       LOG.debug(
-          "Time to complete RemoteManifestServiceCacheStorage.getBuildFileManifest method: %d.",
+          "Time to complete RemoteManifestServiceCacheStorage.getManifest method: %d.",
           timer.elapsed(TimeUnit.NANOSECONDS));
     }
   }

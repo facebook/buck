@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_test")
+load("//tools/build_rules:java_rules.bzl", "java_test")
 
 java_test(
     name = "cell",
@@ -6,6 +6,7 @@ java_test(
     has_immutable_types = True,
     deps = [
         ":testutil",
+        "//test/com/facebook/buck/core/cell/nameresolver:testutil",
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/testutil:testutil",
@@ -21,6 +22,9 @@ java_library(
         ["*.java"],
         exclude = ["*Test.java"],
     ),
+    visibility = [
+        "//test/...",
+    ],
     exported_deps = [
         "//src/com/facebook/buck/core/cell/impl:impl",
         "//src/com/facebook/buck/core/module:module",
@@ -33,8 +37,5 @@ java_library(
         "//test/com/facebook/buck/testutil:testutil",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
-    ],
-    visibility = [
-        "//test/...",
     ],
 )

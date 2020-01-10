@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.macros;
@@ -27,13 +27,11 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.core.HasMavenCoordinates;
@@ -41,6 +39,7 @@ import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.google.common.collect.ImmutableList;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -120,11 +119,8 @@ public class MavenCoordinatesMacroExpanderTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     CellPathResolver cellPathResolver = TestCellBuilder.createCellRoots(filesystem);
     StringWithMacrosConverter converter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(target)
-            .setCellPathResolver(cellPathResolver)
-            .addExpanders(expander)
-            .build();
+        StringWithMacrosConverter.of(
+            target, cellPathResolver, graphBuilder, ImmutableList.of(expander));
 
     String input = "$(maven_coords //:java)";
 
@@ -141,11 +137,8 @@ public class MavenCoordinatesMacroExpanderTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     CellPathResolver cellPathResolver = TestCellBuilder.createCellRoots(filesystem);
     StringWithMacrosConverter converter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(target)
-            .setCellPathResolver(cellPathResolver)
-            .addExpanders(expander)
-            .build();
+        StringWithMacrosConverter.of(
+            target, cellPathResolver, graphBuilder, ImmutableList.of(expander));
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage("no rule //:foo");
@@ -167,11 +160,11 @@ public class MavenCoordinatesMacroExpanderTest {
                 .coerce(
                     cellPathResolver,
                     filesystem,
-                    rule.getBuildTarget().getBasePath(),
-                    EmptyTargetConfiguration.INSTANCE,
+                    rule.getBuildTarget().getCellRelativeBasePath().getPath(),
+                    UnconfiguredTargetConfiguration.INSTANCE,
+                    UnconfiguredTargetConfiguration.INSTANCE,
                     input);
-    Arg arg = converter.convert(stringWithMacros, graphBuilder);
-    return Arg.stringify(
-        arg, DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder)));
+    Arg arg = converter.convert(stringWithMacros);
+    return Arg.stringify(arg, graphBuilder.getSourcePathResolver());
   }
 }

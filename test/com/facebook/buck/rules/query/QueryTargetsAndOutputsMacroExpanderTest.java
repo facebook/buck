@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.query;
@@ -21,17 +21,17 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -45,7 +45,7 @@ import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.testutil.HashMapWithStats;
 import com.facebook.buck.testutil.TemporaryPaths;
-import java.io.File;
+import com.google.common.collect.ImmutableList;
 import java.nio.file.Paths;
 import java.util.Optional;
 import org.hamcrest.Matchers;
@@ -63,7 +63,6 @@ public class QueryTargetsAndOutputsMacroExpanderTest {
   private ProjectFilesystem filesystem;
   private ActionGraphBuilder graphBuilder;
   private CellPathResolver cellNames;
-  private SourcePathResolver pathResolver;
   private TypeCoercer<?> coercer;
   private BuildRule rule;
   private StringWithMacrosConverter converter;
@@ -72,39 +71,36 @@ public class QueryTargetsAndOutputsMacroExpanderTest {
   @Before
   public void setUp() {
     cache = new HashMapWithStats<>();
-    filesystem = new FakeProjectFilesystem(tmp.getRoot());
+    filesystem = new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp.getRoot());
     cellNames = TestCellBuilder.createCellRoots(filesystem);
     coercer = new DefaultTypeCoercerFactory().typeCoercerForType(StringWithMacros.class);
 
     TargetNode<?> depNode =
         JavaLibraryBuilder.createBuilder(
-                BuildTargetFactory.newInstance(filesystem.getRootPath(), "//exciting:dep"),
-                filesystem)
+                BuildTargetFactory.newInstance("//exciting:dep"), filesystem)
             .addSrc(Paths.get("Dep.java"))
             .build();
 
     TargetNode<?> ruleNode =
         JavaLibraryBuilder.createBuilder(
-                BuildTargetFactory.newInstance(filesystem.getRootPath(), "//exciting:target"),
-                filesystem)
+                BuildTargetFactory.newInstance("//exciting:target"), filesystem)
             .addSrc(Paths.get("Other.java"))
             .addDep(depNode.getBuildTarget())
             .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, ruleNode);
     graphBuilder = new TestActionGraphBuilder(targetGraph, filesystem);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     rule = graphBuilder.requireRule(ruleNode.getBuildTarget());
 
     converter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(ruleNode.getBuildTarget())
-            .setCellPathResolver(cellNames)
-            .addExpanders(new QueryTargetsAndOutputsMacroExpander(Optional.of(targetGraph)))
-            .setPrecomputedWorkCache(cache)
-            .build();
+        StringWithMacrosConverter.of(
+            ruleNode.getBuildTarget(),
+            cellNames,
+            graphBuilder,
+            ImmutableList.of(new QueryTargetsAndOutputsMacroExpander(Optional.of(targetGraph))),
+            Optional.empty(),
+            cache);
   }
 
   @Test
@@ -115,9 +111,13 @@ public class QueryTargetsAndOutputsMacroExpanderTest {
         String.format(
             "%s %s %s %s",
             "//exciting:dep",
-            absolutify("exciting/lib__dep__output/dep.jar"),
+            absolutify(
+                BuildTargetFactory.newInstance("//exciting:dep"), "lib__%s__output", "dep.jar"),
             "//exciting:target",
-            absolutify("exciting/lib__target__output/target.jar")));
+            absolutify(
+                BuildTargetFactory.newInstance("//exciting:target"),
+                "lib__%s__output",
+                "target.jar")));
   }
 
   @Test
@@ -128,9 +128,13 @@ public class QueryTargetsAndOutputsMacroExpanderTest {
         String.format(
             "%s %s %s %s",
             "//exciting:dep",
-            absolutify("exciting/lib__dep__output/dep.jar"),
+            absolutify(
+                BuildTargetFactory.newInstance("//exciting:dep"), "lib__%s__output", "dep.jar"),
             "//exciting:target",
-            absolutify("exciting/lib__target__output/target.jar")));
+            absolutify(
+                BuildTargetFactory.newInstance("//exciting:target"),
+                "lib__%s__output",
+                "target.jar")));
   }
 
   @Test
@@ -141,9 +145,13 @@ public class QueryTargetsAndOutputsMacroExpanderTest {
         String.format(
             "%s test %s test %s test %s",
             "//exciting:dep",
-            absolutify("exciting/lib__dep__output/dep.jar"),
+            absolutify(
+                BuildTargetFactory.newInstance("//exciting:dep"), "lib__%s__output", "dep.jar"),
             "//exciting:target",
-            absolutify("exciting/lib__target__output/target.jar")));
+            absolutify(
+                BuildTargetFactory.newInstance("//exciting:target"),
+                "lib__%s__output",
+                "target.jar")));
   }
 
   @Test
@@ -160,9 +168,13 @@ public class QueryTargetsAndOutputsMacroExpanderTest {
         String.format(
             "%s %s %s %s",
             "//exciting:dep",
-            absolutify("exciting/lib__dep__output/dep.jar"),
+            absolutify(
+                BuildTargetFactory.newInstance("//exciting:dep"), "lib__%s__output", "dep.jar"),
             "//exciting:target",
-            absolutify("exciting/lib__target__output/target.jar")));
+            absolutify(
+                BuildTargetFactory.newInstance("//exciting:target"),
+                "lib__%s__output",
+                "target.jar")));
     // No new cache entry should have appeared
     assertThat(cache.values(), Matchers.hasSize(1));
     assertEquals(1, cache.numPuts());
@@ -176,11 +188,12 @@ public class QueryTargetsAndOutputsMacroExpanderTest {
             coercer.coerce(
                 cellNames,
                 filesystem,
-                rule.getBuildTarget().getBasePath(),
-                EmptyTargetConfiguration.INSTANCE,
+                rule.getBuildTarget().getCellRelativeBasePath().getPath(),
+                UnconfiguredTargetConfiguration.INSTANCE,
+                UnconfiguredTargetConfiguration.INSTANCE,
                 input);
-    Arg arg = converter.convert(stringWithMacros, graphBuilder);
-    return Arg.stringify(arg, pathResolver);
+    Arg arg = converter.convert(stringWithMacros);
+    return Arg.stringify(arg, graphBuilder.getSourcePathResolver());
   }
 
   private void assertExpandsTo(String input, BuildRule rule, String expected)
@@ -189,8 +202,9 @@ public class QueryTargetsAndOutputsMacroExpanderTest {
     assertEquals(expected, results);
   }
 
-  private String absolutify(String relativePath) {
-    relativePath = relativePath.replace("/", File.separator);
-    return filesystem.resolve(Paths.get("buck-out", "gen", relativePath)).toString();
+  private String absolutify(BuildTarget buildTarget, String format, String last) {
+    return filesystem
+        .resolve(BuildTargetPaths.getGenPath(filesystem, buildTarget, format).resolve(last))
+        .toString();
   }
 }

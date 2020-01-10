@@ -1,20 +1,22 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.description;
+
+import com.facebook.buck.core.description.arg.ConstructorArg;
 
 /**
  * Contains information regarding a specific {@link
@@ -24,7 +26,7 @@ package com.facebook.buck.core.description;
  * @param <T> the argument type for the description to construct the {@link
  *     com.facebook.buck.core.rules.BuildRule}
  */
-public interface Description<T> extends BaseDescription<T> {
+public interface Description<T extends ConstructorArg> extends BaseDescription<T> {
 
   /**
    * Whether or not the build rule subgraph produced by this {@code Description} is safe to cache in

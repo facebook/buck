@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.remoteexecution;
@@ -20,14 +20,17 @@ import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
-import java.util.List;
+import java.util.Set;
 import javax.annotation.Nullable;
 
 /** Interface used to upload inputs/outputs to the CAS. */
 public interface CasBlobUploader {
-  ImmutableSet<String> getMissingHashes(List<Digest> requiredDigests) throws IOException;
+  ImmutableSet<String> getMissingHashes(Set<Digest> requiredDigests) throws IOException;
 
-  ImmutableList<UploadResult> batchUpdateBlobs(ImmutableList<UploadData> build) throws IOException;
+  ImmutableList<UploadResult> batchUpdateBlobs(ImmutableList<UploadDataSupplier> build)
+      throws IOException;
+
+  UploadResult uploadFromStream(UploadDataSupplier build) throws IOException;
 
   /** Result (status/error message) of an upload. */
   class UploadResult {
@@ -39,24 +42,6 @@ public interface CasBlobUploader {
       this.digest = digest;
       this.status = status;
       this.message = message;
-    }
-  }
-
-  /**
-   * Data required to upload a file. The underlying data will only be read if the CAS is missing
-   * this digest.
-   */
-  class UploadData {
-    public final Digest digest;
-    public final UploadDataSupplier data;
-
-    public UploadData(Digest digest, UploadDataSupplier data) {
-      this.digest = digest;
-      this.data = data;
-    }
-
-    public String getHash() {
-      return digest.getHash();
     }
   }
 }

@@ -1,0 +1,16 @@
+apple_library(
+    name = "ObjCLibrary",
+    exported_headers = [
+        "ObjCLibrary.h",
+        "OtherHeader.h",
+        "Subdirectory/SubdirectoryHeader.h",
+    ],
+    modular = True,
+)
+
+apple_library(
+    name = "Test",
+    srcs = ["Test.swift"],
+    exported_deps = [":ObjCLibrary"],
+    swift_version = "5",
+)

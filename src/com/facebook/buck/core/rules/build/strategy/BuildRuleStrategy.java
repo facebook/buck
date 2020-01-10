@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.rules.build.strategy;
@@ -44,13 +44,13 @@ public interface BuildRuleStrategy extends Closeable {
     void cancel(Throwable cause);
 
     /**
-     * Tries to cancel the execution if work has not yet begun.
+     * Tries to cancel the execution if work has not yet past the point of no return.
      *
      * @return Whether cancellation was successful. If successful, the strategy might continue doing
      *     more work, but it must not make changes to any rule outputs. If cancellation is
      *     unsuccessful, the strategy should continue execution of the rule.
      */
-    boolean cancelIfNotStarted(Throwable reason);
+    boolean cancelIfNotComplete(Throwable reason);
 
     /** A ListenableFuture for the build result. */
     ListenableFuture<Optional<BuildResult>> getBuildResult();
@@ -64,7 +64,7 @@ public interface BuildRuleStrategy extends Closeable {
         }
 
         @Override
-        public boolean cancelIfNotStarted(Throwable reason) {
+        public boolean cancelIfNotComplete(Throwable reason) {
           return false;
         }
 

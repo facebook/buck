@@ -1,22 +1,26 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.modern.impl;
 
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
+import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -26,7 +30,6 @@ import com.facebook.buck.rules.modern.PublicOutputPath;
 import com.facebook.buck.rules.modern.ValueTypeInfo;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfos.ImmutableListValueTypeInfo;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfos.OptionalValueTypeInfo;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
@@ -35,6 +38,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.hash.HashCode;
 import com.google.common.primitives.Primitives;
 import com.google.common.reflect.TypeToken;
 import java.lang.reflect.ParameterizedType;
@@ -139,6 +143,10 @@ public class ValueTypeInfoFactory {
         return new NonHashableSourcePathContainerValueTypeInfo();
       } else if (BuildTarget.class.isAssignableFrom(rawClass)) {
         return BuildTargetTypeInfo.INSTANCE;
+      } else if (UnconfiguredBuildTargetView.class.isAssignableFrom(rawClass)) {
+        return UnconfiguredBuildTargetTypeInfo.INSTANCE;
+      } else if (TargetConfiguration.class.isAssignableFrom(rawClass)) {
+        return TargetConfigurationTypeInfo.INSTANCE;
       } else if (Pattern.class.isAssignableFrom(rawClass)) {
         return PatternValueTypeInfo.INSTANCE;
       } else if (Toolchain.class.isAssignableFrom(rawClass)) {
@@ -147,6 +155,10 @@ public class ValueTypeInfoFactory {
         return new ToolchainTypeInfo<>(asToolchain);
       } else if (AddsToRuleKey.class.isAssignableFrom(rawClass)) {
         return DynamicTypeInfo.INSTANCE;
+      } else if (HashCode.class.isAssignableFrom(rawClass)) {
+        return HashCodeValueTypeInfo.INSTANCE;
+      } else if (OutputLabel.class.isAssignableFrom(rawClass)) {
+        return OutputLabelValueTypeInfo.INSTANCE;
       }
     } else if (type instanceof ParameterizedType) {
       // This is a parameterized type where one of the parameters requires special handling (i.e.

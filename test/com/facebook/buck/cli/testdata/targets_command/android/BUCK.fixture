@@ -1,0 +1,31 @@
+platform(
+    name = "linux_platform",
+    constraint_values = [
+        "buck//config/constraints:linux",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+config_setting(
+    name = "linux_config",
+    constraint_values = [
+        "buck//config/constraints:linux",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+android_binary(
+    name = "D",
+    keystore = ":debug_keystore",
+    manifest = "AndroidManifest.xml",
+)
+
+keystore(
+    name = "debug_keystore",
+    properties = "debug.keystore.properties",
+    store = "debug.keystore",
+)

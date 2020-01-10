@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.coercer;
@@ -22,13 +22,13 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.TestCellBuilder;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.util.types.Pair;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableList;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Optional;
 import org.hamcrest.Matchers;
@@ -39,21 +39,38 @@ import org.junit.rules.ExpectedException;
 public class OptionalTypeCoercerTest {
 
   private static final ProjectFilesystem FILESYSTEM = new FakeProjectFilesystem();
-  private static final Path PATH_RELATIVE_TO_PROJECT_ROOT = Paths.get("");
+  private static final ForwardRelativePath PATH_RELATIVE_TO_PROJECT_ROOT =
+      ForwardRelativePath.of("");
 
   @Rule public ExpectedException exception = ExpectedException.none();
 
   @Test
   public void nullIsAbsent() throws CoerceFailedException {
-    OptionalTypeCoercer<Void> coercer =
-        new OptionalTypeCoercer<>(new IdentityTypeCoercer<>(Void.class));
-    Optional<Void> result =
+    OptionalTypeCoercer<Unit> coercer =
+        new OptionalTypeCoercer<>(new IdentityTypeCoercer<>(Unit.class));
+    Optional<Unit> result =
         coercer.coerce(
             TestCellBuilder.createCellRoots(FILESYSTEM),
             FILESYSTEM,
             PATH_RELATIVE_TO_PROJECT_ROOT,
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             null);
+    assertThat(result, Matchers.equalTo(Optional.empty()));
+  }
+
+  @Test
+  public void emptyIsEmpty() throws CoerceFailedException {
+    OptionalTypeCoercer<Unit> coercer =
+        new OptionalTypeCoercer<>(new IdentityTypeCoercer<>(Unit.class));
+    Optional<Unit> result =
+        coercer.coerce(
+            TestCellBuilder.createCellRoots(FILESYSTEM),
+            FILESYSTEM,
+            PATH_RELATIVE_TO_PROJECT_ROOT,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            Optional.empty());
     assertThat(result, Matchers.equalTo(Optional.empty()));
   }
 
@@ -65,7 +82,8 @@ public class OptionalTypeCoercerTest {
             TestCellBuilder.createCellRoots(FILESYSTEM),
             FILESYSTEM,
             PATH_RELATIVE_TO_PROJECT_ROOT,
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             "something");
     assertThat(result, Matchers.equalTo(Optional.of("something")));
   }

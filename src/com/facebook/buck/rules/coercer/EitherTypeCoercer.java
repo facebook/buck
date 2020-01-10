@@ -1,26 +1,26 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.types.Either;
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
 
@@ -89,8 +89,9 @@ public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Either<Left, 
   public Either<Left, Right> coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
 
@@ -107,12 +108,22 @@ public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Either<Left, 
       try {
         return Either.ofLeft(
             leftTypeCoercer.coerce(
-                cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object));
+                cellRoots,
+                filesystem,
+                pathRelativeToProjectRoot,
+                targetConfiguration,
+                hostConfiguration,
+                object));
       } catch (CoerceFailedException eLeft) {
         try {
           return Either.ofRight(
               rightTypeCoercer.coerce(
-                  cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object));
+                  cellRoots,
+                  filesystem,
+                  pathRelativeToProjectRoot,
+                  targetConfiguration,
+                  hostConfiguration,
+                  object));
         } catch (CoerceFailedException eRight) {
           throw new CoerceFailedException(
               String.format("%s, or %s", eLeft.getMessage(), eRight.getMessage()));
@@ -125,7 +136,12 @@ public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Either<Left, 
     if (leftCoercerType == objectType) {
       return Either.ofLeft(
           leftTypeCoercer.coerce(
-              cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object));
+              cellRoots,
+              filesystem,
+              pathRelativeToProjectRoot,
+              targetConfiguration,
+              hostConfiguration,
+              object));
     }
 
     // Only the right coercer matches, so use that to parse the input and let any inner
@@ -133,7 +149,12 @@ public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Either<Left, 
     if (rightCoercerType == objectType) {
       return Either.ofRight(
           rightTypeCoercer.coerce(
-              cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object));
+              cellRoots,
+              filesystem,
+              pathRelativeToProjectRoot,
+              targetConfiguration,
+              hostConfiguration,
+              object));
     }
 
     // None of our coercers matched the "type" of the object, so throw the generic

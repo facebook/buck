@@ -1,24 +1,26 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.android.exopackage;
 
 import com.facebook.buck.android.exopackage.ExopackageInfo.NativeLibsInfo;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
@@ -49,7 +51,7 @@ public class ExopackageSymlinkTree {
   public static void createSymlinkTree(
       String packageName,
       ExopackageInfo exoInfo,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       ProjectFilesystem filesystem,
       Path rootPath)
       throws IOException {
@@ -96,7 +98,7 @@ public class ExopackageSymlinkTree {
     // be rooted
     Path deviceRootPath = ExopackageInstaller.EXOPACKAGE_INSTALL_ROOT.resolve(packageName);
     filesystem.writeContentsToPath(
-        MorePaths.pathWithUnixSeparators(deviceRootPath), rootPath.resolve("metadata.txt"));
+        PathFormatter.pathWithUnixSeparators(deviceRootPath), rootPath.resolve("metadata.txt"));
   }
   /** Create symlinks for each of the filesToInstall in the destPath with the proper hierarchy */
   private static void linkFiles(
@@ -126,7 +128,11 @@ public class ExopackageSymlinkTree {
       Path destPathRoot, Map<Path, String> pathsAndContents, ProjectFilesystem filesystem)
       throws IOException {
     for (Map.Entry<Path, String> entry : pathsAndContents.entrySet()) {
-      filesystem.writeContentsToPath(entry.getValue(), destPathRoot.resolve(entry.getKey()));
+      final Path destPath = destPathRoot.resolve(entry.getKey());
+      if (!filesystem.exists(destPath.getParent())) {
+        filesystem.createParentDirs(destPath);
+      }
+      filesystem.writeContentsToPath(entry.getValue(), destPath);
     }
   }
 
@@ -142,9 +148,8 @@ public class ExopackageSymlinkTree {
     // Each shared-object referenced by the metadata is contained within a folder named with the abi
     // so we extract the set of parent folder names for all the objects.
     return ExopackageInstaller.parseExopackageInfoMetadata(
-            metadataPath, MorePaths.EMPTY_PATH, filesystem)
-        .values()
-        .stream()
+            metadataPath, MorePaths.emptyOf(metadataPath), filesystem)
+        .values().stream()
         .map(path -> path.getParent().getFileName().toString())
         .collect(ImmutableSet.toImmutableSet())
         .asList();

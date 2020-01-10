@@ -1,0 +1,96 @@
+java_library(
+    name = "one",
+    srcs = ["1.txt"],
+    tests = [":one-tests"],
+    deps = [
+        ":three",
+        ":two",
+    ],
+)
+
+java_library(
+    name = "two",
+    srcs = ["2.txt"],
+    deps = [
+        ":four",
+    ],
+)
+
+java_library(
+    name = "three",
+    srcs = ["3.txt"],
+    deps = [
+        ":five",
+        ":four",
+        ":six",
+    ],
+)
+
+java_library(
+    name = "four",
+    srcs = ["4.txt"],
+    tests = [
+        ":four-application-tests",
+        ":four-tests",
+    ],
+    deps = [
+        ":six",
+    ],
+)
+
+java_library(
+    name = "five",
+    srcs = [
+        "5.txt",
+        ":six",
+    ],
+)
+
+java_library(
+    name = "six",
+    srcs = ["6.txt"],
+    tests = [":six-tests"],
+)
+
+java_test(
+    name = "one-tests",
+    srcs = ["1-test.txt"],
+    deps = [":one"],
+)
+
+java_test(
+    name = "four-tests",
+    srcs = ["4-test.txt"],
+    deps = [":four"],
+)
+
+java_test(
+    name = "four-application-tests",
+    srcs = ["4-application-test.txt"],
+    labels = ["e2e"],
+    deps = [
+        ":application-test-lib",
+        ":four",
+    ],
+)
+
+java_test(
+    name = "six-tests",
+    srcs = ["6-test.txt"],
+    labels = [
+        "e2e",
+        "other",
+    ],
+    deps = [":six"],
+)
+
+java_library(
+    name = "application-test-lib",
+    labels = ["e2e_lib"],
+    deps = [":test-lib-lib"],
+)
+
+java_library(
+    name = "test-lib-lib",
+    labels = ["e2e_lib"],
+)

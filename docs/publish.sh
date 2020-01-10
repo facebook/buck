@@ -1,25 +1,17 @@
 #!/bin/bash
-# Copyright 2018-present Facebook, Inc.
+# Copyright (c) Facebook, Inc. and its affiliates.
 #
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License. You may obtain
-# a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations
-# under the License.
-#
-# This generates the documentation for Buck and publishes it to GitHub.
-# Usage:
-#
-#   ./docs/publish.sh
-#
-# Caller must be sure they have the appropriate credentials configured
-# to push to the GitHub repo.
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 
 set -e
@@ -60,6 +52,12 @@ for arg do
 done
 
 STATIC_FILES_DIR=$(mktemp -d)
+
+buck run //docs:generate_buckconfig_aliases
+if ! git diff --quiet; then
+  echo "Git repository is not clean; refusing to publish"
+  exit 1
+fi
 
 # Always run this script from the root of the Buck project directory.
 cd $(git rev-parse --show-toplevel)

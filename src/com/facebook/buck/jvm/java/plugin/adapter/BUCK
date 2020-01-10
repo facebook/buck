@@ -3,8 +3,8 @@ java_library(
     # We use conditional compilation to support building against both Java 8 and 11, despite
     # breaking interface changes in the JDK.
     srcs = glob(["*.java"]) + select({
-        "//tools/build/config:java_8": glob(["java8/*.java"]),
         "//tools/build/config:java_11": glob(["java11/*.java"]),
+        "//tools/build/config:java_8": glob(["java8/*.java"]),
     }),
     provided_deps = [
         # Tools.jar is the compiler itself, and will already be present at runtime;
@@ -23,10 +23,10 @@ java_library(
         "//test/com/facebook/buck/jvm/java/tracing:tracing",
     ],
     deps = [
+        "//src/com/facebook/buck/jvm/java/version:version",
         # This module is loaded as a plugin into the compiler itself; don't take dependencies on Buck
         # internals or large libraries like Guava
         "//src/com/facebook/buck/jvm/java/lang/model:model",
-        "//src/com/facebook/buck/util:isolated",
         "//src/com/facebook/buck/util/liteinfersupport:liteinfersupport",
     ],
 )

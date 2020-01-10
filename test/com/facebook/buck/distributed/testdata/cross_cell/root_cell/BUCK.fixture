@@ -1,5 +1,0 @@
-java_library(
-    name = "libA",
-    srcs = ["A.java"],
-    deps = ["cross_cell_secondary//:libB"],
-)

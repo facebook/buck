@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
@@ -24,11 +24,10 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSortedMap;
@@ -58,18 +57,12 @@ abstract class AbstractResourcesParameters implements AddsToRuleKey {
       ImmutableCollection<SourcePath> resources,
       Optional<Path> resourcesRoot) {
     return ResourcesParameters.builder()
-        .setResources(
-            getNamedResources(
-                DefaultSourcePathResolver.from(ruleFinder),
-                ruleFinder,
-                projectFilesystem,
-                resources))
+        .setResources(getNamedResources(ruleFinder, projectFilesystem, resources))
         .setResourcesRoot(resourcesRoot.map(Path::toString))
         .build();
   }
 
   public static ImmutableSortedMap<String, SourcePath> getNamedResources(
-      SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       ProjectFilesystem filesystem,
       ImmutableCollection<SourcePath> resources) {
@@ -91,7 +84,7 @@ abstract class AbstractResourcesParameters implements AddsToRuleKey {
       // Therefore, some path-wrangling is required to produce the correct string.
 
       Optional<BuildRule> underlyingRule = ruleFinder.getRule(rawResource);
-      Path relativePathToResource = pathResolver.getRelativePath(rawResource);
+      Path relativePathToResource = ruleFinder.getSourcePathResolver().getRelativePath(rawResource);
 
       String resource;
 
@@ -99,9 +92,11 @@ abstract class AbstractResourcesParameters implements AddsToRuleKey {
         BuildTarget underlyingTarget = underlyingRule.get().getBuildTarget();
         if (underlyingRule.get() instanceof HasOutputName) {
           resource =
-              MorePaths.pathWithUnixSeparators(
+              PathFormatter.pathWithUnixSeparators(
                   underlyingTarget
-                      .getBasePath()
+                      .getCellRelativeBasePath()
+                      .getPath()
+                      .toPath(filesystem.getFileSystem())
                       .resolve(((HasOutputName) underlyingRule.get()).getOutputName()));
         } else {
           Path genOutputParent =
@@ -117,11 +112,15 @@ abstract class AbstractResourcesParameters implements AddsToRuleKey {
               "%s is used as a resource but does not output to a default output directory",
               underlyingTarget.getFullyQualifiedName());
           resource =
-              MorePaths.pathWithUnixSeparators(
-                  underlyingTarget.getBasePath().resolve(outputPath.get()));
+              PathFormatter.pathWithUnixSeparators(
+                  underlyingTarget
+                      .getCellRelativeBasePath()
+                      .getPath()
+                      .toPath(filesystem.getFileSystem())
+                      .resolve(outputPath.get()));
         }
       } else {
-        resource = MorePaths.pathWithUnixSeparators(relativePathToResource);
+        resource = PathFormatter.pathWithUnixSeparators(relativePathToResource);
       }
       builder.put(resource, rawResource);
     }

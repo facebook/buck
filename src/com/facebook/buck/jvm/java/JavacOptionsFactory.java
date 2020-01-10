@@ -1,18 +1,19 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -31,25 +32,38 @@ public final class JavacOptionsFactory {
     }
 
     JavacOptions.Builder builder = JavacOptions.builder(defaultOptions);
+    JavacLanguageLevelOptions.Builder languageLevelOptionsBuilder =
+        JavacLanguageLevelOptions.builder();
+
+    languageLevelOptionsBuilder.setSourceLevel(
+        defaultOptions.getLanguageLevelOptions().getSourceLevel());
+    languageLevelOptionsBuilder.setTargetLevel(
+        defaultOptions.getLanguageLevelOptions().getTargetLevel());
 
     if (jvmLibraryArg.getJavaVersion().isPresent()) {
-      builder.setSourceLevel(jvmLibraryArg.getJavaVersion().get());
-      builder.setTargetLevel(jvmLibraryArg.getJavaVersion().get());
+      languageLevelOptionsBuilder.setSourceLevel(jvmLibraryArg.getJavaVersion().get());
+      languageLevelOptionsBuilder.setTargetLevel(jvmLibraryArg.getJavaVersion().get());
     }
 
     if (jvmLibraryArg.getSource().isPresent()) {
-      builder.setSourceLevel(jvmLibraryArg.getSource().get());
+      languageLevelOptionsBuilder.setSourceLevel(jvmLibraryArg.getSource().get());
     }
 
     if (jvmLibraryArg.getTarget().isPresent()) {
-      builder.setTargetLevel(jvmLibraryArg.getTarget().get());
+      languageLevelOptionsBuilder.setTargetLevel(jvmLibraryArg.getTarget().get());
     }
+
+    builder.setLanguageLevelOptions(languageLevelOptionsBuilder.build());
 
     builder.addAllExtraArguments(jvmLibraryArg.getExtraArguments());
 
-    AnnotationProcessingParams annotationParams =
-        jvmLibraryArg.buildAnnotationProcessingParams(buildTarget, resolver);
-    builder.setAnnotationProcessingParams(annotationParams);
+    JavacPluginParams annotationParams =
+        jvmLibraryArg.buildJavaAnnotationProcessorParams(buildTarget, resolver);
+    builder.setJavaAnnotationProcessorParams(annotationParams);
+
+    JavacPluginParams standardJavacPluginsParams =
+        jvmLibraryArg.buildStandardJavacParams(buildTarget, resolver);
+    builder.setStandardJavacPluginParams(standardJavacPluginsParams);
 
     return builder.build();
   }

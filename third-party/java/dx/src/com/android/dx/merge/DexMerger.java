@@ -994,7 +994,7 @@ public final class DexMerger {
          */
         public WriterSizes(Dex[] dexes) {
             for (int i = 0; i < dexes.length; i++) {
-                plus(dexes[i].getTableOfContents(), false);
+                plus(dexes[i], false);
             }
             fourByteAlign();
         }
@@ -1016,7 +1016,8 @@ public final class DexMerger {
             fourByteAlign();
         }
 
-        private void plus(TableOfContents contents, boolean exact) {
+        private void plus(Dex d, boolean exact) {
+            TableOfContents contents = d.getTableOfContents();
             idsDefs += contents.stringIds.size * SizeOf.STRING_ID_ITEM
                     + contents.typeIds.size * SizeOf.TYPE_ID_ITEM
                     + contents.protoIds.size * SizeOf.PROTO_ID_ITEM
@@ -1051,7 +1052,92 @@ public final class DexMerger {
                 // all of the bytes in an annotations section may be uleb/sleb
                 annotation += (int) Math.ceil(contents.annotations.byteCount * 2);
                 // all of the bytes in a debug info section may be uleb/sleb
-                debugInfo += contents.debugInfos.byteCount * 2;
+                debugInfo += computeDuplicatedDebugInfoSize(d) * 2;
+            }
+        }
+
+        // d8 de-duplicates its debug programs and dx does not. If dx is
+        // merging DEX files created by d8, then we can't use the size of the
+        // input debug info as a guess for the size of the output debug info.
+        // dx would duplicate some number of debug programs from the input and
+        // possibly overflow the Section.
+        //
+        // We solve this problem by traversing the DEX to find indices into the
+        // debug info and repeatedly counting any debug programs that are
+        // referenced multiple times.
+        private int computeDuplicatedDebugInfoSize(Dex d) {
+            int byteCount = 0;
+            for (ClassDef classDef : d.classDefs()) {
+                if (classDef.getClassDataOffset() != 0) {
+                    ClassData classData = d.readClassData(classDef);
+                    for (ClassData.Method m : classData.getDirectMethods()) {
+                        byteCount += getDebugProgramSize(d, m);
+                    }
+                    for (ClassData.Method m : classData.getVirtualMethods()) {
+                        byteCount += getDebugProgramSize(d, m);
+                    }
+                }
+            }
+            return byteCount;
+        }
+
+        private int getDebugProgramSize(Dex d, ClassData.Method m) {
+            if (m.getCodeOffset() != 0) {
+                Code code = d.readCode(m);
+                int debugInfoOffset = code.getDebugInfoOffset();
+                if (debugInfoOffset != 0) {
+                    return getDebugProgramSize(d.open(debugInfoOffset));
+                }
+            }
+            return 0;
+        }
+
+        private int getDebugProgramSize(Dex.Section debugInfo) {
+            int initPosition = debugInfo.getPosition();
+
+            debugInfo.readUleb128(); // line start
+            int parametersSize = debugInfo.readUleb128();
+            for (int p = 0; p < parametersSize; p++) {
+                debugInfo.readUleb128p1(); // parameter name
+            }
+
+            while (true) {
+                int opcode = debugInfo.readByte();
+
+                switch (opcode) {
+                case DBG_END_SEQUENCE:
+                    int finalPosition = debugInfo.getPosition();
+                    return finalPosition - initPosition;
+
+                case DBG_END_LOCAL:
+                case DBG_RESTART_LOCAL:
+                case DBG_ADVANCE_PC:
+                    debugInfo.readUleb128();
+                    break;
+
+                case DBG_ADVANCE_LINE:
+                    debugInfo.readSleb128();
+                    break;
+
+                case DBG_START_LOCAL:
+                case DBG_START_LOCAL_EXTENDED:
+                    debugInfo.readUleb128();
+                    debugInfo.readUleb128p1();
+                    debugInfo.readUleb128p1();
+                    if (opcode == DBG_START_LOCAL_EXTENDED) {
+                        debugInfo.readUleb128p1();
+                    }
+                    break;
+
+                case DBG_SET_FILE:
+                    debugInfo.readUleb128p1();
+                    break;
+
+                case DBG_SET_PROLOGUE_END:
+                case DBG_SET_EPILOGUE_BEGIN:
+                default:
+                    break;
+                }
             }
         }
 

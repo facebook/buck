@@ -1,5 +1,3 @@
-load("//tools/build_rules:export_files.bzl", "export_files")
-
 python_library(
     name = "hash_files-lib",
     srcs = [
@@ -27,4 +25,7 @@ python_binary(
     visibility = ["PUBLIC"],
 )
 
-export_files(["hash_files.py"])
+export_file(
+    name = "hash_files.py",
+    visibility = ["PUBLIC"],
+)

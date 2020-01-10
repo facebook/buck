@@ -30,8 +30,9 @@
 
 package com.facebook.buck.query;
 
-import com.google.common.collect.ImmutableSet;
+import com.facebook.buck.core.model.QueryTarget;
 import java.util.Collection;
+import java.util.Set;
 
 /**
  * Base class for expressions in the Buck query language.
@@ -51,11 +52,15 @@ import java.util.Collection;
  * defines the semantics. The result of evaluating a query is set of Buck {@code QueryTarget}s (a
  * file or build target). The set may be interpreted as either a set or as nodes of a DAG, depending
  * on the context.
+ *
+ * @param <NODE_TYPE> Type of the node in the {@link QueryEnvironment} this expression should be
+ *     evaluated in the context of.
  */
-public abstract class QueryExpression {
+public abstract class QueryExpression<NODE_TYPE> {
 
   /** Scan and parse the specified query expression. */
-  public static QueryExpression parse(String query, QueryEnvironment env) throws QueryException {
+  public static <NODE_TYPE> QueryExpression<NODE_TYPE> parse(
+      String query, QueryEnvironment<NODE_TYPE> env) throws QueryException {
     return QueryParser.parse(query, env);
   }
 
@@ -67,8 +72,8 @@ public abstract class QueryExpression {
    *
    * <p>Failures resulting from evaluation of an ill-formed query cause QueryException to be thrown.
    */
-  abstract ImmutableSet<QueryTarget> eval(QueryEvaluator evaluator, QueryEnvironment env)
-      throws QueryException;
+  abstract <OUTPUT_TYPE extends QueryTarget> Set<OUTPUT_TYPE> eval(
+      QueryEvaluator<NODE_TYPE> evaluator, QueryEnvironment<NODE_TYPE> env) throws QueryException;
 
   /**
    * Collects all target patterns that are referenced anywhere within this query expression and adds
@@ -77,15 +82,15 @@ public abstract class QueryExpression {
    * <p>This is intended to accumulate patterns from multiple expressions for preloading at once.
    */
   public void collectTargetPatterns(Collection<String> literals) {
-    traverse(new TargetPatternCollector(literals));
+    traverse(new TargetPatternCollector<NODE_TYPE>(literals));
   }
 
   /** Accepts and applies the given visitor. */
-  public abstract void traverse(Visitor visitor);
+  public abstract void traverse(Visitor<NODE_TYPE> visitor);
 
   /** Returns a set of all targets referenced from literals within this query expression. */
-  public ImmutableSet<QueryTarget> getTargets(QueryEnvironment env) {
-    QueryTargetCollector collector = new QueryTargetCollector(env);
+  public Set<QueryTarget> getTargets(QueryEnvironment<NODE_TYPE> env) {
+    QueryTargetCollector<NODE_TYPE> collector = new QueryTargetCollector<NODE_TYPE>(env);
     traverse(collector);
     return collector.getTargets();
   }
@@ -98,8 +103,8 @@ public abstract class QueryExpression {
    * Visits a query expression, and returns whether the traversal should continue downwards or stop
    * and ignore any subexpressions.
    */
-  interface Visitor {
-    VisitResult visit(QueryExpression exp);
+  interface Visitor<T> {
+    VisitResult visit(QueryExpression<T> exp);
   }
 
   enum VisitResult {

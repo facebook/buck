@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.js;
@@ -27,9 +27,11 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeFalse;
 
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -43,8 +45,8 @@ import com.facebook.buck.features.js.JsFile.JsFileDev;
 import com.facebook.buck.features.js.JsLibrary.Files;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.query.Query;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -152,9 +154,7 @@ public class JsLibraryDescriptionTest {
 
     BuildRule library = scenario.graphBuilder.requireRule(withFlavors);
     BuildRule filesRule =
-        library
-            .getBuildDeps()
-            .stream()
+        library.getBuildDeps().stream()
             .filter(rule -> rule instanceof JsLibrary.Files)
             .findAny()
             .get();
@@ -166,8 +166,8 @@ public class JsLibraryDescriptionTest {
   public void internalFileRuleDependsOnWorker() {
     JsTestScenario scenario = scenarioBuilder.library(target).build();
     BuildRule filesRule = internalFileRule(scenario.graphBuilder);
-    assertThat(
-        filesRule.getBuildDeps(), hasItem(scenario.graphBuilder.getRule(scenario.workerTarget)));
+    BuildRule workerRule = scenario.graphBuilder.getRule(scenario.workerTarget);
+    assertThat(filesRule.getBuildDeps(), hasItem(workerRule));
   }
 
   @Test
@@ -180,7 +180,8 @@ public class JsLibraryDescriptionTest {
     BuildRule filesRule = internalFileRule(scenario.graphBuilder);
     assertThat(
         filesRule.getBuildDeps(),
-        hasItems(Stream.of(a, b, c).map(JsFileMatcher::new).toArray(JsFileMatcher[]::new)));
+        hasItems(
+            Stream.of(a, b, c).map(JsFileMatcher::new).toArray(size -> new JsFileMatcher[size])));
   }
 
   @Test
@@ -232,10 +233,12 @@ public class JsLibraryDescriptionTest {
             .library(target, a, b)
             .build();
 
-    ImmutableMap<SourcePath, JsFileDev> fileRules =
+    ImmutableMap<SourcePath, JsFile> fileRules =
         findJsFileRules(scenario.graphBuilder)
-            .filter(JsFileDev.class)
-            .collect(ImmutableMap.toImmutableMap(JsFileDev::getSource, Function.identity()));
+            .filter(rule -> rule.getBuildable() instanceof JsFileDev)
+            .collect(
+                ImmutableMap.toImmutableMap(
+                    rule -> ((JsFileDev) rule.getBuildable()).getSource(), Function.identity()));
 
     assertThat(a.getTarget(), in(getBuildDepsAsTargets(fileRules.get(a))));
     assertThat(b.getTarget(), not(in(getBuildDepsAsTargets(fileRules.get(a)))));
@@ -365,7 +368,10 @@ public class JsLibraryDescriptionTest {
             .bundleWithDeps(BuildTargetFactory.newInstance("//query-deps:bundle"))
             .library(
                 target,
-                Query.of(String.format("deps(%s)", x)),
+                Query.of(
+                    String.format("deps(%s)", x),
+                    UnconfiguredTargetConfiguration.INSTANCE,
+                    BaseName.ROOT),
                 FakeSourcePath.of("arbitrary/source"))
             .build();
 
@@ -409,7 +415,10 @@ public class JsLibraryDescriptionTest {
             .bundleWithDeps(BuildTargetFactory.newInstance("//query-deps:bundle"))
             .library(
                 target,
-                Query.of(String.format("deps(%s)", x)),
+                Query.of(
+                    String.format("deps(%s)", x),
+                    UnconfiguredTargetConfiguration.INSTANCE,
+                    BaseName.ROOT),
                 FakeSourcePath.of("arbitrary/source"))
             .build();
 
@@ -438,7 +447,14 @@ public class JsLibraryDescriptionTest {
     BuildTarget b = BuildTargetFactory.newInstance("//direct:dep");
 
     JsTestScenario scenario =
-        scenarioBuilder.library(a).library(b).library(target, Query.of(a.toString()), b).build();
+        scenarioBuilder
+            .library(a)
+            .library(b)
+            .library(
+                target,
+                Query.of(a.toString(), UnconfiguredTargetConfiguration.INSTANCE, BaseName.ROOT),
+                b)
+            .build();
 
     JsLibrary lib = scenario.graphBuilder.getRuleWithType(target, JsLibrary.class);
     ImmutableSortedSet<BuildRule> deps = scenario.graphBuilder.getAllRules(ImmutableList.of(a, b));
@@ -473,7 +489,7 @@ public class JsLibraryDescriptionTest {
   }
 
   @Test
-  public void locationMacrosInExtraJsonAddBuildDeps() {
+  public void locationMacrosInTransitiveBuildDeps() {
     BuildTarget referencedTarget = BuildTargetFactory.newInstance("//:ref");
     JsTestScenario scenario =
         scenarioBuilder
@@ -487,11 +503,9 @@ public class JsLibraryDescriptionTest {
 
     BuildRule referenced = scenario.graphBuilder.getRule(referencedTarget);
 
-    assertThat(referenced, in(scenario.graphBuilder.getRule(target).getBuildDeps()));
-
-    RichStream<JsFile> jsFileRules = findJsFileRules(scenario.graphBuilder);
-    jsFileRules.collect(
-        countAssertions(jsFile -> assertThat(referenced, in(jsFile.getBuildDeps()))));
+    JsLibrary jsLibraryRule = (JsLibrary) scenario.graphBuilder.getRule(target);
+    Stream<JsFile<?>> jsFiles = jsLibraryRule.getJsFiles(scenario.graphBuilder);
+    jsFiles.collect(countAssertions(jsFile -> assertThat(referenced, in(jsFile.getBuildDeps()))));
   }
 
   private JsTestScenario buildScenario(String basePath, SourcePath source) {
@@ -507,7 +521,11 @@ public class JsLibraryDescriptionTest {
   }
 
   private JsFile.JsFileDev findFirstJsFileDevRule(ActionGraphBuilder graphBuilder) {
-    return findJsFileRules(graphBuilder).filter(JsFileDev.class).findFirst().get();
+    return findJsFileRules(graphBuilder)
+        .map(JsFile::getBuildable)
+        .filter(JsFileDev.class)
+        .findFirst()
+        .get();
   }
 
   private JsLibrary.Files internalFileRule(ActionGraphBuilder graphBuilder) {
@@ -515,9 +533,7 @@ public class JsLibraryDescriptionTest {
   }
 
   private static ImmutableList<BuildTarget> getBuildDepsAsTargets(BuildRule buildRule) {
-    return buildRule
-        .getBuildDeps()
-        .stream()
+    return buildRule.getBuildDeps().stream()
         .map(BuildRule::getBuildTarget)
         .collect(ImmutableList.toImmutableList());
   }
@@ -554,7 +570,12 @@ public class JsLibraryDescriptionTest {
 
     @Override
     public boolean matches(Object o) {
-      return o instanceof JsFile.JsFileDev && ((JsFile.JsFileDev) o).getSource().equals(source);
+      return RichStream.of(o)
+          .filter(JsFile.class)
+          .map(JsFile::getBuildable)
+          .filter(JsFileDev.class)
+          .map(JsFileDev::getSource)
+          .allMatch(source::equals);
     }
 
     @Override

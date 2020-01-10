@@ -1,0 +1,8 @@
+kotlin_test(
+    name = "collect",
+    srcs = glob(["*.kt"]),
+    deps = [
+        "//src/com/facebook/buck/multitenant/collect:collect",
+        "//third-party/java/junit:junit",
+    ],
+)

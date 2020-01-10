@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.rules.configsetting;
@@ -184,7 +184,7 @@ public class ConfigSettingIntegrationTest {
             this, "project_with_constraints", temporaryFolder);
     workspace.setUp();
 
-    Path output = workspace.buildAndReturnOutput("--target-platforms", "//:osx_x86-64", ":cat");
+    Path output = workspace.buildAndReturnOutput("--target-platforms", "//:osx_x86_64", ":cat");
     assertEquals("a", Files.readAllLines(output).get(0));
 
     output = workspace.buildAndReturnOutput("--target-platforms", "//:linux_aarch64", ":cat");
@@ -203,7 +203,7 @@ public class ConfigSettingIntegrationTest {
             "-c",
             "cat.file=a",
             "--target-platforms",
-            "//:osx_x86-64",
+            "//:osx_x86_64",
             ":cat_with_constraints_and_values");
     assertEquals("a", Files.readAllLines(output).get(0));
 
@@ -224,12 +224,13 @@ public class ConfigSettingIntegrationTest {
             this, "project_with_constraints", temporaryFolder);
     workspace.setUp();
 
-    ProcessResult processResult = workspace.runBuckBuild("--target-platforms", "//:osx", ":cat");
+    ProcessResult processResult =
+        workspace.runBuckBuild("--target-platforms", "//:osx_config", ":cat");
     processResult.assertFailure();
     assertThat(
         processResult.getStderr(),
         containsString(
-            "//:osx is used as a target platform, but not declared using `platform` rule"));
+            "//:osx_config is used as a target platform, but not declared using a platform rule"));
   }
 
   @Test
@@ -259,7 +260,7 @@ public class ConfigSettingIntegrationTest {
 
     Path output =
         workspace.buildAndReturnOutput(
-            "--target-platforms", "//:osx_x86-64", ":cat_with_specialized_constraints");
+            "--target-platforms", "//:osx_x86_64", ":cat_with_specialized_constraints");
     assertEquals("b", Files.readAllLines(output).get(0));
   }
 
@@ -277,7 +278,7 @@ public class ConfigSettingIntegrationTest {
             "-c",
             "cat.file2=b",
             "--target-platforms",
-            "//:osx_x86-64",
+            "//:osx_x86_64",
             ":cat_with_specialized_config");
     assertEquals("b", Files.readAllLines(output).get(0));
   }

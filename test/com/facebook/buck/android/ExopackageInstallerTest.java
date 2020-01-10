@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -109,6 +109,31 @@ public class ExopackageInstallerTest {
         RealAndroidDevice.parsePathAndPackageInfo("com.facebook.katana", lines);
 
     assertFalse(optionalInfo.isPresent());
+  }
+
+  @Test
+  public void testParsePathAndPackageInfoHandlesErrorLines() {
+    String lines =
+        "/system/csc/customer.xml can't open file\n"
+            + "package:/data/app/com.facebook.buck.android.agent-1/base.apk\n"
+            + "Key Set Manager:\n"
+            + "  [com.facebook.buck.android.agent]\n"
+            + "      Signing KeySets: 148\n"
+            + "\n"
+            + "/thislineisahunkofjunk\n"
+            + "Packages:\n"
+            + "  Package [com.facebook.buck.android.agent] (1d1d165b):\n"
+            + "    pkg=Package{bdd64f0 com.facebook.buck.android.agent}\n"
+            + "    codePath=/data/app/com.facebook.buck.android.agent-1\n"
+            + "    resourcePath=/data/app/com.facebook.buck.android.agent-1\n"
+            + "    legacyNativeLibraryDir=/data/app/com.facebook.buck.android.agent-1/lib\n"
+            + "    nativeLibraryRootDir=/data/app/com.facebook.buck.android.agent-1/lib\n"
+            + "    nativeLibraryDir=/data/app/com.facebook.buck.android.agent-1/lib/arm\n"
+            + "    versionCode=9 targetSdk=19\n"
+            + "    versionName=9\n";
+    Optional<PackageInfo> optionalPackageInfo =
+        RealAndroidDevice.parsePathAndPackageInfo("com.facebook.buck.android.agent", lines);
+    assertTrue(optionalPackageInfo.isPresent());
   }
 
   @Test

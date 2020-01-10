@@ -1,0 +1,20 @@
+config_setting(
+    name = "config",
+    values = {
+        "section.config": "true",
+    },
+)
+
+platform(
+    name = "platform",
+)
+
+java_library(
+    name = "lib",
+    srcs = [
+        "A.java",
+    ],
+    compatible_with = [
+        ":config",
+    ],
+)

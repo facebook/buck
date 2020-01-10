@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx.toolchain;
@@ -21,24 +21,24 @@ import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
-import com.facebook.buck.apple.clang.ModuleMap;
-import com.facebook.buck.apple.clang.ModuleMap.SwiftMode;
+import com.facebook.buck.apple.clang.ModuleMapMode;
+import com.facebook.buck.apple.clang.UmbrellaHeaderModuleMap;
+import com.facebook.buck.apple.clang.UmbrellaHeaderModuleMap.SwiftMode;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -47,8 +47,8 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.SymlinkMapsPaths;
 import com.facebook.buck.step.fs.SymlinkTreeMergeStep;
-import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
@@ -57,7 +57,6 @@ import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -75,12 +74,11 @@ public class HeaderSymlinkTreeWithModuleMapTest {
   private ImmutableMap<Path, SourcePath> links;
   private Path symlinkTreeRoot;
   private BuildRuleResolver ruleResolver;
-  private SourcePathRuleFinder ruleFinder;
-  private SourcePathResolver resolver;
+  private SourcePathResolverAdapter resolver;
 
   @Before
   public void setUp() throws Exception {
-    projectFilesystem = new FakeProjectFilesystem(tmpDir.getRoot());
+    projectFilesystem = new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmpDir.getRoot());
 
     // Create a build target to use when building the symlink tree.
     buildTarget = BuildTargetFactory.newInstance("//test:test");
@@ -108,13 +106,12 @@ public class HeaderSymlinkTreeWithModuleMapTest {
         BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/symlink-tree-root");
 
     ruleResolver = new TestActionGraphBuilder(TargetGraph.EMPTY);
-    ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    resolver = DefaultSourcePathResolver.from(ruleFinder);
+    resolver = ruleResolver.getSourcePathResolver();
 
     // Setup the symlink tree buildable.
     symlinkTreeBuildRule =
         HeaderSymlinkTreeWithModuleMap.create(
-            buildTarget, projectFilesystem, symlinkTreeRoot, links, ruleFinder);
+            buildTarget, projectFilesystem, symlinkTreeRoot, links, ModuleMapMode.UMBRELLA_HEADER);
   }
 
   @Test
@@ -129,20 +126,18 @@ public class HeaderSymlinkTreeWithModuleMapTest {
                     BuildCellRelativePath.fromCellRelativePath(
                         buildContext.getBuildCellRootPath(), projectFilesystem, symlinkTreeRoot)))
             .add(
-                new SymlinkTreeStep(
+                new SymlinkTreeMergeStep(
                     "cxx_header",
                     projectFilesystem,
                     symlinkTreeRoot,
-                    resolver.getMappedPaths(links)))
-            .add(
-                new SymlinkTreeMergeStep(
-                    "cxx_header", projectFilesystem, symlinkTreeRoot, ImmutableMultimap.of()))
+                    new SymlinkMapsPaths(resolver.getMappedPaths(links)),
+                    (fs, p) -> false))
             .add(
                 new ModuleMapStep(
                     projectFilesystem,
                     BuildTargetPaths.getGenPath(
                         projectFilesystem, buildTarget, "%s/SomeModule/module.modulemap"),
-                    new ModuleMap("SomeModule", SwiftMode.NO_SWIFT)))
+                    new UmbrellaHeaderModuleMap("SomeModule", SwiftMode.NO_SWIFT)))
             .build();
     ImmutableList<Step> actualBuildSteps =
         symlinkTreeBuildRule.getBuildSteps(buildContext, buildableContext);
@@ -161,7 +156,7 @@ public class HeaderSymlinkTreeWithModuleMapTest {
             symlinkTreeRoot,
             ImmutableMap.of(
                 Paths.get("SomeModule", "SomeModule-Swift.h"), FakeSourcePath.of("SomeModule")),
-            ruleFinder);
+            ModuleMapMode.UMBRELLA_HEADER);
 
     ImmutableList<Step> actualBuildSteps =
         linksWithSwiftHeader.getBuildSteps(buildContext, buildableContext);
@@ -171,7 +166,7 @@ public class HeaderSymlinkTreeWithModuleMapTest {
             projectFilesystem,
             BuildTargetPaths.getGenPath(
                 projectFilesystem, buildTarget, "%s/SomeModule/module.modulemap"),
-            new ModuleMap("SomeModule", SwiftMode.INCLUDE_SWIFT_HEADER));
+            new UmbrellaHeaderModuleMap("SomeModule", SwiftMode.INCLUDE_SWIFT_HEADER));
     assertThat(actualBuildSteps, hasItem(moduleMapStep));
   }
 
@@ -188,7 +183,7 @@ public class HeaderSymlinkTreeWithModuleMapTest {
                 Paths.get("OtherModule", "Header.h"),
                 PathSourcePath.of(
                     projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), aFile))),
-            ruleFinder);
+            ModuleMapMode.UMBRELLA_HEADER);
 
     // Calculate their rule keys and verify they're different.
     DefaultFileHashCache hashCache =
@@ -197,10 +192,9 @@ public class HeaderSymlinkTreeWithModuleMapTest {
             FileHashCacheMode.DEFAULT);
     FileHashLoader hashLoader = new StackedFileHashCache(ImmutableList.of(hashCache));
     RuleKey key1 =
-        new TestDefaultRuleKeyFactory(hashLoader, resolver, ruleFinder).build(symlinkTreeBuildRule);
+        new TestDefaultRuleKeyFactory(hashLoader, ruleResolver).build(symlinkTreeBuildRule);
     RuleKey key2 =
-        new TestDefaultRuleKeyFactory(hashLoader, resolver, ruleFinder)
-            .build(modifiedSymlinkTreeBuildRule);
+        new TestDefaultRuleKeyFactory(hashLoader, ruleResolver).build(modifiedSymlinkTreeBuildRule);
     assertNotEquals(key1, key2);
   }
 }

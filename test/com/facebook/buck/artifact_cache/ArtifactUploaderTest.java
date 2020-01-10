@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.artifact_cache;
@@ -32,6 +32,7 @@ import com.facebook.buck.io.file.MorePosixFilePermissions;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TarInspector;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -87,12 +88,15 @@ public class ArtifactUploaderTest {
           }
 
           @Override
-          public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
+          public ListenableFuture<Unit> store(ArtifactInfo info, BorrowablePath output) {
             stored.set(true);
 
             // Verify the build metadata.
             assertThat(
                 info.getMetadata().get("build-metadata"), Matchers.equalTo("build-metadata"));
+            assertThat(
+                info.getBuildTarget().get().getFullyQualifiedName(),
+                Matchers.equalTo(BUILD_TARGET.getFullyQualifiedName()));
 
             // Unarchive file.
             final ImmutableMap<String, byte[]> archiveContents;
@@ -100,7 +104,7 @@ public class ArtifactUploaderTest {
               archiveContents = TarInspector.readTarZst(output.getPath());
             } catch (IOException | CompressorException e) {
               fail(e.getMessage());
-              return Futures.immediateFuture(null);
+              return Futures.immediateFuture(Unit.UNIT);
             }
 
             // Verify archive contents.
@@ -115,7 +119,7 @@ public class ArtifactUploaderTest {
             assertArrayEquals(contents, archiveContents.get("dir/file"));
             assertArrayEquals(
                 contents, archiveContents.get("buck-out/bin/foo/.bar/metadata/artifact/metadata"));
-            return Futures.immediateFuture(null);
+            return Futures.immediateFuture(Unit.UNIT);
           }
         };
 
@@ -157,9 +161,9 @@ public class ArtifactUploaderTest {
       }
 
       assertThat(entries, Matchers.hasSize(1));
-      assertThat(
-          MorePosixFilePermissions.fromMode(entries.get(0).getMode()),
-          Matchers.contains(PosixFilePermission.OWNER_EXECUTE));
+      assertTrue(
+          MorePosixFilePermissions.fromMode(entries.get(0).getMode())
+              .contains(PosixFilePermission.OWNER_EXECUTE));
     }
   }
 }

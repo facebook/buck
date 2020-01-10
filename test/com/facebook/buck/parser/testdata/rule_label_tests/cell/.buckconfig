@@ -1,0 +1,8 @@
+[repositories]
+  root_cell = ../
+  child_cell = .
+
+[parser]
+  default_build_file_syntax = SKYLARK
+  enable_user_defined_rules = true
+

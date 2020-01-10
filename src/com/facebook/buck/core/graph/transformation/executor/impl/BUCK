@@ -1,9 +1,6 @@
 java_library(
     name = "impl",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//src/com/facebook/buck/core/graph/transformation/executor:executor",
-    ],
     tests = [
         "//test/com/facebook/buck/core/graph/transformation/executor/impl:impl",
     ],
@@ -13,5 +10,8 @@ java_library(
     deps = [
         "//src/com/facebook/buck/core/util/log:log",
         "//third-party/java/guava:guava",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/graph/transformation/executor:executor",
     ],
 )

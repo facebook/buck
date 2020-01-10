@@ -1,18 +1,19 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 {namespace kotlin_library}
 
 /***/
@@ -39,12 +40,7 @@ the <code>resources</code> argument.
 
 {param args}
 
-{call buck.arg}
-  {param name: 'name' /}
-  {param desc}
-  The name of the rule.
-  {/param}
-{/call}
+{call buck.name_arg /}
 
 {call buck.arg}
   {param name: 'srcs' /}
@@ -69,7 +65,57 @@ the <code>resources</code> argument.
 {/call}
 
 {call buck.arg}
-  {param name: 'extra_arguments' /}
+  {param name: 'kotlinc_plugins' /}
+  {param default: '[]' /}
+  {param desc}
+  Use this to specify <a href="https://kotlinlang.org/docs/reference/compiler-plugins.html">
+  Kotlin compiler plugins</a> to use when compiling this library.
+  This takes a list of source paths, each of which will be prefixed
+  with <code>-Xplugin=</code> and passed as extra arguments to the compiler.
+  Unlike <code>extra_kotlinc_arguments</code>, these can be <em>source paths</em>,
+  not just strings (though <code>extra_kotlinc_arguments</code> should be used
+  to specify plugin compiler options with <code>-P</code>).
+  <p>
+  For example, if you want to use{sp}
+  <a href="https://github.com/Kotlin/kotlinx.serialization">kotlinx.serialization</a>
+  {sp}with <code>kotlin_library()</code>, you need to specify{sp}
+  <code>kotlinx-serialization-compiler-plugin.jar</code> under{sp}
+  <code>kotlinc_plugins</code> and <code>kotlinx-serialization-runtime.jar</code>{sp}
+  (which you may have to fetch from Maven) in your <code>deps</code>:
+{literal}<pre class="prettyprint lang-py">
+kotlin_library(
+    name = "example",
+    srcs = glob(["*.kt"]),
+    deps = [
+        ":kotlinx-serialization-runtime",
+    ],
+    kotlinc_plugins = [
+        # Likely copied from your $KOTLIN_HOME directory.
+        "kotlinx-serialization-compiler-plugin.jar",
+    ],
+)
+
+prebuilt_jar(
+    name = "kotlinx-serialization-runtime",
+    binary_jar = ":kotlinx-serialization-runtime-0.10.0",
+)
+
+# Note you probably want to set
+# maven_repo=http://jcenter.bintray.com/ in your .buckconfig until
+# https://github.com/Kotlin/kotlinx.serialization/issues/64
+# is closed.
+remote_file(
+    name = "kotlinx-serialization-runtime-0.10.0",
+    out = "kotlinx-serialization-runtime-0.10.0.jar",
+    url = "mvn:org.jetbrains.kotlinx:kotlinx-serialization-runtime:jar:0.10.0",
+    sha1 = "23d777a5282c1957c7ce35946374fff0adab114c"
+)
+</pre>{/literal}
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'extra_kotlinc_arguments' /}
   {param default: '[]' /}
   {param desc}
   List of additional arguments to pass into the Kotlin compiler.
@@ -94,6 +140,19 @@ the <code>resources</code> argument.
   it for Java sources too.
   "javac" works only against Java sources, Kotlin sources won't have access to generated
   classes at compile time.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'kapt_ap_options' /}
+  {param desc}{literal}
+  Map of annotation processor options to pass into kapt via the apoptions plugin option. Each entry
+  should be a key value pair of the processor option and its value. Default is an empty map.
+  E.g.
+  kapt_ap_options = {
+    'someAnnotationOption': 'someValue'
+  }
+  More information here: https://kotlinlang.org/docs/reference/kapt.html{/literal}
   {/param}
 {/call}
 

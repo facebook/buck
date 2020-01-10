@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android.packageable;
@@ -20,7 +20,7 @@ import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.google.common.collect.ImmutableList;
@@ -72,16 +72,22 @@ interface AbstractAndroidPackageableCollection {
   ImmutableMap<APKModule, AndroidPackageableCollection.ResourceDetails> getResourceDetails();
 
   /** Native libraries mapped from modules. */
-  ImmutableMultimap<APKModule, NativeLinkable> getNativeLinkables();
+  ImmutableMultimap<APKModule, NativeLinkableGroup> getNativeLinkables();
 
   /** Native libraries to be packaged as assets. */
-  ImmutableMultimap<APKModule, NativeLinkable> getNativeLinkablesAssets();
+  ImmutableMultimap<APKModule, NativeLinkableGroup> getNativeLinkablesAssets();
 
   /** Directories containing native libraries. */
   ImmutableMultimap<APKModule, SourcePath> getNativeLibsDirectories();
 
   /** Directories containing native libraries to be used as assets. */
   ImmutableMultimap<APKModule, SourcePath> getNativeLibAssetsDirectories();
+
+  /**
+   * Directories containing native libraries which must be loadable by the system loader. Since
+   * these cannot be in a separate module, we use a list instead of a map
+   */
+  ImmutableList<SourcePath> getNativeLibsDirectoriesForSystemLoader();
 
   /**
    * Directories containing assets to be included directly in the apk, under the "assets" directory.

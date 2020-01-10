@@ -1,0 +1,1 @@
+int secret() { return -2; }

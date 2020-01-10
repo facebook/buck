@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
@@ -33,7 +33,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.SourceSet;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
-import com.facebook.buck.shell.Genrule;
+import com.facebook.buck.shell.LegacyGenrule;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MoveStep;
 import com.facebook.buck.step.fs.RmStep;
@@ -47,7 +47,7 @@ import java.util.Optional;
  * <p>The produced jar behaves similarly to a jar produced by java_binary, which means it can be
  * executed by {@code buck run} or using the {@code $(exe )} macro.
  */
-public class JarGenrule extends Genrule implements BinaryBuildRule {
+public class JarGenrule extends LegacyGenrule implements BinaryBuildRule {
 
   // Only used by getExecutableCommand, does not need to contribute to the rule key.
   private final Tool javaRuntimeLauncher;
@@ -85,10 +85,7 @@ public class JarGenrule extends Genrule implements BinaryBuildRule {
         false,
         isCacheable,
         environmentExpansionSeparator,
-        Optional.empty(),
-        Optional.empty(),
-        Optional.empty(),
-        false);
+        Optional.empty());
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.pathToOutput = BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "%s.jar");
   }

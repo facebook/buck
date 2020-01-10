@@ -1,11 +1,10 @@
-load("//tools/build_rules:java_rules.bzl", "java_test", "java_immutables_library")
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_test")
 
 java_test(
     name = "impl",
     srcs = glob(["*Test.java"]),
     deps = [
         "//src/com/facebook/buck/core/toolchain/impl:impl",
-        "//src/com/facebook/buck/util:exceptions",
         "//test/com/facebook/buck/core/config:FakeBuckConfig",
         "//test/com/facebook/buck/io/filesystem/impl:testutil",
         "//test/com/facebook/buck/rules/keys/config:testutil",
@@ -20,9 +19,6 @@ java_immutables_library(
         ["*.java"],
         exclude = ["*Test.java"],
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/core/toolchain:toolchain",
-    ],
     visibility = [
         "PUBLIC",
     ],
@@ -31,5 +27,8 @@ java_immutables_library(
         "//src/com/facebook/buck/core/toolchain/impl:impl",
         "//src/com/facebook/buck/util/environment:platform",
         "//test/com/facebook/buck/core/config:FakeBuckConfig",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/toolchain:toolchain",
     ],
 )

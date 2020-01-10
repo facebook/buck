@@ -1,25 +1,28 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.remoteexecution.grpc.server;
 
+import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.remoteexecution.grpc.GrpcRemoteExecutionClients;
-import com.facebook.buck.remoteexecution.grpc.GrpcRemoteExecutionServiceImpl;
+import com.facebook.buck.remoteexecution.grpc.GrpcRemoteExecutionServiceServer;
 import com.facebook.buck.remoteexecution.util.LocalContentAddressedStorage;
 import com.facebook.buck.util.NamedTemporaryDirectory;
+import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.io.Closer;
 import io.grpc.Server;
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
@@ -35,10 +38,12 @@ public class GrpcServer implements Closeable {
 
   public GrpcServer(int port) throws IOException {
     workDir = new NamedTemporaryDirectory("__remote__");
-    GrpcRemoteExecutionServiceImpl remoteExecution =
-        new GrpcRemoteExecutionServiceImpl(
+    GrpcRemoteExecutionServiceServer remoteExecution =
+        new GrpcRemoteExecutionServiceServer(
             new LocalContentAddressedStorage(
-                workDir.getPath().resolve("__cache__"), GrpcRemoteExecutionClients.PROTOCOL),
+                workDir.getPath().resolve("__cache__"),
+                GrpcRemoteExecutionClients.PROTOCOL,
+                new DefaultBuckEventBus(new DefaultClock(true), new BuildId())),
             workDir.getPath().resolve("__work__"));
     NettyServerBuilder builder = NettyServerBuilder.forPort(port);
 

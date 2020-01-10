@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -21,21 +21,23 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.linker.HasImportLibrary;
+import com.facebook.buck.cxx.toolchain.linker.HasIncrementalThinLTO;
+import com.facebook.buck.cxx.toolchain.linker.HasLTO;
 import com.facebook.buck.cxx.toolchain.linker.HasLinkerMap;
-import com.facebook.buck.cxx.toolchain.linker.HasThinLTO;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.ExtraOutputsDeriver;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
+import com.facebook.buck.cxx.toolchain.nativelink.LinkableListFilter;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup.Linkage;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.file.MorePaths;
@@ -48,19 +50,20 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Streams;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class CxxLinkableEnhancer {
   private static final Logger LOG = Logger.get(CxxLinkableEnhancer.class);
@@ -71,13 +74,91 @@ public class CxxLinkableEnhancer {
   // Utility class doesn't instantiate.
   private CxxLinkableEnhancer() {}
 
+  /** Generate build rule for the indexing step of an incremental ThinLTO build */
+  public static CxxThinLTOIndex createCxxThinLTOIndexBuildRule(
+      CxxBuckConfig cxxBuckConfig,
+      CxxPlatform cxxPlatform,
+      ProjectFilesystem projectFilesystem,
+      ActionGraphBuilder graphBuilder,
+      BuildTarget target,
+      Path output,
+      Linker.LinkableDepType depType,
+      Optional<LinkableListFilter> linkableListFilter,
+      Iterable<? extends NativeLinkable> nativeLinkableDeps,
+      Optional<Linker.CxxRuntimeType> cxxRuntimeType,
+      ImmutableSet<BuildTarget> blacklist,
+      ImmutableSet<BuildTarget> linkWholeDeps,
+      NativeLinkableInput immediateLinkableInput) {
+
+    // Build up the arguments to pass to the linker.
+    ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
+
+    Linker linker = cxxPlatform.getLd().resolve(graphBuilder, target.getTargetConfiguration());
+
+    // Add flags to generate linker map if supported.
+    if (linker instanceof HasLinkerMap && LinkerMapMode.isLinkerMapEnabledForBuildTarget(target)) {
+      argsBuilder.addAll(((HasLinkerMap) linker).linkerMap(output));
+    }
+
+    // ThinLto flags
+    if (linker instanceof HasIncrementalThinLTO) {
+      argsBuilder.addAll(((HasIncrementalThinLTO) linker).incrementalThinLTOFlags(output));
+    }
+
+    if (linker instanceof HasImportLibrary) {
+      argsBuilder.addAll(((HasImportLibrary) linker).importLibrary(output));
+    }
+
+    // Pass any platform specific or extra linker flags.
+    argsBuilder.addAll(
+        SanitizedArg.from(
+            cxxPlatform.getCompilerDebugPathSanitizer().sanitizer(Optional.empty()),
+            cxxPlatform.getLdflags()));
+
+    ImmutableList<Arg> allArgs =
+        createDepSharedLibFrameworkArgsForLink(
+            cxxPlatform,
+            graphBuilder,
+            target,
+            Linker.LinkType.EXECUTABLE,
+            Optional.empty(),
+            depType,
+            linkableListFilter,
+            nativeLinkableDeps,
+            Optional.empty(),
+            blacklist,
+            linkWholeDeps,
+            immediateLinkableInput);
+
+    argsBuilder.addAll(allArgs);
+
+    Linker.LinkableDepType runtimeDepType = depType;
+    if (cxxRuntimeType.orElse(Linker.CxxRuntimeType.DYNAMIC) == Linker.CxxRuntimeType.STATIC) {
+      runtimeDepType = Linker.LinkableDepType.STATIC;
+    }
+
+    // Add all arguments needed to link in the C/C++ platform runtime.
+    argsBuilder.addAll(StringArg.from(cxxPlatform.getRuntimeLdflags().get(runtimeDepType)));
+
+    ImmutableList<Arg> ldArgs = argsBuilder.build();
+
+    return new CxxThinLTOIndex(
+        target,
+        projectFilesystem,
+        graphBuilder,
+        linker,
+        output,
+        ldArgs,
+        cxxBuckConfig.getLinkScheduleInfo(),
+        cxxBuckConfig.shouldCacheLinks());
+  }
+
   public static CxxLink createCxxLinkableBuildRule(
       CellPathResolver cellPathResolver,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver ruleResolver,
-      SourcePathRuleFinder ruleFinder,
       BuildTarget target,
       Path output,
       ImmutableMap<String, Path> extraOutputs,
@@ -86,7 +167,7 @@ public class CxxLinkableEnhancer {
       CxxLinkOptions linkOptions,
       Optional<LinkOutputPostprocessor> postprocessor) {
 
-    Linker linker = cxxPlatform.getLd().resolve(ruleResolver);
+    Linker linker = cxxPlatform.getLd().resolve(ruleResolver, target.getTargetConfiguration());
 
     // Build up the arguments to pass to the linker.
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
@@ -97,8 +178,10 @@ public class CxxLinkableEnhancer {
     }
 
     // Add lto object path if thin LTO is on.
-    if (linker instanceof HasThinLTO && linkOptions.getThinLto()) {
-      argsBuilder.addAll(((HasThinLTO) linker).thinLTO(output));
+    if (linker instanceof HasLTO && linkOptions.getThinLto()) {
+      argsBuilder.addAll(((HasLTO) linker).thinLTO(output));
+    } else if (linker instanceof HasLTO && linkOptions.getFatLto()) {
+      argsBuilder.addAll(((HasLTO) linker).fatLTO(output));
     }
 
     if (linker instanceof HasImportLibrary) {
@@ -108,7 +191,7 @@ public class CxxLinkableEnhancer {
     // Pass any platform specific or extra linker flags.
     argsBuilder.addAll(
         SanitizedArg.from(
-            cxxPlatform.getCompilerDebugPathSanitizer().sanitize(Optional.empty()),
+            cxxPlatform.getCompilerDebugPathSanitizer().sanitizer(Optional.empty()),
             cxxPlatform.getLdflags()));
 
     argsBuilder.addAll(args);
@@ -125,7 +208,7 @@ public class CxxLinkableEnhancer {
           extraOutputsDeriver
               .get()
               .deriveExtraOutputsFromArgs(
-                  Arg.stringify(ldArgs, DefaultSourcePathResolver.from(ruleFinder)), output);
+                  Arg.stringify(ldArgs, ruleResolver.getSourcePathResolver()), output);
       if (!derivedExtraOutputs.isEmpty()) {
         allExtraOutputs =
             ImmutableMap.<String, Path>builder()
@@ -138,7 +221,7 @@ public class CxxLinkableEnhancer {
     return new CxxLink(
         target,
         projectFilesystem,
-        ruleFinder,
+        ruleResolver,
         cellPathResolver,
         linker,
         output,
@@ -147,12 +230,112 @@ public class CxxLinkableEnhancer {
         postprocessor,
         cxxBuckConfig.getLinkScheduleInfo(),
         cxxBuckConfig.shouldCacheLinks(),
-        linkOptions.getThinLto());
+        linkOptions.getThinLto(),
+        linkOptions.getFatLto());
+  }
+
+  private static ImmutableList<Arg> createDepSharedLibFrameworkArgsForLink(
+      CxxPlatform cxxPlatform,
+      ActionGraphBuilder graphBuilder,
+      BuildTarget target,
+      Linker.LinkType linkType,
+      Optional<String> soname,
+      Linker.LinkableDepType depType,
+      Optional<LinkableListFilter> linkableListFilter,
+      Iterable<? extends NativeLinkable> nativeLinkableDeps,
+      Optional<SourcePath> bundleLoader,
+      ImmutableSet<BuildTarget> blacklist,
+      ImmutableSet<BuildTarget> linkWholeDeps,
+      NativeLinkableInput immediateLinkableInput) {
+
+    // Soname should only ever be set when linking a "shared" library.
+    Preconditions.checkState(!soname.isPresent() || SONAME_REQUIRED_LINK_TYPES.contains(linkType));
+
+    // Bundle loaders are only supported for Mach-O bundle libraries
+    Preconditions.checkState(
+        !bundleLoader.isPresent() || linkType == Linker.LinkType.MACH_O_BUNDLE);
+
+    // Collect and topologically sort our deps that contribute to the link.
+    Collection<NativeLinkableInput> nativeLinkableInputs =
+        graphBuilder
+            .getParallelizer()
+            .maybeParallelizeTransform(
+                Collections2.filter(
+                    NativeLinkables.getNativeLinkables(
+                        graphBuilder, nativeLinkableDeps, depType, linkableListFilter),
+                    linkable -> !blacklist.contains(linkable.getBuildTarget())),
+                nativeLinkable -> {
+                  Linkage link = nativeLinkable.getPreferredLinkage();
+                  NativeLinkableInput input =
+                      nativeLinkable.getNativeLinkableInput(
+                          NativeLinkables.getLinkStyle(
+                              link, depType, Optional.of(cxxPlatform.getPicTypeForSharedLinking())),
+                          linkWholeDeps.contains(nativeLinkable.getBuildTarget()),
+                          graphBuilder,
+                          target.getTargetConfiguration());
+                  LOG.verbose("Native linkable %s returned input %s", nativeLinkable, input);
+                  return input;
+                });
+    // Construct a list out of the stream rather than passing in an iterable via ::iterator as
+    // the latter will never evaluate stream elements in parallel.
+    NativeLinkableInput linkableInput =
+        NativeLinkableInput.concat(
+            Iterables.concat(ImmutableList.of(immediateLinkableInput), nativeLinkableInputs));
+
+    // Build up the arguments to pass to the linker.
+    ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
+
+    // If we're doing a shared build, pass the necessary flags to the linker, including setting
+    // the soname.
+    if (linkType == Linker.LinkType.SHARED) {
+      argsBuilder.addAll(
+          cxxPlatform
+              .getLd()
+              .resolve(graphBuilder, target.getTargetConfiguration())
+              .getSharedLibFlag());
+    } else if (linkType == Linker.LinkType.MACH_O_BUNDLE) {
+      argsBuilder.add(StringArg.of("-bundle"));
+      // It's possible to build a Mach-O bundle without a bundle loader (logic tests, for example).
+      if (bundleLoader.isPresent()) {
+        argsBuilder.add(StringArg.of("-bundle_loader"), SourcePathArg.of(bundleLoader.get()));
+      }
+    }
+    if (soname.isPresent()) {
+      argsBuilder.addAll(
+          StringArg.from(
+              cxxPlatform
+                  .getLd()
+                  .resolve(graphBuilder, target.getTargetConfiguration())
+                  .soname(soname.get())));
+    }
+
+    // Add all arguments from our dependencies.
+    argsBuilder.addAll(linkableInput.getArgs());
+
+    // Add all shared libraries
+    if (!linkableInput.getLibraries().isEmpty()) {
+      addSharedLibrariesLinkerArgs(
+          cxxPlatform,
+          graphBuilder.getSourcePathResolver(),
+          ImmutableSortedSet.copyOf(linkableInput.getLibraries()),
+          argsBuilder);
+    }
+
+    // Add framework args
+    if (!linkableInput.getFrameworks().isEmpty()) {
+      addFrameworkLinkerArgs(
+          cxxPlatform,
+          graphBuilder.getSourcePathResolver(),
+          ImmutableSortedSet.copyOf(linkableInput.getFrameworks()),
+          argsBuilder);
+    }
+
+    return argsBuilder.build();
   }
 
   /**
    * Construct a {@link CxxLink} rule that builds a native linkable from top-level input objects and
-   * a dependency tree of {@link NativeLinkable} dependencies.
+   * a dependency tree of {@link NativeLinkableGroup} dependencies.
    *
    * @param nativeLinkableDeps library dependencies that the linkable links in
    * @param immediateLinkableInput framework and libraries of the linkable itself
@@ -163,14 +346,13 @@ public class CxxLinkableEnhancer {
       CxxPlatform cxxPlatform,
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver resolver,
-      SourcePathRuleFinder ruleFinder,
       BuildTarget target,
       Linker.LinkType linkType,
       Optional<String> soname,
       Path output,
       ImmutableList<String> extraOutputNames,
       Linker.LinkableDepType depType,
+      Optional<LinkableListFilter> linkableListFilter,
       CxxLinkOptions linkOptions,
       Iterable<? extends NativeLinkable> nativeLinkableDeps,
       Optional<Linker.CxxRuntimeType> cxxRuntimeType,
@@ -181,87 +363,25 @@ public class CxxLinkableEnhancer {
       Optional<LinkOutputPostprocessor> postprocessor,
       CellPathResolver cellPathResolver) {
 
-    // Soname should only ever be set when linking a "shared" library.
-    Preconditions.checkState(!soname.isPresent() || SONAME_REQUIRED_LINK_TYPES.contains(linkType));
-
-    // Bundle loaders are only supported for Mach-O bundle libraries
-    Preconditions.checkState(
-        !bundleLoader.isPresent() || linkType == Linker.LinkType.MACH_O_BUNDLE);
-
-    // Collect and topologically sort our deps that contribute to the link.
-    Stream<NativeLinkableInput> nativeLinkableInputs =
-        graphBuilder
-            .getParallelizer()
-            .maybeParallelize(
-                NativeLinkables.getNativeLinkables(
-                        cxxPlatform, graphBuilder, nativeLinkableDeps, depType)
-                    .stream())
-            .filter(linkable -> !blacklist.contains(linkable.getBuildTarget()))
-            .map(
-                nativeLinkable -> {
-                  NativeLinkable.Linkage link =
-                      nativeLinkable.getPreferredLinkage(cxxPlatform, graphBuilder);
-                  NativeLinkableInput input =
-                      nativeLinkable.getNativeLinkableInput(
-                          cxxPlatform,
-                          NativeLinkables.getLinkStyle(link, depType),
-                          linkWholeDeps.contains(nativeLinkable.getBuildTarget()),
-                          graphBuilder);
-                  LOG.verbose("Native linkable %s returned input %s", nativeLinkable, input);
-                  return input;
-                });
-    nativeLinkableInputs = Stream.concat(Stream.of(immediateLinkableInput), nativeLinkableInputs);
-    // Construct a list out of the stream rather than passing in an iterable via ::iterator as
-    // the latter will never evaluate stream elements in parallel.
-    NativeLinkableInput linkableInput =
-        NativeLinkableInput.concat(nativeLinkableInputs.collect(Collectors.toList()));
-
-    // Build up the arguments to pass to the linker.
-    ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
-
-    // If we're doing a shared build, pass the necessary flags to the linker, including setting
-    // the soname.
-    if (linkType == Linker.LinkType.SHARED) {
-      argsBuilder.addAll(cxxPlatform.getLd().resolve(graphBuilder).getSharedLibFlag());
-    } else if (linkType == Linker.LinkType.MACH_O_BUNDLE) {
-      argsBuilder.add(StringArg.of("-bundle"));
-      // It's possible to build a Mach-O bundle without a bundle loader (logic tests, for example).
-      if (bundleLoader.isPresent()) {
-        argsBuilder.add(StringArg.of("-bundle_loader"), SourcePathArg.of(bundleLoader.get()));
-      }
-    }
-    if (soname.isPresent()) {
-      argsBuilder.addAll(
-          StringArg.from(cxxPlatform.getLd().resolve(graphBuilder).soname(soname.get())));
-    }
-
-    // Add all arguments from our dependencies.
-    argsBuilder.addAll(linkableInput.getArgs());
-
-    // Add all shared libraries
-    if (!linkableInput.getLibraries().isEmpty()) {
-      addSharedLibrariesLinkerArgs(
-          cxxPlatform,
-          resolver,
-          ImmutableSortedSet.copyOf(linkableInput.getLibraries()),
-          argsBuilder);
-    }
-
-    // Add framework args
-    if (!linkableInput.getFrameworks().isEmpty()) {
-      addFrameworkLinkerArgs(
-          cxxPlatform,
-          resolver,
-          ImmutableSortedSet.copyOf(linkableInput.getFrameworks()),
-          argsBuilder);
-    }
+    ImmutableList<Arg> allArgs =
+        createDepSharedLibFrameworkArgsForLink(
+            cxxPlatform,
+            graphBuilder,
+            target,
+            linkType,
+            soname,
+            depType,
+            linkableListFilter,
+            nativeLinkableDeps,
+            bundleLoader,
+            blacklist,
+            linkWholeDeps,
+            immediateLinkableInput);
 
     Linker.LinkableDepType runtimeDepType = depType;
     if (cxxRuntimeType.orElse(Linker.CxxRuntimeType.DYNAMIC) == Linker.CxxRuntimeType.STATIC) {
       runtimeDepType = Linker.LinkableDepType.STATIC;
     }
-
-    ImmutableList<Arg> allArgs = argsBuilder.build();
 
     return createCxxLinkableBuildRule(
         cellPathResolver,
@@ -269,7 +389,6 @@ public class CxxLinkableEnhancer {
         cxxPlatform,
         projectFilesystem,
         graphBuilder,
-        ruleFinder,
         target,
         output,
         deriveSupplementaryOutputPathsFromMainOutputPath(output, extraOutputNames),
@@ -281,7 +400,7 @@ public class CxxLinkableEnhancer {
 
   private static void addSharedLibrariesLinkerArgs(
       CxxPlatform cxxPlatform,
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       ImmutableSortedSet<FrameworkPath> allLibraries,
       ImmutableList.Builder<Arg> argsBuilder) {
 
@@ -293,7 +412,7 @@ public class CxxLinkableEnhancer {
 
   private static void addFrameworkLinkerArgs(
       CxxPlatform cxxPlatform,
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       ImmutableSortedSet<FrameworkPath> allFrameworks,
       ImmutableList.Builder<Arg> argsBuilder) {
 
@@ -313,7 +432,6 @@ public class CxxLinkableEnhancer {
       CxxPlatform cxxPlatform,
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver ruleResolver,
-      SourcePathRuleFinder ruleFinder,
       BuildTarget target,
       Path output,
       ImmutableMap<String, Path> extraOutputs,
@@ -321,10 +439,18 @@ public class CxxLinkableEnhancer {
       ImmutableList<? extends Arg> args,
       CellPathResolver cellPathResolver) {
     ImmutableList.Builder<Arg> linkArgsBuilder = ImmutableList.builder();
-    linkArgsBuilder.addAll(cxxPlatform.getLd().resolve(ruleResolver).getSharedLibFlag());
+    linkArgsBuilder.addAll(
+        cxxPlatform
+            .getLd()
+            .resolve(ruleResolver, target.getTargetConfiguration())
+            .getSharedLibFlag());
     if (soname.isPresent()) {
       linkArgsBuilder.addAll(
-          StringArg.from(cxxPlatform.getLd().resolve(ruleResolver).soname(soname.get())));
+          StringArg.from(
+              cxxPlatform
+                  .getLd()
+                  .resolve(ruleResolver, target.getTargetConfiguration())
+                  .soname(soname.get())));
     }
     linkArgsBuilder.addAll(args);
     ImmutableList<Arg> linkArgs = linkArgsBuilder.build();
@@ -334,7 +460,6 @@ public class CxxLinkableEnhancer {
         cxxPlatform,
         projectFilesystem,
         ruleResolver,
-        ruleFinder,
         target,
         output,
         extraOutputs,
@@ -366,17 +491,16 @@ public class CxxLinkableEnhancer {
     public FrameworkLinkerArgs(
         ImmutableSortedSet<FrameworkPath> allFrameworks,
         CxxPlatform cxxPlatform,
-        SourcePathResolver resolver) {
+        SourcePathResolverAdapter resolver) {
       super(allFrameworks);
       frameworkPathToSearchPath =
           CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, resolver);
     }
 
     @Override
-    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver resolver) {
+    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolverAdapter resolver) {
       ImmutableSortedSet<Path> searchPaths =
-          frameworkPaths
-              .stream()
+          frameworkPaths.stream()
               .map(frameworkPathToSearchPath)
               .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
       for (Path searchPath : searchPaths) {
@@ -392,7 +516,7 @@ public class CxxLinkableEnhancer {
     }
 
     @Override
-    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver resolver) {
+    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolverAdapter resolver) {
       for (FrameworkPath frameworkPath : frameworkPaths) {
         consumer.accept("-framework");
         consumer.accept(frameworkPath.getName(resolver::getAbsolutePath));
@@ -406,7 +530,7 @@ public class CxxLinkableEnhancer {
     }
 
     @Override
-    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver resolver) {
+    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolverAdapter resolver) {
       for (FrameworkPath frameworkPath : frameworkPaths) {
         String libName =
             MorePaths.stripPathPrefixAndExtension(
@@ -428,17 +552,16 @@ public class CxxLinkableEnhancer {
     public SharedLibraryLinkArgs(
         ImmutableSortedSet<FrameworkPath> allLibraries,
         CxxPlatform cxxPlatform,
-        SourcePathResolver resolver) {
+        SourcePathResolverAdapter resolver) {
       super(allLibraries);
       frameworkPathToSearchPath =
           CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, resolver);
     }
 
     @Override
-    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver resolver) {
+    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolverAdapter resolver) {
       ImmutableSortedSet<Path> searchPaths =
-          frameworkPaths
-              .stream()
+          frameworkPaths.stream()
               .map(frameworkPathToSearchPath)
               .filter(Objects::nonNull)
               .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));

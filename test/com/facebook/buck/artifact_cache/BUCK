@@ -36,7 +36,6 @@ java_library(
         "//src/com/facebook/buck/slb:slb",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/test/result/type:type",
-        "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:io",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
@@ -84,7 +83,6 @@ standard_java_test(
         "//src/com/facebook/buck/core/util/immutables:immutables",
         "//src/com/facebook/buck/counters:counters",
         "//src/com/facebook/buck/cxx:rules",
-        "//src/com/facebook/buck/distributed:distributed",
         "//src/com/facebook/buck/doctor/config:config",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",
@@ -128,9 +126,7 @@ standard_java_test(
         "//src/com/facebook/buck/test:test",
         "//src/com/facebook/buck/test/result/type:type",
         "//src/com/facebook/buck/test/selectors:selectors",
-        "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:io",
-        "//src/com/facebook/buck/util:packaged_resource",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/cache:cache",
@@ -140,6 +136,7 @@ standard_java_test(
         "//src/com/facebook/buck/util/hashing:hashing",
         "//src/com/facebook/buck/util/network/hostname:hostname",
         "//src/com/facebook/buck/util/sha1:sha1",
+        "//src/com/facebook/buck/util/stream:stream",
         "//src/com/facebook/buck/util/trace:trace",
         "//src/com/facebook/buck/util/unit:unit",
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
@@ -153,6 +150,7 @@ standard_java_test(
         "//src/com/facebook/buck/worker:worker_process",
         "//test/com/facebook/buck/artifact_cache:testutil",
         "//test/com/facebook/buck/cli:testutil",
+        "//test/com/facebook/buck/core/cell:testutil",
         "//test/com/facebook/buck/core/config:FakeBuckConfig",
         "//test/com/facebook/buck/core/config:testutil",
         "//test/com/facebook/buck/core/model:testutil",
@@ -205,6 +203,12 @@ java_library(
     srcs = [
         "SQLiteArtifactCacheBenchmark.java",
     ],
+    visibility = [
+        "//test/com/facebook/buck/benchmarks/...",
+    ],
+    deps = [
+        "//src/com/facebook/buck/artifact_cache:artifact_cache",
+    ],
     exported_deps = [
         "//src/com/facebook/buck/artifact_cache:impl",
         "//src/com/facebook/buck/core/build/engine/buildinfo:buildinfo",
@@ -219,12 +223,6 @@ java_library(
         "//third-party/java/caliper:caliper",
         "//third-party/java/guava:guava",
         "//third-party/java/junit:junit",
-    ],
-    visibility = [
-        "//test/com/facebook/buck/benchmarks/...",
-    ],
-    deps = [
-        "//src/com/facebook/buck/artifact_cache:artifact_cache",
     ],
 )
 

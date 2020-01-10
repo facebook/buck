@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.apple.project;
@@ -26,75 +26,88 @@ import com.facebook.buck.cli.ProjectTestsMode;
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellProvider;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
-import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.NoSuchTargetException;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.model.targetgraph.impl.TargetGraphAndTargets;
-import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.resolver.impl.SingleThreadedActionGraphBuilder;
+import com.facebook.buck.core.rules.config.registry.impl.ConfigurationRuleRegistryFactory;
+import com.facebook.buck.core.rules.resolver.impl.MultiThreadedActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.core.util.graph.AbstractBottomUpTraversal;
+import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
+import com.facebook.buck.core.util.graph.CycleException;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.cxx.toolchain.impl.LegacyToolchainProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.features.apple.common.PathOutputPresenter;
+import com.facebook.buck.features.apple.common.XcodeWorkspaceConfigDescription;
+import com.facebook.buck.features.apple.common.XcodeWorkspaceConfigDescriptionArg;
 import com.facebook.buck.features.halide.HalideBuckConfig;
-import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.Parser;
-import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.SpeculativeParsing;
-import com.facebook.buck.parser.TargetNodePredicateSpec;
-import com.facebook.buck.parser.TargetNodeSpec;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
+import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.swift.SwiftBuckConfig;
+import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ProcessManager;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.collect.MoreSets;
 import com.facebook.buck.util.config.Configs;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
 import com.facebook.buck.versions.VersionException;
-import com.facebook.buck.versions.VersionedTargetGraphAndTargets;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import javax.annotation.concurrent.ThreadSafe;
 import org.pf4j.PluginManager;
 
@@ -110,8 +123,9 @@ public class XCodeProjectCommandHelper {
   private final BuckConfig buckConfig;
   private final InstrumentedVersionedTargetGraphCache versionedTargetGraphCache;
   private final TypeCoercerFactory typeCoercerFactory;
-  private final UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory;
+  private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
   private final Cell cell;
+  private final Optional<TargetConfiguration> targetConfiguration;
   private final ImmutableSet<Flavor> appleCxxFlavors;
   private final RuleKeyConfiguration ruleKeyConfiguration;
   private final Console console;
@@ -134,6 +148,7 @@ public class XCodeProjectCommandHelper {
 
   private final Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser;
   private final Function<ImmutableList<String>, ExitCode> buildRunner;
+  private final Supplier<DepsAwareExecutor<? super ComputeResult, ?>> depsAwareExecutorSupplier;
 
   public XCodeProjectCommandHelper(
       BuckEventBus buckEventBus,
@@ -142,15 +157,16 @@ public class XCodeProjectCommandHelper {
       BuckConfig buckConfig,
       InstrumentedVersionedTargetGraphCache versionedTargetGraphCache,
       TypeCoercerFactory typeCoercerFactory,
-      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
+      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       Cell cell,
       RuleKeyConfiguration ruleKeyConfiguration,
+      Optional<TargetConfiguration> targetConfiguration,
       Console console,
       Optional<ProcessManager> processManager,
       ImmutableMap<String, String> environment,
       ListeningExecutorService executorService,
       ListeningExecutorService parsingExecutorService,
-      List<String> arguments,
+      CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>> depsAwareExecutor,
       ImmutableSet<Flavor> appleCxxFlavors,
       boolean absoluteHeaderMapPaths,
       boolean sharedLibrariesInBundles,
@@ -165,7 +181,8 @@ public class XCodeProjectCommandHelper {
       boolean readOnly,
       PathOutputPresenter outputPresenter,
       Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser,
-      Function<ImmutableList<String>, ExitCode> buildRunner) {
+      Function<ImmutableList<String>, ExitCode> buildRunner,
+      List<String> arguments) {
     this.buckEventBus = buckEventBus;
     this.pluginManager = pluginManager;
     this.parser = parser;
@@ -174,6 +191,8 @@ public class XCodeProjectCommandHelper {
     this.typeCoercerFactory = typeCoercerFactory;
     this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
     this.cell = cell;
+    this.targetConfiguration = targetConfiguration;
+    this.depsAwareExecutorSupplier = depsAwareExecutor;
     this.appleCxxFlavors = appleCxxFlavors;
     this.ruleKeyConfiguration = ruleKeyConfiguration;
     this.console = console;
@@ -204,17 +223,29 @@ public class XCodeProjectCommandHelper {
   }
 
   public ExitCode parseTargetsAndRunXCodeGenerator() throws IOException, InterruptedException {
-    ImmutableSet<BuildTarget> passedInTargetsSet;
-    TargetGraph projectGraph;
+    TargetGraphCreationResult targetGraphCreationResult;
 
     LOG.debug("Xcode project generation: Getting the target graph");
 
     try {
-      passedInTargetsSet =
+      ImmutableSet<BuildTarget> passedInTargetsSet =
           ImmutableSet.copyOf(
               Iterables.concat(
-                  parser.resolveTargetSpecs(parsingContext, argsParser.apply(arguments))));
-      projectGraph = getProjectGraphForIde(passedInTargetsSet);
+                  parser.resolveTargetSpecs(
+                      parsingContext,
+                      argsParser.apply(arguments.isEmpty() ? ImmutableList.of("//...") : arguments),
+                      targetConfiguration)));
+      if (passedInTargetsSet.isEmpty()) {
+        throw new HumanReadableException("Could not find targets matching arguments");
+      }
+      targetGraphCreationResult = parser.buildTargetGraph(parsingContext, passedInTargetsSet);
+      if (arguments.isEmpty()) {
+        targetGraphCreationResult =
+            targetGraphCreationResult.withBuildTargets(
+                getRootsFromPredicate(
+                    targetGraphCreationResult.getTargetGraph(),
+                    node -> node.getDescription() instanceof XcodeWorkspaceConfigDescription));
+      }
     } catch (BuildFileParseException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return ExitCode.PARSE_ERROR;
@@ -227,29 +258,15 @@ public class XCodeProjectCommandHelper {
 
     checkForAndKillXcodeIfRunning(getIDEForceKill(buckConfig));
 
-    LOG.debug("Xcode project generation: Computing graph roots");
-
-    ImmutableSet<BuildTarget> graphRoots;
-    if (passedInTargetsSet.isEmpty()) {
-      graphRoots =
-          getRootsFromPredicate(
-              projectGraph,
-              node -> node.getDescription() instanceof XcodeWorkspaceConfigDescription);
-    } else {
-      graphRoots = passedInTargetsSet;
-    }
-
     LOG.debug("Xcode project generation: Getting more part of the target graph");
 
-    TargetGraphAndTargets targetGraphAndTargets;
     try {
-      targetGraphAndTargets =
-          createTargetGraph(
-              projectGraph,
-              graphRoots,
+      targetGraphCreationResult =
+          enhanceTargetGraphIfNeeded(
+              depsAwareExecutorSupplier,
+              targetGraphCreationResult,
               isWithTests(buckConfig),
-              isWithDependenciesTests(buckConfig),
-              passedInTargetsSet.isEmpty());
+              isWithDependenciesTests(buckConfig));
     } catch (BuildFileParseException | NoSuchTargetException | VersionException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return ExitCode.PARSE_ERROR;
@@ -264,11 +281,12 @@ public class XCodeProjectCommandHelper {
       sharedLibraryToBundle =
           Optional.of(
               ProjectGenerator.computeSharedLibrariesToBundles(
-                  targetGraphAndTargets.getTargetGraph().getNodes(), targetGraphAndTargets));
+                  targetGraphCreationResult.getTargetGraph().getNodes(),
+                  targetGraphCreationResult.getTargetGraph()));
     }
 
     if (dryRun) {
-      for (TargetNode<?> targetNode : targetGraphAndTargets.getTargetGraph().getNodes()) {
+      for (TargetNode<?> targetNode : targetGraphCreationResult.getTargetGraph().getNodes()) {
         console.getStdOut().println(targetNode.toString());
       }
 
@@ -277,8 +295,7 @@ public class XCodeProjectCommandHelper {
 
     LOG.debug("Xcode project generation: Run the project generator");
 
-    return runXcodeProjectGenerator(
-        targetGraphAndTargets, passedInTargetsSet, sharedLibraryToBundle);
+    return runXcodeProjectGenerator(targetGraphCreationResult, sharedLibraryToBundle);
   }
 
   private static String getIDEForceKillSectionName() {
@@ -336,8 +353,7 @@ public class XCodeProjectCommandHelper {
 
   /** Run xcode specific project generation actions. */
   private ExitCode runXcodeProjectGenerator(
-      TargetGraphAndTargets targetGraphAndTargets,
-      ImmutableSet<BuildTarget> passedInTargetsSet,
+      TargetGraphCreationResult targetGraphCreationResult,
       Optional<ImmutableMap<BuildTarget, TargetNode<?>>> sharedLibraryToBundle)
       throws IOException, InterruptedException {
     ExitCode exitCode = ExitCode.SUCCESS;
@@ -351,6 +367,7 @@ public class XCodeProjectCommandHelper {
             .setShouldUseAbsoluteHeaderMapPaths(absoluteHeaderMapPaths)
             .setShouldMergeHeaderMaps(appleConfig.shouldMergeHeaderMapsInXcodeProject())
             .setShouldAddLinkedLibrariesAsFlags(appleConfig.shouldAddLinkedLibrariesAsFlags())
+            .setShouldLinkSystemSwift(appleConfig.shouldLinkSystemSwift())
             .setShouldForceLoadLinkWholeLibraries(
                 appleConfig.shouldAddLinkerFlagsForLinkWholeLibraries())
             .setShouldGenerateHeaderSymlinkTreesOnly(
@@ -372,8 +389,7 @@ public class XCodeProjectCommandHelper {
             buckConfig,
             ruleKeyConfiguration,
             executorService,
-            targetGraphAndTargets,
-            passedInTargetsSet,
+            targetGraphCreationResult,
             options,
             appleCxxFlavors,
             getFocusModules(),
@@ -382,31 +398,16 @@ public class XCodeProjectCommandHelper {
             outputPresenter,
             sharedLibraryToBundle);
     if (!requiredBuildTargets.isEmpty()) {
-      ImmutableMultimap<Path, String> cellPathToCellName =
-          cell.getCellPathResolver().getCellPaths().asMultimap().inverse();
       ImmutableList<String> arguments =
           RichStream.from(requiredBuildTargets)
               .map(
                   target -> {
-                    if (!target.getCellPath().equals(cell.getRoot())) {
-                      Optional<String> cellName =
-                          cellPathToCellName.get(target.getCellPath()).stream().findAny();
-                      if (cellName.isPresent()) {
-                        return target.withUnflavoredBuildTarget(
-                            ImmutableUnflavoredBuildTarget.of(
-                                target.getCellPath(),
-                                cellName,
-                                target.getBaseName(),
-                                target.getShortName()));
-                      } else {
-                        throw new IllegalStateException(
-                            "Failed to find cell name for cell path while constructing parameters to "
-                                + "build dependencies for project generation. "
-                                + "Build target: "
-                                + target
-                                + " cell path: "
-                                + target.getCellPath());
-                      }
+                    if (!target.getCell().equals(cell.getCanonicalName())) {
+                      CanonicalCellName cellName = target.getCell();
+
+                      return target.withUnflavoredBuildTarget(
+                          UnflavoredBuildTarget.of(
+                              cellName, target.getBaseName(), target.getShortName()));
                     } else {
                       return target;
                     }
@@ -426,8 +427,7 @@ public class XCodeProjectCommandHelper {
       BuckConfig buckConfig,
       RuleKeyConfiguration ruleKeyConfiguration,
       ListeningExecutorService executorService,
-      TargetGraphAndTargets targetGraphAndTargets,
-      ImmutableSet<BuildTarget> passedInTargetsSet,
+      TargetGraphCreationResult targetGraphCreationResult,
       ProjectGeneratorOptions options,
       ImmutableSet<Flavor> appleCxxFlavors,
       FocusedModuleTargetMatcher focusModules,
@@ -436,27 +436,17 @@ public class XCodeProjectCommandHelper {
       PathOutputPresenter presenter,
       Optional<ImmutableMap<BuildTarget, TargetNode<?>>> sharedLibraryToBundle)
       throws IOException, InterruptedException {
-    ImmutableSet<BuildTarget> targets;
-    if (passedInTargetsSet.isEmpty()) {
-      targets =
-          targetGraphAndTargets
-              .getProjectRoots()
-              .stream()
-              .map(TargetNode::getBuildTarget)
-              .collect(ImmutableSet.toImmutableSet());
-    } else {
-      targets = passedInTargetsSet;
-    }
 
     LazyActionGraph lazyActionGraph =
-        new LazyActionGraph(targetGraphAndTargets.getTargetGraph(), cell.getCellProvider());
+        new LazyActionGraph(targetGraphCreationResult.getTargetGraph(), cell.getCellProvider());
 
     XCodeDescriptions xcodeDescriptions = XCodeDescriptionsFactory.create(pluginManager);
 
-    LOG.debug("Generating workspace for config targets %s", targets);
+    LOG.debug(
+        "Generating workspace for config targets %s", targetGraphCreationResult.getBuildTargets());
     ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder = ImmutableSet.builder();
-    for (BuildTarget inputTarget : targets) {
-      TargetNode<?> inputNode = targetGraphAndTargets.getTargetGraph().get(inputTarget);
+    for (BuildTarget inputTarget : targetGraphCreationResult.getBuildTargets()) {
+      TargetNode<?> inputNode = targetGraphCreationResult.getTargetGraph().get(inputTarget);
       XcodeWorkspaceConfigDescriptionArg workspaceArgs;
       if (inputNode.getDescription() instanceof XcodeWorkspaceConfigDescription) {
         TargetNode<XcodeWorkspaceConfigDescriptionArg> castedWorkspaceNode =
@@ -477,15 +467,20 @@ public class XCodeProjectCommandHelper {
 
       CxxPlatformsProvider cxxPlatformsProvider =
           cell.getToolchainProvider()
-              .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+              .getByName(
+                  CxxPlatformsProvider.DEFAULT_NAME,
+                  inputTarget.getTargetConfiguration(),
+                  CxxPlatformsProvider.class);
 
       CxxPlatform defaultCxxPlatform =
-          cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform().getLegacyTotallyUnsafe();
+          LegacyToolchainProvider.getLegacyTotallyUnsafe(
+              cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform());
+      Cell workspaceCell = cell.getCell(inputTarget.getCell());
       WorkspaceAndProjectGenerator generator =
           new WorkspaceAndProjectGenerator(
               xcodeDescriptions,
-              cell,
-              targetGraphAndTargets.getTargetGraph(),
+              workspaceCell,
+              targetGraphCreationResult.getTargetGraph(),
               workspaceArgs,
               inputTarget,
               options,
@@ -515,20 +510,22 @@ public class XCodeProjectCommandHelper {
           inputTarget, requiredBuildTargetsForWorkspace);
       requiredBuildTargetsBuilder.addAll(requiredBuildTargetsForWorkspace);
 
-      presenter.present(inputTarget.getFullyQualifiedName(), outputPath);
+      Path absolutePath = workspaceCell.getFilesystem().resolve(outputPath);
+      Path relativePath = cell.getFilesystem().relativize(absolutePath);
+      presenter.present(inputTarget.getFullyQualifiedName(), relativePath);
     }
 
     return requiredBuildTargetsBuilder.build();
   }
 
-  private FocusedModuleTargetMatcher getFocusModules() throws IOException, InterruptedException {
+  private FocusedModuleTargetMatcher getFocusModules() throws InterruptedException {
     if (modulesToFocusOn == null) {
       return FocusedModuleTargetMatcher.noFocus();
     }
 
     Iterable<String> patterns = Splitter.onPattern("\\s+").split(modulesToFocusOn);
     // Parse patterns with the following syntax:
-    // https://buckbuild.com/concept/build_target_pattern.html
+    // https://buck.build/concept/build_target_pattern.html
     ImmutableList<TargetNodeSpec> specs = argsParser.apply(patterns);
 
     // Resolve the list of targets matching the patterns.
@@ -537,7 +534,9 @@ public class XCodeProjectCommandHelper {
       passedInTargetsSet =
           parser
               .resolveTargetSpecs(
-                  parsingContext.withSpeculativeParsing(SpeculativeParsing.DISABLED), specs)
+                  parsingContext.withSpeculativeParsing(SpeculativeParsing.DISABLED),
+                  specs,
+                  targetConfiguration)
               .stream()
               .flatMap(Collection::stream)
               .collect(ImmutableSet.toImmutableSet());
@@ -664,85 +663,61 @@ public class XCodeProjectCommandHelper {
   @VisibleForTesting
   static ImmutableSet<BuildTarget> getRootsFromPredicate(
       TargetGraph projectGraph, Predicate<TargetNode<?>> rootsPredicate) {
-    return projectGraph
-        .getNodes()
-        .stream()
+    return projectGraph.getNodes().stream()
         .filter(rootsPredicate)
         .map(TargetNode::getBuildTarget)
         .collect(ImmutableSet.toImmutableSet());
   }
 
-  private TargetGraph getProjectGraphForIde(ImmutableSet<BuildTarget> passedInTargets)
-      throws InterruptedException, BuildFileParseException, IOException {
-
-    if (passedInTargets.isEmpty()) {
-      return parser
-          .buildTargetGraphWithConfigurationTargets(
-              parsingContext,
-              ImmutableList.of(
-                  TargetNodePredicateSpec.of(
-                      BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))))
-          .getTargetGraph();
-    }
-    Preconditions.checkState(!passedInTargets.isEmpty());
-    return parser.buildTargetGraph(parsingContext, passedInTargets);
-  }
-
-  private TargetGraphAndTargets createTargetGraph(
-      TargetGraph projectGraph,
-      ImmutableSet<BuildTarget> graphRoots,
+  private TargetGraphCreationResult enhanceTargetGraphIfNeeded(
+      Supplier<DepsAwareExecutor<? super ComputeResult, ?>> depsAwareExecutorSupplier,
+      TargetGraphCreationResult targetGraphCreationResult,
       boolean isWithTests,
-      boolean isWithDependenciesTests,
-      boolean needsFullRecursiveParse)
+      boolean isWithDependenciesTests)
       throws IOException, InterruptedException, BuildFileParseException, VersionException {
 
-    ImmutableSet<BuildTarget> explicitTestTargets = ImmutableSet.of();
-    ImmutableSet<BuildTarget> graphRootsOrSourceTargets =
-        replaceWorkspacesWithSourceTargetsIfPossible(graphRoots, projectGraph);
+    ImmutableSet<BuildTarget> originalBuildTargets = targetGraphCreationResult.getBuildTargets();
 
     if (isWithTests) {
       FocusedModuleTargetMatcher focusedModules = getFocusModules();
 
-      explicitTestTargets =
+      ImmutableSet<BuildTarget> graphRootsOrSourceTargets =
+          replaceWorkspacesWithSourceTargetsIfPossible(targetGraphCreationResult);
+
+      ImmutableSet<BuildTarget> explicitTestTargets =
           getExplicitTestTargets(
-              graphRootsOrSourceTargets, projectGraph, isWithDependenciesTests, focusedModules);
-      if (!needsFullRecursiveParse) {
-        projectGraph =
-            parser.buildTargetGraph(parsingContext, Sets.union(graphRoots, explicitTestTargets));
-      } else {
-        projectGraph =
-            parser.buildTargetGraph(
-                parsingContext,
-                Sets.union(
-                    projectGraph
-                        .getNodes()
-                        .stream()
-                        .map(TargetNode::getBuildTarget)
-                        .collect(ImmutableSet.toImmutableSet()),
-                    explicitTestTargets));
-      }
+              graphRootsOrSourceTargets,
+              targetGraphCreationResult.getTargetGraph(),
+              isWithDependenciesTests,
+              focusedModules);
+
+      targetGraphCreationResult =
+          parser.buildTargetGraph(
+              parsingContext,
+              MoreSets.union(targetGraphCreationResult.getBuildTargets(), explicitTestTargets));
     }
 
-    TargetGraphAndTargets targetGraphAndTargets =
-        TargetGraphAndTargets.create(graphRoots, projectGraph, isWithTests, explicitTestTargets);
     if (buckConfig.getView(BuildBuckConfig.class).getBuildVersions()) {
-      targetGraphAndTargets =
-          VersionedTargetGraphAndTargets.toVersionedTargetGraphAndTargets(
-              targetGraphAndTargets,
-              versionedTargetGraphCache,
-              buckEventBus,
+      targetGraphCreationResult =
+          versionedTargetGraphCache.toVersionedTargetGraph(
+              depsAwareExecutorSupplier.get(),
               buckConfig,
               typeCoercerFactory,
               unconfiguredBuildTargetFactory,
-              explicitTestTargets);
+              targetGraphCreationResult,
+              targetConfiguration,
+              buckEventBus);
     }
-    return targetGraphAndTargets;
+    return targetGraphCreationResult.withBuildTargets(originalBuildTargets);
   }
 
   @VisibleForTesting
   static ImmutableSet<BuildTarget> replaceWorkspacesWithSourceTargetsIfPossible(
-      ImmutableSet<BuildTarget> buildTargets, TargetGraph projectGraph) {
-    Iterable<TargetNode<?>> targetNodes = projectGraph.getAll(buildTargets);
+      TargetGraphCreationResult targetGraphCreationResult) {
+    Iterable<TargetNode<?>> targetNodes =
+        targetGraphCreationResult
+            .getTargetGraph()
+            .getAll(targetGraphCreationResult.getBuildTargets());
     ImmutableSet.Builder<BuildTarget> resultBuilder = ImmutableSet.builder();
     for (TargetNode<?> node : targetNodes) {
       if (node.getDescription() instanceof XcodeWorkspaceConfigDescription) {
@@ -804,7 +779,7 @@ public class XCodeProjectCommandHelper {
       nodes = projectRoots;
     }
 
-    return TargetGraphAndTargets.getExplicitTestTargets(
+    return TargetNodes.getTestTargetsForNodes(
         RichStream.from(nodes)
             .filter(node -> focusedModules.isFocusedOn(node.getBuildTarget()))
             .iterator());
@@ -822,30 +797,45 @@ public class XCodeProjectCommandHelper {
   private static class LazyActionGraph {
     private final TargetGraph targetGraph;
     private final ActionGraphBuilder graphBuilder;
+    private final Set<BuildTarget> traversedTargets;
 
     public LazyActionGraph(TargetGraph targetGraph, CellProvider cellProvider) {
       this.targetGraph = targetGraph;
       this.graphBuilder =
-          new SingleThreadedActionGraphBuilder(
-              targetGraph, new DefaultTargetNodeToBuildRuleTransformer(), cellProvider);
+          new MultiThreadedActionGraphBuilder(
+              MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
+              targetGraph,
+              ConfigurationRuleRegistryFactory.createRegistry(targetGraph),
+              new DefaultTargetNodeToBuildRuleTransformer(),
+              cellProvider);
+      this.traversedTargets = new HashSet<>();
     }
 
     public ActionGraphBuilder getActionGraphBuilderWhileRequiringSubgraph(TargetNode<?> root) {
-      TargetGraph subgraph = targetGraph.getSubgraph(ImmutableList.of(root));
-
-      try {
-        synchronized (this) {
-          new AbstractBottomUpTraversal<TargetNode<?>, NoSuchBuildTargetException>(subgraph) {
-            @Override
-            public void visit(TargetNode<?> node) throws NoSuchBuildTargetException {
-              graphBuilder.requireRule(node.getBuildTarget());
+      synchronized (this) {
+        try {
+          List<BuildTarget> currentTargets = new ArrayList<>();
+          for (TargetNode<?> targetNode :
+              new AcyclicDepthFirstPostOrderTraversal<TargetNode<?>>(
+                      node ->
+                          traversedTargets.contains(node.getBuildTarget())
+                              ? Collections.emptyIterator()
+                              : targetGraph.getOutgoingNodesFor(node).iterator())
+                  .traverse(ImmutableList.of(root))) {
+            if (!traversedTargets.contains(targetNode.getBuildTarget())
+                && targetNode.getRuleType().isBuildRule()) {
+              graphBuilder.requireRule(targetNode.getBuildTarget());
+              currentTargets.add(targetNode.getBuildTarget());
             }
-          }.traverse();
+          }
+          traversedTargets.addAll(currentTargets);
+        } catch (NoSuchBuildTargetException e) {
+          throw new HumanReadableException(e);
+        } catch (CycleException e) {
+          throw new RuntimeException(e);
         }
-      } catch (NoSuchBuildTargetException e) {
-        throw new HumanReadableException(e);
+        return graphBuilder;
       }
-      return graphBuilder;
     }
   }
 }

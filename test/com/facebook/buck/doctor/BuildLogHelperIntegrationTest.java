@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.doctor;
@@ -54,8 +54,7 @@ public class BuildLogHelperIntegrationTest {
   public void testBuildCommand() throws Exception {
     ImmutableList<BuildLogEntry> buildLogs = buildLogHelper.getBuildLogs();
     ImmutableMap<BuildId, String> buildIdToCommandMap =
-        buildLogs
-            .stream()
+        buildLogs.stream()
             .collect(
                 ImmutableMap.toImmutableMap(
                     e -> e.getBuildId().get(), e -> Joiner.on(" ").join(e.getCommandArgs().get())));
@@ -69,14 +68,30 @@ public class BuildLogHelperIntegrationTest {
   }
 
   @Test
+  public void testBuildExpandedCommand() throws Exception {
+    ImmutableList<BuildLogEntry> buildLogs = buildLogHelper.getBuildLogs();
+    ImmutableMap<BuildId, String> buildIdToCommandMap =
+        buildLogs.stream()
+            .collect(
+                ImmutableMap.toImmutableMap(
+                    e -> e.getBuildId().get(),
+                    e -> Joiner.on(" ").join(e.getExpandedCommandArgs().get())));
+
+    assertThat(
+        buildIdToCommandMap,
+        Matchers.equalTo(
+            ImmutableMap.of(
+                new BuildId("ac8bd626-6137-4747-84dd-5d4f215c876c"),
+                "build --config foo.bar=baz --config mode.setting=something buck")));
+  }
+
+  @Test
   public void testBuildDuration() throws Exception {
     ImmutableList<BuildLogEntry> buildLogs = buildLogHelper.getBuildLogs();
     ImmutableMap<BuildId, OptionalInt> buildIdToCommandMap =
-        buildLogs
-            .stream()
+        buildLogs.stream()
             .collect(
                 ImmutableMap.toImmutableMap(e -> e.getBuildId().get(), e -> e.getBuildTimeMs()));
-
     assertThat(
         buildIdToCommandMap,
         Matchers.equalTo(

@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -22,6 +22,7 @@ import com.android.tools.r8.D8Command;
 import com.android.tools.r8.Diagnostic;
 import com.android.tools.r8.DiagnosticsHandler;
 import com.android.tools.r8.OutputMode;
+import com.android.tools.r8.utils.InternalOptions;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.event.ConsoleEvent;
@@ -61,7 +62,7 @@ public class DxStep extends ShellStep {
     /** Specify the {@code --no-optimize} flag when running {@code dx}. */
     NO_OPTIMIZE,
 
-    /** Specify the {@code --force-jumbo} flag when running {@code dx}. */
+    /** Force the dexer to emit jumbo string references */
     FORCE_JUMBO,
 
     /**
@@ -102,6 +103,9 @@ public class DxStep extends ShellStep {
   private final Optional<String> maxHeapSize;
   private final String dexTool;
   private final boolean intermediate;
+  // used to differentiate different dexing buckets (if any)
+  private final Optional<String> bucketId;
+  private final Optional<Integer> minSdkVersion;
 
   @Nullable private Collection<String> resourcesReferencedInCode;
 
@@ -121,7 +125,7 @@ public class DxStep extends ShellStep {
         outputDexFile,
         filesToDex,
         EnumSet.noneOf(DxStep.Option.class),
-        DX);
+        D8);
   }
 
   /**
@@ -175,7 +179,9 @@ public class DxStep extends ShellStep {
         maxHeapSize,
         dexTool,
         intermediate,
-        null);
+        null,
+        Optional.empty(),
+        Optional.empty() /* minSdkVersion */);
   }
 
   /**
@@ -186,6 +192,7 @@ public class DxStep extends ShellStep {
    * @param maxHeapSize The max heap size used for out of process dex.
    * @param dexTool the tool used to perform dexing.
    * @param classpathFiles specifies classpath for interface static and default methods desugaring.
+   * @param minSdkVersion
    */
   public DxStep(
       ProjectFilesystem filesystem,
@@ -196,7 +203,9 @@ public class DxStep extends ShellStep {
       Optional<String> maxHeapSize,
       String dexTool,
       boolean intermediate,
-      @Nullable Collection<Path> classpathFiles) {
+      @Nullable Collection<Path> classpathFiles,
+      Optional<String> bucketId,
+      Optional<Integer> minSdkVersion) {
     super(filesystem.getRootPath());
     this.filesystem = filesystem;
     this.androidPlatformTarget = androidPlatformTarget;
@@ -207,6 +216,8 @@ public class DxStep extends ShellStep {
     this.maxHeapSize = maxHeapSize;
     this.dexTool = dexTool;
     this.intermediate = intermediate;
+    this.bucketId = bucketId;
+    this.minSdkVersion = minSdkVersion;
 
     Preconditions.checkArgument(
         !options.contains(Option.RUN_IN_PROCESS)
@@ -224,6 +235,7 @@ public class DxStep extends ShellStep {
     String dx = androidPlatformTarget.getDxExecutable().toString();
 
     if (dexTool.equals(D8)) {
+      // FIXME: We use the dx description for this rule, even if d8 is in use.
       context.postEvent(
           ConsoleEvent.fine("Using %s instead of D8. D8 can only be used in-process.", dx));
     }
@@ -265,6 +277,13 @@ public class DxStep extends ShellStep {
     if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()) {
       commandArgs.add("--verbose");
     }
+
+    // min api flag if known
+    minSdkVersion.ifPresent(
+        minApi -> {
+          commandArgs.add("--min-sdk-version");
+          commandArgs.add(Integer.toString(minApi));
+        });
 
     commandArgs.add("--output");
     commandArgs.add(filesystem.resolve(outputDexFile).toString());
@@ -338,7 +357,15 @@ public class DxStep extends ShellStep {
                         ? CompilationMode.DEBUG
                         : CompilationMode.RELEASE)
                 .setOutput(output, OutputMode.DexIndexed)
-                .setDisableDesugaring(options.contains(Option.NO_DESUGAR));
+                .setDisableDesugaring(options.contains(Option.NO_DESUGAR))
+                .setInternalOptionsModifier(
+                    (InternalOptions opt) -> {
+                      opt.testing.forceJumboStringProcessing = options.contains(Option.FORCE_JUMBO);
+                    });
+
+        bucketId.ifPresent(builder::setBucketId);
+        minSdkVersion.ifPresent(builder::setMinApiLevel);
+
         if (classpathFiles != null && !classpathFiles.isEmpty()) {
           // classpathFiles is needed only for D8 java 8 desugar
           ImmutableSet.Builder<Path> absolutePaths = ImmutableSet.builder();
@@ -364,9 +391,7 @@ public class DxStep extends ShellStep {
             ConsoleEvent.severe(
                 String.join(
                     System.lineSeparator(),
-                    diagnosticsHandler
-                        .diagnostics
-                        .stream()
+                    diagnosticsHandler.diagnostics.stream()
                         .map(Diagnostic::getDiagnosticMessage)
                         .collect(ImmutableList.toImmutableList()))));
         e.printStackTrace(context.getStdErr());

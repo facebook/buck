@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx.toolchain;
@@ -20,9 +20,16 @@ import com.facebook.buck.core.toolchain.tool.DelegatingTool;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.List;
 
 /** Preprocessor implementation for the Windows toolchain. */
 public class WindowsPreprocessor extends DelegatingTool implements Preprocessor {
+
+  public static final List<String> ENABLE_WIN_EXTERNAL_FLAGS =
+      Collections.singletonList("/experimental:external");
+  public static final String WIN_SYSTEM_INCLUDE_FLAG = "/external:I";
+
   public WindowsPreprocessor(Tool tool) {
     super(tool);
   }
@@ -44,6 +51,10 @@ public class WindowsPreprocessor extends DelegatingTool implements Preprocessor 
     return "/I" + includeRoot;
   }
 
+  private static String prependSystemIncludeFlag(String includeRoot) {
+    return WIN_SYSTEM_INCLUDE_FLAG + includeRoot;
+  }
+
   @Override
   public Iterable<String> localIncludeArgs(Iterable<String> includeRoots) {
     return Iterables.transform(includeRoots, WindowsPreprocessor::prependIncludeFlag);
@@ -51,12 +62,13 @@ public class WindowsPreprocessor extends DelegatingTool implements Preprocessor 
 
   @Override
   public Iterable<String> systemIncludeArgs(Iterable<String> includeRoots) {
-    return Iterables.transform(includeRoots, WindowsPreprocessor::prependIncludeFlag);
-  }
+    if (Iterables.isEmpty(includeRoots)) {
+      return Collections.emptyList();
+    }
 
-  @Override
-  public Iterable<String> quoteIncludeArgs(Iterable<String> includeRoots) {
-    return Iterables.transform(includeRoots, WindowsPreprocessor::prependIncludeFlag);
+    return Iterables.concat(
+        ENABLE_WIN_EXTERNAL_FLAGS,
+        Iterables.transform(includeRoots, WindowsPreprocessor::prependSystemIncludeFlag));
   }
 
   @Override

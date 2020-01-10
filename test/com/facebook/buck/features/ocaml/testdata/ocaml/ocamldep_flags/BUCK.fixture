@@ -8,13 +8,13 @@ ocaml_library(
         "otherModule.ml",
     ],
     compiler_flags = [
-      "-pp",
-      "ocamldep_flags/fake_ppx.sh",
+        "-pp",
+        "ocamldep_flags/fake_ppx.sh",
     ],
     ocamldep_flags = [
-      "-pp",
-      "ocamldep_flags/fake_ppx.sh",
-    ]
+        "-pp",
+        "ocamldep_flags/fake_ppx.sh",
+    ],
 )
 
 ocaml_binary(
@@ -24,14 +24,14 @@ ocaml_binary(
         "thirdModule.ml",
     ],
     compiler_flags = [
-      "-pp",
-      "ocamldep_flags/fake_ppx.sh",
+        "-pp",
+        "ocamldep_flags/fake_ppx.sh",
     ],
     ocamldep_flags = [
-      "-pp",
-      "ocamldep_flags/fake_ppx.sh",
+        "-pp",
+        "ocamldep_flags/fake_ppx.sh",
     ],
     deps = [
-      ":code",
-    ]
+        ":code",
+    ],
 )

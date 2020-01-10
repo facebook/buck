@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android.dalvik;
@@ -19,46 +19,75 @@ package com.facebook.buck.android.dalvik;
 import com.facebook.buck.jvm.java.classes.AbstractFileLike;
 import com.facebook.buck.jvm.java.classes.FileLike;
 import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
+import com.google.common.primitives.Bytes;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 
 /** Helper to create a "canary" class for the secondary DEX. See {@link #create}. */
 public class CanaryFactory {
-
-  static final String CANARY_PATH_FORMAT = "%s/dex%02d/Canary.class";
+  static final String CANARY_PATH_FORMAT = "%s/dex%s/Canary";
 
   /**
-   * Produced by compiling the following Java file with JDK 7 with "-target 6 -source 6".
+   * Produced by:
    *
    * <pre>
-   * package secondary.dex01;
-   * public interface Canary {}
+   * $ echo -e "package secondary.dex01;\npublic interface Canary {}" > Canary.java
+   * $ javac -target 6 -source 6 Canary.java
+   * $ xxd -c 4 -g 1 Canary.class | cut -d' ' -f2-5 | sed -E 's/(..) ?/(byte) 0x\1, /g'
    * </pre>
    */
-  private static final byte[] CANARY_TEMPLATE = {
-    -54, -2, -70, -66, 0x00, 0x00, 0x00, 0x32,
-    0x00, 0x05, 0x07, 0x00, 0x03, 0x07, 0x00, 0x04,
-    0x01, 0x00, 0x16, 0x73, 0x65, 0x63, 0x6f, 0x6e,
-    0x64, 0x61, 0x72, 0x79, 0x2f, 0x64, 0x65, 0x78,
-    0x30, 0x31, 0x2f, 0x43, 0x61, 0x6e, 0x61, 0x72,
-    0x79, 0x01, 0x00, 0x10, 0x6a, 0x61, 0x76, 0x61,
-    0x2f, 0x6c, 0x61, 0x6e, 0x67, 0x2f, 0x4f, 0x62,
-    0x6a, 0x65, 0x63, 0x74, 0x06, 0x01, 0x00, 0x01,
-    0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00
+  private static final byte[] CANARY_START = {
+    (byte) 0xca, (byte) 0xfe, (byte) 0xba, (byte) 0xbe,
+    (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x32,
+    (byte) 0x00, (byte) 0x07, (byte) 0x07, (byte) 0x00,
+    (byte) 0x05, (byte) 0x07, (byte) 0x00, (byte) 0x06,
+    (byte) 0x01, (byte) 0x00, (byte) 0x0a, (byte) 0x53,
+    (byte) 0x6f, (byte) 0x75, (byte) 0x72, (byte) 0x63,
+    (byte) 0x65, (byte) 0x46, (byte) 0x69, (byte) 0x6c,
+    (byte) 0x65, (byte) 0x01, (byte) 0x00, (byte) 0x0b,
+    (byte) 0x43, (byte) 0x61, (byte) 0x6e, (byte) 0x61,
+    (byte) 0x72, (byte) 0x79, (byte) 0x2e, (byte) 0x6a,
+    (byte) 0x61, (byte) 0x76, (byte) 0x61,
   };
+  /*
+    The part between CANARY_START and CANARY_REMAINDER is regenerated
+    to rename the canary class.
 
-  /**
-   * Offset into {@link #CANARY_TEMPLATE} where we find the 2-byte UTF-8 index that must be updated
-   * for each canary class to change the package.
-   */
-  private static final int CANARY_INDEX_OFFSET = 32;
+    (byte) 0x01, (byte) 0x00, (byte) 0x16,
+    (byte) 0x73, (byte) 0x65, (byte) 0x63, (byte) 0x6f,
+    (byte) 0x6e, (byte) 0x64, (byte) 0x61, (byte) 0x72,
+    (byte) 0x79, (byte) 0x2f, (byte) 0x64, (byte) 0x65,
+    (byte) 0x78, (byte) 0x30, (byte) 0x31, (byte) 0x2f,
+    (byte) 0x43, (byte) 0x61, (byte) 0x6e, (byte) 0x61,
+    (byte) 0x72, (byte) 0x79,
 
-  private static final int CANARY_STORE_OFFSET = 19;
+    This corresponds to a constant pool entry of type CONSTANT_Utf8_info
+    CONSTANT_Utf8_info {
+        u1 tag;               0x01    (Utf8 string)
+        u2 length;            0x0016  (22)
+        u1 bytes[length];     secondary/dex01/Canary
+    }
+
+    u1,u2,etc. types in the java class file spec are big-endian
+
+    https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.4
+    https://en.wikipedia.org/wiki/Java_class_file
+  */
+  private static final byte[] CANARY_REMAINDER = {
+    (byte) 0x01, (byte) 0x00, (byte) 0x10, (byte) 0x6a,
+    (byte) 0x61, (byte) 0x76, (byte) 0x61, (byte) 0x2f,
+    (byte) 0x6c, (byte) 0x61, (byte) 0x6e, (byte) 0x67,
+    (byte) 0x2f, (byte) 0x4f, (byte) 0x62, (byte) 0x6a,
+    (byte) 0x65, (byte) 0x63, (byte) 0x74, (byte) 0x06,
+    (byte) 0x01, (byte) 0x00, (byte) 0x01, (byte) 0x00,
+    (byte) 0x02, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+    (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+    (byte) 0x01, (byte) 0x00, (byte) 0x03, (byte) 0x00,
+    (byte) 0x00, (byte) 0x00, (byte) 0x02, (byte) 0x00,
+    (byte) 0x04,
+  };
 
   /** Utility class: do not instantiate */
   private CanaryFactory() {}
@@ -72,21 +101,19 @@ public class CanaryFactory {
    * @param store dex store name of the current zip (to ensure unique names).
    * @param index Index of the current zip (to ensure unique names).
    */
-  public static FileLike create(String store, int index) {
-    byte[] canaryClass = Arrays.copyOf(CANARY_TEMPLATE, CANARY_TEMPLATE.length);
-    String canaryIndexStr = String.format("%02d", index);
-    byte[] canaryIndexBytes = canaryIndexStr.getBytes(Charsets.UTF_8);
-    Preconditions.checkState(
-        canaryIndexBytes.length == 2,
-        "Formatted index string \"" + canaryIndexStr + "\" is not exactly 2 bytes.");
-    System.arraycopy(canaryIndexBytes, 0, canaryClass, CANARY_INDEX_OFFSET, 2);
-    byte[] canaryStoreBytes = store.getBytes(Charsets.UTF_8);
-    Preconditions.checkState(
-        canaryStoreBytes.length == 9,
-        "Formatted store string \"" + store + "\" is not exactly 9 bytes.\"");
-    System.arraycopy(canaryStoreBytes, 0, canaryClass, CANARY_STORE_OFFSET, 9);
-    String relativePath = String.format(CANARY_PATH_FORMAT, store, index);
-    return getCanaryClass(relativePath, canaryClass);
+  public static FileLike create(String store, String index) {
+    String className = String.format(CANARY_PATH_FORMAT, store, index);
+    byte[] classNameBytes = className.getBytes(Charsets.UTF_8);
+    // See above comment regarding CONSTANT_Utf8_info
+    byte[] stringInfo = new byte[3];
+    stringInfo[0] = (byte) 0x01;
+    stringInfo[1] = (byte) ((classNameBytes.length & 0x0000FF00) >> 8);
+    stringInfo[2] = (byte) (classNameBytes.length & 0x000000FF);
+
+    byte[] canaryClass = Bytes.concat(CANARY_START, stringInfo, classNameBytes, CANARY_REMAINDER);
+
+    String classFilePath = className + ".class";
+    return getCanaryClass(classFilePath, canaryClass);
   }
 
   private static FileLike getCanaryClass(String relativePath, byte[] canaryClass) {

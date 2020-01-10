@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.rust;
@@ -26,12 +26,10 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.file.FileScrubber;
@@ -42,8 +40,10 @@ import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.hamcrest.Matchers;
@@ -61,7 +61,7 @@ public class RustCompileTest {
     RustCompileRule linkable =
         FakeRustCompileRule.from(
             "//:donotcare", ImmutableSortedSet.of(FakeSourcePath.of("main.rs")));
-    assertThat(linkable.getCrateRoot().toString(), Matchers.endsWith("main.rs"));
+    assertThat(linkable.getCrateRoot(), Matchers.endsWith("main.rs"));
   }
 
   @Test
@@ -69,7 +69,7 @@ public class RustCompileTest {
     RustCompileRule linkable =
         FakeRustCompileRule.from(
             "//:myname", ImmutableSortedSet.of(FakeSourcePath.of("myname.rs")));
-    assertThat(linkable.getCrateRoot().toString(), Matchers.endsWith("myname.rs"));
+    assertThat(linkable.getCrateRoot(), Matchers.endsWith("myname.rs"));
   }
 
   // Test that there's only one valid candidate root source file.
@@ -96,17 +96,30 @@ public class RustCompileTest {
     assertEquals(
         "i386-apple-ios",
         RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("iphonesimulator-i386")));
+
+    assertEquals(
+        "aarch64-linux-android",
+        RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("android-arm64")));
+    assertEquals(
+        "armv7-linux-androideabi",
+        RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("android-armv7")));
+    assertEquals(
+        "x86_64-linux-android",
+        RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("android-x86_64")));
+    assertEquals(
+        "i686-linux-android",
+        RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("android-i386")));
   }
 
   private static Tool fakeTool() {
     return new Tool() {
       @Override
-      public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
+      public ImmutableList<String> getCommandPrefix(SourcePathResolverAdapter resolver) {
         return ImmutableList.of();
       }
 
       @Override
-      public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+      public ImmutableMap<String, String> getEnvironment(SourcePathResolverAdapter resolver) {
         return ImmutableMap.of();
       }
     };
@@ -120,7 +133,7 @@ public class RustCompileTest {
       }
 
       @Override
-      public Iterable<Arg> linkWhole(Arg input, SourcePathResolver pathResolver) {
+      public Iterable<Arg> linkWhole(Arg input, SourcePathResolverAdapter pathResolver) {
         return null;
       }
 
@@ -169,7 +182,6 @@ public class RustCompileTest {
           ProjectFilesystem projectFilesystem,
           BuildRuleParams baseParams,
           ActionGraphBuilder graphBuilder,
-          SourcePathRuleFinder ruleFinder,
           BuildTarget target,
           ImmutableList<? extends SourcePath> symbolFiles) {
         return null;
@@ -186,11 +198,6 @@ public class RustCompileTest {
       }
 
       @Override
-      public boolean hasFilePathSizeLimitations() {
-        return false;
-      }
-
-      @Override
       public SharedLibraryLoadingType getSharedLibraryLoadingType() {
         return SharedLibraryLoadingType.RPATH;
       }
@@ -201,12 +208,12 @@ public class RustCompileTest {
       }
 
       @Override
-      public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
+      public ImmutableList<String> getCommandPrefix(SourcePathResolverAdapter resolver) {
         return ImmutableList.of();
       }
 
       @Override
-      public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+      public ImmutableMap<String, String> getEnvironment(SourcePathResolverAdapter resolver) {
         return ImmutableMap.of();
       }
 
@@ -219,12 +226,15 @@ public class RustCompileTest {
 
   static class FakeRustCompileRule extends RustCompileRule {
     private FakeRustCompileRule(
-        BuildTarget target, ImmutableSortedSet<SourcePath> srcs, SourcePath rootModule) {
+        BuildTarget target,
+        ImmutableSortedSet<SourcePath> srcs,
+        String rootModule,
+        SourcePathRuleFinder ruleFinder) {
       super(
           target,
           new FakeProjectFilesystem(),
-          TestBuildRuleParams.create(),
-          Optional.of(String.format("lib%s.rlib", target)),
+          ruleFinder,
+          String.format("lib%s.rlib", target.getShortName()),
           fakeTool(),
           fakeLinker(),
           Stream.of("--crate-name", target.getShortName(), "--crate-type", "rlib")
@@ -233,29 +243,32 @@ public class RustCompileTest {
           /* depArgs */ ImmutableList.of(),
           /* linkerFlags */
           ImmutableList.of(),
-          srcs,
+          ImmutableSortedMap.of(),
+          srcs.stream()
+              .collect(
+                  ImmutableSortedMap.toImmutableSortedMap(
+                      Comparator.naturalOrder(), src -> src, src -> Optional.empty())),
           rootModule,
-          RustBuckConfig.RemapSrcPaths.NO);
+          RustBuckConfig.RemapSrcPaths.NO,
+          Optional.empty());
     }
 
     static FakeRustCompileRule from(String target, ImmutableSortedSet<SourcePath> srcs) {
       BuildTarget buildTarget = BuildTargetFactory.newInstance(target);
 
-      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+      SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
 
-      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
-
-      Optional<SourcePath> root =
+      Optional<String> root =
           RustCompileUtils.getCrateRoot(
-              pathResolver,
+              ruleFinder.getSourcePathResolver(),
               buildTarget.getShortName(),
               ImmutableSet.of("main.rs", "lib.rs"),
-              srcs.stream());
+              srcs.stream().map(sp -> ruleFinder.getSourcePathResolver().getRelativePath(sp)));
 
       if (!root.isPresent()) {
         throw new HumanReadableException("No crate root source identified");
       }
-      return new FakeRustCompileRule(buildTarget, srcs, root.get());
+      return new FakeRustCompileRule(buildTarget, srcs, root.get(), ruleFinder);
     }
   }
 }

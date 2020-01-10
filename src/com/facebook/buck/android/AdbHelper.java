@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -30,8 +30,10 @@ import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.android.exopackage.RealAndroidDevice;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -49,7 +51,6 @@ import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.CommandThreadFactory;
 import com.facebook.buck.util.concurrent.MostExecutors;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -253,7 +254,7 @@ public class AdbHelper implements AndroidDevicesHelper {
 
   @Override
   public void installApk(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       HasInstallableApk hasInstallableApk,
       boolean installViaSd,
       boolean quiet,
@@ -291,7 +292,7 @@ public class AdbHelper implements AndroidDevicesHelper {
 
   @Override
   public void startActivity(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       HasInstallableApk hasInstallableApk,
       @Nullable String activity,
       boolean waitForDebugger)
@@ -346,7 +347,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   /**
    * Uninstall apk from all matching devices.
    *
-   * @see #installApk(SourcePathResolver, HasInstallableApk, boolean, boolean, String)
+   * @see #installApk(SourcePathResolverAdapter, HasInstallableApk, boolean, boolean, String)
    */
   @Override
   public void uninstallApp(String packageName, boolean shouldKeepUserData)
@@ -371,7 +372,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   }
 
   public static String tryToExtractPackageNameFromManifest(
-      SourcePathResolver pathResolver, ApkInfo apkInfo) {
+      SourcePathResolverAdapter pathResolver, ApkInfo apkInfo) {
     Path pathToManifest = pathResolver.getAbsolutePath(apkInfo.getManifestPath());
     return tryToExtractPackageNameFromManifest(pathToManifest);
   }
@@ -521,17 +522,42 @@ public class AdbHelper implements AndroidDevicesHelper {
     if (devicesSupplierForTests.isPresent()) {
       return devicesSupplierForTests.get().get();
     }
+
+    // TODO(nga): use something else
+    UnconfiguredTargetConfiguration toolchainTargetConfiguration =
+        UnconfiguredTargetConfiguration.INSTANCE;
+
     // Initialize adb connection.
     AndroidDebugBridge adb;
     try {
       adb =
           createAdb(
               toolchainProvider.getByName(
-                  AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class),
+                  AndroidPlatformTarget.DEFAULT_NAME,
+                  toolchainTargetConfiguration,
+                  AndroidPlatformTarget.class),
               contextSupplier.get(),
               options.getAdbTimeout());
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
+    }
+    if (adb == null) {
+      // Try resetting state and reconnecting
+      printError("Unable to reconnect to existing server, starting a new one");
+      try {
+        AndroidDebugBridge.disconnectBridge();
+        AndroidDebugBridge.terminate();
+        adb =
+            createAdb(
+                toolchainProvider.getByName(
+                    AndroidPlatformTarget.DEFAULT_NAME,
+                    toolchainTargetConfiguration,
+                    AndroidPlatformTarget.class),
+                contextSupplier.get(),
+                options.getAdbTimeout());
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
     }
     if (adb == null) {
       printError("Failed to create adb connection.");
@@ -554,6 +580,28 @@ public class AdbHelper implements AndroidDevicesHelper {
       printError("No devices found with adb, restarting adb-server.");
       adb.restart();
       devices = filterDevices(adb.getDevices());
+    }
+    if (devices == null && restartAdbOnFailure) {
+      printError("No devices found with adb after restart, terminating and restarting adb-server.");
+      AndroidDebugBridge.disconnectBridge();
+      AndroidDebugBridge.terminate();
+      try {
+        adb =
+            createAdb(
+                toolchainProvider.getByName(
+                    AndroidPlatformTarget.DEFAULT_NAME,
+                    toolchainTargetConfiguration,
+                    AndroidPlatformTarget.class),
+                contextSupplier.get(),
+                options.getAdbTimeout());
+        if (adb == null) {
+          printError("Failed to re-create adb connection.");
+          return ImmutableList.of();
+        }
+        devices = filterDevices(adb.getDevices());
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
     }
     if (devices == null) {
       return ImmutableList.of();
@@ -599,7 +647,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   }
 
   private void installApkExopackage(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       HasInstallableApk hasInstallableApk,
       boolean quiet,
       @Nullable String processName)
@@ -619,7 +667,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   }
 
   private void installApkDirectly(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       HasInstallableApk hasInstallableApk,
       boolean installViaSd,
       boolean quiet)

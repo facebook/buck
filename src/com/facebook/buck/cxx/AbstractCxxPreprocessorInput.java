@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.rules.args.Arg;
@@ -50,17 +49,17 @@ abstract class AbstractCxxPreprocessorInput {
   @Value.Parameter
   protected abstract ImmutableSet<BuildTarget> getRules();
 
-  public Iterable<BuildRule> getDeps(
-      BuildRuleResolver ruleResolver, SourcePathRuleFinder ruleFinder) {
+  public Iterable<BuildRule> getDeps(BuildRuleResolver ruleResolver) {
     ImmutableList.Builder<BuildRule> builder = ImmutableList.builder();
     for (CxxHeaders cxxHeaders : getIncludes()) {
-      cxxHeaders.getDeps(ruleFinder).forEachOrdered(builder::add);
+      cxxHeaders.getDeps(ruleResolver).forEachOrdered(builder::add);
     }
     builder.addAll(ruleResolver.getAllRules(getRules()));
 
     for (FrameworkPath frameworkPath : getFrameworks()) {
       if (frameworkPath.getSourcePath().isPresent()) {
-        Optional<BuildRule> frameworkRule = ruleFinder.getRule(frameworkPath.getSourcePath().get());
+        Optional<BuildRule> frameworkRule =
+            ruleResolver.getRule(frameworkPath.getSourcePath().get());
         if (frameworkRule.isPresent()) {
           builder.add(frameworkRule.get());
         }
@@ -68,7 +67,7 @@ abstract class AbstractCxxPreprocessorInput {
     }
 
     for (Arg arg : getPreprocessorFlags().values()) {
-      builder.addAll(BuildableSupport.getDepsCollection(arg, ruleFinder));
+      builder.addAll(BuildableSupport.getDepsCollection(arg, ruleResolver));
     }
 
     return builder.build();

@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android.redex;
@@ -20,7 +20,7 @@ import com.facebook.buck.android.KeystoreProperties;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
@@ -48,7 +48,7 @@ public class ReDexStep extends ShellStep {
   private final Path proguardMap;
   private final Path proguardCommandLine;
   private final Path seeds;
-  private final SourcePathResolver pathResolver;
+  private final SourcePathResolverAdapter pathResolver;
 
   @VisibleForTesting
   ReDexStep(
@@ -64,7 +64,7 @@ public class ReDexStep extends ShellStep {
       Path proguardMap,
       Path proguardCommandLine,
       Path seeds,
-      SourcePathResolver pathResolver) {
+      SourcePathResolverAdapter pathResolver) {
     super(workingDirectory);
     this.androidSdkLocation = androidSdkLocation;
     this.redexBinaryArgs = ImmutableList.copyOf(redexBinaryArgs);
@@ -83,7 +83,7 @@ public class ReDexStep extends ShellStep {
   public static ImmutableList<Step> createSteps(
       ProjectFilesystem filesystem,
       AndroidSdkLocation androidSdkLocation,
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       RedexOptions redexOptions,
       Path inputApkPath,
       Path outputApkPath,

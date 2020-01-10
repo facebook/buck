@@ -1,0 +1,30 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_test(
+    name = "query",
+    srcs = glob(["*Test.java"]),
+    labels = ["long_running"],
+    resources = glob(
+        ["testdata/**"],
+    ),
+    deps = [
+        "//src-gen:thrift",
+        "//src/com/facebook/buck/apple/toolchain:toolchain",
+        "//src/com/facebook/buck/io/file:file",
+        "//src/com/facebook/buck/io/pathformat:pathformat",
+        "//src/com/facebook/buck/slb:slb",
+        "//src/com/facebook/buck/support/cli/args:args",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/json:json",
+        "//src/com/facebook/buck/util/string:string",
+        "//test/com/facebook/buck/android:testutil",
+        "//test/com/facebook/buck/apple:testutil",
+        "//test/com/facebook/buck/cli:testutil",
+        "//test/com/facebook/buck/test:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//test/com/facebook/buck/util:testutil",
+        "//third-party/java/junit:junit",
+        "//third-party/java/junitparams:junitparams",
+    ],
+)

@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.io.file;
@@ -26,8 +26,8 @@ import com.facebook.buck.io.MoreProjectFilesystems;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -36,9 +36,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
+@RunWith(JUnitParamsRunner.class)
 public class MorePathsTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
@@ -231,11 +235,29 @@ public class MorePathsTest {
   }
 
   @Test
-  public void relativeWithEmptyPath() {
+  public void relativizeWithEmptyPath() {
     // Ensure workaround for Windows Path relativize bug
     Path p1 = Paths.get("");
     Path p2 = Paths.get("foo");
     assertThat(MorePaths.relativize(p1, p2), equalTo(Paths.get("foo")));
+  }
+
+  @Test
+  @Parameters({
+    ",,",
+    ",a,a",
+    "a,,..",
+    "a,a,",
+    "a/b/c,a/d/e,../../d/e",
+    "a/b,a,..",
+    "../a,b,../../b",
+    "a,../b,../../b",
+    "/a/b/c,/a/b/d,../d"
+  })
+  public void relativizeWithDotDotSupport(String basePath, String childPath, String expected) {
+    assertThat(
+        MorePaths.relativizeWithDotDotSupport(Paths.get(basePath), Paths.get(childPath)),
+        equalTo(Paths.get(expected)));
   }
 
   @Test
@@ -361,6 +383,37 @@ public class MorePathsTest {
         MorePaths.splitOnCommonPrefix(ImmutableList.of(first, second, third));
 
     assertFalse(result.isPresent());
+  }
+
+  @Test
+  @Parameters({
+    "a/b/c",
+    "/a/b/c/d",
+    "a/b/../c/d/../../e",
+    "../a/.././../b",
+  })
+  public void windowsLongPathStringHasCorrectPrefix(String testPathString) {
+    String uncPrefix = "\\\\?\\";
+
+    Path path = Paths.get(testPathString);
+    String longPathString = MorePaths.getWindowsLongPathString(path);
+    assertTrue(longPathString.startsWith(uncPrefix));
+  }
+
+  @Test
+  @Parameters({
+    "a/b/c",
+    "/a/b/c/d",
+    "a/b/../c/d/../../e",
+    "../a/.././../b",
+  })
+  public void windowsLongPathStringIsAbsolute(String testPathString) {
+    String uncPrefix = "\\\\?\\";
+
+    Path path = Paths.get(testPathString);
+    String longPathString = MorePaths.getWindowsLongPathString(path);
+    Path pathComponent = Paths.get(longPathString.substring(uncPrefix.length()));
+    assertTrue(pathComponent.isAbsolute());
   }
 
   private void validateSymlinklTarget(

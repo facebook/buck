@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.go;
@@ -27,7 +27,7 @@ import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.features.go.GoListStep.ListType;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -49,7 +49,7 @@ public class CGoGenImport extends AbstractBuildRule {
   @AddToRuleKey private final SourcePath sourceWithPackageName;
 
   private final ImmutableSortedSet<BuildRule> deps;
-  private final SourcePathResolver pathResolver;
+  private final SourcePathResolverAdapter pathResolver;
   private final Path outputFile;
   private final Path genDir;
 
@@ -57,18 +57,17 @@ public class CGoGenImport extends AbstractBuildRule {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
-      SourcePathResolver pathResolver,
       Tool cgo,
       GoPlatform platform,
       SourcePath sourceWithPackageName,
       SourcePath cgoBin) {
     super(buildTarget, projectFilesystem);
 
-    this.pathResolver = pathResolver;
+    this.pathResolver = ruleFinder.getSourcePathResolver();
     this.cgo = cgo;
     this.platform = platform;
     this.sourceWithPackageName = sourceWithPackageName;
-    this.genDir = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/gen/");
+    this.genDir = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/gen");
     this.outputFile = genDir.resolve("_cgo_import.go");
     this.cgoBin = cgoBin;
     this.deps =

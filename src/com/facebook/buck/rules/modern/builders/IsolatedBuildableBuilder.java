@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.modern.builders;
@@ -23,21 +23,23 @@ import com.facebook.buck.core.cell.CellConfig;
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.cell.impl.LocalCellProviderFactory;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.module.impl.BuckModuleJarHashProvider;
 import com.facebook.buck.core.module.impl.DefaultBuckModuleManager;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
-import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
-import com.facebook.buck.core.rules.AbstractBuildRuleResolver;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.impl.AbstractBuildRuleResolver;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.sourcepath.resolver.impl.AbstractSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.ToolchainProviderFactory;
@@ -55,28 +57,31 @@ import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.rules.modern.Deserializer;
 import com.facebook.buck.rules.modern.Deserializer.DataProvider;
 import com.facebook.buck.rules.modern.ModernBuildRule;
-import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
+import com.facebook.buck.step.StepRunner;
+import com.facebook.buck.util.CloseableWrapper;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import java.io.BufferedInputStream;
+import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -101,12 +106,13 @@ public abstract class IsolatedBuildableBuilder {
   private final Path dataRoot;
   private final BuckEventBus eventBus;
   private final Function<Optional<String>, ToolchainProvider> toolchainProviderFunction;
+  private final Path metadataPath;
 
   @SuppressWarnings("PMD.EmptyCatchBlock")
-  IsolatedBuildableBuilder(Path workRoot, Path projectRoot) throws IOException {
+  IsolatedBuildableBuilder(Path workRoot, Path projectRoot, Path metadataPath) throws IOException {
     Path canonicalWorkRoot = workRoot.toRealPath().normalize();
     Path canonicalProjectRoot = canonicalWorkRoot.resolve(projectRoot).normalize();
-
+    this.metadataPath = metadataPath;
     this.dataRoot = workRoot.resolve("__data__");
 
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
@@ -133,7 +139,8 @@ public abstract class IsolatedBuildableBuilder {
 
     // Root filesystemCell doesn't require embedded buck-out info.
     ProjectFilesystem filesystem =
-        projectFilesystemFactory.createProjectFilesystem(canonicalProjectRoot, config);
+        projectFilesystemFactory.createProjectFilesystem(
+            CanonicalCellName.rootCell(), canonicalProjectRoot, config);
 
     Architecture architecture = Architecture.detect();
     Platform platform = Platform.detect();
@@ -141,8 +148,9 @@ public abstract class IsolatedBuildableBuilder {
     ImmutableMap<String, String> clientEnvironment = EnvVariablesProvider.getSystemEnv();
 
     DefaultCellPathResolver cellPathResolver =
-        DefaultCellPathResolver.of(filesystem.getRootPath(), config);
-    UnconfiguredBuildTargetFactory buildTargetFactory = new ParsingUnconfiguredBuildTargetFactory();
+        DefaultCellPathResolver.create(filesystem.getRootPath(), config);
+    UnconfiguredBuildTargetViewFactory buildTargetFactory =
+        new ParsingUnconfiguredBuildTargetViewFactory();
 
     BuckConfig buckConfig =
         new BuckConfig(
@@ -168,7 +176,7 @@ public abstract class IsolatedBuildableBuilder {
         LocalCellProviderFactory.create(
             filesystem,
             buckConfig,
-            CellConfig.of(),
+            CellConfig.EMPTY_INSTANCE,
             cellPathResolver.getPathMapping(),
             cellPathResolver,
             moduleManager,
@@ -206,29 +214,31 @@ public abstract class IsolatedBuildableBuilder {
     this.buildContext =
         BuildContext.builder()
             .setSourcePathResolver(
-                new AbstractSourcePathResolver() {
-                  @Override
-                  protected ProjectFilesystem getBuildTargetSourcePathFilesystem(
-                      BuildTargetSourcePath sourcePath) {
-                    Preconditions.checkState(sourcePath instanceof ExplicitBuildTargetSourcePath);
-                    BuildTarget target = sourcePath.getTarget();
-                    return filesystemFunction.apply(target.getCell());
-                  }
+                new SourcePathResolverAdapter(
+                    new AbstractSourcePathResolver() {
+                      @Override
+                      protected ProjectFilesystem getBuildTargetSourcePathFilesystem(
+                          BuildTargetSourcePath sourcePath) {
+                        Preconditions.checkState(
+                            sourcePath instanceof ExplicitBuildTargetSourcePath);
+                        BuildTarget target = sourcePath.getTarget();
+                        return filesystemFunction.apply(target.getCell().getLegacyName());
+                      }
 
-                  @Override
-                  protected SourcePath resolveDefaultBuildTargetSourcePath(
-                      DefaultBuildTargetSourcePath targetSourcePath) {
-                    throw new IllegalStateException(
-                        "Cannot resolve DefaultBuildTargetSourcePaths when running with an isolated strategy. "
-                            + "These should have been resolved to the underlying ExplicitBuildTargetSourcePath already.");
-                  }
+                      @Override
+                      protected ImmutableSortedSet<SourcePath> resolveDefaultBuildTargetSourcePath(
+                          DefaultBuildTargetSourcePath targetSourcePath) {
+                        throw new IllegalStateException(
+                            "Cannot resolve DefaultBuildTargetSourcePaths when running with an isolated strategy. "
+                                + "These should have been resolved to the underlying ExplicitBuildTargetSourcePath already.");
+                      }
 
-                  @Override
-                  public String getSourcePathName(BuildTarget target, SourcePath sourcePath) {
-                    throw new IllegalStateException(
-                        "Cannot resolve SourcePath names during build when running with an isolated strategy.");
-                  }
-                })
+                      @Override
+                      public String getSourcePathName(BuildTarget target, SourcePath sourcePath) {
+                        throw new IllegalStateException(
+                            "Cannot resolve SourcePath names during build when running with an isolated strategy.");
+                      }
+                    }))
             .setBuildCellRootPath(canonicalProjectRoot)
             .setEventBus(eventBus)
             .setJavaPackageFinder(javaPackageFinder)
@@ -242,7 +252,7 @@ public abstract class IsolatedBuildableBuilder {
                 .getCellByPath(cellPathResolver.getCellPath(cellName).get())
                 .getToolchainProvider();
 
-    RichStream.from(cellPathResolver.getCellPaths().keySet())
+    RichStream.from(cellPathResolver.getCellPathsByRootCellExternalName().keySet())
         .forEachThrowing(
             name -> {
               // Sadly, some things assume this exists and writes to it.
@@ -265,10 +275,19 @@ public abstract class IsolatedBuildableBuilder {
                         unconfiguredPaths.getGenDir(), configuredPaths.getGenDir(),
                         unconfiguredPaths.getScratchDir(), configuredPaths.getScratchDir());
                 for (Map.Entry<Path, Path> entry : paths.entrySet()) {
-                  filesystem.createSymLink(
-                      entry.getKey(),
-                      entry.getKey().getParent().relativize(entry.getValue()),
-                      /* force */ false);
+                  try {
+                    filesystem.createSymLink(
+                        entry.getKey(),
+                        entry.getKey().getParent().relativize(entry.getValue()),
+                        /* force */ false);
+                  } catch (FileAlreadyExistsException e) {
+                    // Verify that the symlink is valid then continue gracefully
+                    if (!filesystem
+                        .readSymLink(entry.getKey())
+                        .equals(entry.getKey().getParent().relativize(entry.getValue()))) {
+                      throw e;
+                    }
+                  }
                 }
               }
             });
@@ -293,23 +312,23 @@ public abstract class IsolatedBuildableBuilder {
     BuildableAndTarget reconstructed;
     try (Scope ignored = LeafEvents.scope(eventBus, "deserializing")) {
       reconstructed =
-          deserializer.deserialize(
-              getProvider(dataRoot.resolve(hash.toString())), BuildableAndTarget.class);
+          deserializer.deserialize(getProvider(dataRoot, hash), BuildableAndTarget.class);
     }
 
-    try (Scope ignored = LeafEvents.scope(eventBus, "steps")) {
-      ProjectFilesystem filesystem = filesystemFunction.apply(reconstructed.target.getCell());
+    try (Scope ignored = LeafEvents.scope(eventBus, "steps");
+        CloseableWrapper<BuckEventBus> eventBusWrapper = getWaitEventsWrapper(eventBus)) {
+      ProjectFilesystem filesystem =
+          filesystemFunction.apply(reconstructed.target.getCell().getLegacyName());
       ModernBuildRule.injectFieldsIfNecessary(
           filesystem,
           reconstructed.target,
           reconstructed.buildable,
-          new SourcePathRuleFinder(
-              new AbstractBuildRuleResolver() {
-                @Override
-                public Optional<BuildRule> getRuleOptional(BuildTarget buildTarget) {
-                  throw new RuntimeException("Cannot resolve rules in deserialized MBR state.");
-                }
-              }));
+          new AbstractBuildRuleResolver() {
+            @Override
+            public Optional<BuildRule> getRuleOptional(BuildTarget buildTarget) {
+              throw new RuntimeException("Cannot resolve rules in deserialized MBR state.");
+            }
+          });
 
       final Instant deserializationComplete = Instant.now();
       LOG.info(
@@ -321,26 +340,50 @@ public abstract class IsolatedBuildableBuilder {
       for (Step step :
           ModernBuildRule.stepsForBuildable(
               buildContext, reconstructed.buildable, filesystem, reconstructed.target)) {
-        new DefaultStepRunner()
-            .runStepForBuildTarget(executionContext, step, Optional.of(reconstructed.target));
+        StepRunner.runStep(executionContext, step, Optional.of(reconstructed.target));
       }
 
+      long duration =
+          Instant.now().minusMillis(deserializationComplete.toEpochMilli()).toEpochMilli();
+      writeDurationToFile(duration);
       LOG.info(
           String.format(
               "Finished running the build at [%s], took %d ms. Exiting buck now.",
-              new java.util.Date(),
-              Instant.now().minusMillis(deserializationComplete.toEpochMilli()).toEpochMilli()));
+              new java.util.Date(), duration));
     }
   }
 
-  private DataProvider getProvider(Path dir) {
+  private void writeDurationToFile(long duration) {
+    try (BufferedWriter writer = Files.newBufferedWriter(metadataPath)) {
+      writer.write(Long.toString(duration));
+    } catch (IOException e) {
+      LOG.error(e);
+    }
+  }
+
+  private CloseableWrapper<BuckEventBus> getWaitEventsWrapper(BuckEventBus buildEventBus) {
+    return CloseableWrapper.of(
+        buildEventBus,
+        eventBus -> {
+          // wait for event bus to process all pending events
+          if (!eventBus.waitEvents(100)) {
+            LOG.warn(
+                "Event bus did not complete all events within timeout; event listener's data"
+                    + " may be incorrect");
+          }
+        });
+  }
+
+  // TODO(cjhopman): The layout of this directory is just determined by what
+  // ModernBuildRuleRemoteExecutionHelper does. We should extract these to a single place.
+  private DataProvider getProvider(Path dir, HashCode hash) {
     Preconditions.checkState(Files.exists(dir), "Dir [%s] does not exist.", dir.toAbsolutePath());
 
     return new DataProvider() {
       @Override
       public InputStream getData() {
         try {
-          Path path = dir.resolve("__value__");
+          Path path = dir.resolve(hash.toString()).resolve("__value__");
           return new BufferedInputStream(new FileInputStream(path.toFile()));
         } catch (FileNotFoundException e) {
           throw new RuntimeException(e);
@@ -349,7 +392,7 @@ public abstract class IsolatedBuildableBuilder {
 
       @Override
       public DataProvider getChild(HashCode hash) {
-        return getProvider(dir.resolve(hash.toString()));
+        return getProvider(dir, hash);
       }
     };
   }

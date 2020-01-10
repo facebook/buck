@@ -1,18 +1,19 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 {namespace buck.command.install}
 
 /***/
@@ -62,7 +63,8 @@ apply to <code>buck install</code>.</p>
   {param name: 'device' /}
   {param alias: 'd' /}
   {param desc}
-  Use this option to use real devices only.
+  Use this option to use real devices only. This option works only with
+  Android devices. It does not work with iOS devices.
   {/param}
 {/call}
 
@@ -149,7 +151,7 @@ Builds and installs the APK for an <code>android_binary</code> or target.
   {param name: 'simulator-name' /}
   {param alias: 'n'/}
   {param desc}
-  Use simulator with specific name (defaults to <code>iPhone 5s</code>)
+  Use simulator with specific name (defaults to <code>iPhone 6s</code>)
  {/param}
 {/call}
 

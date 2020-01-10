@@ -1,20 +1,22 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.intellij.ideabuck.build;
+
+import com.google.common.collect.Iterables;
 
 /** The descriptor of buck command. */
 public class BuckCommand {
@@ -32,7 +34,6 @@ public class BuckCommand {
       new BuckCommand("project", VERBOSITY_TAG, VERBOSITY_LEVEL);
   // Internal commands
   public static final BuckCommand QUERY = new BuckCommand("query", "--json");
-  public static final BuckCommand AUDIT_OWNER = new BuckCommand("audit", "owner", "--json");
 
   /** Command name passed to buck. */
   private final String name;
@@ -42,6 +43,11 @@ public class BuckCommand {
   public BuckCommand(String name, String... parameters) {
     this.name = name;
     this.parameters = parameters;
+  }
+
+  public BuckCommand(String name, Iterable<String> parameters) {
+    this.name = name;
+    this.parameters = Iterables.toArray(parameters, String.class);
   }
 
   public String name() {

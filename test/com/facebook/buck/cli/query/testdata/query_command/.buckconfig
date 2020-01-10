@@ -1,0 +1,10 @@
+[alias]
+    app = //example/app:seven
+
+[project]
+    read_only_paths = symlinks/
+    package_boundary_exceptions=owners_violating_package_boundary
+
+[parser]
+  enable_package_files = true
+  enable_inheriting_package_files = true

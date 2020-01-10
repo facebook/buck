@@ -1,23 +1,25 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent.StoreType;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfigurationSerializer;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
@@ -30,6 +32,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import java.io.IOException;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import javax.annotation.Nullable;
 
@@ -51,7 +54,11 @@ public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
         args.getHttpWriteExecutorService(),
         args.getHttpFetchExecutorService(),
         new NetworkEventListener(
-            args.getBuckEventBus(), args.getCacheName(), new ErrorReporter(args)),
+            args.getUnconfiguredBuildTargetFactory(),
+            args.getTargetConfigurationSerializer(),
+            args.getBuckEventBus(),
+            args.getCacheName(),
+            new ErrorReporter(args)),
         args.getMaxStoreSizeBytes(),
         args.getProjectFilesystem());
     this.repository = args.getRepository();
@@ -76,12 +83,20 @@ public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
   }
 
   private static class NetworkEventListener implements CacheEventListener {
+    private final Function<String, UnconfiguredBuildTargetView> unconfiguredBuildTargetFactory;
+    private final TargetConfigurationSerializer targetConfigurationSerializer;
     private final EventDispatcher dispatcher;
     private final String name;
     private final ErrorReporter errorReporter;
 
     private NetworkEventListener(
-        EventDispatcher dispatcher, String name, ErrorReporter errorReporter) {
+        Function<String, UnconfiguredBuildTargetView> unconfiguredBuildTargetFactory,
+        TargetConfigurationSerializer targetConfigurationSerializer,
+        EventDispatcher dispatcher,
+        String name,
+        ErrorReporter errorReporter) {
+      this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
+      this.targetConfigurationSerializer = targetConfigurationSerializer;
       this.dispatcher = dispatcher;
       this.name = name;
       this.errorReporter = errorReporter;
@@ -136,6 +151,8 @@ public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
           HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent);
       dispatcher.post(startedEvent);
       return new MultiFetchRequestEvents() {
+        long artifactSizeBytes = 0L;
+
         @Override
         public void skipped(int keyIndex) {
           LOG.debug("multiFetchSkipped for %s.", ruleKeys.get(keyIndex));
@@ -143,21 +160,22 @@ public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
         }
 
         @Override
-        public void finished(int keyIndex, FetchResult thisResult) {
+        public void finished(int keyIndex, FetchResult fetchResult) {
           LOG.debug(
               "multiFetchFinished for %s with result %s.",
-              ruleKeys.get(keyIndex), thisResult.getCacheResult().getType());
-          // TODO(cjhopman): implement.
+              ruleKeys.get(keyIndex), fetchResult.getCacheResult().getType());
+          artifactSizeBytes += fetchResult.getArtifactSizeBytes().orElse(0L);
         }
 
         @Override
         public void failed(int keyIndex, IOException e, String msg, CacheResult result) {
           reportFetchFailure(ruleKeys.get(keyIndex), e, msg);
-          // TODO(cjhopman): implement this.
+          eventBuilder.getFetchBuilder().setErrorMessage(msg);
         }
 
         @Override
         public void close() {
+          eventBuilder.getFetchBuilder().setArtifactSizeBytes(artifactSizeBytes);
           dispatcher.post(eventBuilder.build());
         }
       };
@@ -177,7 +195,10 @@ public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
     public StoreEvents storeScheduled(ArtifactInfo info, long artifactSizeBytes) {
       HttpArtifactCacheEvent.Scheduled scheduled =
           HttpArtifactCacheEvent.newStoreScheduledEvent(
-              ArtifactCacheEvent.getTarget(info.getMetadata()),
+              AbstractArtifactCacheEventFactory.getTarget(
+                  unconfiguredBuildTargetFactory,
+                  targetConfigurationSerializer,
+                  info.getMetadata()),
               info.getRuleKeys(),
               StoreType.fromArtifactInfo(info));
       dispatcher.post(scheduled);

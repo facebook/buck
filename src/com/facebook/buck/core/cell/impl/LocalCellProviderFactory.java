@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.cell.impl;
@@ -24,10 +24,13 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.CellPathResolverView;
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.InvalidCellOverrideException;
+import com.facebook.buck.core.cell.NewCellPathResolver;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.module.BuckModuleManager;
-import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.ToolchainProviderFactory;
 import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
@@ -59,7 +62,7 @@ public class LocalCellProviderFactory {
       BuckModuleManager moduleManager,
       ToolchainProviderFactory toolchainProviderFactory,
       ProjectFilesystemFactory projectFilesystemFactory,
-      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory) {
+      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory) {
 
     ImmutableMap<Path, RawConfig> pathToConfigOverrides;
     try {
@@ -69,11 +72,16 @@ public class LocalCellProviderFactory {
     }
 
     ImmutableSet<Path> allRoots = ImmutableSet.copyOf(cellPathMapping.values());
+
+    NewCellPathResolver newCellPathResolver =
+        CellMappingsFactory.create(rootFilesystem.getRootPath(), rootConfig.getConfig());
+
     return new CellProvider(
+        newCellPathResolver,
         cellProvider ->
             new CacheLoader<Path, Cell>() {
               @Override
-              public Cell load(Path cellPath) throws IOException, InterruptedException {
+              public Cell load(Path cellPath) throws IOException {
                 Path normalizedCellPath = cellPath.toRealPath().normalize();
 
                 Preconditions.checkState(
@@ -94,7 +102,8 @@ public class LocalCellProviderFactory {
                 // The cell should only contain a subset of cell mappings of the root cell.
                 cellMapping.forEach(
                     (name, path) -> {
-                      Path pathInRootResolver = rootCellCellPathResolver.getCellPaths().get(name);
+                      Path pathInRootResolver =
+                          rootCellCellPathResolver.getCellPathsByRootCellExternalName().get(name);
                       if (pathInRootResolver == null) {
                         throw new HumanReadableException(
                             "In the config of %s:  %s.%s must exist in the root cell's cell mappings.",
@@ -112,26 +121,31 @@ public class LocalCellProviderFactory {
                             path);
                       }
                     });
+                CellNameResolver cellNameResolver =
+                    CellMappingsFactory.createCellNameResolver(
+                        cellPath, config, newCellPathResolver);
 
                 CellPathResolver cellPathResolver =
                     new CellPathResolverView(
-                        rootCellCellPathResolver, cellMapping.keySet(), cellPath);
+                        rootCellCellPathResolver, cellNameResolver, cellMapping.keySet(), cellPath);
 
                 Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo = Optional.empty();
-                Optional<String> canonicalCellName =
-                    cellPathResolver.getCanonicalCellName(normalizedCellPath);
+                CanonicalCellName canonicalCellName =
+                    cellPathResolver
+                        .getNewCellPathResolver()
+                        .getCanonicalCellName(normalizedCellPath);
                 if (rootConfig.getView(BuildBuckConfig.class).isEmbeddedCellBuckOutEnabled()
-                    && canonicalCellName.isPresent()) {
+                    && canonicalCellName.getLegacyName().isPresent()) {
                   embeddedCellBuckOutInfo =
                       Optional.of(
                           EmbeddedCellBuckOutInfo.of(
                               rootFilesystem.resolve(rootFilesystem.getRootPath()),
                               rootFilesystem.getBuckPaths(),
-                              canonicalCellName.get()));
+                              canonicalCellName));
                 }
                 ProjectFilesystem cellFilesystem =
                     projectFilesystemFactory.createProjectFilesystem(
-                        normalizedCellPath, config, embeddedCellBuckOutInfo);
+                        canonicalCellName, normalizedCellPath, config, embeddedCellBuckOutInfo);
 
                 BuckConfig buckConfig =
                     new BuckConfig(
@@ -153,20 +167,22 @@ public class LocalCellProviderFactory {
 
                 // TODO(13777679): cells in other watchman roots do not work correctly.
 
-                return ImmutableCell.of(
+                return ImmutableCellImpl.of(
                     cellPathResolver.getKnownRoots(),
                     canonicalCellName,
                     cellFilesystem,
                     buckConfig,
                     cellProvider,
                     toolchainProvider,
-                    ruleKeyConfiguration,
-                    cellPathResolver);
+                    cellPathResolver,
+                    newCellPathResolver,
+                    cellNameResolver);
               }
             },
         cellProvider ->
             RootCellFactory.create(
                 cellProvider,
+                newCellPathResolver,
                 rootCellCellPathResolver,
                 toolchainProviderFactory,
                 rootFilesystem,

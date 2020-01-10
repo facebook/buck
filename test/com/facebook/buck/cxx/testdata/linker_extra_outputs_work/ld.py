@@ -12,7 +12,7 @@ def main():
         if arg.startswith("@"):
             with open(arg[1:], "rb") as f:
                 for arg1 in f:
-                    expanded_args.append(arg1.rstrip("\n").strip('"'))
+                    expanded_args.append(arg1.decode("utf-8").rstrip("\n").strip('"'))
         else:
             expanded_args.append(arg)
 
@@ -25,10 +25,10 @@ def main():
 
     # write the output path into the output file.
     with open(ns.output, "wb") as f:
-        f.write(ns.output)
+        f.write(ns.output.encode("utf-8"))
 
     with open(ns.extra_output, "wb") as f:
-        f.write(ns.extra_output)
+        f.write(ns.extra_output.encode("utf-8"))
 
 
 if __name__ == "__main__":

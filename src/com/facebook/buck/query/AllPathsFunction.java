@@ -30,14 +30,15 @@
 
 package com.facebook.buck.query;
 
+import com.facebook.buck.core.model.QueryTarget;
 import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
-import com.facebook.buck.util.MoreSets;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
@@ -47,7 +48,7 @@ import java.util.Set;
  *
  * <pre>expr ::= ALLPATHS '(' expr ',' expr ')'</pre>
  */
-public class AllPathsFunction implements QueryFunction {
+public class AllPathsFunction<T extends QueryTarget> implements QueryFunction<T, T> {
 
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.EXPRESSION, ArgumentType.EXPRESSION);
@@ -70,14 +71,14 @@ public class AllPathsFunction implements QueryFunction {
   }
 
   @Override
-  public ImmutableSet<QueryTarget> eval(
-      QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args)
+  public Set<T> eval(
+      QueryEvaluator<T> evaluator, QueryEnvironment<T> env, ImmutableList<Argument<T>> args)
       throws QueryException {
-    QueryExpression from = args.get(0).getExpression();
-    QueryExpression to = args.get(1).getExpression();
+    QueryExpression<T> from = args.get(0).getExpression();
+    QueryExpression<T> to = args.get(1).getExpression();
 
-    Set<QueryTarget> fromSet = evaluator.eval(from, env);
-    Set<QueryTarget> toSet = evaluator.eval(to, env);
+    Set<T> fromSet = evaluator.eval(from, env);
+    Set<T> toSet = evaluator.eval(to, env);
 
     // Algorithm:
     // 1) compute "reachableFromX", the forward transitive closure of the "from" set;
@@ -87,18 +88,32 @@ public class AllPathsFunction implements QueryFunction {
 
     env.buildTransitiveClosure(fromSet, Integer.MAX_VALUE);
 
-    Set<QueryTarget> reachableFromX = env.getTransitiveClosure(fromSet);
-    Set<QueryTarget> result = MoreSets.intersection(reachableFromX, toSet);
-    Collection<QueryTarget> worklist = result;
+    Set<T> reachableFromX = env.getTransitiveClosure(fromSet);
+    Set<T> result = intersection(reachableFromX, toSet);
+    Collection<T> worklist = result;
     while (!worklist.isEmpty()) {
-      Collection<QueryTarget> reverseDeps = env.getReverseDeps(worklist);
+      Collection<T> reverseDeps = env.getReverseDeps(worklist);
       worklist = new ArrayList<>();
-      for (QueryTarget target : reverseDeps) {
+      for (T target : reverseDeps) {
         if (reachableFromX.contains(target) && result.add(target)) {
           worklist.add(target);
         }
       }
     }
-    return ImmutableSet.copyOf(result);
+    return result;
+  }
+
+  /**
+   * Returns a new and mutable set containing the intersection of the two specified sets. Using the
+   * smaller of the two sets as the base for finding the intersection for performance reasons.
+   */
+  private static <T> Set<T> intersection(Set<T> x, Set<T> y) {
+    Set<T> result = new LinkedHashSet<>();
+    if (x.size() > y.size()) {
+      Sets.intersection(y, x).copyInto(result);
+    } else {
+      Sets.intersection(x, y).copyInto(result);
+    }
+    return result;
   }
 }

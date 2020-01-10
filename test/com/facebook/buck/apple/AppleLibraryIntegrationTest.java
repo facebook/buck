@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple;
@@ -20,6 +20,7 @@ import static com.facebook.buck.cxx.toolchain.CxxFlavorSanitizer.sanitize;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
@@ -27,6 +28,7 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
@@ -47,6 +49,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -333,7 +336,11 @@ public class AppleLibraryIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("build", buildTarget.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path inputPath = workspace.getPath(buildTarget.getBasePath()).toRealPath();
+    Path inputPath =
+        workspace
+            .getPath(
+                buildTarget.getCellRelativeBasePath().getPath().toPath(filesystem.getFileSystem()))
+            .toRealPath();
     Path outputPath =
         workspace.getPath(BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s")).toRealPath();
 
@@ -507,6 +514,70 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
+  public void testAppleBinaryLinksAgainstSharedInterface() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_library_shared_interface", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("cxx", "shlib_interfaces", "enabled");
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+
+    BuildTarget target =
+        BuildTargetFactory.newInstance("//Libraries/TestLibrary:Binary")
+            .withAppendedFlavors(InternalFlavor.of("macosx-x86_64"));
+
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    result.assertSuccess();
+
+    Path outputPath = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"));
+    assertThat(Files.exists(outputPath), is(true));
+  }
+
+  @Test
+  public void testAppleSharedInterfaceProducesTheSameStubsForSameABI() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_library_shared_interface", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("cxx", "shlib_interfaces", "enabled");
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+
+    byte[] aDylibStub =
+        buildDylibStub(workspace, filesystem, "//Libraries/TestLibrary:A", "Hello.dylib");
+    byte[] bDylibStub =
+        buildDylibStub(workspace, filesystem, "//Libraries/TestLibrary:B", "Hello.dylib");
+    assertThat(aDylibStub, equalTo(bDylibStub));
+  }
+
+  private byte[] buildDylibStub(
+      ProjectWorkspace workspace, ProjectFilesystem filesystem, String targetName, String libName)
+      throws IOException {
+    BuildTarget aLibTarget =
+        BuildTargetFactory.newInstance(targetName)
+            .withAppendedFlavors(
+                InternalFlavor.of("macosx-x86_64"), CxxDescriptionEnhancer.SHARED_INTERFACE_FLAVOR);
+
+    ProcessResult result = workspace.runBuckCommand("build", aLibTarget.getFullyQualifiedName());
+    result.assertSuccess();
+
+    Path aLibOutputPath =
+        workspace
+            .getPath(BuildTargetPaths.getGenPath(filesystem, aLibTarget, "%s"))
+            .resolve(libName);
+    assertThat(Files.exists(aLibOutputPath), is(true));
+
+    return Files.readAllBytes(aLibOutputPath);
+  }
+
+  @Test
   public void testAppleDynamicLibraryWithDsym() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
@@ -674,7 +745,11 @@ public class AppleLibraryIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("build", buildTarget.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path inputPath = workspace.getPath(buildTarget.getBasePath()).toRealPath();
+    Path inputPath =
+        workspace
+            .getPath(
+                buildTarget.getCellRelativeBasePath().getPath().toPath(filesystem.getFileSystem()))
+            .toRealPath();
     Path outputPath =
         workspace.getPath(BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s")).toRealPath();
 
@@ -941,7 +1016,54 @@ public class AppleLibraryIntegrationTest {
     testModularScenario("apple_library_modular_swift_uses_objc_same_lib", "Mixed");
   }
 
-  private void testModularScenario(String scenario, String targetName) throws Exception {
+  @Test
+  public void testBuildAppleLibraryWhereModularSwiftUsesUmbrellaDirectoryModuleMap()
+      throws Exception {
+    ProjectWorkspace workspace = testModularScenario("umbrella_directory_modulemap", "Test");
+
+    // After testing the build itself, we want to ensure that we did not create an
+    // umbrella header for the library, and were truly relying on only the umbrella
+    // directory declaration.
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    Path headersPath =
+        tmp.getRoot()
+            .resolve(filesystem.getBuckPaths().getGenDir())
+            .resolve(
+                "ObjCLibrary#header-mode-symlink-tree-with-umbrella-directory-modulemap,headers,iphonesimulator-x86_64")
+            .resolve("ObjCLibrary");
+
+    Path umbrellaHeaderPath = headersPath.resolve("ObjCLibrary.h");
+    assertThat("umbrella header should not exist", Files.exists(umbrellaHeaderPath), is(false));
+
+    // Also check that an actual header from the library exists, so that we know
+    // we don't just have the wrong directory when passing the "false" check
+    // above.
+    Path libraryHeaderPath = headersPath.resolve("FirstHeader.h");
+    assertThat("library header should exist", Files.exists(libraryHeaderPath), is(true));
+  }
+
+  @Test
+  public void testBuildAppleLibraryWhereModularSwiftUsesPerLibraryUmbrellaDirectoryModuleMap()
+      throws Exception {
+    testModularScenario("umbrella_directory_modulemap_per_library", "Test");
+  }
+
+  @Test
+  public void testTargetSDKVersion() throws Exception {
+    testModularScenario("target_sdk_version", "Binary");
+    testModularScenario("target_sdk_version", "Library");
+    testModularScenarioWithFlavor("target_sdk_version", "Test", Optional.empty());
+  }
+
+  private ProjectWorkspace testModularScenario(String scenario, String targetName)
+      throws Exception {
+    return testModularScenarioWithFlavor(
+        scenario, targetName, Optional.of(CxxDescriptionEnhancer.SHARED_FLAVOR));
+  }
+
+  private ProjectWorkspace testModularScenarioWithFlavor(
+      String scenario, String targetName, Optional<Flavor> flavor) throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
@@ -950,12 +1072,16 @@ public class AppleLibraryIntegrationTest {
     workspace.setUp();
     workspace.addBuckConfigLocalOption("apple", "use_swift_delegate", "false");
     workspace.addBuckConfigLocalOption("cxx", "cflags", "-fmodules");
-    BuildTarget dylibTarget =
-        workspace
-            .newBuildTarget(String.format("//:%s#iphonesimulator-x86_64", targetName))
-            .withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR);
-    ProcessResult result = workspace.runBuckCommand("build", dylibTarget.getFullyQualifiedName());
+    BuildTarget target =
+        workspace.newBuildTarget(String.format("//:%s#iphonesimulator-x86_64", targetName));
+
+    if (flavor.isPresent()) {
+      target = target.withAppendedFlavors(flavor.get());
+    }
+
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
+    return workspace;
   }
 
   private static void assertIsSymbolicLink(Path link, Path target) throws IOException {

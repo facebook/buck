@@ -3,14 +3,6 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 java_immutables_library(
     name = "targetgraph",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//src/com/facebook/buck/core/cell:cell",
-        "//src/com/facebook/buck/core/description:description",
-        "//src/com/facebook/buck/core/model:model",
-        "//src/com/facebook/buck/core/rules/impl:impl",
-        "//src/com/facebook/buck/core/util/graph:graph",
-        "//src/com/facebook/buck/rules/visibility:visibility",
-    ],
     tests = [
         "//test/com/facebook/buck/core/model/targetgraph:targetgraph",
     ],
@@ -21,6 +13,16 @@ java_immutables_library(
         "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/util/immutables:immutables",
         "//src/com/facebook/buck/util:util",
+        "//third-party/java/jackson:jackson-annotations",
+        "//third-party/java/jackson:jackson-databind",
         "//third-party/java/jsr:jsr305",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/cell:cell",
+        "//src/com/facebook/buck/core/description:description",
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/model/targetgraph/raw:raw",
+        "//src/com/facebook/buck/core/util/graph:graph",
+        "//src/com/facebook/buck/rules/visibility/parser:parser",
     ],
 )

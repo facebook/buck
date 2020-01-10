@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.event;
@@ -28,7 +28,6 @@ import com.facebook.buck.util.concurrent.MostExecutors.NamedThreadFactory;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.timing.SettableFakeClock;
 import com.google.common.eventbus.Subscribe;
-import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import org.junit.Test;
 
@@ -37,7 +36,7 @@ public class DefaultBuckEventBusTest {
   private static final int timeoutMillis = 500;
 
   @Test
-  public void testShutdownSuccess() throws Exception {
+  public void testShutdownSuccess() {
     DefaultBuckEventBus eb =
         new DefaultBuckEventBus(
             new DefaultClock(), false, BuckEventBusForTests.BUILD_ID_FOR_TEST, timeoutMillis);
@@ -54,7 +53,7 @@ public class DefaultBuckEventBusTest {
   }
 
   @Test
-  public void testShutdownFailure() throws IOException {
+  public void testShutdownFailure() {
     DefaultBuckEventBus eb =
         new DefaultBuckEventBus(
             new DefaultClock(), false, BuckEventBusForTests.BUILD_ID_FOR_TEST, timeoutMillis);
@@ -72,7 +71,7 @@ public class DefaultBuckEventBusTest {
   }
 
   @Test
-  public void whenEventTimestampedThenEventCannotBePosted() throws IOException {
+  public void whenEventTimestampedThenEventCannotBePosted() {
     DefaultBuckEventBus eb =
         new DefaultBuckEventBus(
             new DefaultClock(), false, BuckEventBusForTests.BUILD_ID_FOR_TEST, timeoutMillis);
@@ -92,7 +91,7 @@ public class DefaultBuckEventBusTest {
   }
 
   @Test
-  public void whenEventPostedWithAnotherThenTimestampCopiedToPostedEvent() throws IOException {
+  public void whenEventPostedWithAnotherThenTimestampCopiedToPostedEvent() {
     DefaultBuckEventBus eb =
         new DefaultBuckEventBus(
             new DefaultClock(), false, BuckEventBusForTests.BUILD_ID_FOR_TEST, timeoutMillis);
@@ -106,7 +105,7 @@ public class DefaultBuckEventBusTest {
   }
 
   @Test
-  public void timestampedEventHasSeparateNanosAndMillis() throws IOException {
+  public void timestampedEventHasSeparateNanosAndMillis() {
     SettableFakeClock fakeClock = new SettableFakeClock(49152, 64738);
     DefaultBuckEventBus eb =
         new DefaultBuckEventBus(

@@ -1,2 +1,4 @@
-third-party/java/easymock/easymock-3.3.1.jar
+third-party/java/easymock/easymock-4.0.2.jar
+third-party/java/mockk/mockk-1.9.3.kotlin12.jar
+third-party/java/mockk/mockk-dsl-jvm-1.9.3.kotlin12.jar
 third-party/java/junit/junit-4.12.jar

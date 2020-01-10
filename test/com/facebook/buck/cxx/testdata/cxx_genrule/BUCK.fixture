@@ -30,6 +30,18 @@ cxx_library(
 )
 
 cxx_library(
+    name = "dep_on_prebuilt_c",
+    srcs = ["b.c"],
+    deps = [":prebuilt_c"],
+)
+
+prebuilt_cxx_library(
+    name = "prebuilt_c",
+    static_lib = ":c#static-pic,default",
+    visibility = ["PUBLIC"],
+)
+
+cxx_library(
     name = "c",
     srcs = [
         "c.c",
@@ -40,6 +52,13 @@ cxx_library(
     },
     exported_linker_flags = [
         "-c-ld-flag",
+    ],
+)
+
+cxx_library(
+    name = "trivial",
+    srcs = [
+        "trivial.c",
     ],
 )
 

@@ -1,0 +1,5 @@
+# BUILD FILE SYNTAX: SKYLARK
+native.java_library(
+    name = "main",
+    srcs = ["Main.java"],
+)

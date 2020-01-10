@@ -1,28 +1,28 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.lua;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -36,7 +36,7 @@ public class LuaUtil {
 
   public static ImmutableMap<String, SourcePath> toModuleMap(
       BuildTarget target,
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       String parameter,
       String baseModule,
       Iterable<SourceSortedSet> inputs) {
@@ -64,21 +64,18 @@ public class LuaUtil {
   }
 
   public static String getBaseModule(BuildTarget target, Optional<String> override) {
-    return override.isPresent()
-        ? override.get().replace('.', File.separatorChar)
-        : target.getBasePath().toString();
+    return override
+        .map(s -> s.replace('.', File.separatorChar))
+        .orElseGet(() -> target.getCellRelativeBasePath().getPath().toString());
   }
 
   public static ImmutableList<BuildTarget> getDeps(
       CxxPlatform cxxPlatform,
       ImmutableSortedSet<BuildTarget> deps,
       PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> platformDeps) {
-    return RichStream.<BuildTarget>empty()
-        .concat(deps.stream())
+    return RichStream.from(deps)
         .concat(
-            platformDeps
-                .getMatchingValues(cxxPlatform.getFlavor().toString())
-                .stream()
+            platformDeps.getMatchingValues(cxxPlatform.getFlavor().toString()).stream()
                 .flatMap(Collection::stream))
         .toImmutableList();
   }

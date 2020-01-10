@@ -1,0 +1,11 @@
+genrule(
+    name = "working_dir",
+    out = "working_dir_out",
+    cmd = "touch hello.txt && touch $OUT",
+)
+
+genrule(
+    name = "working_dir_outs",
+    outs = {"working_dir_out": ["working_dir_out"]},
+    cmd = "touch hello.txt && touch $OUT/working_dir_out",
+)

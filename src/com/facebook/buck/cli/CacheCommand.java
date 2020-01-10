@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
@@ -24,6 +24,8 @@ import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfo;
 import com.facebook.buck.core.build.event.BuildEvent;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -35,12 +37,14 @@ import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.json.ObjectMappers;
+import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.unarchive.ArchiveFormat;
 import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
@@ -55,6 +59,7 @@ import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
@@ -62,28 +67,40 @@ import org.kohsuke.args4j.Option;
 /** A command for inspecting the artifact cache. */
 public class CacheCommand extends AbstractCommand {
 
-  @Argument private List<String> arguments = new ArrayList<>();
-
   @Option(name = "--output-dir", usage = "Extract artifacts to this directory.")
   @Nullable
   private String outputDir = null;
 
-  @Option(name = "--distributed", usage = "If the request is for our distributed system.")
-  private boolean isRequestForDistributed = false;
+  @Option(
+      name = "--rule-key-with-target",
+      usage =
+          "A build target and rule key pair which will be sent to the cache together. "
+              + "This is in contrast to specifying a rule key on its own (without this flag), which will "
+              + "be sent to the cache without any target information. This flag can be specified "
+              + "multiple times so each rule key can be sent to the cache with a target.",
+      handler = PairedStringOptionHandler.class)
+  private List<Pair<String, String>> targetsWithRuleKeys = new ArrayList<>();
+
+  @VisibleForTesting
+  void setTargetsWithRuleKeys(ImmutableList<Pair<String, String>> pairs) {
+    this.targetsWithRuleKeys = pairs;
+  }
+
+  @Argument private List<String> arguments = new ArrayList<>();
 
   public List<String> getArguments() {
     return arguments;
   }
-
-  Optional<Path> outputPath = Optional.empty();
 
   @VisibleForTesting
   void setArguments(List<String> arguments) {
     this.arguments = arguments;
   }
 
+  Optional<Path> outputPath = Optional.empty();
+
   public void fakeOutParseEvents(BuckEventBus eventBus) {
-    ParseEvent.Started parseStart = ParseEvent.started(ImmutableList.of());
+    ParseEvent.Started parseStart = ParseEvent.started(ImmutableSet.of());
     eventBus.post(parseStart);
     eventBus.post(ParseEvent.finished(parseStart, 0, Optional.empty()));
     ActionGraphEvent.Started actionGraphStart = ActionGraphEvent.started();
@@ -119,7 +136,7 @@ public class CacheCommand extends AbstractCommand {
       }
     }
 
-    if (arguments.isEmpty()) {
+    if (arguments.isEmpty() && targetsWithRuleKeys.isEmpty()) {
       throw new CommandLineException("no cache keys specified");
     }
 
@@ -128,16 +145,20 @@ public class CacheCommand extends AbstractCommand {
       Files.createDirectories(outputPath.get());
     }
 
-    ImmutableList<RuleKey> ruleKeys =
+    ImmutableList<RuleKey> rawRuleKeys =
         arguments.stream().map(RuleKey::new).collect(ImmutableList.toImmutableList());
+
+    ImmutableList<Pair<BuildTarget, RuleKey>> pairedRuleKeys =
+        targetsWithRuleKeys.stream()
+            .map(pair -> parseTargetRuleKeyPair(params, pair))
+            .collect(ImmutableList.toImmutableList());
 
     Path tmpDir = Files.createTempDirectory("buck-cache-command");
 
     BuildEvent.Started started = BuildEvent.started(getArguments());
 
     List<ArtifactRunner> results = null;
-    try (ArtifactCache cache =
-            params.getArtifactCacheFactory().newInstance(isRequestForDistributed, false);
+    try (ArtifactCache cache = params.getArtifactCacheFactory().newInstance();
         CommandThreadManager pool =
             new CommandThreadManager("Build", getConcurrencyLimit(params.getBuckConfig()))) {
       WeightedListeningExecutorService executor = pool.getWeightedListeningExecutorService();
@@ -148,10 +169,22 @@ public class CacheCommand extends AbstractCommand {
 
       // Fetch all artifacts
       List<ListenableFuture<ArtifactRunner>> futures = new ArrayList<>();
-      for (RuleKey ruleKey : ruleKeys) {
+      for (RuleKey ruleKey : rawRuleKeys) {
         futures.add(
             executor.submit(
-                new ArtifactRunner(params.getProjectFilesystemFactory(), ruleKey, tmpDir, cache)));
+                new ArtifactRunner(
+                    params.getProjectFilesystemFactory(), null, ruleKey, tmpDir, cache)));
+      }
+
+      for (Pair<BuildTarget, RuleKey> targetRuleKeyPair : pairedRuleKeys) {
+        futures.add(
+            executor.submit(
+                new ArtifactRunner(
+                    params.getProjectFilesystemFactory(),
+                    targetRuleKeyPair.getFirst(),
+                    targetRuleKeyPair.getSecond(),
+                    tmpDir,
+                    cache)));
       }
 
       // Wait for all executions to complete or fail.
@@ -169,15 +202,18 @@ public class CacheCommand extends AbstractCommand {
 
     HashMap<ArtifactCacheMode, AtomicInteger> cacheHitsPerMode = new HashMap<>();
     HashMap<ArtifactCacheMode, AtomicInteger> cacheErrorsPerMode = new HashMap<>();
+    HashMap<ArtifactCacheMode, AtomicLong> cacheBytesPerMode = new HashMap<>();
     for (ArtifactCacheMode mode : ArtifactCacheMode.values()) {
       cacheHitsPerMode.put(mode, new AtomicInteger(0));
       cacheErrorsPerMode.put(mode, new AtomicInteger(0));
+      cacheBytesPerMode.put(mode, new AtomicLong(0L));
     }
     int cacheHits = 0;
     int cacheMisses = 0;
     int cacheErrors = 0;
     int cacheIgnored = 0;
     int localKeyUnchanged = 0;
+    long cacheBytes = 0L;
 
     for (ArtifactRunner r : results) {
       if (r.completed) {
@@ -187,6 +223,7 @@ public class CacheCommand extends AbstractCommand {
       ArtifactCacheMode artifactCacheMode = r.cacheResultMode.orElse(ArtifactCacheMode.unknown);
       switch (r.cacheResultType) {
         case ERROR:
+        case SOFT_ERROR:
           if (cacheErrorsPerMode.containsKey(artifactCacheMode)) {
             cacheErrorsPerMode.get(artifactCacheMode).incrementAndGet();
           }
@@ -199,7 +236,12 @@ public class CacheCommand extends AbstractCommand {
           if (cacheHitsPerMode.containsKey(artifactCacheMode)) {
             cacheHitsPerMode.get(artifactCacheMode).incrementAndGet();
           }
+          AtomicLong bytes = cacheBytesPerMode.get(artifactCacheMode);
+          if (bytes != null) {
+            bytes.addAndGet(r.artifactSize);
+          }
           ++cacheHits;
+          cacheBytes += r.artifactSize;
           break;
         case MISS:
           ++cacheMisses;
@@ -248,6 +290,8 @@ public class CacheCommand extends AbstractCommand {
                     .setTotalCacheLocalKeyUnchangedHits(localKeyUnchanged)
                     .setFailureUploadCount(new AtomicInteger(0))
                     .setSuccessUploadCount(new AtomicInteger(0))
+                    .setCacheBytesPerMode(cacheBytesPerMode)
+                    .setTotalCacheBytes(cacheBytes)
                     .build()));
 
     ExitCode exitCode = (totalRuns == goodRuns) ? ExitCode.SUCCESS : ExitCode.BUILD_ERROR;
@@ -267,11 +311,27 @@ public class CacheCommand extends AbstractCommand {
     return exitCode;
   }
 
+  private Pair<BuildTarget, RuleKey> parseTargetRuleKeyPair(
+      CommandRunnerParams params, Pair<String, String> rawArg) {
+    String targetName = rawArg.getFirst();
+    String ruleKey = rawArg.getSecond();
+
+    BuildTarget buildTarget =
+        params
+            .getUnconfiguredBuildTargetFactory()
+            .create(params.getCell().getCellPathResolver(), targetName)
+            // TODO(nga): ignores default_target_platform and platform detector
+            .configure(
+                params.getTargetConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE));
+    return new Pair<>(buildTarget, new RuleKey(ruleKey));
+  }
+
   private String cacheResultToString(CacheResult cacheResult) {
     CacheResultType type = cacheResult.getType();
     String typeString = type.toString().toLowerCase();
     switch (type) {
       case ERROR:
+      case SOFT_ERROR:
         return String.format("%s %s", typeString, cacheResult.getCacheError());
       case HIT:
       case CONTAINS:
@@ -364,6 +424,7 @@ public class CacheCommand extends AbstractCommand {
   class ArtifactRunner implements Callable<ArtifactRunner> {
 
     final ProjectFilesystemFactory projectFilesystemFactory;
+    @Nullable BuildTarget buildTarget;
     RuleKey ruleKey;
     Path tmpDir;
     Path artifact;
@@ -374,13 +435,16 @@ public class CacheCommand extends AbstractCommand {
     StringBuilder resultString;
     ArtifactCache cache;
     boolean completed;
+    long artifactSize;
 
     public ArtifactRunner(
         ProjectFilesystemFactory projectFilesystemFactory,
+        @Nullable BuildTarget buildTarget,
         RuleKey ruleKey,
         Path tmpDir,
         ArtifactCache cache) {
       this.projectFilesystemFactory = projectFilesystemFactory;
+      this.buildTarget = buildTarget;
       this.ruleKey = ruleKey;
       this.tmpDir = tmpDir;
       this.cache = cache;
@@ -404,7 +468,8 @@ public class CacheCommand extends AbstractCommand {
       // TODO(skotch): don't use intermediate files, that just slows us down
       // instead, unzip from the ~/buck-cache/ directly
       CacheResult success =
-          Futures.getUnchecked(cache.fetchAsync(null, ruleKey, LazyPath.ofInstance(artifact)));
+          Futures.getUnchecked(
+              cache.fetchAsync(buildTarget, ruleKey, LazyPath.ofInstance(artifact)));
       cacheResult = cacheResultToString(success);
       cacheResultType = success.getType();
       cacheResultMode = success.cacheMode();
@@ -413,6 +478,7 @@ public class CacheCommand extends AbstractCommand {
       resultString.append("Artifact metadata:\n");
       resultString.append(ObjectMappers.WRITER.writeValueAsString(metadata));
       resultString.append(System.lineSeparator());
+      artifactSize = success.getType() == CacheResultType.HIT ? success.getArtifactSizeBytes() : 0L;
       boolean cacheSuccess = success.getType().isSuccess();
       if (!cacheSuccess) {
         statusString = String.format("FAILED FETCHING %s %s", ruleKey, cacheResult);

@@ -1,16 +1,16 @@
-# Copyright 2018-present Facebook, Inc.
+# Copyright (c) Facebook, Inc. and its affiliates.
 #
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License. You may obtain
-# a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations
-# under the License.
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import glob
 import hashlib
@@ -21,7 +21,8 @@ import shutil
 import tempfile
 
 import requests
-from platforms.common import ReleaseException, run, temp_move_file
+
+from platforms.common import ReleaseException, run
 from releases import get_version_and_timestamp_from_release
 
 
@@ -86,7 +87,7 @@ def setup_tap(homebrew_dir, tap_repository):
 
 
 def update_formula_before_bottle(
-    release, release_version, release_timestamp, formula_path, tarball_sha256
+    repository, release_version, release_timestamp, formula_path, tarball_sha256
 ):
     """
     Updates `formula_path` with correct urls, version and sha for building a bottle
@@ -102,14 +103,14 @@ def update_formula_before_bottle(
     with open(formula_path, "r") as fin:
         all_data = fin.read()
         all_data = re.sub(
-            r"@@buck_version = .*$",
-            '@@buck_version = "{}"'.format(release_version),
+            r"BUCK_VERSION = .*$",
+            'BUCK_VERSION = "{}".freeze'.format(release_version),
             all_data,
             flags=re.MULTILINE,
         )
         all_data = re.sub(
-            r"@@buck_release_timestamp = .*$",
-            '@@buck_release_timestamp = "{}"'.format(release_timestamp),
+            r"BUCK_RELEASE_TIMESTAMP = .*$",
+            'BUCK_RELEASE_TIMESTAMP = "{}".freeze'.format(release_timestamp),
             all_data,
             flags=re.MULTILINE,
         )
@@ -119,12 +120,25 @@ def update_formula_before_bottle(
             all_data,
             flags=re.MULTILINE,
         )
+        # This is a wholly undocumented endpoint, but is not subject to ratelimiting
+        # See https://github.com/facebook/homebrew-fb/pull/33
         all_data = re.sub(
             r'  url "https://.+"$',
-            r'  url "{}"'.format(release["tarball_url"]),
+            r'  url "https://github.com/{repository}/archive/v#{{BUCK_VERSION}}.tar.gz"'.format(
+                repository=repository
+            ),
             all_data,
             flags=re.MULTILINE,
         )
+        all_data = re.sub(
+            r'    root_url "https://github.com/.*/releases/download/v#{BUCK_VERSION}"',
+            r'    root_url "https://github.com/{repository}/releases/download/v#{{BUCK_VERSION}}"'.format(
+                repository=repository
+            ),
+            all_data,
+            flags=re.MULTILINE,
+        )
+
     with open(formula_path, "w") as fout:
         fout.write(all_data)
 
@@ -152,40 +166,18 @@ def build_bottle_file(
     """
     brew_target = tap_repository + "/buck"
 
-    # So, if buck wasn't linked to begin with, we can't unlink it. Ideally the install
-    # fails down the road. There is, so far as I could tell, no way to verify if
-    # a formula is linked :/
-    logging.info("Unlinking buck")
-    brew(homebrew_dir, ["unlink", brew_target], tap_path, check=False)
-
     logging.info("Building bottle")
-    # If there is still a buck file that exists, move it out of the way for now
-    # This should generally not be an issue outside of FB
-    with temp_move_file("/usr/local/bin/buck") as moved:
-        # Cool, so install --force will still not rebuild. Uninstall, and just don't
-        # care if the uninstall fails
-        brew(
-            homebrew_dir,
-            ["uninstall", "--force", "--build-bottle", brew_target],
-            tap_path,
-            check=False,
-        )
-        brew(
-            homebrew_dir,
-            ["install", "--force", "--build-bottle", brew_target],
-            tap_path,
-        )
-        logging.info("Creating bottle file")
-        brew(
-            homebrew_dir,
-            ["bottle", "--no-rebuild", "--skip-relocation", brew_target],
-            tap_path,
-        )
-        logging.info("Created bottle file")
-        if moved:
-            # Make sure to unlink again so that we can move the original file back
-            logging.info("Unlinking buck again")
-            brew(homebrew_dir, ["unlink", brew_target], tap_path)
+    # Cool, so install --force will still not rebuild. Uninstall, and just don't
+    # care if the uninstall fails
+    brew(homebrew_dir, ["uninstall", "--force", brew_target], tap_path, check=False)
+    brew(homebrew_dir, ["install", "--force", "--build-bottle", brew_target], tap_path)
+    logging.info("Creating bottle file")
+    brew(
+        homebrew_dir,
+        ["bottle", "--no-rebuild", "--skip-relocation", brew_target],
+        tap_path,
+    )
+    logging.info("Created bottle file")
 
     bottle_filename = "buck-{ver}.{macos_ver}.bottle.tar.gz".format(
         ver=release_version, macos_ver=target_macos_version
@@ -285,21 +277,24 @@ def validate_tap(homebrew_dir, tap_repository, version):
     logging.info("Validating that brew installs with new tap information")
     brew_target = tap_repository + "/buck"
     brew(homebrew_dir, ["uninstall", "--force", brew_target])
-    with temp_move_file("/usr/local/bin/buck") as moved:
-        brew(homebrew_dir, ["install", brew_target])
-        output = (
-            brew(homebrew_dir, ["info", brew_target], capture_output=True)
-            .stdout.decode("utf-8")
-            .splitlines()[0]
-        )
-        if moved:
-            brew(homebrew_dir, ["uninstall", brew_target])
-        if "{}/buck: stable {}".format(tap_repository, version) not in output:
-            raise ReleaseException(
-                "Expected version {} to be installed, but got this from `brew info {}`: {}".format(
-                    version, tap_repository, output
-                )
+    brew(homebrew_dir, ["install", brew_target])
+    output = (
+        brew(homebrew_dir, ["info", brew_target], capture_output=True)
+        .stdout.decode("utf-8")
+        .splitlines()[0]
+    )
+    if "{}/buck: stable {}".format(tap_repository, version) not in output:
+        raise ReleaseException(
+            "Expected version {} to be installed, but got this from `brew info {}`: {}".format(
+                version, tap_repository, output
             )
+        )
+
+
+def audit_tap(homebrew_dir, tap_repository):
+    logging.info("Running brew audit")
+    brew_target = tap_repository + "/buck"
+    brew(homebrew_dir, ["audit", brew_target])
 
 
 def publish_tap_changes(homebrew_dir, tap_repository, version):
@@ -324,6 +319,7 @@ def log_about_manual_tap_push(homebrew_dir, tap_repository):
 def build_bottle(
     homebrew_dir,
     release,
+    repository,
     tap_repository,
     target_macos_version,
     target_macos_version_spec,
@@ -337,11 +333,16 @@ def build_bottle(
     formula_path = get_formula_path(homebrew_dir, tap_repository)
     tap_path = os.path.dirname(formula_path)
 
-    tarball_sha256 = fetch_tarball_sha256(release["tarball_url"])
+    # This is a wholly undocumented endpoint, but is not subject to ratelimiting
+    # See https://github.com/facebook/homebrew-fb/pull/33
+    undocumented_tarball_url = "https://github.com/{repository}/archive/{tag_name}.tar.gz".format(
+        repository=repository, tag_name=release["tag_name"]
+    )
+    tarball_sha256 = fetch_tarball_sha256(undocumented_tarball_url)
 
     # First, update the bottle to have the new version and tarball sha.
     update_formula_before_bottle(
-        release, release_version, release_timestamp, formula_path, tarball_sha256
+        repository, release_version, release_timestamp, formula_path, tarball_sha256
     )
 
     # Build the actual bottle file
@@ -357,5 +358,8 @@ def build_bottle(
     # Get the bottle file sha, and update the bottle formula
     bottle_sha = get_sha256(bottle_path)
     update_formula_after_bottle(formula_path, bottle_sha, target_macos_version_spec)
+
+    # Make sure that we still pass `brew audit`
+    audit_tap(homebrew_dir, tap_repository)
 
     return bottle_path

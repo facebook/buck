@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
@@ -20,6 +20,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.CacheResult;
@@ -42,8 +43,10 @@ import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.timing.Clock;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.google.common.util.concurrent.Futures;
@@ -53,8 +56,8 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicBoolean;
+import javax.annotation.Nullable;
 import org.junit.Test;
 
 public class CacheCommandTest {
@@ -93,7 +96,7 @@ public class CacheCommandTest {
 
     ArtifactCache cache =
         new FakeArtifactCache(
-            new RuleKey(ruleKeyHash), CacheResult.hit("http", ArtifactCacheMode.http));
+            null, new RuleKey(ruleKeyHash), CacheResult.hit("http", ArtifactCacheMode.http));
 
     TestConsole console = new TestConsole();
 
@@ -135,7 +138,7 @@ public class CacheCommandTest {
   public void testRunCommandAndFetchArtifactsUnsuccessfully() throws Exception {
     final String ruleKeyHash = "b64009ae3762a42a1651c139ec452f0d18f48e21";
 
-    ArtifactCache cache = new FakeArtifactCache(new RuleKey(ruleKeyHash), CacheResult.miss());
+    ArtifactCache cache = new FakeArtifactCache(null, new RuleKey(ruleKeyHash), CacheResult.miss());
 
     TestConsole console = new TestConsole();
 
@@ -157,7 +160,7 @@ public class CacheCommandTest {
 
     ArtifactCache cache =
         new FakeArtifactCache(
-            new RuleKey(ruleKeyHash), CacheResult.hit("http", ArtifactCacheMode.http));
+            null, new RuleKey(ruleKeyHash), CacheResult.hit("http", ArtifactCacheMode.http));
 
     TestConsole console = new TestConsole();
 
@@ -181,9 +184,74 @@ public class CacheCommandTest {
     assertThat(strBuilder.toString(), containsString("Downloaded"));
   }
 
+  @Test
+  public void testRunCommandWithTargetNameAndFetchSuccessfully() throws Exception {
+    final String targetName = "//foo/bar:bar";
+    final String ruleKeyHash = "b64009ae3762a42a1651c139ec452f0d18f48e21";
+
+    ArtifactCache cache =
+        new FakeArtifactCache(
+            targetName, new RuleKey(ruleKeyHash), CacheResult.hit("http", ArtifactCacheMode.http));
+
+    TestConsole console = new TestConsole();
+
+    CommandRunnerParams commandRunnerParams =
+        CommandRunnerParamsForTesting.builder().setConsole(console).setArtifactCache(cache).build();
+
+    Builder<String> arguments = ImmutableList.builder();
+    arguments.add("fetch");
+
+    Builder<Pair<String, String>> targetsWithRuleKeys = ImmutableList.builder();
+    targetsWithRuleKeys.add(new Pair<>(targetName, ruleKeyHash));
+
+    CacheCommand cacheCommand = new CacheCommand();
+    cacheCommand.setArguments(arguments.build());
+    cacheCommand.setTargetsWithRuleKeys(targetsWithRuleKeys.build());
+
+    ExitCode exitCode = cacheCommand.run(commandRunnerParams);
+    assertEquals(ExitCode.SUCCESS, exitCode);
+    assertThat(
+        console.getTextWrittenToStdErr(),
+        containsString("Successfully downloaded artifact with id " + ruleKeyHash + " at "));
+  }
+
+  @Test
+  public void testRunCommandWithMixedTargetNameWithNot() throws Exception {
+    RecordingArtifactCache cache =
+        new RecordingArtifactCache(CacheResult.hit("http", ArtifactCacheMode.http));
+
+    TestConsole console = new TestConsole();
+
+    CommandRunnerParams commandRunnerParams =
+        CommandRunnerParamsForTesting.builder().setConsole(console).setArtifactCache(cache).build();
+
+    Builder<String> arguments = ImmutableList.builder();
+    arguments.add("fetch");
+    final String rawRuleKey = "9ae9d0b9551c08a5119b608875b7753890aa3072";
+    arguments.add(rawRuleKey);
+
+    Builder<Pair<String, String>> targetsWithRuleKeys = ImmutableList.builder();
+    final String target1 = "//foo:foo";
+    final String ruleKey1 = "d93d0c9039fca504ec8f1f4d604215bc56b0229b";
+    targetsWithRuleKeys.add(new Pair<>(target1, ruleKey1));
+    final String target2 = "//bar:bar";
+    final String ruleKey2 = "ea4513bc65306bb5dcd53fa1c7b6ff0754bd8ea2";
+    targetsWithRuleKeys.add(new Pair<>(target2, ruleKey2));
+
+    CacheCommand cacheCommand = new CacheCommand();
+    cacheCommand.setArguments(arguments.build());
+    cacheCommand.setTargetsWithRuleKeys(targetsWithRuleKeys.build());
+
+    ExitCode exitCode = cacheCommand.run(commandRunnerParams);
+    assertEquals(ExitCode.SUCCESS, exitCode);
+
+    assertTrue(cache.requestedRawRuleKey(rawRuleKey));
+    assertTrue(cache.requestedTargetWithRuleKey(target1, ruleKey1));
+    assertTrue(cache.requestedTargetWithRuleKey(target2, ruleKey2));
+  }
+
   private SuperConsoleEventBusListener createSuperConsole(
       Console console, Clock clock, BuckEventBus eventBus) {
-    TimeZone timeZone = TimeZone.getTimeZone("UTC");
     FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
     Path logPath = vfs.getPath("log.txt");
     SuperConsoleConfig emptySuperConsoleConfig =
@@ -199,7 +267,6 @@ public class CacheCommandTest {
                 EnvVariablesProvider.getSystemEnv(), System.getProperties()),
             Locale.US,
             logPath,
-            timeZone,
             0L,
             0L,
             1000L,
@@ -207,29 +274,42 @@ public class CacheCommandTest {
             new BuildId("1234-5678"),
             false,
             Optional.empty(),
-            ImmutableList.of());
+            ImmutableSet.of(),
+            ImmutableList.of(),
+            /* maxConcurrentReExecutions= */ 0);
     listener.register(eventBus);
     return listener;
   }
 
+  /** Cache which only accepts one artifact (and returns the desired result), otherwise it throws */
   private static class FakeArtifactCache extends NoopArtifactCache {
 
+    private final @Nullable String fullyQualifiedBuildTarget;
     private final RuleKey ruleKey;
     private final CacheResult cacheResult;
     private final AtomicBoolean closed = new AtomicBoolean(false);
 
-    private FakeArtifactCache(RuleKey ruleKey, CacheResult cacheResult) {
+    private FakeArtifactCache(
+        @Nullable String fullyQualifiedBuildTarget, RuleKey ruleKey, CacheResult cacheResult) {
+      this.fullyQualifiedBuildTarget = fullyQualifiedBuildTarget;
       this.ruleKey = ruleKey;
       this.cacheResult = cacheResult;
     }
 
     @Override
     public ListenableFuture<CacheResult> fetchAsync(
-        BuildTarget target, RuleKey ruleKey, LazyPath output) {
-      if (ruleKey.equals(this.ruleKey)) {
-        return Futures.immediateFuture(cacheResult);
+        @Nullable BuildTarget target, RuleKey ruleKey, LazyPath output) {
+
+      if (!ruleKey.equals(this.ruleKey)) {
+        throw new IllegalArgumentException();
       }
-      throw new IllegalArgumentException();
+
+      if (target != null
+          && !target.getFullyQualifiedName().equals(this.fullyQualifiedBuildTarget)) {
+        throw new IllegalArgumentException();
+      }
+
+      return Futures.immediateFuture(cacheResult);
     }
 
     @Override
@@ -237,6 +317,79 @@ public class CacheCommandTest {
       if (!closed.compareAndSet(false, true)) {
         throw new IllegalStateException("Already closed");
       }
+    }
+  }
+
+  /**
+   * ArtifactCache which always returns the cacheResult and records what data was requested of it
+   */
+  private static class RecordingArtifactCache extends NoopArtifactCache {
+
+    private final CacheResult cacheResult;
+
+    private final AtomicBoolean closed = new AtomicBoolean(false);
+    private ImmutableList.Builder<Pair<Optional<BuildTarget>, RuleKey>> requestedArtifacts =
+        new ImmutableList.Builder();
+    private ImmutableList<Pair<Optional<BuildTarget>, RuleKey>> finalArtifacts;
+
+    private RecordingArtifactCache(CacheResult cacheResult) {
+      this.cacheResult = cacheResult;
+    }
+
+    public boolean requestedTargetWithRuleKey(String fullyQualifiedTarget, String ruleKey) {
+      if (finalArtifacts == null) {
+        throw new IllegalStateException("ArtifactCache must be closed before inspecting elements");
+      }
+      RuleKey rk = new RuleKey(ruleKey);
+      for (Pair<Optional<BuildTarget>, RuleKey> pair : finalArtifacts) {
+        // We're specifically looking for rulekeys with targets
+        if (!pair.getFirst().isPresent()) {
+          continue;
+        }
+        if (!rk.equals(pair.getSecond())) {
+          continue;
+        }
+        BuildTarget target = pair.getFirst().get();
+        if (fullyQualifiedTarget.equals(target.getFullyQualifiedName())) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    public boolean requestedRawRuleKey(String ruleKey) {
+      if (finalArtifacts == null) {
+        throw new IllegalStateException("ArtifactCache must be closed before inspecting elements");
+      }
+      RuleKey rk = new RuleKey(ruleKey);
+      for (Pair<Optional<BuildTarget>, RuleKey> pair : finalArtifacts) {
+        // We're specifically looking for raw rulekeys
+        if (pair.getFirst().isPresent()) {
+          continue;
+        }
+
+        if (rk.equals(pair.getSecond())) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    @Override
+    public ListenableFuture<CacheResult> fetchAsync(
+        @Nullable BuildTarget target, RuleKey ruleKey, LazyPath output) {
+      synchronized (this) {
+        requestedArtifacts.add(new Pair<>(Optional.ofNullable(target), ruleKey));
+      }
+      return Futures.immediateFuture(cacheResult);
+    }
+
+    @Override
+    public void close() {
+      if (!closed.compareAndSet(false, true)) {
+        throw new IllegalStateException("Already closed");
+      }
+      finalArtifacts = requestedArtifacts.build();
     }
   }
 }

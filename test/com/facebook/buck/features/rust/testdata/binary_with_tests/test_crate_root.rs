@@ -1,3 +1,2 @@
 #[test]
-fn test_success() {
-}
+fn test_success() {}

@@ -1,34 +1,39 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
+import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.modern.EmptyMemoizerDeserialization;
 import com.facebook.buck.util.Memoizer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import java.io.File;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 public class ResolvedJavacPluginProperties implements AddsToRuleKey {
   @AddToRuleKey private final JavacPluginProperties inner;
@@ -58,12 +63,10 @@ public class ResolvedJavacPluginProperties implements AddsToRuleKey {
   }
 
   /** Get the classpath for the plugin. */
-  public URL[] getClasspath(SourcePathResolver resolver, ProjectFilesystem filesystem) {
+  public URL[] getClasspath(SourcePathResolverAdapter resolver, ProjectFilesystem filesystem) {
     return classpathSupplier.get(
         () ->
-            inner
-                .getClasspathEntries()
-                .stream()
+            inner.getClasspathEntries().stream()
                 .map(resolver::getAbsolutePath)
                 .map(filesystem::resolve)
                 .map(Path::toUri)
@@ -89,11 +92,32 @@ public class ResolvedJavacPluginProperties implements AddsToRuleKey {
 
   /** Get the javac plugin fields. */
   public JavacPluginJsr199Fields getJavacPluginJsr199Fields(
-      SourcePathResolver resolver, ProjectFilesystem filesystem) {
+      SourcePathResolverAdapter resolver, ProjectFilesystem filesystem) {
     return JavacPluginJsr199Fields.builder()
         .setCanReuseClassLoader(getCanReuseClassLoader())
         .setClasspath(ImmutableList.copyOf(getClasspath(resolver, filesystem)))
         .setProcessorNames(getProcessorNames())
         .build();
+  }
+
+  public static String getJoinedClasspath(
+      SourcePathResolverAdapter resolver,
+      ProjectFilesystem filesystem,
+      ImmutableList<ResolvedJavacPluginProperties> resolvedProperties) {
+    return resolvedProperties.stream()
+        .map(properties -> properties.getClasspath(resolver, filesystem))
+        .flatMap(Arrays::stream)
+        .distinct()
+        .map(
+            url -> {
+              try {
+                return url.toURI();
+              } catch (URISyntaxException e) {
+                throw new RuntimeException(e);
+              }
+            })
+        .map(Paths::get)
+        .map(Path::toString)
+        .collect(Collectors.joining(File.pathSeparator));
   }
 }

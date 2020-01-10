@@ -5,6 +5,6 @@ class AKotlinClass {
         JavaClassWithJavaAnnotation_()
         KotlinClassWithJavaAnnotation_()
         JavaClassWithKotlinAnnotation_()
-        KotlinClassWithJavaAnnotation_()
+        KotlinClassWithKotlinAnnotation_()
     }
 }

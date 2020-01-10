@@ -1,18 +1,19 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 {namespace buck.getting_started}
 
 /***/
@@ -46,8 +47,8 @@ addition to the documentation here.
   <tr>
   <td><span><strong>Platform:</strong></span></td>
   <td>
-  <a href="javascript:void(0);" class="button-ios" onclick="display('platform', 'ios')">iOS</a>
   <a href="javascript:void(0);" class="button-android" onclick="display('platform', 'android')">Android</a>
+  <a href="javascript:void(0);" class="button-ios" onclick="display('platform', 'ios')">iOS</a>
   <a href="javascript:void(0);" class="button-java" onclick="display('platform', 'java')">Java</a>
   <a href="javascript:void(0);" class="button-other" onclick="display('platform', 'other')">Other</a>
   </td>
@@ -298,10 +299,13 @@ This automatically adds buck to Chocolatey's path, and lets you run commands jus
 # Install command line tools. NOTE: If you have Xcode installed, these may
 # already be installed.
 xcode-select --install
-# Install Java - this installs the JDK 8, a superset of the JRE
-brew tap caskroom/cask
-brew tap caskroom/versions
-brew cask install java8
+# Download and Install Java SE 8 from:
++# https://www.oracle.com/technetwork/java/javase/downloads/index.html.
++# This installs the JDK 8, a superset of the JRE.
++# Alternatively, install AdoptOpenJDK 8 with Homebrew Cask:
++brew tap homebrew/cask-cask
++brew tap homebrew/cask-versions
++brew cask install homebrew/cask-versions/adoptopenjdk8
 </pre>{/literal}
 
 <span><block class="mac ios" /></span>
@@ -419,13 +423,14 @@ available commands:
   kill        kill buckd for the current project
   killall     kill all buckd processes
   project     generates project configuration files for an IDE
-  query       provides facilities to query information about the target nodes graph
+  query       provides facilities to query information about the configured target nodes graph
   root        prints the absolute path to the root of the current buck project
   run         runs a target as a command
   server      query and control the http server
   targets     prints the list of buildable targets
   test        builds and runs the tests for the specified target
   uninstall   uninstalls an APK
+  uquery      provides facilities to query information about the unconfigured target nodes graph
 options:
  --help         : Shows this screen and exits.
  --version (-V) : Show version number.
@@ -499,7 +504,7 @@ For some distros, the default packages may be older than what you would like. In
 
 <span><block class="mac linux windows android" /></span>
 
-<h3>Set Location of Android SDK and NDK</h3>
+<h3 id="locate-android-sdk">Set Location of Android SDK and NDK</h3>
 
 <p>
   You will need to tell Buck where to find the Android SDK and NDK.  
@@ -533,7 +538,7 @@ For some distros, the default packages may be older than what you would like. In
       <code>NDK_HOME</code> environment variable.
     </li>  
     <li>
-      The value of the {call buckconfig.ndk_path /} property 
+      The value of the {call buckconfig.ndk_ndk_path /} property 
       in <code>.buckconfig</code>.
     </li>
   </ul>
@@ -548,7 +553,7 @@ For some distros, the default packages may be older than what you would like. In
       <code>ANDROID_NDK_REPOSITORY</code> environment variable.
     </li>
     <li>
-      The {call buckconfig.ndk_repository_path /} property 
+      The {call buckconfig.ndk_ndk_repository_path /} property 
       in <code>.buckconfig</code>. 
     </li>
   </ul>
@@ -559,7 +564,7 @@ For some distros, the default packages may be older than what you would like. In
 
   <p>
   If you specify an NDK repository, Buck selects the NDK based on the
-  version that you specify in the {call buckconfig.ndk_version /} property 
+  version that you specify in the {call buckconfig.ndk_ndk_version /} property 
   of <code>.buckconfig</code>.
   </p>
 
@@ -663,7 +668,7 @@ cd bucksamples/cross-platform-scale-2015-demo/
 <h3>Build the iOS sample</h3>
 
 <p>
-  In order to build the app, you use the {call buck.cmd_build /} command, specifying your app as the target. The target may be defined in the {call buckconfig.alias /} section in the <code>.buckconfig</code> file or it would be the name of your iOS project prepended by <code>//[the directory where your project is located]:</code> (e.g., <code>//ios:BuckDempApp</code>).
+  In order to build the app, you use the {call buck.cmd_build /} command, specifying your app as the target. The target may be defined in the {call buckconfig.alias /} section in the <code>.buckconfig</code> file or it would be the name of your iOS project prepended by <code>//[the directory where your project is located]:</code> (e.g., <code>//ios:BuckDemoApp</code>).
 </p>
 
 {literal}
@@ -790,20 +795,20 @@ ANDROID_SDK=&lt;path-to-sdk&gt;
 
 <ul>
   <li>See {call buckconfig.android_build_tools_version /} to get the version of build tools in Android SDK.</li>
-  <li>{call buckconfig.android_target /} points to the target.</li>
-  <li>{call buckconfig.ndk_version /} points to the version of Android NDK.</li>
+  <li>{call buckconfig.android_compile_sdk_version /} points to the Android SDK to build against.</li>
+  <li>{call buckconfig.ndk_ndk_version /} points to the version of Android NDK.</li>
 </ul>
 
 Optionally:
 
 <ul>
   <li>{call buckconfig.android_sdk_path /} is an absolute path to the Android SDK.</li>
-  <li>{call buckconfig.ndk_path /} is an absolute path to the Android NDK.</li>
+  <li>{call buckconfig.ndk_ndk_path /} is an absolute path to the Android NDK.</li>
   <li>
-    {call buckconfig.ndk_repository_path /} is an absolute path to a
+    {call buckconfig.ndk_ndk_repository_path /} is an absolute path to a
     directory that contains multiple Android NDKs in subdirectories.
     Buck selects which NDK to use based on the value of 
-    the {call buckconfig.ndk_version /} property in <code>.buckconfig</code>.
+    the {call buckconfig.ndk_ndk_version /} property in <code>.buckconfig</code>.
   </li>
 </ul>
 
@@ -1065,7 +1070,7 @@ if (!foundHash) {
   var isMac = navigator.platform.toLowerCase().indexOf('mac') !== -1;
   var isLinux = navigator.platform.toLowerCase().indexOf('linux') !== -1;
   display('os', isMac ? 'mac' : (isLinux ? 'linux' : 'windows'));
-  display('platform', isMac ? 'ios' : 'android');
+  display('platform', 'android');
 }
 </script>
 {/literal}

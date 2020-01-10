@@ -3,16 +3,6 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 java_immutables_library(
     name = "cell",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//src/com/facebook/buck/core/config:config",
-        "//src/com/facebook/buck/core/model:model",
-        "//src/com/facebook/buck/core/toolchain:toolchain",
-        "//src/com/facebook/buck/io:executable-finder",
-        "//src/com/facebook/buck/io/filesystem:filesystem",
-        "//src/com/facebook/buck/parser/exceptions:exceptions",
-        "//src/com/facebook/buck/util/config:config",
-        "//third-party/java/pf4j:pf4j",
-    ],
     tests = [
         "//test/com/facebook/buck/core/cell:cell",
     ],
@@ -20,7 +10,19 @@ java_immutables_library(
         "PUBLIC",
     ],
     deps = [
+        "//src/com/facebook/buck/core/cell/exception:exception",
         "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/stream:stream",
         "//src/com/facebook/buck/util/string:string",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/cell/nameresolver:nameresolver",
+        "//src/com/facebook/buck/core/config:config",
+        "//src/com/facebook/buck/core/toolchain:toolchain",
+        "//src/com/facebook/buck/io:executable-finder",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//src/com/facebook/buck/parser/exceptions:exceptions",
+        "//src/com/facebook/buck/util/config:config",
+        "//third-party/java/pf4j:pf4j",
     ],
 )

@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple;
@@ -53,6 +53,7 @@ class SwiftStdlibStep implements Step {
   private final Path destinationDirectory;
   private final Iterable<String> swiftStdlibToolCommandPrefix;
   private final Iterable<String> lipoCommandPrefix;
+  private final boolean useLipoThin;
   private final Path binaryPathToScan;
   private final Iterable<Path> additionalFoldersToScan;
 
@@ -65,6 +66,7 @@ class SwiftStdlibStep implements Step {
       Path destinationDirectory,
       Iterable<String> swiftStdlibToolCommandPrefix,
       Iterable<String> lipoCommandPrefix,
+      boolean useLipoThin,
       Path binaryPathToScan,
       Iterable<Path> additionalFoldersToScan,
       Optional<Supplier<CodeSignIdentity>> codeSignIdentitySupplier) {
@@ -74,6 +76,7 @@ class SwiftStdlibStep implements Step {
     this.temp = workingDirectory.resolve(temp);
     this.swiftStdlibToolCommandPrefix = swiftStdlibToolCommandPrefix;
     this.lipoCommandPrefix = lipoCommandPrefix;
+    this.useLipoThin = useLipoThin;
     this.binaryPathToScan = binaryPathToScan;
     this.additionalFoldersToScan = additionalFoldersToScan;
     this.codeSignIdentitySupplier = codeSignIdentitySupplier;
@@ -100,10 +103,10 @@ class SwiftStdlibStep implements Step {
     return swiftStdlibCommand.build();
   }
 
-  private ImmutableList<String> getArchsCommand() {
+  private ImmutableList<String> getArchsCommand(Path lib) {
     ImmutableList.Builder<String> command = ImmutableList.builder();
     command.addAll(lipoCommandPrefix);
-    command.add("-archs", binaryPathToScan.toString());
+    command.add("-archs", lib.toString());
     return command.build();
   }
 
@@ -115,10 +118,26 @@ class SwiftStdlibStep implements Step {
     return command.build();
   }
 
+  private ImmutableList<String> getLipoThinCommand(Path lib, String arch) {
+    ImmutableList.Builder<String> command = ImmutableList.builder();
+    command.addAll(lipoCommandPrefix);
+    command.add("-thin", arch, lib.toString());
+    command.add("-output", lib.toString() + "." + arch);
+    return command.build();
+  }
+
   private ImmutableList<String> getLipoCreateCommand(Path lib, String[] archs) {
     ImmutableList.Builder<String> command = ImmutableList.builder();
     command.addAll(lipoCommandPrefix);
     command.addAll(FluentIterable.from(archs).transform(arch -> lib.toString() + "." + arch));
+    command.add("-create", "-output", destinationDirectory.resolve(lib.getFileName()).toString());
+    return command.build();
+  }
+
+  private ImmutableList<String> getCopyLibCommand(Path lib) {
+    ImmutableList.Builder<String> command = ImmutableList.builder();
+    command.addAll(lipoCommandPrefix);
+    command.add(lib.toString());
     command.add("-create", "-output", destinationDirectory.resolve(lib.getFileName()).toString());
     return command.build();
   }
@@ -163,7 +182,7 @@ class SwiftStdlibStep implements Step {
       Files.createDirectories(destinationDirectory);
 
       // Get needed archs from the binary.
-      params = makeProcessExecutorParams(context, getArchsCommand());
+      params = makeProcessExecutorParams(context, getArchsCommand(binaryPathToScan));
       LOG.debug("%s", params.getCommand());
       result = executor.launchAndExecute(params);
       if (result.getExitCode() != 0) {
@@ -185,10 +204,39 @@ class SwiftStdlibStep implements Step {
       // 2. Combine them into a new library in the destination path
       ImmutableList.Builder<ProcessExecutorParams> lipoCommands = ImmutableList.builder();
       for (Path lib : libs) {
-        for (String arch : archs) {
-          lipoCommands.add(makeProcessExecutorParams(context, getLipoExtractCommand(lib, arch)));
+        // For each lib, check to see if it's a universal binary and can actually extract slices.
+        // Attempting to extract from a binary with only one arch will error,
+        // so we just copy it instead.
+        params = makeProcessExecutorParams(context, getArchsCommand(lib));
+        result = executor.launchAndExecute(params);
+        if (result.getExitCode() != 0) {
+          LOG.error("Error running %s: %s", params.getCommand(), result.getStderr());
+          return StepExecutionResult.of(result);
         }
-        lipoCommands.add(makeProcessExecutorParams(context, getLipoCreateCommand(lib, archs)));
+
+        String[] libArchs = result.getStdout().orElse("").trim().split(" ");
+        LOG.debug("Library %s archs are %s", lib, libArchs.toString());
+
+        if (libArchs.length < 1) {
+          LOG.error("Unable to get binary archs");
+          return StepExecutionResults.ERROR;
+        }
+
+        boolean shouldExtractArch = (libArchs.length > 1);
+
+        if (shouldExtractArch) {
+          for (String arch : archs) {
+            if (useLipoThin) {
+              lipoCommands.add(makeProcessExecutorParams(context, getLipoThinCommand(lib, arch)));
+            } else {
+              lipoCommands.add(
+                  makeProcessExecutorParams(context, getLipoExtractCommand(lib, arch)));
+            }
+          }
+          lipoCommands.add(makeProcessExecutorParams(context, getLipoCreateCommand(lib, archs)));
+        } else {
+          lipoCommands.add(makeProcessExecutorParams(context, getCopyLibCommand(lib)));
+        }
       }
 
       // Actually run the lipo commands

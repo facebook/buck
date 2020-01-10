@@ -1,0 +1,48 @@
+java_library(
+    name = "a",
+    deps = [
+        ":a",
+    ],
+)
+
+java_library(
+    name = "b",
+    deps = [
+        ":a",
+    ],
+)
+
+java_library(
+    name = "c",
+    deps = [
+        ":d",
+    ],
+)
+
+java_library(
+    name = "d",
+    deps = [
+        ":c",
+    ],
+)
+
+java_library(
+    name = "e",
+    deps = [
+        ":c",
+    ],
+)
+
+java_library(
+    name = "f",
+    deps = [
+        "//cycles/dir:g",
+    ],
+)
+
+java_library(
+    name = "h",
+    deps = [
+        "//cycles/dir:i",
+    ],
+)

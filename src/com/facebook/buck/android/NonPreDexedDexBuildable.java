@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -32,7 +32,7 @@ import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -47,7 +47,7 @@ import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.MoreSuppliers;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -74,7 +74,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.function.Consumer;
@@ -83,13 +82,13 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
-class NonPreDexedDexBuildable extends AbstractBuildRule {
-  @AddToRuleKey private final ImmutableSortedSet<SourcePath> additionalJarsForProguard;
+class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> additionalJarsForProguardAndDesugar;
 
   @AddToRuleKey
   private final ImmutableSortedMap<APKModule, ImmutableSortedSet<APKModule>> apkModuleMap;
 
-  @AddToRuleKey private final Optional<ImmutableSet<SourcePath>> classpathEntriesToDexSourcePaths;
+  @AddToRuleKey private final ImmutableSet<SourcePath> classpathEntriesToDexSourcePaths;
   @AddToRuleKey private final Optional<SourcePath> dexReorderDataDumpFile;
   @AddToRuleKey private final Optional<SourcePath> dexReorderToolFile;
   @AddToRuleKey private final DexSplitMode dexSplitMode;
@@ -100,7 +99,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
   private final Optional<ImmutableSortedMap<APKModule, ImmutableList<SourcePath>>>
       moduleMappedClasspathEntriesToDex;
 
-  @AddToRuleKey private final OptionalInt optimizationPasses;
+  @AddToRuleKey private final int optimizationPasses;
   @AddToRuleKey private final boolean shouldProguard;
   @AddToRuleKey private final Optional<Arg> preprocessJavaClassesBash;
   @AddToRuleKey private final Optional<String> proguardAgentPath;
@@ -113,10 +112,11 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
   @AddToRuleKey private final APKModule rootAPKModule;
   @AddToRuleKey private final ProGuardObfuscateStep.SdkProguardType sdkProguardConfig;
   @AddToRuleKey private final boolean skipProguard;
-  @AddToRuleKey private final OptionalInt xzCompressionLevel;
+  @AddToRuleKey private final int xzCompressionLevel;
   @AddToRuleKey private final boolean shouldSplitDex;
   @AddToRuleKey private final String dexTool;
-  private final boolean desugarInterfaceMethods;
+  @AddToRuleKey private final boolean desugarInterfaceMethods;
+  @AddToRuleKey private final Optional<Integer> minSdkVersion;
 
   private final AndroidPlatformTarget androidPlatformTarget;
   private final ListeningExecutorService dxExecutorService;
@@ -145,7 +145,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
 
     ProGuardObfuscateStep.SdkProguardType getSdkProguardConfig();
 
-    OptionalInt getOptimizationPasses();
+    int getOptimizationPasses();
 
     Optional<List<String>> getProguardJvmArgs();
 
@@ -156,20 +156,22 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
     Optional<SourcePath> getProguardConfigPath();
 
     boolean getShouldProguard();
+
+    Optional<Integer> getMinSdkVersion();
   }
 
   NonPreDexedDexBuildable(
       AndroidPlatformTarget androidPlatformTarget,
       SourcePathRuleFinder ruleFinder,
-      ImmutableSortedSet<SourcePath> additionalJarsForProguard,
+      ImmutableSortedSet<SourcePath> additionalJarsForProguardAndDesugar,
       ImmutableSortedMap<APKModule, ImmutableSortedSet<APKModule>> apkModuleMap,
-      Optional<ImmutableSet<SourcePath>> classpathEntriesToDexSourcePaths,
+      ImmutableSet<SourcePath> classpathEntriesToDexSourcePaths,
       DexSplitMode dexSplitMode,
       Optional<ImmutableSortedMap<APKModule, ImmutableList<SourcePath>>>
           moduleMappedClasspathEntriesToDex,
       ImmutableList<SourcePath> proguardConfigs,
       APKModule rootAPKModule,
-      OptionalInt xzCompressionLevel,
+      int xzCompressionLevel,
       boolean shouldSplitDex,
       NonPredexedDexBuildableArgs args,
       ProjectFilesystem filesystem,
@@ -178,7 +180,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
       boolean desugarInterfaceMethods) {
     super(buildTarget, filesystem);
     this.androidPlatformTarget = androidPlatformTarget;
-    this.additionalJarsForProguard = additionalJarsForProguard;
+    this.additionalJarsForProguardAndDesugar = additionalJarsForProguardAndDesugar;
     this.apkModuleMap = apkModuleMap;
     this.classpathEntriesToDexSourcePaths = classpathEntriesToDexSourcePaths;
     this.dexReorderDataDumpFile = args.getDexReorderDataDumpFile();
@@ -203,6 +205,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
     this.skipProguard = args.getSkipProguard();
     this.xzCompressionLevel = xzCompressionLevel;
     this.shouldSplitDex = shouldSplitDex;
+    this.minSdkVersion = args.getMinSdkVersion();
 
     this.buildDepsSupplier =
         MoreSuppliers.memoize(
@@ -234,7 +237,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
     // Redex access the constructed proguard command line and then goes and opens a bunch of the
     // files listed there.
     return ImmutableList.<SourcePath>builder()
-        .addAll(classpathEntriesToDexSourcePaths.orElse(ImmutableSet.of()))
+        .addAll(classpathEntriesToDexSourcePaths)
         .addAll(RichStream.from(proguardConfig).collect(Collectors.toList()))
         .addAll(proguardConfigs)
         .build();
@@ -282,9 +285,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
       BuildContext buildContext, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     ImmutableSet<Path> classpathEntriesToDex =
-        classpathEntriesToDexSourcePaths
-            .get()
-            .stream()
+        classpathEntriesToDexSourcePaths.stream()
             .map(
                 input ->
                     getProjectFilesystem()
@@ -304,15 +305,10 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
                 getSecondaryDexRoot())));
 
     ImmutableMultimap<APKModule, Path> additionalDexStoreToJarPathMap =
-        moduleMappedClasspathEntriesToDex
-            .get()
-            .entrySet()
-            .stream()
+        moduleMappedClasspathEntriesToDex.get().entrySet().stream()
             .flatMap(
                 entry ->
-                    entry
-                        .getValue()
-                        .stream()
+                    entry.getValue().stream()
                         .map(
                             v ->
                                 new AbstractMap.SimpleEntry<>(
@@ -417,8 +413,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
       classpathEntriesToDex =
           addProguardCommands(
               classpathEntriesToDex,
-              proguardConfigs
-                  .stream()
+              proguardConfigs.stream()
                   .map(buildContext.getSourcePathResolver()::getAbsolutePath)
                   .collect(ImmutableSet.toImmutableSet()),
               skipProguard,
@@ -496,7 +491,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
     return steps.build();
   }
 
-  DexFilesInfo getDexFilesInfo() {
+  @Override
+  public DexFilesInfo getDexFilesInfo() {
     return new DexFilesInfo(
         genSourcePath(getNonPredexedPrimaryDexPath()),
         new DexFilesInfo.DexSecondaryDexDirView(
@@ -575,8 +571,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
     // TODO(devjasta): the output path we choose is the result of a slicing function against
     // input classpath. This is fragile and should be replaced with knowledge of the BuildTarget.
     ImmutableMap<Path, Path> inputOutputEntries =
-        classpathEntriesToDex
-            .stream()
+        classpathEntriesToDex.stream()
             .collect(
                 ImmutableMap.toImmutableMap(
                     java.util.function.Function.identity(),
@@ -600,7 +595,9 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
         optimizationPasses,
         proguardJvmArgs,
         inputOutputEntries,
-        buildContext.getSourcePathResolver().getAllAbsolutePaths(additionalJarsForProguard),
+        buildContext
+            .getSourcePathResolver()
+            .getAllAbsolutePaths(additionalJarsForProguardAndDesugar),
         getProguardConfigDir(),
         buildableContext,
         buildContext,
@@ -641,7 +638,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
       Optional<SourcePath> dexReorderDataDumpFile,
       ImmutableMultimap<APKModule, Path> additionalDexStoreToJarPathMap,
       BuildContext buildContext) {
-    SourcePathResolver resolver = buildContext.getSourcePathResolver();
+    SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
     Supplier<Set<Path>> primaryInputsToDex;
     Optional<Path> secondaryDexDir;
     Optional<Supplier<Multimap<Path, Path>>> secondaryOutputToInputs;
@@ -867,8 +864,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
             androidPlatformTarget,
             buildContext,
             getProjectFilesystem(),
-            selectedPrimaryDexPath,
-            primaryInputsToDex,
+            Optional.of(selectedPrimaryDexPath),
+            Optional.of(primaryInputsToDex),
             secondaryDexDir,
             secondaryOutputToInputs,
             hashInputJarsToDexStep,
@@ -878,7 +875,14 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
             xzCompressionLevel,
             dxMaxHeapSize,
             dexTool,
-            desugarInterfaceMethods);
+            desugarInterfaceMethods,
+            true,
+            Optional.of(
+                additionalJarsForProguardAndDesugar.stream()
+                    .map(input -> buildContext.getSourcePathResolver().getAbsolutePath(input))
+                    .collect(ImmutableSet.toImmutableSet())),
+            getBuildTarget(),
+            minSdkVersion);
     steps.add(smartDexingCommand);
 
     if (reorderClassesIntraDex) {

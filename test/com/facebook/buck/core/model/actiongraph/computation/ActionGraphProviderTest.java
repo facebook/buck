@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.model.actiongraph.computation;
@@ -34,13 +34,11 @@ import com.facebook.buck.core.model.targetgraph.FakeTargetNodeBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.targetgraph.TestTargetGraphCreationResultFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -51,21 +49,23 @@ import com.facebook.buck.rules.keys.ContentAgnosticRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.util.CloseableMemoizedSupplier;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.Scope;
+import com.facebook.buck.util.concurrent.ExecutorPool;
 import com.facebook.buck.util.concurrent.MostExecutors;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.timing.IncrementingFakeClock;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.Subscribe;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -81,8 +81,6 @@ public class ActionGraphProviderTest {
   private TargetNode<?> nodeB;
   private TargetGraph targetGraph1;
   private TargetGraph targetGraph2;
-
-  CloseableMemoizedSupplier<ForkJoinPool> fakePoolSupplier;
 
   private BuckEventBus eventBus;
   private BlockingQueue<BuckEvent> trackedEvents = new LinkedBlockingQueue<>();
@@ -103,14 +101,6 @@ public class ActionGraphProviderTest {
     nodeA = createTargetNode("A", nodeB);
     targetGraph1 = TargetGraphFactory.newInstance(nodeA, nodeB);
     targetGraph2 = TargetGraphFactory.newInstance(nodeB);
-
-    fakePoolSupplier =
-        CloseableMemoizedSupplier.of(
-            () -> {
-              throw new IllegalStateException(
-                  "should not use parallel executor for single threaded action graph construction in test");
-            },
-            ignored -> {});
 
     eventBus =
         BuckEventBusForTests.newInstance(new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1)));
@@ -134,18 +124,19 @@ public class ActionGraphProviderTest {
   public void hitOnCache() {
     ActionGraphProvider cache =
         new ActionGraphProviderBuilder()
-            .withPoolSupplier(fakePoolSupplier)
             .withEventBus(eventBus)
             .withRuleKeyConfiguration(TestRuleKeyConfigurationFactory.createWithSeed(keySeed))
             .withCheckActionGraphs()
             .build();
 
-    ActionGraphAndBuilder resultRun1 = cache.getActionGraph(targetGraph1);
+    ActionGraphAndBuilder resultRun1 =
+        cache.getActionGraph(TestTargetGraphCreationResultFactory.create(targetGraph1));
     // The 1st time you query the ActionGraph it's a cache miss.
     assertEquals(countEventsOf(ActionGraphEvent.Cache.Hit.class), 0);
     assertEquals(countEventsOf(ActionGraphEvent.Cache.Miss.class), 1);
 
-    ActionGraphAndBuilder resultRun2 = cache.getActionGraph(targetGraph1);
+    ActionGraphAndBuilder resultRun2 =
+        cache.getActionGraph(TestTargetGraphCreationResultFactory.create(targetGraph1));
     // The 2nd time it should be a cache hit and the ActionGraphs should be exactly the same.
     assertEquals(countEventsOf(ActionGraphEvent.Cache.Hit.class), 1);
     assertEquals(countEventsOf(ActionGraphEvent.Cache.Miss.class), 1);
@@ -165,7 +156,6 @@ public class ActionGraphProviderTest {
   public void hitOnMultiEntryCache() {
     ActionGraphProvider cache =
         new ActionGraphProviderBuilder()
-            .withPoolSupplier(fakePoolSupplier)
             .withMaxEntries(2)
             .withEventBus(eventBus)
             .withCheckActionGraphs()
@@ -192,7 +182,6 @@ public class ActionGraphProviderTest {
   public void testLruEvictionOrder() {
     ActionGraphProvider cache =
         new ActionGraphProviderBuilder()
-            .withPoolSupplier(fakePoolSupplier)
             .withMaxEntries(2)
             .withEventBus(eventBus)
             .withCheckActionGraphs()
@@ -220,7 +209,7 @@ public class ActionGraphProviderTest {
   private void runAndCheckExpectedHitMissCount(
       ActionGraphProvider cache, List<Pair<TargetGraph, Pair<Integer, Integer>>> runList) {
     for (Pair<TargetGraph, Pair<Integer, Integer>> run : runList) {
-      cache.getActionGraph(run.getFirst());
+      cache.getActionGraph(TestTargetGraphCreationResultFactory.create(run.getFirst()));
 
       assertEquals(
           countEventsOf(ActionGraphEvent.Cache.Hit.class), (int) run.getSecond().getFirst());
@@ -233,25 +222,28 @@ public class ActionGraphProviderTest {
   public void missOnCache() {
     ActionGraphProvider cache =
         new ActionGraphProviderBuilder()
-            .withPoolSupplier(fakePoolSupplier)
             .withEventBus(eventBus)
             .withRuleKeyConfiguration(TestRuleKeyConfigurationFactory.createWithSeed(keySeed))
             .withCheckActionGraphs()
             .build();
-    ActionGraphAndBuilder resultRun1 = cache.getActionGraph(targetGraph1);
+    ActionGraphAndBuilder resultRun1 =
+        cache.getActionGraph(TestTargetGraphCreationResultFactory.create(targetGraph1));
     // Each time you call it for a different TargetGraph so all calls should be misses.
     assertEquals(0, countEventsOf(ActionGraphEvent.Cache.Hit.class));
     assertEquals(1, countEventsOf(ActionGraphEvent.Cache.Miss.class));
 
     trackedEvents.clear();
     ActionGraphAndBuilder resultRun2 =
-        cache.getActionGraph(targetGraph1.getSubgraph(ImmutableSet.of(nodeB)));
+        cache.getActionGraph(
+            TestTargetGraphCreationResultFactory.create(
+                targetGraph1.getSubgraph(ImmutableSet.of(nodeB))));
     assertEquals(0, countEventsOf(ActionGraphEvent.Cache.Hit.class));
     assertEquals(1, countEventsOf(ActionGraphEvent.Cache.Miss.class));
     assertEquals(1, countEventsOf(ActionGraphEvent.Cache.MissWithTargetGraphDifference.class));
 
     trackedEvents.clear();
-    ActionGraphAndBuilder resultRun3 = cache.getActionGraph(targetGraph1);
+    ActionGraphAndBuilder resultRun3 =
+        cache.getActionGraph(TestTargetGraphCreationResultFactory.create(targetGraph1));
     assertEquals(0, countEventsOf(ActionGraphEvent.Cache.Hit.class));
     assertEquals(1, countEventsOf(ActionGraphEvent.Cache.Miss.class));
 
@@ -276,17 +268,16 @@ public class ActionGraphProviderTest {
   @Test
   public void compareActionGraphsBasedOnRuleKeys() {
     ActionGraphProvider actionGraphProvider =
-        new ActionGraphProviderBuilder()
-            .withPoolSupplier(fakePoolSupplier)
-            .withEventBus(eventBus)
-            .build();
+        new ActionGraphProviderBuilder().withEventBus(eventBus).build();
     ActionGraphAndBuilder resultRun1 =
         actionGraphProvider.getFreshActionGraph(
-            new DefaultTargetNodeToBuildRuleTransformer(), targetGraph1);
+            new DefaultTargetNodeToBuildRuleTransformer(),
+            TestTargetGraphCreationResultFactory.create(targetGraph1));
 
     ActionGraphAndBuilder resultRun2 =
         actionGraphProvider.getFreshActionGraph(
-            new DefaultTargetNodeToBuildRuleTransformer(), targetGraph1);
+            new DefaultTargetNodeToBuildRuleTransformer(),
+            TestTargetGraphCreationResultFactory.create(targetGraph1));
 
     // Check all the RuleKeys are the same between the 2 ActionGraphs.
     Map<BuildRule, RuleKey> resultRun1RuleKeys =
@@ -300,85 +291,20 @@ public class ActionGraphProviderTest {
   }
 
   @Test
-  public void actionGraphParallelizationStateIsLogged() {
-    List<ExperimentEvent> experimentEvents;
-    try (CloseableMemoizedSupplier<ForkJoinPool> poolSupplier =
-        CloseableMemoizedSupplier.of(
-            () -> MostExecutors.forkJoinPoolWithThreadLimit(1, 1), ForkJoinPool::shutdownNow)) {
-      for (ActionGraphParallelizationMode mode :
-          ImmutableSet.of(
-              ActionGraphParallelizationMode.DISABLED, ActionGraphParallelizationMode.ENABLED)) {
-        new ActionGraphProviderBuilder()
-            .withPoolSupplier(poolSupplier)
-            .withEventBus(eventBus)
-            .withRuleKeyConfiguration(TestRuleKeyConfigurationFactory.createWithSeed(keySeed))
-            .withParallelizationMode(mode)
-            .build()
-            .getActionGraph(targetGraph1);
-        experimentEvents =
-            RichStream.from(trackedEvents.stream())
-                .filter(ExperimentEvent.class)
-                .collect(Collectors.toList());
-        assertThat(
-            "No experiment event is logged if not in experiment mode", experimentEvents, empty());
-      }
-
-      trackedEvents.clear();
-      new ActionGraphProviderBuilder()
-          .withPoolSupplier(poolSupplier)
-          .withEventBus(eventBus)
-          .withParallelizationMode(ActionGraphParallelizationMode.EXPERIMENT)
-          .build()
-          .getActionGraph(targetGraph1);
-      experimentEvents =
-          RichStream.from(trackedEvents.stream())
-              .filter(ExperimentEvent.class)
-              .collect(Collectors.toList());
-      assertThat(
-          "EXPERIMENT mode should log either enabled or disabled.",
-          experimentEvents,
-          contains(
-              allOf(
-                  hasProperty("tag", equalTo("action_graph_parallelization")),
-                  hasProperty("variant", anyOf(equalTo("ENABLED"), equalTo("DISABLED"))))));
-
-      trackedEvents.clear();
-      new ActionGraphProviderBuilder()
-          .withPoolSupplier(poolSupplier)
-          .withEventBus(eventBus)
-          .withRuleKeyConfiguration(TestRuleKeyConfigurationFactory.createWithSeed(keySeed))
-          .withParallelizationMode(ActionGraphParallelizationMode.EXPERIMENT_UNSTABLE)
-          .build()
-          .getActionGraph(targetGraph1);
-      experimentEvents =
-          RichStream.from(trackedEvents.stream())
-              .filter(ExperimentEvent.class)
-              .collect(Collectors.toList());
-      assertThat(
-          "EXPERIMENT mode should log either enabled or disabled.",
-          experimentEvents,
-          contains(
-              allOf(
-                  hasProperty("tag", equalTo("action_graph_parallelization_unstable")),
-                  hasProperty("variant", anyOf(equalTo("ENABLED"), equalTo("DISABLED"))))));
-    }
-  }
-
-  @Test
   public void incrementalActionGraphStateIsLogged() {
     List<ExperimentEvent> experimentEvents;
     for (IncrementalActionGraphMode mode :
         ImmutableSet.of(IncrementalActionGraphMode.DISABLED, IncrementalActionGraphMode.ENABLED)) {
       new ActionGraphProviderBuilder()
-          .withPoolSupplier(fakePoolSupplier)
           .withEventBus(eventBus)
           .withRuleKeyConfiguration(TestRuleKeyConfigurationFactory.createWithSeed(keySeed))
           .withIncrementalActionGraphMode(mode)
           .build()
-          .getActionGraph(targetGraph1);
+          .getActionGraph(TestTargetGraphCreationResultFactory.create(targetGraph1));
       experimentEvents =
           RichStream.from(trackedEvents.stream())
               .filter(ExperimentEvent.class)
+              .filter(ev -> !ev.getTag().equals("rule_analysis"))
               .collect(Collectors.toList());
       assertThat(
           "No experiment event is logged if not in experiment mode", experimentEvents, empty());
@@ -391,16 +317,16 @@ public class ActionGraphProviderTest {
     experimentGroups.put(IncrementalActionGraphMode.ENABLED, 0.5);
     experimentGroups.put(IncrementalActionGraphMode.DISABLED, 0.5);
     new ActionGraphProviderBuilder()
-        .withPoolSupplier(fakePoolSupplier)
         .withEventBus(eventBus)
         .withRuleKeyConfiguration(TestRuleKeyConfigurationFactory.createWithSeed(keySeed))
         .withIncrementalActionGraphExperimentGroups(experimentGroups.build())
         .withIncrementalActionGraphMode(IncrementalActionGraphMode.EXPERIMENT)
         .build()
-        .getActionGraph(targetGraph1);
+        .getActionGraph(TestTargetGraphCreationResultFactory.create(targetGraph1));
     experimentEvents =
         RichStream.from(trackedEvents.stream())
             .filter(ExperimentEvent.class)
+            .filter(ev -> !ev.getTag().equals("rule_analysis"))
             .collect(Collectors.toList());
     assertThat(
         "EXPERIMENT mode should log either enabled or disabled.",
@@ -414,61 +340,49 @@ public class ActionGraphProviderTest {
   }
 
   @Test
-  public void cachedSubgraphReturnedFromNodeCacheSerial() {
-    runCachedSubgraphReturnedFromNodeCacheTest(
-        ActionGraphParallelizationMode.DISABLED, fakePoolSupplier);
-  }
-
-  @Test
   public void cachedSubgraphReturnedFromNodeCacheParallel() {
-    try (CloseableMemoizedSupplier<ForkJoinPool> poolSupplier =
-        CloseableMemoizedSupplier.of(
-            () -> MostExecutors.forkJoinPoolWithThreadLimit(1, 1), ForkJoinPool::shutdownNow)) {
-      runCachedSubgraphReturnedFromNodeCacheTest(
-          ActionGraphParallelizationMode.ENABLED, poolSupplier);
+    ListeningExecutorService executor =
+        MoreExecutors.listeningDecorator(MostExecutors.newMultiThreadExecutor("threads", 1));
+    try (Scope ignored = executor::shutdownNow) {
+      ActionGraphProvider cache =
+          new ActionGraphProviderBuilder()
+              .withPoolSupplier(ImmutableMap.of(ExecutorPool.GRAPH_CPU, executor))
+              .withEventBus(eventBus)
+              .withRuleKeyConfiguration(TestRuleKeyConfigurationFactory.createWithSeed(keySeed))
+              .withIncrementalActionGraphMode(IncrementalActionGraphMode.ENABLED)
+              .build();
+
+      TargetNode<?> originalNode3 = createCacheableTargetNode("C");
+      TargetNode<?> originalNode2 = createCacheableTargetNode("B", originalNode3);
+      TargetNode<?> originalNode1 = createCacheableTargetNode("A", originalNode2);
+      targetGraph1 = TargetGraphFactory.newInstance(originalNode1, originalNode2, originalNode3);
+
+      ActionGraphAndBuilder originalResult =
+          cache.getActionGraph(TestTargetGraphCreationResultFactory.create(targetGraph1));
+
+      BuildRule originalBuildRule1 =
+          originalResult.getActionGraphBuilder().getRule(originalNode1.getBuildTarget());
+      BuildRule originalBuildRule2 =
+          originalResult.getActionGraphBuilder().getRule(originalNode2.getBuildTarget());
+      BuildRule originalBuildRule3 =
+          originalResult.getActionGraphBuilder().getRule(originalNode3.getBuildTarget());
+
+      TargetNode<?> newNode4 = createCacheableTargetNode("D");
+      TargetNode<?> newNode3 = createCacheableTargetNode("C");
+      TargetNode<?> newNode2 = createCacheableTargetNode("B", newNode3);
+      TargetNode<?> newNode1 = createCacheableTargetNode("A", newNode2, newNode4);
+      targetGraph2 = TargetGraphFactory.newInstance(newNode1, newNode2, newNode3, newNode4);
+
+      ActionGraphAndBuilder newResult =
+          cache.getActionGraph(TestTargetGraphCreationResultFactory.create(targetGraph2));
+
+      assertNotSame(
+          originalBuildRule1, newResult.getActionGraphBuilder().getRule(newNode1.getBuildTarget()));
+      assertSame(
+          originalBuildRule2, newResult.getActionGraphBuilder().getRule(newNode2.getBuildTarget()));
+      assertSame(
+          originalBuildRule3, newResult.getActionGraphBuilder().getRule(newNode3.getBuildTarget()));
     }
-  }
-
-  private void runCachedSubgraphReturnedFromNodeCacheTest(
-      ActionGraphParallelizationMode parallelizationMode,
-      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
-    ActionGraphProvider cache =
-        new ActionGraphProviderBuilder()
-            .withPoolSupplier(poolSupplier)
-            .withEventBus(eventBus)
-            .withRuleKeyConfiguration(TestRuleKeyConfigurationFactory.createWithSeed(keySeed))
-            .withParallelizationMode(parallelizationMode)
-            .withIncrementalActionGraphMode(IncrementalActionGraphMode.ENABLED)
-            .build();
-
-    TargetNode<?> originalNode3 = createCacheableTargetNode("C");
-    TargetNode<?> originalNode2 = createCacheableTargetNode("B", originalNode3);
-    TargetNode<?> originalNode1 = createCacheableTargetNode("A", originalNode2);
-    targetGraph1 = TargetGraphFactory.newInstance(originalNode1, originalNode2, originalNode3);
-
-    ActionGraphAndBuilder originalResult = cache.getActionGraph(targetGraph1);
-
-    BuildRule originalBuildRule1 =
-        originalResult.getActionGraphBuilder().getRule(originalNode1.getBuildTarget());
-    BuildRule originalBuildRule2 =
-        originalResult.getActionGraphBuilder().getRule(originalNode2.getBuildTarget());
-    BuildRule originalBuildRule3 =
-        originalResult.getActionGraphBuilder().getRule(originalNode3.getBuildTarget());
-
-    TargetNode<?> newNode4 = createCacheableTargetNode("D");
-    TargetNode<?> newNode3 = createCacheableTargetNode("C");
-    TargetNode<?> newNode2 = createCacheableTargetNode("B", newNode3);
-    TargetNode<?> newNode1 = createCacheableTargetNode("A", newNode2, newNode4);
-    targetGraph2 = TargetGraphFactory.newInstance(newNode1, newNode2, newNode3, newNode4);
-
-    ActionGraphAndBuilder newResult = cache.getActionGraph(targetGraph2);
-
-    assertNotSame(
-        originalBuildRule1, newResult.getActionGraphBuilder().getRule(newNode1.getBuildTarget()));
-    assertSame(
-        originalBuildRule2, newResult.getActionGraphBuilder().getRule(newNode2.getBuildTarget()));
-    assertSame(
-        originalBuildRule3, newResult.getActionGraphBuilder().getRule(newNode3.getBuildTarget()));
   }
 
   private TargetNode<?> createCacheableTargetNode(String name, TargetNode<?>... deps) {
@@ -501,11 +415,8 @@ public class ActionGraphProviderTest {
       Iterable<BuildRule> buildRules, BuildRuleResolver buildRuleResolver) {
     RuleKeyFieldLoader ruleKeyFieldLoader =
         new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     ContentAgnosticRuleKeyFactory factory =
-        new ContentAgnosticRuleKeyFactory(
-            ruleKeyFieldLoader, pathResolver, ruleFinder, Optional.empty());
+        new ContentAgnosticRuleKeyFactory(ruleKeyFieldLoader, buildRuleResolver, Optional.empty());
 
     HashMap<BuildRule, RuleKey> ruleKeysMap = new HashMap<>();
 

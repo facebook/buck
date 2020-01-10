@@ -1,18 +1,19 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 {namespace buck.targets}
 
 /***/
@@ -35,7 +36,7 @@ List information about the build targets in the current project.
 
 <p>
 <pre>
-buck targets &lt;{call buck.build_target /}> | &lt;{call buck.build_target_pattern /}> 
+buck targets &lt;{call buck.build_target /}> | &lt;{call buck.build_target_pattern /}> ...
 </pre>
 </p>
 
@@ -59,29 +60,36 @@ buck targets //...
 </p>
 
 <p>
-You can pass a list of targets to <code>buck targets</code>, and
-Buck will print information only for those targets. For example:
-</p>
-
-{literal}<pre>
-buck targets --show-output &#x2F;/java/com/myproject:binary
-> &#x2F;/java/com/myproject:binary buck-out/gen/java/com/myproject/binary.apk
-</pre>{/literal}
-
-<p>
-This command can be handy in programmatic tasks, such as running all of
-the Java tests under <code>&#x2F;/java/com/myproject</code>:
+You can pass a list of targets to <code>buck targets</code>, and Buck
+prints information only for those targets. For example, the following
+command line prints the target <code>main</code> from 
+the <code>BUCK</code> file in the root of the Buck project and all the
+targets from the <code>BUCK</code> file in the subdirectory <code>myclass</code>.
 </p>
 
 <p>
 <pre>
 {literal}
-buck targets --type java_test | \
-  grep '&#x2F;/java/com/myproject' | \
-  xargs buck test
+buck targets //:main //myclass:
 {/literal}
 </pre>
 </p>
+
+<p>
+The <code>buck targets</code> command is commonly used with 
+the <code>--show-output</code> option to obtain the output paths for the
+build artifacts for Buck targets.
+</p>
+
+<p>
+<pre>
+{literal}
+buck targets --show-output &#x2F;/java/com/myproject:binary
+> &#x2F;/java/com/myproject:binary buck-out/gen/java/com/myproject/binary.apk
+{/literal}
+</pre>
+</p>
+
 
 {/param}
 
@@ -91,16 +99,35 @@ buck targets --type java_test | \
   {param name: 'type' /}
   {param desc}
   <p>
-    The types of target to filter by.  For example:
+    The types of target by which to filter.  For example:
   </p>
 
 <p>
 <pre>
 {literal}
-buck targets --type java_test java_binary
+buck targets &#x2F;/java/com/myproject/... --type java_test java_binary
 {/literal}
 </pre>
 </p>
+
+<p>
+Note that the <code>--type</code> parameter comes <em>after</em> the
+specified targets.
+</p>
+
+<p>
+This parameter can be handy in programmatic tasks, such as running all of
+the Java tests under <code>&#x2F;/java/com/myproject</code>:
+</p>
+
+<p>
+<pre>
+{literal}
+buck targets &#x2F;/java/com/myproject/... --type java_test | xargs buck test
+{/literal}
+</pre>
+</p>
+
 
   {/param}
 {/call}
@@ -111,19 +138,19 @@ buck targets --type java_test java_binary
   {param desc}
 
   <p>
-  Filters targets by the list of rules that include
-  {sp}<code>referenced-file</code> in their transitive closure.
+  Filters targets by the list of rules that include the specified file
+  in their transitive closure.
   </p>
 
   <p>
-  For example, if you to run all tests that could be affected by a
-  particular file, they would run:
+  For example, to run all tests that could be affected by a particular
+  file, you could use:
   </p>
 
 <p>
 <pre>
 {literal}
-buck targets --type java_test \
+buck targets &#x2F;/java/com/myproject/... --type java_test \
   --referenced-file java/com/example/Foo.java |
   xargs buck test
 {/literal}

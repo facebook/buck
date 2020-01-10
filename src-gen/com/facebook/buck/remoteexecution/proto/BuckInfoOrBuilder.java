@@ -44,4 +44,46 @@ public interface BuckInfoOrBuilder extends
    */
   com.google.protobuf.ByteString
       getRuleNameBytes();
+
+  /**
+   * <pre>
+   * Auxiliary tag set for builds with non-standard configurations.
+   * </pre>
+   *
+   * <code>string auxiliary_build_tag = 3;</code>
+   */
+  java.lang.String getAuxiliaryBuildTag();
+  /**
+   * <pre>
+   * Auxiliary tag set for builds with non-standard configurations.
+   * </pre>
+   *
+   * <code>string auxiliary_build_tag = 3;</code>
+   */
+  com.google.protobuf.ByteString
+      getAuxiliaryBuildTagBytes();
+
+  /**
+   * <pre>
+   * Prefix for the top level target that was passed to 'buck build'
+   * If multiple targets were passed, this is the common prefix (if there is one)
+   * Note: project_prefix is not necessarily the same as the prefix for the specific action
+   * that is being executed right now
+   * </pre>
+   *
+   * <code>string project_prefix = 4;</code>
+   */
+  java.lang.String getProjectPrefix();
+  /**
+   * <pre>
+   * Prefix for the top level target that was passed to 'buck build'
+   * If multiple targets were passed, this is the common prefix (if there is one)
+   * Note: project_prefix is not necessarily the same as the prefix for the specific action
+   * that is being executed right now
+   * </pre>
+   *
+   * <code>string project_prefix = 4;</code>
+   */
+  com.google.protobuf.ByteString
+      getProjectPrefixBytes();
 }

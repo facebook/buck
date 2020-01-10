@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -79,6 +79,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
         /* exportedDeps */ ImmutableSortedSet.of(),
         /* providedDeps */ ImmutableSortedSet.of(),
         ImmutableSortedSet.of(),
+        /* runtimeDeps */ ImmutableSortedSet.of(),
         JavaAbis.getClassAbiJar(buildTarget),
         /* sourceOnlyAbiJar */ null,
         /* mavenCoords */ Optional.empty(),
@@ -87,6 +88,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
         UnusedDependenciesAction.IGNORE,
         Optional.empty(),
         null,
+        false,
         false,
         false);
     this.androidBuildConfig = androidBuildConfig;
@@ -101,7 +103,9 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
   @Override
   public void addToCollector(AndroidPackageableCollector collector) {
     collector.addBuildConfig(
-        androidBuildConfig.getJavaPackage(), androidBuildConfig.getBuildConfigFields());
+        getBuildTarget(),
+        androidBuildConfig.getJavaPackage(),
+        androidBuildConfig.getBuildConfigFields());
   }
 
   public AndroidBuildConfig getAndroidBuildConfig() {

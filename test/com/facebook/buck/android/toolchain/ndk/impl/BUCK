@@ -50,9 +50,6 @@ java_library(
         ["*.java"],
         exclude = ["*Test.java"],
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/android/toolchain/ndk:ndk",
-    ],
     visibility = [
         "PUBLIC",
     ],
@@ -64,7 +61,9 @@ java_library(
         "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/android/toolchain/ndk/impl:impl",
         "//src/com/facebook/buck/util/environment:environment",
+        "//test/com/facebook/buck/android:utils",
         "//test/com/facebook/buck/core/config:FakeBuckConfig",
+        "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
         "//test/com/facebook/buck/core/toolchain/impl:testutil",
         "//test/com/facebook/buck/cxx/toolchain:testutil",
         "//test/com/facebook/buck/rules/keys/config:testutil",
@@ -72,5 +71,8 @@ java_library(
         "//test/com/facebook/buck/testutil/integration:util",
         "//third-party/java/junit:junit",
         "//third-party/java/xz-java-1.5:xz",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/android/toolchain/ndk:ndk",
     ],
 )

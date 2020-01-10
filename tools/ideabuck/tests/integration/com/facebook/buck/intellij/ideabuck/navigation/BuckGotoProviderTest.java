@@ -1,26 +1,26 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.intellij.ideabuck.navigation;
 
 import com.facebook.buck.intellij.ideabuck.config.BuckCell;
 import com.facebook.buck.intellij.ideabuck.config.BuckCellSettingsProvider;
 import com.facebook.buck.intellij.ideabuck.endtoend.BuckTestCase;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionCall;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionTrailer;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckString;
-import com.facebook.buck.intellij.ideabuck.util.BuckPsiUtils;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
@@ -93,10 +93,10 @@ public class BuckGotoProviderTest extends BuckTestCase {
 
   private PsiElement findStringInFile(String s, VirtualFile virtualFile) {
     PsiFile psiFile = toPsiFile(virtualFile);
-    for (PsiElement candidate : PsiTreeUtil.findChildrenOfType(psiFile, BuckString.class)) {
-      String value = BuckPsiUtils.getStringValueFromBuckString(candidate);
+    for (BuckString buckString : PsiTreeUtil.findChildrenOfType(psiFile, BuckString.class)) {
+      String value = buckString.getValue();
       if (s.equals(value)) {
-        return candidate;
+        return buckString;
       }
     }
     fail("Could not find string " + s + " in file " + virtualFile.getPath());
@@ -144,7 +144,8 @@ public class BuckGotoProviderTest extends BuckTestCase {
             "genrule(name='c')");
     PsiElement sourceElement = findStringInFile(":b", sourceFile);
     PsiElement targetString = findStringInFile("b", sourceFile);
-    PsiElement expectedTarget = PsiTreeUtil.getParentOfType(targetString, BuckFunctionCall.class);
+    PsiElement expectedTarget =
+        PsiTreeUtil.getParentOfType(targetString, BuckFunctionTrailer.class);
 
     PsiElement actualTarget = buckGotoProvider.getGotoDeclarationTarget(sourceElement);
     assertEquals(expectedTarget, actualTarget);
@@ -164,7 +165,8 @@ public class BuckGotoProviderTest extends BuckTestCase {
             "genrule(name='c')");
     PsiElement sourceElement = findStringInFile("//bar:b", sourceFile);
     PsiElement targetString = findStringInFile("b", targetFile);
-    PsiElement expectedTarget = PsiTreeUtil.getParentOfType(targetString, BuckFunctionCall.class);
+    PsiElement expectedTarget =
+        PsiTreeUtil.getParentOfType(targetString, BuckFunctionTrailer.class);
 
     PsiElement actualTarget = buckGotoProvider.getGotoDeclarationTarget(sourceElement);
     assertEquals(expectedTarget, actualTarget);
@@ -184,7 +186,8 @@ public class BuckGotoProviderTest extends BuckTestCase {
             "genrule(name='c')");
     PsiElement sourceElement = findStringInFile("//bar:b", sourceFile);
     PsiElement targetString = findStringInFile("b", targetFile);
-    PsiElement expectedTarget = PsiTreeUtil.getParentOfType(targetString, BuckFunctionCall.class);
+    PsiElement expectedTarget =
+        PsiTreeUtil.getParentOfType(targetString, BuckFunctionTrailer.class);
 
     PsiElement actualTarget = buckGotoProvider.getGotoDeclarationTarget(sourceElement);
     assertEquals(expectedTarget, actualTarget);
@@ -199,7 +202,8 @@ public class BuckGotoProviderTest extends BuckTestCase {
             otherCellRoot, "a/BUCK", "genrule(name='a')", "genrule(name='b')", "genrule(name='c')");
     PsiElement sourceElement = findStringInFile("other//a:b", sourceFile);
     PsiElement targetString = findStringInFile("b", targetFile);
-    PsiElement expectedTarget = PsiTreeUtil.getParentOfType(targetString, BuckFunctionCall.class);
+    PsiElement expectedTarget =
+        PsiTreeUtil.getParentOfType(targetString, BuckFunctionTrailer.class);
 
     PsiElement actualTarget = buckGotoProvider.getGotoDeclarationTarget(sourceElement);
     assertEquals(expectedTarget, actualTarget);

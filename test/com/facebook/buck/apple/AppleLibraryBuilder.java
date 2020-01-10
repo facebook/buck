@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple;
@@ -22,13 +22,14 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.cxx.AbstractCxxSource;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -47,8 +48,17 @@ public class AppleLibraryBuilder
     super(FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION, target);
   }
 
+  protected AppleLibraryBuilder(BuildTarget target, ProjectFilesystem projectFilesystem) {
+    super(FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION, target, projectFilesystem);
+  }
+
   public static AppleLibraryBuilder createBuilder(BuildTarget target) {
     return new AppleLibraryBuilder(target);
+  }
+
+  public static AppleLibraryBuilder createBuilder(
+      BuildTarget target, ProjectFilesystem projectFilesystem) {
+    return new AppleLibraryBuilder(target, projectFilesystem);
   }
 
   public AppleLibraryBuilder setModular(boolean modular) {
@@ -64,6 +74,16 @@ public class AppleLibraryBuilder
 
   public AppleLibraryBuilder setCompilerFlags(ImmutableList<String> compilerFlags) {
     getArgForPopulating().setCompilerFlags(StringWithMacrosUtils.fromStrings(compilerFlags));
+    return this;
+  }
+
+  public AppleLibraryBuilder setLangCompilerFlags(
+      ImmutableMap<AbstractCxxSource.Type, ImmutableList<String>> langPreprocessorFlags) {
+    getArgForPopulating()
+        .setLangCompilerFlags(
+            Maps.transformValues(
+                langPreprocessorFlags,
+                f -> RichStream.from(f).map(StringWithMacrosUtils::format).toImmutableList()));
     return this;
   }
 
@@ -212,7 +232,7 @@ public class AppleLibraryBuilder
     return this;
   }
 
-  public AppleLibraryBuilder setPreferredLinkage(NativeLinkable.Linkage linkage) {
+  public AppleLibraryBuilder setPreferredLinkage(NativeLinkableGroup.Linkage linkage) {
     getArgForPopulating().setPreferredLinkage(Optional.of(linkage));
     return this;
   }

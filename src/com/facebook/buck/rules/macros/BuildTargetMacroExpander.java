@@ -1,29 +1,26 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.rules.args.Arg;
 import java.util.Optional;
 
@@ -36,7 +33,7 @@ import java.util.Optional;
 public abstract class BuildTargetMacroExpander<M extends BuildTargetMacro>
     extends AbstractMacroExpanderWithoutPrecomputedWork<M> {
 
-  protected abstract Arg expand(SourcePathResolver resolver, M macro, BuildRule rule)
+  protected abstract Arg expand(SourcePathResolverAdapter resolver, M macro, BuildRule rule)
       throws MacroException;
 
   protected BuildRule resolve(ActionGraphBuilder graphBuilder, M input) throws MacroException {
@@ -48,11 +45,8 @@ public abstract class BuildTargetMacroExpander<M extends BuildTargetMacro>
   }
 
   @Override
-  public Arg expandFrom(
-      BuildTarget target, CellPathResolver cellNames, ActionGraphBuilder graphBuilder, M input)
+  public Arg expandFrom(BuildTarget target, ActionGraphBuilder graphBuilder, M input)
       throws MacroException {
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
-    return expand(pathResolver, input, resolve(graphBuilder, input));
+    return expand(graphBuilder.getSourcePathResolver(), input, resolve(graphBuilder, input));
   }
 }

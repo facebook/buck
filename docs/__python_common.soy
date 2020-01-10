@@ -1,18 +1,19 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 {namespace python_common}
 
 /***/
@@ -131,7 +132,9 @@
   {param desc}
   A list of C/C++ library dependencies that need to be loaded before any 
   other libraries when the PEX starts up. This requires dynamic loader support, 
-  such as <code>LD_PRELOAD</code>, found on most systems.
+  such as <code>LD_PRELOAD</code>, found on most systems.  This list is order-
+  sensitive and the preload libraries listed here are passed down to the dynamic
+  linker in the same order.
   {/param}
 {/call}
 {/template}

@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.intellij.ideabuck.autodeps;
@@ -42,17 +42,13 @@ import com.intellij.pom.Navigatable;
 import com.intellij.psi.NavigatablePsiElement;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiJavaCodeReferenceElement;
+import com.intellij.psi.PsiReference;
 import com.intellij.util.IncorrectOperationException;
-import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.stream.Collectors;
 import javax.swing.event.HyperlinkEvent;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.Nls.Capitalization;
@@ -77,13 +73,12 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
    * graph (or both).
    */
   @Nullable
-  public static BuckAddDependencyIntention create(
-      PsiJavaCodeReferenceElement referenceElement, PsiClass psiClass) {
-    VirtualFile editSourceFile = referenceElement.getContainingFile().getVirtualFile();
+  public static BuckAddDependencyIntention create(PsiReference reference, PsiClass psiClass) {
+    VirtualFile editSourceFile = reference.getElement().getContainingFile().getVirtualFile();
     if (editSourceFile == null) {
       return null;
     }
-    Project project = referenceElement.getProject();
+    Project project = reference.getElement().getProject();
     BuckTargetLocator buckTargetLocator = BuckTargetLocator.getInstance(project);
     VirtualFile editBuildFile =
         buckTargetLocator.findBuckFileForVirtualFile(editSourceFile).orElse(null);
@@ -129,7 +124,7 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
     }
     return new BuckAddDependencyIntention(
         project,
-        referenceElement,
+        reference,
         editBuildFile,
         editSourceFile,
         editSourceTarget,
@@ -143,8 +138,8 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
 
   private Project project;
 
-  // Fields pertaining to the element in the file being edited
-  private PsiJavaCodeReferenceElement referenceElement;
+  // Fields pertaining to the PsiReference in the file being edited
+  private PsiReference reference;
   private VirtualFile editBuildFile;
   private VirtualFile editSourceFile;
   private BuckTarget editSourceTarget;
@@ -161,7 +156,7 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
 
   BuckAddDependencyIntention(
       Project project,
-      PsiJavaCodeReferenceElement referenceElement,
+      PsiReference reference,
       VirtualFile editBuildFile,
       VirtualFile editSourceFile,
       BuckTarget editSourceTarget,
@@ -172,7 +167,7 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
       BuckTarget importSourceTarget,
       Module importModule) {
     this.project = project;
-    this.referenceElement = referenceElement;
+    this.reference = reference;
     this.editBuildFile = editBuildFile;
     this.editSourceFile = editSourceFile;
     this.editSourceTarget = editSourceTarget;
@@ -206,80 +201,6 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
     queryBuckForTargets(editor);
   }
 
-  /** Helper class to handle deserialization of buck query. */
-  static class TargetMetadata {
-    public BuckTarget target;
-    public @Nullable List<BuckTarget> deps;
-    public @Nullable List<BuckTargetPattern> visibility; // null means PUBLIC
-    public @Nullable List<String> srcs;
-    public @Nullable List<String> resources;
-
-    static TargetMetadata from(
-        BuckTargetLocator buckTargetLocator, BuckTarget target, JsonObject payload) {
-      TargetMetadata targetMetadata = new TargetMetadata();
-      targetMetadata.target = target;
-      targetMetadata.srcs = stringListOrNull(payload.get("srcs"));
-      targetMetadata.resources = stringListOrNull(payload.get("resources"));
-
-      // Deps are a list of BuckTargets
-      targetMetadata.deps =
-          Optional.ofNullable(stringListOrNull(payload.get("deps")))
-              .map(
-                  deps ->
-                      deps.stream()
-                          .map(
-                              s -> BuckTarget.parse(s).map(buckTargetLocator::resolve).orElse(null))
-                          .collect(Collectors.toList()))
-              .orElse(null);
-
-      // Visibilility falls in one of three cases:
-      //   (1) if unspecified => means visibility is limited to the current package
-      //   (2) contains "PUBLIC" => available everywhere
-      //   (3) otherwise is a list of buck target patterns where it is visible
-      List<String> optionalVisibility = stringListOrNull(payload.get("visibility"));
-      if (optionalVisibility == null) {
-        targetMetadata.visibility =
-            Collections.singletonList(target.asPattern().asPackageMatchingPattern());
-      } else if (optionalVisibility.contains("PUBLIC")) {
-        targetMetadata.visibility = null; //
-      } else {
-        targetMetadata.visibility =
-            optionalVisibility
-                .stream()
-                .map(p -> BuckTargetPattern.parse(p).map(buckTargetLocator::resolve).orElse(null))
-                .collect(Collectors.toList());
-      }
-
-      return targetMetadata;
-    }
-
-    static @Nullable List<String> stringListOrNull(@Nullable JsonElement jsonElement) {
-      if (jsonElement == null) {
-        return null;
-      }
-      return new Gson().fromJson(jsonElement, new TypeToken<List<String>>() {}.getType());
-    }
-
-    boolean isVisibleTo(BuckTarget target) {
-      if (visibility == null) {
-        return true;
-      }
-      return visibility.stream().anyMatch(pattern -> pattern.matches(target));
-    }
-
-    boolean hasDependencyOn(BuckTarget target) {
-      return deps.stream().anyMatch(dep -> dep.equals(target));
-    }
-
-    boolean contains(BuckTarget targetFile) {
-      if (!target.asPattern().asPackageMatchingPattern().matches(targetFile)) {
-        return false;
-      }
-      String relativeToBuildFile = targetFile.getRuleName();
-      return srcs.contains(relativeToBuildFile) || resources.contains(relativeToBuildFile);
-    }
-  }
-
   /** Queries buck for targets that own the editSourceFile and the importSourceFile. */
   private void queryBuckForTargets(Editor editor) {
     BuckTargetLocator buckTargetLocator = BuckTargetLocator.getInstance(project);
@@ -291,7 +212,7 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
             BuckCommand.QUERY,
             new Callback<List<TargetMetadata>>() {
               @Override
-              public List<TargetMetadata> deserialize(JsonElement jsonElement) throws IOException {
+              public List<TargetMetadata> deserialize(JsonElement jsonElement) {
                 Type type = new TypeToken<Map<String, JsonObject>>() {}.getType();
                 Map<String, JsonObject> raw = new Gson().fromJson(jsonElement, type);
                 List<TargetMetadata> results = new ArrayList<>();
@@ -312,10 +233,12 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
                 List<TargetMetadata> importTargets = new ArrayList<>();
                 for (TargetMetadata targetMetadata : results) {
                   if (targetMetadata.contains(editSourceTarget)) {
-                    editTargets.add(targetMetadata);
+                    editTargets.add(
+                        TargetMetadataTransformer.transformEditedTarget(project, targetMetadata));
                   }
                   if (targetMetadata.contains(importSourceTarget)) {
-                    importTargets.add(targetMetadata);
+                    importTargets.add(
+                        TargetMetadataTransformer.transformImportedTarget(project, targetMetadata));
                   }
                 }
                 updateDependencies(editor, editTargets, importTargets);
@@ -333,7 +256,6 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
                             + editSourceFile
                             + " and/or "
                             + importSourceFile);
-                return;
               }
             });
     handler
@@ -474,7 +396,7 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
                     + " on "
                     + importModule.getName());
           }
-          new AddImportAction(project, referenceElement, editor, psiClass).execute();
+          new AddImportAction(project, reference, editor, psiClass).execute();
         }));
   }
 }

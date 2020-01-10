@@ -1,22 +1,22 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasDefaultPlatform;
 import com.facebook.buck.core.description.arg.HasTests;
@@ -27,6 +27,7 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.HasDefaultFlavors;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.toolchain.HasSystemFrameworkAndLibraries;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -34,12 +35,17 @@ import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Sets;
+import java.util.Collection;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.immutables.value.Value;
 
 public interface CxxConstructorArg
-    extends CommonDescriptionArg,
+    extends BuildRuleArg,
         HasDeclaredDeps,
         HasDefaultFlavors,
         HasDefaultPlatform,
@@ -51,6 +57,37 @@ public interface CxxConstructorArg
   @Value.Default
   default PatternMatchedCollection<ImmutableSortedSet<SourceWithFlags>> getPlatformSrcs() {
     return PatternMatchedCollection.of();
+  }
+
+  /** Checks that there are no files that appear both in srcs and platform_srcs */
+  default void checkDuplicateSources(SourcePathResolverAdapter sourcePathResolverAdapter) {
+    ImmutableSet.Builder<SourcePath> platformSrcsBuilder =
+        ImmutableSet.builderWithExpectedSize(
+            getPlatformSrcs().getValues().stream().mapToInt(Set::size).sum());
+
+    getPlatformSrcs().getValues().stream()
+        .flatMap(Collection::stream)
+        .map(SourceWithFlags::getSourcePath)
+        .forEach(platformSrcsBuilder::add);
+
+    ImmutableSet.Builder<SourcePath> srcsBuilder =
+        ImmutableSet.builderWithExpectedSize(getSrcs().size());
+
+    getSrcs().stream().map(SourceWithFlags::getSourcePath).forEach(srcsBuilder::add);
+
+    Set<SourcePath> intersect = Sets.intersection(platformSrcsBuilder.build(), srcsBuilder.build());
+
+    if (!intersect.isEmpty()) {
+      throw new HumanReadableException(
+          String.format(
+                  "Files may be listed in srcs or platform_srcs, but not both. The following %s both in srcs and platform_srcs: \n\n\t%s\n",
+                  intersect.size() > 1 ? "files are listed" : "file is listed",
+                  intersect.stream()
+                      .map(sourcePathResolverAdapter::getRelativePath)
+                      .map(Object::toString)
+                      .collect(Collectors.joining("\n\t")))
+              .replace("\n", System.lineSeparator()));
+    }
   }
 
   @Value.Default
@@ -66,6 +103,16 @@ public interface CxxConstructorArg
    */
   @Value.Default
   default ImmutableSortedSet<SourcePath> getRawHeaders() {
+    return ImmutableSortedSet.of();
+  }
+
+  /**
+   * A list of include directories to be added to the compile command for compiling this cxx target.
+   *
+   * @return a list of private include paths for this cxx target.
+   */
+  @Value.Default
+  default ImmutableSortedSet<String> getIncludeDirectories() {
     return ImmutableSortedSet.of();
   }
 

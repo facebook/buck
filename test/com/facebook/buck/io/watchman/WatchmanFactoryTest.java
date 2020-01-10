@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.io.watchman;
@@ -345,6 +345,7 @@ public class WatchmanFactoryTest {
         watchman.getCapabilities());
 
     assertEquals(ImmutableMap.of(root, "c:0:0:1"), watchman.getClockIds());
+    assertEquals("3.8.0", watchman.getVersion());
   }
 
   @Test
@@ -400,6 +401,7 @@ public class WatchmanFactoryTest {
         watchman.getCapabilities());
 
     assertEquals(ImmutableMap.of(root, "c:0:0:1"), watchman.getClockIds());
+    assertEquals("4.7.0", watchman.getVersion());
   }
 
   @Test
@@ -445,5 +447,6 @@ public class WatchmanFactoryTest {
             executor, rootPaths, env, finder, new TestConsole(), clock, Optional.empty());
 
     assertEquals(ImmutableMap.of(), watchman.getClockIds());
+    assertEquals("4.7.0", watchman.getVersion());
   }
 }

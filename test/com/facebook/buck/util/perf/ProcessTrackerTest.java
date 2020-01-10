@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.perf;
@@ -297,15 +297,15 @@ public class ProcessTrackerTest {
       super(eventBus, invocationInfo, processHelper, processRegistry, /* isDaemon */ false, false);
     }
 
-    void explicitStartUp() throws Exception {
+    void explicitStartUp() {
       super.startUp();
     }
 
-    void explicitRunOneIteration() throws Exception {
+    void explicitRunOneIteration() {
       super.runOneIteration();
     }
 
-    void explicitShutDown() throws Exception {
+    void explicitShutDown() {
       super.shutDown();
     }
 
@@ -339,17 +339,7 @@ public class ProcessTrackerTest {
   }
 
   private static ProcessResourceConsumption createConsumption(long cpu, long mem, long io) {
-    return ProcessResourceConsumption.builder()
-        .setMemResident(0)
-        .setMemSize(mem)
-        .setCpuReal(cpu)
-        .setCpuUser(1)
-        .setCpuSys(2)
-        .setCpuTotal(3)
-        .setIoBytesRead(io)
-        .setIoBytesWritten(0)
-        .setIoTotal(io)
-        .build();
+    return ProcessResourceConsumption.of(0, mem, cpu, 1, 2, 3, io, 0, io);
   }
 
   private static ProcessExecutorParams createParams(String executable) {

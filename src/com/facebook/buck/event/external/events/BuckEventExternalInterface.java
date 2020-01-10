@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.event.external.events;
@@ -33,14 +33,6 @@ public interface BuckEventExternalInterface {
   String BUILD_STARTED = "BuildStarted";
   // Sent when a build has finished
   String BUILD_FINISHED = "BuildFinished";
-  // Sent when a build is reset for some reason (e.g. DistBuild switching to synchronized phase)
-  String BUILD_RESET = "BuildReset";
-  // Sent when a distributed build has been created
-  String DIST_BUILD_CREATED = "DistBuildCreated";
-  // Sent when a distributed build has started
-  String DIST_BUILD_STARTED = "DistBuildStarted";
-  // Sent when a distributed build has finished
-  String DIST_BUILD_FINISHED = "DistBuildFinished";
   // Sent when a build finishes with the tag --build-report
   String BUILD_REPORT = "BuildReport";
   // Sent when file parsing has started
@@ -51,6 +43,8 @@ public interface BuckEventExternalInterface {
   String PROJECT_GENERATION_STARTED = "ProjectGenerationStarted";
   // Sent when project generation has finished
   String PROJECT_GENERATION_FINISHED = "ProjectGenerationFinished";
+  // Updates about cache rate stats
+  String CACHE_RATE_STATS_UPDATE_EVENT = "CacheRateStatsUpdateEvent";
   /** @return the time at which the event has been created, in milliseconds. */
   long getTimestampMillis();
   /** @return the type of the event. */

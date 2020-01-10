@@ -1,0 +1,26 @@
+java_library(
+    name = "edenfs",
+    srcs = glob(["*.java"]),
+    tests = [
+        "//test/com/facebook/buck/edenfs:edenfs",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/io/unixsocket:unixsocket",
+        "//src/com/facebook/buck/io/watchman:transport",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/sha1:sha1",
+        "//src/com/facebook/buck/util/timing:timing",
+        "//third-party/java/eden:eden-thrift-bindings",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jna:jna",
+        "//third-party/java/jsr:jsr305",
+    ],
+    exported_deps = [
+        # EdenProjectFilesystemDelegate constructor takes this as a param.
+        "//src/com/facebook/buck/util/config:config",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
+    ],
+)

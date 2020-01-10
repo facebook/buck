@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java.abi;
@@ -21,6 +21,7 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,7 +35,8 @@ public class AbiFilteringClassVisitorTest {
   @Before
   public void setUp() {
     mockVisitor = createMock(ClassVisitor.class);
-    filteringVisitor = new AbiFilteringClassVisitor(mockVisitor, ImmutableSet.of());
+    filteringVisitor =
+        new AbiFilteringClassVisitor(mockVisitor, ImmutableList.of(), ImmutableSet.of());
   }
 
   @Test
@@ -85,6 +87,13 @@ public class AbiFilteringClassVisitorTest {
   @Test
   public void testExcludesPrivateMethods() {
     testExcludesMethodWithAccess(Opcodes.ACC_PRIVATE);
+  }
+
+  @Test
+  public void testIncludesPrivateMethodsWhenRetained() {
+    filteringVisitor =
+        new AbiFilteringClassVisitor(mockVisitor, ImmutableList.of("foo"), ImmutableSet.of());
+    testIncludesMethodWithAccess(Opcodes.ACC_PRIVATE);
   }
 
   @Test
@@ -156,7 +165,8 @@ public class AbiFilteringClassVisitorTest {
 
   @Test
   public void testIncludesInnerClassEntryForReferencedOtherClassInnerClass() {
-    filteringVisitor = new AbiFilteringClassVisitor(mockVisitor, ImmutableSet.of("Bar$Inner"));
+    filteringVisitor =
+        new AbiFilteringClassVisitor(mockVisitor, ImmutableList.of(), ImmutableSet.of("Bar$Inner"));
 
     visitClass(mockVisitor, "Foo");
     mockVisitor.visitInnerClass("Bar$Inner", "Bar", "Inner", Opcodes.ACC_PUBLIC);

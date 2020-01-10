@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -28,20 +28,22 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.Keystore;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.EnumSet;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public class AndroidBinaryFactory {
 
   private static final Flavor ANDROID_MODULARITY_VERIFICATION_FLAVOR =
       InternalFlavor.of("modularity_verification");
+  static final Flavor EXO_SYMLINK_TREE = InternalFlavor.of("exo_symlink_tree");
 
   private final AndroidBuckConfig androidBuckConfig;
 
@@ -60,7 +62,7 @@ public class AndroidBinaryFactory {
       DexSplitMode dexSplitMode,
       EnumSet<ExopackageMode> exopackageModes,
       ResourceFilter resourceFilter,
-      ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
+      Supplier<ImmutableSet<JavaLibrary>> rulesToExcludeFromDex,
       AndroidBinaryDescriptionArg args,
       JavaOptions javaOptions) {
 
@@ -74,19 +76,27 @@ public class AndroidBinaryFactory {
     ProGuardObfuscateStep.SdkProguardType androidSdkProguardConfig =
         args.getAndroidSdkProguardConfig().orElse(ProGuardObfuscateStep.SdkProguardType.NONE);
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-
     AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
     AndroidBinaryFilesInfo filesInfo =
         new AndroidBinaryFilesInfo(result, exopackageModes, args.isPackageAssetLibraries());
 
+    if (filesInfo.getExopackageInfo().isPresent()) {
+      AndroidBinaryExopackageSymlinkTree androidBinaryExopackageSymlinkTree =
+          new AndroidBinaryExopackageSymlinkTree(
+              buildTarget.withAppendedFlavors(EXO_SYMLINK_TREE),
+              projectFilesystem,
+              graphBuilder,
+              filesInfo.getExopackageInfo().get(),
+              result.getAndroidManifestPath());
+      graphBuilder.addToIndex(androidBinaryExopackageSymlinkTree);
+    }
     Optional<BuildRule> moduleVerification;
     if (args.getAndroidAppModularityResult().isPresent()) {
       moduleVerification =
           Optional.of(
               new AndroidAppModularityVerification(
-                  ruleFinder,
+                  graphBuilder,
                   buildTarget.withFlavors(ANDROID_MODULARITY_VERIFICATION_FLAVOR),
                   projectFilesystem,
                   args.getAndroidAppModularityResult().get(),
@@ -101,11 +111,16 @@ public class AndroidBinaryFactory {
     return new AndroidBinary(
         buildTarget,
         projectFilesystem,
-        toolchainProvider.getByName(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class),
         toolchainProvider.getByName(
-            AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class),
+            AndroidSdkLocation.DEFAULT_NAME,
+            buildTarget.getTargetConfiguration(),
+            AndroidSdkLocation.class),
+        toolchainProvider.getByName(
+            AndroidPlatformTarget.DEFAULT_NAME,
+            buildTarget.getTargetConfiguration(),
+            AndroidPlatformTarget.class),
         params,
-        ruleFinder,
+        graphBuilder,
         Optional.of(args.getProguardJvmArgs()),
         (Keystore) keystore,
         dexSplitMode,
@@ -133,7 +148,7 @@ public class AndroidBinaryFactory {
         args.isCompressAssetLibraries(),
         args.getAssetCompressionAlgorithm(),
         args.getManifestEntries(),
-        javaOptions.getJavaRuntimeLauncher(graphBuilder),
+        javaOptions.getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
         args.getIsCacheable(),
         moduleVerification,
         filesInfo.getDexFilesInfo(),

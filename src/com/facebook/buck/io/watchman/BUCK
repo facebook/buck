@@ -1,10 +1,17 @@
 load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 
+TRANSPORT_SRCS = ["Transport.java"]
+
+CAPABILITY_SRCS = ["Capability.java"]
+
+WATCHMAN_SRCS = glob(
+    ["*.java"],
+    exclude = TRANSPORT_SRCS + CAPABILITY_SRCS,
+)
+
 java_library(
     name = "transport",
-    srcs = [
-        "Transport.java",
-    ],
+    srcs = TRANSPORT_SRCS,
     visibility = [
         "PUBLIC",
     ],
@@ -12,29 +19,13 @@ java_library(
 
 java_library(
     name = "capability",
-    srcs = [
-        "Capability.java",
-    ],
+    srcs = CAPABILITY_SRCS,
     visibility = ["PUBLIC"],
 )
 
 java_immutables_library(
     name = "watchman",
-    srcs = [
-        "AbstractProjectWatch.java",
-        "AbstractWatchmanDiagnostic.java",
-        "AbstractWatchmanQuery.java",
-        "Watchman.java",
-        "WatchmanClient.java",
-        "WatchmanCursor.java",
-        "WatchmanDiagnosticEvent.java",
-        "WatchmanDiagnosticEventListener.java",
-        "WatchmanEvent.java",
-        "WatchmanFactory.java",
-        "WatchmanTransportClient.java",
-        "WatchmanWatcher.java",
-        "WatchmanWatcherException.java",
-    ],
+    srcs = WATCHMAN_SRCS,
     visibility = [
         "PUBLIC",
     ],
@@ -52,12 +43,12 @@ java_immutables_library(
         "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/io/unixsocket:unixsocket",
         "//src/com/facebook/buck/io/windowspipe:windowspipe",
-        "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/bser:bser",
         "//src/com/facebook/buck/util/concurrent:concurrent",
         "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/stream:stream",
         "//src/com/facebook/buck/util/timing:timing",
     ],
 )

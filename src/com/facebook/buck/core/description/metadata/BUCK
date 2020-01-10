@@ -1,0 +1,15 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "metadata",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    deps = [
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/rules:rules",
+        "//src/com/facebook/buck/versions:types",
+        "//third-party/java/guava:guava",
+    ],
+)

@@ -1,0 +1,17 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "composition",
+    srcs = glob(["*.java"]),
+    tests = [
+        "//test/com/facebook/buck/core/graph/transformation/composition:composition",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//third-party/java/guava:guava",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/graph/transformation:transformation",
+        "//src/com/facebook/buck/core/graph/transformation/impl:impl",
+    ],
+)

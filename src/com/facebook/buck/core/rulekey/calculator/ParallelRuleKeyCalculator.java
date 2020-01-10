@@ -1,22 +1,23 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.rulekey.calculator;
 
 import com.facebook.buck.core.build.engine.RuleDepsCache;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -24,11 +25,11 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.keys.RuleKeyFactory;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.collect.SortedSets;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.SettableFuture;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -62,17 +63,26 @@ public class ParallelRuleKeyCalculator<T> {
    * @return a {@link ListenableFuture} wrapping the result of calculating the {@link RuleKey} of
    *     the given {@link BuildRule}.
    */
-  public synchronized ListenableFuture<T> calculate(BuckEventBus buckEventBus, BuildRule rule) {
-    ListenableFuture<T> fromOurCache = ruleKeys.get(rule.getBuildTarget());
-    if (fromOurCache != null) {
-      return fromOurCache;
+  public ListenableFuture<T> calculate(BuckEventBus buckEventBus, BuildRule rule) {
+
+    // Do an initial check for an existing future, to avoid allocating a `SettableFuture` (below).
+    ListenableFuture<T> existingFuture = ruleKeys.get(rule.getBuildTarget());
+    if (existingFuture != null) {
+      return existingFuture;
+    }
+
+    // Create a `SettableFuture` and atomically put it in the rule key map.  At this point, if it's
+    // not already created, we should proceed.
+    SettableFuture<T> future = SettableFuture.create();
+    existingFuture = ruleKeys.putIfAbsent(rule.getBuildTarget(), future);
+    if (existingFuture != null) {
+      return existingFuture;
     }
 
     T fromInternalCache = ruleKeyFactory.getFromCache(rule);
     if (fromInternalCache != null) {
-      ListenableFuture<T> future = Futures.immediateFuture(fromInternalCache);
       // Record the rule key future.
-      ruleKeys.put(rule.getBuildTarget(), future);
+      future.set(fromInternalCache);
       // Because a rule key will be invalidated from the internal cache any time one of its
       // dependents is invalidated, we know that all of our transitive deps are also in cache.
       return future;
@@ -107,12 +117,11 @@ public class ParallelRuleKeyCalculator<T> {
             },
             service);
 
-    // Record the rule key future.
-    ruleKeys.put(rule.getBuildTarget(), calculated);
-    return calculated;
+    future.setFuture(calculated);
+    return future;
   }
 
-  public synchronized Set<BuildTarget> getAllKnownTargets() {
+  public Set<BuildTarget> getAllKnownTargets() {
     return ruleKeys.keySet();
   }
 

@@ -1,0 +1,25 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "config",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/toolchain/tool/impl:impl",
+        "//src/com/facebook/buck/core/toolchain/toolprovider/impl:impl",
+        "//src/com/facebook/buck/cxx/toolchain/linker/impl:impl",
+        "//src/com/facebook/buck/rules/tool/config:config",
+        "//src/com/facebook/buck/shell:rules",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/config:config",
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/rules/schedule:schedule",
+        "//src/com/facebook/buck/core/sourcepath:sourcepath",
+        "//src/com/facebook/buck/core/toolchain/tool:tool",
+        "//src/com/facebook/buck/core/toolchain/toolprovider:toolprovider",
+        "//src/com/facebook/buck/cxx/toolchain:toolchain",
+    ],
+)

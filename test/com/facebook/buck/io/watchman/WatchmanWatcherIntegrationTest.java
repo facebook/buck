@@ -1,21 +1,22 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.io.watchman;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
@@ -25,6 +26,7 @@ import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.filesystem.FileExtensionMatcher;
 import com.facebook.buck.io.filesystem.GlobPatternMatcher;
 import com.facebook.buck.io.filesystem.PathMatcher;
+import com.facebook.buck.io.watchman.WatchmanEvent.Kind;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
@@ -44,6 +46,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -106,12 +109,10 @@ public class WatchmanWatcherIntegrationTest {
     watcher.postEvents(
         new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId()),
         WatchmanWatcher.FreshInstanceAction.NONE);
-    ImmutableList<WatchmanEvent> events = watchmanEventCollector.getEvents();
-    assertThat(events.size(), Matchers.equalTo(1));
-    WatchmanPathEvent event = (WatchmanPathEvent) events.get(0);
+    WatchmanPathEvent event = watchmanEventCollector.getOnlyEvent(WatchmanPathEvent.class);
     Path eventPath = event.getPath();
     assertThat(eventPath, Matchers.equalTo(path));
-    assertSame(event.getKind(), WatchmanPathEvent.Kind.CREATE);
+    assertSame(event.getKind(), Kind.CREATE);
   }
 
   // Create a watcher for the given ignore paths, clearing the initial overflow event before
@@ -136,6 +137,7 @@ public class WatchmanWatcherIntegrationTest {
     return watcher;
   }
 
+  // TODO(buck_team): unite with WatchmanWatcherTest#EventBuffer
   private static final class WatchmanEventCollector {
 
     private final List<WatchmanEvent> events = new ArrayList<>();
@@ -151,6 +153,24 @@ public class WatchmanWatcherIntegrationTest {
 
     public ImmutableList<WatchmanEvent> getEvents() {
       return ImmutableList.copyOf(events);
+    }
+
+    /** Helper to retrieve the only event of the specific class that should be in the list. */
+    public <E extends WatchmanEvent> List<E> filterEventsByClass(Class<E> clazz) {
+      return events.stream()
+          .filter(e -> clazz.isAssignableFrom(e.getClass()))
+          .map(e -> (E) e)
+          .collect(Collectors.toList());
+    }
+
+    /** Helper to retrieve the only event of the specific class that should be in the list. */
+    public <E extends WatchmanEvent> E getOnlyEvent(Class<E> clazz) {
+      List<E> filteredEvents = filterEventsByClass(clazz);
+      assertEquals(
+          String.format("Expected only one event of type %s", clazz.getName()),
+          1,
+          filteredEvents.size());
+      return filteredEvents.get(0);
     }
   }
 }

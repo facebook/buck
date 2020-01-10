@@ -1,0 +1,10 @@
+[color]
+  ui = false
+[alias]
+  root=//:root_repo
+[project]
+  ignore = buck-out
+  ide = intellij
+  skip_build = true
+[intellij]
+  keep_module_files_in_module_dirs = true

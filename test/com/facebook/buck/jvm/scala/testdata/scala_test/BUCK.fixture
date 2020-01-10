@@ -30,12 +30,20 @@ scala_test(
 
 prebuilt_jar(
     name = "scalatest",
-    binary_jar = "scalatest_2.11-2.2.4.jar",
-    deps = [":scala-xml"],
+    binary_jar = "scalatest_2.13-3.0.8.jar",
+    deps = [
+        ":scala-xml",
+        ":scalactic",
+    ],
+)
+
+prebuilt_jar(
+    name = "scalactic",
+    binary_jar = "scalactic_2.13-3.0.8.jar",
 )
 
 prebuilt_jar(
     name = "scala-xml",
-    binary_jar = "scala-xml_2.11-1.0.2.jar",
+    binary_jar = "scala-xml_2.13-1.2.0.jar",
     deps = ["buck//third-party/scala:scala-library"],
 )

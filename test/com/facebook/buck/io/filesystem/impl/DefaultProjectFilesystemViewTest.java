@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.io.filesystem.impl;
@@ -81,6 +81,24 @@ public class DefaultProjectFilesystemViewTest {
     assertTrue(filesystemView.isSubdirOf(tmp.getRoot().resolve("foo").resolve("bar")));
     assertTrue(filesystemView.isSubdirOf(tmp.getRoot().resolve("foo")));
     assertFalse(filesystemView.isSubdirOf(tmp.getRoot()));
+  }
+
+  @Test
+  public void getDirectoryContentsObeysViewRoot() throws IOException {
+    tmp.newFile("file1");
+    tmp.newFolder("dir");
+    tmp.newFile("dir/file2");
+    tmp.newFolder("dir/subdir");
+    tmp.newFile("dir/subdir/file3");
+
+    DefaultProjectFilesystemView dirView =
+        filesystemView.withView(Paths.get("dir"), ImmutableSet.of());
+    assertThat(
+        dirView.getDirectoryContents(Paths.get("")),
+        containsInAnyOrder(Paths.get("file2"), Paths.get("subdir")));
+    assertThat(
+        dirView.getDirectoryContents(Paths.get("subdir")),
+        containsInAnyOrder(Paths.get("subdir/file3")));
   }
 
   @Test
@@ -360,5 +378,17 @@ public class DefaultProjectFilesystemViewTest {
     attributes = filesystemView.readAttributes(Paths.get("dir1"), BasicFileAttributes.class);
     assertFalse(attributes.isRegularFile());
     assertTrue(attributes.isDirectory());
+  }
+
+  @Test
+  public void writeLinesToFileWritesFileAtCorrectPath() throws IOException {
+    filesystemView.writeLinesToPath(ImmutableList.of("1"), Paths.get("test1"));
+    assertEquals(ImmutableList.of("1"), filesystem.readLines(Paths.get("test1")));
+
+    filesystemView = filesystemView.withView(Paths.get("rel"), ImmutableSet.of());
+
+    filesystem.mkdirs(Paths.get("rel"));
+    filesystemView.writeLinesToPath(ImmutableList.of("2"), Paths.get("test2"));
+    assertEquals(ImmutableList.of("2"), filesystem.readLines(Paths.get("rel", "test2")));
   }
 }

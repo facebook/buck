@@ -1,38 +1,40 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.graph.transformation;
 
+import com.facebook.buck.core.graph.transformation.model.ComputeKey;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.google.common.collect.ImmutableMap;
 import java.util.Set;
 import java.util.concurrent.Future;
 
 /**
  * Transformation engine that transforms supplied ComputeKey into ComputeResult via {@link
- * GraphTransformer}. This engine is able to asynchronously run graph based computation, reusing
+ * GraphComputation}. This engine is able to asynchronously run graph based computation, reusing
  * results when possible. Note that the computation graph must be an acyclic graph.
  *
  * <p>This engine is able to deal with dependencies in the computation graph by having {@link
- * GraphTransformer} request dependent results of other transformations through {@link
- * GraphTransformer#discoverPreliminaryDeps(ComputeKey)} and {@link
- * GraphTransformer#discoverDeps(ComputeKey, TransformationEnvironment)}
+ * GraphComputation} request dependent results of other transformations through {@link
+ * GraphComputation#discoverPreliminaryDeps(ComputeKey)} and {@link
+ * GraphComputation#discoverDeps(ComputeKey, ComputationEnvironment)}
  */
 public interface GraphTransformationEngine extends AutoCloseable {
 
-  /** Shuts down the engine and the backing executor */
+  /** Shuts down the engine and rejects any future computations */
   @Override
   void close();
 

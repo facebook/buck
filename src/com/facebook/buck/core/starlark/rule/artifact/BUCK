@@ -1,0 +1,13 @@
+java_library(
+    name = "artifact",
+    srcs = glob(
+        ["*.java"],
+    ),
+    visibility = ["PUBLIC"],
+    deps = [
+        "//third-party/java/guava:guava",
+    ],
+    exported_deps = [
+        "//third-party/java/bazel:bazel",
+    ],
+)

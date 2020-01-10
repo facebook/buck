@@ -1,0 +1,1 @@
+int x86() { return 0; }

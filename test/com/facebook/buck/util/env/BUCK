@@ -5,6 +5,7 @@ standard_java_test(
     deps = [
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/env:env",
+        "//src/com/facebook/buck/util/stream:stream",
         "//third-party/java/guava:guava",
         "//third-party/java/junit:junit",
     ],

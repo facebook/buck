@@ -1,0 +1,41 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        exclude = ["*Test.java"],
+    ),
+    visibility = ["//test/..."],
+    exported_deps = [
+        "//src/com/facebook/buck/core/graph/transformation/impl:impl",
+        "//src/com/facebook/buck/util/types:types",
+        "//third-party/java/guava:guava",
+    ],
+)
+
+java_test(
+    name = "transformation_unit",
+    srcs = glob(
+        ["*Test.java"],
+        exclude = ["DefaultGraphTransformationEngineStackUseTest.java"],
+    ),
+    deps = [
+        ":testutil",
+        "//src/com/facebook/buck/core/graph/transformation/executor/impl:impl",
+        "//src/com/facebook/buck/core/graph/transformation/impl:impl",
+        "//third-party/java/junit:junit",
+    ],
+)
+
+java_test(
+    name = "transformation_stackuse",
+    srcs = ["DefaultGraphTransformationEngineStackUseTest.java"],
+    vm_args = ["-Xss500k"],  #explicitly set a small stack for testing stack use
+    deps = [
+        ":testutil",
+        "//src/com/facebook/buck/core/graph/transformation/executor/impl:impl",
+        "//src/com/facebook/buck/core/graph/transformation/impl:impl",
+        "//third-party/java/junit:junit",
+    ],
+)

@@ -1,5 +1,4 @@
 load("//tools/build_rules:java_rules.bzl", "standard_java_test")
-load("//tools/build_rules:export_files.bzl", "export_files")
 
 java_library(
     name = "test_extension",
@@ -14,17 +13,17 @@ java_library(
     ],
 )
 
-export_files(
-    ["run.sh"],
-    visibility = [
-        "//test/com/facebook/buck/core/module/impl/...",
-    ],
-)
-
 standard_java_test(
     name = "impl",
     deps = [
         "//src/com/facebook/buck/core/module/impl:impl",
         "//third-party/java/junit:junit",
+    ],
+)
+
+export_file(
+    name = "test_app.py",
+    visibility = [
+        "//test/com/facebook/buck/core/module/impl/...",
     ],
 )

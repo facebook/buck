@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.file;
@@ -86,8 +86,7 @@ public class DownloadStepTest {
   }
 
   @Test
-  public void returnsAFailureIfASingleUriIsPassedAndFails()
-      throws IOException, InterruptedException {
+  public void returnsAFailureIfASingleUriIsPassedAndFails() throws IOException {
     DownloadStep step =
         new DownloadStep(
             filesystem,
@@ -106,7 +105,7 @@ public class DownloadStepTest {
   }
 
   @Test
-  public void returnsAFailureIfAllUrisFail() throws IOException, InterruptedException {
+  public void returnsAFailureIfAllUrisFail() throws IOException {
     DownloadStep step =
         new DownloadStep(
             filesystem,
@@ -140,8 +139,7 @@ public class DownloadStepTest {
   }
 
   @Test
-  public void succeedsIfOneDownloadSucceedsAndSha1IsCorrect()
-      throws IOException, InterruptedException {
+  public void succeedsIfOneDownloadSucceedsAndSha1IsCorrect() throws IOException {
     ConditionallyExplodingDownloader downloader =
         new ConditionallyExplodingDownloader(
             uri -> {
@@ -179,8 +177,7 @@ public class DownloadStepTest {
   }
 
   @Test
-  public void succeedsIfOneDownloadSucceedsAndSha256IsCorrect()
-      throws IOException, InterruptedException {
+  public void succeedsIfOneDownloadSucceedsAndSha256IsCorrect() throws IOException {
     ConditionallyExplodingDownloader downloader =
         new ConditionallyExplodingDownloader(
             uri -> {
@@ -220,7 +217,7 @@ public class DownloadStepTest {
   }
 
   @Test
-  public void failsIfDownloadSucceedsAndSha1Fails() throws IOException, InterruptedException {
+  public void failsIfDownloadSucceedsAndSha1Fails() throws IOException {
     ConditionallyExplodingDownloader downloader =
         new ConditionallyExplodingDownloader(
             uri -> Optional.of("test_bad_hash".getBytes(Charsets.UTF_8)));
@@ -247,7 +244,7 @@ public class DownloadStepTest {
   }
 
   @Test
-  public void failsIfDownloadSucceedsAndSha256Fails() throws IOException, InterruptedException {
+  public void failsIfDownloadSucceedsAndSha256Fails() throws IOException {
     ConditionallyExplodingDownloader downloader =
         new ConditionallyExplodingDownloader(
             uri -> Optional.of("test_bad_hash".getBytes(Charsets.UTF_8)));

@@ -1,22 +1,23 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.modern.builders;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -40,8 +41,17 @@ class FileInputsAdder {
   interface Delegate {
     void addFile(Path path) throws IOException;
 
+    void addEmptyDirectory(Path path) throws IOException;
+
     void addSymlink(Path symlink, Path fixedTarget);
 
+    /**
+     * Returns the iterable elements which are the entries in the directory.
+     *
+     * @param target The path to the directory
+     * @return directory contents or {@code null} if {@code target} is not a directory
+     * @throws IOException if an I/O error occurs when opening the directory
+     */
     @Nullable
     Iterable<Path> getDirectoryContents(Path target) throws IOException;
 
@@ -69,7 +79,7 @@ class FileInputsAdder {
     if (addedInputs.contains(path)) {
       return;
     }
-    Preconditions.checkState(path.isAbsolute(), "Expected absolute path: " + path);
+    Preconditions.checkState(path.isAbsolute(), "Expected absolute path: %s", path);
     addedInputs.add(path);
 
     if (!path.startsWith(cellPathPrefix)) {
@@ -81,7 +91,14 @@ class FileInputsAdder {
 
     if (target.startsWith(cellPathPrefix)) {
       Iterable<Path> children = delegate.getDirectoryContents(target);
-      if (children != null) {
+      /// skip if is not a directory
+      if (children == null) {
+        return;
+      }
+
+      if (Iterables.isEmpty(children)) {
+        delegate.addEmptyDirectory(target);
+      } else {
         for (Path child : children) {
           addInput(child);
         }

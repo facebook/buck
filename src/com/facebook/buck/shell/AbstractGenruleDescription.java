@@ -1,35 +1,35 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
-import com.facebook.buck.android.toolchain.AndroidSdkLocation;
-import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.android.toolchain.AndroidTools;
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasTests;
+import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -37,7 +37,9 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.SourceSet;
 import com.facebook.buck.rules.macros.ClasspathAbiMacroExpander;
 import com.facebook.buck.rules.macros.ClasspathMacroExpander;
+import com.facebook.buck.rules.macros.ExecutableMacro;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
+import com.facebook.buck.rules.macros.ExecutableTargetMacro;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroContainer;
@@ -53,10 +55,11 @@ import com.facebook.buck.rules.macros.WorkerMacro;
 import com.facebook.buck.rules.macros.WorkerMacroArg;
 import com.facebook.buck.rules.macros.WorkerMacroExpander;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
-import com.facebook.buck.util.Optionals;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Comparator;
 import java.util.Optional;
@@ -65,7 +68,7 @@ import java.util.stream.Stream;
 import org.immutables.value.Value;
 
 public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescription.CommonArg>
-    implements DescriptionWithTargetGraph<T> {
+    implements DescriptionWithTargetGraph<T>, ImplicitDepsInferringDescription<T> {
 
   protected final ToolchainProvider toolchainProvider;
   protected final SandboxExecutionStrategy sandboxExecutionStrategy;
@@ -93,18 +96,17 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
   protected BuildRule createBuildRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
       BuildRuleResolver resolver,
       T args,
       Optional<Arg> cmd,
       Optional<Arg> bash,
       Optional<Arg> cmdExe,
-      String outputFileName) {
+      Optional<String> outputFileName,
+      Optional<ImmutableMap<String, ImmutableList<String>>> outputFileNames) {
     return new Genrule(
         buildTarget,
         projectFilesystem,
         resolver,
-        params,
         sandboxExecutionStrategy,
         args.getSrcs(),
         cmd,
@@ -112,15 +114,23 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
         cmdExe,
         args.getType(),
         outputFileName,
+        outputFileNames,
         args.getEnableSandbox().orElse(enableSandbox),
         args.getCacheable().orElse(true),
         args.getEnvironmentExpansionSeparator(),
-        toolchainProvider.getByNameIfPresent(
-            AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class),
-        toolchainProvider.getByNameIfPresent(AndroidNdk.DEFAULT_NAME, AndroidNdk.class),
-        toolchainProvider.getByNameIfPresent(
-            AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class),
+        getAndroidToolsOptional(args, buildTarget.getTargetConfiguration()),
         false);
+  }
+
+  /**
+   * Returns android tools if {@code args} has need_android_tools option set or empty optional
+   * otherwise.
+   */
+  protected Optional<AndroidTools> getAndroidToolsOptional(
+      T args, TargetConfiguration toolchainTargetConfiguration) {
+    return args.isNeedAndroidTools()
+        ? Optional.of(AndroidTools.getAndroidTools(toolchainProvider, toolchainTargetConfiguration))
+        : Optional.empty();
   }
 
   /**
@@ -137,7 +147,8 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
         ImmutableList.of(
             new ClasspathMacroExpander(),
             new ClasspathAbiMacroExpander(),
-            new ExecutableMacroExpander(),
+            new ExecutableMacroExpander<>(ExecutableMacro.class),
+            new ExecutableMacroExpander<>(ExecutableTargetMacro.class),
             new WorkerMacroExpander(),
             new LocationMacroExpander(),
             new MavenCoordinatesMacroExpander(),
@@ -163,12 +174,12 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
             args);
     if (maybeExpanders.isPresent()) {
       ImmutableList<MacroExpander<? extends Macro, ?>> expanders = maybeExpanders.get();
-      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
       StringWithMacrosConverter converter =
-          StringWithMacrosConverter.of(buildTarget, context.getCellPathResolver(), expanders);
+          StringWithMacrosConverter.of(
+              buildTarget, context.getCellPathResolver(), graphBuilder, expanders);
       Function<StringWithMacros, Arg> toArg =
           str -> {
-            Arg arg = converter.convert(str, graphBuilder);
+            Arg arg = converter.convert(str);
             if (RichStream.from(str.getMacros())
                 .map(MacroContainer::getMacro)
                 .anyMatch(WorkerMacro.class::isInstance)) {
@@ -184,10 +195,10 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
           context.getProjectFilesystem(),
           params.withExtraDeps(
               Stream.concat(
-                      ruleFinder.filterBuildRuleInputs(args.getSrcs().getPaths()).stream(),
+                      graphBuilder.filterBuildRuleInputs(args.getSrcs().getPaths()).stream(),
                       Stream.of(cmd, bash, cmdExe)
-                          .flatMap(Optionals::toStream)
-                          .flatMap(input -> BuildableSupport.getDeps(input, ruleFinder)))
+                          .flatMap(RichStream::from)
+                          .flatMap(input -> BuildableSupport.getDeps(input, graphBuilder)))
                   .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()))),
           graphBuilder,
           args,
@@ -206,8 +217,21 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
         Optional.empty());
   }
 
+  @Override
+  public void findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      CellPathResolver cellRoots,
+      T constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    if (constructorArg.isNeedAndroidTools()) {
+      AndroidTools.addParseTimeDepsToAndroidTools(
+          toolchainProvider, buildTarget, targetGraphOnlyDepsBuilder);
+    }
+  }
+
   @SuppressFieldNotInitialized
-  public interface CommonArg extends CommonDescriptionArg, HasTests {
+  public interface CommonArg extends BuildRuleArg, HasTests {
     Optional<StringWithMacros> getBash();
 
     Optional<StringWithMacros> getCmd();
@@ -226,11 +250,25 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
     Optional<String> getEnvironmentExpansionSeparator();
 
     /**
+     * If present and true, requests that Buck run this genrule remotely if possible. Defaults to
+     * false for now.
+     */
+    Optional<Boolean> getRemote();
+
+    /**
      * This functionality only exists to get around the lack of extensibility in our current build
      * rule / build file apis. It may go away at some point. Also, make sure that you understand
-     * what {@link BuildRule.isCacheable} does with respect to caching if you decide to use this
+     * what {@link BuildRule#isCacheable} does with respect to caching if you decide to use this
      * attribute
      */
     Optional<Boolean> getCacheable();
+
+    /**
+     * This argument allows genrule to specify if it needs android tools (like dex, aapt, ndk, sdk).
+     */
+    @Value.Default
+    default boolean isNeedAndroidTools() {
+      return false;
+    }
   }
 }

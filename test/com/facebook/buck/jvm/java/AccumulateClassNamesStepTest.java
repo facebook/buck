@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
@@ -19,18 +19,21 @@ package com.facebook.buck.jvm.java;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.step.TestExecutionContext;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.hash.HashCode;
 import com.google.common.io.Files;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Optional;
 import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
@@ -41,12 +44,13 @@ import org.junit.rules.TemporaryFolder;
 public class AccumulateClassNamesStepTest {
 
   private static final String SHA1_FOR_EMPTY_STRING = "da39a3ee5e6b4b0d3255bfef95601890afd80709";
+  private static final HashCode SHA1_HASHCODE_FOR_EMPTY_STRING =
+      HashCode.fromString(SHA1_FOR_EMPTY_STRING);
 
   @Rule public TemporaryFolder tmp = new TemporaryFolder();
 
   @Test
-  public void testExecuteAccumulateClassNamesStepOnJarFile()
-      throws InterruptedException, IOException {
+  public void testExecuteAccumulateClassNamesStepOnJarFile() throws IOException {
     // Create a JAR file.
     String name = "example.jar";
     File jarFile = tmp.newFile(name);
@@ -85,8 +89,7 @@ public class AccumulateClassNamesStepTest {
   }
 
   @Test
-  public void testExecuteAccumulateClassNamesStepOnDirectory()
-      throws InterruptedException, IOException {
+  public void testExecuteAccumulateClassNamesStepOnDirectory() throws IOException {
     // Create a directory.
     String name = "dir";
     tmp.newFolder(name);
@@ -115,16 +118,49 @@ public class AccumulateClassNamesStepTest {
         "Verify that the contents are sorted alphabetically and ignore non-.class files.",
         Joiner.on('\n')
                 .join(
-                    MorePaths.pathWithUnixSeparators(Paths.get("com/example/Bar"))
+                    PathFormatter.pathWithUnixSeparators(Paths.get("com/example/Bar"))
                         + separator
                         + SHA1_FOR_EMPTY_STRING,
-                    MorePaths.pathWithUnixSeparators(Paths.get("com/example/Foo"))
+                    PathFormatter.pathWithUnixSeparators(Paths.get("com/example/Foo"))
                         + separator
                         + SHA1_FOR_EMPTY_STRING,
-                    MorePaths.pathWithUnixSeparators(Paths.get("com/example/subpackage/Baz"))
+                    PathFormatter.pathWithUnixSeparators(Paths.get("com/example/subpackage/Baz"))
                         + separator
                         + SHA1_FOR_EMPTY_STRING)
             + '\n',
         contents);
+  }
+
+  @Test
+  public void testParseClassHashesWithSpaces() throws IOException {
+    // Create a JAR file.
+    String name = "example.jar";
+    File jarFile = tmp.newFile(name);
+    try (JarOutputStream out =
+        new JarOutputStream(new BufferedOutputStream(new FileOutputStream(jarFile)))) {
+      out.putNextEntry(new ZipEntry("com/example/Foo.class"));
+      out.closeEntry();
+      out.putNextEntry(new ZipEntry("com/example/Foo$something with spaces$1.class"));
+      out.closeEntry();
+    }
+
+    // Create the AccumulateClassNamesStep and execute it.
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().toPath());
+    AccumulateClassNamesStep accumulateClassNamesStep =
+        new AccumulateClassNamesStep(
+            filesystem, Optional.of(Paths.get(name)), Paths.get("output.txt"));
+    ExecutionContext context = TestExecutionContext.newInstance();
+    accumulateClassNamesStep.execute(context);
+
+    List<String> lines = filesystem.readLines(Paths.get("output.txt"));
+    ImmutableSortedMap<String, HashCode> parsedClassHashes =
+        AccumulateClassNamesStep.parseClassHashes(lines);
+
+    assertEquals(2, parsedClassHashes.size());
+    assertEquals(SHA1_HASHCODE_FOR_EMPTY_STRING, parsedClassHashes.get("com/example/Foo"));
+    assertEquals(
+        SHA1_HASHCODE_FOR_EMPTY_STRING,
+        parsedClassHashes.get("com/example/Foo$something with spaces$1"));
   }
 }

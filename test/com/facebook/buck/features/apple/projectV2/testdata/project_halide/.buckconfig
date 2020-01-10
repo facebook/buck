@@ -1,0 +1,6 @@
+[project]
+  ide = xcode
+
+[halide]
+  target_default = x86-64-osx-user_context
+  xcode_compile_script = halide_compile.sh

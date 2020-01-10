@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -31,13 +31,11 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
 import com.facebook.buck.jvm.java.JavaCompilationConstants;
@@ -63,7 +61,6 @@ import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -75,8 +72,7 @@ public class AndroidBinaryTest {
   @Test
   public void testAndroidBinaryNoDx() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     BuildContext buildContext = FakeBuildContext.withSourcePathResolver(pathResolver);
 
     // Two android_library deps, neither with an assets directory.
@@ -121,12 +117,10 @@ public class AndroidBinaryTest {
 
     androidBinary
         .getEnhancementResult()
-        .getDexMergeRule()
-        .getRight()
+        .getNonPreDexedDex()
+        .get()
         .addProguardCommands(
-            packageableCollection
-                .getClasspathEntriesToDex()
-                .stream()
+            packageableCollection.getClasspathEntriesToDex().stream()
                 .map(pathResolver::getRelativePath)
                 .collect(ImmutableSet.toImmutableSet()),
             pathResolver.getAllAbsolutePaths(packageableCollection.getProguardConfigs()),
@@ -141,12 +135,12 @@ public class AndroidBinaryTest {
             InternalFlavor.of(APKModuleGraph.ROOT_APKMODULE_NAME));
     Path aaptProguardDir =
         BuildTargetPaths.getGenPath(
-            androidBinary.getProjectFilesystem(), aaptPackageTarget, "%s/proguard/");
+            androidBinary.getProjectFilesystem(), aaptPackageTarget, "%s/proguard");
 
     Path proguardOutputDir =
-        androidBinary.getEnhancementResult().getDexMergeRule().getRight().getProguardConfigDir();
+        androidBinary.getEnhancementResult().getNonPreDexedDex().get().getProguardConfigDir();
     Path proguardInputsDir =
-        androidBinary.getEnhancementResult().getDexMergeRule().getRight().getProguardInputsDir();
+        androidBinary.getEnhancementResult().getNonPreDexedDex().get().getProguardInputsDir();
     ImmutableSet<Path> expectedRecordedArtifacts =
         ImmutableSet.of(
             proguardOutputDir.resolve("configuration.txt"),
@@ -171,7 +165,7 @@ public class AndroidBinaryTest {
             proguardConfig.getFilesystem().resolve(proguardConfig.getRelativePath()),
             proguardConfig.getFilesystem().resolve(aaptProguardDir.resolve("proguard.txt"))),
         ProGuardObfuscateStep.SdkProguardType.NONE,
-        /* optimizationPasses */ OptionalInt.empty(),
+        /* optimizationPasses */ ProGuardObfuscateStep.DEFAULT_OPTIMIZATION_PASSES,
         /* proguardJvmArgs */ Optional.empty(),
         ImmutableMap.of(
             BuildTargetPaths.getGenPath(
@@ -183,15 +177,13 @@ public class AndroidBinaryTest {
                 BuildTargetPaths.getGenPath(
                         libraryOneRule.getProjectFilesystem(),
                         libraryOneRule.getBuildTarget(),
-                        "lib__%s__output/")
+                        "lib__%s__output")
                     .resolve(
                         libraryOne.getBuildTarget().getShortNameAndFlavorPostfix()
                             + "-obfuscated.jar"))),
         ImmutableSet.of(
-            libraryTwo
-                .getBuildTarget()
-                .getUnflavoredBuildTarget()
-                .getCellPath()
+            androidBinary
+                .getProjectFilesystem()
                 .resolve(
                     BuildTargetPaths.getGenPath(
                             libraryTwoRule.getProjectFilesystem(),
@@ -225,11 +217,10 @@ public class AndroidBinaryTest {
     if (!Strings.isNullOrEmpty(resDirectory) || !Strings.isNullOrEmpty(assetDirectory)) {
       BuildTarget resourceOnebuildTarget =
           BuildTargetFactory.newInstance(buildTarget + "_resources");
-      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
       BuildRule androidResourceRule =
           graphBuilder.addToIndex(
               AndroidResourceRuleBuilder.newBuilder()
-                  .setRuleFinder(ruleFinder)
+                  .setRuleFinder(graphBuilder)
                   .setAssets(FakeSourcePath.of(assetDirectory))
                   .setRes(resDirectory == null ? null : FakeSourcePath.of(resDirectory))
                   .setBuildTarget(resourceOnebuildTarget)
@@ -255,8 +246,7 @@ public class AndroidBinaryTest {
   @Test
   public void testGetUnsignedApkPath() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     Keystore keystore = addKeystoreRule(graphBuilder);
 
     BuildTarget targetInRootDirectory = BuildTargetFactory.newInstance("//:fb4a");
@@ -315,8 +305,7 @@ public class AndroidBinaryTest {
 
   private void assertCommandsInOrder(List<Step> steps, List<Class<?>> expectedCommands) {
     List<Class<?>> filteredObservedCommands =
-        steps
-            .stream()
+        steps.stream()
             .map(((Function<Step, Class<?>>) Step::getClass))
             .filter(Sets.newHashSet(expectedCommands)::contains)
             .collect(Collectors.toList());
@@ -350,8 +339,8 @@ public class AndroidBinaryTest {
             .resolve(".dex/classes.dex");
     splitDexRule
         .getEnhancementResult()
-        .getDexMergeRule()
-        .getRight()
+        .getNonPreDexedDex()
+        .get()
         .addDexingSteps(
             classpath,
             Suppliers.ofInstance(ImmutableMap.of()),
@@ -361,8 +350,7 @@ public class AndroidBinaryTest {
             Optional.empty(),
             Optional.empty(),
             /*  additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
-            FakeBuildContext.withSourcePathResolver(
-                DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder))));
+            FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()));
 
     assertEquals(
         "Expected 2 new assets paths (one for metadata.txt and the other for the "
@@ -404,8 +392,8 @@ public class AndroidBinaryTest {
             .resolve(".dex/classes.dex");
     splitDexRule
         .getEnhancementResult()
-        .getDexMergeRule()
-        .getRight()
+        .getNonPreDexedDex()
+        .get()
         .addDexingSteps(
             classpath,
             Suppliers.ofInstance(ImmutableMap.of()),
@@ -415,8 +403,7 @@ public class AndroidBinaryTest {
             Optional.of(reorderTool),
             Optional.of(reorderData),
             /*  additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
-            FakeBuildContext.withSourcePathResolver(
-                DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder))));
+            FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()));
 
     assertEquals(
         "Expected 2 new assets paths (one for metadata.txt and the other for the "
@@ -431,8 +418,6 @@ public class AndroidBinaryTest {
   @Test
   public void testAddPostFilterCommandSteps() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
     BuildRule keystoreRule = addKeystoreRule(graphBuilder);
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     AndroidBinaryBuilder builder =
@@ -448,7 +433,8 @@ public class AndroidBinaryTest {
     ResourcesFilter resourcesFilter =
         (ResourcesFilter) ((AaptPackageResources) aaptPackageRule).getFilteredResourcesProvider();
     ImmutableList.Builder<Step> stepsBuilder = new ImmutableList.Builder<>();
-    resourcesFilter.addPostFilterCommandSteps(StringArg.of("cmd"), pathResolver, stepsBuilder);
+    resourcesFilter.addPostFilterCommandSteps(
+        StringArg.of("cmd"), graphBuilder.getSourcePathResolver(), stepsBuilder);
     ImmutableList<Step> steps = stepsBuilder.build();
 
     Path dataPath =

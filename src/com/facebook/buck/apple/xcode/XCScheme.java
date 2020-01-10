@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple.xcode;
@@ -191,15 +191,18 @@ public class XCScheme {
 
   public static class BuildActionEntry {
     public enum BuildFor {
-      RUNNING,
+      ANALYZING,
       TESTING,
+      RUNNING,
       PROFILING,
-      ARCHIVING,
-      ANALYZING;
+      ARCHIVING;
 
       public static final EnumSet<BuildFor> DEFAULT = EnumSet.allOf(BuildFor.class);
-      public static final EnumSet<BuildFor> INDEXING = EnumSet.of(TESTING, ANALYZING, ARCHIVING);
-      public static final EnumSet<BuildFor> TEST_ONLY = EnumSet.of(TESTING, ANALYZING);
+      public static final EnumSet<BuildFor> INDEXING_ONLY = EnumSet.of(ANALYZING);
+      public static final EnumSet<BuildFor> SCHEME_LIBRARY = EnumSet.of(ANALYZING, RUNNING);
+      public static final EnumSet<BuildFor> MAIN_EXECUTABLE =
+          EnumSet.of(ANALYZING, RUNNING, PROFILING, ARCHIVING);
+      public static final EnumSet<BuildFor> TEST_ONLY = EnumSet.of(ANALYZING, TESTING);
     }
 
     private BuildableReference buildableReference;

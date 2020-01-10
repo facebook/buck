@@ -1,6 +1,18 @@
 java_library(
     name = "manager",
     srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/build/event:event",
+        "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/util/json:json",
+        "//src/com/facebook/buck/util/stream:stream",
+        "//src/com/facebook/buck/util/unarchive:unarchive",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
     exported_deps = [
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
         "//src/com/facebook/buck/core/build/engine:engine",
@@ -18,14 +30,6 @@ java_library(
         "//src/com/facebook/buck/rules/keys:keys",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/concurrent:concurrent",
-    ],
-    visibility = ["PUBLIC"],
-    deps = [
-        "//src/com/facebook/buck/core/build/event:event",
-        "//src/com/facebook/buck/core/util/log:log",
-        "//src/com/facebook/buck/util/json:json",
-        "//src/com/facebook/buck/util/unarchive:unarchive",
-        "//third-party/java/guava:guava",
-        "//third-party/java/jsr:jsr305",
+        "//src/com/facebook/buck/util/hashing:hashing",
     ],
 )

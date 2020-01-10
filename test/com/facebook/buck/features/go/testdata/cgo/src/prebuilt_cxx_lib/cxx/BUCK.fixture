@@ -1,0 +1,8 @@
+prebuilt_cxx_library(
+    name = "lib",
+    header_dirs = [
+        "include",
+    ],
+    header_only = True,
+    visibility = ["PUBLIC"],
+)

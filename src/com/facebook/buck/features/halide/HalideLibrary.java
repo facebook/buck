@@ -1,22 +1,23 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.halide;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -33,7 +34,10 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInfo;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.PlatformMappedCache;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -47,13 +51,14 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class HalideLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
-    implements CxxPreprocessorDep, NativeLinkable {
+    implements CxxPreprocessorDep, NativeLinkableGroup {
 
   private final ActionGraphBuilder graphBuilder;
   private final Optional<Pattern> supportedPlatformsRegex;
 
   private final TransitiveCxxPreprocessorInputCache transitiveCxxPreprocessorInputCache =
       new TransitiveCxxPreprocessorInputCache(this);
+  private final PlatformMappedCache<NativeLinkableInfo> linkableCache = new PlatformMappedCache<>();
 
   protected HalideLibrary(
       BuildTarget buildTarget,
@@ -104,22 +109,50 @@ public class HalideLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Iterable<NativeLinkable> getNativeLinkableDeps(BuildRuleResolver ruleResolver) {
-    return FluentIterable.from(getDeclaredDeps()).filter(NativeLinkable.class);
-  }
+  public NativeLinkableInfo getNativeLinkable(
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    return linkableCache.get(
+        cxxPlatform,
+        () -> {
+          boolean platformSupported = isPlatformSupported(cxxPlatform);
+          NativeLinkableInfo.Delegate delegate =
+              new NativeLinkableInfo.Delegate() {
+                @Override
+                public NativeLinkableInput computeInput(
+                    ActionGraphBuilder graphBuilder1,
+                    Linker.LinkableDepType type,
+                    boolean forceLinkWhole,
+                    TargetConfiguration targetConfiguration) {
+                  return !platformSupported
+                      ? NativeLinkableInput.of()
+                      : NativeLinkableInput.of(
+                          ImmutableList.of(requireLibraryArg(cxxPlatform, type)),
+                          ImmutableSet.of(),
+                          ImmutableSet.of());
+                }
 
-  @Override
-  public Iterable<NativeLinkable> getNativeLinkableDepsForPlatform(
-      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
-    if (!isPlatformSupported(cxxPlatform)) {
-      return ImmutableList.of();
-    }
-    return getNativeLinkableDeps(ruleResolver);
-  }
-
-  @Override
-  public Iterable<NativeLinkable> getNativeLinkableExportedDeps(BuildRuleResolver ruleResolver) {
-    return ImmutableList.of();
+                @Override
+                public ImmutableMap<String, SourcePath> getSharedLibraries(
+                    ActionGraphBuilder graphBuilder1) {
+                  return ImmutableMap.of();
+                }
+              };
+          ImmutableList<NativeLinkable> deps =
+              platformSupported
+                  ? FluentIterable.from(getDeclaredDeps())
+                      .filter(NativeLinkableGroup.class)
+                      .transform(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
+                      .toList()
+                  : ImmutableList.of();
+          return new NativeLinkableInfo(
+              getBuildTarget(),
+              getType(),
+              deps,
+              ImmutableList.of(),
+              Linkage.STATIC,
+              delegate,
+              NativeLinkableInfo.defaults());
+        });
   }
 
   private Arg requireLibraryArg(CxxPlatform cxxPlatform, Linker.LinkableDepType type) {
@@ -134,32 +167,5 @@ public class HalideLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     } else {
       return SourcePathArg.of(Objects.requireNonNull(rule.getSourcePathToOutput()));
     }
-  }
-
-  @Override
-  public NativeLinkableInput getNativeLinkableInput(
-      CxxPlatform cxxPlatform,
-      Linker.LinkableDepType type,
-      boolean forceLinkWhole,
-      ActionGraphBuilder graphBuilder) {
-    if (!isPlatformSupported(cxxPlatform)) {
-      return NativeLinkableInput.of();
-    }
-    return NativeLinkableInput.of(
-        ImmutableList.of(requireLibraryArg(cxxPlatform, type)),
-        ImmutableSet.of(),
-        ImmutableSet.of());
-  }
-
-  @Override
-  public NativeLinkable.Linkage getPreferredLinkage(
-      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-    return NativeLinkable.Linkage.STATIC;
-  }
-
-  @Override
-  public ImmutableMap<String, SourcePath> getSharedLibraries(
-      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-    return ImmutableMap.of();
   }
 }

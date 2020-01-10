@@ -1,29 +1,29 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -31,8 +31,8 @@ import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.json.ObjectMappers;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
@@ -83,15 +83,14 @@ public class AuditFlavorsCommand extends AbstractCommand {
                 .getParser()
                 .getPerBuildStateFactory()
                 .create(
-                    ParsingContext.builder(params.getCell(), pool.getListeningExecutorService())
-                        .setProfilingEnabled(getEnableParserProfiling())
-                        .setSpeculativeParsing(SpeculativeParsing.ENABLED)
-                        .build(),
-                    params.getParser().getPermState(),
-                    getTargetPlatforms())) {
+                    createParsingContext(params.getCell(), pool.getListeningExecutorService())
+                        .withSpeculativeParsing(SpeculativeParsing.ENABLED)
+                        .withExcludeUnsupportedTargets(false),
+                    params.getParser().getPermState())) {
 
       for (BuildTarget target : targets) {
-        TargetNode<?> targetNode = params.getParser().getTargetNode(parserState, target);
+        TargetNode<?> targetNode =
+            params.getParser().getTargetNode(parserState, target, DependencyStack.top(target));
         builder.add(targetNode);
       }
     } catch (BuildFileParseException e) {
@@ -123,7 +122,7 @@ public class AuditFlavorsCommand extends AbstractCommand {
       stdout.println(node.getBuildTarget().getFullyQualifiedName());
       if (description instanceof Flavored) {
         Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains =
-            ((Flavored) description).flavorDomains();
+            ((Flavored) description).flavorDomains(node.getBuildTarget().getTargetConfiguration());
         if (flavorDomains.isPresent()) {
           for (FlavorDomain<?> domain : flavorDomains.get()) {
             ImmutableSet<UserFlavor> userFlavors =
@@ -163,7 +162,7 @@ public class AuditFlavorsCommand extends AbstractCommand {
 
       if (description instanceof Flavored) {
         Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains =
-            ((Flavored) description).flavorDomains();
+            ((Flavored) description).flavorDomains(node.getBuildTarget().getTargetConfiguration());
         if (flavorDomains.isPresent()) {
           for (FlavorDomain<?> domain : flavorDomains.get()) {
             ImmutableSet<UserFlavor> userFlavors =
@@ -174,8 +173,7 @@ public class AuditFlavorsCommand extends AbstractCommand {
               continue;
             }
             SortedMap<String, String> flavorsJson =
-                userFlavors
-                    .stream()
+                userFlavors.stream()
                     .collect(
                         ImmutableSortedMap.toImmutableSortedMap(
                             Ordering.natural(), UserFlavor::getName, UserFlavor::getDescription));

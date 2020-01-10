@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -21,22 +21,13 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.android.toolchain.AndroidBuildToolsLocation;
-import com.facebook.buck.android.toolchain.AndroidSdkLocation;
-import com.facebook.buck.android.toolchain.TestAndroidSdkLocationFactory;
-import com.facebook.buck.android.toolchain.impl.AndroidBuildToolsResolver;
-import com.facebook.buck.android.toolchain.impl.AndroidPlatformTargetProducer;
-import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.DirArtifactCacheTestUtil;
 import com.facebook.buck.artifact_cache.TestArtifactCaches;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -47,7 +38,6 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.VersionStringComparator;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
@@ -63,42 +53,24 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 
 public class AndroidResourceFilterIntegrationTest {
 
-  private static boolean isBuildToolsNew;
-  private static Supplier<Tool> aaptProvider;
-
   @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
+  private AndroidSdkResolver sdkResolver;
 
   private ProjectFilesystem filesystem;
 
-  @BeforeClass
-  public static void findBuildToolsVersion() throws InterruptedException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
+  private boolean isBuildToolsNew() {
+    return sdkResolver.isBuildToolsVersionAtLeast("21");
+  }
 
-    AndroidSdkLocation androidSdkLocation = TestAndroidSdkLocationFactory.create(filesystem);
-    AndroidBuildToolsResolver buildToolsResolver =
-        new AndroidBuildToolsResolver(AndroidNdkHelper.DEFAULT_CONFIG, androidSdkLocation);
-    AndroidBuildToolsLocation buildToolsLocation =
-        AndroidBuildToolsLocation.of(buildToolsResolver.getBuildToolsPath());
-    aaptProvider =
-        AndroidPlatformTargetProducer.getDefaultPlatformTarget(
-                filesystem,
-                buildToolsLocation,
-                androidSdkLocation,
-                Optional.empty(),
-                Optional.empty())
-            .getAaptExecutable();
-    String buildToolsVersion = buildToolsLocation.getBuildToolsPath().getFileName().toString();
-    isBuildToolsNew = new VersionStringComparator().compare(buildToolsVersion, "21") >= 0;
+  private Supplier<Tool> getAapt() {
+    return sdkResolver.getAndroidPlatformTarget().getAaptExecutable();
   }
 
   @Before
@@ -106,6 +78,9 @@ public class AndroidResourceFilterIntegrationTest {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
+    sdkResolver = AndroidSdkResolver.get(workspace).get();
+
     filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
   }
 
@@ -121,7 +96,7 @@ public class AndroidResourceFilterIntegrationTest {
                 filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
     ZipInspector zipInspector = new ZipInspector(apkFile);
 
-    if (isBuildToolsNew) {
+    if (isBuildToolsNew()) {
       zipInspector.assertFileExists("res/drawable-mdpi-v4/app_icon.png");
       zipInspector.assertFileExists("res/drawable-hdpi-v4/app_icon.png");
       zipInspector.assertFileExists("res/drawable-xhdpi-v4/app_icon.png");
@@ -144,7 +119,7 @@ public class AndroidResourceFilterIntegrationTest {
                 filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
     ZipInspector zipInspector = new ZipInspector(apkFile);
 
-    if (isBuildToolsNew) {
+    if (isBuildToolsNew()) {
       zipInspector.assertFileExists("res/drawable-mdpi-v4/app_icon.png");
       zipInspector.assertFileDoesNotExist("res/drawable-hdpi-v4/app_icon.png");
       zipInspector.assertFileDoesNotExist("res/drawable-xhdpi-v4/app_icon.png");
@@ -166,7 +141,7 @@ public class AndroidResourceFilterIntegrationTest {
             BuildTargetPaths.getGenPath(
                 filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
     String iconPath =
-        isBuildToolsNew ? "res/drawable-mdpi-v4/app_icon.png" : "res/drawable-mdpi/app_icon.png";
+        isBuildToolsNew() ? "res/drawable-mdpi-v4/app_icon.png" : "res/drawable-mdpi/app_icon.png";
     long firstImageCrc = new ZipInspector(apkFile).getCrc(iconPath);
 
     workspace.copyFile(
@@ -201,7 +176,7 @@ public class AndroidResourceFilterIntegrationTest {
                 filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
     ZipInspector zipInspector = new ZipInspector(apkFile);
 
-    if (isBuildToolsNew) {
+    if (isBuildToolsNew()) {
       zipInspector.assertFileDoesNotExist("res/drawable-mdpi-v4/app_icon.png");
       zipInspector.assertFileExists("res/drawable-hdpi-v4/app_icon.png");
       zipInspector.assertFileExists("res/drawable-xhdpi-v4/app_icon.png");
@@ -269,7 +244,7 @@ public class AndroidResourceFilterIntegrationTest {
   }
 
   @Test
-  public void testPostFilterResourcesAndBanDuplicates() throws IOException {
+  public void testPostFilterResourcesAndBanDuplicates() {
     workspace.runBuckBuild("//apps/sample:app_post_filter_no_dups").assertSuccess();
   }
 
@@ -321,7 +296,7 @@ public class AndroidResourceFilterIntegrationTest {
 
     zipInspector.assertFileExists("assets/strings/fr.fbstr");
 
-    if (isBuildToolsNew) {
+    if (isBuildToolsNew()) {
       zipInspector.assertFileExists("res/drawable-xhdpi-v4/app_icon.png");
       zipInspector.assertFileDoesNotExist("res/drawable-hdpi-v4/app_icon.png");
       zipInspector.assertFileDoesNotExist("res/drawable-mdpi-v4/app_icon.png");
@@ -404,13 +379,14 @@ public class AndroidResourceFilterIntegrationTest {
   }
 
   private int runAaptDumpResources(Path apkFile) throws IOException, InterruptedException {
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
     Pattern pattern = Pattern.compile(".*com.example:string/base_button: t=.*");
     ProcessExecutor.Result result =
         workspace.runCommand(
             ImmutableList.<String>builder()
-                .addAll(aaptProvider.get().getCommandPrefix(pathResolver))
+                .addAll(
+                    getAapt()
+                        .get()
+                        .getCommandPrefix(new TestActionGraphBuilder().getSourcePathResolver()))
                 .add("dump")
                 .add("resources")
                 .add(apkFile.toAbsolutePath().toString())

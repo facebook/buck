@@ -1,18 +1,19 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.features.project.intellij.lang.java;
 
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -25,7 +26,6 @@ import com.facebook.buck.features.project.intellij.aggregation.AggregationContex
 import com.facebook.buck.features.project.intellij.aggregation.AggregationKeys;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
-import com.facebook.buck.jvm.java.JavacOptions;
 import java.util.Collection;
 import java.util.Optional;
 
@@ -52,26 +52,6 @@ public class JavaLibraryRuleHelper {
     }
   }
 
-  public static <T extends JavaLibraryDescription.CoreArg> Optional<String> getLanguageLevel(
-      IjProjectConfig projectConfig, TargetNode<T> targetNode) {
-
-    JavaLibraryDescription.CoreArg arg = targetNode.getConstructorArg();
-
-    if (arg.getSource().isPresent()) {
-      JavacOptions defaultJavacOptions = projectConfig.getJavaBuckConfig().getDefaultJavacOptions();
-      String defaultSourceLevel = defaultJavacOptions.getSourceLevel();
-      String defaultTargetLevel = defaultJavacOptions.getTargetLevel();
-      boolean languageLevelsAreDifferent =
-          !defaultSourceLevel.equals(arg.getSource().orElse(defaultSourceLevel))
-              || !defaultTargetLevel.equals(arg.getTarget().orElse(defaultTargetLevel));
-      if (languageLevelsAreDifferent) {
-        return Optional.of(JavaLanguageLevelHelper.normalizeSourceLevel(arg.getSource().get()));
-      }
-    }
-
-    return Optional.empty();
-  }
-
   public static <T extends JavaLibraryDescription.CoreArg> void addNonSourceBuildTargets(
       TargetNode<T> targetNode, ModuleBuildContext context) {
     T arg = targetNode.getConstructorArg();
@@ -86,7 +66,8 @@ public class JavaLibraryRuleHelper {
    */
   public static <T extends JavaLibraryDescription.CoreArg> void addLanguageAggregationKeyIfNeeded(
       IjProjectConfig projectConfig, TargetNode<T> target, AggregationContext context) {
-    Optional<String> languageLevel = getLanguageLevel(projectConfig, target);
+    Optional<String> languageLevel =
+        JavaLanguageLevelHelper.getLanguageLevel(projectConfig, target);
     if (languageLevel.isPresent()) {
       context.addAggregationKey(AggregationKeys.JAVA_LANGUAGE_LEVEL, languageLevel);
     }

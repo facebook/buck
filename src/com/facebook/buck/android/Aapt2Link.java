@@ -1,54 +1,54 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.step.fs.SymlinkTreeStep;
-import com.facebook.buck.util.MoreSuppliers;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.zip.ZipScrubberStep;
+import com.google.common.base.Joiner;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
-import java.util.Optional;
 import java.util.SortedSet;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
@@ -59,14 +59,18 @@ public class Aapt2Link extends AbstractBuildRule {
   @AddToRuleKey private final boolean noVersionTransitions;
   @AddToRuleKey private final boolean noAutoAddOverlay;
   @AddToRuleKey private final boolean useProtoFormat;
+  @AddToRuleKey private final boolean noResourceRemoval;
   @AddToRuleKey private final ImmutableList<Aapt2Compile> compileRules;
   @AddToRuleKey private final SourcePath manifest;
   @AddToRuleKey private final ManifestEntries manifestEntries;
   @AddToRuleKey private final int packageIdOffset;
   @AddToRuleKey private final ImmutableList<SourcePath> dependencyResourceApks;
-
-  private final AndroidPlatformTarget androidPlatformTarget;
-  private final Supplier<ImmutableSortedSet<BuildRule>> buildDepsSupplier;
+  @AddToRuleKey private final Tool aapt2Tool;
+  @AddToRuleKey private final ImmutableList<String> additionalAaptParams;
+  @AddToRuleKey private final boolean filterLocales;
+  @AddToRuleKey private final ImmutableSet<String> locales;
+  private final Path androidJar;
+  private final BuildableSupport.DepsSupplier depsSupplier;
 
   private static final int BASE_PACKAGE_ID = 0x7f;
 
@@ -75,7 +79,6 @@ public class Aapt2Link extends AbstractBuildRule {
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
       ImmutableList<Aapt2Compile> compileRules,
-      ImmutableList<HasAndroidResourceDeps> resourceRules,
       SourcePath manifest,
       ManifestEntries manifestEntries,
       int packageIdOffset,
@@ -85,9 +88,13 @@ public class Aapt2Link extends AbstractBuildRule {
       boolean noVersionTransitions,
       boolean noAutoAddOverlay,
       boolean useProtoFormat,
-      AndroidPlatformTarget androidPlatformTarget) {
+      boolean noResourceRemoval,
+      Tool aapt2Tool,
+      ImmutableList<String> additionalAaptParams,
+      Path androidJar,
+      boolean filterLocales,
+      ImmutableSet<String> locales) {
     super(buildTarget, projectFilesystem);
-    this.androidPlatformTarget = androidPlatformTarget;
     this.compileRules = compileRules;
     this.manifest = manifest;
     this.manifestEntries = manifestEntries;
@@ -97,26 +104,19 @@ public class Aapt2Link extends AbstractBuildRule {
     this.noAutoVersion = noAutoVersion;
     this.noVersionTransitions = noVersionTransitions;
     this.noAutoAddOverlay = noAutoAddOverlay;
+    this.noResourceRemoval = noResourceRemoval;
     this.useProtoFormat = useProtoFormat;
-    this.buildDepsSupplier =
-        MoreSuppliers.memoize(
-            () ->
-                ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(compileRules)
-                    .addAll(RichStream.from(resourceRules).filter(BuildRule.class).toOnceIterable())
-                    .addAll(ruleFinder.filterBuildRuleInputs(manifest))
-                    .addAll(
-                        RichStream.from(dependencyResourceApks)
-                            .map(ruleFinder::getRule)
-                            .filter(Optional::isPresent)
-                            .map(Optional::get)
-                            .collect(Collectors.toList()))
-                    .build());
+    this.androidJar = androidJar;
+    this.aapt2Tool = aapt2Tool;
+    this.additionalAaptParams = additionalAaptParams;
+    this.depsSupplier = BuildableSupport.buildDepsSupplier(this, ruleFinder);
+    this.filterLocales = filterLocales;
+    this.locales = locales;
   }
 
   @Override
   public SortedSet<BuildRule> getBuildDeps() {
-    return buildDepsSupplier.get();
+    return depsSupplier.get();
   }
 
   @Override
@@ -139,44 +139,26 @@ public class Aapt2Link extends AbstractBuildRule {
         context.getSourcePathResolver().getAbsolutePath(manifest),
         manifestEntries);
 
-    Path linkTreePath =
-        BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s/link-tree");
-
     // Need to reverse the order of the rules because aapt2 allows later resources
     // to override earlier ones, but aapt gives the earlier ones precedence.
-    Iterable<Path> compiledResourcePaths =
-        Lists.reverse(compileRules)
-                .stream()
-                .map(Aapt2Compile::getSourcePathToOutput)
-                .map(context.getSourcePathResolver()::getAbsolutePath)
-            ::iterator;
-    // Make a symlink tree to avoid lots of really long filenames
-    // that can exceed the limit on Mac.
-    int index = 1;
-    ImmutableMap.Builder<Path, Path> symlinkMap = ImmutableMap.builder();
-    ImmutableList.Builder<Path> symlinkPaths = ImmutableList.builder();
-    for (Path flata : compiledResourcePaths) {
-      Path linkPath = Paths.get(String.format("res-%09d.flata", index++));
-      symlinkPaths.add(linkPath);
-      symlinkMap.put(linkPath, flata);
-    }
+    List<Path> compiledResourcePaths =
+        Lists.reverse(compileRules).stream()
+            .map(Aapt2Compile::getSourcePathToOutput)
+            .map(context.getSourcePathResolver()::getRelativePath)
+            .collect(Collectors.toList());
 
-    steps.addAll(
-        MakeCleanDirectoryStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), linkTreePath)));
-    steps.add(
-        new SymlinkTreeStep("aapt", getProjectFilesystem(), linkTreePath, symlinkMap.build()));
+    List<Path> compiledApkPaths =
+        dependencyResourceApks.stream()
+            .map(context.getSourcePathResolver()::getRelativePath)
+            .collect(Collectors.toList());
+    steps.add(new Aapt2LinkArgsStep(getProjectFilesystem(), getArgsPath(), compiledResourcePaths));
 
     steps.add(
         new Aapt2LinkStep(
+            getProjectFilesystem(),
             context.getSourcePathResolver(),
-            getProjectFilesystem().resolve(linkTreePath),
-            symlinkPaths.build(),
-            dependencyResourceApks
-                .stream()
-                .map(context.getSourcePathResolver()::getRelativePath)
-                .collect(Collectors.toList())));
+            getArgsPath(),
+            compiledApkPaths));
     steps.add(ZipScrubberStep.of(getProjectFilesystem().resolve(getResourceApkPath())));
 
     buildableContext.recordArtifact(getFinalManifestPath());
@@ -195,56 +177,58 @@ public class Aapt2Link extends AbstractBuildRule {
     return null;
   }
 
+  private Path getGenDir() {
+    return BuildPaths.getGenDir(getProjectFilesystem(), getBuildTarget());
+  }
+
+  private Path getArgsPath() {
+    return getGenDir().resolve("aapt2-R-args.txt");
+  }
+
   private Path getFinalManifestPath() {
-    return BuildTargetPaths.getGenPath(
-        getProjectFilesystem(), getBuildTarget(), "%s/AndroidManifest.xml");
+    return getGenDir().resolve("AndroidManifest.xml");
   }
 
   private Path getResourceApkPath() {
-    return BuildTargetPaths.getGenPath(
-        getProjectFilesystem(), getBuildTarget(), "%s/resource-apk.ap_");
+    return getGenDir().resolve("resource-apk.ap_");
   }
 
   private Path getProguardConfigPath() {
-    return BuildTargetPaths.getGenPath(
-        getProjectFilesystem(), getBuildTarget(), "%s/proguard-for-resources.pro");
+    return getGenDir().resolve("proguard-for-resources.pro");
   }
 
   private Path getRDotTxtPath() {
-    return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/R.txt");
+    return getGenDir().resolve("R.txt");
   }
 
   /** Directory containing R.java files produced by aapt2 link. */
   private Path getInitialRDotJavaDir() {
-    return BuildTargetPaths.getGenPath(
-        getProjectFilesystem(), getBuildTarget(), "%s/initial-rdotjava");
+    return getGenDir().resolve("initial-rdotjava");
   }
 
   public AaptOutputInfo getAaptOutputInfo() {
-    return AaptOutputInfo.builder()
-        .setPathToRDotTxt(ExplicitBuildTargetSourcePath.of(getBuildTarget(), getRDotTxtPath()))
-        .setPrimaryResourcesApkPath(
-            ExplicitBuildTargetSourcePath.of(getBuildTarget(), getResourceApkPath()))
-        .setAndroidManifestXml(
-            ExplicitBuildTargetSourcePath.of(getBuildTarget(), getFinalManifestPath()))
-        .setAaptGeneratedProguardConfigFile(
-            ExplicitBuildTargetSourcePath.of(getBuildTarget(), getProguardConfigPath()))
-        .build();
+    return ImmutableAaptOutputInfo.of(
+        ExplicitBuildTargetSourcePath.of(getBuildTarget(), getRDotTxtPath()),
+        ExplicitBuildTargetSourcePath.of(getBuildTarget(), getResourceApkPath()),
+        ExplicitBuildTargetSourcePath.of(getBuildTarget(), getFinalManifestPath()),
+        ExplicitBuildTargetSourcePath.of(getBuildTarget(), getProguardConfigPath()));
   }
 
   class Aapt2LinkStep extends ShellStep {
-    private final List<Path> compiledResourcePaths;
+    private final ProjectFilesystem filesystem;
+    private final SourcePathResolverAdapter pathResolver;
+    private final Path argsFile;
     private final List<Path> compiledResourceApkPaths;
-    private final SourcePathResolver pathResolver;
 
     Aapt2LinkStep(
-        SourcePathResolver pathResolver,
-        Path workingDirectory,
-        List<Path> compiledResourcePaths,
+        ProjectFilesystem filesystem,
+        SourcePathResolverAdapter pathResolver,
+        Path argsFile,
         List<Path> compiledResourceApkPaths) {
-      super(workingDirectory);
+      super(filesystem.getRootPath());
+      this.filesystem = filesystem;
       this.pathResolver = pathResolver;
-      this.compiledResourcePaths = compiledResourcePaths;
+      this.argsFile = argsFile;
       this.compiledResourceApkPaths = compiledResourceApkPaths;
     }
 
@@ -256,10 +240,13 @@ public class Aapt2Link extends AbstractBuildRule {
     @Override
     protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
       ImmutableList.Builder<String> builder = ImmutableList.builder();
-      builder.addAll(
-          androidPlatformTarget.getAapt2Executable().get().getCommandPrefix(pathResolver));
+      builder.addAll(aapt2Tool.getCommandPrefix(pathResolver));
 
       builder.add("link");
+      // aapt2 only supports @ for -R or input files, not for all args, so we pass in all "normal"
+      // args here.
+      builder.add("-o", getResourceApkPath().toString());
+      builder.add("--manifest", getFinalManifestPath().toString());
       if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()) {
         builder.add("-v");
       }
@@ -284,25 +271,65 @@ public class Aapt2Link extends AbstractBuildRule {
         builder.add("--proto-format");
       }
 
+      if (noResourceRemoval) {
+        builder.add("--no-resource-removal");
+      }
+
       if (packageIdOffset != 0) {
         builder.add("--package-id", String.format("0x%x", BASE_PACKAGE_ID + packageIdOffset));
       }
 
-      ProjectFilesystem pf = getProjectFilesystem();
-      builder.add("-o", pf.resolve(getResourceApkPath()).toString());
-      builder.add("--proguard", pf.resolve(getProguardConfigPath()).toString());
-      builder.add("--manifest", pf.resolve(getFinalManifestPath()).toString());
-      builder.add("-I", pf.resolve(androidPlatformTarget.getAndroidJar()).toString());
+      if (filterLocales && !locales.isEmpty()) {
+        // "NONE" means "en", update the list of locales
+        ImmutableSet<String> updatedLocales =
+            ImmutableSet.copyOf(
+                Collections2.transform(locales, (String i) -> "NONE".equals(i) ? "en" : i));
+        builder.add("-c", Joiner.on(',').join(updatedLocales));
+      }
+
+      builder.add("--proguard", getProguardConfigPath().toString());
+      builder.add("-I", androidJar.toString());
       for (Path resourceApk : compiledResourceApkPaths) {
-        builder.add("-I", pf.resolve(resourceApk).toString());
+        builder.add("-I", resourceApk.toString());
       }
       // We don't need the R.java output, but aapt2 won't output R.txt
       // unless we also request R.java.
-      builder.add("--java", pf.resolve(getInitialRDotJavaDir()).toString());
-      builder.add("--output-text-symbols", pf.resolve(getRDotTxtPath()).toString());
+      builder.add("--java", getInitialRDotJavaDir().toString());
+      builder.add("--output-text-symbols", getRDotTxtPath().toString());
 
-      compiledResourcePaths.forEach(r -> builder.add("-R", r.toString()));
+      builder.add("-R", "@" + filesystem.resolve(argsFile).toString());
 
+      builder.addAll(additionalAaptParams);
+
+      return builder.build();
+    }
+  }
+
+  /** Generates aapt2 args into a file that can be passed to the tool. */
+  class Aapt2LinkArgsStep extends AbstractExecutionStep {
+    private final ProjectFilesystem filesystem;
+    private final Path argsFilePath;
+    private final List<Path> compiledResourcePaths;
+
+    Aapt2LinkArgsStep(
+        ProjectFilesystem filesystem, Path argsFilePath, List<Path> compiledResourcePaths) {
+      super("write_aapt2_command_line_arguments");
+      this.filesystem = filesystem;
+      this.argsFilePath = argsFilePath;
+      this.compiledResourcePaths = compiledResourcePaths;
+    }
+
+    @Override
+    public StepExecutionResult execute(ExecutionContext context) throws IOException {
+      String args = Joiner.on(' ').join(getParameters());
+      filesystem.writeContentsToPath(args, argsFilePath);
+
+      return StepExecutionResults.SUCCESS;
+    }
+
+    private ImmutableList<String> getParameters() {
+      ImmutableList.Builder<String> builder = ImmutableList.builder();
+      compiledResourcePaths.forEach(r -> builder.add(r.toString()));
       return builder.build();
     }
   }

@@ -1,0 +1,11 @@
+java_library(
+    name = "stream",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    deps = [
+        "//third-party/java/guava:guava",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/util/function:function",
+    ],
+)

@@ -1,0 +1,29 @@
+{
+  "//example:five": [
+    "//example:six-tests"
+  ],
+  "//example:four": [
+    "//example:four-application-tests",
+    "//example:four-tests",
+    "//example:six-tests"
+  ],
+  "//example:one": [
+    "//example:four-application-tests",
+    "//example:four-tests",
+    "//example:one-tests",
+    "//example:six-tests"
+  ],
+  "//example:six": [
+    "//example:six-tests"
+  ],
+  "//example:three": [
+    "//example:four-application-tests",
+    "//example:four-tests",
+    "//example:six-tests"
+  ],
+  "//example:two": [
+    "//example:four-application-tests",
+    "//example:four-tests",
+    "//example:six-tests"
+  ]
+}

@@ -1,9 +1,14 @@
-load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "standard_java_test")
 
 standard_java_test(
     name = "function",
     deps = [
+        ":testutil",
         "//src/com/facebook/buck/core/cell:cell",
+        "//src/com/facebook/buck/core/rules/providers/lib:lib",
+        "//src/com/facebook/buck/core/starlark/knowntypes:knowntypes",
+        "//src/com/facebook/buck/core/starlark/rule:rule",
+        "//src/com/facebook/buck/core/starlark/rule/attr/impl:impl",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/io/filesystem/skylark:skylark",
         "//src/com/facebook/buck/parser:parser",
@@ -27,5 +32,24 @@ standard_java_test(
         "//third-party/java/hamcrest:java-hamcrest",
         "//third-party/java/jsr:jsr305",
         "//third-party/java/junit:junit",
+    ],
+)
+
+java_immutables_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        exclude = ["*Test.java"],
+    ),
+    visibility = ["//test/..."],
+    deps = [
+        "//src/com/facebook/buck/core/starlark/rule/attr/impl:impl",
+        "//src/com/facebook/buck/skylark/function:function",
+        "//third-party/java/jsr:jsr305",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/starlark/rule:rule",
+        "//src/com/facebook/buck/core/starlark/rule/attr:attr",
+        "//third-party/java/bazel:bazel",
     ],
 )

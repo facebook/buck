@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.testrunner;
@@ -33,6 +33,7 @@ import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger; // NOPMD
 import java.util.logging.StreamHandler;
+import junit.framework.TestCase;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.internal.builders.AllDefaultPossibilitiesBuilder;
@@ -113,6 +114,12 @@ public final class JUnitRunner extends BaseRunner {
     if (Modifier.isInterface(klassModifiers) || Modifier.isAbstract(klassModifiers)) {
       return false;
     }
+
+    // Classes that extend junit.framework.TestCase are JUnit3-style test classes.
+    if (TestCase.class.isAssignableFrom(klass)) {
+      return true;
+    }
+
     // Since no RunWith annotation, using standard runner, which requires
     // test classes to have exactly one public constructor (that has no args).
     // Classes may have (non-public) constructors (with or without args).

@@ -3,10 +3,6 @@ java_library(
     srcs = glob(
         ["*.java"],
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/core/plugin:plugin",
-        "//third-party/java/pf4j:pf4j",
-    ],
     visibility = [
         "//src/com/facebook/buck/cli:cli",
         "//src/com/facebook/buck/rules/modern/builders/...",
@@ -15,5 +11,10 @@ java_library(
     deps = [
         "//src/com/facebook/buck/core/util/log:log",
         "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/plugin:plugin",
+        "//third-party/java/pf4j:pf4j",
     ],
 )

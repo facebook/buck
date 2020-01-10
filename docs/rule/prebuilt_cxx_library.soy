@@ -1,18 +1,19 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 {namespace prebuilt_cxx_library}
 
 /***/
@@ -35,12 +36,7 @@ files and provides various flags to control how they are linked and exported.
 
 {param args}
 
-{call buck.arg}
-  {param name: 'name' /}
-  {param desc}
-  The name of the rule.
-  {/param}
-{/call}
+{call buck.name_arg /}
 
 {call buck.arg}
   {param name: 'header_only' /}
@@ -148,37 +144,9 @@ files and provides various flags to control how they are linked and exported.
 
 {call cxx_common.exported_deps_arg /}
 
+{call cxx_common.exported_platform_deps_arg /}
+
 {call cxx_common.supports_merged_linking /}
-
-{call buck.arg}
-  {param name: 'lib_name' /}
-  {{param default: '{name}' /}}
-  {param desc}
-    DEPRECATED: Please use newer <code>*_lib</code> parameters.<br>
-    The name of the library.  If your library file was named <code>libmylib.a</code>, this should
-    be <code>mylib</code>.  This defaults to the <code>name</code> of the rule.
-  {/param}
-{/call}
-
-{call buck.arg}
-  {param name: 'lib_dir' /}
-  {param default: 'lib' /}
-  {param desc}
-    DEPRECATED: Please use newer <code>*_lib</code> parameters.<br>
-    The directory the library <code>lib_name</code> can be found.  This can use the
-    <code>$(platform)</code> macro to specify platform-dependent versions of the library.
-  {/param}
-{/call}
-
-{call buck.arg}
-  {param name: 'include_dirs' /}
-  {param default: 'None' /}
-  {param desc}
-    DEPRECATED: Please use newer <code>header_dirs</code> parameter.<br>
-    A directory that headers can be included from. This can use the <code>$(platform)</code>
-    macro to specify platform-dependent versions of the directory.
-  {/param}
-{/call}
 
 {/param} // close args
 
@@ -237,143 +205,6 @@ prebuilt_cxx_library(
     'mylib.h',
   ],
 )
-</pre>{/literal}
-
-<p>
-  Porting from deprecated API to the newer API.
-</p>
-
-{literal}<pre class="prettyprint lang-py">
-# Porting this rule which uses the deprecated API...
-prebuilt_cxx_library(
-  name = 'mylib',
-  lib_dir = 'lib',
-  lib_name = 'mylib-1.0',
-  include_dirs = [
-    'include',
-  ],
-)
-</pre>
-<pre class="prettyprint lang-sh">
-# ... becomes this using the new API.
-prebuilt_cxx_library(
-  name = 'mylib',
-  soname = 'libmylib-1.0.so',
-  static_lib = 'lib/libmylib-1.0.a',
-  shared_lib = 'lib/libmylib-1.0.so',
-  header_dirs = [
-    'include',
-  ],
-)
-</pre>{/literal}
-
-<p>
-  Porting from deprecated API to the newer API when using the <code>$(platform)</code> macro.
-</p>
-
-{literal}<pre class="prettyprint lang-py">
-# Porting this rule which uses the deprecated API...
-prebuilt_cxx_library(
-  name = 'mylib',
-  lib_dir = 'lib/$(platform)',
-  lib_name = 'mylib-1.0',
-  include_dirs = [
-    'include',
-  ],
-)
-</pre>
-<pre class="prettyprint lang-sh">
-# ... becomes this using the new API.
-prebuilt_cxx_library(
-  name = 'mylib',
-  soname = 'libmylib.so',
-  platform_static_lib = [
-    ('android-arm', 'lib/android-arm/libmylib-1.0.a'),
-    ('android-x86', 'lib/android-x86/libmylib-1.0.a'),
-    ('iphonesimulator-x86_64', 'iphonesimulator-x86_64/libmylib.a'),
-  ],
-  platform_shared_lib = [
-    ('android-arm', 'lib/android-arm/libmylib-1.0.so'),
-    ('android-x86', 'lib/android-x86/libmylib-1.0.so'),
-    ('iphonesimulator-x86_64', 'iphonesimulator-x86_64/libmylib.so'),
-  ],
-  header_dirs = [
-    'include',
-  ],
-)
-</pre>{/literal}
-
-<p>
-  While porting from the deprecated API to the newer API, it may also be useful
-  to add helper macros which re-implement the old API using the new API:
-</p>
-
-{literal}<pre class="prettyprint lang-py">
-
-import os
-
-
-__all__ = ['deprecated_prebuilt_cxx_library']
-
-
-def _get_lib(name, lib_dir, lib_name, ext):
-    """
-    Get a base-path relative library path with the given extension.
-    """
-
-    parts = []
-    parts.append(lib_dir)
-    parts.append('lib{}{}'.format(lib_name or name, ext))
-    return os.path.join(*parts)
-
-
-def _find_lib(name, lib_dir, lib_name, ext):
-    """
-    Return the base-path relative library path with the given extension if it
-    exists, otherwise return `None`.
-    """
-
-    lib = _get_lib(name, lib_dir, lib_name, ext)
-    lib_path = os.path.join(get_base_path(), lib)
-    add_build_file_dep('//' + lib_path)
-
-  ` # NOTE: While necessary to re-implement the deprecated API, I/O in BUCK
-    # files is a *bad* idea and support for this may very likely be removed.
-    if os.path.exists(lib_path):
-        return lib
-
-
-def deprecated_prebuilt_cxx_library(
-        name,
-        lib_dir='lib',
-        lib_name=None,
-        include_dirs=None,
-        header_only=False,
-        **kwargs):
-
-    static_lib = None
-    static_pic_lib = None
-    shared_lib = None
-    preferred_linkage = None
-
-    if not header_only:
-        static_lib = _find_lib(name, lib_dir, lib_name, '.a')
-        static_pic_lib = _find_lib(name, lib_dir, lib_name, '_pic.a')
-        shared_lib = _find_lib(name, lib_dir, lib_name, '.so')
-
-        if static_lib is None and static_pic_lib is None:
-            preferred_linkage = 'shared'
-
-    prebuilt_cxx_library(
-        name,
-        static_lib=static_lib,
-        static_pic_lib=static_pic_lib,
-        shared_lib=shared_lib,
-        preferred_linkage=preferred_linkage,
-        header_only=header_only,
-        header_dirs=include_dirs,
-        **kwargs
-    )
 </pre>{/literal}
 
 {/param}

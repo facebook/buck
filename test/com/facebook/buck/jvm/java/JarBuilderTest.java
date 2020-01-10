@@ -1,27 +1,30 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.util.zip.CustomZipEntry;
 import com.facebook.buck.util.zip.JarBuilder;
 import com.facebook.buck.util.zip.JarEntryContainer;
 import com.facebook.buck.util.zip.JarEntrySupplier;
+import com.facebook.buck.util.zip.ZipConstants;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.CharStreams;
@@ -30,14 +33,20 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -233,6 +242,48 @@ public class JarBuilderTest {
             jarFile.stream().map(JarEntry::getName).collect(Collectors.toList()));
       }
     }
+  }
+
+  @Test
+  public void testDoesNotLeakJarFileHandles() throws Exception {
+    File toTest = temporaryFolder.newFile();
+    File modification = temporaryFolder.newFile();
+    try (TestJarEntryContainer container1 = new TestJarEntryContainer("Container1");
+        TestJarEntryContainer container2 = new TestJarEntryContainer("Container2")) {
+      new JarBuilder()
+          .addEntryContainer(container1.addEntry("Before", "Before"))
+          .setShouldHashEntries(true)
+          .createJarFile(toTest.toPath());
+      new JarBuilder()
+          .addEntryContainer(container2.addEntry("After", "After"))
+          .setShouldHashEntries(true)
+          .createJarFile(modification.toPath());
+    }
+
+    FileTime hardcodedTime = FileTime.fromMillis(ZipConstants.getFakeTime());
+    Files.setLastModifiedTime(toTest.toPath(), hardcodedTime);
+    Files.setLastModifiedTime(modification.toPath(), hardcodedTime);
+
+    // Use JarBuilder with toTest
+    File outputFile = temporaryFolder.newFile();
+    new JarBuilder()
+        .setEntriesToJar(ImmutableList.of(toTest.toPath()))
+        .setShouldHashEntries(true)
+        .setShouldMergeManifests(true)
+        .createJarFile(outputFile.toPath());
+    // assert the jar was created
+    assertTrue(Files.exists(outputFile.toPath()));
+
+    // Now modify toTest make sure we don't get a cached result when we open it for a second time
+    Files.move(modification.toPath(), toTest.toPath(), StandardCopyOption.REPLACE_EXISTING);
+    Files.setLastModifiedTime(toTest.toPath(), hardcodedTime);
+
+    Map<String, Attributes> entries = new JarFile(toTest).getManifest().getEntries();
+    // If we leaked the file handle for toTest from within JarBuilder then we will see
+    // stale data here (or a crash) and the manifest
+    // will incorrectly return "Before" instead of "After"
+    // See item (3) of https://bugs.openjdk.java.net/browse/JDK-8142508 for some info
+    assertThat(entries.keySet(), Matchers.contains("After"));
   }
 
   private static class TestJarEntryContainer implements JarEntryContainer {

@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -21,16 +21,15 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
-import com.facebook.buck.jvm.java.AnnotationProcessingParams;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.JavacPluginParams;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.util.DependencyMode;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -74,7 +73,7 @@ public class AndroidLibraryGraphEnhancer {
     // Override javacoptions because DummyRDotJava doesn't require annotation processing.
     this.javacOptions =
         JavacOptions.builder(javacOptions)
-            .setAnnotationProcessingParams(AnnotationProcessingParams.EMPTY)
+            .setJavaAnnotationProcessorParams(JavacPluginParams.EMPTY)
             .build();
     this.resourceDependencyMode = resourceDependencyMode;
     this.forceFinalResourceIds = forceFinalResourceIds;
@@ -125,7 +124,6 @@ public class AndroidLibraryGraphEnhancer {
         graphBuilder.computeIfAbsent(
             dummyRDotJavaBuildTarget,
             ignored -> {
-              SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
               JavacOptions filteredOptions =
                   javacOptions.withExtraArguments(Collections.emptyList());
 
@@ -135,7 +133,7 @@ public class AndroidLibraryGraphEnhancer {
               return new DummyRDotJava(
                   dummyRDotJavaBuildTarget,
                   projectFilesystem,
-                  ruleFinder,
+                  graphBuilder,
                   androidResourceDeps,
                   compileToJarStepFactory,
                   forceFinalResourceIds,

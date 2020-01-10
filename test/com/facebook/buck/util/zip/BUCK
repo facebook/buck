@@ -12,6 +12,7 @@ java_test(
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/io/filesystem/impl:impl",
+        "//src/com/facebook/buck/jvm/java/version:version",
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util/unarchive:unarchive",
         "//src/com/facebook/buck/util/zip:zip",

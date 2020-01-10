@@ -1,26 +1,27 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.skylark.parser;
 
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.impl.DescriptionCache;
-import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
@@ -46,9 +47,9 @@ import java.util.stream.Collectors;
 public class RuleFunctionFactory {
 
   private static final ImmutableSet<String> IMPLICIT_ATTRIBUTES =
-      ImmutableSet.of("visibility", "within_view");
+      ImmutableSet.of(VisibilityAttributes.VISIBILITY, VisibilityAttributes.WITHIN_VIEW);
   // URL prefix for all build rule documentation pages
-  private static final String BUCK_RULE_DOC_URL_PREFIX = "https://buckbuild.com/rule/";
+  private static final String BUCK_RULE_DOC_URL_PREFIX = "https://buck.build/rule/";
 
   private final TypeCoercerFactory typeCoercerFactory;
 
@@ -86,8 +87,10 @@ public class RuleFunctionFactory {
                         .getPathString())
                 .put("buck.type", name);
         ImmutableMap<String, ParamInfo> allParamInfo =
-            CoercedTypeCache.INSTANCE.getAllParamInfo(
-                typeCoercerFactory, ruleClass.getConstructorArgType());
+            typeCoercerFactory
+                .getConstructorArgDescriptor(
+                    (Class<? extends ConstructorArg>) ruleClass.getConstructorArgType())
+                .getParamInfos();
         populateAttributes(kwargs, builder, allParamInfo);
         throwOnMissingRequiredAttribute(kwargs, allParamInfo, getName(), ast);
         parseContext.recordRule(builder.build(), ast);
@@ -112,9 +115,7 @@ public class RuleFunctionFactory {
       FuncallExpression ast)
       throws EvalException {
     ImmutableList<ParamInfo> missingAttributes =
-        allParamInfo
-            .values()
-            .stream()
+        allParamInfo.values().stream()
             .filter(param -> !param.isOptional() && !kwargs.containsKey(param.getPythonName()))
             .collect(ImmutableList.toImmutableList());
     if (!missingAttributes.isEmpty()) {
@@ -122,8 +123,7 @@ public class RuleFunctionFactory {
           ast.getLocation(),
           name
               + " requires "
-              + missingAttributes
-                  .stream()
+              + missingAttributes.stream()
                   .map(ParamInfo::getPythonName)
                   .collect(Collectors.joining(" and "))
               + " but they are not provided.",

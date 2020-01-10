@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.parser;
@@ -20,8 +20,15 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
+import com.facebook.buck.core.model.CellRelativePath;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.parser.spec.BuildFileSpec;
+import com.facebook.buck.parser.spec.TargetNodePredicateSpec;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.caliper.AfterExperiment;
 import com.google.caliper.BeforeExperiment;
@@ -34,7 +41,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import org.junit.After;
 import org.junit.Before;
@@ -53,9 +60,11 @@ public class ParserBenchmark {
   private ProjectFilesystem filesystem;
   private Cell cell;
   private ListeningExecutorService executorService;
+  private DepsAwareExecutor<? super ComputeResult, ?> executor;
 
   @Before
   public void setUpTest() throws Exception {
+    executor = DefaultDepsAwareExecutor.of(4);
     targetCount = 10;
     setUpBenchmark();
   }
@@ -103,13 +112,14 @@ public class ParserBenchmark {
 
     cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
     executorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(threadCount));
-    parser = TestParserFactory.create(config);
+    parser = TestParserFactory.create(executor, cell);
   }
 
   @After
   @AfterExperiment
   public void cleanup() {
     tempDir.after();
+    executor.close();
     executorService.shutdown();
   }
 
@@ -120,12 +130,14 @@ public class ParserBenchmark {
 
   @Benchmark
   public void parseMultipleTargets() throws Exception {
-    parser.buildTargetGraphWithConfigurationTargets(
+    parser.buildTargetGraphWithTopLevelConfigurationTargets(
         ParsingContext.builder(cell, executorService)
             .setSpeculativeParsing(SpeculativeParsing.ENABLED)
             .build(),
         ImmutableList.of(
             TargetNodePredicateSpec.of(
-                BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))));
+                BuildFileSpec.fromRecursivePath(
+                    CellRelativePath.of(cell.getCanonicalName(), ForwardRelativePath.of(""))))),
+        Optional.empty());
   }
 }

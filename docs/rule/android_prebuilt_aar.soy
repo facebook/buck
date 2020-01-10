@@ -1,18 +1,19 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 {namespace android_prebuilt_aar}
 
 /***/
@@ -42,12 +43,7 @@ official Android documentation</a> for details about the <code>.aar</code> forma
 
 {param args}
 
-{call buck.arg}
-  {param name: 'name' /}
-  {param desc}
-  The name of the rule.
-  {/param}
-{/call}
+{call buck.name_arg /}
 
 {call buck.arg}
   {param name: 'aar' /}
@@ -74,6 +70,20 @@ official Android documentation</a> for details about the <code>.aar</code> forma
   {param desc}
   URL to the Javadoc for the <code>.class</code> files in the
   {sp}<code>aar</code>.
+  {/param}
+{/call}
+
+
+{call buck.arg}
+  {param name: 'use_system_library_loader' /}
+  {param default : 'False' /}
+  {param desc}
+  If this <code>.aar</code> file contains native prebuilt <code>.so</code> libraries and the
+  Java code uses these libraries via a call to <code>System.loadLibrary()</code>, then many
+  optimizations&mdash;such as exopackage, compression, or asset packaging&mdash;may not be compatible with these prebuilt libs.
+  Setting this parameter to <code>True</code> causes all of these optimizations to skip the prebuilt <code>.so</code>
+  files originating from this <code>.aar</code> file. The <code>.so</code> files will always be packaged directly into
+  the main <code>.apk</code>.
   {/param}
 {/call}
 

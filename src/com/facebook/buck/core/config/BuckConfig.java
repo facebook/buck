@@ -1,26 +1,27 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.config;
 
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -29,7 +30,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.network.hostname.HostnameFetching;
 import com.facebook.infer.annotation.PropagatesNullable;
 import com.google.common.base.Objects;
@@ -62,7 +62,7 @@ public class BuckConfig {
   private final ConfigViewCache<BuckConfig> viewCache =
       new ConfigViewCache<>(this, BuckConfig.class);
 
-  private final Function<String, UnconfiguredBuildTarget> buildTargetParser;
+  private final Function<String, UnconfiguredBuildTargetView> buildTargetParser;
 
   private final int hashCode;
 
@@ -72,7 +72,7 @@ public class BuckConfig {
       Architecture architecture,
       Platform platform,
       ImmutableMap<String, String> environment,
-      Function<String, UnconfiguredBuildTarget> buildTargetParser) {
+      Function<String, UnconfiguredBuildTargetView> buildTargetParser) {
     this.config = config;
     this.projectFilesystem = projectFilesystem;
     this.architecture = architecture;
@@ -86,7 +86,7 @@ public class BuckConfig {
 
   /** Returns a clone of the current config with a the argument CellPathResolver. */
   public BuckConfig withBuildTargetParser(
-      Function<String, UnconfiguredBuildTarget> buildTargetParser) {
+      Function<String, UnconfiguredBuildTargetView> buildTargetParser) {
     return new BuckConfig(
         config, projectFilesystem, architecture, platform, environment, buildTargetParser);
   }
@@ -151,6 +151,11 @@ public class BuckConfig {
     return Optional.of(paths.collect(ImmutableList.toImmutableList()));
   }
 
+  public UnconfiguredBuildTargetView getUnconfiguredBuildTargetForFullyQualifiedTarget(
+      String target) {
+    return buildTargetParser.apply(target);
+  }
+
   public BuildTarget getBuildTargetForFullyQualifiedTarget(
       String target, TargetConfiguration targetConfiguration) {
     return buildTargetParser.apply(target).configure(targetConfiguration);
@@ -162,8 +167,7 @@ public class BuckConfig {
     if (buildTargets.isEmpty()) {
       return ImmutableList.of();
     }
-    return buildTargets
-        .stream()
+    return buildTargets.stream()
         .map(buildTarget -> getBuildTargetForFullyQualifiedTarget(buildTarget, targetConfiguration))
         .collect(ImmutableList.toImmutableList());
   }
@@ -188,12 +192,24 @@ public class BuckConfig {
    */
   public Optional<BuildTarget> getMaybeBuildTarget(
       String section, String field, TargetConfiguration targetConfiguration) {
+    return getMaybeUnconfiguredBuildTarget(section, field)
+        .map(target -> target.configure(targetConfiguration));
+  }
+
+  /**
+   * @return the parsed UnconfiguredBuildTargetView in the given section and field, if set and a
+   *     valid build target.
+   *     <p>This is useful if you use getTool to get the target, if any, but allow filesystem
+   *     references.
+   */
+  public Optional<UnconfiguredBuildTargetView> getMaybeUnconfiguredBuildTarget(
+      String section, String field) {
     Optional<String> value = getValue(section, field);
     if (!value.isPresent()) {
       return Optional.empty();
     }
     try {
-      return Optional.of(getBuildTargetForFullyQualifiedTarget(value.get(), targetConfiguration));
+      return Optional.of(getUnconfiguredBuildTargetForFullyQualifiedTarget(value.get()));
     } catch (BuildTargetParseException e) {
       return Optional.empty();
     }
@@ -335,9 +351,7 @@ public class BuckConfig {
   /** Returns the probabilities for each group in an experiment. */
   public <T extends Enum<T>> Map<T, Double> getExperimentGroups(
       String section, String field, Class<T> enumClass) {
-    return getMap(section, field)
-        .entrySet()
-        .stream()
+    return getMap(section, field).entrySet().stream()
         .collect(
             ImmutableMap.toImmutableMap(
                 x -> Enum.valueOf(enumClass, x.getKey().toUpperCase(Locale.ROOT)),

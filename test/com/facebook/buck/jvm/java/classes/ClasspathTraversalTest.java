@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java.classes;
@@ -79,7 +79,7 @@ public class ClasspathTraversalTest {
   }
 
   @Test
-  public void testDirectoryAndFile() throws InterruptedException, IOException {
+  public void testDirectoryAndFile() throws IOException {
     File notADirectory = tempDir.newFile("not_a_directory.txt");
     Files.write("not_a_directory.txt", notADirectory, Charsets.UTF_8);
     File yesADir = tempDir.newFolder("is_a_directory");
@@ -95,7 +95,7 @@ public class ClasspathTraversalTest {
   }
 
   @Test
-  public void testZip() throws InterruptedException, IOException {
+  public void testZip() throws IOException {
     String[] files = {"test/foo.txt", "bar.txt", "test/baz.txt"};
     File file = tempDir.newFile("test.zip");
     try (ZipOutputStream zipOut =

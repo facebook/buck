@@ -1,0 +1,5 @@
+load("//subdir:foo.bzl", "macro")
+
+macro(
+    name = "target1",
+)

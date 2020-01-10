@@ -1,25 +1,23 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.core.build.action.BuildEngineAction;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.rulekey.RuleKeyAppendable;
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
-import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.util.log.Logger;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.LoadingCache;
@@ -33,13 +31,13 @@ public final class AlterRuleKeys {
   private static final ConcurrentHashMap<Class<?>, String> pseudoNameCache =
       new ConcurrentHashMap<>();
 
-  public static void amendKey(RuleKeyObjectSink sink, BuildRule rule) {
-    amendKey(sink, (Object) rule);
+  public static void amendKey(AbstractRuleKeyBuilder<?> sink, BuildEngineAction action) {
+    amendKey(sink, (Object) action);
   }
 
-  public static void amendKey(RuleKeyObjectSink sink, AddsToRuleKey appendable) {
+  public static void amendKey(AbstractRuleKeyBuilder<?> sink, AddsToRuleKey appendable) {
     if (appendable instanceof RuleKeyAppendable) {
-      ((RuleKeyAppendable) appendable).appendToRuleKey(sink);
+      ((RuleKeyAppendable) appendable).appendToRuleKey(sink::setReflectivelyPathKey);
     }
 
     // Honor @AddToRuleKey on RuleKeyAppendable's in addition to their custom code. Having this be a
@@ -49,7 +47,7 @@ public final class AlterRuleKeys {
     amendKey(sink, (Object) appendable);
   }
 
-  private static void amendKey(RuleKeyObjectSink sink, Object appendable) {
+  private static void amendKey(AbstractRuleKeyBuilder<?> sink, Object appendable) {
     Class<?> clazz = appendable.getClass();
     String className = clazz.getName();
     if (clazz.isAnonymousClass() || clazz.isSynthetic()) {

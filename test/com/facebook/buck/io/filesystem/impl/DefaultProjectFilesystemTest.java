@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.io.filesystem.impl;
@@ -24,6 +24,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.io.file.MorePosixFilePermissions;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.CopySourceMode;
@@ -518,7 +519,7 @@ public class DefaultProjectFilesystemTest {
         filesystem, ImmutableList.of(Paths.get("foo/bar.txt"), Paths.get("foo/baz.txt")), output);
 
     ZipInspector zipInspector = new ZipInspector(output);
-    assertEquals(ImmutableSet.of("foo/bar.txt", "foo/baz.txt"), zipInspector.getZipFileEntries());
+    assertEquals(ImmutableList.of("foo/bar.txt", "foo/baz.txt"), zipInspector.getZipFileEntries());
   }
 
   @Test
@@ -537,7 +538,7 @@ public class DefaultProjectFilesystemTest {
 
     ZipInspector zipInspector = new ZipInspector(output);
     assertEquals(
-        ImmutableSet.of("foo/bar.txt", "foo/baz.txt", "empty/"), zipInspector.getZipFileEntries());
+        ImmutableList.of("foo/bar.txt", "foo/baz.txt", "empty/"), zipInspector.getZipFileEntries());
   }
 
   @Test
@@ -664,14 +665,17 @@ public class DefaultProjectFilesystemTest {
   }
 
   @Test
-  public void twoProjectFilesystemsWithSameIgnoreGlobsShouldBeEqual() throws InterruptedException {
+  public void twoProjectFilesystemsWithSameIgnoreGlobsShouldBeEqual() {
     Config config = ConfigBuilder.createFromText("[project]", "ignore = **/*.orig");
     Path rootPath = tmp.getRoot();
     ProjectFilesystemFactory projectFilesystemFactory = new DefaultProjectFilesystemFactory();
     assertThat(
         "Two ProjectFilesystems with same glob in ignore should be equal",
-        projectFilesystemFactory.createProjectFilesystem(rootPath, config),
-        equalTo(projectFilesystemFactory.createProjectFilesystem(rootPath, config)));
+        projectFilesystemFactory.createProjectFilesystem(
+            CanonicalCellName.rootCell(), rootPath, config),
+        equalTo(
+            projectFilesystemFactory.createProjectFilesystem(
+                CanonicalCellName.rootCell(), rootPath, config)));
   }
 
   @Test
@@ -680,7 +684,8 @@ public class DefaultProjectFilesystemTest {
     Path root = vfs.getPath("/root");
     Files.createDirectories(root);
     ProjectFilesystem projectFilesystem =
-        new DefaultProjectFilesystemFactory().createProjectFilesystem(root);
+        new DefaultProjectFilesystemFactory()
+            .createProjectFilesystem(CanonicalCellName.rootCell(), root);
     assertEquals(vfs, projectFilesystem.getPath("bar").getFileSystem());
     assertEquals(vfs.getPath("bar"), projectFilesystem.getPath("bar"));
   }
@@ -756,5 +761,14 @@ public class DefaultProjectFilesystemTest {
 
     assertFalse(Files.exists(srcDir.resolve("subdir1")));
     assertFalse(Files.exists(srcDir.resolve("file1")));
+  }
+
+  @Test
+  public void testComputeShaExceptionMsg() throws IOException {
+    expected.expectMessage("Error computing Sha1");
+    expected.expectMessage("afakefile.txt");
+    expected.expect(IOException.class);
+
+    filesystem.computeSha1(Paths.get("afakefile.txt"));
   }
 }

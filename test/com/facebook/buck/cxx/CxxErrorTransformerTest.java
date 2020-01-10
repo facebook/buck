@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -21,11 +21,9 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.oneOf;
 
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.util.Ansi;
@@ -33,6 +31,7 @@ import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -48,13 +47,12 @@ public class CxxErrorTransformerTest {
   public static Collection<Object[]> data() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
 
     Path original = filesystem.resolve("buck-out/foo#bar/world.h");
     Path replacement = filesystem.resolve("hello/world.h");
 
-    HeaderPathNormalizer.Builder normalizerBuilder = new HeaderPathNormalizer.Builder(pathResolver);
+    HeaderPathNormalizer.Builder normalizerBuilder =
+        new HeaderPathNormalizer.Builder(ruleResolver.getSourcePathResolver());
     normalizerBuilder.addHeader(FakeSourcePath.of(replacement.toString()), original);
     HeaderPathNormalizer normalizer = normalizerBuilder.build();
 
@@ -87,48 +85,60 @@ public class CxxErrorTransformerTest {
   @Parameterized.Parameter(value = 3)
   public Path originalPath;
 
+  private SourcePathResolverAdapter pathResolver;
+
+  @Before
+  public void setUp() {
+    pathResolver = new TestActionGraphBuilder().getSourcePathResolver();
+  }
+
   @Test
   public void shouldProperlyTransformErrorLinesInPrimaryIncludeTrace() {
     assertThat(
-        transformer.transformLine(String.format("In file included from %s:", originalPath)),
+        transformer.transformLine(
+            pathResolver, String.format("In file included from %s:", originalPath)),
         equalTo(String.format("In file included from %s:", expectedPath)));
     assertThat(
-        transformer.transformLine(String.format("In file included from %s:3:2:", originalPath)),
+        transformer.transformLine(
+            pathResolver, String.format("In file included from %s:3:2:", originalPath)),
         equalTo(String.format("In file included from %s:3:2:", expectedPath)));
     assertThat(
-        transformer.transformLine(String.format("In file included from %s,", originalPath)),
+        transformer.transformLine(
+            pathResolver, String.format("In file included from %s,", originalPath)),
         equalTo(String.format("In file included from %s,", expectedPath)));
     assertThat(
-        transformer.transformLine(String.format("In file included from %s:7,", originalPath)),
+        transformer.transformLine(
+            pathResolver, String.format("In file included from %s:7,", originalPath)),
         equalTo(String.format("In file included from %s:7,", expectedPath)));
   }
 
   @Test
   public void shouldProperlyTransformLinesInSubsequentIncludeTrace() {
     assertThat(
-        transformer.transformLine(String.format("   from %s:", originalPath)),
+        transformer.transformLine(pathResolver, String.format("   from %s:", originalPath)),
         equalTo(String.format("   from %s:", expectedPath)));
     assertThat(
-        transformer.transformLine(String.format("   from %s:3:2:", originalPath)),
+        transformer.transformLine(pathResolver, String.format("   from %s:3:2:", originalPath)),
         equalTo(String.format("   from %s:3:2:", expectedPath)));
     assertThat(
-        transformer.transformLine(String.format("   from %s,", originalPath)),
+        transformer.transformLine(pathResolver, String.format("   from %s,", originalPath)),
         equalTo(String.format("   from %s,", expectedPath)));
     assertThat(
-        transformer.transformLine(String.format("   from %s:7,", originalPath)),
+        transformer.transformLine(pathResolver, String.format("   from %s:7,", originalPath)),
         equalTo(String.format("   from %s:7,", expectedPath)));
   }
 
   @Test
   public void shouldProperlyTransformLinesInErrorMessages() {
     assertThat(
-        transformer.transformLine(String.format("%s: something bad", originalPath)),
+        transformer.transformLine(pathResolver, String.format("%s: something bad", originalPath)),
         equalTo(String.format("%s: something bad", expectedPath)));
     assertThat(
-        transformer.transformLine(String.format("%s:4: something bad", originalPath)),
+        transformer.transformLine(pathResolver, String.format("%s:4: something bad", originalPath)),
         equalTo(String.format("%s:4: something bad", expectedPath)));
     assertThat(
-        transformer.transformLine(String.format("%s:4:2: something bad", originalPath)),
+        transformer.transformLine(
+            pathResolver, String.format("%s:4:2: something bad", originalPath)),
         equalTo(String.format("%s:4:2: something bad", expectedPath)));
   }
 
@@ -137,18 +147,21 @@ public class CxxErrorTransformerTest {
     Ansi ansi = new Ansi(/* isAnsiTerminal */ true);
     assertThat(
         transformer.transformLine(
-            String.format("%s something bad", ansi.asErrorText(originalPath + ":"))),
+            pathResolver, String.format("%s something bad", ansi.asErrorText(originalPath + ":"))),
         equalTo(String.format("%s something bad", ansi.asErrorText(expectedPath + ":"))));
     assertThat(
         transformer.transformLine(
+            pathResolver,
             String.format("%s something bad", ansi.asErrorText(originalPath + ":4:"))),
         equalTo(String.format("%s something bad", ansi.asErrorText(expectedPath + ":4:"))));
     assertThat(
         transformer.transformLine(
+            pathResolver,
             String.format("%s something bad", ansi.asErrorText(originalPath + ":4:2:"))),
         equalTo(String.format("%s something bad", ansi.asErrorText(expectedPath + ":4:2:"))));
     assertThat(
         transformer.transformLine(
+            pathResolver,
             String.format(
                 "In file included from \u001b[01m\u001b[K%s:7\u001b[m\u001b[K,", originalPath)),
         equalTo(
@@ -156,21 +169,23 @@ public class CxxErrorTransformerTest {
                 "In file included from \u001b[01m\u001b[K%s:7\u001b[m\u001b[K,", expectedPath)));
     assertThat(
         transformer.transformLine(
+            pathResolver,
             String.format("    from \u001b[01m\u001b[K%s:7\u001b[m\u001b[K,", originalPath)),
         equalTo(String.format("    from \u001b[01m\u001b[K%s:7\u001b[m\u001b[K,", expectedPath)));
     assertThat(
         transformer.transformLine(
-            String.format("\u001b[01m\u001b[K%s:7\u001b[m\u001b[K,", originalPath)),
+            pathResolver, String.format("\u001b[01m\u001b[K%s:7\u001b[m\u001b[K,", originalPath)),
         equalTo(String.format("\u001b[01m\u001b[K%s:7\u001b[m\u001b[K,", expectedPath)));
     assertThat(
-        transformer.transformLine(String.format("\u001b[01m%s:7\u001b[m,", originalPath)),
+        transformer.transformLine(
+            pathResolver, String.format("\u001b[01m%s:7\u001b[m,", originalPath)),
         equalTo(String.format("\u001b[01m%s:7\u001b[m,", expectedPath)));
   }
 
   @Test
   public void shouldNotTransformLineNotInReplacementMap() {
     assertThat(
-        transformer.transformLine("In file included from test.h:"),
+        transformer.transformLine(pathResolver, "In file included from test.h:"),
         oneOf(
             // relative/absolute should still resolve, but otherwise the path should be unchanged.
             "In file included from test.h:",
@@ -180,6 +195,7 @@ public class CxxErrorTransformerTest {
 
   @Test
   public void shouldNotTransformLineWithoutLocations() {
-    assertThat(transformer.transformLine(" error message!"), equalTo(" error message!"));
+    assertThat(
+        transformer.transformLine(pathResolver, " error message!"), equalTo(" error message!"));
   }
 }

@@ -1,28 +1,25 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.intellij.ideabuck.format;
 
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckArgument;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckList;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckListElements;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPrimary;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPrimaryWithSuffix;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPropertyLvalue;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckSingleExpression;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckExpression;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckExpressionListOrComprehension;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckListMaker;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckVisitor;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Ordering;
@@ -31,6 +28,7 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.util.PsiTreeUtil;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -108,25 +106,28 @@ public class DependenciesOptimizer {
 
     private class PropertyVisitor extends BuckVisitor {
       @Override
-      public void visitArgument(@NotNull BuckArgument property) {
-        BuckPropertyLvalue lValue = property.getPropertyLvalue();
+      public void visitArgument(@NotNull BuckArgument argument) {
+        PsiElement lValue = argument.getIdentifier();
         if (lValue == null
             || (!DEPENDENCIES_KEYWORD.equals(lValue.getText())
                 && !PROVIDED_DEPENDENCIES_KEYWORD.equals(lValue.getText())
                 && !EXPORTED_DEPENDENCIES_KEYWORD.equals(lValue.getText()))) {
           return;
         }
-        Optional.of(property.getSingleExpression())
-            .map(BuckSingleExpression::getPrimaryWithSuffix)
-            .map(BuckPrimaryWithSuffix::getPrimary)
-            .map(BuckPrimary::getList)
-            .map(BuckList::getListElements)
+        Optional.of(argument.getExpression())
+            .map(e -> PsiTreeUtil.findChildrenOfType(e, BuckListMaker.class))
+            .filter(collection -> collection.size() == 1)
+            .map(collection -> collection.iterator().next())
+            .map(BuckListMaker::getExpressionListOrComprehension)
             .ifPresent(OptimizerInstance.this::uniqueSort);
       }
     }
 
-    private void uniqueSort(BuckListElements buckListElements) {
-      List<BuckSingleExpression> expressionList = buckListElements.getSingleExpressionList();
+    private void uniqueSort(BuckExpressionListOrComprehension expressionListOrComprehension) {
+      List<BuckExpression> expressionList = expressionListOrComprehension.getExpressionList();
+      if (expressionList.isEmpty()) {
+        return; // nothing to sort
+      }
       TreeMap<String, PsiElement> treeMap =
           new TreeMap<>(DependenciesOptimizer::compareDependencyStrings);
       boolean isSorted = true;
@@ -150,8 +151,9 @@ public class DependenciesOptimizer {
         index++;
       }
       if (index < expressionList.size() && index > 0) {
-        buckListElements.deleteChildRange(
-            expressionList.get(index).getPrevSibling(), buckListElements.getLastChild());
+        expressionListOrComprehension.deleteChildRange(
+            expressionList.get(index).getPrevSibling(),
+            expressionListOrComprehension.getLastChild());
       }
     }
   }

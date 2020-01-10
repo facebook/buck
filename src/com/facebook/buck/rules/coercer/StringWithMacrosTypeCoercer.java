@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.coercer;
@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.macros.MacroFinderAutomaton;
 import com.facebook.buck.core.macros.MacroMatchResult;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroContainer;
@@ -31,11 +32,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Streams;
-import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 
 public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros> {
 
@@ -83,18 +84,35 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
       CellPathResolver cellRoots, StringWithMacros stringWithMacros, Traversal traversal) {
     for (MacroContainer macroContainer : stringWithMacros.getMacros()) {
       MacroTypeCoercer<? extends Macro> coercer =
-          Objects.requireNonNull(coercers.get(macroContainer.getMacro().getClass()));
+          Objects.requireNonNull(coercers.get(macroContainer.getMacro().getMacroClass()));
       traverse(cellRoots, coercer, macroContainer.getMacro(), traversal);
     }
+  }
+
+  // Most strings with macros do not contain any macros.
+  // This method is optimistic fast-path optimization of string with macro parsing.
+  @Nullable
+  private StringWithMacros tryParseFast(String blob) {
+    if (blob.indexOf('$') >= 0) {
+      return null;
+    }
+
+    return StringWithMacros.ofConstantString(blob);
   }
 
   private StringWithMacros parse(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       String blob)
       throws CoerceFailedException {
+
+    StringWithMacros fast = tryParseFast(blob);
+    if (fast != null) {
+      return fast;
+    }
 
     ImmutableList.Builder<Either<String, MacroContainer>> parts = ImmutableList.builder();
 
@@ -145,7 +163,12 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
         try {
           macro =
               coercer.coerce(
-                  cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, args);
+                  cellRoots,
+                  filesystem,
+                  pathRelativeToProjectRoot,
+                  targetConfiguration,
+                  hostConfiguration,
+                  args);
         } catch (CoerceFailedException e) {
           throw new CoerceFailedException(
               String.format(
@@ -173,15 +196,21 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
   public StringWithMacros coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     if (!(object instanceof String)) {
       throw CoerceFailedException.simple(object, getOutputClass());
     }
     return parse(
-        cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, (String) object);
+        cellRoots,
+        filesystem,
+        pathRelativeToProjectRoot,
+        targetConfiguration,
+        hostConfiguration,
+        (String) object);
   }
 
   @Override

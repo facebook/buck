@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -21,8 +21,11 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JacocoConstants;
 import com.facebook.buck.jvm.java.runner.FileClassPathRunner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.nio.file.Path;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -40,6 +43,8 @@ abstract class AbstractAndroidInstrumentationTestJVMArgs {
   abstract String getTestPackage();
 
   abstract String getTestRunner();
+
+  abstract String getTargetPackage();
 
   abstract String getDdmlibJarPath();
 
@@ -78,6 +83,8 @@ abstract class AbstractAndroidInstrumentationTestJVMArgs {
   /** @return The filesystem path to the compiled Buck test runner classes. */
   abstract Path getTestRunnerClasspath();
 
+  abstract ImmutableMap<String, String> getEnvironmentOverrides();
+
   public void formatCommandLineArgsToList(
       ProjectFilesystem filesystem, ImmutableList.Builder<String> args) {
     // NOTE(agallagher): These propbably don't belong here, but buck integration tests need
@@ -111,11 +118,18 @@ abstract class AbstractAndroidInstrumentationTestJVMArgs {
 
     // The InstrumentationRunner requires the package name of the test
     args.add("--test-package-name", getTestPackage());
+    args.add("--target-package-name", getTargetPackage());
     args.add("--test-runner", getTestRunner());
     args.add("--adb-executable-path", getPathToAdbExecutable());
 
     if (getTestFilter().isPresent()) {
       args.add("--extra-instrumentation-argument", "class=" + getTestFilter().get());
+    }
+
+    for (Map.Entry<String, String> argPair : getEnvironmentOverrides().entrySet()) {
+      args.add(
+          "--extra-instrumentation-argument",
+          String.format(Locale.US, "%s=%s", argPair.getKey(), argPair.getValue()));
     }
 
     // If the test APK supports exopackage installation, this will be the location of a

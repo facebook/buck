@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.event.listener;
@@ -45,9 +45,11 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -81,7 +83,8 @@ public class MachineReadableLogJsonViewTest {
   public void testWatchmanEvents() throws Exception {
     WatchmanStatusEvent createEvent = WatchmanStatusEvent.fileCreation("filename_new");
     WatchmanStatusEvent deleteEvent = WatchmanStatusEvent.fileDeletion("filename_del");
-    WatchmanStatusEvent overflowEvent = WatchmanStatusEvent.overflow("reason");
+    WatchmanStatusEvent overflowEvent =
+        WatchmanStatusEvent.overflow("reason", Paths.get("/some/path"));
 
     // Configure the events so timestamps etc are there.
     createEvent.configure(timestampMillis, nanoTime, threadUserNanoTime, threadId, buildId);
@@ -138,6 +141,7 @@ public class MachineReadableLogJsonViewTest {
             Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
             UploadToCacheResultType.UNCACHEABLE,
             Optional.of(HashCode.fromString("abcd42")),
+            Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
@@ -208,10 +212,16 @@ public class MachineReadableLogJsonViewTest {
                 new AtomicInteger(1),
                 ArtifactCacheMode.dir,
                 new AtomicInteger(2)),
+            ImmutableMap.of(
+                ArtifactCacheMode.http,
+                new AtomicLong(1),
+                ArtifactCacheMode.dir,
+                new AtomicLong(2)),
             3,
             3,
             0,
             5,
+            3L,
             0,
             new AtomicInteger(2),
             new AtomicInteger(0));
@@ -220,8 +230,9 @@ public class MachineReadableLogJsonViewTest {
         WRITER.writeValueAsString(summary),
         "{\"cacheHitsPerMode\":{\"dir\":2,\"http\":1},"
             + "\"cacheErrorsPerMode\":{\"dir\":2,\"http\":1},"
+            + "\"cacheBytesPerMode\":{\"dir\":2,\"http\":1},"
             + "\"totalCacheHits\":3,\"totalCacheErrors\":3,"
-            + "\"totalCacheMisses\":0,\"totalCacheIgnores\":5,\""
+            + "\"totalCacheMisses\":0,\"totalCacheIgnores\":5,\"totalCacheBytes\":3,\""
             + "totalCacheLocalKeyUnchangedHits\":0,"
             + "\"successUploadCount\":2,\"failureUploadCount\":0}");
   }

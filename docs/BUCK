@@ -1,4 +1,38 @@
 python_test(
+    name = "buckconfig_aliases_clean",
+    srcs = [
+        "buckconfig_aliases_clean.py",
+    ],
+    resources = [
+        "__buckconfig_common.soy",
+        "files-and-dirs/buckconfig.soy",
+        ":generate_buckconfig_aliases",
+    ],
+)
+
+python_library(
+    name = "alphabetize_buckconfig-lib",
+    srcs = ["alphabetize_buckconfig.py"],
+)
+
+python_binary(
+    name = "alphabetize_buckconfig",
+    main_module = "docs.alphabetize_buckconfig",
+    deps = [":alphabetize_buckconfig-lib"],
+)
+
+python_library(
+    name = "generate_buckconfig_aliases-lib",
+    srcs = ["generate_buckconfig_aliases.py"],
+)
+
+python_binary(
+    name = "generate_buckconfig_aliases",
+    main_module = "docs.generate_buckconfig_aliases",
+    deps = [":generate_buckconfig_aliases-lib"],
+)
+
+python_test(
     name = "soy_docs_syntax",
     srcs = [
         "soy_syntax_check.py",

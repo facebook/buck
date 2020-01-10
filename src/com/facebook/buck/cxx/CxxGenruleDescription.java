@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -23,12 +23,13 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -36,11 +37,11 @@ import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.PathShortener;
@@ -48,15 +49,18 @@ import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
-import com.facebook.buck.cxx.toolchain.linker.Linkers;
+import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.ProxyArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.args.ToolArg;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
 import com.facebook.buck.rules.macros.CcFlagsMacro;
 import com.facebook.buck.rules.macros.CcMacro;
@@ -65,7 +69,9 @@ import com.facebook.buck.rules.macros.CxxFlagsMacro;
 import com.facebook.buck.rules.macros.CxxGenruleFilterAndTargetsMacro;
 import com.facebook.buck.rules.macros.CxxMacro;
 import com.facebook.buck.rules.macros.CxxppFlagsMacro;
+import com.facebook.buck.rules.macros.ExecutableMacro;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
+import com.facebook.buck.rules.macros.ExecutableTargetMacro;
 import com.facebook.buck.rules.macros.LdMacro;
 import com.facebook.buck.rules.macros.LdflagsSharedFilterMacro;
 import com.facebook.buck.rules.macros.LdflagsSharedMacro;
@@ -73,6 +79,7 @@ import com.facebook.buck.rules.macros.LdflagsStaticFilterMacro;
 import com.facebook.buck.rules.macros.LdflagsStaticMacro;
 import com.facebook.buck.rules.macros.LdflagsStaticPicFilterMacro;
 import com.facebook.buck.rules.macros.LdflagsStaticPicMacro;
+import com.facebook.buck.rules.macros.LocationPlatformMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.PlatformNameMacro;
@@ -82,9 +89,8 @@ import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.util.Escaper;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.versions.VersionPropagator;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -129,11 +135,8 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
    *     refers to a {@link CxxGenrule} with the given {@code platform} flavor applied.
    */
   public static SourcePath fixupSourcePath(
-      ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
-      CxxPlatform platform,
-      SourcePath path) {
-    Optional<BuildRule> rule = ruleFinder.getRule(path);
+      ActionGraphBuilder graphBuilder, CxxPlatform platform, SourcePath path) {
+    Optional<BuildRule> rule = graphBuilder.getRule(path);
     if (rule.isPresent() && rule.get() instanceof CxxGenrule) {
       Genrule platformRule =
           (Genrule)
@@ -145,39 +148,31 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
   }
 
   public static ImmutableList<SourcePath> fixupSourcePaths(
-      ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
-      CxxPlatform cxxPlatform,
-      ImmutableList<SourcePath> paths) {
+      ActionGraphBuilder graphBuilder, CxxPlatform cxxPlatform, ImmutableList<SourcePath> paths) {
     ImmutableList.Builder<SourcePath> fixed = ImmutableList.builder();
     for (SourcePath path : paths) {
-      fixed.add(fixupSourcePath(graphBuilder, ruleFinder, cxxPlatform, path));
+      fixed.add(fixupSourcePath(graphBuilder, cxxPlatform, path));
     }
     return fixed.build();
   }
 
   public static ImmutableSortedSet<SourcePath> fixupSourcePaths(
       ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
       ImmutableSortedSet<SourcePath> paths) {
     ImmutableSortedSet.Builder<SourcePath> fixed =
         new ImmutableSortedSet.Builder<>(Objects.requireNonNull(paths.comparator()));
     for (SourcePath path : paths) {
-      fixed.add(fixupSourcePath(graphBuilder, ruleFinder, cxxPlatform, path));
+      fixed.add(fixupSourcePath(graphBuilder, cxxPlatform, path));
     }
     return fixed.build();
   }
 
   public static <T> ImmutableMap<T, SourcePath> fixupSourcePaths(
-      ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
-      CxxPlatform cxxPlatform,
-      ImmutableMap<T, SourcePath> paths) {
+      ActionGraphBuilder graphBuilder, CxxPlatform cxxPlatform, ImmutableMap<T, SourcePath> paths) {
     ImmutableMap.Builder<T, SourcePath> fixed = ImmutableMap.builder();
     for (Map.Entry<T, SourcePath> ent : paths.entrySet()) {
-      fixed.put(
-          ent.getKey(), fixupSourcePath(graphBuilder, ruleFinder, cxxPlatform, ent.getValue()));
+      fixed.put(ent.getKey(), fixupSourcePath(graphBuilder, cxxPlatform, ent.getValue()));
     }
     return fixed.build();
   }
@@ -192,8 +187,9 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return getCxxPlatforms().containsAnyOf(flavors)
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
+    return getCxxPlatforms(toolchainTargetConfiguration).containsAnyOf(flavors)
         || !Sets.intersection(declaredPlatforms, flavors).isEmpty();
   }
 
@@ -205,21 +201,31 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       TargetGraph targetGraph,
       CxxGenruleDescriptionArg args) {
 
-    Optional<UnresolvedCxxPlatform> maybeCxxPlatform = getCxxPlatforms().getValue(buildTarget);
+    Optional<UnresolvedCxxPlatform> maybeCxxPlatform =
+        getCxxPlatforms(buildTarget.getTargetConfiguration()).getValue(buildTarget);
     if (!maybeCxxPlatform.isPresent()) {
       return Optional.empty();
     }
 
-    CxxPlatform cxxPlatform = maybeCxxPlatform.get().resolve(resolver);
+    CxxPlatform cxxPlatform =
+        maybeCxxPlatform.get().resolve(resolver, buildTarget.getTargetConfiguration());
     ImmutableList.Builder<MacroExpander<? extends Macro, ?>> expanders = ImmutableList.builder();
 
-    expanders.add(new ExecutableMacroExpander());
+    expanders.add(new ExecutableMacroExpander<>(ExecutableMacro.class));
+    expanders.add(new ExecutableMacroExpander<>(ExecutableTargetMacro.class));
     expanders.add(new CxxLocationMacroExpander(cxxPlatform));
+    expanders.add(new LocationPlatformMacroExpander(cxxPlatform));
     expanders.add(
         new StringExpander<>(
             PlatformNameMacro.class, StringArg.of(cxxPlatform.getFlavor().toString())));
-    expanders.add(new ToolExpander<>(CcMacro.class, cxxPlatform.getCc().resolve(resolver)));
-    expanders.add(new ToolExpander<>(CxxMacro.class, cxxPlatform.getCxx().resolve(resolver)));
+    expanders.add(
+        new ToolExpander<>(
+            CcMacro.class,
+            cxxPlatform.getCc().resolve(resolver, buildTarget.getTargetConfiguration())));
+    expanders.add(
+        new ToolExpander<>(
+            CxxMacro.class,
+            cxxPlatform.getCxx().resolve(resolver, buildTarget.getTargetConfiguration())));
 
     ImmutableList<String> asflags = cxxPlatform.getAsflags();
     ImmutableList<String> cflags = cxxPlatform.getCflags();
@@ -235,7 +241,10 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
         new CxxPreprocessorFlagsExpander<>(CppFlagsMacro.class, cxxPlatform, CxxSource.Type.C));
     expanders.add(
         new CxxPreprocessorFlagsExpander<>(CxxppFlagsMacro.class, cxxPlatform, CxxSource.Type.CXX));
-    expanders.add(new ToolExpander<>(LdMacro.class, cxxPlatform.getLd().resolve(resolver)));
+    expanders.add(
+        new ToolExpander<>(
+            LdMacro.class,
+            cxxPlatform.getLd().resolve(resolver, buildTarget.getTargetConfiguration())));
 
     for (Map.Entry<Class<? extends CxxGenruleFilterAndTargetsMacro>, LinkableDepType> ent :
         ImmutableMap.<Class<? extends CxxGenruleFilterAndTargetsMacro>, LinkableDepType>builder()
@@ -261,7 +270,8 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       BuildTarget buildTarget,
       BuildRuleParams params,
       CxxGenruleDescriptionArg args) {
-    Optional<UnresolvedCxxPlatform> cxxPlatform = getCxxPlatforms().getValue(buildTarget);
+    Optional<UnresolvedCxxPlatform> cxxPlatform =
+        getCxxPlatforms(buildTarget.getTargetConfiguration()).getValue(buildTarget);
     if (cxxPlatform.isPresent()) {
       return super.createBuildRule(
           context, buildTarget.withAppendedFlavors(cxxPlatform.get().getFlavor()), params, args);
@@ -273,6 +283,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
   protected BuildRule createBuildRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      // TODO(swgillespie) T55035474 tracks removal of this parameter
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
       CxxGenruleDescriptionArg args,
@@ -282,13 +293,13 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     return createBuildRule(
         buildTarget,
         projectFilesystem,
-        params,
         graphBuilder,
         args,
         cmd,
         bash,
         cmdExe,
-        args.getOut());
+        Optional.of(args.getOut()),
+        Optional.empty()); // multiple outputs not supported yet for CxxGenRule
   }
 
   @Override
@@ -299,8 +310,10 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Add in all parse time deps from the C/C++ platforms.
-    for (UnresolvedCxxPlatform cxxPlatform : getCxxPlatforms().getValues()) {
-      targetGraphOnlyDepsBuilder.addAll(cxxPlatform.getParseTimeDeps());
+    for (UnresolvedCxxPlatform cxxPlatform :
+        getCxxPlatforms(buildTarget.getTargetConfiguration()).getValues()) {
+      targetGraphOnlyDepsBuilder.addAll(
+          cxxPlatform.getParseTimeDeps(buildTarget.getTargetConfiguration()));
     }
   }
 
@@ -309,9 +322,13 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     return true;
   }
 
-  private FlavorDomain<UnresolvedCxxPlatform> getCxxPlatforms() {
+  private FlavorDomain<UnresolvedCxxPlatform> getCxxPlatforms(
+      TargetConfiguration toolchainTargetConfiguration) {
     return toolchainProvider
-        .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
+        .getByName(
+            CxxPlatformsProvider.DEFAULT_NAME,
+            toolchainTargetConfiguration,
+            CxxPlatformsProvider.class)
         .getUnresolvedCxxPlatforms();
   }
 
@@ -338,8 +355,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     }
 
     @Override
-    public Arg expandFrom(
-        BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver) {
+    public Arg expandFrom(BuildTarget target, BuildRuleResolver resolver) {
       return ToolArg.of(tool);
     }
   }
@@ -361,13 +377,19 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     }
 
     protected abstract Arg expand(
-        ActionGraphBuilder graphBuilder, ImmutableList<BuildRule> rules, Optional<Pattern> filter);
+        ActionGraphBuilder graphBuilder,
+        TargetConfiguration targetConfiguration,
+        ImmutableList<BuildRule> rules,
+        Optional<Pattern> filter);
 
     @Override
-    public Arg expandFrom(
-        BuildTarget target, CellPathResolver cellNames, ActionGraphBuilder graphBuilder, M input)
+    public Arg expandFrom(BuildTarget target, ActionGraphBuilder graphBuilder, M input)
         throws MacroException {
-      return expand(graphBuilder, resolve(graphBuilder, input.getTargets()), input.getFilter());
+      return expand(
+          graphBuilder,
+          target.getTargetConfiguration(),
+          resolve(graphBuilder, input.getTargets()),
+          input.getFilter());
     }
   }
 
@@ -405,7 +427,8 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     /** Get the transitive C/C++ preprocessor input rooted at the given rules. */
     private Collection<CxxPreprocessorInput> getCxxPreprocessorInput(
         ActionGraphBuilder graphBuilder, ImmutableList<BuildRule> rules) {
-      return CxxPreprocessables.getTransitiveCxxPreprocessorInput(cxxPlatform, graphBuilder, rules);
+      return CxxPreprocessables.getTransitiveCxxPreprocessorInputFromDeps(
+          cxxPlatform, graphBuilder, rules);
     }
 
     /**
@@ -433,38 +456,55 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
      */
     @Override
     protected Arg expand(
-        ActionGraphBuilder graphBuilder, ImmutableList<BuildRule> rules, Optional<Pattern> filter) {
+        ActionGraphBuilder graphBuilder,
+        TargetConfiguration targetConfiguration,
+        ImmutableList<BuildRule> rules,
+        Optional<Pattern> filter) {
       return new CxxPreprocessorFlagsArg(
           getPreprocessorFlags(getCxxPreprocessorInput(graphBuilder, rules)),
-          CxxSourceTypes.getPreprocessor(cxxPlatform, sourceType).resolve(graphBuilder));
+          CxxSourceTypes.getPreprocessor(cxxPlatform, sourceType)
+              .resolve(graphBuilder, targetConfiguration),
+          CxxDescriptionEnhancer.frameworkPathToSearchPath(
+              cxxPlatform, graphBuilder.getSourcePathResolver()));
+    }
+  }
+
+  /**
+   * Argument type for C++ compiler preprocessor args. In addition to holding the flags themselves,
+   * this type also holds a rule-keyable function mapping framework paths to search paths.
+   */
+  private static class CxxPreprocessorFlagsArg implements Arg {
+    @AddToRuleKey private final PreprocessorFlags ppFlags;
+    @AddToRuleKey private final Preprocessor preprocessor;
+
+    @AddToRuleKey
+    private final AddsToRuleKeyFunction<FrameworkPath, Path> frameworkPathToSearchPath;
+
+    CxxPreprocessorFlagsArg(
+        PreprocessorFlags ppFlags,
+        Preprocessor preprocessor,
+        AddsToRuleKeyFunction<FrameworkPath, Path> frameworkPathToSearchPath) {
+      this.ppFlags = ppFlags;
+      this.preprocessor = preprocessor;
+      this.frameworkPathToSearchPath = frameworkPathToSearchPath;
     }
 
-    private class CxxPreprocessorFlagsArg implements Arg {
-      @AddToRuleKey private final PreprocessorFlags ppFlags;
-      @AddToRuleKey private final Preprocessor preprocessor;
-
-      CxxPreprocessorFlagsArg(PreprocessorFlags ppFlags, Preprocessor preprocessor) {
-        this.ppFlags = ppFlags;
-        this.preprocessor = preprocessor;
-      }
-
-      @Override
-      public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver resolver) {
-        consumer.accept(
-            Arg.stringify(
-                    ppFlags
-                        .toToolFlags(
-                            resolver,
-                            PathShortener.identity(),
-                            CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, resolver),
-                            preprocessor,
-                            /* pch */ Optional.empty())
-                        .getAllFlags(),
-                    resolver)
-                .stream()
-                .map(Escaper.SHELL_ESCAPER)
-                .collect(Collectors.joining(" ")));
-      }
+    @Override
+    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolverAdapter resolver) {
+      consumer.accept(
+          Arg.stringify(
+                  ppFlags
+                      .toToolFlags(
+                          resolver,
+                          PathShortener.identity(),
+                          frameworkPathToSearchPath,
+                          preprocessor,
+                          /* pch */ Optional.empty())
+                      .getAllFlags(),
+                  resolver)
+              .stream()
+              .map(Escaper.SHELL_ESCAPER)
+              .collect(Collectors.joining(" ")));
     }
   }
 
@@ -522,7 +562,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
       // The shared libraries root is absolute. Also need an absolute path to the linkOutput
       Path linkOutput = BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s").resolve(out);
-      Path absLinkOut = buildTarget.getCellPath().resolve(linkOutput);
+      Path absLinkOut = filesystem.resolve(linkOutput);
       SymlinkTree symlinkTree = requireSymlinkTree(graphBuilder, rules);
       return RichStream.from(
               StringArg.from(
@@ -530,52 +570,47 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
                       "-rpath",
                       String.format(
                           "%s/%s",
-                          cxxPlatform.getLd().resolve(graphBuilder).origin(),
+                          cxxPlatform
+                              .getLd()
+                              .resolve(graphBuilder, buildTarget.getTargetConfiguration())
+                              .origin(),
                           absLinkOut.getParent().relativize(symlinkTree.getRoot()).toString()))))
-          .map(
-              arg ->
-                  new ProxyArg(arg) {
-                    // This is added so that the arg's rulekey properly reflects its deps.
-                    @AddToRuleKey
-                    private final NonHashableSourcePathContainer symlinkTreeRef =
-                        new NonHashableSourcePathContainer(symlinkTree.getSourcePathToOutput());
-                  })
+          .map(arg -> new SymlinkProxyArg(arg, symlinkTree.getSourcePathToOutput()))
           .collect(ImmutableList.toImmutableList());
     }
 
     private NativeLinkableInput getNativeLinkableInput(
         ActionGraphBuilder graphBuilder, Iterable<BuildRule> rules, Optional<Pattern> filter) {
-      ImmutableList<NativeLinkable> nativeLinkables =
+      ImmutableList<? extends NativeLinkable> nativeLinkables =
           NativeLinkables.getNativeLinkables(
-              cxxPlatform,
               graphBuilder,
-              FluentIterable.from(rules).filter(NativeLinkable.class),
+              FluentIterable.from(rules)
+                  .filter(NativeLinkableGroup.class)
+                  .transform(g -> g.getNativeLinkable(cxxPlatform, graphBuilder)),
               depType,
               !filter.isPresent()
                   ? x -> true
-                  : input -> {
-                    Preconditions.checkArgument(input instanceof BuildRule);
-                    BuildRule rule = (BuildRule) input;
-                    return filter
-                        .get()
-                        .matcher(String.format("%s(%s)", rule.getType(), rule.getBuildTarget()))
-                        .find();
-                  });
+                  : input ->
+                      filter
+                          .get()
+                          .matcher(
+                              String.format("%s(%s)", input.getRuleType(), input.getBuildTarget()))
+                          .find());
       ImmutableList.Builder<NativeLinkableInput> nativeLinkableInputs = ImmutableList.builder();
       for (NativeLinkable nativeLinkable : nativeLinkables) {
         nativeLinkableInputs.add(
             NativeLinkables.getNativeLinkableInput(
-                cxxPlatform, depType, nativeLinkable, graphBuilder));
+                depType, nativeLinkable, graphBuilder, buildTarget.getTargetConfiguration()));
       }
       return NativeLinkableInput.concat(nativeLinkableInputs.build());
     }
 
-    /** Make sure all resolved targets are instances of {@link NativeLinkable}. */
+    /** Make sure all resolved targets are instances of {@link NativeLinkableGroup}. */
     @Override
     protected ImmutableList<BuildRule> resolve(
         BuildRuleResolver resolver, ImmutableList<BuildTarget> input) throws MacroException {
       return FluentIterable.from(super.resolve(resolver, input))
-          .filter(NativeLinkable.class::isInstance)
+          .filter(NativeLinkableGroup.class::isInstance)
           .toList();
     }
 
@@ -597,7 +632,10 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
      */
     @Override
     public Arg expand(
-        ActionGraphBuilder graphBuilder, ImmutableList<BuildRule> rules, Optional<Pattern> filter) {
+        ActionGraphBuilder graphBuilder,
+        TargetConfiguration targetConfiguration,
+        ImmutableList<BuildRule> rules,
+        Optional<Pattern> filter) {
       return new ShQuoteJoinArg(getLinkerArgs(graphBuilder, rules, filter));
     }
   }
@@ -610,8 +648,19 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     }
 
     @Override
-    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+    public void appendToCommandLine(
+        Consumer<String> consumer, SourcePathResolverAdapter pathResolver) {
       consumer.accept(shquoteJoin(Arg.stringify(args, pathResolver)));
+    }
+  }
+
+  private static class SymlinkProxyArg extends ProxyArg {
+    // This is added so that the arg's rulekey properly reflects its deps.
+    @AddToRuleKey private final NonHashableSourcePathContainer symlinkTreeRef;
+
+    public SymlinkProxyArg(Arg arg, SourcePath symlinkTreePath) {
+      super(arg);
+      this.symlinkTreeRef = new NonHashableSourcePathContainer(symlinkTreePath);
     }
   }
 }

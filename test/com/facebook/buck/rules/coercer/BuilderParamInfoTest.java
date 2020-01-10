@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.coercer;
@@ -23,7 +23,9 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.cell.TestCellPathResolver;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.description.arg.DataTransferObject;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.util.ErrorLogger;
@@ -32,7 +34,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -45,8 +46,9 @@ public class BuilderParamInfoTest {
   @Test
   public void failedCoercionIncludesClassAndFieldNames() {
     try {
-      CoercedTypeCache.INSTANCE
-          .getAllParamInfo(new DefaultTypeCoercerFactory(), DtoWithBadField.class)
+      ((TypeCoercerFactory) new DefaultTypeCoercerFactory())
+          .getConstructorArgDescriptor(DtoWithBadField.class)
+          .getParamInfos()
           .values();
       fail("Expected exception.");
     } catch (Exception e) {
@@ -62,8 +64,9 @@ public class BuilderParamInfoTest {
   @Test
   public void optionalsForAbstractClass() {
     for (ParamInfo param :
-        CoercedTypeCache.INSTANCE
-            .getAllParamInfo(new DefaultTypeCoercerFactory(), DtoWithOptionals.class)
+        ((TypeCoercerFactory) new DefaultTypeCoercerFactory())
+            .getConstructorArgDescriptor(DtoWithOptionals.class)
+            .getParamInfos()
             .values()) {
       assertTrue("Expected param " + param.getName() + " to be optional", param.isOptional());
     }
@@ -72,8 +75,9 @@ public class BuilderParamInfoTest {
   @Test
   public void optionalsForInterface() {
     for (ParamInfo param :
-        CoercedTypeCache.INSTANCE
-            .getAllParamInfo(new DefaultTypeCoercerFactory(), DtoWithOptionalsFromInterface.class)
+        ((TypeCoercerFactory) new DefaultTypeCoercerFactory())
+            .getConstructorArgDescriptor(DtoWithOptionalsFromInterface.class)
+            .getParamInfos()
             .values()) {
       assertTrue("Expected param " + param.getName() + " to be optional", param.isOptional());
     }
@@ -87,8 +91,9 @@ public class BuilderParamInfoTest {
         .set(
             TestCellPathResolver.get(filesystem),
             filesystem,
-            Paths.get("/doesnotexist"),
-            EmptyTargetConfiguration.INSTANCE,
+            ForwardRelativePath.of("doesnotexist"),
+            UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             builder,
             "foo");
     assertEquals("foo", builder.build().getSomeString());
@@ -112,8 +117,9 @@ public class BuilderParamInfoTest {
 
   private ParamInfo getParamInfo() {
     return Iterables.getOnlyElement(
-        CoercedTypeCache.INSTANCE
-            .getAllParamInfo(new DefaultTypeCoercerFactory(), DtoWithOneParameter.class)
+        ((TypeCoercerFactory) new DefaultTypeCoercerFactory())
+            .getConstructorArgDescriptor(DtoWithOneParameter.class)
+            .getParamInfos()
             .values());
   }
 
@@ -121,13 +127,13 @@ public class BuilderParamInfoTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithBadField {
+  abstract static class AbstractDtoWithBadField implements DataTransferObject {
     abstract BadFieldType getBadFieldType();
   }
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithOptionals {
+  abstract static class AbstractDtoWithOptionals implements DataTransferObject {
     abstract Optional<String> getOptional();
 
     abstract Optional<ImmutableSet<String>> getOptionalImmutableSet();
@@ -151,7 +157,7 @@ public class BuilderParamInfoTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractDtoWithOptionalsFromInterface {
+  interface AbstractDtoWithOptionalsFromInterface extends DataTransferObject {
     Optional<String> getOptional();
 
     Optional<ImmutableSet<String>> getOptionalImmutableSet();
@@ -175,7 +181,7 @@ public class BuilderParamInfoTest {
 
   @BuckStyleImmutable
   @Value.Immutable
-  abstract static class AbstractDtoWithOneParameter {
+  abstract static class AbstractDtoWithOneParameter implements DataTransferObject {
     abstract String getSomeString();
   }
 }

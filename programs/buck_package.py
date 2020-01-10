@@ -1,20 +1,19 @@
-# Copyright 2018-present Facebook, Inc.
+# Copyright (c) Facebook, Inc. and its affiliates.
 #
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License. You may obtain
-# a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations
-# under the License.
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 from __future__ import print_function
 
-import contextlib
 import errno
 import json
 import os
@@ -23,39 +22,19 @@ import stat
 import tempfile
 
 import pkg_resources
+from programs import file_locks
+from programs.buck_tool import BuckTool, MovableTemporaryFile, Resource
 
-import file_locks
-from buck_tool import BuckTool, Resource
 
 SERVER = Resource("buck_server")
 BOOTSTRAPPER = Resource("bootstrapper_jar")
+BUCKFILESYSTEM = Resource("buckfilesystem_jar")
 BUCK_BINARY_HASH = Resource("buck_binary_hash")
 
 PEX_ONLY_EXPORTED_RESOURCES = [Resource("external_executor_jar")]
 
 MODULES_DIR = "buck-modules"
 MODULES_RESOURCES_DIR = "buck-modules-resources"
-
-
-@contextlib.contextmanager
-def closable_named_temporary_file(*args, **kwargs):
-    """
-    Due to a bug in python (https://bugs.python.org/issue14243), we need to be able to close() the
-    temporary file without deleting it.
-    """
-    fp = tempfile.NamedTemporaryFile(*args, delete=False, **kwargs)
-    try:
-        with fp:
-            yield fp
-    finally:
-        try:
-            os.remove(fp.name)
-        except OSError as e:
-            # It's possible this fails because of a race with another buck
-            # instance has removed the entire resource_path, so ignore
-            # 'file not found' errors.
-            if e.errno != errno.ENOENT:
-                raise
 
 
 class BuckPackage(BuckTool):
@@ -145,9 +124,8 @@ class BuckPackage(BuckTool):
                     False,
                 )
         else:
-            with closable_named_temporary_file(
-                prefix=resource_path + os.extsep
-            ) as outf:
+            with MovableTemporaryFile(prefix=resource_path + os.extsep) as f:
+                outf = f.file
                 outf.write(pkg_resources.resource_string(__name__, resource_name))
                 if resource_executable and hasattr(os, "fchmod"):
                     st = os.fstat(outf.fileno())
@@ -176,6 +154,9 @@ class BuckPackage(BuckTool):
 
     def _get_bootstrap_classpath(self):
         return self._get_resource(BOOTSTRAPPER)
+
+    def _get_buckfilesystem_classpath(self):
+        return self._get_resource(BUCKFILESYSTEM)
 
     def _get_java_classpath(self):
         return self._get_resource(SERVER)

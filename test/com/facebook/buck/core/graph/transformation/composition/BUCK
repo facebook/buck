@@ -1,0 +1,13 @@
+java_test(
+    name = "composition",
+    srcs = glob(
+        ["*Test.java"],
+    ),
+    deps = [
+        "//src/com/facebook/buck/core/graph/transformation/composition:composition",
+        "//src/com/facebook/buck/core/graph/transformation/executor/impl:impl",
+        "//test/com/facebook/buck/core/graph/transformation/impl:testutil",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)

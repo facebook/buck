@@ -1,10 +1,11 @@
-SOME_REFERENCE = [
-  'Ref.java',
+SOME_REFERENCES = [
+  'Foo.java',
+  'Bar.java',
 ]
 
 foo_android_library(
   name = 'locale',
-  srcs = glob(['*.java'], excludes = SOME_REFERENCE),
+  srcs = glob(['*.java'], excludes = SOME_REFERENCES),
   deps = [
     '//java/com/foo/common/android:android',
     '//java/com/foo/debug/log:log',

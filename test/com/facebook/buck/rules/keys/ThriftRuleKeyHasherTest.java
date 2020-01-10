@@ -1,29 +1,32 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
+import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.sourcepath.AbstractDefaultBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
-import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
@@ -156,24 +159,25 @@ public class ThriftRuleKeyHasherTest {
         new File("test").toPath(), HashCode.fromString("0503e9786d39160e3811ea609c512530c7f66e82"));
     hasher.putKey(".path_value");
     hasher.putArchiveMemberPath(
-        ArchiveMemberPath.of(new File("archive_path").toPath(), new File("member_path").toPath()),
+        Paths.get("archive_path"),
+        Paths.get("member_path"),
         HashCode.fromString("f9d8ff855a16a3a3d28bfb445cc440502d6e895a"));
     hasher.putKey(".archive_member_path_value");
-    hasher.putNonHashingPath("non_hashing_test");
+    hasher.putNonHashingPath(Paths.get("non_hashing_test"));
     hasher.putKey(".non_hashing_path_value");
     hasher.putRuleKey(new RuleKey(HashCode.fromString("d0c852385a66458b6e960c89fac580e5eb6d6aec")));
     hasher.putKey(".rule_key_value");
     hasher.putRuleType(RuleType.of("sample_build_rule", RuleType.Kind.BUILD));
     hasher.putKey(".build_rule_type_value");
-    hasher.putBuildTarget(
-        BuildTargetFactory.newInstance(new File("cell_path").toPath(), "//base_name", "rule_name"));
+    hasher.putBuildTarget(BuildTargetFactory.newInstance("//base_name", "rule_name"));
     hasher.putKey(".build_target_value");
     hasher.putBuildTargetSourcePath(
-        new AbstractDefaultBuildTargetSourcePath() {
+        new DefaultBuildTargetSourcePath() {
           @Override
-          public BuildTarget getTarget() {
-            return BuildTargetFactory.newInstance(
-                new File("cell_path_2").toPath(), "//base_name_2", "rule_name_2");
+          public BuildTargetWithOutputs getTargetWithOutputs() {
+            return ImmutableBuildTargetWithOutputs.of(
+                BuildTargetFactory.newInstance("//base_name_2", "rule_name_2"),
+                OutputLabel.defaultLabel());
           }
 
           @Override
@@ -264,7 +268,12 @@ public class ThriftRuleKeyHasherTest {
                     new com.facebook.buck.log.thrift.rulekeys.BuildTarget("//base_name:rule_name")))
             .put(
                 ".build_target_source_path_value",
-                Value.targetPath(new TargetPath("//base_name_2:rule_name_2")))
+                Value.targetPath(
+                    new TargetPath(
+                        ImmutableBuildTargetWithOutputs.of(
+                                BuildTargetFactory.newInstance("//base_name_2:rule_name_2"),
+                                OutputLabel.defaultLabel())
+                            .toString())))
             .put(
                 ".list_value",
                 Value.containerList(
@@ -314,8 +323,10 @@ public class ThriftRuleKeyHasherTest {
   @Test
   public void canHandleForwardingBuildTargetSourcePathsWithDifferentFilesystems()
       throws TException {
-    ProjectFilesystem filesystem1 = new FakeProjectFilesystem(Paths.get("first", "root"));
-    ProjectFilesystem filesystem2 = new FakeProjectFilesystem(Paths.get("other", "root"));
+    ProjectFilesystem filesystem1 =
+        new FakeProjectFilesystem(CanonicalCellName.rootCell(), Paths.get("first", "root"));
+    ProjectFilesystem filesystem2 =
+        new FakeProjectFilesystem(CanonicalCellName.rootCell(), Paths.get("other", "root"));
     Path relativePath = Paths.get("arbitrary", "path");
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
 

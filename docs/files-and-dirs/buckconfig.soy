@@ -1,18 +1,19 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 {namespace buck.buckconfig}
 
 /***/
@@ -238,40 +239,34 @@ personal settings, such as personal aliases.
 
 <p>
 In addition to the <code>.buckconfig</code> and <code>.buckconfig.local</code> files in 
-the project root, Buck supports a cascading set of other configuration
-files. These files are identified either by having the name <code>.buckconfig</code> or 
-by being located in a subdirectory named <code>.buckconfig.d</code>.
-</p>
-
-<p>
-Buck supports the following locations for additional <code>.buckconfig</code> files 
-and <code>.buckconfig.d</code> directories:
-</p>
+the project root, Buck reads configuration settings from the following additional locations, some of
+which are actually directories:</p>
 
 <ol>
 
   <li>
-    The root directory of your Buck project. That is, you can locate 
-    a <code>.buckconfig.d</code> directory in the same location 
-    as <code>.buckconfig.local</code> and the primary <code>.buckconfig</code>. 
+    Directory <code>.buckconfig.d</code> located in the project root directory.
   </li>
 
   <li>
-    The current user's home directory which, on Unix-like systems, is
+    File <code>.buckconfig</code> and directory <code>.buckconfig.d</code> located
+    in the current user's home directory which, on Unix-like systems, is
     available from the <code>HOME</code> environment variable or through
     the <code>~</code> symbol.
   </li>
 
   <li>
-    The system directory <code>/etc/</code>.
+    File <code>buckconfig</code> and directory <code>buckconfig.d</code> located
+    in system directory <code>/etc/</code>.
   </li>
 
 </ol>
 
 
 <p>
-Buck treats <em>any</em> file&mdash;irrespective of name&mdash;in a <code>.buckconfig.d</code> directory 
-as a Buck configuration file, provided that it adheres to <code>.buckconfig</code> syntax.
+Buck treats <em>any</em> file&mdash;irrespective of name&mdash;in a <code>.buckconfig.d</code>
+(<code>buckconfig.d</code>) directory (excluding files found in subdirectories) as a Buck
+configuration file, provided that it adheres to <code>.buckconfig</code> syntax.
 </p>
 
 <p>
@@ -316,7 +311,7 @@ rendered_text: '<strong>Common Parameters</strong>' /}{/call} topic.
 <p>
 The following list shows the order of precedence for how Buck interprets
 its configuration specifications. Settings specified using a method closer 
-to the top of the list have higher precedence and will override those lower 
+to the top of the list have higher precedence and will override those lower
 on the list. For example, the <code>.buckconfig</code> file in the project directory
 overrides a <code>.buckconfig</code> file in the user's <code>HOME</code> directory.
 </p>
@@ -331,12 +326,12 @@ Configuration specified later on the command line overrides configuration specif
 <li><code>.buckconfig</code> in the <code>HOME</code> directory.</li>
 <li>Files in a <code>.buckconfig.d</code> subdirectory of the project directory, irrespective of filename.</li>
 <li>Files in a <code>.buckconfig.d</code> subdirectory of the <code>HOME</code> directory, irrespective of filename.</li>
-<li><code>.buckconfig</code> in the <code>/etc/</code> directory.</li>
-<li>Files in a <code>.buckconfig.d</code> subdirectory of the <code>/etc/</code> directory, irrespective of filename.</li>
+<li><code>buckconfig</code> in the <code>/etc/</code> directory.</li>
+<li>Files in a <code>buckconfig.d</code> subdirectory of the <code>/etc/</code> directory, irrespective of filename.</li>
 </ol>
 
 <p>
-Files in a <code>.buckconfig.d</code> directory have precedence
+Files in a <code>.buckconfig.d</code> (<code>buckconfig.d</code>) directory have precedence
 according to the lexicographical order of their file names. 
 Files <em>later</em> in the lexicographical order have precedence 
 over files earlier in that order.
@@ -570,6 +565,18 @@ $ buck targets --resolve-alias app#src_jar
 
 {call buckconfig.entry}
   {param section: 'android' /}
+  {param name: 'compile_sdk_version' /}
+  {param example_value: 'Google Inc.:Google APIs:21' /}
+  {param description}
+    This specifies the version of the Android SDK that all Android code in the project should be
+    built against.  Even if not specified, the version that Buck chose to use will be printed to the
+    console during the build.  A list of valid values on your system can be found by running{sp}
+    <code>android list target --compact</code>.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'android' /}
   {param name: 'sdk_path' /}
   {param example_value: '/Library/Android/sdk' /}
   {param description}
@@ -593,18 +600,6 @@ $ buck targets --resolve-alias app#src_jar
       variables&mdash;in the order in which they are listed above&mdash;over 
       the value of this property in <code>.buckconfig</code>.
     </p>
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'android' /}
-  {param name: 'target' /}
-  {param example_value: 'Google Inc.:Google APIs:21' /}
-  {param description}
-    This specifies the version of the Android SDK that all Android code in the project should be
-    built against.  Even if not specified, the version that Buck chose to use will be printed to the
-    console during the build.  A list of valid values on your system can be found by running{sp}
-    <code>android list targets --compact</code>.
   {/param}
 {/call}
 
@@ -1069,7 +1064,7 @@ artifact_cache_size_limit = 52428800
     <p>
       <strong>Note:</strong> This value sets an upper bound on artifact 
       size for all values of {call buckconfig.cache_mode /}.  
-      The parameter {call buckconfig.http_max_store_size /} sets 
+      The parameter {call buckconfig.cache_http_max_store_size /} sets 
       an artifact size limit <em>only</em> for distributed cache modes 
       (<code>http</code> and <code>thrift_over_http</code>).
       Therefore, it is not meaningful to set a value 
@@ -1279,10 +1274,13 @@ artifact_cache_size_limit = 52428800
 {call buckconfig.section}
   {param name: 'cache' /}
   {param description}
-    This section configures build artifact caching, which can be disabled (default), on the
-    filesystem, or in a distributed cache that can be shared among developers.  Note that the{sp}
-    {call buckconfig.cache_mode /} setting determines which other properties, if any, are relevant
-    to the caching configuration; the irrelevant properties are ignored.
+    This section configures build artifact caching. Caching can be
+    configured to use the local filesystem, an SQLite database, or a
+    remote distributed cache that can be shared among developers.
+    Caching is disabled by default. 
+    The{sp} {call buckconfig.cache_mode /} setting&mdash;described below&mdash;determines 
+    which properties are relevant to the caching configuration; other
+    properties are ignored by Buck.
   {/param}
 {/call}
 
@@ -1291,7 +1289,7 @@ artifact_cache_size_limit = 52428800
   {param name: 'mode' /}
   {param example_value: 'dir, http, sqlite' /}
   {param description}
-    A comma-separated set of caching policies to use.  The valid values are:
+    A comma-separated list of caching policies to use. Valid values are:
     <ul>
       <li>
         <code>dir</code> (default): Use a directory-based cache on the local filesystem.
@@ -1313,32 +1311,40 @@ artifact_cache_size_limit = 52428800
 {call buckconfig.entry}
   {param section: 'cache' /}
   {param name: 'dir' /}
-  {param example_value: 'buck-cache' /}
+  {param example_value: 'buck-out/cache' /}
   {param description}
-    The directory path relative to the project root that is used for directory-based caching (
-    {call buckconfig.cache_mode /} must contain <code>dir</code>).  This defaults to{sp}
-    <code>buck-out/cache</code>.
-  {/param}
-{/call}
+    <p>
+      The path to use for directory-based caching. The path can be:
+    </p>
 
-{call buckconfig.entry}
-  {param section: 'cache' /}
-  {param name: 'dir_max_size' /}
-  {param example_value: '10GB' /}
-  {param description}
-    The maximum cache size for directory-based caching ({call buckconfig.cache_mode /} must contain
-    {sp}<code>dir</code>).  The default size is unlimited.
-  {/param}
-{/call}
+    <ul>
+    <li>
+      <p>
+        An absolute path in your local file system, such 
+        as <code>/Volumes/mySSD/cache</code>.
+      </p>
+    </li>
 
-{call buckconfig.entry}
-  {param section: 'cache' /}
-  {param name: 'dir_mode' /}
-  {param example_value: 'readwrite' /}
-  {param description}
-    Dictates if the cache is <code>readonly</code>, <code>passthrough</code> or
-    {sp}<code>readwrite</code> (default) when using directory-based caching
-    {sp}({call buckconfig.cache_mode /} must contain <code>dir</code>).
+    <li>
+      <p>
+        A path relative to your home directory, that 
+        uses <a href="https://www.gnu.org/software/bash/manual/html_node/Tilde-Expansion.html">tilde (<code>~</code>) expansion</a>.
+        such as <code>~/local/cache</code>.
+      </p>
+    </li>
+
+    <li>
+      <p>
+        A path that is relative to the root of your Buck project, such 
+        as <strong><code>{call buck.buck_out_link /}/cache</code></strong>, 
+        which is the <strong>default</strong>.
+      </p>
+    </li>
+    </ul>
+
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>dir</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1353,6 +1359,9 @@ artifact_cache_size_limit = 52428800
     will not be stored in the <code>local</code> cache. Note: if <code>[cache] dir</code> or <code>[cache] dir_mode</code>{sp}
     are found, then Buck will fall back to single dir cache more and <code>[cache] dir_cache_names</code>{sp}
     will be completely ignored.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>dir</code>.
+    </p>
   {/param}
   {param raw_example}
 {literal}<pre class="prettyprint lang-ini">
@@ -1373,13 +1382,66 @@ artifact_cache_size_limit = 52428800
 
 {call buckconfig.entry}
   {param section: 'cache' /}
+  {param name: 'dir_max_size' /}
+  {param example_value: '10GB' /}
+  {param description}
+    The maximum cache size for directory-based caching.  The default size is unlimited.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>dir</code>.
+    </p>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'dir_mode' /}
+  {param example_value: 'readwrite' /}
+  {param description}
+    Dictates if the cache is <code>readonly</code>, <code>passthrough</code>, or
+    {sp}<code>readwrite</code> (default) when using directory-based caching.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>dir</code>.
+    </p>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'serve_local_cache' /}
+  {param example_value: 'false' /}
+  {param description}
+    Make the directory-based cache available to other hosts on the network 
+    via Buck's HTTP server (enabled under{sp} {call buckconfig.httpserver /}).
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>dir</code>.
+    </p>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'served_local_cache_mode' /}
+  {param example_value: 'readwrite' /}
+  {param description}
+    Dictates if the cache is <code>readonly</code> (default) or <code>readwrite</code> when{sp}
+    {call buckconfig.cache_serve_local_cache /} is enabled.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>dir</code>.
+    </p>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cache' /}
   {param name: 'http_url' /}
   {param example_value: 'http://localhost:8080' /}
   {param description}
-    The URL to use to contact the cache when using http-based caching{sp}
-    ({call buckconfig.cache_mode /} must contain <code>http</code>).  Buck communicates with the
-    server using a <a href="{ROOT}concept/http_cache_api.html">simple API</a>.
-
+    The URL to use to contact the cache when using http-based caching.  
+    Buck communicates with the server using 
+    a <a href="{ROOT}concept/http_cache_api.html">simple API</a>.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>http</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1389,7 +1451,10 @@ artifact_cache_size_limit = 52428800
   {param example_value: 'readwrite' /}
   {param description}
     Dictates if the cache is <code>readonly</code> or <code>readwrite</code> (default) when using
-    http-based caching ({call buckconfig.cache_mode /} must contain <code>http</code>).
+    http-based caching.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>http</code> or <code>thrift_over_http</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1399,9 +1464,11 @@ artifact_cache_size_limit = 52428800
   {param example_value: 'User-Agent: buck' /}
   {param description}
     A semicolon-separated set of HTTP headers to use when reading from the cache when using
-    http-based caching ({call buckconfig.cache_mode /} must contain <code>http</code>).  The default
-    is no headers.
-  {/param}
+    http-based caching. The default is no headers.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>http</code>.
+    </p>
+  {/param}             
 {/call}
 
 {call buckconfig.entry}
@@ -1410,8 +1477,10 @@ artifact_cache_size_limit = 52428800
   {param example_value: 'Authorization: XXXXXXX; User-Agent: buck' /}
   {param description}
     A semicolon-separated set of HTTP headers to use when writing to the cache when using http-based
-    caching ({call buckconfig.cache_mode /} must contain <code>http</code>).  The default is no
-    headers.
+    caching. The default is no headers.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>http</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1420,10 +1489,12 @@ artifact_cache_size_limit = 52428800
   {param name: 'http_timeout_seconds' /}
   {param example_value: '3' /}
   {param description}
-    Dictates the timeout per connection when using http-based caching{sp}
-    ({call buckconfig.cache_mode /} must contain <code>http</code>).
+    Dictates the timeout per connection when using http-based caching.
     It will be the default value for http_connect_timeout_seconds, http_read_timeout_seconds,
     http_write_timeout_seconds if they're not set.  The default is <code>3</code>.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>http</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1432,9 +1503,12 @@ artifact_cache_size_limit = 52428800
   {param name: 'http_connect_timeout_seconds' /}
   {param example_value: '3' /}
   {param description}
-    Dictates the timeout on http connect when using http-based caching{sp}
+    Dictates the timeout on http connect when using http-based caching.
     If the value is not set, it will try to use the value set for http_timeout_seconds
-    then use the default value 3</code>.
+    then use the default value <code>3</code>.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>http</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1443,9 +1517,12 @@ artifact_cache_size_limit = 52428800
   {param name: 'http_read_timeout_seconds' /}
   {param example_value: '3' /}
   {param description}
-    Dictates the timeout on http writes when using http-based caching{sp}
+    Dictates the timeout on http writes when using http-based caching.
     If the value is not set, it will try to use the value set for http_timeout_seconds
-    then use the default value 3</code>.
+    then use the default value <code>3</code>.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>http</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1454,9 +1531,12 @@ artifact_cache_size_limit = 52428800
   {param name: 'http_write_timeout_seconds' /}
   {param example_value: '3' /}
   {param description}
-    Dictates the timeout on http reads when using http-based caching{sp}
+    Dictates the timeout on http reads when using http-based caching.
     If the value is not set, it will try to use the value set for http_timeout_seconds
-    then use the default value 3</code>.
+    then use the default value <code>3</code>.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>http</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1465,10 +1545,12 @@ artifact_cache_size_limit = 52428800
   {param name: 'http_max_concurrent_writes' /}
   {param example_value: '1' /}
   {param description}
-    The number of writer threads to use to upload to the http cache when using http-based caching
-    {sp}({call buckconfig.cache_mode /} must contain <code>http</code>).  The default is{sp}
-    <code>1</code>.  Note that when using multiple http caches (see below), the writer thread pool
-    is shared between them all.
+    The number of writer threads to use to upload to the http cache when using http-based caching.  
+    The default is{sp} <code>1</code>.  Note that when using multiple http caches (see below), 
+    the writer thread pool is shared between them all.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>http</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1478,9 +1560,11 @@ artifact_cache_size_limit = 52428800
   {param example_value: '1800' /}
   {param description}
     The length of time to wait after the build completes for any remaining http cache uploads to
-    complete before forcefully shutting down the writer thread pool when using http-based caching
-    {sp}({call buckconfig.cache_mode /} must contain <code>http</code>).  The default is{sp}
-    <code>1800</code> (30 minutes).
+    complete before forcefully shutting down the writer thread pool when using http-based caching.  
+    The default is{sp} <code>1800</code> (30 minutes).
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>http</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1494,6 +1578,9 @@ artifact_cache_size_limit = 52428800
     This setting allows for the customization of how http cache errors appear to the user.  If the
     text <code>{lb}cache_name{rb}</code> is present, it will be replaced with the name of the cache.
     If the text {sp}<code>{lb}error_message{rb}</code>, it will be replaced with the error message.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>http</code> or <code>thrift_over_http</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1507,6 +1594,9 @@ artifact_cache_size_limit = 52428800
     This setting allows to set after how many errors Buck
     will print the <code>http_error_message_format</code>. Every time it prints it the counter
     resets to 0 to avoid spamming the console.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>http</code> or <code>thrift_over_http</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1516,6 +1606,9 @@ artifact_cache_size_limit = 52428800
   {param example_value: '1' /}
   {param description}
     Maximum number of times to attempt to store item to the cache before giving up.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>http</code> or <code>thrift_over_http</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1525,6 +1618,9 @@ artifact_cache_size_limit = 52428800
   {param example_value: '1000' /}
   {param description}
     Interval to wait if previous cache store request failed.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>http</code> or <code>thrift_over_http</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1534,6 +1630,9 @@ artifact_cache_size_limit = 52428800
   {param example_value: '5000000' /}
   {param description}
     The max size in bytes that an artifact can be to get pushed to an http cache.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>http</code> or <code>thrift_over_http</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1544,7 +1643,7 @@ artifact_cache_size_limit = 52428800
   {param description}
     <p>
     The path to a PEM encoded client X.509 TLS certificate that should be used for any HTTP requests to a remote cache.
-    This is used when {call buckconfig.http_mode /} settings are one of <code>http</code> or <code>thrift_over_http</code>, and operates on both read and write connections.
+    This operates on both read and write connections.
   </p>
 
     <p>
@@ -1552,6 +1651,10 @@ artifact_cache_size_limit = 52428800
     </p>
 
     <p><strong>Note:</strong> <code>http_client_tls_key</code> must be set for this setting to be used.</p>
+
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>http</code> or <code>thrift_over_http</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1562,7 +1665,7 @@ artifact_cache_size_limit = 52428800
   {param description}
     <p>
     The path to a PEM encoded PKCS#8 key that should be used for any HTTP requests to a remote cache.
-    This is used when {call buckconfig.http_mode /} settings are one of <code>http</code> or <code>thrift_over_http</code>, and operates on both read and write connections.
+    This operates on both read and write connections.
     </p>
 
     <p>
@@ -1570,6 +1673,10 @@ artifact_cache_size_limit = 52428800
     </p>
 
     <p><strong>Note:</strong> <code>http_client_tls_cert</code> must be set for this setting to be used.</p>
+
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>http</code> or <code>thrift_over_http</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1578,28 +1685,10 @@ artifact_cache_size_limit = 52428800
   {param name: 'hybrid_thrift_endpoint' /}
   {param example_value: '/hybrid_endpoint' /}
   {param description}
-  The HTTP endpoint to call if using {call buck.concept_link}{param page:'http_cache_api' /}{param name:'Thrift over HTTP Cache API' /}{param navid:'thrift_http' /}{/call}. Note that {call buckconfig.cache_mode /} must be set to thrift_over_http.
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'cache' /}
-  {param name: 'serve_local_cache' /}
-  {param example_value: 'false' /}
-  {param description}
-    Make the directory-based cache ({call buckconfig.cache_mode /} must contain <code>dir</code>)
-    available to other hosts on the network via Buck's HTTP server (enabled under{sp}
-    {call buckconfig.httpserver /}).
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'cache' /}
-  {param name: 'served_local_cache_mode' /}
-  {param example_value: 'readwrite' /}
-  {param description}
-    Dictates if the cache is <code>readonly</code> (default) or <code>readwrite</code> when{sp}
-    {call buckconfig.cache_serve_local_cache /} is enabled.
+  The HTTP endpoint to call if using {call buck.concept_link}{param page:'http_cache_api' /}{param name:'Thrift over HTTP Cache API' /}{param navid:'thrift_http' /}{/call}. 
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>thrift_over_http</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1608,8 +1697,11 @@ artifact_cache_size_limit = 52428800
   {param name: 'sqlite_inlined_size' /}
   {param example_value: '10kB' /}
   {param description}
-    The maximum size for artifacts to be inlined ({call buckconfig.cache_mode /} must contain
-    {sp}<code>sqlite</code>).  The default size is 40B.
+    The maximum size for artifacts to be inlined.  
+    The default size is 40B.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>sqlite</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1618,8 +1710,10 @@ artifact_cache_size_limit = 52428800
   {param name: 'sqlite_max_size' /}
   {param example_value: '10GB' /}
   {param description}
-    The maximum cache size for SQLite-based caching ({call buckconfig.cache_mode /} must contain
-    {sp}<code>sqlite</code>).  The default size is unlimited.
+    The maximum cache size for SQLite-based caching. The default size is unlimited.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>sqlite</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1630,7 +1724,9 @@ artifact_cache_size_limit = 52428800
   {param description}
     Dictates if the cache is <code>readonly</code>, <code>passthrough</code> or
     {sp}<code>readwrite</code> (default) when using SQLite-based caching
-    {sp}({call buckconfig.cache_mode /} must contain <code>sqlite</code>).
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>sqlite</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1643,6 +1739,9 @@ artifact_cache_size_limit = 52428800
     further along in the list, an attempt to store it in the caches earlier in the list will be
     made.  In the following example, if the artifact is found in the <code>warm</code> cache, it
     will not be stored in the <code>local</code> cache.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>sqlite</code>.
+    </p>
   {/param}
   {param raw_example}
 {literal}<pre class="prettyprint lang-ini">
@@ -2247,7 +2346,7 @@ cxx_library(
   {param description}
     <p>
       Specifies whether the <code>default</code> flavor should be remapped to the value of 
-      the {call buckconfig.host_platform /} configuration parameter.
+      the {call buckconfig.cxx_host_platform /} configuration parameter.
     </p>
 
 <p>
@@ -2282,7 +2381,7 @@ cxx_library(
   {param description}
     <p>
       Specifies the host platform to use 
-      if {call buckconfig.should_remap_host_platform /} is <code>true</code>.  
+      if {call buckconfig.cxx_should_remap_host_platform /} is <code>true</code>.  
     </p>
 
     <p>
@@ -3371,6 +3470,19 @@ or the value could be a custom platform flavor:
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'log' /}
+  {param name: 'build_details_commands' /}
+  {param example_value: 'build, test, install, query, targets' /}
+  {param description}
+    If <a href="#log.build_details_template"><code>build_details_template</code></a> is provided, 
+    Buck prints the specified string to the console for each of the specified list of
+    commands. This can be useful for ensuring that users do not have too much information
+    provided, but allows configuring log-heavy environments like CI systems to output more
+    information for commands like 'query'. Default value is build, test, install
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'lua' /}
   {param description}
@@ -3483,17 +3595,16 @@ int run_starter(
   central = https://repo1.maven.org/maven2
   m2 = ~/.m2/repository
 </pre>{/literal}
-  {/param}
-{/call}
-
 <p>
-Note that if you using Buck to talk to Maven and you are using IPv6, you
+Note that if you are using Buck to talk to Maven and you are using IPv6, you
 might need to <a href="./buckjavaargs.html">add the following option to
 your <code>.buckjavaargs</code> file</a>:
 </p>
-
 {literal}<pre>
 -Djava.net.preferIPv6Addresses=true</pre>{/literal}
+  {/param}
+{/call}
+
 
 {call buckconfig.section}
   {param name: 'ndk' /}
@@ -3510,7 +3621,7 @@ your <code>.buckjavaargs</code> file</a>:
       The version of the NDK that Buck should use to build native code.
       Buck searches for this version in the subdirectories beneath the
       directory specified by either the <code>ANDROID_NDK_REPOSITORY</code> environment 
-      variable or the value of the {call buckconfig.ndk_repository_path /} property.
+      variable or the value of the {call buckconfig.ndk_ndk_repository_path /} property.
       Buck prefers an exact match, and otherwise accepts a prefix match.
     </p>
 
@@ -3610,7 +3721,7 @@ Pkg.Revision = 13.1.3345770
     </p>
     <p>
       Buck selects which NDK to use based on the value of 
-      the {call buckconfig.ndk_version /} property.
+      the {call buckconfig.ndk_ndk_version /} property.
       Currently, if you do not specify a value for <code>ndk.ndk_version</code>, 
       Buck selects the most-recent NDK.  However, you should not rely on this 
       behavior as it could change in a future release.
@@ -4036,7 +4147,7 @@ buck project --config project.ide_force_kill=always
   {/param}
 
 {/call}
- {call buckconfig.entry}
+{call buckconfig.entry}
   {param section: 'project' /}
   {param name: 'initial_targets' /}
   {param example_value: '//java/com/facebook/schema:generate_thrift_jar' /}
@@ -4213,6 +4324,15 @@ $ buck build app#py3
   {param description}
     The path to the python interpreter to use.  By default, Buck will search for this in your{sp}
     <code>PATH</code>.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'python' /}
+  {param name: 'inplace_interpreter_flags' /}
+  {param example_value: '-EBs' /}
+  {param description}
+    Flags to pass to the python interpreter when running a .pex file that is configured to run 'inplace'. Defaults to <code>-Es</code>
   {/param}
 {/call}
 
@@ -4619,8 +4739,7 @@ buck = .
     construct a link tree with the sources required for a given rule, which means the paths passed
     to <code>rustc</code> are not the original source paths. This option will remap those paths
     in compiler output, debug info, <code>file!()</code> and elsewhere to match the original
-    source names. The options are "no" (don't remap), "unstable" (remap using the experimental
-    version of these options) and "yes" (remap using the stable versions, probably 1.25 onwards).
+    source names. The options are "no" (don't remap),  and "yes" (remap).
   {/param}
 {/call}
 
@@ -4636,6 +4755,7 @@ buck = .
     dynamically link with C/C++ shared objects.
   {/param}
 {/call}
+
 {call buckconfig.entry}
   {param section: 'rust' /}
   {param name: 'prefer_static_libs' /}
@@ -4644,6 +4764,42 @@ buck = .
     When <code>prefer_static_libs</code> is true, then buck will always prefer to link with static
     versions of a library when building a shared target. In practice, this only affects linking
     with the standard library crates.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'rust' /}
+  {param name: 'incremental' /}
+  {param example_value: 'opt' /}
+  {param description}
+    <p>
+    When set, enable rustc's incremental build option.
+    </p>
+    <p>
+    Rust's incremental compilation mode operates transparently to the build system - it is
+    guaranteed to produce bit-for-bit identical output to non-incremental builds. To do this
+    it maintains a separate incremental database to one side. The only requirement is that
+    there is only ever one instance of <code>rustc</code> for a given crate at one time. Buck
+    guarantees this by making sure there's a separate incremental database for each flavor
+    (since builds for different flavors of the same target can be run concurrently).
+    </p>
+    <p>
+    The value of this option is an additional path fragment used for the incremental database
+    path. This allows the user to use separate databases for optimized, debug, etc command lines.
+    If this is not required, then it can be any valid pathname fragment.
+    </p>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'rust' /}
+  {param name: 'default_edition' /}
+  {param example_value: '2018' /}
+  {param description}
+    <p>
+    Set the default edition for Rust rules. The edition can be specified on a per-rule basis, but
+    this sets the default if nothing is specified. The default is "2015".
+    </p>
   {/param}
 {/call}
 
@@ -4827,7 +4983,7 @@ buck = .
   {param description}
     The <code>javac</code> option is a path to a program that acts like Java javac.
     When set, buck uses this program instead of the system Java compiler.
-    When neither this nor {call buckconfig.tools_java_jar /} is set, Buck defaults
+    When neither this nor {call buckconfig.tools_javac_jar /} is set, Buck defaults
     to using the system compiler in-memory.
   {/param}
 {/call}
@@ -4839,6 +4995,17 @@ buck = .
     When this option is set to a JAR file, Buck loads the referenced compiler in-memory.
     When neither this nor {call buckconfig.tools_javac /} is set, Buck defaults
     to using the system compiler in-memory.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'tools' /}
+  {param name: 'java_for_tests' /}
+  {param description}
+    The <code>java_for_tests</code> option is a path to a <code>java</code> binary.
+    When set, buck uses that binary to execute Java tests--when using either the internal or
+   external test runners--instead of the <code>java</code> binary used to run Buck itself.
+    When this option is not set, Buck executes Java tests using the same binary used to run Buck.
   {/param}
 {/call}
 
@@ -4931,6 +5098,33 @@ buck = .
   string, <code>$2</code> for the second, and so on. This works exactly like
   Java regex replacement strings.
   </p>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'ui' /}
+  {param name: 'relativize_targets_to_working_directory' /}
+  {param example_value: 'false' /}
+  {param description}
+    Determines whether {call buck.build_target_pattern /}s provided on the command line 
+    are relativized to the current working directory. For example, if <code>buck build bar/...</code>
+    is run from the <code>foo</code> subdirectory of the project, the pattern
+    <code>//foo/bar/...</code> is built instead. If set to <code>false</code>, <code>//bar/...</code>
+    would be built.
+
+    This defaults to true.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'ui' /}
+  {param name: 'enable_show_output_warning' /}
+  {param example_value: 'false' /}
+  {param description}
+    Determines whether a deprecation warning for <code>--show-output</code> should be shown. The
+    warning also informs users that they should be using <code>--show-outputs</code> instead.
+
+    This defaults to false.
   {/param}
 {/call}
 
