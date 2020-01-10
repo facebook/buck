@@ -19,6 +19,8 @@ package com.facebook.buck.apple;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.cxx.CxxToolchainHelper;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -52,7 +54,11 @@ public class AppleToolchainIntegrationTest {
         String.format(
             "strip:%n"
                 + "linker: input:%n"
-                + "buck-out/gen/TestLib#iphoneos-arm64,static/libTestLib.static.secret%n"
+                + BuildTargetPaths.getGenPath(
+                    workspace.getProjectFileSystem(),
+                    BuildTargetFactory.newInstance("//:TestLib#iphoneos-arm64,static"),
+                    "%s")
+                + "/libTestLib.static.secret%n"
                 + "archive:%n"
                 + "object: compile output: source code 1%n"
                 + "object: compile output: source code 2%n"
@@ -61,7 +67,8 @@ public class AppleToolchainIntegrationTest {
                 + "linker: frameworks: Foundation,UIKit%n"
                 + "linker: lpath:  %s/apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/lib%n"
                 + "linker: libs:  objc%n",
-            rootPath, rootPath),
+            rootPath,
+            rootPath),
         workspace.getFileContents(output.resolve("TestApp")));
   }
 
@@ -80,7 +87,11 @@ public class AppleToolchainIntegrationTest {
             "universal file:%n"
                 + "strip:%n"
                 + "linker: input:%n"
-                + "buck-out/gen/TestLib#iphoneos-arm64,static/libTestLib.static.secret%n"
+                + BuildTargetPaths.getGenPath(
+                    workspace.getProjectFileSystem(),
+                    BuildTargetFactory.newInstance("//:TestLib#iphoneos-arm64,static"),
+                    "%s")
+                + "/libTestLib.static.secret%n"
                 + "archive:%n"
                 + "object: compile output: source code 1%n"
                 + "object: compile output: source code 2%n"
@@ -92,7 +103,11 @@ public class AppleToolchainIntegrationTest {
                 + "universal file:%n"
                 + "strip:%n"
                 + "linker: input:%n"
-                + "buck-out/gen/TestLib#iphoneos-armv7,static/libTestLib.static.secret%n"
+                + BuildTargetPaths.getGenPath(
+                    workspace.getProjectFileSystem(),
+                    BuildTargetFactory.newInstance("//:TestLib#iphoneos-armv7,static"),
+                    "%s")
+                + "/libTestLib.static.secret%n"
                 + "archive:%n"
                 + "object: compile output: source code 1%n"
                 + "object: compile output: source code 2%n"
@@ -101,7 +116,10 @@ public class AppleToolchainIntegrationTest {
                 + "linker: frameworks: Foundation,UIKit%n"
                 + "linker: lpath:  %s/apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/lib%n"
                 + "linker: libs:  objc%n",
-            rootPath, rootPath, rootPath, rootPath),
+            rootPath,
+            rootPath,
+            rootPath,
+            rootPath),
         workspace.getFileContents(output.resolve("TestApp")));
   }
 
@@ -120,7 +138,11 @@ public class AppleToolchainIntegrationTest {
         String.format(
             "strip:%n"
                 + "linker: input:%n"
-                + "buck-out/gen/TestLib#iphoneos-arm64,static/libTestLib.static.secret%n"
+                + BuildTargetPaths.getGenPath(
+                    workspace.getProjectFileSystem(),
+                    BuildTargetFactory.newInstance("//:TestLib#iphoneos-arm64,static"),
+                    "%s")
+                + "/libTestLib.static.secret%n"
                 + "archive:%n"
                 + "object: compile output: source code 1%n"
                 + "object: compile output: source code 2%n"
@@ -129,7 +151,8 @@ public class AppleToolchainIntegrationTest {
                 + "linker: frameworks: Foundation,UIKit%n"
                 + "linker: lpath:  %s/apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/lib%n"
                 + "linker: libs:  objc%n",
-            rootPath, rootPath),
+            rootPath,
+            rootPath),
         workspace.getFileContents(output.resolve("TestApp")));
   }
 }
