@@ -55,7 +55,6 @@ import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
-import com.facebook.buck.parser.spec.BuildTargetSpec;
 import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
@@ -414,7 +413,8 @@ public class BuildCommand extends AbstractCommand {
 
     ImmutableSet<ImmutableBuildTargetWithOutputs> buildTargetsWithOutputs =
         justBuildTarget == null
-            ? getBuildTargetsWithOutputs(specs, targetGraphForLocalBuild.getBuildTargets())
+            ? matchBuildTargetsWithLabelsFromSpecs(
+                specs, targetGraphForLocalBuild.getBuildTargets())
             : getBuildTargetsWithOutputsForJustBuild(
                 params, params.getTargetConfiguration(), actionGraph, justBuildTarget);
 
@@ -426,40 +426,6 @@ public class BuildCommand extends AbstractCommand {
             .build();
 
     return ImmutableGraphsAndBuildTargets.of(actionAndTargetGraphs, buildTargetsWithOutputs);
-  }
-
-  private ImmutableSet<ImmutableBuildTargetWithOutputs> getBuildTargetsWithOutputs(
-      ImmutableList<TargetNodeSpec> specs, ImmutableSet<BuildTarget> buildTargets) {
-    ImmutableSet.Builder<ImmutableBuildTargetWithOutputs> builder =
-        ImmutableSet.builderWithExpectedSize(buildTargets.size());
-    for (BuildTarget target : buildTargets) {
-      boolean mappedTarget = false;
-
-      // Need to look through all the specs even after finding a match because there may be multiple
-      // matches
-      for (TargetNodeSpec spec : specs) {
-        if (!(spec instanceof BuildTargetSpec)) {
-          continue;
-        }
-        BuildTargetSpec buildTargetSpec = (BuildTargetSpec) spec;
-        if (buildTargetSpec
-            .getUnconfiguredBuildTargetView()
-            .equals(target.getUnconfiguredBuildTargetView())) {
-          builder.add(
-              ImmutableBuildTargetWithOutputs.of(
-                  target,
-                  buildTargetSpec.getUnconfiguredBuildTargetViewWithOutputs().getOutputLabel()));
-          mappedTarget = true;
-        }
-      }
-
-      // A target may not map to an output label if the build command wasn't invoked with a build
-      // pattern that specifies a specific target
-      if (!mappedTarget) {
-        builder.add(ImmutableBuildTargetWithOutputs.of(target, OutputLabel.defaultLabel()));
-      }
-    }
-    return builder.build();
   }
 
   private ImmutableSet<ImmutableBuildTargetWithOutputs> getBuildTargetsWithOutputsForJustBuild(
