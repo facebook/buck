@@ -64,7 +64,7 @@ import java.util.stream.Collectors;
  * )
  * </pre>
  *
- * The output of this rule would likely be used as follows:
+ * <p>The output of this rule would likely be used as follows:
  *
  * <pre>
  * android_binary(
@@ -76,7 +76,43 @@ import java.util.stream.Collectors;
  * )
  * </pre>
  *
- * A <code>genrule</code> is evaluated by running the shell command specified by {@code cmd} with
+ * <p>Named outputs are availabe in genrules by using `outs` instead of `out`. Only one of 'out' or
+ * 'outs' may be present in a genrule. For example, the aforementioned rule can be defined as:
+ *
+ * <pre>
+ * genrule(
+ *   name = 'katana_manifest',
+ *   srcs = [
+ *     'wakizashi_to_katana_manifest.py',
+ *     'AndroidManifest.xml',
+ *   ],
+ *   cmd = 'python wakizashi_to_katana_manifest.py ${SRCDIR}/AndroidManfiest.xml &gt; $OUT',
+ *   outs = {
+ *    'manifest': [ 'AndroidManifest.xml'] ,
+ *   },
+ * )
+ * </pre>
+ *
+ * <p>The key-value pairs in 'outs' define the named output groups provided by this genrule. The
+ * keys are {@link OutputLabel} instances, while the values are outputs relative to this genrule's
+ * output directory. Genrule outputs with 'outs' can be consumed using the {@link
+ * com.facebook.buck.core.model.BuildTargetWithOutputs} syntax. For example:
+ *
+ * <pre>
+ * android_binary(
+ *   name = 'katana',
+ *   manifest = ':katana_manifest[manifest]',
+ *   deps = [
+ *     # Additional dependent android_library rules would be listed here, as well.
+ *   ],
+ * )
+ * </pre>
+ *
+ * <p>If a rule with 'outs' is consumed without an output label, the default output group is
+ * returned. Currently, the default output group is an empty set. In the future, it would be the set
+ * of all named outputs.
+ *
+ * <p>A <code>genrule</code> is evaluated by running the shell command specified by {@code cmd} with
  * the following environment variable substitutions:
  *
  * <ul>
@@ -84,9 +120,10 @@ import java.util.stream.Collectors;
  *       attribute where each element of <code>srcs</code> will be translated into an absolute path.
  *   <li><code>SRCDIR</code> will be a directory containing all files mentioned in the srcs.
  *   <li><code>TMP</code> will be a temporary directory which can be used for intermediate results
- *   <li><code>OUT</code> is the output file for the <code>genrule()</code>. The file specified by
- *       this variable must always be written by this command. If not, the execution of this rule
- *       will be considered a failure, halting the build process.
+ *   <li><code>OUT</code> is </code>the output file for the <code>genrule()</code> if 'out' is used.
+ *       If using `outs`, it is the output directory. The file specified by this variable must
+ *       always be written by this command. If not, the execution of this rule will be considered a
+ *       failure, halting the build process.
  * </ul>
  *
  * In the above example, if the {@code katana_manifest} rule were defined in the {@code
