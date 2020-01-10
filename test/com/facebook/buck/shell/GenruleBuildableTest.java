@@ -430,11 +430,8 @@ public class GenruleBuildableTest {
   }
 
   @Test
-  public void canGetSingleDefaultOutput() {
+  public void defaultOutsIsEmpty() {
     BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
-    ProjectFilesystem fakeProjectFileSystem = new FakeProjectFilesystem();
-    OutputPathResolver outputPathResolver =
-        new DefaultOutputPathResolver(fakeProjectFileSystem, target);
 
     GenruleBuildable buildable =
         GenruleBuildableBuilder.builder()
@@ -445,10 +442,7 @@ public class GenruleBuildableTest {
             .build()
             .toBuildable();
 
-    Path outputPath =
-        outputPathResolver.resolvePath(
-            Iterables.getOnlyElement(buildable.getOutputs(OutputLabel.defaultLabel())));
-    assertEquals(outputPathResolver.getRootPath().resolve("output1a"), outputPath);
+    assertThat(buildable.getOutputs(OutputLabel.defaultLabel()), Matchers.empty());
   }
 
   @Test
@@ -513,42 +507,6 @@ public class GenruleBuildableTest {
     assertThat(
         actual,
         Matchers.containsInAnyOrder(rootPath.resolve("output1a"), rootPath.resolve("output1b")));
-  }
-
-  @Test
-  public void defaultGroupReturnsAllNamedOutputs() {
-    BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
-    ProjectFilesystem fakeProjectFileSystem = new FakeProjectFilesystem();
-    OutputPathResolver outputPathResolver =
-        new DefaultOutputPathResolver(fakeProjectFileSystem, target);
-    Path rootPath = outputPathResolver.getRootPath();
-
-    GenruleBuildable buildable =
-        GenruleBuildableBuilder.builder()
-            .setBuildTarget(target)
-            .setFilesystem(fakeProjectFileSystem)
-            .setBash("echo something")
-            .setOuts(
-                Optional.of(
-                    ImmutableMap.of(
-                        "label1",
-                        ImmutableList.of("output1a", "output1b"),
-                        "label2",
-                        ImmutableList.of("output2a"))))
-            .build()
-            .toBuildable();
-
-    ImmutableSet<Path> actual =
-        buildable.getOutputs(OutputLabel.defaultLabel()).stream()
-            .map(p -> outputPathResolver.resolvePath(p))
-            .collect(ImmutableSet.toImmutableSet());
-
-    assertThat(
-        actual,
-        Matchers.containsInAnyOrder(
-            rootPath.resolve("output1a"),
-            rootPath.resolve("output1b"),
-            rootPath.resolve("output2a")));
   }
 
   @Test

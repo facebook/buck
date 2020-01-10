@@ -17,7 +17,6 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.android.toolchain.AndroidTools;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.HasOutputName;
 import com.facebook.buck.core.model.OutputLabel;
@@ -188,6 +187,10 @@ public class Genrule extends ModernBuildRule<GenruleBuildable>
             executeRemotely));
   }
 
+  /**
+   * Returns the output defined in 'out'. Should not be used with multiple outputs. Use {@link
+   * #getSourcePathToOutput(OutputLabel)} instead.
+   */
   @Override
   public SourcePath getSourcePathToOutput() {
     ImmutableSortedSet<SourcePath> sourcePaths = getSourcePathToOutput(OutputLabel.defaultLabel());
@@ -200,16 +203,7 @@ public class Genrule extends ModernBuildRule<GenruleBuildable>
 
   @Override
   public ImmutableSortedSet<SourcePath> getSourcePathToOutput(OutputLabel outputLabel) {
-    ImmutableSortedSet<SourcePath> sourcePaths =
-        getSourcePaths(getBuildable().getOutputs(outputLabel));
-    if (outputLabel.isDefault() && sourcePaths.size() > 1) {
-      // This will fail anyway even without this exception being thrown here, but throwing the
-      // exception here gives a genrule-specific error rather than a more generic framework error.
-      throw new HumanReadableException(
-          "Genrule target %s doesn't support multiple default outputs yet. Use named outputs.",
-          getBuildTarget().getFullyQualifiedName());
-    }
-    return sourcePaths;
+    return getSourcePaths(getBuildable().getOutputs(outputLabel));
   }
 
   @Override

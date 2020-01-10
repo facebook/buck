@@ -982,11 +982,7 @@ public class GenruleTest {
   }
 
   @Test
-  public void throwsIfDefaultOutputGroupNotSingleElement() {
-    expectedThrownException.expect(HumanReadableException.class);
-    expectedThrownException.expectMessage(
-        "Genrule target //:test_genrule doesn't support multiple default outputs yet. Use named outputs.");
-
+  public void defaultOutputGroupIsEmpty() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     Genrule genrule =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:test_genrule"))
@@ -999,26 +995,7 @@ public class GenruleTest {
                     ImmutableList.of("output2a")))
             .build(graphBuilder, new FakeProjectFilesystem());
 
-    genrule.getSourcePathToOutput(OutputLabel.defaultLabel());
-  }
-
-  @Test
-  public void doesNotThrowIfDefaultOutputGroupIsSingleElement() {
-    ProjectFilesystem fakeFileSystem = new FakeProjectFilesystem();
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(graphBuilder);
-    BuildTarget target = BuildTargetFactory.newInstance("//:test_genrule");
-    Genrule genrule =
-        GenruleBuilder.newGenruleBuilder(target)
-            .setCmd("echo hello >> $OUT")
-            .setOuts(ImmutableMap.of("label2", ImmutableList.of("output2a")))
-            .build(graphBuilder, new FakeProjectFilesystem());
-
-    ImmutableSet<Path> actual =
-        convertSourcePathsToPaths(
-            sourcePathResolver, genrule.getSourcePathToOutput(OutputLabel.defaultLabel()));
-    assertThat(
-        actual, Matchers.containsInAnyOrder(getExpectedPath(fakeFileSystem, target, "output2a")));
+    assertThat(genrule.getSourcePathToOutput(OutputLabel.defaultLabel()), Matchers.empty());
   }
 
   @Test
@@ -1081,12 +1058,7 @@ public class GenruleTest {
     assertThat(
         actual.get(OutputLabel.of("label2")),
         Matchers.containsInAnyOrder(getExpectedPath(fakeFileSystem, target, "output2a")));
-    assertThat(
-        actual.get(OutputLabel.defaultLabel()),
-        Matchers.containsInAnyOrder(
-            getExpectedPath(fakeFileSystem, target, "output1a"),
-            getExpectedPath(fakeFileSystem, target, "output1b"),
-            getExpectedPath(fakeFileSystem, target, "output2a")));
+    assertThat(actual.get(OutputLabel.defaultLabel()), Matchers.empty());
   }
 
   @Test

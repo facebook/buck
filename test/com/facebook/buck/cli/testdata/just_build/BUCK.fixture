@@ -20,17 +20,6 @@ genrule(
 )
 
 genrule(
-    name = "bar_with_multiple_outputs_but_really_only_has_one_heehee",
-    outs = {
-        "output1": [
-            "bar",
-        ],
-    },
-    bash = "touch $OUT/bar",
-    cmd_exe = "(echo something)> %OUT%\\bar",
-)
-
-genrule(
     name = "foo",
     srcs = [
         ":bar",

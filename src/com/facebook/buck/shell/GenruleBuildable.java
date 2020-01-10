@@ -288,15 +288,15 @@ public class GenruleBuildable implements Buildable {
         .map(
             paths -> {
               if (outputLabel.isDefault()) {
-                return getAllOutputPaths(paths);
+                return ImmutableSet.<OutputPath>of();
               }
-              ImmutableSet<OutputPath> pathsforLabel = paths.get(outputLabel);
-              if (pathsforLabel == null) {
+              ImmutableSet<OutputPath> pathsForLabel = paths.get(outputLabel);
+              if (pathsForLabel == null) {
                 throw new HumanReadableException(
                     "Cannot find output label [%s] for target %s",
                     outputLabel, buildTarget.getFullyQualifiedName());
               }
-              return pathsforLabel;
+              return pathsForLabel;
             })
         .orElseGet(
             () -> {
@@ -318,13 +318,8 @@ public class GenruleBuildable implements Buildable {
     return ImmutableMap.<OutputLabel, ImmutableSet<OutputPath>>builderWithExpectedSize(
             paths.size() + 1)
         .putAll(paths)
-        .put(OutputLabel.defaultLabel(), getAllOutputPaths(paths))
+        .put(OutputLabel.defaultLabel(), ImmutableSet.of())
         .build();
-  }
-
-  private ImmutableSet<OutputPath> getAllOutputPaths(
-      ImmutableMap<OutputLabel, ImmutableSet<OutputPath>> paths) {
-    return paths.values().stream().flatMap(Set::stream).collect(ImmutableSet.toImmutableSet());
   }
 
   @Override

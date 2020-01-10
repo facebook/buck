@@ -170,10 +170,6 @@ public class BuildReportIntegrationTest {
     assertThat(
         outputs.get("output2"),
         Matchers.containsInAnyOrder(expectedBasePath.resolve("out2.txt").toString()));
-    assertThat(
-        outputs.get("DEFAULT"),
-        Matchers.containsInAnyOrder(
-            expectedBasePath.resolve("out1.txt").toString(),
-            expectedBasePath.resolve("out2.txt").toString()));
+    assertThat(outputs.get("DEFAULT"), Matchers.empty());
   }
 }

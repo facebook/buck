@@ -162,33 +162,9 @@ public class BuildCommandIntegrationTest {
     workspace.setUp();
 
     ProcessResult result =
-        workspace
-            .runBuckBuild("--show-outputs", "//:bar_with_multiple_outputs")
-            .assertExitCode(ExitCode.BUILD_ERROR);
-    assertThat(
-        result.getStderr(),
-        Matchers.containsString(
-            "Genrule target //:bar_with_multiple_outputs doesn't support multiple default outputs yet. Use named outputs"));
-  }
-
-  @Test
-  public void showOutputsForSingleDefaultOutput() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
-    workspace.setUp();
-    Path expectedPath =
-        getExpectedOutputPathRelativeToProjectRoot(
-            "//:bar_with_multiple_outputs_but_really_only_has_one_heehee", "bar");
-
-    ProcessResult result =
-        workspace
-            .runBuckBuild(
-                "--show-outputs", "//:bar_with_multiple_outputs_but_really_only_has_one_heehee")
-            .assertSuccess();
-    assertThat(
-        result.getStdout(),
-        Matchers.containsString(
-            String.format(
-                "//:bar_with_multiple_outputs_but_really_only_has_one_heehee %s", expectedPath)));
+        workspace.runBuckBuild("--show-outputs", "//:bar_with_multiple_outputs").assertSuccess();
+    assertThat(result.getStdout(), Matchers.containsString("//:bar_with_multiple_outputs"));
+    assertThat(result.getStdout(), Matchers.not(Matchers.containsString("buck-out")));
   }
 
   @Test
