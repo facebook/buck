@@ -41,4 +41,13 @@ public class CustomProtoSerializerTest {
         "{\"executedActionMetadata\":\"{\\n  \\\"worker\\\": \\\"abc\\\"\\n}\"}",
         new ObjectMapper().writeValueAsString(classWithProto));
   }
+
+  @Test
+  public void testEmpty() throws IOException {
+    ClassWithProto classWithProto = new ClassWithProto();
+    classWithProto.executedActionMetadata = Optional.empty();
+    assertEquals(
+        "{\"executedActionMetadata\":\"No message\"}",
+        new ObjectMapper().writeValueAsString(classWithProto));
+  }
 }

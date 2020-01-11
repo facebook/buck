@@ -40,6 +40,8 @@ public class CustomOptionalProtoSerializer extends JsonSerializer<Optional<Messa
       } catch (IOException e) {
         gen.writeString("Unexpected error trying to serialize proto object");
       }
+    } else {
+      gen.writeString("No message");
     }
   }
 }
