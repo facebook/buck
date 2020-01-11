@@ -105,6 +105,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 import org.hamcrest.Matchers;
 import org.pf4j.PluginManager;
@@ -748,6 +749,12 @@ public class ProjectWorkspace extends AbstractWorkspace {
   }
 
   public void assertFilesEqual(Path expected, Path actual) throws IOException {
+    assertFilesEqual(expected, actual, s -> s);
+  }
+
+  private void assertFilesEqual(
+      Path expected, Path actual, Function<String, String> normalizeObservedContent)
+      throws IOException {
     if (!expected.isAbsolute()) {
       expected = templatePath.resolve(expected);
     }
@@ -818,19 +825,29 @@ public class ProjectWorkspace extends AbstractWorkspace {
               observedObject);
           break;
         } else {
-          assertFileContentsEqual(expected, actual, false);
+          assertFileContentsEqual(expected, actual, false, normalizeObservedContent);
         }
         break;
       case "iml":
       case "xml":
-        assertFileContentsEqual(expected, actual, true);
+        assertFileContentsEqual(expected, actual, true, normalizeObservedContent);
         break;
       default:
-        assertFileContentsEqual(expected, actual, false);
+        assertFileContentsEqual(expected, actual, false, normalizeObservedContent);
     }
   }
 
-  private void assertFileContentsEqual(Path expectedFile, Path observedFile, boolean isXml)
+  private enum FileType {
+    DEFAULT,
+    XML,
+    JSLIB,
+  }
+
+  private void assertFileContentsEqual(
+      Path expectedFile,
+      Path observedFile,
+      boolean isXml,
+      Function<String, String> normalizeObservedContent)
       throws IOException {
     String cleanPathToObservedFile =
         MoreStrings.withoutSuffix(
@@ -864,6 +881,8 @@ public class ProjectWorkspace extends AbstractWorkspace {
     observedFileContent =
         BuckOutConfigHashPlaceholder.replaceHashByPlaceholder(observedFileContent);
 
+    observedFileContent = normalizeObservedContent.apply(expectedFileContent);
+
     // TODO(gabrielrc): Remove this after we land the new config hash changes
     observedFileContent = BuckOutConfigHashPlaceholder.removePlaceholder(observedFileContent);
     expectedFileContent = BuckOutConfigHashPlaceholder.removePlaceholder(expectedFileContent);
@@ -883,7 +902,10 @@ public class ProjectWorkspace extends AbstractWorkspace {
    * @param templateSubdirectory An optional subdirectory to check. Only files in this directory
    *     will be compared.
    */
-  private void assertPathsEqual(Path templateSubdirectory, Path destinationSubdirectory)
+  private void assertPathsEqual(
+      Path templateSubdirectory,
+      Path destinationSubdirectory,
+      Function<String, String> normalizeObservedContent)
       throws IOException {
     SimpleFileVisitor<Path> copyDirVisitor =
         new SimpleFileVisitor<Path>() {
@@ -897,7 +919,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
                   destinationSubdirectory.resolve(templateSubdirectory.relativize(file));
               Path directory = generatedFileWithSuffix.getParent();
               Path observedFile = directory.resolve(MorePaths.getNameWithoutExtension(file));
-              assertFilesEqual(file, observedFile);
+              assertFilesEqual(file, observedFile, normalizeObservedContent);
             }
             return FileVisitResult.CONTINUE;
           }
@@ -907,12 +929,22 @@ public class ProjectWorkspace extends AbstractWorkspace {
   }
 
   public void verify(Path templateSubdirectory, Path destinationSubdirectory) throws IOException {
-    assertPathsEqual(
-        templatePath.resolve(templateSubdirectory), destPath.resolve(destinationSubdirectory));
+    verify(templateSubdirectory, destinationSubdirectory, s -> s);
   }
 
   public void verify() throws IOException {
-    assertPathsEqual(templatePath, destPath);
+    assertPathsEqual(templatePath, destPath, s -> s);
+  }
+
+  public void verify(
+      Path templateSubdirectory,
+      Path destinationSubdirectory,
+      Function<String, String> normalizeObservedContent)
+      throws IOException {
+    assertPathsEqual(
+        templatePath.resolve(templateSubdirectory),
+        destPath.resolve(destinationSubdirectory),
+        normalizeObservedContent);
   }
 
   public Path getGenPath(BuildTarget buildTarget, String format) throws IOException {
@@ -930,7 +962,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
         !subdirectory.isAbsolute(),
         "'verify(subdirectory)' takes a relative path, but received '%s'",
         subdirectory);
-    assertPathsEqual(templatePath.resolve(subdirectory), destPath.resolve(subdirectory));
+    assertPathsEqual(templatePath.resolve(subdirectory), destPath.resolve(subdirectory), s -> s);
   }
 
   /**
