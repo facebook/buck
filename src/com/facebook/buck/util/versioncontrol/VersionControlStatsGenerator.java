@@ -201,7 +201,7 @@ public class VersionControlStatsGenerator {
         }
         if (mode.hasDiff && diff == null) {
           diff =
-              versionControlCmdLineInterface.diffBetweenRevisionsOrAbsent(
+              versionControlCmdLineInterface.diffBetweenRevisions(
                   fastStats.getBranchedFromMasterRevisionId(), fastStats.getCurrentRevisionId());
           versionControlStatsBuilder.setDiff(diff);
         }

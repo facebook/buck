@@ -18,6 +18,7 @@ package com.facebook.buck.util.versioncontrol;
 
 import com.google.common.collect.ImmutableSet;
 import java.io.InputStream;
+import java.util.Optional;
 
 /** * This is used if the project being built doesn't use a supported VCS. */
 public class NoOpCmdLineInterface implements VersionControlCmdLineInterface {
@@ -31,7 +32,7 @@ public class NoOpCmdLineInterface implements VersionControlCmdLineInterface {
   }
 
   @Override
-  public VersionControlSupplier<InputStream> diffBetweenRevisions(
+  public Optional<VersionControlSupplier<InputStream>> diffBetweenRevisions(
       String baseRevision, String tipRevision) throws VersionControlCommandFailedException {
     throw new VersionControlCommandFailedException("");
   }

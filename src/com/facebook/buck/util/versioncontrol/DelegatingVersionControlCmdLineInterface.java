@@ -76,16 +76,10 @@ public class DelegatingVersionControlCmdLineInterface implements VersionControlC
   }
 
   @Override
-  public VersionControlSupplier<InputStream> diffBetweenRevisions(
+  public Optional<VersionControlSupplier<InputStream>> diffBetweenRevisions(
       String baseRevision, String tipRevision)
       throws VersionControlCommandFailedException, InterruptedException {
     return getDelegate().diffBetweenRevisions(baseRevision, tipRevision);
-  }
-
-  @Override
-  public Optional<VersionControlSupplier<InputStream>> diffBetweenRevisionsOrAbsent(
-      String baseRevision, String tipRevision) throws InterruptedException {
-    return getDelegate().diffBetweenRevisionsOrAbsent(baseRevision, tipRevision);
   }
 
   @Override

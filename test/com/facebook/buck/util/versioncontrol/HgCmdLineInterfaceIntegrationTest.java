@@ -19,6 +19,7 @@ package com.facebook.buck.util.versioncontrol;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
@@ -141,8 +142,7 @@ public class HgCmdLineInterfaceIntegrationTest {
   @Test
   public void testDiffBetweenTheSameRevision()
       throws VersionControlCommandFailedException, InterruptedException {
-    exception.expect(VersionControlCommandFailedException.class);
-    repoThreeCmdLine.diffBetweenRevisions("adf7a0", "adf7a0").get();
+    assertFalse(repoThreeCmdLine.diffBetweenRevisions("adf7a0", "adf7a0").isPresent());
   }
 
   @Test
@@ -162,7 +162,7 @@ public class HgCmdLineInterfaceIntegrationTest {
             "new file mode 100644",
             "");
     try (InputStream diffFileStream =
-        repoThreeCmdLine.diffBetweenRevisions("b1fd7e", "2911b3").get()) {
+        repoThreeCmdLine.diffBetweenRevisions("b1fd7e", "2911b3").get().get()) {
       InputStreamReader diffFileReader = new InputStreamReader(diffFileStream, Charsets.UTF_8);
       String actualDiff = CharStreams.toString(diffFileReader);
       assertEquals(String.join("\n", expectedValue), actualDiff);
