@@ -233,8 +233,12 @@ public class SwiftIOSBundleIntegrationTest {
 
     Path parentOutput =
         tmp.getRoot()
-            .resolve(filesystem.getBuckPaths().getGenDir())
-            .resolve("ios-parent-dynamic#iphonesimulator-x86_64,swift-compile")
+            .resolve(
+                BuildTargetPaths.getGenPath(
+                    filesystem,
+                    BuildTargetFactory.newInstance(
+                        "//:ios-parent-dynamic#iphonesimulator-x86_64,swift-compile"),
+                    "%s"))
             .resolve("ios_parent_dynamic.swiftmodule");
     assertThat(Files.exists(parentOutput), CoreMatchers.is(true));
 
@@ -265,8 +269,11 @@ public class SwiftIOSBundleIntegrationTest {
 
     Path binaryOutput =
         tmp.getRoot()
-            .resolve(filesystem.getBuckPaths().getGenDir())
-            .resolve("dep1-soname#iphonesimulator-x86_64")
+            .resolve(
+                BuildTargetPaths.getGenPath(
+                    filesystem,
+                    BuildTargetFactory.newInstance("//:dep1-soname#iphonesimulator-x86_64"),
+                    "%s"))
             .resolve("custom-soname");
     assertThat(Files.exists(binaryOutput), CoreMatchers.is(true));
 
@@ -307,8 +314,11 @@ public class SwiftIOSBundleIntegrationTest {
 
     Path binaryOutput =
         tmp.getRoot()
-            .resolve(filesystem.getBuckPaths().getGenDir())
-            .resolve("ios-parent-dynamic#iphonesimulator-x86_64");
+            .resolve(
+                BuildTargetPaths.getGenPath(
+                    filesystem,
+                    BuildTargetFactory.newInstance("//:ios-parent-dynamic#iphonesimulator-x86_64"),
+                    "%s"));
     assertThat(Files.exists(binaryOutput), CoreMatchers.is(true));
 
     Path dep1Output =
