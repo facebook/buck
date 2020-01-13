@@ -326,7 +326,7 @@ public class XCodeProjectCommandHelperTest {
             /* withDependenciesTests */ false);
 
     ImmutableMap<BuildTarget, TargetNode<?>> sharedLibraryToBundle =
-        ProjectGenerator.computeSharedLibrariesToBundles(
+        XCodeProjectCommandHelper.computeSharedLibrariesToBundles(
             ImmutableSet.of(sharedLibNode, bundleNode), targetGraph);
     assertTrue(sharedLibraryToBundle.containsKey(sharedLibTarget));
     assertTrue(sharedLibraryToBundle.containsValue(bundleNode));

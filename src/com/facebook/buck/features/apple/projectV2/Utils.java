@@ -16,17 +16,28 @@
 
 package com.facebook.buck.features.apple.projectV2;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.shell.ExportFileDescriptionArg;
 import com.facebook.buck.swift.SwiftLibraryDescriptionArg;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.function.Function;
 
 /** Utility functions for project generation. */
 public class Utils {
@@ -64,5 +75,40 @@ public class Utils {
     return TargetNodes.castArg(targetNode, CxxLibraryDescription.CommonArg.class)
         .flatMap(node -> node.getConstructorArg().getModuleName())
         .orElse(targetNode.getBuildTarget().getShortName());
+  }
+
+  /**
+   * Adds the input source path object to the required build targets builder, if needed.
+   *
+   * @param sourcePath The source path to write. If it is not a BuildTargetSourcePath, it is
+   *     ignored.
+   * @param requiredBuildTargetsBuilder The builder to add the target too, if necessary.
+   * @param targetGraph The target graph that includes the target
+   * @param actionGraphBuilderForNode The action graph builder for the target node.
+   */
+  public static void addRequiredBuildTargetFromSourcePath(
+      SourcePath sourcePath,
+      ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
+      TargetGraph targetGraph,
+      Function<? super TargetNode<?>, ActionGraphBuilder> actionGraphBuilderForNode) {
+    if (sourcePath instanceof PathSourcePath) {
+      return;
+    }
+
+    Preconditions.checkArgument(sourcePath instanceof BuildTargetSourcePath);
+    BuildTargetSourcePath buildTargetSourcePath = (BuildTargetSourcePath) sourcePath;
+    BuildTarget buildTarget = buildTargetSourcePath.getTarget();
+    TargetNode<?> node = targetGraph.get(buildTarget);
+    Optional<TargetNode<ExportFileDescriptionArg>> exportFileNode =
+        TargetNodes.castArg(node, ExportFileDescriptionArg.class);
+    if (!exportFileNode.isPresent()) {
+      BuildRuleResolver resolver = actionGraphBuilderForNode.apply(node);
+      Path output = resolver.getSourcePathResolver().getAbsolutePath(sourcePath);
+      if (output == null) {
+        throw new HumanReadableException(
+            "The target '%s' does not have an output.", node.getBuildTarget());
+      }
+      requiredBuildTargetsBuilder.add(buildTarget);
+    }
   }
 }

@@ -31,7 +31,6 @@ import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
@@ -241,9 +240,10 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(libraryNode, bundleNode), bundleTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXProject project = result.generatedProject;
 
     Iterable<String> childNames =
         Iterables.transform(project.getMainGroup().getChildren(), PBXReference::getName);
@@ -260,9 +260,10 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(libraryNode), libraryTarget);
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXProject project = result.generatedProject;
     PBXGroup fooGroup = PBXTestUtils.assertHasSubgroupAndReturnIt(project.getMainGroup(), "foo");
     PBXGroup myLibGroup = PBXTestUtils.assertHasSubgroupAndReturnIt(fooGroup, "myLib");
     PBXTestUtils.assertHasFileReferenceWithNameAndReturnIt(myLibGroup, "BUCK");
@@ -304,250 +305,11 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(InternalFlavor.of("iphonesimulator-x86_64")),
             Optional.of(ImmutableMap.of(sharedLibTarget, bundleNode)));
 
-    projectGenerator.createXcodeProjects();
-    PBXProject project = projectGenerator.getGeneratedProject();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+    PBXProject project = result.generatedProject;
     assertEquals(project.getMainGroup().getChildren().size(), 5);
     assertEquals(project.getTargets().size(), 3);
-  }
-
-  @Test
-  public void testSwapWithSharedBundes() {
-    BuildTarget sharedLibrary = BuildTargetFactory.newInstance("//foo:shared#shared");
-    BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo", "sharedFramework");
-
-    TargetNode<?> bundleNode =
-        AppleBundleBuilder.createBuilder(bundleTarget)
-            .setBinary(sharedLibrary)
-            .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
-            .setInfoPlist(FakeSourcePath.of("Info.plist"))
-            .setProductName(Optional.of("shared"))
-            .build();
-
-    TargetNode<?> sharedNode = AppleLibraryBuilder.createBuilder(sharedLibrary).build();
-
-    ImmutableMap<BuildTarget, TargetNode<?>> sharedLibraryToBundle =
-        ImmutableMap.of(sharedLibrary, bundleNode);
-
-    FluentIterable<TargetNode<?>> input = FluentIterable.of(sharedNode);
-    FluentIterable<TargetNode<?>> output =
-        ProjectGenerator.swapSharedLibrariesForBundles(input, sharedLibraryToBundle);
-    assertTrue(output.contains(bundleNode));
-    assertFalse(output.contains(sharedNode));
-    assertEquals(output.size(), 1);
-  }
-
-  @Test
-  public void testProjectStructureWithDuplicateBundle() throws IOException {
-    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo:lib");
-    BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo:bundle");
-    BuildTarget libraryWithFlavorTarget =
-        BuildTargetFactory.newInstance("//foo:lib#iphonesimulator-x86_64");
-    BuildTarget bundleWithFlavorTarget =
-        BuildTargetFactory.newInstance("//foo:bundle#iphonesimulator-x86_64");
-
-    TargetNode<?> libraryNode =
-        AppleLibraryBuilder.createBuilder(libraryTarget)
-            .setExportedHeaders(ImmutableSortedSet.of(FakeSourcePath.of("foo.h")))
-            .build();
-    TargetNode<?> bundleNode =
-        AppleBundleBuilder.createBuilder(bundleTarget)
-            .setBinary(libraryTarget)
-            .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
-            .setInfoPlist(FakeSourcePath.of(("Info.plist")))
-            .build();
-
-    TargetNode<?> libraryWithFlavorNode =
-        AppleLibraryBuilder.createBuilder(libraryWithFlavorTarget)
-            .setExportedHeaders(ImmutableSortedSet.of(FakeSourcePath.of("foo.h")))
-            .build();
-    TargetNode<?> bundleWithFlavorNode =
-        AppleBundleBuilder.createBuilder(bundleWithFlavorTarget)
-            .setBinary(libraryTarget)
-            .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
-            .setInfoPlist(FakeSourcePath.of(("Info.plist")))
-            .build();
-
-    ImmutableSet<TargetNode<?>> nodes =
-        ImmutableSet.of(libraryNode, bundleNode, libraryWithFlavorNode, bundleWithFlavorNode);
-    ProjectGenerator projectGenerator =
-        createProjectGenerator(
-            nodes,
-            nodes,
-            bundleTarget,
-            ProjectGeneratorOptions.builder().build(),
-            ImmutableSet.of(
-                InternalFlavor.of("iphonesimulator-x86_64"), InternalFlavor.of("macosx-x86_64")),
-            Optional.empty());
-
-    projectGenerator.createXcodeProjects();
-
-    int count = 0;
-    PBXProject project = projectGenerator.getGeneratedProject();
-    for (PBXTarget target : project.getTargets()) {
-      if (target.getProductName().equals("bundle")) {
-        count++;
-      }
-    }
-    assertSame(count, 1);
-  }
-
-  @Test
-  public void testPlatformSourcesAndHeaders() {
-    SourceWithFlags androidSource = SourceWithFlags.of(FakeSourcePath.of("androidFile.cpp"));
-    SourceWithFlags iOSAndSimulatorSource =
-        SourceWithFlags.of(FakeSourcePath.of("iOSAndSimulatorFile.cpp"));
-    SourceWithFlags macOSSource = SourceWithFlags.of(FakeSourcePath.of("macOSFile.cpp"));
-
-    Pattern androidPattern = Pattern.compile("android");
-    Pattern simulatorPattern = Pattern.compile("^iphonesim.*");
-    Pattern iOSPattern = Pattern.compile("iphoneos");
-    Pattern macOSPattern = Pattern.compile("macos");
-
-    Pair<Pattern, ImmutableSortedSet<SourceWithFlags>> androidSources =
-        new Pair<>(androidPattern, ImmutableSortedSet.of(androidSource));
-    Pair<Pattern, ImmutableSortedSet<SourceWithFlags>> simulatorSources =
-        new Pair<>(simulatorPattern, ImmutableSortedSet.of(iOSAndSimulatorSource));
-    Pair<Pattern, ImmutableSortedSet<SourceWithFlags>> iOSSources =
-        new Pair<>(iOSPattern, ImmutableSortedSet.of(iOSAndSimulatorSource));
-    Pair<Pattern, ImmutableSortedSet<SourceWithFlags>> macOSSources =
-        new Pair<>(macOSPattern, ImmutableSortedSet.of(macOSSource));
-
-    ImmutableList.Builder<Pair<Pattern, ImmutableSortedSet<SourceWithFlags>>>
-        platformSourcesbuilder = ImmutableList.builder();
-    ImmutableList<Pair<Pattern, ImmutableSortedSet<SourceWithFlags>>> platformSources =
-        platformSourcesbuilder
-            .add(androidSources)
-            .add(simulatorSources)
-            .add(iOSSources)
-            .add(macOSSources)
-            .build();
-
-    SourcePath androidHeader = FakeSourcePath.of("androidFile.h");
-    SourcePath simulatorHeader = FakeSourcePath.of("simulatorFile.h");
-    SourcePath macOSAndIOSHeader = FakeSourcePath.of("macOSAndIOSFile.h");
-
-    Pattern androidPattern2 = Pattern.compile("android");
-    Pattern simulatorPattern2 = Pattern.compile("iphonesimulator");
-    Pattern iOSPattern2 = Pattern.compile("iphoneos");
-    Pattern macOSPattern2 = Pattern.compile("mac");
-
-    Pair<Pattern, SourceSortedSet> androidHeaders =
-        new Pair<>(
-            androidPattern2,
-            SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of(androidHeader)));
-    Pair<Pattern, SourceSortedSet> simulatorHeaders =
-        new Pair<>(
-            simulatorPattern2,
-            SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of(simulatorHeader)));
-    Pair<Pattern, SourceSortedSet> iOSHeaders =
-        new Pair<>(
-            iOSPattern2,
-            SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of(macOSAndIOSHeader)));
-    Pair<Pattern, SourceSortedSet> macOSHeaders =
-        new Pair<>(
-            macOSPattern2,
-            SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of(macOSAndIOSHeader)));
-
-    SourcePath androidAndMacHeader = FakeSourcePath.of("androidAndMacFile.h");
-    SourcePath iPhoneHeader = FakeSourcePath.of("iOSAndSimulatorFile.h");
-
-    Pattern androidPattern3 = Pattern.compile("an.*");
-    Pattern iPhonePattern = Pattern.compile("iphone");
-
-    Pair<Pattern, SourceSortedSet> androidHeaders2 =
-        new Pair<>(
-            androidPattern3,
-            SourceSortedSet.ofNamedSources(ImmutableSortedMap.of("ignored", androidAndMacHeader)));
-    Pair<Pattern, SourceSortedSet> iPhoneHeaders =
-        new Pair<>(
-            iPhonePattern,
-            SourceSortedSet.ofNamedSources(ImmutableSortedMap.of("ignored", iPhoneHeader)));
-    Pair<Pattern, SourceSortedSet> macOSHeaders2 =
-        new Pair<>(
-            macOSPattern2,
-            SourceSortedSet.ofNamedSources(ImmutableSortedMap.of("ignored", androidAndMacHeader)));
-
-    ImmutableList.Builder<Pair<Pattern, SourceSortedSet>> platformHeadersBuilder =
-        ImmutableList.builder();
-    platformHeadersBuilder.add(androidHeaders);
-    platformHeadersBuilder.add(simulatorHeaders);
-    platformHeadersBuilder.add(iOSHeaders);
-    platformHeadersBuilder.add(macOSHeaders);
-    platformHeadersBuilder.add(androidHeaders2);
-    platformHeadersBuilder.add(iPhoneHeaders);
-    platformHeadersBuilder.add(macOSHeaders2);
-    ImmutableList<Pair<Pattern, SourceSortedSet>> platformHeaders = platformHeadersBuilder.build();
-
-    ImmutableList.Builder<Pair<Pattern, Iterable<SourcePath>>> platformHeadersIterableBuilder =
-        ImmutableList.builder();
-    for (Pair<Pattern, SourceSortedSet> platformHeader : platformHeaders) {
-      platformHeadersIterableBuilder.add(
-          new Pair<>(
-              platformHeader.getFirst(),
-              ProjectGenerator.getHeaderSourcePaths(platformHeader.getSecond())));
-    }
-    ImmutableList<Pair<Pattern, Iterable<SourcePath>>> platformHeadersIterable =
-        platformHeadersIterableBuilder.build();
-
-    UserFlavor simulator = UserFlavor.of("iphonesimulator11.4-i386", "buck boilerplate");
-    UserFlavor macOS = UserFlavor.of("macosx10-x86_64", "buck boilerplate");
-    UserFlavor iOS = UserFlavor.of("iphoneos-x86_64", "buck boilerplate");
-
-    ImmutableSet<Flavor> appleFlavors = ImmutableSet.of(simulator, iOS, macOS);
-
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-
-    ImmutableMap<String, ImmutableSortedSet<String>> result =
-        ProjectGenerator.gatherExcludedSources(
-            appleFlavors,
-            platformSources,
-            platformHeadersIterable,
-            Paths.get(".."),
-            graphBuilder.getSourcePathResolver());
-
-    ImmutableSet.Builder<String> excludedResultsBuilder = ImmutableSet.builder();
-    ImmutableSet<String> excludedResults =
-        excludedResultsBuilder
-            .add("'../androidFile.cpp'")
-            .add("'../iOSAndSimulatorFile.cpp'")
-            .add("'../macOSFile.cpp'")
-            .add("'../androidFile.h'")
-            .add("'../simulatorFile.h'")
-            .add("'../macOSAndIOSFile.h'")
-            .add("'../androidAndMacFile.h'")
-            .add("'../iOSAndSimulatorFile.h'")
-            .build();
-    ImmutableSet.Builder<String> simulatorResultsBuilder = ImmutableSet.builder();
-    ImmutableSet<String> simulatorResults =
-        simulatorResultsBuilder
-            .add("'../iOSAndSimulatorFile.cpp'")
-            .add("'../simulatorFile.h'")
-            .add("'../iOSAndSimulatorFile.h'")
-            .build();
-    ImmutableSet.Builder<String> iOSResultsBuilder = ImmutableSet.builder();
-    ImmutableSet<String> iOSResults =
-        iOSResultsBuilder
-            .add("'../iOSAndSimulatorFile.cpp'")
-            .add("'../macOSAndIOSFile.h'")
-            .add("'../iOSAndSimulatorFile.h'")
-            .build();
-    ImmutableSet.Builder<String> macOSResultsBuilder = ImmutableSet.builder();
-    ImmutableSet<String> macOSResults =
-        macOSResultsBuilder
-            .add("'../macOSFile.cpp'")
-            .add("'../macOSAndIOSFile.h'")
-            .add("'../androidAndMacFile.h'")
-            .build();
-
-    ImmutableMap.Builder<String, ImmutableSet<String>> expectedBuilder = ImmutableMap.builder();
-    expectedBuilder.put("EXCLUDED_SOURCE_FILE_NAMES", excludedResults);
-    expectedBuilder.put("INCLUDED_SOURCE_FILE_NAMES[sdk=iphoneos*][arch=x86_64]", iOSResults);
-    expectedBuilder.put(
-        "INCLUDED_SOURCE_FILE_NAMES[sdk=iphonesimulator*][arch=i386]", simulatorResults);
-    expectedBuilder.put("INCLUDED_SOURCE_FILE_NAMES[sdk=macosx*][arch=x86_64]", macOSResults);
-    ImmutableMap<String, ImmutableSet<String>> expectedResult = expectedBuilder.build();
-
-    assertEquals(result, expectedResult);
   }
 
   @Test
@@ -578,9 +340,10 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(libraryNode, bundleNode, genruleNode), bundleTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXProject project = result.generatedProject;
 
     Iterable<String> childNames =
         Iterables.transform(project.getMainGroup().getChildren(), PBXReference::getName);
@@ -616,9 +379,10 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(libraryNode, bundleNode), bundleTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXProject project = result.generatedProject;
 
     Iterable<String> childNames =
         Iterables.transform(project.getMainGroup().getChildren(), PBXReference::getName);
@@ -628,8 +392,7 @@ public class ProjectGeneratorTest {
     childNames = Iterables.transform(fooGroup.getChildren(), PBXReference::getName);
     assertThat(childNames, hasItem("foo.json"));
 
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
+    PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:lib");
     assertSourcesNotInSourcesPhase(target, ImmutableSet.of("bar.json"));
   }
 
@@ -655,9 +418,10 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(libraryNode, bundleNode), bundleTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXProject project = result.generatedProject;
 
     Iterable<String> childNames =
         Iterables.transform(project.getMainGroup().getChildren(), PBXReference::getName);
@@ -667,13 +431,14 @@ public class ProjectGeneratorTest {
     childNames = Iterables.transform(fooGroup.getChildren(), PBXReference::getName);
     assertThat(childNames, hasItem("foo.m"));
 
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
-    assertHasSingleSourcesPhaseWithSourcesAndFlags(
+    PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:lib");
+    PBXTestUtils.assertHasSingleSourcesPhaseWithSourcesAndFlags(
         target,
         ImmutableMap.of(
             "foo/foo.m", Optional.empty(),
-            "bar.m", Optional.empty()));
+            "bar.m", Optional.empty()),
+        projectFilesystem,
+        OUTPUT_DIRECTORY);
   }
 
   @Test
@@ -727,7 +492,7 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(),
             Optional.empty());
 
-    projectGenerator.createXcodeProjects();
+    projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
     FakeProjectFilesystem frameworkBundleFileSystem =
         (FakeProjectFilesystem) frameworkBundleNode.getFilesystem();
@@ -770,8 +535,9 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(libNode), libTarget);
 
-    projectGenerator.createXcodeProjects();
-    PBXProject project = projectGenerator.getGeneratedProject();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+    PBXProject project = result.generatedProject;
     assertNotNull(project);
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:lib");
 
@@ -783,7 +549,7 @@ public class ProjectGeneratorTest {
             containsString(
                 "-Xcc -ivfsoverlay -Xcc '$REPO_ROOT/buck-out/gen/_p/CwkbTNOBmb-pub/objc-module-overlay.yaml'")));
 
-    List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
+    List<Path> headerSymlinkTrees = result.headerSymlinkTrees;
     assertThat(headerSymlinkTrees, hasSize(1));
 
     assertEquals("buck-out/gen/_p/CwkbTNOBmb-priv", headerSymlinkTrees.get(0).toString());
@@ -829,9 +595,10 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(),
             Optional.empty());
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXProject project = result.generatedProject;
     PBXTarget libPBXTarget = assertTargetExistsAndReturnTarget(project, "//foo:framework");
 
     ImmutableMap<String, String> buildSettings =
@@ -882,9 +649,10 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(libNode, frameworkNode), libTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXProject project = result.generatedProject;
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:framework");
 
     List<PBXBuildPhase> headersPhases = target.getBuildPhases();
@@ -949,9 +717,10 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(simulator),
             Optional.empty());
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXProject project = result.generatedProject;
 
     PBXGroup group1 = project.getMainGroup().getOrCreateChildGroupByName("HeaderGroup1");
     assertThat(group1.getChildren(), hasSize(4));
@@ -980,7 +749,7 @@ public class ProjectGeneratorTest {
             .filter(input -> input instanceof PBXHeadersBuildPhase)
             .count());
 
-    List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
+    List<Path> headerSymlinkTrees = result.headerSymlinkTrees;
     assertThat(headerSymlinkTrees, hasSize(1));
 
     assertEquals("buck-out/gen/_p/CwkbTNOBmb-priv", headerSymlinkTrees.get(0).toString());
@@ -1071,9 +840,10 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(simulator),
             Optional.empty());
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXProject project = result.generatedProject;
 
     PBXGroup group1 = project.getMainGroup().getOrCreateChildGroupByName("HeaderGroup1");
     assertThat(group1.getChildren(), hasSize(3));
@@ -1104,7 +874,7 @@ public class ProjectGeneratorTest {
             .filter(input -> input instanceof PBXHeadersBuildPhase)
             .count());
 
-    List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
+    List<Path> headerSymlinkTrees = result.headerSymlinkTrees;
     assertThat(headerSymlinkTrees, hasSize(1));
 
     assertThatHeaderMapWithoutSymLinksContains(
@@ -1161,9 +931,10 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
+    List<Path> headerSymlinkTrees = result.headerSymlinkTrees;
 
     // We expect one private header symlink tree
     assertThat(headerSymlinkTrees, hasSize(1));
@@ -1220,9 +991,10 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
+    List<Path> headerSymlinkTrees = result.headerSymlinkTrees;
     assertThat(headerSymlinkTrees, hasSize(1));
 
     assertThat(
@@ -1265,9 +1037,10 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
+    List<Path> headerSymlinkTrees = result.headerSymlinkTrees;
     assertThat(headerSymlinkTrees, hasSize(1));
 
     assertThat(
@@ -1334,9 +1107,10 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(node, privateGeneratedNode, publicGeneratedNode),
             publicGeneratedTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
+    List<Path> headerSymlinkTrees = result.headerSymlinkTrees;
     assertThat(headerSymlinkTrees, hasSize(1));
 
     assertThat(
@@ -1409,9 +1183,10 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(node, privateGeneratedNode, publicGeneratedNode),
             publicGeneratedTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
+    List<Path> headerSymlinkTrees = result.headerSymlinkTrees;
     assertThat(headerSymlinkTrees, hasSize(1));
 
     assertThat(
@@ -1480,9 +1255,10 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(node, privateGeneratedNode, publicGeneratedNode),
             publicGeneratedTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
+    List<Path> headerSymlinkTrees = result.headerSymlinkTrees;
     assertThat(headerSymlinkTrees, hasSize(1));
 
     assertThat(
@@ -1521,9 +1297,10 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
+    List<Path> headerSymlinkTrees = result.headerSymlinkTrees;
     assertThat(headerSymlinkTrees, hasSize(1));
 
     assertEquals("buck-out/gen/_p/CwkbTNOBmb-priv", headerSymlinkTrees.get(0).toString());
@@ -1539,9 +1316,9 @@ public class ProjectGeneratorTest {
 
     projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
-    projectGenerator.createXcodeProjects();
+    result = projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
+    headerSymlinkTrees = result.headerSymlinkTrees;
     assertThat(headerSymlinkTrees, hasSize(1));
 
     assertEquals("buck-out/gen/_p/CwkbTNOBmb-priv", headerSymlinkTrees.get(0).toString());
@@ -1563,9 +1340,10 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
+    List<Path> headerSymlinkTrees = result.headerSymlinkTrees;
     assertThat(headerSymlinkTrees, hasSize(1));
 
     assertEquals("buck-out/gen/_p/CwkbTNOBmb-priv", headerSymlinkTrees.get(0).toString());
@@ -1580,9 +1358,9 @@ public class ProjectGeneratorTest {
 
     projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
-    projectGenerator.createXcodeProjects();
+    result = projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
+    headerSymlinkTrees = result.headerSymlinkTrees;
     assertThat(headerSymlinkTrees, hasSize(1));
 
     assertEquals("buck-out/gen/_p/CwkbTNOBmb-priv", headerSymlinkTrees.get(0).toString());
@@ -1614,9 +1392,10 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(libraryNode, testNode), testTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXProject project = result.generatedProject;
     PBXTarget testPBXTarget = assertTargetExistsAndReturnTarget(project, "//foo:test");
 
     ImmutableMap<String, String> buildSettings =
@@ -1669,9 +1448,10 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(),
             Optional.empty());
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXProject project = result.generatedProject;
     PBXTarget testPBXTarget = assertTargetExistsAndReturnTarget(project, "//foo:test");
 
     ImmutableMap<String, String> buildSettings =
@@ -1732,9 +1512,10 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(libraryNode, bundleNode, testNode), bundleTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXProject project = result.generatedProject;
     PBXTarget testPBXTarget = assertTargetExistsAndReturnTarget(project, "//foo:test");
 
     ImmutableMap<String, String> buildSettings =
@@ -1786,9 +1567,10 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(binaryNode, bundleNode, testNode), bundleTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXProject project = result.generatedProject;
     PBXTarget testPBXTarget = assertTargetExistsAndReturnTarget(project, "//foo:test");
 
     ImmutableMap<String, String> buildSettings =
@@ -1879,21 +1661,23 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
+    PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
     assertThat(target.getProductType(), equalTo(ProductTypes.STATIC_LIBRARY));
 
     assertHasConfigurations(target, "RandomConfig");
     assertEquals("Should have exact number of build phases", 2, target.getBuildPhases().size());
-    assertHasSingleSourcesPhaseWithSourcesAndFlags(
+    PBXTestUtils.assertHasSingleSourcesPhaseWithSourcesAndFlags(
         target,
         ImmutableMap.of(
             "foo.m", Optional.of("-foo"),
             "bar.m", Optional.empty(),
-            "libsomething.a", Optional.empty()));
+            "libsomething.a", Optional.empty()),
+        projectFilesystem,
+        OUTPUT_DIRECTORY);
 
     // this target should not have an asset catalog build phase
     assertTrue(
@@ -1920,10 +1704,10 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(compiler, lib), libTarget);
-    ProjectGenerator.Result result = projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
+    PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
     assertHasConfigurations(target, "Debug", "Release", "Profile");
 
@@ -1962,20 +1746,22 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(cxxNode), buildTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
+    PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
     assertThat(target.getProductType(), equalTo(ProductTypes.STATIC_LIBRARY));
 
     assertHasConfigurations(target, "Debug", "Release", "Profile");
     assertEquals("Should have exact number of build phases", 2, target.getBuildPhases().size());
-    assertHasSingleSourcesPhaseWithSourcesAndFlags(
+    PBXTestUtils.assertHasSingleSourcesPhaseWithSourcesAndFlags(
         target,
         ImmutableMap.of(
             "foo.cpp", Optional.of("-foo"),
-            "bar.cpp", Optional.empty()));
+            "bar.cpp", Optional.empty()),
+        projectFilesystem,
+        OUTPUT_DIRECTORY);
   }
 
   @Test
@@ -1990,10 +1776,10 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
+    PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
     assertThat(target.getProductType(), equalTo(ProductTypes.STATIC_LIBRARY));
 
@@ -2022,10 +1808,10 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(libraryNode, pchNode), libraryTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
+    PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
     assertThat(target.getProductType(), equalTo(ProductTypes.STATIC_LIBRARY));
 
@@ -2045,11 +1831,11 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
     PBXTarget target =
-        assertTargetExistsAndReturnTarget(
-            projectGenerator.getGeneratedProject(), "//hi:lib#shared");
+        assertTargetExistsAndReturnTarget(result.generatedProject, "//hi:lib#shared");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
     assertThat(target.getProductType(), equalTo(ProductTypes.DYNAMIC_LIBRARY));
 
@@ -2071,10 +1857,10 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
+    PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
     assertThat(target.getProductType(), equalTo(ProductTypes.STATIC_LIBRARY));
 
@@ -2095,10 +1881,10 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
+    PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
     assertEquals(
@@ -2128,10 +1914,10 @@ public class ProjectGeneratorTest {
             appleFlavors,
             Optional.empty());
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
+    PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
     assertEquals(
@@ -2153,10 +1939,10 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
+    PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
     assertEquals(
@@ -2185,10 +1971,10 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(node, dependentNode), dependentBuildTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:bin");
+    PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:bin");
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
     assertEquals(
@@ -2206,10 +1992,10 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
+    PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
     assertEquals(
@@ -2236,10 +2022,10 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(node, dependentNode), dependentBuildTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:bin");
+    PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:bin");
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
     assertEquals(
@@ -2261,10 +2047,10 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
+    PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
     assertEquals(
@@ -2309,10 +2095,10 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(node, genruleNode, exportFileNode, transitiveDepOfGenruleNode),
             buildTarget);
 
-    ProjectGenerator.Result result = projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
+    PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
 
     assertThat(
         result.requiredBuildTargets, equalTo(ImmutableSet.of(genruleTarget, exportFileTarget)));
@@ -2349,10 +2135,10 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(node, dependentNode), dependentBuildTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:bin");
+    PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:bin");
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
     assertEquals("$(inherited) -fatal_warnings -ObjC", settings.get("OTHER_LDFLAGS"));
@@ -2372,10 +2158,10 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
+    PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
     assertEquals(
@@ -2404,10 +2190,10 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(node, dependentNode), dependentBuildTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:bin");
+    PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:bin");
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
     assertEquals(
@@ -2426,10 +2212,10 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
+    PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
     assertHasConfigurations(target, "Debug", "Release", "Profile");
     ImmutableMap<String, String> settings =
         ProjectGeneratorTestUtils.getBuildSettings(projectFilesystem, buildTarget, target, "Debug");
@@ -2485,10 +2271,10 @@ public class ProjectGeneratorTest {
                 InternalFlavor.of("iphonesimulator-x86_64"), InternalFlavor.of("macosx-x86_64")),
             Optional.empty());
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
+    PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
     assertHasConfigurations(target, "Debug", "Release", "Profile");
     ImmutableMap<String, String> settings =
         ProjectGeneratorTestUtils.getBuildSettings(projectFilesystem, buildTarget, target, "Debug");
@@ -2522,10 +2308,10 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
+    PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
 
     assertHasConfigurations(target, "Debug", "Release", "Profile");
     ImmutableMap<String, String> settings =
@@ -2554,10 +2340,10 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(node, dependentNode), dependentBuildTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:bin");
+    PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:bin");
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
     assertEquals(
@@ -2602,10 +2388,10 @@ public class ProjectGeneratorTest {
                 InternalFlavor.of("iphonesimulator-x86_64"), InternalFlavor.of("macosx-x86_64")),
             Optional.empty());
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
+    PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
     assertHasConfigurations(target, "Debug", "Release", "Profile");
     ImmutableMap<String, String> settings =
         ProjectGeneratorTestUtils.getBuildSettings(projectFilesystem, buildTarget, target, "Debug");
@@ -2620,7 +2406,7 @@ public class ProjectGeneratorTest {
     assertEquals(null, settings.get("OTHER_LDFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
 
     PBXTarget dependentTarget =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:bin");
+        assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:bin");
     assertHasConfigurations(target, "Debug", "Release", "Profile");
     ImmutableMap<String, String> dependentSettings =
         ProjectGeneratorTestUtils.getBuildSettings(
@@ -2646,15 +2432,15 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
+    PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
     assertThat(target.getProductType(), equalTo(ProductTypes.STATIC_LIBRARY));
 
     assertHasConfigurations(target, "Debug");
-    assertKeepsConfigurationsInGenGroup(projectGenerator.getGeneratedProject(), target);
+    assertKeepsConfigurationsInGenGroup(result.generatedProject, target);
     XCBuildConfiguration configuration =
         target.getBuildConfigurationList().getBuildConfigurationsByName().asMap().get("Debug");
     assertEquals(configuration.getBuildSettings().count(), 0);
@@ -2707,10 +2493,10 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(libraryNode, testNode), libraryTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:xctest");
+    PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:xctest");
 
     ImmutableMap<String, String> settings = getBuildSettings(testTarget, target, "Debug");
     assertEquals(
@@ -2767,10 +2553,10 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(libraryNode, testNode), libraryTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:xctest");
+    PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:xctest");
 
     ImmutableMap<String, String> settings = getBuildSettings(testTarget, target, "Debug");
     assertEquals(
@@ -2837,10 +2623,10 @@ public class ProjectGeneratorTest {
         createProjectGenerator(
             ImmutableSet.of(libraryDepNode, libraryNode, testNode), libraryTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:xctest");
+    PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:xctest");
 
     ImmutableMap<String, String> settings = getBuildSettings(testTarget, target, "Debug");
     assertEquals(
@@ -2878,10 +2664,10 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(libraryNode, testNode), libraryTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:xctest");
+    PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:xctest");
 
     PBXShellScriptBuildPhase shellScriptBuildPhase =
         ProjectGeneratorTestUtils.getSingleBuildPhaseOfType(target, PBXShellScriptBuildPhase.class);
@@ -2924,10 +2710,10 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(libraryNode, testNode), libraryTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:xctest");
+    PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:xctest");
 
     ImmutableMap<String, String> settings = getBuildSettings(testTarget, target, "Debug");
     assertEquals(
@@ -2950,10 +2736,10 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(testNode), testTarget);
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:xctest");
+    PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:xctest");
     assertEquals(target.getProductType(), ProductTypes.UNIT_TEST);
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
     PBXFileReference productReference = target.getProductReference();
@@ -2991,18 +2777,20 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(depNode, binaryNode), binaryTarget);
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:binary");
+    PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:binary");
     assertHasConfigurations(target, "Debug");
     assertEquals(target.getProductType(), ProductTypes.TOOL);
     assertEquals("Should have exact number of build phases", 2, target.getBuildPhases().size());
-    assertHasSingleSourcesPhaseWithSourcesAndFlags(
+    PBXTestUtils.assertHasSingleSourcesPhaseWithSourcesAndFlags(
         target,
         ImmutableMap.of(
             "foo.m", Optional.of("-foo"),
-            "libsomething.a", Optional.empty()));
+            "libsomething.a", Optional.empty()),
+        projectFilesystem,
+        OUTPUT_DIRECTORY);
 
     // this test does not have a dependency on any asset catalogs, so verify no build phase for them
     // exists.
@@ -3031,9 +2819,10 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(sharedLibraryNode, node), buildTarget);
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXProject project = result.generatedProject;
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:bundle");
     assertEquals(target.getProductType(), ProductTypes.FRAMEWORK);
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
@@ -3072,9 +2861,10 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(
             ImmutableSet.of(fooLibraryNode, bundleNode, resourceNode), bundleTarget);
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXProject project = result.generatedProject;
     PBXGroup storyboardGroup = project.getMainGroup().getOrCreateChildGroupByName("Base.lproj");
     List<PBXReference> storyboardGroupChildren = storyboardGroup.getChildren();
     assertEquals(1, storyboardGroupChildren.size());
@@ -3104,9 +2894,10 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(sharedLibraryNode, node), buildTarget);
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXProject project = result.generatedProject;
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:custombundle");
     assertEquals(target.getProductType(), ProductType.of("com.facebook.buck.niftyProductType"));
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
@@ -3138,36 +2929,14 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(sharedLibraryNode, node), buildTarget);
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXProject project = result.generatedProject;
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:custombundle");
 
     ImmutableMap<String, String> buildSettings = getBuildSettings(buildTarget, target, "Debug");
     assertThat(buildSettings.get("PRODUCT_NAME"), Matchers.equalTo("FancyFramework"));
-  }
-
-  private void testRuleAddsReference(BuildTarget ruleTarget, TargetNode<?> ruleNode, String path)
-      throws IOException {
-    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
-    TargetNode<?> libraryNode =
-        AppleLibraryBuilder.createBuilder(libraryTarget)
-            .setDeps(ImmutableSortedSet.of(ruleTarget))
-            .build();
-
-    ProjectGenerator projectGenerator =
-        createProjectGenerator(ImmutableSet.of(ruleNode, libraryNode), libraryTarget);
-
-    projectGenerator.createXcodeProjects();
-
-    PBXProject project = projectGenerator.getGeneratedProject();
-    PBXGroup resourcesGroup = project.getMainGroup().getOrCreateChildGroupByName("Resources");
-
-    assertThat(resourcesGroup.getChildren(), hasSize(1));
-
-    PBXFileReference ruleReference =
-        (PBXFileReference) Iterables.get(resourcesGroup.getChildren(), 0);
-    assertEquals(path, ruleReference.getName());
   }
 
   @Test
@@ -3193,9 +2962,10 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(
             ImmutableSet.of(fooLibraryNode, bundleNode, modelNode), bundleTarget);
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXProject project = result.generatedProject;
     PBXGroup modelGroup =
         PBXTestUtils.assertHasSubgroupPathAndReturnLast(
             project.getMainGroup(), ImmutableList.of("foo", "models"));
@@ -3244,9 +3014,10 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(
             ImmutableSet.of(fooLibraryNode, bundleNode, modelNode), bundleTarget);
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXProject project = result.generatedProject;
     PBXGroup modelGroup =
         PBXTestUtils.assertHasSubgroupPathAndReturnLast(
             project.getMainGroup(), ImmutableList.of("foo", "models"));
@@ -3289,9 +3060,9 @@ public class ProjectGeneratorTest {
     ProjectGenerator generator =
         createProjectGenerator(
             ImmutableList.of(bundleNode, fooLibraryNode, sceneKitNode), bundleTarget);
-    generator.createXcodeProjects();
+    ProjectGenerator.Result result = generator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXProject project = generator.getGeneratedProject();
+    PBXProject project = result.generatedProject;
     PBXTestUtils.assertHasFileReferenceWithNameAndReturnIt(project.getMainGroup(), "foo.scnassets");
   }
 
@@ -3316,9 +3087,10 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(libraryNode, bundleNode), bundleTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXProject project = result.generatedProject;
 
     Iterable<String> childNames =
         Iterables.transform(project.getMainGroup().getChildren(), PBXReference::getName);
@@ -3379,9 +3151,10 @@ public class ProjectGeneratorTest {
                 hostAppNode,
                 hostAppBinaryNode),
             hostAppTarget);
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXProject generatedProject = projectGenerator.getGeneratedProject();
+    PBXProject generatedProject = result.generatedProject;
     PBXTarget generatedHostAppTarget =
         assertTargetExistsAndReturnTarget(generatedProject, "//foo:HostApp");
     // Use the fully qualified name of the watch build targets, since they include a flavor
@@ -3416,66 +3189,20 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
-    ProjectGenerator.Result result = projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
     assertEquals(
         buildTarget, Iterables.getOnlyElement(result.buildTargetsToGeneratedTargetMap.keySet()));
 
     PBXTarget target = Iterables.getOnlyElement(result.buildTargetsToGeneratedTargetMap.values());
-    assertHasSingleSourcesPhaseWithSourcesAndFlags(
+    PBXTestUtils.assertHasSingleSourcesPhaseWithSourcesAndFlags(
         target,
         ImmutableMap.of(
             "foo.m", Optional.of("-foo"),
-            "bar.m", Optional.empty()));
-  }
-
-  /**
-   * Ensure target map filters out duplicated targets with an explicit and implicit static flavor.
-   * Ensure the filtering prefers the main workspace target over other project targets.
-   *
-   * @throws IOException
-   */
-  @Test
-  public void ruleToTargetMapFiltersDuplicatePBXTarget() throws IOException {
-    BuildTarget explicitStaticBuildTarget =
-        BuildTargetFactory.newInstance("//foo", "lib", CxxDescriptionEnhancer.STATIC_FLAVOR);
-    TargetNode<?> explicitStaticNode =
-        AppleLibraryBuilder.createBuilder(explicitStaticBuildTarget)
-            .setSrcs(
-                ImmutableSortedSet.of(
-                    SourceWithFlags.of(FakeSourcePath.of("foo.m"), ImmutableList.of("-foo")),
-                    SourceWithFlags.of(FakeSourcePath.of("bar.m"))))
-            .setHeaders(ImmutableSortedSet.of(FakeSourcePath.of("foo.h")))
-            .build();
-
-    BuildTarget implicitStaticBuildTarget = BuildTargetFactory.newInstance("//foo", "lib");
-    TargetNode<?> implicitStaticNode =
-        AppleLibraryBuilder.createBuilder(implicitStaticBuildTarget)
-            .setSrcs(
-                ImmutableSortedSet.of(
-                    SourceWithFlags.of(FakeSourcePath.of("foo.m"), ImmutableList.of("-foo")),
-                    SourceWithFlags.of(FakeSourcePath.of("bar.m"))))
-            .setHeaders(ImmutableSortedSet.of(FakeSourcePath.of("foo.h")))
-            .build();
-
-    ProjectGenerator projectGenerator =
-        createProjectGenerator(
-            ImmutableSet.of(explicitStaticNode, implicitStaticNode), explicitStaticBuildTarget);
-
-    ProjectGenerator.Result result = projectGenerator.createXcodeProjects();
-
-    // `implicitStaticBuildTarget` should be filtered out since it duplicates
-    // `explicitStaticBuildTarget`, the workspace target, which takes precedence.
-    assertEquals(
-        explicitStaticBuildTarget,
-        Iterables.getOnlyElement(result.buildTargetsToGeneratedTargetMap.keySet()));
-
-    PBXTarget target = Iterables.getOnlyElement(result.buildTargetsToGeneratedTargetMap.values());
-    assertHasSingleSourcesPhaseWithSourcesAndFlags(
-        target,
-        ImmutableMap.of(
-            "foo.m", Optional.of("-foo"),
-            "bar.m", Optional.empty()));
+            "bar.m", Optional.empty()),
+        projectFilesystem,
+        OUTPUT_DIRECTORY);
   }
 
   @Test
@@ -3484,10 +3211,10 @@ public class ProjectGeneratorTest {
     TargetNode<?> node = AppleLibraryBuilder.createBuilder(buildTarget).build();
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:foo");
+    PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:foo");
     String expectedGID =
         String.format("%08X%08X%08X", target.isa().hashCode(), target.getName().hashCode(), 0);
     assertEquals(
@@ -3506,9 +3233,10 @@ public class ProjectGeneratorTest {
             .build();
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXProject generatedProject = projectGenerator.getGeneratedProject();
+    PBXProject generatedProject = result.generatedProject;
     ImmutableMap<String, String> settings =
         getBuildSettings(buildTarget, generatedProject.getTargets().get(0), "Debug");
     assertThat(settings, hasKey("REPO_ROOT"));
@@ -3544,9 +3272,10 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(node1, node2), buildTarget1);
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXProject generatedProject = projectGenerator.getGeneratedProject();
+    PBXProject generatedProject = result.generatedProject;
     Map<String, XCBuildConfiguration> configurations =
         generatedProject.getBuildConfigurationList().getBuildConfigurationsByName().asMap();
     assertThat(configurations, hasKey("Conf1"));
@@ -3566,7 +3295,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator =
         createProjectGenerator(result.getSecond(), result.getFirst());
-    projectGenerator.createXcodeProjects();
+    projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
   }
 
   @Test
@@ -3581,7 +3310,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator =
         createProjectGenerator(result.getSecond(), result.getFirst());
-    projectGenerator.createXcodeProjects();
+    projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
   }
 
   @Test
@@ -3595,7 +3324,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator =
         createProjectGenerator(result.getSecond(), result.getFirst());
-    projectGenerator.createXcodeProjects();
+    projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
   }
 
   @Test
@@ -3610,7 +3339,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator =
         createProjectGenerator(result.getSecond(), result.getFirst());
-    projectGenerator.createXcodeProjects();
+    projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
   }
 
   @Test
@@ -3628,7 +3357,7 @@ public class ProjectGeneratorTest {
             .toSet();
 
     ProjectGenerator projectGenerator = createProjectGenerator(nodes, buildTarget);
-    projectGenerator.createXcodeProjects();
+    projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
   }
 
   private BuckEventBus getFakeBuckEventBus() {
@@ -3680,18 +3409,20 @@ public class ProjectGeneratorTest {
         createProjectGenerator(
             ImmutableSet.of(source1, source2, source2Ref, source3, header, library), libTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
     PBXTarget target =
-        assertTargetExistsAndReturnTarget(
-            projectGenerator.getGeneratedProject(), libTarget.toString());
+        assertTargetExistsAndReturnTarget(result.generatedProject, libTarget.toString());
 
-    assertHasSingleSourcesPhaseWithSourcesAndFlags(
+    PBXTestUtils.assertHasSingleSourcesPhaseWithSourcesAndFlags(
         target,
         ImmutableMap.of(
             "Vendor/sources/source1", Optional.empty(),
             "Vendor/source2", Optional.empty(),
-            "Vendor/source3", Optional.empty()));
+            "Vendor/source3", Optional.empty()),
+        projectFilesystem,
+        OUTPUT_DIRECTORY);
 
     ImmutableMap<String, String> settings = getBuildSettings(libTarget, target, "Debug");
     assertEquals("../Vendor/header", settings.get("GCC_PREFIX_HEADER"));
@@ -3724,12 +3455,12 @@ public class ProjectGeneratorTest {
         createProjectGenerator(
             ImmutableSet.of(hostAppBinaryNode, hostAppNode, testNode), testTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
     PBXTarget testPBXTarget =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:AppTest");
-    assertPBXTargetHasDependency(
-        projectGenerator.getGeneratedProject(), testPBXTarget, "//foo:HostApp");
+        assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:AppTest");
+    assertPBXTargetHasDependency(result.generatedProject, testPBXTarget, "//foo:HostApp");
 
     ImmutableMap<String, String> settings = getBuildSettings(testTarget, testPBXTarget, "Debug");
     assertEquals(
@@ -3771,13 +3502,13 @@ public class ProjectGeneratorTest {
         createProjectGenerator(
             ImmutableSet.of(hostAppBinaryNode, hostAppNode, testNode), testTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
     PBXTarget testPBXTarget =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:AppTest");
+        assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:AppTest");
     assertEquals(testPBXTarget.getProductType(), ProductTypes.UI_TEST);
-    assertPBXTargetHasDependency(
-        projectGenerator.getGeneratedProject(), testPBXTarget, "//foo:HostApp");
+    assertPBXTargetHasDependency(result.generatedProject, testPBXTarget, "//foo:HostApp");
 
     ImmutableMap<String, String> settings = getBuildSettings(testTarget, testPBXTarget, "Debug");
     // Check starts with as the remainder depends on the bundle style at build time.
@@ -3821,13 +3552,13 @@ public class ProjectGeneratorTest {
         createProjectGenerator(
             ImmutableSet.of(hostAppBinaryNode, hostAppNode, uiTargetAppNode, testNode), testTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
     PBXTarget testPBXTarget =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:AppTest");
+        assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:AppTest");
     assertEquals(testPBXTarget.getProductType(), ProductTypes.UI_TEST);
-    assertPBXTargetHasDependency(
-        projectGenerator.getGeneratedProject(), testPBXTarget, "//foo:uiTestTarget");
+    assertPBXTargetHasDependency(result.generatedProject, testPBXTarget, "//foo:uiTestTarget");
     ImmutableMap<String, String> settings = getBuildSettings(testTarget, testPBXTarget, "Debug");
     // Check starts with as the remainder depends on the bundle style at build time.
     assertEquals(settings.get("TEST_TARGET_NAME"), "//foo:uiTestTarget");
@@ -3859,13 +3590,13 @@ public class ProjectGeneratorTest {
         createProjectGenerator(
             ImmutableSet.of(hostAppBinaryNode, uiTargetAppNode, testNode), testTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
     PBXTarget testPBXTarget =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:AppTest");
+        assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:AppTest");
     assertEquals(testPBXTarget.getProductType(), ProductTypes.UI_TEST);
-    assertPBXTargetHasDependency(
-        projectGenerator.getGeneratedProject(), testPBXTarget, "//foo:uiTestTarget");
+    assertPBXTargetHasDependency(result.generatedProject, testPBXTarget, "//foo:uiTestTarget");
     ImmutableMap<String, String> settings = getBuildSettings(testTarget, testPBXTarget, "Debug");
     // Check starts with as the remainder depends on the bundle style at build time.
     assertEquals(settings.get("TEST_TARGET_NAME"), "//foo:uiTestTarget");
@@ -3897,10 +3628,10 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
+    PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
 
     PBXSourcesBuildPhase sourcesBuildPhase =
         ProjectGeneratorTestUtils.getSingleBuildPhaseOfType(target, PBXSourcesBuildPhase.class);
@@ -3931,10 +3662,10 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
+    PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
 
     assertHasConfigurations(target, "Debug", "Release", "Profile");
 
@@ -3983,9 +3714,10 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(),
             Optional.empty());
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXProject project = result.generatedProject;
     PBXGroup mainGroup = project.getMainGroup();
 
     PBXFileReference assetCatalogFile = (PBXFileReference) mainGroup.getChildren().get(0);
@@ -4012,9 +3744,10 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(fileNode, resourceNode, libraryNode), libraryTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXProject project = result.generatedProject;
     PBXGroup mainGroup = project.getMainGroup();
 
     PBXGroup resourcesGroup = mainGroup.getOrCreateDescendantGroupByPath(ImmutableList.of("foo"));
@@ -4042,9 +3775,10 @@ public class ProjectGeneratorTest {
         createProjectGenerator(
             ImmutableSet.of(directoryNode, resourceNode, libraryNode), libraryTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXProject project = result.generatedProject;
     PBXGroup mainGroup = project.getMainGroup();
 
     PBXGroup resourcesGroup = mainGroup.getOrCreateDescendantGroupByPath(ImmutableList.of("foo"));
@@ -4075,9 +3809,10 @@ public class ProjectGeneratorTest {
         createProjectGenerator(
             ImmutableSet.of(directoryNode, resourceNode, libraryNode), libraryTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXProject project = result.generatedProject;
     PBXGroup mainGroup = project.getMainGroup();
 
     PBXGroup resourcesGroup = mainGroup.getOrCreateDescendantGroupByPath(ImmutableList.of("foo"));
@@ -4098,10 +3833,11 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
     // check if bridging header file existing in the project structure
-    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXProject project = result.generatedProject;
     PBXGroup targetGroup = project.getMainGroup().getOrCreateChildGroupByName("BridgingHeader");
 
     PBXFileReference fileRefBridgingHeader =
@@ -4125,8 +3861,9 @@ public class ProjectGeneratorTest {
             .build();
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
-    projectGenerator.createXcodeProjects();
-    PBXProject project = projectGenerator.getGeneratedProject();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+    PBXProject project = result.generatedProject;
 
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:lib");
     ImmutableMap<String, String> buildSettings = getBuildSettings(buildTarget, target, "Debug");
@@ -4144,8 +3881,9 @@ public class ProjectGeneratorTest {
             .build();
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
-    projectGenerator.createXcodeProjects();
-    PBXProject project = projectGenerator.getGeneratedProject();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+    PBXProject project = result.generatedProject;
 
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:lib");
     ImmutableMap<String, String> buildSettings = getBuildSettings(buildTarget, target, "Debug");
@@ -4163,8 +3901,9 @@ public class ProjectGeneratorTest {
             .build();
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
-    projectGenerator.createXcodeProjects();
-    PBXProject project = projectGenerator.getGeneratedProject();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+    PBXProject project = result.generatedProject;
 
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//Foo:Bar");
     ImmutableMap<String, String> buildSettings = getBuildSettings(buildTarget, target, "Debug");
@@ -4190,8 +3929,9 @@ public class ProjectGeneratorTest {
             .build();
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
-    projectGenerator.createXcodeProjects();
-    PBXProject project = projectGenerator.getGeneratedProject();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+    PBXProject project = result.generatedProject;
 
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//Foo:BarWithSuffix");
     ImmutableMap<String, String> buildSettings = getBuildSettings(buildTarget, target, "Debug");
@@ -4222,8 +3962,9 @@ public class ProjectGeneratorTest {
             .build();
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
-    projectGenerator.createXcodeProjects();
-    PBXProject project = projectGenerator.getGeneratedProject();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+    PBXProject project = result.generatedProject;
 
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//Foo:Bar");
     ImmutableMap<String, String> buildSettings = getBuildSettings(buildTarget, target, "Debug");
@@ -4243,8 +3984,9 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(appBinaryNode), binBuildTarget);
-    projectGenerator.createXcodeProjects();
-    PBXProject project = projectGenerator.getGeneratedProject();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+    PBXProject project = result.generatedProject;
 
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:bin");
     ImmutableMap<String, String> buildSettings = getBuildSettings(binBuildTarget, target, "Debug");
@@ -4280,8 +4022,9 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(libNode, binNode), binBuildTarget);
-    projectGenerator.createXcodeProjects();
-    PBXProject project = projectGenerator.getGeneratedProject();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+    PBXProject project = result.generatedProject;
 
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:bin");
     ImmutableMap<String, String> buildSettings = getBuildSettings(binBuildTarget, target, "Debug");
@@ -4319,7 +4062,8 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(),
             Optional.empty());
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
     HeaderMap headerMap = getHeaderMapInDir(PUBLIC_HEADER_MAP_PATH);
     assertThat(headerMap.getNumEntries(), equalTo(1));
@@ -4332,7 +4076,7 @@ public class ProjectGeneratorTest {
         objCGeneratedHeaderPathName.endsWith(
             derivedSourcesUserDir + "/" + objCGeneratedHeaderName));
 
-    PBXProject pbxProject = projectGenerator.getGeneratedProject();
+    PBXProject pbxProject = result.generatedProject;
     PBXTarget pbxTarget = assertTargetExistsAndReturnTarget(pbxProject, "//foo:lib");
     ImmutableMap<String, String> buildSettings = getBuildSettings(buildTarget, pbxTarget, "Debug");
 
@@ -4393,9 +4137,10 @@ public class ProjectGeneratorTest {
         createProjectGenerator(
             ImmutableSet.of(libNode, binaryNode, bundleNode, testNode, testLibNode), bundleTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXProject project = result.generatedProject;
 
     PBXTarget testPBXTarget = assertTargetExistsAndReturnTarget(project, "//foo:test");
     ImmutableMap<String, String> testBuildSettings =
@@ -4453,9 +4198,10 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(libNode, binaryNode, bundleNode), bundleTarget);
 
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXProject project = projectGenerator.getGeneratedProject();
+    PBXProject project = result.generatedProject;
 
     PBXTarget bundlePBXTarget = assertTargetExistsAndReturnTarget(project, "//foo:bundle");
     ImmutableMap<String, String> bundleBuildSettings =
@@ -4531,7 +4277,6 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(lib1Target, testTarget), /* lib3Target not included on purpose */
             projectCell,
             "BUCK",
-            XcodeProjectWriteOptions.of(new PBXProject(PROJECT_NAME), OUTPUT_DIRECTORY),
             ProjectGeneratorOptions.builder().build(),
             TestRuleKeyConfigurationFactory.create(),
             lib1Target,
@@ -4546,7 +4291,8 @@ public class ProjectGeneratorTest {
             swiftBuckConfig,
             Optional.empty());
 
-    projectGeneratorLib1.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGeneratorLib1.createXcodeProject(xcodeProjectWriteOptions());
 
     // The merged header map should not generated at this point.
     assertTrue(hmapPath + " should exist.", projectFilesystem.isFile(hmapPath));
@@ -4560,7 +4306,7 @@ public class ProjectGeneratorTest {
             "lib4/lib4.h",
             absolutePathForHeader("lib4.h")));
     // Checks the content of the header search paths.
-    PBXProject project1 = projectGeneratorLib1.getGeneratedProject();
+    PBXProject project1 = result.generatedProject;
 
     // For //foo:lib1
     PBXTarget testPBXTarget1 = assertTargetExistsAndReturnTarget(project1, "//foo:lib1");
@@ -4658,7 +4404,6 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(lib1Target, testTarget), /* lib3Target not included on purpose */
             projectCell,
             "BUCK",
-            XcodeProjectWriteOptions.of(new PBXProject(PROJECT_NAME), OUTPUT_DIRECTORY),
             ProjectGeneratorOptions.builder().build(),
             TestRuleKeyConfigurationFactory.create(),
             lib1Target,
@@ -4673,7 +4418,8 @@ public class ProjectGeneratorTest {
             swiftBuckConfig,
             Optional.empty());
 
-    projectGeneratorLib1.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGeneratorLib1.createXcodeProject(xcodeProjectWriteOptions());
 
     // The merged header map should not generated at this point.
     assertTrue(hmapPath + " should exist.", projectFilesystem.isFile(hmapPath));
@@ -4687,7 +4433,7 @@ public class ProjectGeneratorTest {
             "lib4/lib4.h",
             absolutePathForHeader("lib4.h")));
     // Checks the content of the header search paths.
-    PBXProject project1 = projectGeneratorLib1.getGeneratedProject();
+    PBXProject project1 = result.generatedProject;
 
     // For //foo:lib1
     PBXTarget testPBXTarget1 = assertTargetExistsAndReturnTarget(project1, "//foo:lib1");
@@ -4750,14 +4496,19 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(binaryNode, bundleNode), bundleTarget);
-    projectGenerator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
 
-    PBXProject generatedProject = projectGenerator.getGeneratedProject();
+    PBXProject generatedProject = result.generatedProject;
     PBXGroup entitlementsGroup =
         PBXTestUtils.assertHasSubgroupPathAndReturnLast(
             generatedProject.getMainGroup(), ImmutableList.of("foo", "Support", "Entitlements"));
     PBXTestUtils.assertHasFileReferenceWithNameAndReturnIt(
         entitlementsGroup, "My-Entitlements.plist");
+  }
+
+  private XcodeProjectWriteOptions xcodeProjectWriteOptions() {
+    return XcodeProjectWriteOptions.of(new PBXProject(PROJECT_NAME), OUTPUT_DIRECTORY);
   }
 
   private ProjectGenerator createProjectGenerator(
@@ -4811,7 +4562,6 @@ public class ProjectGeneratorTest {
         initialBuildTargets,
         projectCell,
         "BUCK",
-        XcodeProjectWriteOptions.of(new PBXProject(PROJECT_NAME), OUTPUT_DIRECTORY),
         projectGeneratorOptions,
         TestRuleKeyConfigurationFactory.create(),
         workspaceTarget,
@@ -4865,19 +4615,6 @@ public class ProjectGeneratorTest {
             .build();
 
     return new Pair(libraryTarget, ImmutableSet.of(resourceNode, libraryNode));
-  }
-
-  private String assertFileRefIsRelativeAndResolvePath(PBXReference fileRef) {
-    assert (!fileRef.getPath().startsWith("/"));
-    assertEquals(
-        "file path should be relative to project directory",
-        PBXReference.SourceTree.SOURCE_ROOT,
-        fileRef.getSourceTree());
-    return projectFilesystem
-        .resolve(OUTPUT_DIRECTORY)
-        .resolve(fileRef.getPath())
-        .normalize()
-        .toString();
   }
 
   private void assertHasConfigurations(PBXTarget target, String... names) {
@@ -4951,54 +4688,6 @@ public class ProjectGeneratorTest {
     }
   }
 
-  private void assertHasSingleSourcesPhaseWithSourcesAndFlags(
-      PBXTarget target, ImmutableMap<String, Optional<String>> sourcesAndFlags) {
-
-    PBXSourcesBuildPhase sourcesBuildPhase =
-        ProjectGeneratorTestUtils.getSingleBuildPhaseOfType(target, PBXSourcesBuildPhase.class);
-
-    assertEquals(
-        "Sources build phase should have correct number of sources",
-        sourcesAndFlags.size(),
-        sourcesBuildPhase.getFiles().size());
-
-    // map keys to absolute paths
-    ImmutableMap.Builder<String, Optional<String>> absolutePathFlagMapBuilder =
-        ImmutableMap.builder();
-    for (Map.Entry<String, Optional<String>> name : sourcesAndFlags.entrySet()) {
-      absolutePathFlagMapBuilder.put(
-          projectFilesystem
-              .getRootPath()
-              .resolve(name.getKey())
-              .toAbsolutePath()
-              .normalize()
-              .toString(),
-          name.getValue());
-    }
-    ImmutableMap<String, Optional<String>> absolutePathFlagMap = absolutePathFlagMapBuilder.build();
-
-    for (PBXBuildFile file : sourcesBuildPhase.getFiles()) {
-      String filePath = assertFileRefIsRelativeAndResolvePath(file.getFileRef());
-      Optional<String> flags = absolutePathFlagMap.get(filePath);
-      assertNotNull(String.format("Unexpected file ref '%s' found", filePath), flags);
-      if (flags.isPresent()) {
-        assertTrue("Build file should have settings dictionary", file.getSettings().isPresent());
-
-        NSDictionary buildFileSettings = file.getSettings().get();
-        NSString compilerFlags = (NSString) buildFileSettings.get("COMPILER_FLAGS");
-
-        assertNotNull("Build file settings should have COMPILER_FLAGS entry", compilerFlags);
-        assertEquals(
-            "Build file settings should be expected value",
-            flags.get(),
-            compilerFlags.getContent());
-      } else {
-        assertFalse(
-            "Build file should not have settings dictionary", file.getSettings().isPresent());
-      }
-    }
-  }
-
   private void assertSourcesNotInSourcesPhase(PBXTarget target, ImmutableSet<String> sources) {
     ImmutableSet.Builder<String> absoluteSourcesBuilder = ImmutableSet.builder();
     for (String name : sources) {
@@ -5016,7 +4705,9 @@ public class ProjectGeneratorTest {
     PBXSourcesBuildPhase sourcesBuildPhase =
         (PBXSourcesBuildPhase) Iterables.getOnlyElement(buildPhases);
     for (PBXBuildFile file : sourcesBuildPhase.getFiles()) {
-      String filePath = assertFileRefIsRelativeAndResolvePath(file.getFileRef());
+      String filePath =
+          PBXTestUtils.assertFileRefIsRelativeAndResolvePath(
+              file.getFileRef(), projectFilesystem, OUTPUT_DIRECTORY);
       assertFalse(
           "Build phase should not contain this file " + filePath,
           absoluteSources.contains(filePath));

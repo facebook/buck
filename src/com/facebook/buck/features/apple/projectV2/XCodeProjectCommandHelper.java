@@ -18,6 +18,7 @@ package com.facebook.buck.features.apple.projectV2;
 
 import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.AppleBundleDescription;
+import com.facebook.buck.apple.AppleBundleDescriptionArg;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.XCodeDescriptions;
@@ -50,10 +51,12 @@ import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRul
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.core.util.graph.CycleException;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.impl.LegacyToolchainProvider;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.features.apple.common.PathOutputPresenter;
@@ -95,9 +98,11 @@ import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -275,7 +280,7 @@ public class XCodeProjectCommandHelper {
     if (sharedLibrariesInBundles) {
       sharedLibraryToBundle =
           Optional.of(
-              ProjectGenerator.computeSharedLibrariesToBundles(
+              computeSharedLibrariesToBundles(
                   targetGraphCreationResult.getTargetGraph().getNodes(),
                   targetGraphCreationResult.getTargetGraph()));
     }
@@ -291,6 +296,40 @@ public class XCodeProjectCommandHelper {
     LOG.debug("Xcode project generation: Run the project generator");
 
     return runXcodeProjectGenerator(targetGraphCreationResult, sharedLibraryToBundle);
+  }
+
+  /** Generate a mapping from libraries to the framework bundles that include them. */
+  static ImmutableMap<BuildTarget, TargetNode<?>> computeSharedLibrariesToBundles(
+      ImmutableSet<TargetNode<?>> targetNodes, TargetGraph targetGraph)
+      throws HumanReadableException {
+
+    Map<BuildTarget, TargetNode<?>> sharedLibraryToBundle = new HashMap<>();
+    for (TargetNode<?> targetNode : targetNodes) {
+      Optional<TargetNode<CxxLibraryDescription.CommonArg>> binaryNode =
+          TargetNodes.castArg(targetNode, AppleBundleDescriptionArg.class)
+              .flatMap(bundleNode -> bundleNode.getConstructorArg().getBinary())
+              .map(target -> targetGraph.get(target))
+              .flatMap(node -> TargetNodes.castArg(node, CxxLibraryDescription.CommonArg.class));
+      if (!binaryNode.isPresent()) {
+        continue;
+      }
+      CxxLibraryDescription.CommonArg arg = binaryNode.get().getConstructorArg();
+      if (arg.getPreferredLinkage().equals(Optional.of(NativeLinkableGroup.Linkage.SHARED))) {
+        BuildTarget binaryBuildTargetWithoutFlavors =
+            binaryNode.get().getBuildTarget().withoutFlavors();
+        if (sharedLibraryToBundle.containsKey(binaryBuildTargetWithoutFlavors)) {
+          throw new HumanReadableException(
+              String.format(
+                  "Library %s is declared as the 'binary' of multiple bundles:\n first bundle: %s\n second bundle: %s",
+                  binaryBuildTargetWithoutFlavors,
+                  sharedLibraryToBundle.get(binaryBuildTargetWithoutFlavors).getBuildTarget(),
+                  targetNode.getBuildTarget()));
+        } else {
+          sharedLibraryToBundle.put(binaryBuildTargetWithoutFlavors, targetNode);
+        }
+      }
+    }
+    return ImmutableMap.copyOf(sharedLibraryToBundle);
   }
 
   private static String getIDEForceKillSectionName() {
@@ -515,12 +554,11 @@ public class XCodeProjectCommandHelper {
           "Required build targets for workspace %s: %s",
           inputTarget, requiredBuildTargetsForWorkspace);
 
-      Path absolutePath = workspaceCell.getFilesystem().resolve(result.getWorkspacePath());
+      Path absolutePath = workspaceCell.getFilesystem().resolve(result.workspacePath);
       Path relativePath = cell.getFilesystem().relativize(absolutePath);
       presenter.present(inputTarget.getFullyQualifiedName(), relativePath);
 
-      generationResultsBuilder.add(
-          new Result(result.getProject(), requiredBuildTargetsForWorkspace));
+      generationResultsBuilder.add(new Result(result.project, requiredBuildTargetsForWorkspace));
     }
 
     return generationResultsBuilder.build();
