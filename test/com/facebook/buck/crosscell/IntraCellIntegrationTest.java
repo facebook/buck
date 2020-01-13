@@ -27,6 +27,7 @@ import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParsingContext;
@@ -174,7 +175,11 @@ public class IntraCellIntegrationTest {
 
     Path outputXCConfig =
         childRepoRoot.resolve(
-            "buck-out/cells/parent/gen/just-a-directory/jad-apple-library-Debug.xcconfig");
+            "buck-out/cells/parent/gen/"
+                + BuildTargetPaths.getBasePathForBaseName(
+                    workspace.getProjectFileSystem(),
+                    BuildTargetFactory.newInstance("//just-a-directory:jad-apple-library"))
+                + "/jad-apple-library-Debug.xcconfig");
     assertTrue(Files.exists(outputXCConfig));
     String xcconfigContents =
         new String(Files.readAllBytes(outputXCConfig), StandardCharsets.UTF_8);
