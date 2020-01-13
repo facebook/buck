@@ -365,9 +365,6 @@ public class ProjectGenerator {
             PerfEventId.of("xcode_project_generation"),
             ImmutableMap.of("Path", getXcodeProjPath()))) {
 
-      ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder = ImmutableSet.builder();
-      ImmutableSet.Builder<Path> xcconfigPathsBuilder = ImmutableSet.builder();
-      ImmutableSet.Builder<String> targetConfigNamesBuilder = ImmutableSet.builder();
       // Does not need to be Immutable because this should not leave the stack.
       Set<BuildTarget> generatedTargets = new HashSet<>();
 
@@ -378,12 +375,7 @@ public class ProjectGenerator {
       // workspace target isn't filtered later by loading it first.
       final TargetNode<?> workspaceTargetNode = targetGraph.get(workspaceTarget);
       ProjectTargetGenerationResult workspaceTargetResult =
-          generateProjectTarget(
-              workspaceTargetNode,
-              requiredBuildTargetsBuilder,
-              xcconfigPathsBuilder,
-              targetConfigNamesBuilder,
-              generatedTargets);
+          generateProjectTarget(workspaceTargetNode, generatedTargets);
       generationResultsBuilder.add(workspaceTargetResult);
 
       /*
@@ -398,13 +390,7 @@ public class ProjectGenerator {
               .filter(buildTarget -> buildTarget != workspaceTarget && buildTarget.isFlavored())
               .map(buildTarget -> targetGraph.get(buildTarget))
               .collect(Collectors.toSet())) {
-        ProjectTargetGenerationResult result =
-            generateProjectTarget(
-                targetNode,
-                requiredBuildTargetsBuilder,
-                xcconfigPathsBuilder,
-                targetConfigNamesBuilder,
-                generatedTargets);
+        ProjectTargetGenerationResult result = generateProjectTarget(targetNode, generatedTargets);
         generationResultsBuilder.add(result);
       }
 
@@ -413,21 +399,24 @@ public class ProjectGenerator {
               .filter(buildTarget -> buildTarget != workspaceTarget && !buildTarget.isFlavored())
               .map(buildTarget -> targetGraph.get(buildTarget))
               .collect(Collectors.toSet())) {
-        ProjectTargetGenerationResult result =
-            generateProjectTarget(
-                targetNode,
-                requiredBuildTargetsBuilder,
-                xcconfigPathsBuilder,
-                targetConfigNamesBuilder,
-                generatedTargets);
+        ProjectTargetGenerationResult result = generateProjectTarget(targetNode, generatedTargets);
         generationResultsBuilder.add(result);
       }
 
+      ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder = ImmutableSet.builder();
+      ImmutableSet.Builder<Path> xcconfigPathsBuilder = ImmutableSet.builder();
+      ImmutableSet.Builder<String> targetConfigNamesBuilder = ImmutableSet.builder();
       ImmutableMap.Builder<TargetNode<?>, PBXNativeTarget>
           targetNodeToGeneratedProjectTargetBuilder = ImmutableMap.builder();
+
       ImmutableList<ProjectTargetGenerationResult> generationResults =
           generationResultsBuilder.build();
+
       for (ProjectTargetGenerationResult result : generationResults) {
+        requiredBuildTargetsBuilder.addAll(result.requiredBuildTargets);
+        xcconfigPathsBuilder.addAll(result.xcconfigPaths);
+        targetConfigNamesBuilder.addAll(result.targetConfigNames);
+
         XCodeNativeTargetAttributes nativeTargetAttributes = result.targetAttributes;
         XcodeNativeTargetProjectWriter nativeTargetProjectWriter =
             new XcodeNativeTargetProjectWriter(
@@ -523,30 +512,44 @@ public class ProjectGenerator {
     public final TargetNode<?> targetNode;
     public final XCodeNativeTargetAttributes targetAttributes;
     public final ImmutableList<BuildTarget> dependencies;
+    public final ImmutableSet<BuildTarget> requiredBuildTargets;
+    public final ImmutableSet<Path> xcconfigPaths;
+    public final ImmutableSet<String> targetConfigNames;
 
     public ProjectTargetGenerationResult(
         TargetNode<?> targetNode, XCodeNativeTargetAttributes targetAttributes) {
-      this(targetNode, targetAttributes, ImmutableList.of());
+      this(
+          targetNode,
+          targetAttributes,
+          ImmutableList.of(),
+          ImmutableSet.of(),
+          ImmutableSet.of(),
+          ImmutableSet.of());
     }
 
     public ProjectTargetGenerationResult(
         TargetNode<?> targetNode,
         XCodeNativeTargetAttributes targetAttributes,
-        ImmutableList<BuildTarget> dependencies) {
+        ImmutableList<BuildTarget> dependencies,
+        ImmutableSet<BuildTarget> requiredBuildTargets,
+        ImmutableSet<Path> xcconfigPaths,
+        ImmutableSet<String> targetConfigNames) {
       this.targetNode = targetNode;
       this.targetAttributes = targetAttributes;
       this.dependencies = dependencies;
+      this.requiredBuildTargets = requiredBuildTargets;
+      this.xcconfigPaths = xcconfigPaths;
+      this.targetConfigNames = targetConfigNames;
     }
   }
 
   @SuppressWarnings("unchecked")
   private ProjectTargetGenerationResult generateProjectTarget(
-      TargetNode<?> targetNode,
-      ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
-      ImmutableSet.Builder<Path> xcconfigPathsBuilder,
-      ImmutableSet.Builder<String> targetConfigNamesBuilder,
-      Set<BuildTarget> generatedTargets)
-      throws IOException {
+      TargetNode<?> targetNode, Set<BuildTarget> generatedTargets) throws IOException {
+
+    ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<Path> xcconfigPathsBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<String> targetConfigNamesBuilder = ImmutableSet.builder();
 
     XCodeNativeTargetAttributes.Builder nativeTargetBuilder =
         XCodeNativeTargetAttributes.builder().setAppleConfig(appleConfig);
@@ -665,7 +668,13 @@ public class ProjectGenerator {
       }
     }
 
-    return new ProjectTargetGenerationResult(targetNode, nativeTargetBuilder.build(), dependencies);
+    return new ProjectTargetGenerationResult(
+        targetNode,
+        nativeTargetBuilder.build(),
+        dependencies,
+        requiredBuildTargetsBuilder.build(),
+        xcconfigPathsBuilder.build(),
+        targetConfigNamesBuilder.build());
   }
 
   private void addRequiredBuildTargetsFromAttributes(
