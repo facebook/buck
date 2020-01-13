@@ -1514,9 +1514,12 @@ public class AppleBinaryIntegrationTest {
 
     Path frameworks =
         tmp.getRoot()
-            .resolve(workspace.getProjectFileSystem().getBuckPaths().getGenDir())
             .resolve(
-                "TestApp#dwarf-and-dsym,iphonesimulator-x86_64,no-include-frameworks,no-linkermap")
+                BuildTargetPaths.getGenPath(
+                    filesystem,
+                    BuildTargetFactory.newInstance(
+                        "//:TestApp#dwarf-and-dsym,iphonesimulator-x86_64,no-include-frameworks,no-linkermap"),
+                    "%s"))
             .resolve("TestApp.app")
             .resolve("Frameworks");
 
