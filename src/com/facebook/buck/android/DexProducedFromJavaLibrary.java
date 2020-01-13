@@ -47,6 +47,7 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -190,6 +191,7 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
 
       @Nullable DxStep dx;
 
+      Path pathToDex = outputPathResolver.resolvePath(outputDex);
       if (hasClassesToDx) {
         Path pathToOutputFile = sourcePathResolverAdapter.getAbsolutePath(javaLibrarySourcePath);
         EstimateDexWeightStep estimate = new EstimateDexWeightStep(filesystem, pathToOutputFile);
@@ -207,7 +209,6 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
         if (!desugarEnabled) {
           options.add(Option.NO_DESUGAR);
         }
-        Path pathToDex = outputPathResolver.resolvePath(outputDex);
         dx =
             new DxStep(
                 filesystem,
@@ -230,6 +231,8 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
       } else {
         dx = null;
         weightEstimate = Suppliers.ofInstance(0);
+        // Create an empty file so the dex output can be used in input rulekeys
+        steps.add(new TouchStep(filesystem, pathToDex));
       }
 
       // Run a step to record artifacts and metadata. The values recorded depend upon whether dx was

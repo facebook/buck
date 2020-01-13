@@ -28,6 +28,7 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.attr.BuildOutputInitializer;
 import com.facebook.buck.core.rules.attr.InitializableFromDisk;
+import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -77,7 +78,7 @@ import javax.annotation.Nullable;
  */
 public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements InitializableFromDisk<PreDexSplitDexGroup.BuildOutput>,
-        TrimUberRDotJava.UsesResources {
+        TrimUberRDotJava.UsesResources, SupportsInputBasedRuleKey {
 
   @AddToRuleKey private final DexSplitMode dexSplitMode;
 
@@ -85,16 +86,19 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
   final APKModule apkModule;
   public final Collection<DexProducedFromJavaLibrary> preDexDeps;
   private final ListeningExecutorService dxExecutorService;
-  private final int xzCompressionLevel;
-  private final Optional<String> dxMaxHeapSize;
+  @AddToRuleKey private final int xzCompressionLevel;
+  @AddToRuleKey private final Optional<String> dxMaxHeapSize;
 
   @AddToRuleKey final String dexTool;
-
-  final AndroidPlatformTarget androidPlatformTarget;
+  @AddToRuleKey final AndroidPlatformTarget androidPlatformTarget;
 
   private OptionalInt groupIndex;
 
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
+
+  @AddToRuleKey
+  @SuppressWarnings("PMD.UnusedPrivateField")
+  private final ImmutableList<SourcePath> preDexInputs;
 
   public PreDexSplitDexGroup(
       BuildTarget buildTarget,
@@ -122,6 +126,10 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
     this.preDexDeps = preDexDeps;
     this.groupIndex = groupIndex;
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
+    this.preDexInputs =
+        preDexDeps.stream()
+            .map(DexProducedFromJavaLibrary::getSourcePathToDex)
+            .collect(ImmutableList.toImmutableList());
   }
 
   public List<DexWithClasses> getDexWithClasses() {
