@@ -89,12 +89,14 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import org.hamcrest.FeatureMatcher;
@@ -125,7 +127,7 @@ public class WorkspaceAndProjectGeneratorTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     xcodeDescriptions =
         XCodeDescriptionsFactory.create(BuckPluginManagerFactory.createPluginManager());
@@ -244,7 +246,7 @@ public class WorkspaceAndProjectGeneratorTest {
 
   @Test
   public void workspaceAndProjectsShouldDiscoverDependenciesAndTests()
-      throws IOException, InterruptedException {
+      throws IOException, InterruptedException, ExecutionException {
     WorkspaceAndProjectGenerator generator =
         new WorkspaceAndProjectGenerator(
             xcodeDescriptions,
@@ -269,7 +271,8 @@ public class WorkspaceAndProjectGeneratorTest {
             appleConfig,
             swiftBuckConfig,
             Optional.empty());
-    WorkspaceAndProjectGenerator.Result result = generator.generateWorkspaceAndDependentProjects();
+    WorkspaceAndProjectGenerator.Result result =
+        generator.generateWorkspaceAndDependentProjects(MoreExecutors.newDirectExecutorService());
 
     ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(result.project, "//foo:bin");
     ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(result.project, "//foo:lib");
@@ -280,7 +283,8 @@ public class WorkspaceAndProjectGeneratorTest {
   }
 
   @Test
-  public void workspaceAndProjectsWithoutTests() throws IOException, InterruptedException {
+  public void workspaceAndProjectsWithoutTests()
+      throws IOException, InterruptedException, ExecutionException {
     WorkspaceAndProjectGenerator generator =
         new WorkspaceAndProjectGenerator(
             xcodeDescriptions,
@@ -302,7 +306,8 @@ public class WorkspaceAndProjectGeneratorTest {
             appleConfig,
             swiftBuckConfig,
             Optional.empty());
-    WorkspaceAndProjectGenerator.Result result = generator.generateWorkspaceAndDependentProjects();
+    WorkspaceAndProjectGenerator.Result result =
+        generator.generateWorkspaceAndDependentProjects(MoreExecutors.newDirectExecutorService());
 
     ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(result.project, "//foo:bin");
     ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(result.project, "//foo:lib");
@@ -310,7 +315,8 @@ public class WorkspaceAndProjectGeneratorTest {
   }
 
   @Test
-  public void workspaceAndProjectsWithoutDependenciesTests() throws IOException {
+  public void workspaceAndProjectsWithoutDependenciesTests()
+      throws IOException, InterruptedException {
     WorkspaceAndProjectGenerator generator =
         new WorkspaceAndProjectGenerator(
             xcodeDescriptions,
@@ -336,7 +342,7 @@ public class WorkspaceAndProjectGeneratorTest {
             swiftBuckConfig,
             Optional.empty());
 
-    generator.generateWorkspaceAndDependentProjects();
+    generator.generateWorkspaceAndDependentProjects(MoreExecutors.newDirectExecutorService());
     assertEquals(generator.getSchemeGenerators().size(), 1);
 
     // validate main scheme values
@@ -373,7 +379,7 @@ public class WorkspaceAndProjectGeneratorTest {
   }
 
   @Test
-  public void requiredBuildTargets() throws IOException, InterruptedException {
+  public void requiredBuildTargets() throws IOException, InterruptedException, ExecutionException {
     BuildTarget genruleTarget = BuildTargetFactory.newInstance("//foo", "gen");
     TargetNode<GenruleDescriptionArg> genrule =
         GenruleBuilder.newGenruleBuilder(genruleTarget).setOut("source.m").build();
@@ -416,7 +422,7 @@ public class WorkspaceAndProjectGeneratorTest {
             swiftBuckConfig,
             Optional.empty());
 
-    generator.generateWorkspaceAndDependentProjects();
+    generator.generateWorkspaceAndDependentProjects(MoreExecutors.newDirectExecutorService());
     assertEquals(generator.getRequiredBuildTargets(), ImmutableSet.of(genruleTarget));
   }
 
@@ -557,7 +563,8 @@ public class WorkspaceAndProjectGeneratorTest {
             appleConfig,
             swiftBuckConfig,
             Optional.empty());
-    WorkspaceAndProjectGenerator.Result result = generator.generateWorkspaceAndDependentProjects();
+    WorkspaceAndProjectGenerator.Result result =
+        generator.generateWorkspaceAndDependentProjects(MoreExecutors.newDirectExecutorService());
 
     ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(result.project, "//foo:FooBin");
     ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(result.project, "//foo:FooLib");
@@ -660,7 +667,8 @@ public class WorkspaceAndProjectGeneratorTest {
             appleConfig,
             swiftBuckConfig,
             Optional.empty());
-    WorkspaceAndProjectGenerator.Result result = generator.generateWorkspaceAndDependentProjects();
+    WorkspaceAndProjectGenerator.Result result =
+        generator.generateWorkspaceAndDependentProjects(MoreExecutors.newDirectExecutorService());
 
     ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(result.project, "//foo:FooLib");
     ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(result.project, "//bar:BarLib");
@@ -686,7 +694,7 @@ public class WorkspaceAndProjectGeneratorTest {
   }
 
   @Test
-  public void targetsWithModularDepsAreBuilt() throws IOException {
+  public void targetsWithModularDepsAreBuilt() throws IOException, InterruptedException {
     BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo", "FooLib");
     TargetNode<AppleLibraryDescriptionArg> fooLib =
         AppleLibraryBuilder.createBuilder(fooLibTarget).setModular(true).build();
@@ -724,7 +732,7 @@ public class WorkspaceAndProjectGeneratorTest {
             appleConfig,
             swiftBuckConfig,
             Optional.empty());
-    generator.generateWorkspaceAndDependentProjects();
+    generator.generateWorkspaceAndDependentProjects(MoreExecutors.newDirectExecutorService());
 
     BuildTarget expectedTarget =
         NodeHelper.getModularMapTarget(
@@ -737,7 +745,8 @@ public class WorkspaceAndProjectGeneratorTest {
   }
 
   @Test
-  public void targetsForWorkspaceWithImplicitExtensionTargets() throws IOException {
+  public void targetsForWorkspaceWithImplicitExtensionTargets()
+      throws IOException, InterruptedException {
     BuildTarget barShareExtensionBinaryTarget =
         BuildTargetFactory.newInstance("//foo", "BarShareExtensionBinary");
     TargetNode<?> barShareExtensionBinary =
@@ -799,7 +808,7 @@ public class WorkspaceAndProjectGeneratorTest {
             appleConfig,
             swiftBuckConfig,
             Optional.empty());
-    generator.generateWorkspaceAndDependentProjects();
+    generator.generateWorkspaceAndDependentProjects(MoreExecutors.newDirectExecutorService());
 
     assertThat(
         generator.getSchemeGenerators().get("BarApp").getOutputScheme().isPresent(), is(true));
@@ -840,7 +849,8 @@ public class WorkspaceAndProjectGeneratorTest {
   }
 
   @Test
-  public void enablingParallelizeBuild() throws IOException, InterruptedException {
+  public void enablingParallelizeBuild()
+      throws IOException, InterruptedException, ExecutionException {
     BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo", "FooLib");
     TargetNode<AppleLibraryDescriptionArg> fooLib =
         AppleLibraryBuilder.createBuilder(fooLibTarget).build();
@@ -878,7 +888,7 @@ public class WorkspaceAndProjectGeneratorTest {
             appleConfig,
             swiftBuckConfig,
             Optional.empty());
-    generator.generateWorkspaceAndDependentProjects();
+    generator.generateWorkspaceAndDependentProjects(MoreExecutors.newDirectExecutorService());
 
     XCScheme mainScheme = generator.getSchemeGenerators().get("workspace").getOutputScheme().get();
     XCScheme.BuildAction mainSchemeBuildAction = mainScheme.getBuildAction().get();
@@ -893,7 +903,7 @@ public class WorkspaceAndProjectGeneratorTest {
   }
 
   @Test
-  public void customRunnableSettings() throws IOException {
+  public void customRunnableSettings() throws IOException, InterruptedException {
     BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo", "FooLib");
     TargetNode<AppleLibraryDescriptionArg> fooLib =
         AppleLibraryBuilder.createBuilder(fooLibTarget).build();
@@ -935,7 +945,7 @@ public class WorkspaceAndProjectGeneratorTest {
             appleConfig,
             swiftBuckConfig,
             Optional.empty());
-    generator.generateWorkspaceAndDependentProjects();
+    generator.generateWorkspaceAndDependentProjects(MoreExecutors.newDirectExecutorService());
 
     XCScheme mainScheme = generator.getSchemeGenerators().get("workspace").getOutputScheme().get();
     XCScheme.LaunchAction launchAction = mainScheme.getLaunchAction().get();
@@ -948,7 +958,7 @@ public class WorkspaceAndProjectGeneratorTest {
   }
 
   @Test
-  public void customPrePostActions() throws IOException {
+  public void customPrePostActions() throws IOException, InterruptedException {
     BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo", "FooLib");
     TargetNode<AppleLibraryDescriptionArg> fooLib =
         AppleLibraryBuilder.createBuilder(fooLibTarget).build();
@@ -996,7 +1006,7 @@ public class WorkspaceAndProjectGeneratorTest {
             appleConfig,
             swiftBuckConfig,
             Optional.empty());
-    generator.generateWorkspaceAndDependentProjects();
+    generator.generateWorkspaceAndDependentProjects(MoreExecutors.newDirectExecutorService());
 
     XCScheme mainScheme = generator.getSchemeGenerators().get("workspace").getOutputScheme().get();
     XCScheme.BuildAction buildAction = mainScheme.getBuildAction().get();
@@ -1013,7 +1023,7 @@ public class WorkspaceAndProjectGeneratorTest {
   }
 
   @Test
-  public void testProjectStructureWithDuplicateBundle() throws IOException {
+  public void testProjectStructureWithDuplicateBundle() throws IOException, InterruptedException {
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo:lib");
     BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo:bundle");
     BuildTarget libraryWithFlavorTarget =
@@ -1081,7 +1091,8 @@ public class WorkspaceAndProjectGeneratorTest {
             swiftBuckConfig,
             Optional.empty());
 
-    WorkspaceAndProjectGenerator.Result result = generator.generateWorkspaceAndDependentProjects();
+    WorkspaceAndProjectGenerator.Result result =
+        generator.generateWorkspaceAndDependentProjects(MoreExecutors.newDirectExecutorService());
 
     int count = 0;
     PBXProject project = result.project;
@@ -1100,7 +1111,7 @@ public class WorkspaceAndProjectGeneratorTest {
    * @throws IOException
    */
   @Test
-  public void ruleToTargetMapFiltersDuplicatePBXTarget() throws IOException {
+  public void ruleToTargetMapFiltersDuplicatePBXTarget() throws IOException, InterruptedException {
     BuildTarget explicitStaticBuildTarget =
         BuildTargetFactory.newInstance("//foo", "lib", CxxDescriptionEnhancer.STATIC_FLAVOR);
     TargetNode<?> explicitStaticNode =
@@ -1157,7 +1168,8 @@ public class WorkspaceAndProjectGeneratorTest {
             swiftBuckConfig,
             Optional.empty());
 
-    WorkspaceAndProjectGenerator.Result result = generator.generateWorkspaceAndDependentProjects();
+    WorkspaceAndProjectGenerator.Result result =
+        generator.generateWorkspaceAndDependentProjects(MoreExecutors.newDirectExecutorService());
 
     // `implicitStaticBuildTarget` should be filtered out since it duplicates
     // `explicitStaticBuildTarget`, the workspace target, which takes precedence.

@@ -135,6 +135,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.ByteStreams;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -175,7 +176,7 @@ public class ProjectGeneratorTest {
   private Path rootPath;
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
     clock = SettableFakeClock.DO_NOT_CARE;
     projectFilesystem = new FakeProjectFilesystem(clock);
@@ -221,7 +222,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testProjectStructureWithInfoPlist() throws IOException {
+  public void testProjectStructureWithInfoPlist() throws IOException, InterruptedException {
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
     BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo", "bundle");
 
@@ -241,7 +242,8 @@ public class ProjectGeneratorTest {
         createProjectGenerator(ImmutableSet.of(libraryNode, bundleNode), bundleTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
 
@@ -251,7 +253,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testProjectStructureWithBuildFileName() throws IOException {
+  public void testProjectStructureWithBuildFileName() throws IOException, InterruptedException {
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo/myLib", "lib");
     TargetNode<?> libraryNode =
         AppleLibraryBuilder.createBuilder(libraryTarget)
@@ -261,7 +263,8 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(libraryNode), libraryTarget);
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
     PBXGroup fooGroup = PBXTestUtils.assertHasSubgroupAndReturnIt(project.getMainGroup(), "foo");
@@ -270,7 +273,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testProjectWithSharedBundleDep() throws IOException {
+  public void testProjectWithSharedBundleDep() throws IOException, InterruptedException {
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
     BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo", "sharedFramework");
     BuildTarget sharedLibTarget = BuildTargetFactory.newInstance("//foo:shared#shared");
@@ -306,14 +309,15 @@ public class ProjectGeneratorTest {
             Optional.of(ImmutableMap.of(sharedLibTarget, bundleNode)));
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
     PBXProject project = result.generatedProject;
     assertEquals(project.getMainGroup().getChildren().size(), 5);
     assertEquals(project.getTargets().size(), 3);
   }
 
   @Test
-  public void testProjectStructureWithGenruleSources() throws IOException {
+  public void testProjectStructureWithGenruleSources() throws IOException, InterruptedException {
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
     BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo", "bundle");
     BuildTarget genruleTarget = BuildTargetFactory.newInstance("//foo", "genrule");
@@ -341,7 +345,8 @@ public class ProjectGeneratorTest {
         createProjectGenerator(ImmutableSet.of(libraryNode, bundleNode, genruleNode), bundleTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
 
@@ -358,7 +363,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testProjectStructureWithExtraXcodeFiles() throws IOException {
+  public void testProjectStructureWithExtraXcodeFiles() throws IOException, InterruptedException {
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
     BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo", "bundle");
 
@@ -380,7 +385,8 @@ public class ProjectGeneratorTest {
         createProjectGenerator(ImmutableSet.of(libraryNode, bundleNode), bundleTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
 
@@ -397,7 +403,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testProjectStructureWithExtraXcodeSources() throws IOException {
+  public void testProjectStructureWithExtraXcodeSources() throws IOException, InterruptedException {
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
     BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo", "bundle");
 
@@ -419,7 +425,8 @@ public class ProjectGeneratorTest {
         createProjectGenerator(ImmutableSet.of(libraryNode, bundleNode), bundleTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
 
@@ -442,7 +449,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testModularLibraryHasCorrectSwiftIncludePaths() throws IOException, ParseException {
+  public void testModularLibraryHasCorrectSwiftIncludePaths()
+      throws IOException, ParseException, InterruptedException {
     BuildTarget frameworkBundleTarget = BuildTargetFactory.newInstance("//foo", "framework");
     BuildTarget frameworkLibTarget = BuildTargetFactory.newInstance("//foo", "lib");
     BuildTarget appBundleTarget = BuildTargetFactory.newInstance("//product", "app");
@@ -492,7 +500,8 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(),
             Optional.empty());
 
-    projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+    projectGenerator.createXcodeProject(
+        xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     FakeProjectFilesystem frameworkBundleFileSystem =
         (FakeProjectFilesystem) frameworkBundleNode.getFilesystem();
@@ -521,7 +530,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testNonModularLibraryMixedSourcesFlags() throws IOException {
+  public void testNonModularLibraryMixedSourcesFlags() throws IOException, InterruptedException {
     BuildTarget libTarget = BuildTargetFactory.newInstance("//foo", "lib");
 
     TargetNode<?> libNode =
@@ -536,7 +545,8 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(libNode), libTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
     PBXProject project = result.generatedProject;
     assertNotNull(project);
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:lib");
@@ -561,7 +571,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testModularFrameworkBuildSettings() throws IOException {
+  public void testModularFrameworkBuildSettings() throws IOException, InterruptedException {
     BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo", "framework");
     BuildTarget libTarget = BuildTargetFactory.newInstance("//foo", "lib");
 
@@ -596,7 +606,8 @@ public class ProjectGeneratorTest {
             Optional.empty());
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
     PBXTarget libPBXTarget = assertTargetExistsAndReturnTarget(project, "//foo:framework");
@@ -621,7 +632,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testModularFrameworkHeadersInHeadersBuildPhase() throws IOException {
+  public void testModularFrameworkHeadersInHeadersBuildPhase()
+      throws IOException, InterruptedException {
     BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo", "framework");
     BuildTarget libTarget = BuildTargetFactory.newInstance("//foo", "lib");
 
@@ -650,7 +662,8 @@ public class ProjectGeneratorTest {
         createProjectGenerator(ImmutableSet.of(libNode, frameworkNode), libTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:framework");
@@ -670,7 +683,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleLibraryHeaderGroupsWithHeaderSymlinkTrees() throws IOException {
+  public void testAppleLibraryHeaderGroupsWithHeaderSymlinkTrees()
+      throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget, projectFilesystem)
@@ -718,7 +732,8 @@ public class ProjectGeneratorTest {
             Optional.empty());
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
 
@@ -786,7 +801,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleLibraryHeaderGroupsWithMappedHeaders() throws IOException {
+  public void testAppleLibraryHeaderGroupsWithMappedHeaders()
+      throws IOException, InterruptedException {
     BuildTarget privateGeneratedTarget = BuildTargetFactory.newInstance("//foo", "generated1.h");
     BuildTarget publicGeneratedTarget = BuildTargetFactory.newInstance("//foo", "generated2.h");
 
@@ -841,7 +857,8 @@ public class ProjectGeneratorTest {
             Optional.empty());
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
 
@@ -904,7 +921,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testCxxLibraryWithListsOfHeaders() throws IOException {
+  public void testCxxLibraryWithListsOfHeaders() throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         new CxxLibraryBuilder(buildTarget)
@@ -932,7 +949,8 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     List<Path> headerSymlinkTrees = result.headerSymlinkTrees;
 
@@ -962,7 +980,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testCxxLibraryWithoutHeadersSymLinks() throws IOException {
+  public void testCxxLibraryWithoutHeadersSymLinks() throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         new CxxLibraryBuilder(buildTarget)
@@ -992,7 +1010,8 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     List<Path> headerSymlinkTrees = result.headerSymlinkTrees;
     assertThat(headerSymlinkTrees, hasSize(1));
@@ -1009,7 +1028,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testCxxLibraryWithListsOfHeadersAndCustomNamespace() throws IOException {
+  public void testCxxLibraryWithListsOfHeadersAndCustomNamespace()
+      throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         new CxxLibraryBuilder(buildTarget)
@@ -1038,7 +1058,8 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     List<Path> headerSymlinkTrees = result.headerSymlinkTrees;
     assertThat(headerSymlinkTrees, hasSize(1));
@@ -1062,7 +1083,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testCxxLibraryHeaderGroupsWithMapsOfHeaders() throws IOException {
+  public void testCxxLibraryHeaderGroupsWithMapsOfHeaders()
+      throws IOException, InterruptedException {
     BuildTarget privateGeneratedTarget = BuildTargetFactory.newInstance("//foo", "generated1.h");
     BuildTarget publicGeneratedTarget = BuildTargetFactory.newInstance("//foo", "generated2.h");
 
@@ -1108,7 +1130,8 @@ public class ProjectGeneratorTest {
             publicGeneratedTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     List<Path> headerSymlinkTrees = result.headerSymlinkTrees;
     assertThat(headerSymlinkTrees, hasSize(1));
@@ -1133,7 +1156,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testCxxLibraryHeaderGroupsWithMapsOfHeadersAndNotMatchingPlatform()
-      throws IOException {
+      throws IOException, InterruptedException {
     BuildTarget privateGeneratedTarget = BuildTargetFactory.newInstance("//foo", "generated1.h");
     BuildTarget publicGeneratedTarget = BuildTargetFactory.newInstance("//foo", "generated2.h");
 
@@ -1184,7 +1207,8 @@ public class ProjectGeneratorTest {
             publicGeneratedTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     List<Path> headerSymlinkTrees = result.headerSymlinkTrees;
     assertThat(headerSymlinkTrees, hasSize(1));
@@ -1209,7 +1233,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testCxxLibraryHeaderGroupsWithMapsOfHeadersAndCustomNamespace() throws IOException {
+  public void testCxxLibraryHeaderGroupsWithMapsOfHeadersAndCustomNamespace()
+      throws IOException, InterruptedException {
     BuildTarget privateGeneratedTarget = BuildTargetFactory.newInstance("//foo", "generated1.h");
     BuildTarget publicGeneratedTarget = BuildTargetFactory.newInstance("//foo", "generated2.h");
 
@@ -1256,7 +1281,8 @@ public class ProjectGeneratorTest {
             publicGeneratedTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     List<Path> headerSymlinkTrees = result.headerSymlinkTrees;
     assertThat(headerSymlinkTrees, hasSize(1));
@@ -1280,7 +1306,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testHeaderSymlinkTreesAreRegeneratedWhenKeyChanges() throws IOException {
+  public void testHeaderSymlinkTreesAreRegeneratedWhenKeyChanges()
+      throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget)
@@ -1298,7 +1325,8 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     List<Path> headerSymlinkTrees = result.headerSymlinkTrees;
     assertThat(headerSymlinkTrees, hasSize(1));
@@ -1316,7 +1344,9 @@ public class ProjectGeneratorTest {
 
     projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
-    result = projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+    result =
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     headerSymlinkTrees = result.headerSymlinkTrees;
     assertThat(headerSymlinkTrees, hasSize(1));
@@ -1330,7 +1360,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testHeaderSymlinkTreesAreRegeneratedWhenValueChanges() throws IOException {
+  public void testHeaderSymlinkTreesAreRegeneratedWhenValueChanges()
+      throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget)
@@ -1341,7 +1372,8 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     List<Path> headerSymlinkTrees = result.headerSymlinkTrees;
     assertThat(headerSymlinkTrees, hasSize(1));
@@ -1358,7 +1390,9 @@ public class ProjectGeneratorTest {
 
     projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
-    result = projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+    result =
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     headerSymlinkTrees = result.headerSymlinkTrees;
     assertThat(headerSymlinkTrees, hasSize(1));
@@ -1369,7 +1403,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testHeaderSymlinkTreesWithHeadersVisibleForTesting() throws IOException {
+  public void testHeaderSymlinkTreesWithHeadersVisibleForTesting()
+      throws IOException, InterruptedException {
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
     BuildTarget testTarget = BuildTargetFactory.newInstance("//foo", "test");
 
@@ -1393,7 +1428,8 @@ public class ProjectGeneratorTest {
         createProjectGenerator(ImmutableSet.of(libraryNode, testNode), testTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
     PBXTarget testPBXTarget = assertTargetExistsAndReturnTarget(project, "//foo:test");
@@ -1417,7 +1453,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAbsoluteHeaderMapPaths() throws IOException {
+  public void testAbsoluteHeaderMapPaths() throws IOException, InterruptedException {
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
     BuildTarget testTarget = BuildTargetFactory.newInstance("//foo", "test");
 
@@ -1449,7 +1485,8 @@ public class ProjectGeneratorTest {
             Optional.empty());
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
     PBXTarget testPBXTarget = assertTargetExistsAndReturnTarget(project, "//foo:test");
@@ -1481,7 +1518,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testHeaderSymlinkTreesWithTestsAndLibraryBundles() throws IOException {
+  public void testHeaderSymlinkTreesWithTestsAndLibraryBundles()
+      throws IOException, InterruptedException {
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
     BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo", "bundle");
     BuildTarget testTarget = BuildTargetFactory.newInstance("//foo", "test");
@@ -1513,7 +1551,8 @@ public class ProjectGeneratorTest {
         createProjectGenerator(ImmutableSet.of(libraryNode, bundleNode, testNode), bundleTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
     PBXTarget testPBXTarget = assertTargetExistsAndReturnTarget(project, "//foo:test");
@@ -1536,7 +1575,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testHeaderSymlinkTreesWithTestsAndBinaryBundles() throws IOException {
+  public void testHeaderSymlinkTreesWithTestsAndBinaryBundles()
+      throws IOException, InterruptedException {
     BuildTarget binaryTarget = BuildTargetFactory.newInstance("//foo", "bin");
     BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo", "bundle");
     BuildTarget testTarget = BuildTargetFactory.newInstance("//foo", "test");
@@ -1568,7 +1608,8 @@ public class ProjectGeneratorTest {
         createProjectGenerator(ImmutableSet.of(binaryNode, bundleNode, testNode), bundleTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
     PBXTarget testPBXTarget = assertTargetExistsAndReturnTarget(project, "//foo:test");
@@ -1591,7 +1632,7 @@ public class ProjectGeneratorTest {
   }
 
   private void assertThatHeaderSymlinkTreeContains(Path root, ImmutableMap<String, String> content)
-      throws IOException {
+      throws IOException, InterruptedException {
     // Read the tree's header map.
     byte[] headerMapBytes;
     try (InputStream headerMapInputStream =
@@ -1616,7 +1657,7 @@ public class ProjectGeneratorTest {
     }
   }
 
-  private HeaderMap getHeaderMapInDir(Path root) throws IOException {
+  private HeaderMap getHeaderMapInDir(Path root) throws IOException, InterruptedException {
     // Read the tree's header map.
     byte[] headerMapBytes;
     try (InputStream headerMapInputStream =
@@ -1626,14 +1667,15 @@ public class ProjectGeneratorTest {
     return HeaderMap.deserialize(headerMapBytes);
   }
 
-  private void assertThatHeaderMapWithoutSymLinksIsEmpty(Path root) throws IOException {
+  private void assertThatHeaderMapWithoutSymLinksIsEmpty(Path root)
+      throws IOException, InterruptedException {
     HeaderMap headerMap = getHeaderMapInDir(root);
     assertNotNull(headerMap);
     assertEquals(headerMap.getNumEntries(), 0);
   }
 
   private void assertThatHeaderMapWithoutSymLinksContains(
-      Path root, ImmutableMap<String, String> content) throws IOException {
+      Path root, ImmutableMap<String, String> content) throws IOException, InterruptedException {
     HeaderMap headerMap = getHeaderMapInDir(root);
     assertNotNull(headerMap);
     assertThat(headerMap.getNumEntries(), equalTo(content.size()));
@@ -1646,7 +1688,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleLibraryRule() throws IOException {
+  public void testAppleLibraryRule() throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget)
@@ -1662,7 +1704,8 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
@@ -1687,7 +1730,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testHalideLibraryRule() throws IOException {
+  public void testHalideLibraryRule() throws IOException, InterruptedException {
     BuildTarget compilerTarget =
         BuildTargetFactory.newInstance(
             "//foo", "lib", HalideLibraryDescription.HALIDE_COMPILER_FLAVOR);
@@ -1705,7 +1748,8 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(compiler, lib), libTarget);
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
@@ -1731,7 +1775,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testCxxLibraryRule() throws IOException {
+  public void testCxxLibraryRule() throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
 
     TargetNode<?> cxxNode =
@@ -1747,7 +1791,8 @@ public class ProjectGeneratorTest {
         createProjectGenerator(ImmutableSet.of(cxxNode), buildTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
@@ -1765,7 +1810,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleLibraryConfiguresOutputPaths() throws IOException {
+  public void testAppleLibraryConfiguresOutputPaths() throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget, projectFilesystem)
@@ -1777,7 +1822,8 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
@@ -1791,7 +1837,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleLibraryConfiguresPrecompiledHeader() throws IOException {
+  public void testAppleLibraryConfiguresPrecompiledHeader()
+      throws IOException, InterruptedException {
     BuildTarget pchTarget = BuildTargetFactory.newInstance("//foo", "pch");
     TargetNode<?> pchNode =
         CxxPrecompiledHeaderBuilder.createBuilder(pchTarget, projectFilesystem)
@@ -1809,7 +1856,8 @@ public class ProjectGeneratorTest {
         createProjectGenerator(ImmutableSet.of(libraryNode, pchNode), libraryTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
@@ -1820,7 +1868,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleLibraryConfiguresSharedLibraryOutputPaths() throws IOException {
+  public void testAppleLibraryConfiguresSharedLibraryOutputPaths()
+      throws IOException, InterruptedException {
     BuildTarget buildTarget =
         BuildTargetFactory.newInstance("//hi", "lib", CxxDescriptionEnhancer.SHARED_FLAVOR);
     TargetNode<?> node =
@@ -1832,7 +1881,8 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget target =
         assertTargetExistsAndReturnTarget(result.generatedProject, "//hi:lib#shared");
@@ -1846,7 +1896,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleLibraryDoesntOverrideHeaderOutputPath() throws IOException {
+  public void testAppleLibraryDoesntOverrideHeaderOutputPath()
+      throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget, projectFilesystem)
@@ -1858,7 +1909,8 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
@@ -1872,7 +1924,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleLibraryCxxCFlags() throws IOException {
+  public void testAppleLibraryCxxCFlags() throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget, projectFilesystem)
@@ -1882,7 +1934,8 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
 
@@ -1895,7 +1948,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleLibraryPlatformSpecificCxxFlags() throws IOException {
+  public void testAppleLibraryPlatformSpecificCxxFlags() throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget, projectFilesystem)
@@ -1915,7 +1968,8 @@ public class ProjectGeneratorTest {
             Optional.empty());
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
 
@@ -1926,7 +1980,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleLibraryCompilerAndPreprocessorFlags() throws IOException {
+  public void testAppleLibraryCompilerAndPreprocessorFlags()
+      throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget, projectFilesystem)
@@ -1940,7 +1995,8 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
 
@@ -1952,7 +2008,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleLibraryCompilerAndPreprocessorFlagsDontPropagate() throws IOException {
+  public void testAppleLibraryCompilerAndPreprocessorFlagsDontPropagate()
+      throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget, projectFilesystem)
@@ -1972,7 +2029,8 @@ public class ProjectGeneratorTest {
         createProjectGenerator(ImmutableSet.of(node, dependentNode), dependentBuildTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:bin");
 
@@ -1982,7 +2040,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleLibraryExportedPreprocessorFlags() throws IOException {
+  public void testAppleLibraryExportedPreprocessorFlags() throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget, projectFilesystem)
@@ -1993,7 +2051,8 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
 
@@ -2004,7 +2063,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleLibraryExportedPreprocessorFlagsPropagate() throws IOException {
+  public void testAppleLibraryExportedPreprocessorFlagsPropagate()
+      throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget, projectFilesystem)
@@ -2023,7 +2083,8 @@ public class ProjectGeneratorTest {
         createProjectGenerator(ImmutableSet.of(node, dependentNode), dependentBuildTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:bin");
 
@@ -2034,7 +2095,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleLibraryLinkerFlags() throws IOException {
+  public void testAppleLibraryLinkerFlags() throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget, projectFilesystem)
@@ -2048,7 +2109,8 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
 
@@ -2058,7 +2120,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleLibraryLinkerFlagsWithLocationMacrosAreExpanded() throws IOException {
+  public void testAppleLibraryLinkerFlagsWithLocationMacrosAreExpanded()
+      throws IOException, InterruptedException {
     BuildTarget exportFileTarget = BuildTargetFactory.newInstance("//foo", "libExported.a");
     TargetNode<?> exportFileNode =
         new ExportFileBuilder(exportFileTarget, projectFilesystem)
@@ -2096,7 +2159,8 @@ public class ProjectGeneratorTest {
             buildTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
 
@@ -2117,7 +2181,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleLibraryLinkerFlagsDontPropagate() throws IOException {
+  public void testAppleLibraryLinkerFlagsDontPropagate() throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget, projectFilesystem)
@@ -2136,7 +2200,8 @@ public class ProjectGeneratorTest {
         createProjectGenerator(ImmutableSet.of(node, dependentNode), dependentBuildTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:bin");
 
@@ -2145,7 +2210,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleLibraryExportedLinkerFlags() throws IOException {
+  public void testAppleLibraryExportedLinkerFlags() throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget, projectFilesystem)
@@ -2159,7 +2224,8 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
 
@@ -2169,7 +2235,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleLibraryExportedLinkerFlagsPropagate() throws IOException {
+  public void testAppleLibraryExportedLinkerFlagsPropagate()
+      throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget, projectFilesystem)
@@ -2191,7 +2258,8 @@ public class ProjectGeneratorTest {
         createProjectGenerator(ImmutableSet.of(node, dependentNode), dependentBuildTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:bin");
 
@@ -2201,7 +2269,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testCxxLibraryCompilerAndPreprocessorFlags() throws IOException {
+  public void testCxxLibraryCompilerAndPreprocessorFlags()
+      throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         new CxxLibraryBuilder(buildTarget, projectFilesystem)
@@ -2213,7 +2282,8 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
     assertHasConfigurations(target, "Debug", "Release", "Profile");
@@ -2231,7 +2301,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testCxxLibraryPlatformFlags() throws IOException {
+  public void testCxxLibraryPlatformFlags() throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         new CxxLibraryBuilder(buildTarget, projectFilesystem)
@@ -2272,7 +2342,8 @@ public class ProjectGeneratorTest {
             Optional.empty());
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
     assertHasConfigurations(target, "Debug", "Release", "Profile");
@@ -2299,7 +2370,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testCxxLibraryExportedPreprocessorFlags() throws IOException {
+  public void testCxxLibraryExportedPreprocessorFlags() throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         new CxxLibraryBuilder(buildTarget, projectFilesystem)
@@ -2309,7 +2380,8 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
 
@@ -2322,7 +2394,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testCxxLibraryExportedPreprocessorFlagsPropagate() throws IOException {
+  public void testCxxLibraryExportedPreprocessorFlagsPropagate()
+      throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         new CxxLibraryBuilder(buildTarget, projectFilesystem)
@@ -2341,7 +2414,8 @@ public class ProjectGeneratorTest {
         createProjectGenerator(ImmutableSet.of(node, dependentNode), dependentBuildTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:bin");
 
@@ -2352,7 +2426,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testCxxLibraryExportedPlatformFlags() throws IOException {
+  public void testCxxLibraryExportedPlatformFlags() throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         new CxxLibraryBuilder(buildTarget, projectFilesystem)
@@ -2389,7 +2463,8 @@ public class ProjectGeneratorTest {
             Optional.empty());
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
     assertHasConfigurations(target, "Debug", "Release", "Profile");
@@ -2423,7 +2498,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testConfigurationSerializationWithoutExistingXcconfig() throws IOException {
+  public void testConfigurationSerializationWithoutExistingXcconfig()
+      throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget, projectFilesystem)
@@ -2433,7 +2509,8 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
@@ -2456,7 +2533,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleLibraryDependentsSearchHeadersAndLibraries() throws IOException {
+  public void testAppleLibraryDependentsSearchHeadersAndLibraries()
+      throws IOException, InterruptedException {
     ImmutableSortedMap<String, ImmutableMap<String, String>> configs =
         ImmutableSortedMap.of("Debug", ImmutableMap.of());
 
@@ -2494,7 +2572,8 @@ public class ProjectGeneratorTest {
         createProjectGenerator(ImmutableSet.of(libraryNode, testNode), libraryTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:xctest");
 
@@ -2510,7 +2589,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleLibraryDependentsInheritSearchPaths() throws IOException {
+  public void testAppleLibraryDependentsInheritSearchPaths()
+      throws IOException, InterruptedException {
     ImmutableSortedMap<String, ImmutableMap<String, String>> configs =
         ImmutableSortedMap.of(
             "Debug",
@@ -2554,7 +2634,8 @@ public class ProjectGeneratorTest {
         createProjectGenerator(ImmutableSet.of(libraryNode, testNode), libraryTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:xctest");
 
@@ -2570,7 +2651,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleLibraryTransitiveDependentsSearchHeadersAndLibraries() throws IOException {
+  public void testAppleLibraryTransitiveDependentsSearchHeadersAndLibraries()
+      throws IOException, InterruptedException {
     ImmutableSortedMap<String, ImmutableMap<String, String>> configs =
         ImmutableSortedMap.of("Debug", ImmutableMap.of());
 
@@ -2624,7 +2706,8 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(libraryDepNode, libraryNode, testNode), libraryTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:xctest");
 
@@ -2640,7 +2723,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleLibraryWithoutSources() throws IOException {
+  public void testAppleLibraryWithoutSources() throws IOException, InterruptedException {
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> libraryNode =
         AppleLibraryBuilder.createBuilder(libraryTarget)
@@ -2665,7 +2748,8 @@ public class ProjectGeneratorTest {
         createProjectGenerator(ImmutableSet.of(libraryNode, testNode), libraryTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:xctest");
 
@@ -2676,7 +2760,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleLibraryWithoutSourcesWithHeaders() throws IOException {
+  public void testAppleLibraryWithoutSourcesWithHeaders() throws IOException, InterruptedException {
     ImmutableSortedMap<String, ImmutableMap<String, String>> configs =
         ImmutableSortedMap.of(
             "Debug",
@@ -2711,7 +2795,8 @@ public class ProjectGeneratorTest {
         createProjectGenerator(ImmutableSet.of(libraryNode, testNode), libraryTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:xctest");
 
@@ -2727,7 +2812,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleTestRule() throws IOException {
+  public void testAppleTestRule() throws IOException, InterruptedException {
     BuildTarget testTarget = BuildTargetFactory.newInstance("//foo", "xctest");
     TargetNode<?> testNode =
         AppleTestBuilder.createBuilder(testTarget)
@@ -2737,7 +2822,8 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(testNode), testTarget);
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:xctest");
     assertEquals(target.getProductType(), ProductTypes.UNIT_TEST);
@@ -2747,7 +2833,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleBinaryRule() throws IOException {
+  public void testAppleBinaryRule() throws IOException, InterruptedException {
     BuildTarget depTarget = BuildTargetFactory.newInstance("//dep", "dep");
     TargetNode<?> depNode =
         AppleLibraryBuilder.createBuilder(depTarget)
@@ -2778,7 +2864,8 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(depNode, binaryNode), binaryTarget);
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:binary");
     assertHasConfigurations(target, "Debug");
@@ -2801,7 +2888,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleBundleRuleForSharedLibraryFramework() throws IOException {
+  public void testAppleBundleRuleForSharedLibraryFramework()
+      throws IOException, InterruptedException {
     BuildTarget sharedLibraryTarget =
         BuildTargetFactory.newInstance("//dep", "shared", CxxDescriptionEnhancer.SHARED_FLAVOR);
     TargetNode<?> sharedLibraryNode =
@@ -2820,7 +2908,8 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(sharedLibraryNode, node), buildTarget);
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:bundle");
@@ -2835,7 +2924,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleResourceWithVariantGroupSetsFileTypeBasedOnPath() throws IOException {
+  public void testAppleResourceWithVariantGroupSetsFileTypeBasedOnPath()
+      throws IOException, InterruptedException {
     BuildTarget resourceTarget =
         BuildTargetFactory.newInstance("//foo", "resource", DEFAULT_FLAVOR);
     TargetNode<?> resourceNode =
@@ -2862,7 +2952,8 @@ public class ProjectGeneratorTest {
         createProjectGenerator(
             ImmutableSet.of(fooLibraryNode, bundleNode, resourceNode), bundleTarget);
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
     PBXGroup storyboardGroup = project.getMainGroup().getOrCreateChildGroupByName("Base.lproj");
@@ -2875,7 +2966,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleBundleRuleWithCustomXcodeProductType() throws IOException {
+  public void testAppleBundleRuleWithCustomXcodeProductType()
+      throws IOException, InterruptedException {
     BuildTarget sharedLibraryTarget =
         BuildTargetFactory.newInstance("//dep", "shared", CxxDescriptionEnhancer.SHARED_FLAVOR);
     TargetNode<?> sharedLibraryNode =
@@ -2895,7 +2987,8 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(sharedLibraryNode, node), buildTarget);
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:custombundle");
@@ -2910,7 +3003,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleBundleRuleWithCustomXcodeProductNameFromConfigs() throws IOException {
+  public void testAppleBundleRuleWithCustomXcodeProductNameFromConfigs()
+      throws IOException, InterruptedException {
     BuildTarget sharedLibraryTarget =
         BuildTargetFactory.newInstance("//dep", "shared", CxxDescriptionEnhancer.SHARED_FLAVOR);
     TargetNode<?> sharedLibraryNode =
@@ -2930,7 +3024,8 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(sharedLibraryNode, node), buildTarget);
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:custombundle");
@@ -2940,7 +3035,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testUnversionedCoreDataModelCreatesFileReference() throws IOException {
+  public void testUnversionedCoreDataModelCreatesFileReference()
+      throws IOException, InterruptedException {
     BuildTarget modelTarget = BuildTargetFactory.newInstance("//foo", "model");
     TargetNode<?> modelNode =
         CoreDataModelBuilder.createBuilder(modelTarget)
@@ -2963,7 +3059,8 @@ public class ProjectGeneratorTest {
         createProjectGenerator(
             ImmutableSet.of(fooLibraryNode, bundleNode, modelNode), bundleTarget);
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
     PBXGroup modelGroup =
@@ -2974,7 +3071,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testVersionedCoreDataModelCreatesGroupWithCurrentVersionSpecified()
-      throws IOException {
+      throws IOException, InterruptedException {
     BuildTarget modelTarget = BuildTargetFactory.newInstance("//foo", "model");
     Path dataModelRootPath = Paths.get("foo/models/foo.xcdatamodeld");
     TargetNode<?> modelNode =
@@ -3015,7 +3112,8 @@ public class ProjectGeneratorTest {
         createProjectGenerator(
             ImmutableSet.of(fooLibraryNode, bundleNode, modelNode), bundleTarget);
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
     PBXGroup modelGroup =
@@ -3038,7 +3136,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testSceneKitAssetsRuleAddsReference() throws IOException {
+  public void testSceneKitAssetsRuleAddsReference() throws IOException, InterruptedException {
     BuildTarget sceneKitTarget = BuildTargetFactory.newInstance("//foo", "scenekitasset");
     TargetNode<?> sceneKitNode =
         SceneKitAssetsBuilder.createBuilder(sceneKitTarget)
@@ -3060,14 +3158,16 @@ public class ProjectGeneratorTest {
     ProjectGenerator generator =
         createProjectGenerator(
             ImmutableList.of(bundleNode, fooLibraryNode, sceneKitNode), bundleTarget);
-    ProjectGenerator.Result result = generator.createXcodeProject(xcodeProjectWriteOptions());
+    ProjectGenerator.Result result =
+        generator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
     PBXTestUtils.assertHasFileReferenceWithNameAndReturnIt(project.getMainGroup(), "foo.scnassets");
   }
 
   @Test
-  public void testCodeSignEntitlementsAddsReference() throws IOException {
+  public void testCodeSignEntitlementsAddsReference() throws IOException, InterruptedException {
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
     BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo", "bundle");
 
@@ -3088,7 +3188,8 @@ public class ProjectGeneratorTest {
         createProjectGenerator(ImmutableSet.of(libraryNode, bundleNode), bundleTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
 
@@ -3098,7 +3199,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleWatchTarget() throws IOException {
+  public void testAppleWatchTarget() throws IOException, InterruptedException {
     BuildTarget watchExtensionBinaryTarget =
         BuildTargetFactory.newInstance("//foo", "WatchExtensionBinary");
     TargetNode<?> watchExtensionBinaryNode =
@@ -3152,7 +3253,8 @@ public class ProjectGeneratorTest {
                 hostAppBinaryNode),
             hostAppTarget);
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXProject generatedProject = result.generatedProject;
     PBXTarget generatedHostAppTarget =
@@ -3176,7 +3278,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void ruleToTargetMapContainsPBXTarget() throws IOException {
+  public void ruleToTargetMapContainsPBXTarget() throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget)
@@ -3190,7 +3292,8 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     assertEquals(
         buildTarget, Iterables.getOnlyElement(result.buildTargetsToGeneratedTargetMap.keySet()));
@@ -3206,13 +3309,14 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void generatedGidsForTargetsAreStable() throws IOException {
+  public void generatedGidsForTargetsAreStable() throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "foo");
     TargetNode<?> node = AppleLibraryBuilder.createBuilder(buildTarget).build();
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:foo");
     String expectedGID =
@@ -3225,7 +3329,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void generatedTargetConfigurationHasRepoRootSet() throws IOException {
+  public void generatedTargetConfigurationHasRepoRootSet()
+      throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "rule");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget, projectFilesystem)
@@ -3234,7 +3339,8 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXProject generatedProject = result.generatedProject;
     ImmutableMap<String, String> settings =
@@ -3251,7 +3357,7 @@ public class ProjectGeneratorTest {
    */
   @Test
   public void generatedProjectConfigurationListIsUnionOfAllTargetConfigurations()
-      throws IOException {
+      throws IOException, InterruptedException {
     BuildTarget buildTarget1 = BuildTargetFactory.newInstance("//foo", "rule1");
     TargetNode<?> node1 =
         AppleLibraryBuilder.createBuilder(buildTarget1)
@@ -3273,7 +3379,8 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(node1, node2), buildTarget1);
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXProject generatedProject = result.generatedProject;
     Map<String, XCBuildConfiguration> configurations =
@@ -3284,7 +3391,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void nonexistentResourceDirectoryShouldThrow() throws IOException {
+  public void nonexistentResourceDirectoryShouldThrow() throws IOException, InterruptedException {
     Pair<BuildTarget, ImmutableSet<TargetNode<?>>> result =
         setupSimpleLibraryWithResources(
             ImmutableSet.of(), ImmutableSet.of(FakeSourcePath.of("nonexistent-directory")));
@@ -3295,11 +3402,12 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator =
         createProjectGenerator(result.getSecond(), result.getFirst());
-    projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+    projectGenerator.createXcodeProject(
+        xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
   }
 
   @Test
-  public void nonexistentResourceFileShouldThrow() throws IOException {
+  public void nonexistentResourceFileShouldThrow() throws IOException, InterruptedException {
     Pair<BuildTarget, ImmutableSet<TargetNode<?>>> result =
         setupSimpleLibraryWithResources(
             ImmutableSet.of(FakeSourcePath.of("nonexistent-file.png")), ImmutableSet.of());
@@ -3310,11 +3418,12 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator =
         createProjectGenerator(result.getSecond(), result.getFirst());
-    projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+    projectGenerator.createXcodeProject(
+        xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
   }
 
   @Test
-  public void usingFileAsResourceDirectoryShouldThrow() throws IOException {
+  public void usingFileAsResourceDirectoryShouldThrow() throws IOException, InterruptedException {
     Pair<BuildTarget, ImmutableSet<TargetNode<?>>> result =
         setupSimpleLibraryWithResources(
             ImmutableSet.of(), ImmutableSet.of(FakeSourcePath.of("bar.png")));
@@ -3324,11 +3433,12 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator =
         createProjectGenerator(result.getSecond(), result.getFirst());
-    projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+    projectGenerator.createXcodeProject(
+        xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
   }
 
   @Test
-  public void usingDirectoryAsResourceFileShouldThrow() throws IOException {
+  public void usingDirectoryAsResourceFileShouldThrow() throws IOException, InterruptedException {
     Pair<BuildTarget, ImmutableSet<TargetNode<?>>> result =
         setupSimpleLibraryWithResources(
             ImmutableSet.of(FakeSourcePath.of("foodir")), ImmutableSet.of());
@@ -3339,11 +3449,13 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator =
         createProjectGenerator(result.getSecond(), result.getFirst());
-    projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+    projectGenerator.createXcodeProject(
+        xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
   }
 
   @Test
-  public void usingBuildTargetSourcePathInResourceDirsOrFilesDoesNotThrow() throws IOException {
+  public void usingBuildTargetSourcePathInResourceDirsOrFilesDoesNotThrow()
+      throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//some:rule");
     SourcePath sourcePath = DefaultBuildTargetSourcePath.of(buildTarget);
     TargetNode<?> generatingTarget = new ExportFileBuilder(buildTarget).build();
@@ -3357,7 +3469,8 @@ public class ProjectGeneratorTest {
             .toSet();
 
     ProjectGenerator projectGenerator = createProjectGenerator(nodes, buildTarget);
-    projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+    projectGenerator.createXcodeProject(
+        xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
   }
 
   private BuckEventBus getFakeBuckEventBus() {
@@ -3365,7 +3478,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testResolvingExportFile() throws IOException {
+  public void testResolvingExportFile() throws IOException, InterruptedException {
     BuildTarget source1Target = BuildTargetFactory.newInstance("//Vendor", "source1");
     BuildTarget source2Target = BuildTargetFactory.newInstance("//Vendor", "source2");
     BuildTarget source2RefTarget = BuildTargetFactory.newInstance("//Vendor", "source2ref");
@@ -3410,7 +3523,8 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(source1, source2, source2Ref, source3, header, library), libTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget target =
         assertTargetExistsAndReturnTarget(result.generatedProject, libTarget.toString());
@@ -3429,7 +3543,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void applicationTestUsesHostAppAsTestHostAndBundleLoader() throws IOException {
+  public void applicationTestUsesHostAppAsTestHostAndBundleLoader()
+      throws IOException, InterruptedException {
     BuildTarget hostAppBinaryTarget = BuildTargetFactory.newInstance("//foo", "HostAppBinary");
     TargetNode<?> hostAppBinaryNode =
         AppleBinaryBuilder.createBuilder(hostAppBinaryTarget, projectFilesystem).build();
@@ -3456,7 +3571,8 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(hostAppBinaryNode, hostAppNode, testNode), testTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget testPBXTarget =
         assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:AppTest");
@@ -3476,7 +3592,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void uiTestUsesHostAppAsTarget() throws IOException {
+  public void uiTestUsesHostAppAsTarget() throws IOException, InterruptedException {
     BuildTarget hostAppBinaryTarget = BuildTargetFactory.newInstance("//foo", "HostAppBinary");
     TargetNode<?> hostAppBinaryNode =
         AppleBinaryBuilder.createBuilder(hostAppBinaryTarget, projectFilesystem).build();
@@ -3503,7 +3619,8 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(hostAppBinaryNode, hostAppNode, testNode), testTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget testPBXTarget =
         assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:AppTest");
@@ -3517,7 +3634,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void uiTestUsesUiTestTargetAsTargetWithBothUiTestTargetAndTestHostPresent()
-      throws IOException {
+      throws IOException, InterruptedException {
     BuildTarget hostAppBinaryTarget = BuildTargetFactory.newInstance("//foo", "HostAppBinary");
     TargetNode<?> hostAppBinaryNode =
         AppleBinaryBuilder.createBuilder(hostAppBinaryTarget, projectFilesystem).build();
@@ -3553,7 +3670,8 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(hostAppBinaryNode, hostAppNode, uiTargetAppNode, testNode), testTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget testPBXTarget =
         assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:AppTest");
@@ -3565,7 +3683,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void uiTestUsesUiTestTargetAsTargetWithOnlyUiTestTarget() throws IOException {
+  public void uiTestUsesUiTestTargetAsTargetWithOnlyUiTestTarget()
+      throws IOException, InterruptedException {
     BuildTarget hostAppBinaryTarget = BuildTargetFactory.newInstance("//foo", "HostAppBinary");
     TargetNode<?> hostAppBinaryNode = AppleBinaryBuilder.createBuilder(hostAppBinaryTarget).build();
 
@@ -3591,7 +3710,8 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(hostAppBinaryNode, uiTargetAppNode, testNode), testTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget testPBXTarget =
         assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:AppTest");
@@ -3603,7 +3723,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void cxxFlagsPropagatedToConfig() throws IOException {
+  public void cxxFlagsPropagatedToConfig() throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget)
@@ -3629,7 +3749,8 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
 
@@ -3653,7 +3774,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testConfiglessAppleTargetGetsDefaultBuildConfigurations() throws IOException {
+  public void testConfiglessAppleTargetGetsDefaultBuildConfigurations()
+      throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget, projectFilesystem)
@@ -3663,7 +3785,8 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
 
@@ -3684,7 +3807,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAssetCatalogsUnderLibrary() throws IOException {
+  public void testAssetCatalogsUnderLibrary() throws IOException, InterruptedException {
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
     BuildTarget testTarget = BuildTargetFactory.newInstance("//foo", "test");
     BuildTarget assetCatalogTarget = BuildTargetFactory.newInstance("//foo", "asset_catalog");
@@ -3715,7 +3838,8 @@ public class ProjectGeneratorTest {
             Optional.empty());
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
     PBXGroup mainGroup = project.getMainGroup();
@@ -3725,7 +3849,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testResourcesUnderLibrary() throws IOException {
+  public void testResourcesUnderLibrary() throws IOException, InterruptedException {
     BuildTarget fileTarget = BuildTargetFactory.newInstance("//foo", "file");
     BuildTarget resourceTarget = BuildTargetFactory.newInstance("//foo", "res");
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
@@ -3745,7 +3869,8 @@ public class ProjectGeneratorTest {
         createProjectGenerator(ImmutableSet.of(fileNode, resourceNode, libraryNode), libraryTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
     PBXGroup mainGroup = project.getMainGroup();
@@ -3755,7 +3880,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void resourceDirectoriesHaveFolderType() throws IOException {
+  public void resourceDirectoriesHaveFolderType() throws IOException, InterruptedException {
     BuildTarget directoryTarget = BuildTargetFactory.newInstance("//foo", "dir");
     BuildTarget resourceTarget = BuildTargetFactory.newInstance("//foo", "res");
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
@@ -3776,7 +3901,8 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(directoryNode, resourceNode, libraryNode), libraryTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
     PBXGroup mainGroup = project.getMainGroup();
@@ -3789,7 +3915,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void resourceDirectoriesDontHaveFolderTypeIfTheyCanHaveAMoreSpecificType()
-      throws IOException {
+      throws IOException, InterruptedException {
     BuildTarget directoryTarget = BuildTargetFactory.newInstance("//foo", "dir.iconset");
     BuildTarget resourceTarget = BuildTargetFactory.newInstance("//foo", "res");
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
@@ -3810,7 +3936,8 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(directoryNode, resourceNode, libraryNode), libraryTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
     PBXGroup mainGroup = project.getMainGroup();
@@ -3822,7 +3949,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testGeneratedProjectStructureAndSettingsWithBridgingHeader() throws IOException {
+  public void testGeneratedProjectStructureAndSettingsWithBridgingHeader()
+      throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget, projectFilesystem)
@@ -3834,7 +3962,8 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     // check if bridging header file existing in the project structure
     PBXProject project = result.generatedProject;
@@ -3852,7 +3981,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testGeneratedProjectSettingForSwiftVersion() throws IOException {
+  public void testGeneratedProjectSettingForSwiftVersion()
+      throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget, projectFilesystem)
@@ -3862,7 +3992,8 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
     PBXProject project = result.generatedProject;
 
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:lib");
@@ -3871,7 +4002,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testGeneratedProjectSettingForSwiftVersionForAppleLibrary() throws IOException {
+  public void testGeneratedProjectSettingForSwiftVersionForAppleLibrary()
+      throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget, projectFilesystem)
@@ -3882,7 +4014,8 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
     PBXProject project = result.generatedProject;
 
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:lib");
@@ -3891,7 +4024,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testGeneratedProjectSettingForSwiftBuildSettingsForAppleLibrary() throws IOException {
+  public void testGeneratedProjectSettingForSwiftBuildSettingsForAppleLibrary()
+      throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//Foo", "Bar");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget, projectFilesystem)
@@ -3902,7 +4036,8 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
     PBXProject project = result.generatedProject;
 
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//Foo:Bar");
@@ -3918,7 +4053,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testGeneratedProjectSettingForSwiftBuildSettingsForAppleLibraryWithModuleName()
-      throws IOException {
+      throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//Foo", "BarWithSuffix");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget, projectFilesystem)
@@ -3930,7 +4065,8 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
     PBXProject project = result.generatedProject;
 
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//Foo:BarWithSuffix");
@@ -3942,7 +4078,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testGeneratedProjectSettingForSwiftWholeModuleOptimizationForAppleLibrary()
-      throws IOException {
+      throws IOException, InterruptedException {
     ImmutableMap<String, ImmutableMap<String, String>> sections =
         ImmutableMap.of(
             "swift",
@@ -3963,7 +4099,8 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
     PBXProject project = result.generatedProject;
 
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//Foo:Bar");
@@ -3974,7 +4111,8 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testGeneratedProjectForAppleBinaryWithSwiftSources() throws IOException {
+  public void testGeneratedProjectForAppleBinaryWithSwiftSources()
+      throws IOException, InterruptedException {
     BuildTarget binBuildTarget = BuildTargetFactory.newInstance("//foo", "bin");
     TargetNode<?> appBinaryNode =
         AppleBinaryBuilder.createBuilder(binBuildTarget, projectFilesystem)
@@ -3985,7 +4123,8 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(appBinaryNode), binBuildTarget);
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
     PBXProject project = result.generatedProject;
 
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:bin");
@@ -4004,7 +4143,7 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testGeneratedProjectForAppleBinaryUsingAppleLibraryWithSwiftSources()
-      throws IOException {
+      throws IOException, InterruptedException {
     BuildTarget libBuildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> libNode =
         AppleLibraryBuilder.createBuilder(libBuildTarget, projectFilesystem)
@@ -4023,7 +4162,8 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(libNode, binNode), binBuildTarget);
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
     PBXProject project = result.generatedProject;
 
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:bin");
@@ -4044,7 +4184,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testSwiftObjCGenerateHeaderInHeaderMap() throws IOException {
+  public void testSwiftObjCGenerateHeaderInHeaderMap() throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> node =
         AppleLibraryBuilder.createBuilder(buildTarget, projectFilesystem)
@@ -4063,7 +4203,8 @@ public class ProjectGeneratorTest {
             Optional.empty());
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     HeaderMap headerMap = getHeaderMapInDir(PUBLIC_HEADER_MAP_PATH);
     assertThat(headerMap.getNumEntries(), equalTo(1));
@@ -4087,7 +4228,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testSwiftRuntimeIsEmbeddedInBinary() throws IOException {
+  public void testSwiftRuntimeIsEmbeddedInBinary() throws IOException, InterruptedException {
     BuildTarget libTarget = BuildTargetFactory.newInstance("//foo", "lib");
     BuildTarget binaryTarget = BuildTargetFactory.newInstance("//foo", "bin");
     BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo", "bundle");
@@ -4138,7 +4279,8 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(libNode, binaryNode, bundleNode, testNode, testLibNode), bundleTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
 
@@ -4155,7 +4297,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testSwiftAddASTPathsLinkerFlags() throws IOException {
+  public void testSwiftAddASTPathsLinkerFlags() throws IOException, InterruptedException {
     ImmutableMap<String, ImmutableMap<String, String>> sections =
         ImmutableMap.of(
             "swift",
@@ -4199,7 +4341,8 @@ public class ProjectGeneratorTest {
         createProjectGenerator(ImmutableSet.of(libNode, binaryNode, bundleNode), bundleTarget);
 
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
 
@@ -4214,7 +4357,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testMergedHeaderMap() throws IOException {
+  public void testMergedHeaderMap() throws IOException, InterruptedException {
     BuildTarget lib1Target = BuildTargetFactory.newInstance("//foo", "lib1");
     BuildTarget lib2Target = BuildTargetFactory.newInstance("//bar", "lib2");
     BuildTarget lib3Target = BuildTargetFactory.newInstance("//foo", "lib3");
@@ -4292,7 +4435,8 @@ public class ProjectGeneratorTest {
             Optional.empty());
 
     ProjectGenerator.Result result =
-        projectGeneratorLib1.createXcodeProject(xcodeProjectWriteOptions());
+        projectGeneratorLib1.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     // The merged header map should not generated at this point.
     assertTrue(hmapPath + " should exist.", projectFilesystem.isFile(hmapPath));
@@ -4339,7 +4483,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testMergedHeaderMapAbsoluteHeaderMap() throws IOException {
+  public void testMergedHeaderMapAbsoluteHeaderMap() throws IOException, InterruptedException {
     BuildTarget lib1Target = BuildTargetFactory.newInstance("//foo", "lib1");
     BuildTarget lib2Target = BuildTargetFactory.newInstance("//bar", "lib2");
     BuildTarget lib3Target = BuildTargetFactory.newInstance("//foo", "lib3");
@@ -4419,7 +4563,8 @@ public class ProjectGeneratorTest {
             Optional.empty());
 
     ProjectGenerator.Result result =
-        projectGeneratorLib1.createXcodeProject(xcodeProjectWriteOptions());
+        projectGeneratorLib1.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     // The merged header map should not generated at this point.
     assertTrue(hmapPath + " should exist.", projectFilesystem.isFile(hmapPath));
@@ -4478,7 +4623,7 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testEntitlementsPlistAddedToPath() throws IOException {
+  public void testEntitlementsPlistAddedToPath() throws IOException, InterruptedException {
     BuildTarget binaryTarget = BuildTargetFactory.newInstance("//foo", "bin");
     BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo", "bundle");
 
@@ -4497,7 +4642,8 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(ImmutableSet.of(binaryNode, bundleNode), bundleTarget);
     ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(xcodeProjectWriteOptions());
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
 
     PBXProject generatedProject = result.generatedProject;
     PBXGroup entitlementsGroup =

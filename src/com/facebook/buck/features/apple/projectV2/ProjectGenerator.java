@@ -55,16 +55,21 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.google.common.base.Charsets;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -212,7 +217,9 @@ public class ProjectGenerator {
    * @throws IOException An IO exception occurred while trying to write to disk.
    */
   public ProjectGenerator.Result createXcodeProject(
-      XcodeProjectWriteOptions xcodeProjectWriteOptions) throws IOException {
+      XcodeProjectWriteOptions xcodeProjectWriteOptions,
+      ListeningExecutorService listeningExecutorService)
+      throws IOException, InterruptedException {
     LOG.debug("Creating projects for targets %s", projectTargets);
 
     try (SimplePerfEvent.Scope scope =
@@ -288,29 +295,47 @@ public class ProjectGenerator {
           targetGenerator.generateTarget(workspaceTargetNode);
       generationResultsBuilder.add(workspaceTargetResult);
 
-      /*
-       * Process flavored nodes before unflavored ones.
-       *
-       * It is possible we have the same bundle node twice (e.g. as a test target and a dep). In
-       * that instance, one may be unflavored, so we need to prioritize the flavored version first
-       * in order to properly get the target out during schema generation.
-       */
-      for (TargetNode<?> targetNode :
-          projectTargets.stream()
-              .filter(buildTarget -> buildTarget != workspaceTarget && buildTarget.isFlavored())
-              .map(targetGraph::get)
-              .collect(Collectors.toSet())) {
-        XcodeNativeTargetGenerator.Result result = targetGenerator.generateTarget(targetNode);
-        generationResultsBuilder.add(result);
-      }
+      try {
+        /*
+         * Process flavored nodes before unflavored ones.
+         *
+         * It is possible we have the same bundle node twice (e.g. as a test target and a dep). In
+         * that instance, one may be unflavored, so we need to prioritize the flavored version first
+         * in order to properly get the target out during schema generation.
+         */
+        List<XcodeNativeTargetGenerator.Result> flavoredTargetResults =
+            Futures.allAsList(
+                    projectTargets.stream()
+                        .filter(
+                            buildTarget ->
+                                buildTarget != workspaceTarget && buildTarget.isFlavored())
+                        .map(
+                            target ->
+                                listeningExecutorService.submit(
+                                    () -> targetGenerator.generateTarget(targetGraph.get(target))))
+                        .collect(Collectors.toList()))
+                .get();
 
-      for (TargetNode<?> targetNode :
-          projectTargets.stream()
-              .filter(buildTarget -> buildTarget != workspaceTarget && !buildTarget.isFlavored())
-              .map(targetGraph::get)
-              .collect(Collectors.toSet())) {
-        XcodeNativeTargetGenerator.Result result = targetGenerator.generateTarget(targetNode);
-        generationResultsBuilder.add(result);
+        generationResultsBuilder.addAll(flavoredTargetResults);
+
+        List<XcodeNativeTargetGenerator.Result> unflavoredTargetResults =
+            Futures.allAsList(
+                    projectTargets.stream()
+                        .filter(
+                            buildTarget ->
+                                buildTarget != workspaceTarget && !buildTarget.isFlavored())
+                        .map(
+                            target ->
+                                listeningExecutorService.submit(
+                                    () -> targetGenerator.generateTarget(targetGraph.get(target))))
+                        .collect(Collectors.toList()))
+                .get();
+
+        generationResultsBuilder.addAll(unflavoredTargetResults);
+      } catch (ExecutionException e) {
+        Throwables.throwIfInstanceOf(e.getCause(), IOException.class);
+        Throwables.throwIfUnchecked(e.getCause());
+        throw new IllegalStateException("Unexpected exception: ", e);
       }
 
       ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder = ImmutableSet.builder();

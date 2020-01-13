@@ -546,7 +546,7 @@ public class XCodeProjectCommandHelper {
       Objects.requireNonNull(
           executorService, "CommandRunnerParams does not have executor for PROJECT pool");
       WorkspaceAndProjectGenerator.Result result =
-          generator.generateWorkspaceAndDependentProjects();
+          generator.generateWorkspaceAndDependentProjects(executorService);
 
       ImmutableSet<BuildTarget> requiredBuildTargetsForWorkspace =
           generator.getRequiredBuildTargets();

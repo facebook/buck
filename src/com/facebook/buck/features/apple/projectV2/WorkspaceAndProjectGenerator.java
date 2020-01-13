@@ -66,6 +66,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -199,7 +200,8 @@ public class WorkspaceAndProjectGenerator {
    * @return A result indicating the output of the generation
    * @throws IOException
    */
-  public Result generateWorkspaceAndDependentProjects() throws IOException {
+  public Result generateWorkspaceAndDependentProjects(
+      ListeningExecutorService listeningExecutorService) throws IOException, InterruptedException {
     LOG.debug("Generating workspace for target %s", workspaceBuildTarget);
 
     String workspaceName =
@@ -255,6 +257,7 @@ public class WorkspaceAndProjectGenerator {
         XcodeProjectWriteOptions.of(new PBXProject(workspaceName), outputDirectory);
 
     generateProject(
+        listeningExecutorService,
         xcodeProjectWriteOptions,
         workspaceGenerator,
         targetsInRequiredProjects,
@@ -332,12 +335,13 @@ public class WorkspaceAndProjectGenerator {
   }
 
   private void generateProject(
+      ListeningExecutorService listeningExecutorService,
       XcodeProjectWriteOptions xcodeProjectWriteOptions,
       WorkspaceGenerator workspaceGenerator,
       ImmutableSet<BuildTarget> targetsInRequiredProjects,
       ImmutableMap.Builder<BuildTarget, PBXTarget> buildTargetToPbxTargetMapBuilder,
       ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder)
-      throws IOException {
+      throws IOException, InterruptedException {
     ImmutableSet.Builder<BuildTarget> buildTargets = ImmutableSet.builder();
 
     HashSet<BuildTarget> unflavoredTargetsToGenerate = new HashSet<>();
@@ -365,7 +369,11 @@ public class WorkspaceAndProjectGenerator {
 
     GenerationResult generationResult =
         generateProjectForDirectory(
-            xcodeProjectWriteOptions, rootCell, buildTargets.build(), targetsInRequiredProjects);
+            listeningExecutorService,
+            xcodeProjectWriteOptions,
+            rootCell,
+            buildTargets.build(),
+            targetsInRequiredProjects);
 
     processGenerationResult(
         buildTargetToPbxTargetMapBuilder, targetToProjectPathMapBuilder, generationResult);
@@ -390,11 +398,12 @@ public class WorkspaceAndProjectGenerator {
   }
 
   private GenerationResult generateProjectForDirectory(
+      ListeningExecutorService listeningExecutorService,
       XcodeProjectWriteOptions xcodeProjectWriteOptions,
       Cell projectCell,
       ImmutableSet<BuildTarget> rules,
       ImmutableSet<BuildTarget> targetsInRequiredProjects)
-      throws IOException {
+      throws IOException, InterruptedException {
     ProjectGenerator generator =
         new ProjectGenerator(
             xcodeDescriptions,
@@ -418,7 +427,8 @@ public class WorkspaceAndProjectGenerator {
             swiftBuckConfig,
             sharedLibraryToBundle);
 
-    ProjectGenerator.Result result = generator.createXcodeProject(xcodeProjectWriteOptions);
+    ProjectGenerator.Result result =
+        generator.createXcodeProject(xcodeProjectWriteOptions, listeningExecutorService);
 
     ImmutableMap<BuildTarget, PBXTarget> buildTargetToGeneratedTargetMap =
         result.buildTargetsToGeneratedTargetMap;
