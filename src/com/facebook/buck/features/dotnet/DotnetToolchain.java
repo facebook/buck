@@ -22,11 +22,14 @@ import com.facebook.buck.core.rules.analysis.context.DependencyOnlyRuleAnalysisC
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.collect.impl.ProviderInfoCollectionImpl;
 import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
+import com.facebook.buck.core.rules.providers.lib.RunInfo;
 import com.facebook.buck.core.toolchain.RuleAnalysisLegacyToolchain;
 import com.facebook.buck.core.toolchain.Toolchain;
+import com.facebook.buck.core.toolchain.toolprovider.RuleAnalysisLegacyToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.SystemToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 import java.util.function.Consumer;
@@ -52,8 +55,15 @@ abstract class DotnetToolchain implements RuleAnalysisLegacyToolchain, Toolchain
   @Override
   public ProviderInfoCollection getProviders(
       DependencyOnlyRuleAnalysisContext context, TargetConfiguration targetConfiguration) {
-    // TODO(pjameson): Empty for the moment, will eventually return a real toolchain provider
+    ToolProvider provider = getCsharpCompiler();
+    Verify.verify(provider instanceof RuleAnalysisLegacyToolProvider);
+
+    RunInfo compilerInfo =
+        ((RuleAnalysisLegacyToolProvider) provider).getRunInfo(context, targetConfiguration);
+    DotnetLegacyToolchainInfo info = new ImmutableDotnetLegacyToolchainInfo(compilerInfo);
+
     return ProviderInfoCollectionImpl.builder()
+        .put(info)
         .build(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of()));
   }
 

@@ -25,7 +25,6 @@ import com.facebook.buck.core.rules.analysis.config.RuleAnalysisConfig;
 import com.facebook.buck.core.rules.providers.impl.BuiltInProvider;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import org.pf4j.Extension;
 
 @Extension
@@ -45,6 +44,6 @@ public class DotNetRuleProvider implements DescriptionProvider, BuiltInProviderP
 
   @Override
   public Collection<BuiltInProvider<?>> getBuiltInProviders() {
-    return Collections.singletonList(DotnetLibraryProviderInfo.PROVIDER);
+    return Arrays.asList(DotnetLibraryProviderInfo.PROVIDER, DotnetLegacyToolchainInfo.PROVIDER);
   }
 }
