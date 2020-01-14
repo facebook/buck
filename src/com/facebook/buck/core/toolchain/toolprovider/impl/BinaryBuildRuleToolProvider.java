@@ -22,8 +22,12 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.analysis.context.DependencyOnlyRuleAnalysisContext;
+import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
+import com.facebook.buck.core.rules.providers.lib.RunInfo;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.core.toolchain.toolprovider.RuleAnalysisLegacyToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
@@ -32,7 +36,7 @@ import java.util.Optional;
  * A {@link ToolProvider} which provides the {@link Tool} object of the {@link BinaryBuildRule}
  * references by a given {@link BuildTarget}.
  */
-public class BinaryBuildRuleToolProvider implements ToolProvider {
+public class BinaryBuildRuleToolProvider implements ToolProvider, RuleAnalysisLegacyToolProvider {
 
   private final UnconfiguredBuildTargetView target;
   private final String source;
@@ -57,5 +61,17 @@ public class BinaryBuildRuleToolProvider implements ToolProvider {
   @Override
   public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {
     return ImmutableList.of(target.configure(targetConfiguration));
+  }
+
+  @Override
+  public RunInfo getRunInfo(
+      DependencyOnlyRuleAnalysisContext context, TargetConfiguration targetConfiguration) {
+    ProviderInfoCollection dep = context.resolveDep(target.configure(targetConfiguration));
+
+    Optional<RunInfo> info = dep.get(RunInfo.PROVIDER);
+    if (!info.isPresent()) {
+      throw new HumanReadableException("%s: %s must be an executable rule", source, target);
+    }
+    return info.get();
   }
 }
