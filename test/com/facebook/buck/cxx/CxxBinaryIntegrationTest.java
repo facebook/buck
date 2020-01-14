@@ -1811,7 +1811,12 @@ public class CxxBinaryIntegrationTest {
       assertThat(
           indexContents,
           containsString(
-              "-Xlinker -plugin-opt -Xlinker 'thinlto-prefix-replace=;buck-out/gen/bin#incremental-thinlto,thinindex/thinlto.indices'"));
+              "-Xlinker -plugin-opt -Xlinker 'thinlto-prefix-replace=;"
+                  + BuildTargetPaths.getGenPath(
+                          workspace.getProjectFileSystem(),
+                          BuildTargetFactory.newInstance("//:bin#incremental-thinlto,thinindex"),
+                          "%s")
+                      .resolve("thinlto.indices")));
     }
 
     // Since we don't have the full thinLTO toolchain, we're just going to verify that the
