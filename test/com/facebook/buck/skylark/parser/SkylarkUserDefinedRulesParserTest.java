@@ -49,6 +49,7 @@ import com.google.devtools.build.lib.events.EventKind;
 import com.google.devtools.build.lib.events.PrintingEventHandler;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Optional;
@@ -454,10 +455,10 @@ public class SkylarkUserDefinedRulesParserTest {
 
   @Test
   public void ruleFailsIfWrongImplTypeProvided() throws IOException, InterruptedException {
-    setupWorkspace("rule_with_wrong_impl_type");
+    setupWorkspace("rule_with_wrong_types");
 
     EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
-    Path buildFile = projectFilesystem.resolve("subdir").resolve("BUCK");
+    Path buildFile = projectFilesystem.resolve(Paths.get("impl_type", "subdir", "BUCK"));
 
     parser = createParser(eventCollector);
 
@@ -470,9 +471,9 @@ public class SkylarkUserDefinedRulesParserTest {
 
   @Test
   public void ruleFailsIfWrongAttrTypeProvided() throws IOException, InterruptedException {
-    setupWorkspace("rule_with_wrong_attr_type");
+    setupWorkspace("rule_with_wrong_types");
     EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
-    Path buildFile = projectFilesystem.resolve("subdir").resolve("BUCK");
+    Path buildFile = projectFilesystem.resolve(Paths.get("attr_type", "subdir", "BUCK"));
 
     parser = createParser(eventCollector);
 
@@ -516,10 +517,10 @@ public class SkylarkUserDefinedRulesParserTest {
   @Test
   public void failsIfAttributeDictValueIsNotAnAttrObject()
       throws IOException, InterruptedException {
-    setupWorkspace("rule_with_wrong_attr_value_type");
+    setupWorkspace("rule_with_wrong_types");
     EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
 
-    Path buildFile = projectFilesystem.resolve("subdir").resolve("BUCK");
+    Path buildFile = projectFilesystem.resolve(Paths.get("attr_value_type", "subdir", "BUCK"));
 
     parser = createParser(eventCollector);
 
