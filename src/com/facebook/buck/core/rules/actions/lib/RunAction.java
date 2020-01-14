@@ -30,6 +30,7 @@ import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgs;
 import com.facebook.buck.core.rules.actions.lib.args.ExecCompatibleCommandLineBuilder;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -61,9 +62,31 @@ public class RunAction extends AbstractAction {
       String shortName,
       CommandLineArgs args,
       ImmutableMap<String, String> env) {
-    super(registry, inputs, outputs, shortName);
+    this(registry, getAllInputsAndOutputs(inputs, outputs, args), shortName, args, env);
+  }
+
+  private RunAction(
+      ActionRegistry registry,
+      Pair<ImmutableSortedSet<Artifact>, ImmutableSortedSet<Artifact>> inputsAndOutputs,
+      String shortName,
+      CommandLineArgs args,
+      ImmutableMap<String, String> env) {
+    super(registry, inputsAndOutputs.getFirst(), inputsAndOutputs.getSecond(), shortName);
     this.args = args;
     this.env = env;
+  }
+
+  private static Pair<ImmutableSortedSet<Artifact>, ImmutableSortedSet<Artifact>>
+      getAllInputsAndOutputs(
+          ImmutableSortedSet<Artifact> inputs,
+          ImmutableSortedSet<Artifact> outputs,
+          CommandLineArgs args) {
+    ImmutableSortedSet.Builder<Artifact> allInputs = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<Artifact> allOutputs = ImmutableSortedSet.naturalOrder();
+    allInputs.addAll(inputs);
+    allOutputs.addAll(outputs);
+    args.visitInputsAndOutputs(allInputs::add, allOutputs::add);
+    return new Pair<>(allInputs.build(), allOutputs.build());
   }
 
   @Override

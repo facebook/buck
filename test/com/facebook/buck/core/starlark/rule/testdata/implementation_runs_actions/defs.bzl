@@ -81,8 +81,6 @@ def _impl(ctx):
         if ctx.attr.use_env:
             env["CUSTOM_ENV"] = "CUSTOM"
     ctx.actions.run(
-        outputs = [f],
-        inputs = [src for src in ctx.attr.srcs],
         arguments = [executable, "--out", src_args, "--bar", args],
         env = env,
     )

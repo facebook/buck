@@ -129,7 +129,8 @@ public interface SkylarkRuleContextActionsApi {
             named = true,
             type = SkylarkList.class,
             noneable = false,
-            generic1 = Artifact.class),
+            generic1 = Artifact.class,
+            defaultValue = "[]"),
         @Param(
             name = "inputs",
             doc = "A list of files that will be used by this action",

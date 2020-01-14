@@ -38,6 +38,8 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.devtools.build.lib.events.Location;
+import com.google.devtools.build.lib.syntax.EvalException;
 import com.sun.jna.Platform;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -218,5 +220,36 @@ public class RunActionTest {
 
     assertFalse(result.isSuccess());
     assertEquals(expectedStderr, getStderr(result));
+  }
+
+  @Test
+  public void getsInputsFromCommandLineArgs() throws IOException, EvalException {
+    Artifact otherInput = runner.declareArtifact(Paths.get("other.txt"));
+    Artifact output1 = runner.declareArtifact(Paths.get("out1.txt"));
+    Artifact output2 = runner.declareArtifact(Paths.get("out2.txt"));
+    runner.runAction(
+        new WriteAction(
+            runner.getRegistry(),
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(otherInput),
+            "contents",
+            false));
+
+    RunAction action =
+        new RunAction(
+            runner.getRegistry(),
+            ImmutableSortedSet.of(otherInput),
+            ImmutableSortedSet.of(output1),
+            "list",
+            CommandLineArgsFactory.from(
+                ImmutableList.of(
+                    script, "--foo", "bar", output2.asOutputArtifact(Location.BUILTIN))),
+            ImmutableMap.of());
+
+    assertEquals(ImmutableSortedSet.of(otherInput, script), action.getInputs());
+    assertEquals(ImmutableSortedSet.of(output1, output2), action.getOutputs());
+
+    StepExecutionResult result = runner.runAction(action).getResult();
+    assertTrue(result.isSuccess());
   }
 }
