@@ -33,7 +33,6 @@ import org.immutables.value.Value;
 import org.junit.Test;
 
 public class AuditRuleTypeCommandTest {
-
   static class BuildRuleDescription implements DescriptionWithTargetGraph<BuildRuleDescriptionArg> {
 
     @Override
