@@ -21,5 +21,7 @@ jobs:
             ant
             ./bin/buck build buck --out ./new_buck.pex
 workflows:
+  version: 2
   all_jobs:
     jobs:
+      - ci_build
