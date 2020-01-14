@@ -18,6 +18,7 @@ package com.facebook.buck.core.starlark.rule;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactDeclarationException;
+import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.core.rules.actions.lib.CopyAction;
@@ -124,18 +125,21 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
         SkylarkDict.castSkylarkDictOrNoneToDict(userEnv, String.class, String.class, null);
 
     CommandLineArgs argumentsValidated;
+    Object firstArgument;
     try {
       argumentsValidated =
           CommandLineArgsFactory.from(
               arguments.stream()
                   .map(SkylarkRuleContextActions::getImmutableArg)
                   .collect(ImmutableList.toImmutableList()));
-      argumentsValidated
-          .getArgs()
-          .findFirst()
-          .orElseThrow(
-              () ->
-                  new EvalException(location, "At least one argument must be provided to 'run()'"));
+      firstArgument =
+          argumentsValidated
+              .getArgs()
+              .findFirst()
+              .orElseThrow(
+                  () ->
+                      new EvalException(
+                          location, "At least one argument must be provided to 'run()'"));
     } catch (CommandLineException e) {
       throw new EvalException(
           location,
@@ -143,9 +147,23 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
               "Invalid type for %s. Must be one of string, int, Artifact, Label, or the result of ctx.actions.args()",
               e.getHumanReadableErrorMessage()));
     }
-    // TODO(pjameson): This name needs to be changed to something more reasonable if not provided
-    //                 probably something like run action: %s
-    String shortNameValidated = EvalUtils.isNullOrNone(shortName) ? "" : (String) shortName;
+
+    String shortNameValidated;
+    if (EvalUtils.isNullOrNone(shortName)) {
+      if (firstArgument instanceof Artifact) {
+        shortNameValidated =
+            String.format("run action %s", ((Artifact) firstArgument).getBasename());
+      } else if (firstArgument instanceof OutputArtifact) {
+        shortNameValidated =
+            String.format(
+                "run action %s",
+                ((Artifact) ((OutputArtifact) firstArgument).getArtifact()).getBasename());
+      } else {
+        shortNameValidated = String.format("run action %s", firstArgument);
+      }
+    } else {
+      shortNameValidated = (String) shortName;
+    }
 
     new RunAction(
         registry, shortNameValidated, argumentsValidated, ImmutableMap.copyOf(userEnvValidated));
