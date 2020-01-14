@@ -25,7 +25,6 @@ import com.facebook.buck.core.model.targetgraph.impl.Package;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.SimplePerfEvent.Scope;
 import com.facebook.buck.parser.PipelineNodeCache.Cache;
@@ -57,7 +56,7 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
   private final ConcurrentHashMap<Path, ListenableFuture<ImmutableList<UnconfiguredTargetNode>>>
       allNodeCache = new ConcurrentHashMap<>();
   private final Scope perfEventScope;
-  private final PerfEventId perfEventId;
+  private final SimplePerfEvent.PerfEventId perfEventId;
   /**
    * minimum duration time for performance events to be logged (for use with {@link
    * SimplePerfEvent}s). This is on the base class to make it simpler to enable verbose tracing for
@@ -85,9 +84,10 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
     this.packagePipeline = packagePipeline;
     this.unconfiguredTargetNodeFactory = unconfiguredTargetNodeFactory;
     this.minimumPerfEventTimeMs = LOG.isVerboseEnabled() ? 0 : 10;
-    this.perfEventId = PerfEventId.of("GetRawTargetNode");
+    this.perfEventId = SimplePerfEvent.PerfEventId.of("GetRawTargetNode");
     this.perfEventScope =
-        SimplePerfEvent.scope(eventBus, PerfEventId.of("raw_target_node_parse_pipeline"));
+        SimplePerfEvent.scope(
+            eventBus, SimplePerfEvent.PerfEventId.of("raw_target_node_parse_pipeline"));
     this.cache =
         new PipelineNodeCache<>(cache, UnconfiguredTargetNodePipeline::targetNodeIsConfiguration);
   }

@@ -48,7 +48,7 @@ final class DoctorTestUtils {
 
   private static final String WATCHMAN_DIAG_COMMAND = "watchman-diag";
 
-  static DefectSubmitResult createDefectReport(
+  static DefectReporter.DefectSubmitResult createDefectReport(
       ProjectWorkspace workspace,
       ImmutableSet<BuildLogEntry> buildLogEntries,
       UserInput userInput,
@@ -126,16 +126,16 @@ final class DoctorTestUtils {
   }
 
   public static class CapturingDefectReporter implements DefectReporter {
-    private DefectReport defectReport = null;
+    private DefectReporter.DefectReport defectReport = null;
 
-    DefectReport getDefectReport() {
+    DefectReporter.DefectReport getDefectReport() {
       return Objects.requireNonNull(defectReport);
     }
 
     @Override
     public DefectSubmitResult submitReport(DefectReport defectReport) {
       this.defectReport = defectReport;
-      return DefectSubmitResult.builder()
+      return ImmutableDefectSubmitResult.builder()
           .setRequestProtocol(DoctorProtocolVersion.SIMPLE)
           .setReportSubmitLocation("")
           .build();

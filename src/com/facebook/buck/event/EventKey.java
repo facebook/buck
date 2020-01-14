@@ -16,24 +16,21 @@
 
 package com.facebook.buck.event;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import java.util.concurrent.atomic.AtomicLong;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
 /**
  * Used to associate sets of {@link BuckEvent}s with each other. The keys are only considered unique
  * in the scope of the same type of {@link BuckEvent}.
  */
-abstract class AbstractEventKey {
+@BuckStyleValue
+public abstract class EventKey {
 
   private static final AtomicLong SEQUENCE_NUMBER = new AtomicLong(1);
 
-  @Value.Parameter
-  abstract long getValue();
+  public abstract long getValue();
 
   @VisibleForTesting
   public static void setSequenceValueForTest(long value) {
@@ -59,5 +56,9 @@ abstract class AbstractEventKey {
    */
   public static EventKey slowValueKey(Object... objects) {
     return EventKey.of(Objects.hashCode(objects));
+  }
+
+  public static EventKey of(long value) {
+    return ImmutableEventKey.of(value);
   }
 }

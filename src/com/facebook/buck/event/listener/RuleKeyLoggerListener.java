@@ -23,7 +23,7 @@ import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.BuildRuleKeys;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -48,7 +48,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.annotation.concurrent.GuardedBy;
-import org.immutables.value.Value;
 
 public class RuleKeyLoggerListener implements BuckEventListener {
   private static final Logger LOG = Logger.get(RuleKeyLoggerListener.class);
@@ -190,7 +189,7 @@ public class RuleKeyLoggerListener implements BuckEventListener {
     submitFlushLogLines();
 
     RuleKeyLoggerListenerCloseArgs args =
-        RuleKeyLoggerListenerCloseArgs.of(
+        ImmutableRuleKeyLoggerListenerCloseArgs.of(
             outputExecutor,
             ruleKeyLogFileUploader,
             info.getLogDirectoryPath().resolve(BuckConstant.RULE_KEY_LOGGER_FILE_NAME));
@@ -221,16 +220,12 @@ public class RuleKeyLoggerListener implements BuckEventListener {
   }
 
   /** Arguments to {@link RuleKeyLoggerListenerCloseAction}. */
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractRuleKeyLoggerListenerCloseArgs {
-    @Value.Parameter
+  @BuckStyleValue
+  abstract static class RuleKeyLoggerListenerCloseArgs {
     public abstract ExecutorService getOutputExecutor();
 
-    @Value.Parameter
     public abstract Optional<RuleKeyLogFileUploader> getRuleKeyLogFileUploader();
 
-    @Value.Parameter
     public abstract Path getRuleKeyLogFilePath();
   }
 }

@@ -44,7 +44,6 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.features.halide.HalideBuckConfig;
@@ -225,7 +224,7 @@ public class ProjectGenerator {
     try (SimplePerfEvent.Scope scope =
         SimplePerfEvent.scope(
             buckEventBus,
-            PerfEventId.of("xcode_project_generation"),
+            SimplePerfEvent.PerfEventId.of("xcode_project_generation"),
             ImmutableMap.of("Path", xcodeProjectWriteOptions.xcodeProjPath()))) {
 
       PathRelativizer pathRelativizer =

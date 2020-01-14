@@ -20,7 +20,6 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import java.nio.file.Path;
 import java.util.Map;
@@ -37,5 +36,5 @@ public interface ParserTargetNodeFromAttrMapFactory {
       BuildTarget target,
       DependencyStack dependencyStack,
       Map<String, Object> rawNode,
-      Function<PerfEventId, SimplePerfEvent.Scope> perfEventScope);
+      Function<SimplePerfEvent.PerfEventId, SimplePerfEvent.Scope> perfEventScope);
 }

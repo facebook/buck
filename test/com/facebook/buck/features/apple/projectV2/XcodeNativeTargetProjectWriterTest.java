@@ -85,7 +85,7 @@ public class XcodeNativeTargetProjectWriterTest {
   @Test
   public void shouldCreateTarget() throws NoSuchBuildTargetException {
     XCodeNativeTargetAttributes nativeTargetAttributes =
-        XCodeNativeTargetAttributes.builder()
+        ImmutableXCodeNativeTargetAttributes.builder()
             .setTarget(Optional.of(buildTarget))
             .setAppleConfig(appleConfig)
             .setProduct(
@@ -226,7 +226,7 @@ public class XcodeNativeTargetProjectWriterTest {
   @Test
   public void testTargetHasBuildScriptPhase() {
     XCodeNativeTargetAttributes targetAttributes =
-        XCodeNativeTargetAttributes.builder()
+        ImmutableXCodeNativeTargetAttributes.builder()
             .setTarget(Optional.of(buildTarget))
             .setAppleConfig(appleConfig)
             .setProduct(
@@ -255,8 +255,8 @@ public class XcodeNativeTargetProjectWriterTest {
         is(equalTo("cd $SOURCE_ROOT/.. && ./build_script.sh")));
   }
 
-  private XCodeNativeTargetAttributes.Builder builderWithCommonDefaults() {
-    return XCodeNativeTargetAttributes.builder()
+  private ImmutableXCodeNativeTargetAttributes.Builder builderWithCommonDefaults() {
+    return ImmutableXCodeNativeTargetAttributes.builder()
         .setTarget(Optional.of(buildTarget))
         .setAppleConfig(appleConfig)
         .setProduct(

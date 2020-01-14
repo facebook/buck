@@ -70,7 +70,7 @@ public class BuildConfiguration {
       TargetNode<?> targetNode,
       BuildTarget buildTarget,
       CxxPlatform cxxPlatform,
-      XCodeNativeTargetAttributes.Builder nativeTargetAttributes,
+      ImmutableXCodeNativeTargetAttributes.Builder nativeTargetAttributes,
       ImmutableMap<String, String> overrideBuildSettings,
       ImmutableMap<String, String> buckXcodeBuildSettings,
       ImmutableMap<String, String> appendBuildSettings,

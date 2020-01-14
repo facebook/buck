@@ -18,9 +18,7 @@ package com.facebook.buck.support.build.report;
 
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.doctor.DefectReport;
 import com.facebook.buck.doctor.DefectReporter;
-import com.facebook.buck.doctor.DefectSubmitResult;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -65,15 +63,15 @@ public class RuleKeyLogFileUploader {
 
     // This defect report is mostly incomplete, it's not used as a rage report itself, only as a
     // way to generate the cache analysis.
-    DefectReport report =
-        DefectReport.builder()
+    DefectReporter.DefectReport report =
+        DefectReporter.DefectReport.builder()
             .setBuildEnvironmentDescription(buildEnvironmentDescription)
             .setIncludedPaths(ImmutableSet.of(ruleKeyLoggerFilepath))
             .setHighlightedBuildIds(
                 ImmutableList.of(BuildId.fromJson(requestUploader.getBuildId())))
             .build();
     try {
-      DefectSubmitResult result = defectReporter.submitReport(report);
+      DefectReporter.DefectSubmitResult result = defectReporter.submitReport(report);
 
       if (!result.getReportId().isPresent()) {
         throw new IllegalStateException("The id of the rage report must be present");

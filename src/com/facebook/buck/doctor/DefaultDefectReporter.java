@@ -126,7 +126,7 @@ public class DefaultDefectReporter implements DefectReporter {
 
   @Override
   public DefectSubmitResult submitReport(DefectReport defectReport) throws IOException {
-    DefectSubmitResult.Builder defectSubmitResult = DefectSubmitResult.builder();
+    ImmutableDefectSubmitResult.Builder defectSubmitResult = ImmutableDefectSubmitResult.builder();
     defectSubmitResult.setRequestProtocol(doctorConfig.getProtocolVersion());
     Optional<SlbBuckConfig> frontendConfig = doctorConfig.getFrontendConfig();
 
@@ -248,7 +248,7 @@ public class DefaultDefectReporter implements DefectReporter {
       throws IOException {
     String responseBody = uploadReportHttp(defectReport, slb);
 
-    return DefectSubmitResult.builder()
+    return ImmutableDefectSubmitResult.builder()
         .setIsRequestSuccessful(true)
         .setReportSubmitMessage(responseBody)
         .setReportSubmitLocation(responseBody)
@@ -265,7 +265,7 @@ public class DefaultDefectReporter implements DefectReporter {
             ObjectMappers.createParser(responseBody.getBytes(Charsets.UTF_8)),
             ImmutableDoctorJsonResponse.class);
 
-    return DefectSubmitResult.builder()
+    return ImmutableDefectSubmitResult.builder()
         .setIsRequestSuccessful(json.getRequestSuccessful())
         .setReportSubmitErrorMessage(json.getErrorMessage())
         .setReportSubmitMessage(json.getMessage())

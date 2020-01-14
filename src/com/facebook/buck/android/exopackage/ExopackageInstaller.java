@@ -25,7 +25,6 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.NamedTemporaryFile;
@@ -230,7 +229,7 @@ public class ExopackageInstaller {
   private Optional<PackageInfo> getPackageInfo(String packageName) throws Exception {
     try (SimplePerfEvent.Scope ignored =
         SimplePerfEvent.scope(
-            eventBus, PerfEventId.of("get_package_info"), "package", packageName)) {
+            eventBus, SimplePerfEvent.PerfEventId.of("get_package_info"), "package", packageName)) {
       return device.getPackageInfo(packageName);
     }
   }

@@ -124,7 +124,6 @@ import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup.Linkage;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.features.apple.common.CopyInXcode;
@@ -483,7 +482,7 @@ public class ProjectGenerator {
     try (SimplePerfEvent.Scope scope =
         SimplePerfEvent.scope(
             buckEventBus,
-            PerfEventId.of("xcode_project_generation"),
+            SimplePerfEvent.PerfEventId.of("xcode_project_generation"),
             ImmutableMap.of("Path", getProjectPath()))) {
 
       // Filter out nodes that aren't included in project.

@@ -49,7 +49,6 @@ import com.facebook.buck.event.CompilerPluginDurationEvent;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.LeafEvents;
-import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.chrome_trace.ChromeTraceBuckConfig;
 import com.facebook.buck.event.chrome_trace.ChromeTraceEvent;
@@ -554,9 +553,11 @@ public class ChromeTraceBuildListenerTest {
 
     try (SimplePerfEvent.Scope scope1 =
         SimplePerfEvent.scope(
-            eventBus, PerfEventId.of("planning"), ImmutableMap.of("nefarious", true))) {
+            eventBus,
+            SimplePerfEvent.PerfEventId.of("planning"),
+            ImmutableMap.of("nefarious", true))) {
       try (SimplePerfEvent.Scope scope2 =
-          SimplePerfEvent.scope(eventBus, PerfEventId.of("scheming"))) {
+          SimplePerfEvent.scope(eventBus, SimplePerfEvent.PerfEventId.of("scheming"))) {
         scope2.appendFinishedInfo("success", false);
       }
       scope1.appendFinishedInfo(

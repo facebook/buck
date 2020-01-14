@@ -163,6 +163,8 @@ public class DoctorReportHelperTest {
         testClient,
         helper.generateEndpointRequest(
             testLogEntry,
-            DefectSubmitResult.builder().setRequestProtocol(DoctorProtocolVersion.JSON).build()));
+            ImmutableDefectSubmitResult.builder()
+                .setRequestProtocol(DoctorProtocolVersion.JSON)
+                .build()));
   }
 }

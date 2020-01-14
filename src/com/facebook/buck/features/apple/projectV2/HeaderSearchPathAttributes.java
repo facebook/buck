@@ -18,7 +18,7 @@ package com.facebook.buck.features.apple.projectV2;
 
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -27,11 +27,9 @@ import java.nio.file.Path;
 import org.immutables.value.Value;
 
 /** Attributes specific to generating and providing Header Search Paths to Xcode for a target. */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractHeaderSearchPathAttributes {
+@BuckStyleValueWithBuilder
+abstract class HeaderSearchPathAttributes {
 
-  @Value.Parameter
   abstract TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode();
 
   /** Target relative Path to SourcePath for all public headers. */

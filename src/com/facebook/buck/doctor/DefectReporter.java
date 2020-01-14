@@ -17,7 +17,8 @@
 package com.facebook.buck.doctor;
 
 import com.facebook.buck.core.model.BuildId;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.doctor.config.DoctorProtocolVersion;
 import com.facebook.buck.doctor.config.SourceControlInfo;
 import com.facebook.buck.doctor.config.UserLocalConfiguration;
@@ -26,15 +27,13 @@ import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /** Interface around the 'backend' of submitting a defect report. */
 public interface DefectReporter {
   DefectSubmitResult submitReport(DefectReport defectReport) throws IOException;
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  interface AbstractDefectSubmitResult {
+  @BuckStyleValueWithBuilder
+  interface DefectSubmitResult {
 
     /**
      * If value is empty then no request was made and report was saved locally.
@@ -60,16 +59,14 @@ public interface DefectReporter {
   }
 
   /** Information helpful when diagnosing 'buck is not picking up changes' reports. */
-  @Value.Immutable
-  @BuckStyleImmutable
-  interface AbstractFileChangesIgnoredReport {
+  @BuckStyleValue
+  interface FileChangesIgnoredReport {
     Optional<Path> getWatchmanDiagReport();
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  interface AbstractDefectReport {
-    Optional<UserReport> getUserReport();
+  @BuckStyleValueWithBuilder
+  interface DefectReport {
+    Optional<AbstractReport.UserReport> getUserReport();
 
     ImmutableSet<BuildId> getHighlightedBuildIds();
 
@@ -84,5 +81,11 @@ public interface DefectReporter {
     Optional<FileChangesIgnoredReport> getFileChangesIgnoredReport();
 
     Optional<UserLocalConfiguration> getUserLocalConfiguration();
+
+    static Builder builder() {
+      return new Builder();
+    }
+
+    class Builder extends ImmutableDefectReport.Builder {}
   }
 }

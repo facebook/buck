@@ -25,7 +25,7 @@ public abstract class NetworkEvent extends AbstractBuckEvent {
     private final long bytesReceived;
 
     public BytesReceivedEvent(long bytesReceived) {
-      super(AbstractEventKey.unique());
+      super(EventKey.unique());
       this.bytesReceived = bytesReceived;
     }
 

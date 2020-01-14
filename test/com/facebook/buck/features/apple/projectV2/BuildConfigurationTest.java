@@ -67,8 +67,8 @@ public class BuildConfigurationTest {
   public void testWriteBuildConfigurationsForTarget() throws IOException {
     TargetNode fooTargetNode = AppleLibraryBuilder.createBuilder(fooBuildTarget).build();
 
-    XCodeNativeTargetAttributes.Builder nativeTargetAttributes =
-        XCodeNativeTargetAttributes.builder()
+    ImmutableXCodeNativeTargetAttributes.Builder nativeTargetAttributes =
+        ImmutableXCodeNativeTargetAttributes.builder()
             .setAppleConfig(AppleProjectHelper.createDefaultAppleConfig(projectFilesystem));
     ImmutableSet.Builder<String> targetConfigNamesBuilder = ImmutableSet.builder();
     ImmutableSet.Builder<Path> xcconfigPathsBuilder = ImmutableSet.builder();

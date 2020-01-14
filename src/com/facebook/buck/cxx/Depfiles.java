@@ -26,7 +26,6 @@ import com.facebook.buck.cxx.toolchain.DependencyTrackingMode;
 import com.facebook.buck.cxx.toolchain.HeaderVerification;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.pathformat.PathFormatter;
@@ -300,7 +299,7 @@ class Depfiles {
     try (SimplePerfEvent.Scope perfEvent =
         SimplePerfEvent.scope(
             eventBus,
-            PerfEventId.of("depfile-parse"),
+            SimplePerfEvent.PerfEventId.of("depfile-parse"),
             ImmutableMap.of("input", inputPath, "output", outputPath))) {
 
       List<String> headers =

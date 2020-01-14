@@ -124,8 +124,8 @@ class HeaderSearchPaths {
   /** Derives header search path attributes for the {@code targetNode}. */
   HeaderSearchPathAttributes getHeaderSearchPathAttributes(
       TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode) {
-    HeaderSearchPathAttributes.Builder builder =
-        HeaderSearchPathAttributes.builder().setTargetNode(targetNode);
+    ImmutableHeaderSearchPathAttributes.Builder builder =
+        ImmutableHeaderSearchPathAttributes.builder().setTargetNode(targetNode);
 
     ImmutableSortedMap<Path, SourcePath> publicCxxHeaders = getPublicCxxHeaders(targetNode);
     builder.setPublicCxxHeaders(publicCxxHeaders);

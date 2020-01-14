@@ -339,7 +339,7 @@ public class EventSerializationTest {
   @Test
   public void testSimplePerfEvent() throws IOException {
     SimplePerfEvent.Started event =
-        SimplePerfEvent.started(PerfEventId.of("PerfId"), "value", "Some value");
+        SimplePerfEvent.started(SimplePerfEvent.PerfEventId.of("PerfId"), "value", "Some value");
     event.configure(timestampMillis, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
     assertJsonEquals(

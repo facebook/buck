@@ -20,7 +20,6 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.targetgraph.impl.Package;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.parser.api.PackageFileManifest;
 import com.facebook.buck.parser.api.PackageMetadata;
@@ -50,7 +49,7 @@ class PackagePipeline implements AutoCloseable {
   private final PackageFileParsePipeline packageFileParsePipeline;
 
   private final SimplePerfEvent.Scope perfEventScope;
-  private final PerfEventId perfEventId;
+  private final SimplePerfEvent.PerfEventId perfEventId;
   /**
    * minimum duration time for performance events to be logged (for use with {@link
    * SimplePerfEvent}s). This is on the base class to make it simpler to enable verbose tracing for
@@ -72,8 +71,9 @@ class PackagePipeline implements AutoCloseable {
     this.packageFileParsePipeline = packageFileParsePipeline;
 
     this.minimumPerfEventTimeMs = LOG.isVerboseEnabled() ? 0 : 10;
-    this.perfEventId = PerfEventId.of("GetPackage");
-    this.perfEventScope = SimplePerfEvent.scope(eventBus, PerfEventId.of("package_pipeline"));
+    this.perfEventId = SimplePerfEvent.PerfEventId.of("GetPackage");
+    this.perfEventScope =
+        SimplePerfEvent.scope(eventBus, SimplePerfEvent.PerfEventId.of("package_pipeline"));
 
     this.cache = new PipelineNodeCache<>(packageCache, n -> false);
   }

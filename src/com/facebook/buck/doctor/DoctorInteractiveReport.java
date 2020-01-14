@@ -68,13 +68,13 @@ public class DoctorInteractiveReport extends AbstractReport {
   }
 
   @Override
-  protected Optional<FileChangesIgnoredReport> getFileChangesIgnoredReport()
+  protected Optional<DefectReporter.FileChangesIgnoredReport> getFileChangesIgnoredReport()
       throws IOException, InterruptedException {
     return runWatchmanDiagReportCollector(input);
   }
 
   @Override
   protected Optional<UserReport> getUserReport() {
-    return issueDescription.map(issue -> UserReport.of("", issue));
+    return issueDescription.map(issue -> ImmutableUserReport.of("", issue));
   }
 }

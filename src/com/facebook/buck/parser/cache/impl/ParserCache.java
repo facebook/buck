@@ -18,7 +18,6 @@ package com.facebook.buck.parser.cache.impl;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.manifestservice.ManifestService;
@@ -38,8 +37,10 @@ import java.util.Optional;
 public class ParserCache {
   private final ParserCacheStorage parserCacheStorage;
   private final BuckEventBus eventBus;
-  private final PerfEventId eventIdGet = PerfEventId.of("ParseFileCacheGet");
-  private final PerfEventId eventIdStore = PerfEventId.of("ParseFileCacheStore");
+  private final SimplePerfEvent.PerfEventId eventIdGet =
+      SimplePerfEvent.PerfEventId.of("ParseFileCacheGet");
+  private final SimplePerfEvent.PerfEventId eventIdStore =
+      SimplePerfEvent.PerfEventId.of("ParseFileCacheStore");
 
   private ParserCache(ParserCacheStorage parserCacheStorage, BuckEventBus eventBus) {
     this.parserCacheStorage = parserCacheStorage;

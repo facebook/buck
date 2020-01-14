@@ -114,7 +114,7 @@ public class DoctorReportHelper {
   }
 
   public DoctorEndpointRequest generateEndpointRequest(
-      BuildLogEntry entry, DefectSubmitResult reportResult) throws IOException {
+      BuildLogEntry entry, DefectReporter.DefectSubmitResult reportResult) throws IOException {
     Optional<String> machineLog;
 
     if (entry.getMachineReadableLogFile().isPresent()) {
@@ -233,13 +233,13 @@ public class DoctorReportHelper {
     output.println();
   }
 
-  public final void presentRageResult(Optional<DefectSubmitResult> result) {
+  public final void presentRageResult(Optional<DefectReporter.DefectSubmitResult> result) {
     if (!result.isPresent()) {
       console.getStdOut().println("=> Failed to generate a report DefectSubmitResult.");
       return;
     }
 
-    DefectSubmitResult submitResult = result.get();
+    DefectReporter.DefectSubmitResult submitResult = result.get();
     if (submitResult.getIsRequestSuccessful().isPresent()) {
       if (submitResult.getReportSubmitLocation().isPresent()) {
         if (submitResult.getRequestProtocol().equals(DoctorProtocolVersion.JSON)) {

@@ -35,7 +35,6 @@ import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.event.listener.stats.cache.CacheRateStatsKeeper;
 import com.facebook.buck.event.listener.stats.cache.NetworkStatsKeeper;
 import com.facebook.buck.event.listener.stats.cache.NetworkStatsTracker;
-import com.facebook.buck.event.listener.stats.cache.RemoteArtifactUploadStats;
 import com.facebook.buck.event.listener.stats.parse.ParseStatsTracker;
 import com.facebook.buck.event.listener.util.EventInterval;
 import com.facebook.buck.event.listener.util.ProgressEstimation;
@@ -347,13 +346,11 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       return UNFINISHED_EVENT_PAIR;
     }
     EventInterval interval =
-        EventInterval.builder()
-            .setStart(startEvent.getTimestampMillis())
-            .setFinish(
-                finishedEvent == null
-                    ? OptionalLong.empty()
-                    : OptionalLong.of(finishedEvent.getTimestampMillis()))
-            .build();
+        EventInterval.of(
+            OptionalLong.of(startEvent.getTimestampMillis()),
+            finishedEvent == null
+                ? OptionalLong.empty()
+                : OptionalLong.of(finishedEvent.getTimestampMillis()));
     return logEventInterval(
         prefix,
         suffix,
@@ -626,7 +623,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
         started.getEventKey(),
         (key, pair) ->
             pair == null
-                ? EventInterval.builder().setStart(started.getTimestampMillis()).build()
+                ? EventInterval.start(started.getTimestampMillis())
                 : pair.withStart(started.getTimestampMillis()));
   }
 
@@ -636,7 +633,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
         finished.getEventKey(),
         (key, pair) ->
             pair == null
-                ? EventInterval.builder().setFinish(finished.getTimestampMillis()).build()
+                ? EventInterval.finish(finished.getTimestampMillis())
                 : pair.withFinish(finished.getTimestampMillis()));
   }
 
@@ -838,7 +835,8 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
    * @return the line
    */
   protected String renderRemoteUploads() {
-    RemoteArtifactUploadStats uploadStats = networkStatsTracker.getRemoteArtifactUploadStats();
+    NetworkStatsTracker.RemoteArtifactUploadStats uploadStats =
+        networkStatsTracker.getRemoteArtifactUploadStats();
 
     long bytesUploaded = uploadStats.getTotalBytes();
     String humanReadableBytesUploaded =

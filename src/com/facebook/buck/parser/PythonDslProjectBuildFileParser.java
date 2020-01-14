@@ -20,7 +20,6 @@ import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.PathMatcher;
@@ -209,7 +208,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   /** Initialize the parser, starting buck.py. */
   private void init() throws IOException {
     try (SimplePerfEvent.Scope scope =
-        SimplePerfEvent.scope(buckEventBus, PerfEventId.of("ParserInit"))) {
+        SimplePerfEvent.scope(buckEventBus, SimplePerfEvent.PerfEventId.of("ParserInit"))) {
 
       ImmutableMap.Builder<String, String> pythonEnvironmentBuilder =
           ImmutableMap.builderWithExpectedSize(environment.size());

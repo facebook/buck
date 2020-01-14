@@ -38,7 +38,6 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
-import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.StartActivityEvent;
 import com.facebook.buck.event.UninstallEvent;
@@ -176,7 +175,7 @@ public class AdbHelper implements AndroidDevicesHelper {
                     try (SimplePerfEvent.Scope ignored =
                         SimplePerfEvent.scope(
                             getBuckEventBus(),
-                            PerfEventId.of("adbCall " + description),
+                            SimplePerfEvent.PerfEventId.of("adbCall " + description),
                             "device_serial",
                             device.getSerialNumber())) {
                       return func.apply(device);

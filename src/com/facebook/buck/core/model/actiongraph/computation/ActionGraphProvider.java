@@ -29,7 +29,6 @@ import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRul
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.rules.keys.ContentAgnosticRuleKeyFactory;
@@ -114,7 +113,7 @@ public class ActionGraphProvider {
    * returns a cached version of the {@link ActionGraphAndBuilder}, else returns a new one and
    * updates the cache.
    *
-   * @param targetGraph the target graph that the action graph will be based on.
+   * @param targetGraphCreationResult the target graph that the action graph will be based on.
    * @return a {@link ActionGraphAndBuilder}
    */
   public ActionGraphAndBuilder getActionGraph(
@@ -257,7 +256,7 @@ public class ActionGraphProvider {
       RuleKeyFieldLoader fieldLoader,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
     try (SimplePerfEvent.Scope scope =
-        SimplePerfEvent.scope(eventBus, PerfEventId.of("ActionGraphCacheCheck"))) {
+        SimplePerfEvent.scope(eventBus, SimplePerfEvent.PerfEventId.of("ActionGraphCacheCheck"))) {
       // We check that the lastActionGraph is not null because it's possible we had a
       // invalidateCache() between the scheduling and the execution of this task.
       LOG.info("ActionGraph integrity check spawned.");

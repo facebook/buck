@@ -22,7 +22,6 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.json.JsonObjectHashing;
@@ -96,7 +95,7 @@ public class TargetGraphHashing {
    */
   public ImmutableMap<BuildTarget, HashCode> hashTargetGraph() throws InterruptedException {
     try (SimplePerfEvent.Scope ignored =
-        SimplePerfEvent.scope(eventBus, PerfEventId.of("ShowTargetHashes"))) {
+        SimplePerfEvent.scope(eventBus, SimplePerfEvent.PerfEventId.of("ShowTargetHashes"))) {
       return new Runner().run();
     } catch (ExecutionException e) {
       Throwables.throwIfUnchecked(e.getCause());

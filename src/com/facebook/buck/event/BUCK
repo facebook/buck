@@ -2,7 +2,7 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 
 EVENT_INTERFACES = [
     "AbstractBuckEvent.java",
-    "AbstractEventKey.java",
+    "EventKey.java",
     "BuckEvent.java",
     "BuckEventListener.java",
     "BuckEventBus.java",

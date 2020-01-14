@@ -379,8 +379,8 @@ public class XcodeNativeTargetGenerator {
     ImmutableSet.Builder<String> targetConfigNamesBuilder = ImmutableSet.builder();
     ImmutableList.Builder<Path> headerSymlinkTreesBuilder = ImmutableList.builder();
 
-    XCodeNativeTargetAttributes.Builder nativeTargetBuilder =
-        XCodeNativeTargetAttributes.builder().setAppleConfig(appleConfig);
+    ImmutableXCodeNativeTargetAttributes.Builder nativeTargetBuilder =
+        ImmutableXCodeNativeTargetAttributes.builder().setAppleConfig(appleConfig);
 
     // Not sure if this is still needed -- IT excludes BUCK compilation targets, according to the
     // comment
@@ -606,7 +606,7 @@ public class XcodeNativeTargetGenerator {
   }
 
   private void generateHalideLibraryTarget(
-      XCodeNativeTargetAttributes.Builder xcodeNativeTargetAttributesBuilder,
+      ImmutableXCodeNativeTargetAttributes.Builder xcodeNativeTargetAttributesBuilder,
       ImmutableSet.Builder<Path> xcconfigPathsBuilder,
       ImmutableSet.Builder<String> targetConfigNamesBuilder,
       TargetNode<HalideLibraryDescriptionArg> targetNode)
@@ -672,7 +672,7 @@ public class XcodeNativeTargetGenerator {
       ImmutableSet.Builder<Path> xcconfigPathsBuilder,
       ImmutableSet.Builder<String> targetConfigNamesBuilder,
       ImmutableList.Builder<Path> headerSymlinkTreesBuilder,
-      XCodeNativeTargetAttributes.Builder nativeTargetBuilder)
+      ImmutableXCodeNativeTargetAttributes.Builder nativeTargetBuilder)
       throws IOException {
     AppleTestDescriptionArg args = testTargetNode.getConstructorArg();
     Optional<BuildTarget> testTargetApp = extractTestTargetForTestDescriptionArg(args);
@@ -731,7 +731,7 @@ public class XcodeNativeTargetGenerator {
   }
 
   private ImmutableList<BuildTarget> generateAppleBundleTarget(
-      XCodeNativeTargetAttributes.Builder nativeTargetBuilder,
+      ImmutableXCodeNativeTargetAttributes.Builder nativeTargetBuilder,
       ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
       ImmutableSet.Builder<Path> xcconfigPathsBuilder,
       ImmutableSet.Builder<String> targetConfigNamesBuilder,
@@ -813,7 +813,7 @@ public class XcodeNativeTargetGenerator {
   }
 
   private ImmutableList<BuildTarget> generateAppleBinaryTarget(
-      XCodeNativeTargetAttributes.Builder nativeTargetBuilder,
+      ImmutableXCodeNativeTargetAttributes.Builder nativeTargetBuilder,
       ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
       ImmutableSet.Builder<Path> xcconfigPathsBuilder,
       ImmutableSet.Builder<String> targetConfigNamesBuilder,
@@ -844,7 +844,7 @@ public class XcodeNativeTargetGenerator {
   }
 
   private ImmutableList<BuildTarget> generateAppleLibraryTarget(
-      XCodeNativeTargetAttributes.Builder nativeTargetBuilder,
+      ImmutableXCodeNativeTargetAttributes.Builder nativeTargetBuilder,
       ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
       ImmutableSet.Builder<Path> xcconfigPathsBuilder,
       ImmutableSet.Builder<String> targetConfigNamesBuilder,
@@ -869,7 +869,7 @@ public class XcodeNativeTargetGenerator {
   }
 
   private ImmutableList<BuildTarget> generateCxxLibraryTarget(
-      XCodeNativeTargetAttributes.Builder nativeTargetBuilder,
+      ImmutableXCodeNativeTargetAttributes.Builder nativeTargetBuilder,
       ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
       ImmutableSet.Builder<Path> xcconfigPathsBuilder,
       ImmutableSet.Builder<String> targetConfigNamesBuilder,
@@ -1024,7 +1024,7 @@ public class XcodeNativeTargetGenerator {
   }
 
   private ImmutableList<BuildTarget> generateBinaryTarget(
-      XCodeNativeTargetAttributes.Builder xcodeNativeTargetAttributesBuilder,
+      ImmutableXCodeNativeTargetAttributes.Builder xcodeNativeTargetAttributesBuilder,
       ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
       ImmutableSet.Builder<Path> xcconfigPathsBuilder,
       ImmutableSet.Builder<String> targetConfigNamesBuilder,
@@ -1702,7 +1702,7 @@ public class XcodeNativeTargetGenerator {
 
   private ImmutableMap<String, String> getFrameworkAndLibrarySearchPathConfigs(
       TargetNode<? extends CommonArg> node,
-      XCodeNativeTargetAttributes.Builder nativeTargetBuilder,
+      ImmutableXCodeNativeTargetAttributes.Builder nativeTargetBuilder,
       boolean includeFrameworks) {
     HashSet<String> frameworkSearchPaths = new HashSet<>();
     frameworkSearchPaths.add("$BUILT_PRODUCTS_DIR");
@@ -1863,7 +1863,7 @@ public class XcodeNativeTargetGenerator {
 
   private void addEntitlementsPlistIntoTarget(
       TargetNode<? extends HasAppleBundleFields> targetNode,
-      XCodeNativeTargetAttributes.Builder nativeTargetBuilder) {
+      ImmutableXCodeNativeTargetAttributes.Builder nativeTargetBuilder) {
     ImmutableMap<String, String> infoPlistSubstitutions =
         targetNode.getConstructorArg().getInfoPlistSubstitutions();
 
@@ -2007,7 +2007,7 @@ public class XcodeNativeTargetGenerator {
   }
 
   private void addLibraryFileReferenceToTarget(
-      TargetNode<?> targetNode, XCodeNativeTargetAttributes.Builder nativeTargetBuilder) {
+      TargetNode<?> targetNode, ImmutableXCodeNativeTargetAttributes.Builder nativeTargetBuilder) {
     String productOutputName = getProductOutputNameWithExtension(targetNode);
     PBXReference.SourceTree path = PBXReference.SourceTree.BUILT_PRODUCTS_DIR;
     if (targetNode.getDescription() instanceof PrebuiltAppleFrameworkDescription) {

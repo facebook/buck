@@ -106,9 +106,9 @@ public class AndroidPackageableCollector {
 
   /**
    * @param resourcesToExclude Only relevant to {@link AndroidInstrumentationApk} which needs to
-   *     remove resources that are already included in the {@link
-   *     AndroidInstrumentationApkDescription.AndroidInstrumentationApkDescriptionArg#apk}. The same
-   *     goes for native libs and native linkables, and their asset counterparts.
+   *     remove resources that are already included in the
+   *     com.facebook.buck.android.AndroidInstrumentationApkDescription.AbstractAndroidInstrumentationApkDescriptionArg#apk.
+   *     The same goes for native libs and native linkables, and their asset counterparts.
    */
   public AndroidPackageableCollector(
       BuildTarget collectionRoot,

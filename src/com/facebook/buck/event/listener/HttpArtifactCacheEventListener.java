@@ -21,7 +21,7 @@ import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEventFetchData;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEventStoreData;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.support.bgtasks.BackgroundTask;
@@ -39,7 +39,6 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import org.immutables.value.Value;
 
 /** Listens to HttpArtifactCacheEvents and logs stats data in Hive row format. */
 public class HttpArtifactCacheEventListener implements BuckEventListener {
@@ -109,7 +108,7 @@ public class HttpArtifactCacheEventListener implements BuckEventListener {
   @Override
   public void close() {
     HttpArtifactCacheEventListenerCloseArgs args =
-        HttpArtifactCacheEventListenerCloseArgs.of(fetchRequestLogger, storeRequestLogger);
+        ImmutableHttpArtifactCacheEventListenerCloseArgs.of(fetchRequestLogger, storeRequestLogger);
     BackgroundTask<HttpArtifactCacheEventListenerCloseArgs> task =
         ImmutableBackgroundTask.<HttpArtifactCacheEventListenerCloseArgs>builder()
             .setAction(new HttpArtifactCacheEventListenerCloseAction())
@@ -143,13 +142,10 @@ public class HttpArtifactCacheEventListener implements BuckEventListener {
   }
 
   /** Arguments to {@link HttpArtifactCacheEventListenerCloseAction}. */
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractHttpArtifactCacheEventListenerCloseArgs {
-    @Value.Parameter
+  @BuckStyleValue
+  abstract static class HttpArtifactCacheEventListenerCloseArgs {
     public abstract BatchingLogger getFetchRequestLogger();
 
-    @Value.Parameter
     public abstract BatchingLogger getStoreRequestLogger();
   }
 }

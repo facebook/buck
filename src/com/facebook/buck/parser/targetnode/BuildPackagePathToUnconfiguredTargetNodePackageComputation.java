@@ -35,7 +35,6 @@ import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDeps;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDepsPackage;
 import com.facebook.buck.core.path.ForwardRelativePath;
-import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.parser.UnconfiguredTargetNodeToTargetNodeFactory;
 import com.facebook.buck.parser.api.BuildFileManifest;
@@ -194,7 +193,9 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputation
             buildTarget,
             dependencyStack,
             unconfiguredTargetNode,
-            id -> SimplePerfEvent.scope(Optional.empty(), PerfEventId.of("raw_to_targetnode")));
+            id ->
+                SimplePerfEvent.scope(
+                    Optional.empty(), SimplePerfEvent.PerfEventId.of("raw_to_targetnode")));
 
     return targetNode.getParseDeps().stream()
         .map(bt -> bt.getUnconfiguredBuildTargetView().getData())

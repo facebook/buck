@@ -18,7 +18,6 @@ package com.facebook.buck.remoteexecution.util;
 
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.remoteexecution.AsyncBlobFetcher;
 import com.facebook.buck.remoteexecution.ContentAddressedStorageClient.FileMaterializer;
@@ -251,7 +250,7 @@ public class OutputsMaterializer {
       try (SimplePerfEvent.Scope ignored =
           SimplePerfEvent.scope(
               buckEventBus,
-              PerfEventId.of("outputs-materializer"),
+              SimplePerfEvent.PerfEventId.of("outputs-materializer"),
               "size",
               size,
               "items",

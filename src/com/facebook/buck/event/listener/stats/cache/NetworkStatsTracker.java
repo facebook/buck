@@ -21,14 +21,13 @@ import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent.Scheduled;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.event.listener.stats.cache.CacheRateStatsKeeper.CacheRateStatsUpdateEvent;
 import com.google.common.eventbus.Subscribe;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nullable;
-import org.immutables.value.Value;
 
 /** Tracks network related events and maintains stats about uploads/downloads/cache rate/etc. */
 public class NetworkStatsTracker {
@@ -39,9 +38,8 @@ public class NetworkStatsTracker {
   }
 
   /** Stats about remote artifact uploads. */
-  @Value.Immutable
-  @BuckStyleImmutable
-  interface AbstractRemoteArtifactUploadStats {
+  @BuckStyleValue
+  public interface RemoteArtifactUploadStats {
     int getStarted();
 
     int getFailed();
@@ -80,13 +78,12 @@ public class NetworkStatsTracker {
 
   /** Get the current upload stats. */
   public RemoteArtifactUploadStats getRemoteArtifactUploadStats() {
-    return RemoteArtifactUploadStats.builder()
-        .setStarted(remoteArtifactUploadsStartedCount.get())
-        .setFailed(remoteArtifactUploadFailedCount.get())
-        .setUploaded(remoteArtifactUploadedCount.get())
-        .setScheduled(remoteArtifactUploadsScheduledCount.get())
-        .setTotalBytes(remoteArtifactTotalBytesUploaded.get())
-        .build();
+    return ImmutableRemoteArtifactUploadStats.of(
+        remoteArtifactUploadsStartedCount.get(),
+        remoteArtifactUploadFailedCount.get(),
+        remoteArtifactUploadedCount.get(),
+        remoteArtifactUploadsScheduledCount.get(),
+        remoteArtifactTotalBytesUploaded.get());
   }
 
   public boolean haveUploadsStarted() {

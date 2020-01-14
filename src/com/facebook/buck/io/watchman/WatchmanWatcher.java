@@ -18,7 +18,6 @@ package com.facebook.buck.io.watchman;
 
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.io.filesystem.PathMatcher;
@@ -211,7 +210,10 @@ public class WatchmanWatcher {
               if (query != null && cursor != null) {
                 try (SimplePerfEvent.Scope perfEvent =
                         SimplePerfEvent.scope(
-                            buckEventBus, PerfEventId.of("check_watchman"), "cell", cellPath);
+                            buckEventBus,
+                            SimplePerfEvent.PerfEventId.of("check_watchman"),
+                            "cell",
+                            cellPath);
                     WatchmanClient client = watchmanClientFactory.newInstance()) {
                   // Include the cellPath in the finished event so it can be matched with the begin
                   // event.

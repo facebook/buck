@@ -24,7 +24,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.collect.ImmutableList;
@@ -35,10 +35,9 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 /** A native Xcode target, with a breakdown of all of its files. */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractXCodeNativeTargetAttributes {
-  @Value.Parameter
+@BuckStyleValueWithBuilder
+abstract class XCodeNativeTargetAttributes {
+
   public abstract AppleConfig appleConfig();
 
   public abstract Optional<BuildTarget> target();

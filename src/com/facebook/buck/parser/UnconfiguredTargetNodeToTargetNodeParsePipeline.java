@@ -32,7 +32,6 @@ import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.model.tc.factory.TargetConfigurationFactory;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.SimplePerfEvent.Scope;
 import com.facebook.buck.parser.PipelineNodeCache.Cache;
@@ -75,7 +74,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
           Pair<Path, Optional<TargetConfiguration>>, ListenableFuture<ImmutableList<TargetNode<?>>>>
       allNodeCache = new ConcurrentHashMap<>();
   private final Scope perfEventScope;
-  private final PerfEventId perfEventId;
+  private final SimplePerfEvent.PerfEventId perfEventId;
   private final TargetConfigurationFactory targetConfigurationFactory;
   /**
    * minimum duration time for performance events to be logged (for use with {@link
@@ -104,8 +103,9 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
     this.requireTargetPlatform = requireTargetPlatform;
     this.targetConfigurationFactory = targetConfigurationFactory;
     this.minimumPerfEventTimeMs = LOG.isVerboseEnabled() ? 0 : 10;
-    this.perfEventScope = SimplePerfEvent.scope(eventBus, PerfEventId.of(pipelineName));
-    this.perfEventId = PerfEventId.of("GetTargetNode");
+    this.perfEventScope =
+        SimplePerfEvent.scope(eventBus, SimplePerfEvent.PerfEventId.of(pipelineName));
+    this.perfEventId = SimplePerfEvent.PerfEventId.of("GetTargetNode");
     this.eventBus = eventBus;
     this.cache =
         new PipelineNodeCache<>(
@@ -122,7 +122,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
       BuildTarget buildTarget,
       DependencyStack dependencyStack,
       UnconfiguredTargetNode rawNode,
-      Function<PerfEventId, Scope> perfEventScopeFunction)
+      Function<SimplePerfEvent.PerfEventId, Scope> perfEventScopeFunction)
       throws BuildTargetException {
     TargetNode<?> targetNode =
         rawTargetNodeToTargetNodeFactory.createTargetNode(
@@ -184,7 +184,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
             perfEventScope,
             minimumPerfEventTimeMs,
             TimeUnit.MILLISECONDS)) {
-      Function<PerfEventId, Scope> perfEventScopeFunction =
+      Function<SimplePerfEvent.PerfEventId, Scope> perfEventScopeFunction =
           perfEventId1 ->
               SimplePerfEvent.scopeIgnoringShortEvents(
                   eventBus, perfEventId1, scope, minimumPerfEventTimeMs, TimeUnit.MILLISECONDS);
