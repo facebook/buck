@@ -17,7 +17,7 @@
 package com.facebook.buck.log;
 
 import com.facebook.buck.core.model.BuildId;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.util.BuckConstant;
 import com.fasterxml.jackson.annotation.JsonView;
@@ -28,12 +28,10 @@ import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 import java.util.regex.Pattern;
-import org.immutables.value.Value;
 
-@Value.Immutable(copy = true)
-@BuckStyleImmutable
-@JsonDeserialize(as = InvocationInfo.class)
-abstract class AbstractInvocationInfo {
+@BuckStyleValue
+@JsonDeserialize(as = ImmutableInvocationInfo.class)
+public abstract class InvocationInfo {
   private static final ThreadLocal<SimpleDateFormat> DIR_DATE_FORMAT =
       new ThreadLocal<SimpleDateFormat>() {
         @Override
@@ -52,39 +50,26 @@ abstract class AbstractInvocationInfo {
   // TODO(#13704826): we should switch over to a machine-readable log format.
   private static final String LOG_MSG_TEMPLATE = "InvocationInfo BuildId=[%s] Args=[%s]";
 
-  @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)
   public abstract BuildId getBuildId();
 
-  @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)
   public abstract boolean getSuperConsoleEnabled();
 
-  @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)
   public abstract boolean getIsDaemon();
 
-  @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)
   public abstract String getSubCommand();
 
-  @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)
   public abstract ImmutableList<String> getCommandArgs();
 
-  @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)
   public abstract ImmutableList<String> getUnexpandedCommandArgs();
 
-  @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)
   public abstract Path getBuckLogDir();
-
-  @Value.Default
-  @JsonView(JsonViews.MachineReadableLog.class)
-  public long getTimestampMillis() {
-    return System.currentTimeMillis();
-  }
 
   // Just a convenient explicit alias.
   public String getCommandId() {
@@ -96,17 +81,17 @@ abstract class AbstractInvocationInfo {
         LOG_MSG_TEMPLATE, getBuildId().toString(), Joiner.on(", ").join(getCommandArgs()));
   }
 
-  @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)
   public abstract boolean getIsRemoteExecution();
 
-  @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)
   public abstract String getRepository();
 
-  @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)
   public abstract String getWatchmanVersion();
+
+  @JsonView(JsonViews.MachineReadableLog.class)
+  public abstract long getTimestampMillis();
 
   public Path getLogDirectoryPath() {
     return getBuckLogDir().resolve(getLogDirectoryName());
@@ -137,5 +122,56 @@ abstract class AbstractInvocationInfo {
     return String.format(
         "buildId=[%s] subCommand=[%s] utcMillis=[%d]",
         getBuildId().toString(), getSubCommand(), getTimestampMillis());
+  }
+
+  public static InvocationInfo of(
+      BuildId buildId,
+      boolean superConsoleEnabled,
+      boolean isDaemon,
+      String subCommand,
+      ImmutableList<String> commandArgs,
+      ImmutableList<String> unexpandedCommandArgs,
+      Path buckLogDir,
+      boolean isRemoteExecution,
+      String repository,
+      String watchmanVersion) {
+    return of(
+        buildId,
+        superConsoleEnabled,
+        isDaemon,
+        subCommand,
+        commandArgs,
+        unexpandedCommandArgs,
+        buckLogDir,
+        isRemoteExecution,
+        repository,
+        watchmanVersion,
+        System.currentTimeMillis());
+  }
+
+  public static InvocationInfo of(
+      BuildId buildId,
+      boolean superConsoleEnabled,
+      boolean isDaemon,
+      String subCommand,
+      ImmutableList<String> commandArgs,
+      ImmutableList<String> unexpandedCommandArgs,
+      Path buckLogDir,
+      boolean isRemoteExecution,
+      String repository,
+      String watchmanVersion,
+      long timestampMillis) {
+    return ImmutableInvocationInfo.of(
+        buildId,
+        superConsoleEnabled,
+        isDaemon,
+        subCommand,
+        commandArgs,
+        unexpandedCommandArgs,
+        buckLogDir,
+        isRemoteExecution,
+        repository,
+        watchmanVersion,
+        timestampMillis);
   }
 }

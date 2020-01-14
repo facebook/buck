@@ -542,7 +542,7 @@ public abstract class DefaultJavaLibraryRules {
 
   @Value.Lazy
   DefaultJavaLibraryClasspaths getClasspaths() {
-    return DefaultJavaLibraryClasspaths.builder(getActionGraphBuilder())
+    return ImmutableDefaultJavaLibraryClasspaths.builder(getActionGraphBuilder())
         .setBuildRuleParams(getInitialParams())
         .setDeps(Objects.requireNonNull(getDeps()))
         .setCompileAgainstLibraryType(getCompileAgainstLibraryType())

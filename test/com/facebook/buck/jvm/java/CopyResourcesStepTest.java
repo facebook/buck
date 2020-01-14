@@ -62,19 +62,16 @@ public class CopyResourcesStepTest {
             filesystem,
             buildContext,
             buildTarget,
-            ResourcesParameters.builder()
-                .setResources(
-                    ResourcesParameters.getNamedResources(
-                        ruleFinder,
-                        filesystem,
-                        ImmutableSortedSet.of(
-                            FakeSourcePath.of(
-                                filesystem, "android/java/src/com/facebook/base/data.json"),
-                            FakeSourcePath.of(
-                                filesystem,
-                                "android/java/src/com/facebook/common/util/data.json"))))
-                .setResourcesRoot(Optional.empty())
-                .build(),
+            ResourcesParameters.of(
+                ResourcesParameters.getNamedResources(
+                    ruleFinder,
+                    filesystem,
+                    ImmutableSortedSet.of(
+                        FakeSourcePath.of(
+                            filesystem, "android/java/src/com/facebook/base/data.json"),
+                        FakeSourcePath.of(
+                            filesystem, "android/java/src/com/facebook/common/util/data.json"))),
+                Optional.empty()),
             filesystem
                 .getBuckPaths()
                 .getScratchDir()
@@ -129,19 +126,16 @@ public class CopyResourcesStepTest {
             filesystem,
             buildContext,
             buildTarget,
-            ResourcesParameters.builder()
-                .setResources(
-                    ResourcesParameters.getNamedResources(
-                        ruleFinder,
-                        filesystem,
-                        ImmutableSortedSet.of(
-                            FakeSourcePath.of(
-                                filesystem, "android/java/src/com/facebook/base/data.json"),
-                            FakeSourcePath.of(
-                                filesystem,
-                                "android/java/src/com/facebook/common/util/data.json"))))
-                .setResourcesRoot(Optional.empty())
-                .build(),
+            ResourcesParameters.of(
+                ResourcesParameters.getNamedResources(
+                    ruleFinder,
+                    filesystem,
+                    ImmutableSortedSet.of(
+                        FakeSourcePath.of(
+                            filesystem, "android/java/src/com/facebook/base/data.json"),
+                        FakeSourcePath.of(
+                            filesystem, "android/java/src/com/facebook/common/util/data.json"))),
+                Optional.empty()),
             filesystem
                 .getBuckPaths()
                 .getScratchDir()
@@ -198,19 +192,16 @@ public class CopyResourcesStepTest {
             filesystem,
             buildContext,
             buildTarget,
-            ResourcesParameters.builder()
-                .setResources(
-                    ResourcesParameters.getNamedResources(
-                        ruleFinder,
-                        filesystem,
-                        ImmutableSortedSet.of(
-                            FakeSourcePath.of(
-                                filesystem, "android/java/src/com/facebook/base/data.json"),
-                            FakeSourcePath.of(
-                                filesystem,
-                                "android/java/src/com/facebook/common/util/data.json"))))
-                .setResourcesRoot(Optional.empty())
-                .build(),
+            ResourcesParameters.of(
+                ResourcesParameters.getNamedResources(
+                    ruleFinder,
+                    filesystem,
+                    ImmutableSortedSet.of(
+                        FakeSourcePath.of(
+                            filesystem, "android/java/src/com/facebook/base/data.json"),
+                        FakeSourcePath.of(
+                            filesystem, "android/java/src/com/facebook/common/util/data.json"))),
+                Optional.empty()),
             filesystem
                 .getBuckPaths()
                 .getScratchDir()

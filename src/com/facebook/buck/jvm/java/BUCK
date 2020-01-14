@@ -120,8 +120,6 @@ java_library(
 java_immutables_library(
     name = "support",
     srcs = [
-        "AbstractCompilerOutputPaths.java",
-        "AbstractCompilerParameters.java",
         "AbstractJarParameters.java",
         "AbstractJavacLanguageLevelOptions.java",
         "AbstractJavacOptions.java",
@@ -130,13 +128,14 @@ java_immutables_library(
         "AbstractJavacPluginProperties.java",
         "AbstractJavacSpec.java",
         "AbstractJavacVersion.java",
-        "AbstractResourcesParameters.java",
         "AnnotationProcessingEvent.java",
         "AnnotationProcessorFactory.java",
         "BuildsAnnotationProcessor.java",
         "BuiltInJavac.java",
         "ClassUsageFileWriter.java",
         "ClassUsageTracker.java",
+        "CompilerOutputPaths.java",
+        "CompilerParameters.java",
         "ConstantJavacProvider.java",
         "DefaultClassUsageFileReader.java",
         "DefaultClassUsageFileWriter.java",
@@ -176,6 +175,7 @@ java_immutables_library(
         "PluginLoaderJavaFileManager.java",
         "RemoveClassesPatternsMatcher.java",
         "ResolvedJavacPluginProperties.java",
+        "ResourcesParameters.java",
         "StandardJavaFileManagerFactory.java",
         "TracingProcessorWrapper.java",
     ],
@@ -305,7 +305,6 @@ java_library(
 java_library_with_plugins(
     name = "rules",
     srcs = [
-        "AbstractDefaultJavaLibraryClasspaths.java",
         "BuiltInJavac.java",
         "CalculateClassAbi.java",
         "CalculateSourceAbi.java",
@@ -317,6 +316,7 @@ java_library_with_plugins(
         "DefaultJavaClassHashesProvider.java",
         "DefaultJavaLibrary.java",
         "DefaultJavaLibraryBuildable.java",
+        "DefaultJavaLibraryClasspaths.java",
         "DefaultJavaLibraryRules.java",
         "DefaultSourceOnlyAbiRuleInfo.java",
         "DefaultSourceOnlyAbiRuleInfoFactory.java",

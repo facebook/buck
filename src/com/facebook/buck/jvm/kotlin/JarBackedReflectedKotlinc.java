@@ -51,7 +51,7 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
 
   private static final String COMPILER_CLASS = "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler";
   private static final String EXIT_CODE_CLASS = "org.jetbrains.kotlin.cli.common.ExitCode";
-  private static final KotlincVersion VERSION = KotlincVersion.of("in memory");
+  private static final KotlincVersion VERSION = ImmutableKotlincVersion.of("in memory");
 
   private static final Function<Path, URL> PATH_TO_URL =
       p -> {

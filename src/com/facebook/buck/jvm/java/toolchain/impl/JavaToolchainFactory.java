@@ -34,13 +34,11 @@ public class JavaToolchainFactory implements ToolchainFactory<JavaToolchain> {
       ToolchainCreationContext context,
       TargetConfiguration toolchainTargetConfiguration) {
     return Optional.of(
-        JavaToolchain.builder()
-            .setJavacProvider(
-                context
-                    .getBuckConfig()
-                    .getView(JavaBuckConfig.class)
-                    .getJavacSpec(toolchainTargetConfiguration)
-                    .getJavacProvider())
-            .build());
+        JavaToolchain.of(
+            context
+                .getBuckConfig()
+                .getView(JavaBuckConfig.class)
+                .getJavacSpec(toolchainTargetConfiguration)
+                .getJavacProvider()));
   }
 }

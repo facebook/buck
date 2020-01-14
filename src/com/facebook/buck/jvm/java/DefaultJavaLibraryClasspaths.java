@@ -22,7 +22,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.common.BuildRules;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.JarBuildStepsFactory.JavaDependencyInfo;
@@ -38,9 +38,8 @@ import java.util.Objects;
 import org.immutables.builder.Builder;
 import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractDefaultJavaLibraryClasspaths {
+@BuckStyleValueWithBuilder
+abstract class DefaultJavaLibraryClasspaths {
 
   @Builder.Parameter
   abstract ActionGraphBuilder getActionGraphBuilder();
@@ -150,9 +149,9 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
   @Value.Lazy
   DefaultJavaLibraryClasspaths getSourceOnlyAbiClasspaths() {
     if (shouldCreateSourceOnlyAbi()) {
-      return (DefaultJavaLibraryClasspaths) this;
+      return this;
     }
-    return DefaultJavaLibraryClasspaths.builder()
+    return ImmutableDefaultJavaLibraryClasspaths.builder()
         .from(this)
         .setShouldCreateSourceOnlyAbi(true)
         .build();

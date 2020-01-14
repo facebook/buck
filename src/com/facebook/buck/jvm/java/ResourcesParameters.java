@@ -24,7 +24,7 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.pathformat.PathFormatter;
@@ -35,9 +35,8 @@ import java.nio.file.Path;
 import java.util.Optional;
 import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractResourcesParameters implements AddsToRuleKey {
+@BuckStyleValue
+public abstract class ResourcesParameters implements AddsToRuleKey {
   @Value.Default
   @AddToRuleKey
   public ImmutableSortedMap<String, SourcePath> getResources() {
@@ -48,7 +47,12 @@ abstract class AbstractResourcesParameters implements AddsToRuleKey {
   public abstract Optional<String> getResourcesRoot();
 
   public static ResourcesParameters of() {
-    return ResourcesParameters.builder().build();
+    return of(ImmutableSortedMap.of(), Optional.empty());
+  }
+
+  public static ResourcesParameters of(
+      ImmutableSortedMap<String, SourcePath> resources, Optional<String> resourcesRoot) {
+    return ImmutableResourcesParameters.of(resources, resourcesRoot);
   }
 
   public static ResourcesParameters create(
@@ -56,10 +60,9 @@ abstract class AbstractResourcesParameters implements AddsToRuleKey {
       SourcePathRuleFinder ruleFinder,
       ImmutableCollection<SourcePath> resources,
       Optional<Path> resourcesRoot) {
-    return ResourcesParameters.builder()
-        .setResources(getNamedResources(ruleFinder, projectFilesystem, resources))
-        .setResourcesRoot(resourcesRoot.map(Path::toString))
-        .build();
+    return ResourcesParameters.of(
+        getNamedResources(ruleFinder, projectFilesystem, resources),
+        resourcesRoot.map(Path::toString));
   }
 
   public static ImmutableSortedMap<String, SourcePath> getNamedResources(

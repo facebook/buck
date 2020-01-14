@@ -19,7 +19,7 @@ package com.facebook.buck.log;
 import static com.facebook.buck.util.MoreThrowables.getInitialCause;
 import static com.facebook.buck.util.MoreThrowables.getThrowableOrigin;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.concurrent.ThreadIdToCommandIdMapper;
@@ -33,9 +33,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.LogRecord;
 import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractErrorLogRecord {
+@BuckStyleValueWithBuilder
+public abstract class ErrorLogRecord {
 
   private static final ThreadIdToCommandIdMapper MAPPER =
       GlobalStateManager.singleton().getThreadIdToCommandIdMapper();
@@ -45,7 +44,7 @@ abstract class AbstractErrorLogRecord {
       GlobalStateManager.singleton().getCommandIdToIsSuperConsoleEnabledMapper();
   private static final CommandIdToIsRemoteExecutionMapper IS_REMOTE_EXECUTION_MAPPER =
       GlobalStateManager.singleton().getCommandIdToIsRemoteExecutionMapper();
-  private static final Logger LOG = Logger.get(AbstractErrorLogRecord.class);
+  private static final Logger LOG = Logger.get(ErrorLogRecord.class);
 
   public abstract LogRecord getRecord();
 
@@ -259,4 +258,10 @@ abstract class AbstractErrorLogRecord {
     }
     return "";
   }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends ImmutableErrorLogRecord.Builder {}
 }

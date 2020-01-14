@@ -14,21 +14,25 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.kotlin;
+package com.facebook.buck.jvm.java.toolchain;
 
-import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.core.toolchain.Toolchain;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.jvm.java.JavacProvider;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractKotlincVersion implements AddsToRuleKey {
-
-  @Value.Parameter
-  public abstract String getVersionString();
+/** The java toolchain. */
+@BuckStyleValue
+public interface JavaToolchain extends Toolchain {
+  String DEFAULT_NAME = "java-toolchain";
 
   @Override
-  public String toString() {
-    return getVersionString();
+  default String getName() {
+    return DEFAULT_NAME;
+  }
+
+  JavacProvider getJavacProvider();
+
+  static JavaToolchain of(JavacProvider javacProvider) {
+    return ImmutableJavaToolchain.of(javacProvider);
   }
 }

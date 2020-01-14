@@ -53,9 +53,7 @@ public class FauxScalaLibraryBuilder
                     JavacOptionsProvider.of(DEFAULT_JAVAC_OPTIONS))
                 .withToolchain(
                     JavaToolchain.DEFAULT_NAME,
-                    JavaToolchain.builder()
-                        .setJavacProvider(JavacSpec.builder().build().getJavacProvider())
-                        .build())
+                    JavaToolchain.of(JavacSpec.builder().build().getJavacProvider()))
                 .build(),
             scalaBuckConfig,
             null),

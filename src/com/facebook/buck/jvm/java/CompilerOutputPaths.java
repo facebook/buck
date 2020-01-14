@@ -18,18 +18,16 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /** Provides access to the various output paths for a java library. */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractCompilerOutputPaths {
+@BuckStyleValueWithBuilder
+public abstract class CompilerOutputPaths {
   public abstract Path getClassesDir();
 
   public abstract Path getOutputJarDirPath();
@@ -48,7 +46,7 @@ abstract class AbstractCompilerOutputPaths {
     Path genRoot = BuildTargetPaths.getGenPath(filesystem, target, "lib__%s__output");
     Path scratchRoot = BuildTargetPaths.getScratchPath(filesystem, target, "lib__%s__scratch");
 
-    return CompilerOutputPaths.builder()
+    return ImmutableCompilerOutputPaths.builder()
         .setClassesDir(scratchRoot.resolve("classes"))
         .setOutputJarDirPath(genRoot)
         .setAbiJarPath(

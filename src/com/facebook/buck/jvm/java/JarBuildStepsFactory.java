@@ -488,7 +488,7 @@ public class JarBuildStepsFactory
     if (JavaAbis.isSourceAbiTarget(buildTarget) || JavaAbis.isSourceOnlyAbiTarget(buildTarget)) {
       return Optional.of(CompilerOutputPaths.getAbiJarPath(buildTarget, filesystem));
     } else if (JavaAbis.isLibraryTarget(buildTarget)) {
-      return Optional.of(AbstractCompilerOutputPaths.getOutputJarPath(buildTarget, filesystem));
+      return Optional.of(CompilerOutputPaths.getOutputJarPath(buildTarget, filesystem));
     } else {
       throw new IllegalArgumentException();
     }

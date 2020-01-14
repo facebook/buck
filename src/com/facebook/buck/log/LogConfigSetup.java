@@ -16,14 +16,13 @@
 
 package com.facebook.buck.log;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.util.BuckConstant;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractLogConfigSetup {
+@BuckStyleValueWithBuilder
+public abstract class LogConfigSetup {
   // Total maximum amount of logs stored.
   public static final int DEFAULT_MAX_COUNT = 25;
 
@@ -40,7 +39,6 @@ abstract class AbstractLogConfigSetup {
   public static final LogConfigSetup DEFAULT_SETUP =
       LogConfigSetup.builder().setLogDir(BuckConstant.getBuckOutputPath().resolve("log")).build();
 
-  @Value.Parameter
   public abstract Path getLogDir();
 
   @Value.Default
@@ -66,4 +64,10 @@ abstract class AbstractLogConfigSetup {
   public Path getLogFilePath() {
     return getLogDir().resolve(getLogFilePrefix() + "%g.log");
   }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends ImmutableLogConfigSetup.Builder {}
 }

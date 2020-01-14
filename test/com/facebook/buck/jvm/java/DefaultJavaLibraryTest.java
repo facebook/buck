@@ -129,7 +129,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     annotationScenarioGenPath =
         filesystem
             .resolve(
-                AbstractCompilerOutputPaths.of(
+                CompilerOutputPaths.of(
                         BuildTargetFactory.newInstance("//android/java/src/com/facebook:fb"),
                         filesystem)
                     .getAnnotationPath())
@@ -485,11 +485,9 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     Path root = libraryOneRule.getProjectFilesystem().getRootPath();
     assertEquals(
         ImmutableSet.of(
-            root.resolve(
-                AbstractCompilerOutputPaths.getOutputJarPath(libraryOneTarget, filesystem)),
-            root.resolve(
-                AbstractCompilerOutputPaths.getOutputJarPath(libraryTwoTarget, filesystem)),
-            root.resolve(AbstractCompilerOutputPaths.getOutputJarPath(parentTarget, filesystem))),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(libraryOneTarget, filesystem)),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(libraryTwoTarget, filesystem)),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(parentTarget, filesystem))),
         resolve(parentRule.getTransitiveClasspaths(), graphBuilder.getSourcePathResolver()));
   }
 
@@ -813,35 +811,30 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         "A java_library that depends on //:libone should include only libone.jar in its "
             + "classpath when compiling itself.",
         ImmutableSet.of(
-            root.resolve(
-                AbstractCompilerOutputPaths.getOutputJarPath(nonIncludedTarget, filesystem))),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(nonIncludedTarget, filesystem))),
         resolve(getJavaLibrary(notIncluded).getOutputClasspaths(), pathResolver));
 
     assertEquals(
         ImmutableSet.of(
-            root.resolve(AbstractCompilerOutputPaths.getOutputJarPath(includedTarget, filesystem))),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(includedTarget, filesystem))),
         resolve(getJavaLibrary(included).getOutputClasspaths(), pathResolver));
 
     assertEquals(
         ImmutableSet.of(
-            root.resolve(AbstractCompilerOutputPaths.getOutputJarPath(includedTarget, filesystem)),
-            root.resolve(
-                AbstractCompilerOutputPaths.getOutputJarPath(libraryOneTarget, filesystem)),
-            root.resolve(AbstractCompilerOutputPaths.getOutputJarPath(includedTarget, filesystem))),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(includedTarget, filesystem)),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(libraryOneTarget, filesystem)),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(includedTarget, filesystem))),
         resolve(getJavaLibrary(libraryOne).getOutputClasspaths(), pathResolver));
 
     assertEquals(
         "//:libtwo exports its deps, so a java_library that depends on //:libtwo should include "
             + "both libone.jar and libtwo.jar in its classpath when compiling itself.",
         ImmutableSet.of(
-            root.resolve(
-                AbstractCompilerOutputPaths.getOutputJarPath(libraryOneTarget, filesystem)),
-            root.resolve(AbstractCompilerOutputPaths.getOutputJarPath(includedTarget, filesystem)),
-            root.resolve(
-                AbstractCompilerOutputPaths.getOutputJarPath(libraryOneTarget, filesystem)),
-            root.resolve(
-                AbstractCompilerOutputPaths.getOutputJarPath(libraryTwoTarget, filesystem)),
-            root.resolve(AbstractCompilerOutputPaths.getOutputJarPath(includedTarget, filesystem))),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(libraryOneTarget, filesystem)),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(includedTarget, filesystem)),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(libraryOneTarget, filesystem)),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(libraryTwoTarget, filesystem)),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(includedTarget, filesystem))),
         resolve(getJavaLibrary(libraryTwo).getOutputClasspaths(), pathResolver));
 
     assertEquals(
@@ -849,16 +842,11 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             + "parent.jar.",
         ImmutableSet.<Path>builder()
             .add(
-                root.resolve(
-                    AbstractCompilerOutputPaths.getOutputJarPath(includedTarget, filesystem)),
-                root.resolve(
-                    AbstractCompilerOutputPaths.getOutputJarPath(nonIncludedTarget, filesystem)),
-                root.resolve(
-                    AbstractCompilerOutputPaths.getOutputJarPath(libraryOneTarget, filesystem)),
-                root.resolve(
-                    AbstractCompilerOutputPaths.getOutputJarPath(libraryTwoTarget, filesystem)),
-                root.resolve(
-                    AbstractCompilerOutputPaths.getOutputJarPath(parentTarget, filesystem)))
+                root.resolve(CompilerOutputPaths.getOutputJarPath(includedTarget, filesystem)),
+                root.resolve(CompilerOutputPaths.getOutputJarPath(nonIncludedTarget, filesystem)),
+                root.resolve(CompilerOutputPaths.getOutputJarPath(libraryOneTarget, filesystem)),
+                root.resolve(CompilerOutputPaths.getOutputJarPath(libraryTwoTarget, filesystem)),
+                root.resolve(CompilerOutputPaths.getOutputJarPath(parentTarget, filesystem)))
             .build(),
         resolve(getJavaLibrary(parent).getTransitiveClasspaths(), pathResolver));
 
@@ -877,7 +865,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         "A java_library that depends on //:parent should include only parent.jar in its "
             + "-classpath when compiling itself.",
         ImmutableSet.of(
-            root.resolve(AbstractCompilerOutputPaths.getOutputJarPath(parentTarget, filesystem))),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(parentTarget, filesystem))),
         resolve(getJavaLibrary(parent).getOutputClasspaths(), pathResolver));
   }
 

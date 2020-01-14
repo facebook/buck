@@ -19,7 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
@@ -30,9 +30,8 @@ import java.util.Collection;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractCompilerParameters {
+@BuckStyleValueWithBuilder
+public abstract class CompilerParameters {
   @Value.Default
   public ImmutableSortedSet<Path> getSourceFilePaths() {
     return ImmutableSortedSet.of();
@@ -68,15 +67,17 @@ abstract class AbstractCompilerParameters {
   @Nullable
   public abstract SourceOnlyAbiRuleInfoFactory getSourceOnlyAbiRuleInfoFactory();
 
-  public abstract static class Builder {
-    public CompilerParameters.Builder setScratchPaths(
-        BuildTarget target, ProjectFilesystem projectFilesystem) {
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends ImmutableCompilerParameters.Builder {
+    public Builder setScratchPaths(BuildTarget target, ProjectFilesystem projectFilesystem) {
       CompilerOutputPaths paths = CompilerOutputPaths.of(target, projectFilesystem);
-      CompilerParameters.Builder builder = (CompilerParameters.Builder) this;
-      return builder.setOutputPaths(paths);
+      return this.setOutputPaths(paths);
     }
 
-    public CompilerParameters.Builder setSourceFileSourcePaths(
+    public Builder setSourceFileSourcePaths(
         ImmutableSortedSet<SourcePath> srcs,
         ProjectFilesystem projectFilesystem,
         SourcePathResolverAdapter resolver) {
@@ -84,15 +85,15 @@ abstract class AbstractCompilerParameters {
           srcs.stream()
               .map(src -> projectFilesystem.relativize(resolver.getAbsolutePath(src)))
               .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
-      return ((CompilerParameters.Builder) this).setSourceFilePaths(javaSrcs);
+      return this.setSourceFilePaths(javaSrcs);
     }
 
-    public CompilerParameters.Builder setClasspathEntriesSourcePaths(
+    public Builder setClasspathEntriesSourcePaths(
         Collection<SourcePath> compileTimeClasspathSourcePaths,
         SourcePathResolverAdapter resolver) {
       ImmutableSortedSet<Path> compileTimeClasspathPaths =
           resolver.getAllAbsolutePaths(compileTimeClasspathSourcePaths);
-      return ((CompilerParameters.Builder) this).setClasspathEntries(compileTimeClasspathPaths);
+      return this.setClasspathEntries(compileTimeClasspathPaths);
     }
   }
 }

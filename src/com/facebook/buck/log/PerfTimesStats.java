@@ -16,14 +16,13 @@
 
 package com.facebook.buck.log;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.log.views.JsonViews;
 import com.fasterxml.jackson.annotation.JsonView;
 import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractPerfTimesStats {
+@BuckStyleValueWithBuilder
+public abstract class PerfTimesStats {
 
   /** @return duration of the time spent in python, in milliseconds. */
   @JsonView(JsonViews.MachineReadableLog.class)
@@ -106,4 +105,10 @@ abstract class AbstractPerfTimesStats {
   public Long getInstallTimeMs() {
     return 0L;
   }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends ImmutablePerfTimesStats.Builder {}
 }
