@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
 import com.facebook.buck.core.rules.providers.lib.RunInfo;
+import com.facebook.buck.core.rules.providers.lib.TestInfo;
 import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
 
@@ -27,7 +28,13 @@ public class SkylarkBuiltInProvidersTest {
   @Test
   public void providersAreCorrect() {
     ImmutableMap<String, Object> expected =
-        ImmutableMap.of("DefaultInfo", DefaultInfo.PROVIDER, "RunInfo", RunInfo.PROVIDER);
+        ImmutableMap.of(
+            "DefaultInfo",
+            DefaultInfo.PROVIDER,
+            "RunInfo",
+            RunInfo.PROVIDER,
+            "TestInfo",
+            TestInfo.PROVIDER);
     assertEquals(expected, SkylarkBuiltInProviders.PROVIDERS);
   }
 }

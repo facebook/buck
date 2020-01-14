@@ -33,7 +33,9 @@ import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.impl.RuleAnalysisLegacyBuildRuleView;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.lib.RunInfo;
+import com.facebook.buck.core.rules.providers.lib.TestInfo;
 import com.facebook.buck.core.rules.tool.RuleAnalysisLegacyBinaryBuildRuleView;
+import com.facebook.buck.core.rules.tool.RuleAnalysisLegacyTestBuildRuleView;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.google.common.collect.ImmutableCollection;
@@ -84,10 +86,10 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer
 
       ProviderInfoCollection providerInfos = result.getProviderInfos();
       return providerInfos
-          .get(RunInfo.PROVIDER)
+          .get(TestInfo.PROVIDER)
           .<BuildRule>map(
-              info ->
-                  new RuleAnalysisLegacyBinaryBuildRuleView(
+              testInfo ->
+                  new RuleAnalysisLegacyTestBuildRuleView(
                       legacyRuleDescription.getConstructorArgType().getTypeName(),
                       result.getBuildTarget(),
                       correspondingAction,
@@ -96,13 +98,26 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer
                       providerInfos))
           .orElseGet(
               () ->
-                  new RuleAnalysisLegacyBuildRuleView(
-                      legacyRuleDescription.getConstructorArgType().getTypeName(),
-                      result.getBuildTarget(),
-                      correspondingAction,
-                      graphBuilder,
-                      targetNode.getFilesystem(),
-                      providerInfos));
+                  providerInfos
+                      .get(RunInfo.PROVIDER)
+                      .<BuildRule>map(
+                          runInfo ->
+                              new RuleAnalysisLegacyBinaryBuildRuleView(
+                                  legacyRuleDescription.getConstructorArgType().getTypeName(),
+                                  result.getBuildTarget(),
+                                  correspondingAction,
+                                  graphBuilder,
+                                  targetNode.getFilesystem(),
+                                  providerInfos))
+                      .orElseGet(
+                          () ->
+                              new RuleAnalysisLegacyBuildRuleView(
+                                  legacyRuleDescription.getConstructorArgType().getTypeName(),
+                                  result.getBuildTarget(),
+                                  correspondingAction,
+                                  graphBuilder,
+                                  targetNode.getFilesystem(),
+                                  providerInfos)));
     }
 
     return delegate.transform(

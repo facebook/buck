@@ -18,10 +18,16 @@ package com.facebook.buck.core.rules.analysis.impl;
 
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.artifact.BuildArtifactFactoryForTests;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
+import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
+import com.facebook.buck.test.TestResultSummary;
+import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -29,9 +35,12 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.events.Location;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -457,6 +466,201 @@ public class RuleAnalysisRulesBuildIntegrationTest {
 
     assertEquals(String.format(expected, "0"), successRun.getStdout().trim());
     assertEquals(String.format(expected, "100"), failureRun.getStdout().trim());
+  }
+
+  @Test
+  public void ruleAnalysisRulesReturningTestInfoRunWithInternalRunner() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "testable_rules", tmp);
+
+    String successTarget =
+        Platform.detect().getType().isWindows()
+            ? "//:testable_bat_success"
+            : "//:testable_sh_success";
+    String failureTarget =
+        Platform.detect().getType().isWindows()
+            ? "//:testable_bat_failure"
+            : "//:testable_sh_failure";
+
+    workspace.setUp();
+
+    Path successJson =
+        workspace
+            .getProjectFileSystem()
+            .createTempFile("", "test-results-success.json")
+            .toAbsolutePath();
+    Path failureJson =
+        workspace
+            .getProjectFileSystem()
+            .createTempFile("", "test-results-failure.json")
+            .toAbsolutePath();
+
+    workspace
+        .runBuckCommand("test", successTarget, "--output-test-events-to-file=" + successJson)
+        .assertSuccess();
+
+    workspace
+        .runBuckCommand("test", failureTarget, "--output-test-events-to-file=" + failureJson)
+        .assertTestFailure();
+
+    validateTestResults(
+        workspace,
+        successJson,
+        successTarget,
+        true,
+        ImmutableList.of("foo", "bar"),
+        ImmutableList.of("foo@example.com", "bar@example.com"),
+        "testable_rule",
+        BuildTargetFactory.newInstance(successTarget).getShortName(),
+        0);
+    validateTestResults(
+        workspace,
+        failureJson,
+        failureTarget,
+        false,
+        ImmutableList.of("foo", "bar"),
+        ImmutableList.of("foo@example.com", "bar@example.com"),
+        "testable_rule",
+        BuildTargetFactory.newInstance(failureTarget).getShortName(),
+        100);
+  }
+
+  private void validateTestResults(
+      ProjectWorkspace workspace,
+      Path eventJsonPath,
+      String expectedTarget,
+      boolean expectedSuccess,
+      ImmutableList<String> labels,
+      ImmutableList<String> contacts,
+      String testName,
+      String testCaseName,
+      int exitCode)
+      throws IOException {
+
+    ImmutableList<JsonNode> failureResults = parseTestResults(eventJsonPath);
+
+    // Useful deserializers aren't present for these events.... bleh.
+    assertEquals(1, failureResults.size());
+    JsonNode failureResult = failureResults.get(0).get("results");
+
+    BuildTarget actualTarget =
+        BuildTargetFactory.newInstance(
+            failureResult.get("buildTarget").get("baseName").asText(),
+            failureResult.get("buildTarget").get("shortName").asText());
+
+    assertEquals(BuildTargetFactory.newInstance(expectedTarget), actualTarget);
+
+    assertEquals(expectedSuccess, failureResult.get("success").asBoolean());
+    assertEquals(expectedSuccess ? 0 : 1, failureResult.get("failureCount").asInt());
+    assertEquals(1, failureResult.get("totalNumberOfTests").asInt());
+    assertEquals(
+        contacts,
+        ImmutableList.copyOf(failureResult.get("contacts").elements()).stream()
+            .map(JsonNode::asText)
+            .collect(ImmutableList.toImmutableList()));
+    assertEquals(
+        labels,
+        ImmutableList.copyOf(failureResult.get("labels").elements()).stream()
+            .map(JsonNode::asText)
+            .collect(ImmutableList.toImmutableList()));
+
+    JsonNode testCase = failureResult.get("testCases").get(0);
+    assertEquals(expectedTarget, testCase.get("testCaseName").asText());
+    assertEquals(0, testCase.get("skippedCount").asInt());
+    assertEquals(expectedSuccess ? 0 : 1, testCase.get("failureCount").asInt());
+    assertEquals(expectedSuccess, testCase.get("success").asBoolean());
+
+    TestResultSummary result =
+        ObjectMappers.READER.treeToValue(
+            testCase.get("testResults").get(0), TestResultSummary.class);
+    assertEquals(testCaseName, result.getTestCaseName());
+    assertEquals(expectedSuccess ? ResultType.SUCCESS : ResultType.FAILURE, result.getType());
+    assertEquals(testName, result.getTestName());
+
+    String rootString = workspace.getProjectFileSystem().getRootPath().toAbsolutePath().toString();
+    ImmutableList<String> expected =
+        ImmutableList.of(
+            "PWD: " + rootString,
+            "pwd: " + rootString,
+            "ENV: some-string",
+            "EXIT_CODE: " + exitCode,
+            "arg[foo]",
+            "arg[1]",
+            "arg[//foo:bar]");
+
+    assertEquals(expected, ImmutableList.copyOf(result.getStdOut().trim().split("\\r?\n")));
+  }
+
+  private ImmutableList<JsonNode> parseTestResults(Path pathToJson) throws IOException {
+    return Files.readAllLines(pathToJson, Charsets.UTF_8).stream()
+        .map(
+            line -> {
+              try {
+                return ObjectMappers.READER.readTree(line);
+              } catch (IOException e) {
+                throw new RuntimeException(e);
+              }
+            })
+        .filter(node -> node.get("type").asText().equals("ResultsAvailable"))
+        .collect(ImmutableList.toImmutableList());
+  }
+
+  @Test
+  public void ruleAnalysisRulesReturningTestInfoRunWithExternalRunner() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "testable_rules", tmp);
+    String testRunner =
+        workspace
+            .resolve(Platform.detect().getType().isWindows() ? "runner.bat" : "runner.sh")
+            .toAbsolutePath()
+            .toString();
+    workspace.addBuckConfigLocalOption("test", "external_runner", testRunner);
+
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:testable_sh_success");
+
+    ProcessResult successRun =
+        workspace.runBuckCommand("test", target.getFullyQualifiedName()).assertSuccess();
+
+    ExternalTestRunnerTestSpec spec =
+        ExternalTestRunnerTestSpec.builder()
+            .setTarget(target)
+            .setType("json")
+            .setCwd(tmp.getRoot())
+            .setEnv(ImmutableMap.of("CUSTOM_ENV", "some-string", "EXIT_CODE", "0"))
+            .setCommand(
+                ImmutableList.of(
+                    tmp.getRoot()
+                        .resolve(
+                            BuildPaths.getGenDir(workspace.getProjectFileSystem(), target)
+                                .resolve("testable.sh"))
+                        .toString(),
+                    "foo",
+                    "1",
+                    "//foo:bar"))
+            .setLabels(ImmutableList.of("foo", "bar"))
+            .setContacts(ImmutableList.of("foo@example.com", "bar@example.com"))
+            .build();
+    JsonNode expected =
+        ObjectMappers.READER.readTree(ObjectMappers.WRITER.writeValueAsString(spec));
+
+    JsonNode allTests = ObjectMappers.READER.readTree(successRun.getStdout());
+
+    assertTrue(allTests.isArray());
+    assertEquals(1, allTests.size());
+    assertEquals(expected, allTests.get(0));
+  }
+
+  @Test
+  public void ruleAnalysisRulesReturningTestInfoWithoutRunInfoAreErrors()
+      throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "testable_rules", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckTest("//:without_run").assertFailure();
+    assertThat(result.getStderr(), Matchers.containsString("without a RunInfo provider"));
   }
 
   private static class RuleOutput {
