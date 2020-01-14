@@ -22,7 +22,13 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
+import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildPaths;
+import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
+import com.facebook.buck.core.rules.actions.lib.WriteAction;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLine;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgException;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgs;
@@ -34,6 +40,7 @@ import com.facebook.buck.core.starlark.rule.args.CommandLineArgsBuilder;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
@@ -162,12 +169,23 @@ public class RunInfoTest {
     Path txtPath = Paths.get("subdir", "file.txt");
     try (Mutability mut = Mutability.create("test")) {
       Artifact artifact = ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, txtPath));
+
+      BuildTarget target = BuildTargetFactory.newInstance("//:some_rule");
+      ActionRegistryForTests registry = new ActionRegistryForTests(target, filesystem);
+      Artifact artifact2 = registry.declareArtifact(Paths.get("out.txt"), Location.BUILTIN);
+      OutputArtifact artifact2Output =
+          (OutputArtifact) artifact2.asOutputArtifact(Location.BUILTIN);
+      Path artifact2Path = BuildPaths.getGenDir(filesystem, target).resolve("out.txt");
+
       Environment environment = getEnv(mut);
       SkylarkDict<String, String> env =
           SkylarkDict.of(environment, "foo", "foo_val", "bar", "bar_val");
       SkylarkList.MutableList<Object> args =
           SkylarkList.MutableList.of(
-              environment, CommandLineArgsFactory.from(ImmutableList.of("arg1", "arg2")), artifact);
+              environment,
+              CommandLineArgsFactory.from(ImmutableList.of("arg1", "arg2")),
+              artifact,
+              artifact2Output);
 
       RunInfo info = RunInfo.instantiateFromSkylark(env, args);
 
@@ -175,13 +193,25 @@ public class RunInfoTest {
       args.add("arg3", Location.BUILTIN, mut);
       env.pop("foo", "", Location.BUILTIN, environment);
 
+      new WriteAction(
+          registry, ImmutableSortedSet.of(), ImmutableSortedSet.of(artifact2), "contents", false);
+
       CommandLine cli =
           new ExecCompatibleCommandLineBuilder(new ArtifactFilesystem(filesystem)).build(info);
 
-      assertEquals(ImmutableList.of("arg1", "arg2", txtPath.toString()), cli.getCommandLineArgs());
+      assertEquals(
+          ImmutableList.of("arg1", "arg2", txtPath.toString(), artifact2Path.toString()),
+          cli.getCommandLineArgs());
       assertEquals(
           ImmutableMap.of("foo", "foo_val", "bar", "bar_val"), cli.getEnvironmentVariables());
-      assertEquals(3, info.getEstimatedArgsCount());
+      assertEquals(4, info.getEstimatedArgsCount());
+
+      ImmutableList.Builder<Artifact> inputs = ImmutableList.builder();
+      ImmutableList.Builder<Artifact> outputs = ImmutableList.builder();
+      info.visitInputsAndOutputs(inputs::add, outputs::add);
+
+      assertEquals(ImmutableList.of(artifact), inputs.build());
+      assertEquals(ImmutableList.of(artifact2), outputs.build());
     }
   }
 }

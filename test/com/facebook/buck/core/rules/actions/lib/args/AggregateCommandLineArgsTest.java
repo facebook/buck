@@ -23,9 +23,13 @@ import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.core.artifact.BuildArtifactFactoryForTests;
 import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
+import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
+import com.facebook.buck.core.rules.actions.lib.WriteAction;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.providers.lib.ImmutableRunInfo;
 import com.facebook.buck.core.rules.providers.lib.RunInfo;
@@ -37,8 +41,10 @@ import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import com.google.devtools.build.lib.events.Location;
+import com.google.devtools.build.lib.syntax.EvalException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -53,19 +59,28 @@ public class AggregateCommandLineArgsTest {
   }
 
   @Test
-  public void returnsProperStreamAndArgCount() {
+  public void returnsProperStreamAndArgCount() throws EvalException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     Artifact path1 =
         ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("some_bin")));
     Artifact path2 =
         ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("other_file")));
 
+    BuildTarget target = BuildTargetFactory.newInstance("//:some_rule");
+    ActionRegistryForTests registry = new ActionRegistryForTests(target, filesystem);
+    Artifact artifact3 = registry.declareArtifact(Paths.get("out.txt"), Location.BUILTIN);
+    OutputArtifact artifact3Output = (OutputArtifact) artifact3.asOutputArtifact(Location.BUILTIN);
+    Path artifact3Path = BuildPaths.getGenDir(filesystem, target).resolve("out.txt");
+
     CommandLineArgs args =
         new AggregateCommandLineArgs(
             ImmutableList.of(
                 createRunInfo(ImmutableSortedMap.of("FOO", "foo_val"), ImmutableList.of(path1)),
                 createRunInfo(ImmutableSortedMap.of("BAZ", "baz_val"), ImmutableList.of(path2, 1)),
-                CommandLineArgsFactory.from(ImmutableList.of("foo", "bar"))));
+                CommandLineArgsFactory.from(ImmutableList.of("foo", "bar", artifact3Output))));
+
+    new WriteAction(
+        registry, ImmutableSortedSet.of(), ImmutableSortedSet.of(artifact3), "contents", false);
 
     CommandLine cli =
         new ExecCompatibleCommandLineBuilder(new ArtifactFilesystem(filesystem)).build(args);
@@ -76,11 +91,19 @@ public class AggregateCommandLineArgsTest {
             "other_file",
             "1",
             "foo",
-            "bar"),
+            "bar",
+            artifact3Path.toString()),
         cli.getCommandLineArgs());
-    assertEquals(5, args.getEstimatedArgsCount());
+    assertEquals(6, args.getEstimatedArgsCount());
     assertEquals(
         ImmutableSortedMap.of("FOO", "foo_val", "BAZ", "baz_val"), cli.getEnvironmentVariables());
+
+    ImmutableSortedSet.Builder<Artifact> inputs = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<Artifact> outputs = ImmutableSortedSet.naturalOrder();
+    args.visitInputsAndOutputs(inputs::add, outputs::add);
+
+    assertEquals(ImmutableSortedSet.of(path1, path2), inputs.build());
+    assertEquals(ImmutableSortedSet.of(artifact3), outputs.build());
   }
 
   @Test

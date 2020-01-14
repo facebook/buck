@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.rules.providers.lib;
 
+import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgs;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgsFactory;
@@ -31,6 +32,7 @@ import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 import com.google.devtools.build.lib.syntax.SkylarkList;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 /**
@@ -96,5 +98,10 @@ public abstract class RunInfo extends BuiltInProviderInfo<RunInfo> implements Co
   @Override
   public int getEstimatedArgsCount() {
     return args().getEstimatedArgsCount();
+  }
+
+  @Override
+  public void visitInputsAndOutputs(Consumer<Artifact> inputs, Consumer<Artifact> outputs) {
+    args().visitInputsAndOutputs(inputs, outputs);
   }
 }

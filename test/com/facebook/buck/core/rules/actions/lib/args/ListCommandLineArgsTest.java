@@ -23,9 +23,13 @@ import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.core.artifact.BuildArtifactFactoryForTests;
 import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
+import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
+import com.facebook.buck.core.rules.actions.lib.WriteAction;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -34,8 +38,10 @@ import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import com.google.devtools.build.lib.events.Location;
+import com.google.devtools.build.lib.syntax.EvalException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -48,21 +54,43 @@ public class ListCommandLineArgsTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
-  public void returnsProperStreamAndSize() {
+  public void returnsProperStreamAndSize() throws EvalException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+
     Artifact path1 =
         ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("some_bin")));
     Artifact path2 =
         ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("other_file")));
-    CommandLineArgs args = new ListCommandLineArgs(ImmutableList.of(path1, 1, "foo", path2));
+    BuildTarget target = BuildTargetFactory.newInstance("//:some_rule");
+    ActionRegistryForTests registry = new ActionRegistryForTests(target, filesystem);
+    Artifact artifact3 = registry.declareArtifact(Paths.get("out.txt"), Location.BUILTIN);
+    OutputArtifact artifact3Output = (OutputArtifact) artifact3.asOutputArtifact(Location.BUILTIN);
+    Path artifact3Path = BuildPaths.getGenDir(filesystem, target).resolve("out.txt");
+
+    CommandLineArgs args =
+        new ListCommandLineArgs(ImmutableList.of(path1, 1, "foo", path2, artifact3Output));
+
+    new WriteAction(
+        registry, ImmutableSortedSet.of(), ImmutableSortedSet.of(artifact3), "contents", false);
 
     assertEquals(
         ImmutableList.of(
-            filesystem.resolve("some_bin").toAbsolutePath().toString(), "1", "foo", "other_file"),
+            filesystem.resolve("some_bin").toAbsolutePath().toString(),
+            "1",
+            "foo",
+            "other_file",
+            artifact3Path.toString()),
         new ExecCompatibleCommandLineBuilder(new ArtifactFilesystem(filesystem))
             .build(args)
             .getCommandLineArgs());
-    assertEquals(4, args.getEstimatedArgsCount());
+    assertEquals(5, args.getEstimatedArgsCount());
+
+    ImmutableSortedSet.Builder<Artifact> inputs = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<Artifact> outputs = ImmutableSortedSet.naturalOrder();
+    args.visitInputsAndOutputs(inputs::add, outputs::add);
+
+    assertEquals(ImmutableSortedSet.of(path1, path2), inputs.build());
+    assertEquals(ImmutableSortedSet.of(artifact3), outputs.build());
   }
 
   @Test

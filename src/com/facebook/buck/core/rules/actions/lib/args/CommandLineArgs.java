@@ -26,6 +26,7 @@ import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSortedMap;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 /**
@@ -107,4 +108,10 @@ public interface CommandLineArgs extends AddsToRuleKey {
               return o;
             });
   }
+
+  /**
+   * Add any artifacts from {@link #getArgs()} to {@code inputs} and {@code outputs}, inferring
+   * based on type
+   */
+  void visitInputsAndOutputs(Consumer<Artifact> inputs, Consumer<Artifact> outputs);
 }

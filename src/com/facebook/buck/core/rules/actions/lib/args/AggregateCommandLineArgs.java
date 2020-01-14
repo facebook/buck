@@ -16,9 +16,11 @@
 
 package com.facebook.buck.core.rules.actions.lib.args;
 
+import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 /**
@@ -37,6 +39,11 @@ class AggregateCommandLineArgs implements CommandLineArgs {
   @Override
   public int getEstimatedArgsCount() {
     return args.stream().map(CommandLineArgs::getEstimatedArgsCount).reduce(0, Integer::sum);
+  }
+
+  @Override
+  public void visitInputsAndOutputs(Consumer<Artifact> inputs, Consumer<Artifact> outputs) {
+    args.forEach(arg -> arg.visitInputsAndOutputs(inputs, outputs));
   }
 
   @Override

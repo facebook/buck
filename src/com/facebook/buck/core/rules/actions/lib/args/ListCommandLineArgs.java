@@ -16,8 +16,11 @@
 
 package com.facebook.buck.core.rules.actions.lib.args;
 
+import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.artifact.OutputArtifact;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 /**
@@ -55,5 +58,17 @@ class ListCommandLineArgs implements CommandLineArgs {
   @Override
   public int getEstimatedArgsCount() {
     return objects.size();
+  }
+
+  @Override
+  public void visitInputsAndOutputs(Consumer<Artifact> inputs, Consumer<Artifact> outputs) {
+    objects.forEach(
+        arg -> {
+          if (arg instanceof Artifact) {
+            inputs.accept((Artifact) arg);
+          } else if (arg instanceof OutputArtifact) {
+            outputs.accept(((OutputArtifact) arg).getArtifact());
+          }
+        });
   }
 }

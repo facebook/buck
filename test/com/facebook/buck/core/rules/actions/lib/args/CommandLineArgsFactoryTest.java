@@ -140,7 +140,12 @@ public class CommandLineArgsFactoryTest {
 
     CommandLineArgs args =
         CommandLineArgsFactory.from(ImmutableList.of(artifact.asOutputArtifact(Location.BUILTIN)));
-    Object arg = args.getArgs().findFirst().get();
-    assertEquals(artifact.asOutputArtifact(Location.BUILTIN), arg);
+
+    ImmutableList.Builder<Artifact> inputs = ImmutableList.builder();
+    ImmutableList.Builder<Artifact> outputs = ImmutableList.builder();
+    args.visitInputsAndOutputs(inputs::add, outputs::add);
+
+    assertEquals(ImmutableList.of(), inputs.build());
+    assertEquals(ImmutableList.of(artifact), outputs.build());
   }
 }
