@@ -126,7 +126,8 @@ public class PrebuiltPythonLibraryDescription
         context.getProjectFilesystem(),
         params,
         args.getBinarySrc(),
-        args.isExcludeDepsFromMergedLinking());
+        args.isExcludeDepsFromMergedLinking(),
+        args.isCompile());
   }
 
   @Override
@@ -165,6 +166,11 @@ public class PrebuiltPythonLibraryDescription
     @Value.Default
     default boolean isIgnoreCompileErrors() {
       return false;
+    }
+
+    @Value.Default
+    default boolean isCompile() {
+      return true;
     }
   }
 }

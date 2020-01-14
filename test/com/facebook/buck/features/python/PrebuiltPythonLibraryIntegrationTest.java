@@ -41,6 +41,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
+import java.util.stream.Collectors;
 import org.hamcrest.Matchers;
 import org.hamcrest.comparator.ComparatorMatcherBuilder;
 import org.junit.Assert;
@@ -142,5 +143,33 @@ public class PrebuiltPythonLibraryIntegrationTest {
         Matchers.containsInAnyOrder(
             Matchers.matchesRegex("package(/__pycache__)?/file(.cpython-3[0-9])?.pyc"),
             Matchers.matchesRegex("package(/__pycache__)?/__init__(.cpython-3[0-9])?.pyc")));
+  }
+
+  @Test
+  public void compileOptOut() throws IOException {
+    Path py3 = PythonTestUtils.assumeInterpreter("python3");
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
+    Path binPath =
+        filesystem.relativize(
+            workspace.buildAndReturnOutput(
+                "-c",
+                "python.interpreter=" + py3,
+                "-c",
+                "python.pex_flags=--directory",
+                "-c",
+                "python.package_style=" + PythonBuckConfig.PackageStyle.STANDALONE,
+                "//:main_whl_compile_opt_out"));
+    assertThat(
+        workspace.getProjectFileSystem().asView()
+            .getFilesUnderPath(binPath, EnumSet.noneOf(FileVisitOption.class)).stream()
+            .map(binPath::relativize)
+            .map(Path::toString)
+            .collect(Collectors.toList()),
+        Matchers.everyItem(
+            Matchers.not(
+                Matchers.anyOf(
+                    Matchers.matchesRegex("package(/__pycache__)?/file(.cpython-3[0-9])?.pyc"),
+                    Matchers.matchesRegex(
+                        "package(/__pycache__)?/__init__(.cpython-3[0-9])?.pyc")))));
   }
 }

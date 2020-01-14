@@ -13,6 +13,12 @@ prebuilt_python_library(
     binary_src = glob(["dist/package-0.1-py*.whl"])[0],
 )
 
+prebuilt_python_library(
+    name = "python_whl_no_compile",
+    compile = False,
+    binary_src = glob(["dist/package-0.1-py*.whl"])[0],
+)
+
 python_binary(
     name = "main_egg",
     main = "main.py",
@@ -23,4 +29,11 @@ python_binary(
     name = "main_whl",
     main = "main.py",
     deps = [":python_whl"],
+)
+
+python_binary(
+    name = "main_whl_compile_opt_out",
+    main_module = "foo",
+    compile = True,
+    deps = [":python_whl_no_compile"],
 )
