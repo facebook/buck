@@ -369,7 +369,6 @@ public class ParserWithConfigurableAttributesTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void testParseBuildFilesForTargetsWithOverlappingTargets() throws Exception {
     // Execute buildTargetGraphForBuildTargets() with multiple targets that require parsing the same
     // build file.
@@ -2717,7 +2716,6 @@ public class ParserWithConfigurableAttributesTest {
 
     // We know that the ProjectBuildFileParser emits a Started event when it parses a build file.
     @Subscribe
-    @SuppressWarnings("unused")
     public void call(ParseBuckFileEvent.Started parseEvent) {
       calls++;
     }
