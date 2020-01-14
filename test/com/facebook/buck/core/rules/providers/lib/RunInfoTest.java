@@ -150,6 +150,7 @@ public class RunInfoTest {
             .build();
 
     FuncallExpression ast = new FuncallExpression(new Identifier("RunInfo"), ImmutableList.of());
+    ast.setLocation(Location.BUILTIN);
 
     Object raw = ast.eval(env);
     assertTrue(raw instanceof RunInfo);

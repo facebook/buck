@@ -16,11 +16,13 @@
 
 package com.facebook.buck.core.starlark.compatible;
 
+import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.Param;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import com.google.devtools.build.lib.syntax.StarlarkSemantics;
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandle;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -32,10 +34,12 @@ class BuckStarlarkCallable implements SkylarkCallable {
 
   private final String methodName;
   private final Param[] skylarkParams;
+  private final boolean useLocation;
 
-  private BuckStarlarkCallable(String methodName, Param[] skylarkParams) {
+  private BuckStarlarkCallable(String methodName, Param[] skylarkParams, boolean useLocation) {
     this.methodName = methodName;
     this.skylarkParams = skylarkParams;
+    this.useLocation = useLocation;
   }
 
   /**
@@ -56,6 +60,14 @@ class BuckStarlarkCallable implements SkylarkCallable {
       List<String> namedParams,
       List<String> defaultSkylarkValues) {
     Class<?>[] parameters = method.type().parameterArray();
+    boolean useLocation = false;
+    // Use class equality here because otherwise a last argument of 'Object' could get confused
+    // for a location
+    if (parameters.length > 0 && parameters[parameters.length - 1] == Location.class) {
+      useLocation = true;
+      parameters = Arrays.copyOf(parameters, parameters.length - 1);
+    }
+
     Param[] skylarkParams = new Param[parameters.length];
 
     if (namedParams.size() > parameters.length) {
@@ -82,7 +94,7 @@ class BuckStarlarkCallable implements SkylarkCallable {
       skylarkParams[i] = BuckStarlarkParam.fromParam(parameters[i], namedParam, defaultValue);
     }
 
-    return new BuckStarlarkCallable(name, skylarkParams);
+    return new BuckStarlarkCallable(name, skylarkParams, useLocation);
   }
 
   @Override
@@ -137,7 +149,7 @@ class BuckStarlarkCallable implements SkylarkCallable {
 
   @Override
   public boolean useLocation() {
-    return false;
+    return useLocation;
   }
 
   @Override

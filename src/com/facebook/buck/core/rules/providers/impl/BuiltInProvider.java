@@ -27,6 +27,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.devtools.build.lib.events.Location;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -154,10 +155,19 @@ public class BuiltInProvider<T extends BuiltInProviderInfo<T>> extends BuckStarl
                   infoApiClass.getSimpleName()));
         }
         if (method.getParameterCount() != argNames.size()) {
-          throw new IllegalArgumentException(
-              String.format(
-                  "Method %s on %s must take %s arguments.",
-                  SKYLARK_CONSTRUCTOR_METHOD_NAME, infoApiClass.getSimpleName(), argNames.size()));
+          // Skylark constructors may take a single extra argument of type `Location`, and it must
+          // be the last argument.
+          if (method.getParameterCount() != argNames.size() + 1
+              || method.getParameterTypes()[method.getParameterTypes().length - 1]
+                  != Location.class) {
+            throw new IllegalArgumentException(
+                String.format(
+                    "Method %s on %s must take %s arguments, with an optional additional "
+                        + "Location parameter as the last parameter",
+                    SKYLARK_CONSTRUCTOR_METHOD_NAME,
+                    infoApiClass.getSimpleName(),
+                    argNames.size()));
+          }
         }
         return method;
       }

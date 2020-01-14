@@ -25,7 +25,9 @@ import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.Argument;
+import com.google.devtools.build.lib.syntax.BuildFileAST;
 import com.google.devtools.build.lib.syntax.DictionaryLiteral;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
@@ -33,8 +35,10 @@ import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.Identifier;
 import com.google.devtools.build.lib.syntax.IntegerLiteral;
 import com.google.devtools.build.lib.syntax.Mutability;
+import com.google.devtools.build.lib.syntax.ParserInputSource;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 import com.google.devtools.build.lib.syntax.StringLiteral;
+import com.google.devtools.build.lib.vfs.PathFragment;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import java.util.Set;
@@ -118,6 +122,28 @@ public class BuiltInProviderInfoTest {
       Map<String, String> validated = s.getContents(String.class, String.class, "stuff");
       return new ImmutableSomeInfoWithInstantiate(
           ImmutableList.copyOf(validated.keySet()), Integer.toString(myInfo));
+    }
+  }
+
+  @ImmutableInfo(
+      args = {"str_list", "my_info"},
+      defaultSkylarkValues = {"{\"foo\":\"bar\"}", "1"})
+  public abstract static class SomeInfoWithInstantiateAndLocation
+      extends BuiltInProviderInfo<SomeInfoWithInstantiateAndLocation> {
+    public static final BuiltInProvider<SomeInfoWithInstantiateAndLocation> PROVIDER =
+        BuiltInProvider.of(ImmutableSomeInfoWithInstantiateAndLocation.class);
+
+    public abstract ImmutableList<String> str_list();
+
+    public abstract String myInfo();
+
+    public abstract Location location();
+
+    public static SomeInfoWithInstantiateAndLocation instantiateFromSkylark(
+        SkylarkDict<String, String> s, int myInfo, Location location) throws EvalException {
+      Map<String, String> validated = s.getContents(String.class, String.class, "stuff");
+      return new ImmutableSomeInfoWithInstantiateAndLocation(
+          ImmutableList.copyOf(validated.keySet()), Integer.toString(myInfo), location);
     }
   }
 
@@ -329,5 +355,39 @@ public class BuiltInProviderInfoTest {
     thrown.expect(EvalException.class);
     thrown.expectMessage("expected value of type 'int'");
     ast.eval(env);
+  }
+
+  @Test
+  public void passesLocationWhenInstantiatingFromStaticMethod()
+      throws InterruptedException, EvalException {
+    Mutability mutability = Mutability.create("providertest");
+    Location location =
+        Location.fromPathAndStartColumn(
+            PathFragment.create("foo/bar.bzl"), 0, 0, new Location.LineAndColumn(1, 1));
+
+    Environment env =
+        Environment.builder(mutability)
+            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
+            .setGlobals(
+                Environment.GlobalFrame.createForBuiltins(
+                    ImmutableMap.of(
+                        SomeInfoWithInstantiateAndLocation.PROVIDER.getName(),
+                        SomeInfoWithInstantiateAndLocation.PROVIDER)))
+            .build();
+
+    Object o =
+        BuildFileAST.parseSkylarkFileWithoutImports(
+                ParserInputSource.create(
+                    "SomeInfoWithInstantiateAndLocation(my_info=1)",
+                    PathFragment.create("foo/bar.bzl")),
+                env.getEventHandler())
+            .eval(env);
+
+    assertThat(o, Matchers.instanceOf(SomeInfoWithInstantiateAndLocation.class));
+    SomeInfoWithInstantiateAndLocation someInfo = (SomeInfoWithInstantiateAndLocation) o;
+    assertEquals(ImmutableList.of("foo"), someInfo.str_list());
+    assertEquals("1", someInfo.myInfo());
+    assertEquals(location.getPath(), someInfo.location().getPath());
+    assertEquals(location.getStartLineAndColumn(), someInfo.location().getStartLineAndColumn());
   }
 }
