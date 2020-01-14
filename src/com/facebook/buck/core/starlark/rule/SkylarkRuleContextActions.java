@@ -43,7 +43,6 @@ import java.nio.file.InvalidPathException;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 /**
  * Container for all methods that create actions within the implementation function of a user
@@ -110,13 +109,11 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
     return builder;
   }
 
-  private static Object validateStringOrArg(Object arg) throws CommandLineArgException {
+  private static Object getImmutableArg(Object arg) throws CommandLineArgException {
     if (arg instanceof CommandLineArgsBuilder) {
       return ((CommandLineArgsBuilder) arg).build();
-    } else if (arg instanceof CommandLineArgs || arg instanceof String) {
-      return arg;
     } else {
-      throw new CommandLineArgException(arg);
+      return arg;
     }
   }
 
@@ -124,7 +121,6 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
   public void run(
       SkylarkList<Artifact> outputs,
       SkylarkList<Artifact> inputs,
-      Object executable,
       SkylarkList<Object> arguments,
       Object shortName,
       Object userEnv,
@@ -142,11 +138,15 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
     try {
       argumentsValidated =
           CommandLineArgsFactory.from(
-              Stream.concat(
-                      Stream.of(CommandLineArgsFactory.from(ImmutableList.of(executable))),
-                      arguments.stream())
-                  .map(SkylarkRuleContextActions::validateStringOrArg)
+              arguments.stream()
+                  .map(SkylarkRuleContextActions::getImmutableArg)
                   .collect(ImmutableList.toImmutableList()));
+      argumentsValidated
+          .getArgs()
+          .findFirst()
+          .orElseThrow(
+              () ->
+                  new EvalException(location, "At least one argument must be provided to 'run()'"));
     } catch (CommandLineException e) {
       throw new EvalException(
           location,

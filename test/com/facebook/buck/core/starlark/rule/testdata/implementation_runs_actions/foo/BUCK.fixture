@@ -49,3 +49,8 @@ invalid_types(
     name = "invalid_env",
     type = "env",
 )
+
+invalid_types(
+    name = "invalid_zeroargs",
+    type = "zeroargs",
+)

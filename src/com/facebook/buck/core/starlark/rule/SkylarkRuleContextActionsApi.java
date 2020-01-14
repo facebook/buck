@@ -137,11 +137,6 @@ public interface SkylarkRuleContextActionsApi {
             type = SkylarkList.class,
             defaultValue = "[]"),
         @Param(
-            name = "executable",
-            doc = "The executable to run",
-            named = true,
-            allowedTypes = {@ParamType(type = String.class), @ParamType(type = Artifact.class)}),
-        @Param(
             name = "arguments",
             doc =
                 "The list of arguments to pass to executable. This must be a list containing only strings or objects from ctx.actions.args()",
@@ -166,7 +161,6 @@ public interface SkylarkRuleContextActionsApi {
   void run(
       SkylarkList<Artifact> outputs,
       SkylarkList<Artifact> inputs,
-      Object executable,
       SkylarkList<Object> arguments,
       Object shortName,
       Object userEnv,

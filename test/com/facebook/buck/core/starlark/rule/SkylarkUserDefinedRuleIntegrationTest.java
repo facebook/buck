@@ -526,6 +526,10 @@ public class SkylarkUserDefinedRuleIntegrationTest {
     assertThat(
         workspace.runBuckBuild("//foo:invalid_env").assertFailure().getStderr(),
         Matchers.containsString("expected type"));
+
+    assertThat(
+        workspace.runBuckBuild("//foo:invalid_zeroargs").assertFailure().getStderr(),
+        Matchers.containsString("At least one argument"));
   }
 
   @Test

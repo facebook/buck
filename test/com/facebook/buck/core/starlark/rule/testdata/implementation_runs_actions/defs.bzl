@@ -42,13 +42,15 @@ exit 0
 def _invalid_types_impl(ctx):
     t = ctx.attr.type
     if t == "outputs":
-        ctx.actions.run(outputs = [1], inputs = [], executable = "echo", arguments = [], short_name = None, env = None)
+        ctx.actions.run(outputs = [1], inputs = [], arguments = ["echo"], short_name = None, env = None)
     elif t == "inputs":
-        ctx.actions.run(outputs = [], inputs = [1], executable = "echo", arguments = [], short_name = None, env = None)
+        ctx.actions.run(outputs = [], inputs = [1], arguments = ["echo"], short_name = None, env = None)
     elif t == "arguments":
-        ctx.actions.run(outputs = [], inputs = [], executable = "echo", arguments = [1], short_name = None, env = None)
+        ctx.actions.run(outputs = [], inputs = [], arguments = ["echo", []], short_name = None, env = None)
     elif t == "env":
-        ctx.actions.run(outputs = [], inputs = [], executable = "echo", arguments = [], short_name = None, env = {"foo": 1})
+        ctx.actions.run(outputs = [], inputs = [], arguments = ["echo"], short_name = None, env = {"foo": 1})
+    elif t == "zeroargs":
+        ctx.actions.run(outputs = [], inputs = [], arguments = [], short_name = None, env = None)
     else:
         fail("invalid failure type")
 
@@ -80,9 +82,8 @@ def _impl(ctx):
             env["CUSTOM_ENV"] = "CUSTOM"
     ctx.actions.run(
         outputs = [f],
-        inputs = [executable],
-        executable = executable,
-        arguments = ["--out", src_args, "--bar", args],
+        inputs = [src for src in ctx.attr.srcs],
+        arguments = [executable, "--out", src_args, "--bar", args],
         env = env,
     )
 
