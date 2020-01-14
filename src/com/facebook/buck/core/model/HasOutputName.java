@@ -16,8 +16,24 @@
 
 package com.facebook.buck.core.model;
 
-/** Interface for BuildRules which generate sources with logical "names" (e.g. Python modules). */
+/**
+ * Interface for {@link com.facebook.buck.core.rules.BuildRule} instances which generate sources
+ * with logical "names" (e.g. Python modules).
+ */
 public interface HasOutputName {
+  // TODO(irenewchen): This should be removed after all the plumbing for existing usages is done.
+  // Use getOutputName(OutputLabel) instead
+  default String getOutputName() {
+    return getOutputName(OutputLabel.defaultLabel());
+  }
 
-  String getOutputName();
+  /**
+   * Returns an output name for the build target associated with the given output label. Not
+   * necessarily a path relative to any directory
+   *
+   * @throws {@link RuntimeException} if the given output label is invalid and is not associated
+   *     with an output
+   *     <p>TODO(irenewchen): Convert this to ImmutableSet<String>
+   */
+  String getOutputName(OutputLabel outputLabel);
 }

@@ -217,18 +217,10 @@ public class Genrule extends ModernBuildRule<GenruleBuildable>
     return super.getType() + (getBuildable().type.map(typeStr -> "_" + typeStr).orElse(""));
   }
 
-  /**
-   * Get the output name of the generated file, as listed in the BUCK file. Should only be called if
-   * 'out' is specified in the BUCK file.
-   */
+  /** Get the output name of the generated file, as listed in the BUCK file. */
   @Override
-  public String getOutputName() {
-    Optional<String> out = getBuildable().out;
-    Preconditions.checkState(
-        out.isPresent(),
-        "Unexpectedly cannot find output for %s.",
-        getBuildTarget().getFullyQualifiedName());
-    return out.get();
+  public String getOutputName(OutputLabel outputLabel) {
+    return getBuildable().getOutputName(outputLabel);
   }
 
   /** Get whether or not the output of this genrule can be cached. */

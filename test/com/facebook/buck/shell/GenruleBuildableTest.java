@@ -771,4 +771,109 @@ public class GenruleBuildableTest {
 
     step.execute(TestExecutionContext.newInstance());
   }
+
+  @Test
+  public void outputNameIsOutForOutWithDefaultLabel() {
+    BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
+
+    GenruleBuildable buildable =
+        GenruleBuildableBuilder.builder()
+            .setBuildTarget(target)
+            .setFilesystem(new FakeProjectFilesystem())
+            .setCmd("echo something")
+            .setOut(Optional.of("output.txt"))
+            .build()
+            .toBuildable();
+
+    assertEquals("output.txt", buildable.getOutputName(OutputLabel.defaultLabel()));
+  }
+
+  @Test
+  public void throwsIfGetOutputNameWithInvalidLabel() {
+    expectedThrownException.expect(HumanReadableException.class);
+    expectedThrownException.expectMessage(
+        "Output label [nonexistent] not found for target //example:genrule");
+
+    BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
+
+    GenruleBuildable buildable =
+        GenruleBuildableBuilder.builder()
+            .setBuildTarget(target)
+            .setFilesystem(new FakeProjectFilesystem())
+            .setCmd("echo something")
+            .setOuts(Optional.of(ImmutableMap.of("label", ImmutableList.of("output1"))))
+            .build()
+            .toBuildable();
+
+    buildable.getOutputName(OutputLabel.of("nonexistent"));
+  }
+
+  @Test
+  public void throwsIfGetOutputNameForOutWithNonDefaultLabel() {
+    expectedThrownException.expect(IllegalArgumentException.class);
+    expectedThrownException.expectMessage(
+        "Unexpectedly received non-default label [nonexistent] for target //example:genrule");
+
+    BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
+
+    GenruleBuildable buildable =
+        GenruleBuildableBuilder.builder()
+            .setBuildTarget(target)
+            .setFilesystem(new FakeProjectFilesystem())
+            .setCmd("echo something")
+            .setOut(Optional.of("output.txt"))
+            .build()
+            .toBuildable();
+
+    buildable.getOutputName(OutputLabel.of("nonexistent"));
+  }
+
+  @Test
+  public void canGetDifferentOutputNamesForOuts() {
+    BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
+
+    GenruleBuildable buildable =
+        GenruleBuildableBuilder.builder()
+            .setBuildTarget(target)
+            .setFilesystem(new FakeProjectFilesystem())
+            .setCmd("echo something")
+            .setOuts(
+                Optional.of(
+                    ImmutableMap.of(
+                        "label1",
+                        ImmutableList.of("output1a"),
+                        "label2",
+                        ImmutableList.of("output2a"))))
+            .build()
+            .toBuildable();
+
+    assertEquals("output1a", buildable.getOutputName(OutputLabel.of("label1")));
+    assertEquals("output2a", buildable.getOutputName(OutputLabel.of("label2")));
+  }
+
+  @Test
+  public void throwsIfGetOutputNameForDefaultOutputs() {
+    expectedThrownException.expect(HumanReadableException.class);
+    expectedThrownException.expectMessage(
+        "Default outputs not supported for genrule //example:genrule (that uses `outs`). Use named outputs");
+
+    BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
+
+    GenruleBuildable buildable =
+        GenruleBuildableBuilder.builder()
+            .setBuildTarget(target)
+            .setFilesystem(new FakeProjectFilesystem())
+            .setCmd("echo something")
+            .setOuts(
+                Optional.of(
+                    ImmutableMap.of(
+                        "label1",
+                        ImmutableList.of("output1a"),
+                        "label2",
+                        ImmutableList.of("output2a"))))
+            .build()
+            .toBuildable();
+
+    buildable.getOutputName(OutputLabel.defaultLabel());
+  }
 }

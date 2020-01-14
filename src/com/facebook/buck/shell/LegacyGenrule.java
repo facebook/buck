@@ -26,6 +26,7 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.HasOutputName;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -565,7 +566,7 @@ public class LegacyGenrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   /** Get the output name of the generated file, as listed in the BUCK file. */
   @Override
-  public String getOutputName() {
+  public String getOutputName(OutputLabel outputLabel) {
     return out;
   }
 

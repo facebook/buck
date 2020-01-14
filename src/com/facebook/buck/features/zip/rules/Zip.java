@@ -19,6 +19,7 @@ package com.facebook.buck.features.zip.rules;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.HasOutputName;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -99,7 +100,7 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
   }
 
   @Override
-  public String getOutputName() {
+  public String getOutputName(OutputLabel outputLabel) {
     return name;
   }
 }
