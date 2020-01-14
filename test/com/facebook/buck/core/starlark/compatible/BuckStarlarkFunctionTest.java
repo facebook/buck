@@ -20,14 +20,18 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.syntax.Argument;
+import com.google.devtools.build.lib.syntax.BuildFileAST;
 import com.google.devtools.build.lib.syntax.Environment;
+import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.Identifier;
 import com.google.devtools.build.lib.syntax.IntegerLiteral;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParamDescriptor;
+import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkList;
 import org.junit.Rule;
 import org.junit.Test;
@@ -40,7 +44,8 @@ public class BuckStarlarkFunctionTest {
   @Test
   public void simpleArgument() throws Throwable {
     BuckStarlarkFunction function =
-        new BuckStarlarkFunction("foo", ImmutableList.of("i"), ImmutableList.of("")) {
+        new BuckStarlarkFunction(
+            "foo", ImmutableList.of("i"), ImmutableList.of(""), ImmutableSet.of()) {
           public void foo(int i) {
             i++;
           }
@@ -57,7 +62,8 @@ public class BuckStarlarkFunctionTest {
   @Test
   public void manyArgs() throws Throwable {
     BuckStarlarkFunction function =
-        new BuckStarlarkFunction("manyArgs", ImmutableList.of("a", "b"), ImmutableList.of("", "")) {
+        new BuckStarlarkFunction(
+            "manyArgs", ImmutableList.of("a", "b"), ImmutableList.of("", ""), ImmutableSet.of()) {
           public String manyArgs(String a, String b) {
             return a + b;
           }
@@ -76,7 +82,8 @@ public class BuckStarlarkFunctionTest {
   @Test
   public void skylarkCollection() throws Throwable {
     BuckStarlarkFunction function =
-        new BuckStarlarkFunction("skylarkLists", ImmutableList.of("list"), ImmutableList.of("[]")) {
+        new BuckStarlarkFunction(
+            "skylarkLists", ImmutableList.of("list"), ImmutableList.of("[]"), ImmutableSet.of()) {
           public String skylarkLists(SkylarkList<Integer> list) {
             return list.toString();
           }
@@ -94,7 +101,8 @@ public class BuckStarlarkFunctionTest {
   @Test
   public void skylarkCall() throws Throwable {
     BuckStarlarkFunction function =
-        new BuckStarlarkFunction("toStr", ImmutableList.of("num"), ImmutableList.of("")) {
+        new BuckStarlarkFunction(
+            "toStr", ImmutableList.of("num"), ImmutableList.of(""), ImmutableSet.of()) {
           public String toStr(Integer num) {
             return num.toString();
           }
@@ -120,7 +128,8 @@ public class BuckStarlarkFunctionTest {
   @Test
   public void noDefaultValues() throws Throwable {
     BuckStarlarkFunction function =
-        new BuckStarlarkFunction("toStr", ImmutableList.of("num"), ImmutableList.of()) {
+        new BuckStarlarkFunction(
+            "toStr", ImmutableList.of("num"), ImmutableList.of(), ImmutableSet.of()) {
           public String toStr(Integer num) {
             return num.toString();
           }
@@ -147,7 +156,10 @@ public class BuckStarlarkFunctionTest {
   public void withPartialNamedAndDefault() throws Throwable {
     BuckStarlarkFunction function =
         new BuckStarlarkFunction(
-            "myFoo", ImmutableList.of("numNoDefault", "numWithDefault"), ImmutableList.of("1")) {
+            "myFoo",
+            ImmutableList.of("numNoDefault", "numWithDefault"),
+            ImmutableList.of("1"),
+            ImmutableSet.of()) {
           public String myFoo(Integer mand, Integer numNoDefault, Integer withDefault) {
             return String.valueOf(mand + numNoDefault + withDefault);
           }
@@ -189,7 +201,7 @@ public class BuckStarlarkFunctionTest {
 
     BuckStarlarkFunction function =
         new BuckStarlarkFunction(
-            "myFoo", ImmutableList.of("correct", "extra"), ImmutableList.of()) {
+            "myFoo", ImmutableList.of("correct", "extra"), ImmutableList.of(), ImmutableSet.of()) {
           public String myFoo(Integer correct) {
             return "";
           }
@@ -203,10 +215,46 @@ public class BuckStarlarkFunctionTest {
 
     BuckStarlarkFunction function =
         new BuckStarlarkFunction(
-            "myFoo", ImmutableList.of(), ImmutableList.of("correct", "extra")) {
+            "myFoo", ImmutableList.of(), ImmutableList.of("correct", "extra"), ImmutableSet.of()) {
           public String myFoo(Integer correct) {
             return "";
           }
         };
+  }
+
+  @Test
+  public void allowsNoneable() throws Throwable {
+    BuckStarlarkFunction function =
+        new BuckStarlarkFunction(
+            "withNone",
+            ImmutableList.of("non_noneable", "noneable"),
+            ImmutableList.of("None"),
+            ImmutableSet.of("noneable")) {
+          public Object withNone(Object nonNoneable, Object noneable) {
+            return SkylarkList.createImmutable(ImmutableList.of(nonNoneable, noneable));
+          }
+        };
+
+    Mutability mutability = Mutability.create("test");
+    Environment env =
+        Environment.builder(mutability)
+            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
+            .setGlobals(
+                Environment.GlobalFrame.createForBuiltins(
+                    ImmutableMap.of(
+                        function.getMethodDescriptor().getName(), function, "None", Runtime.NONE)))
+            .build();
+
+    Object none = BuildFileAST.eval(env, "withNone(noneable=None, non_noneable=1)[1]");
+    Object defaultNone = BuildFileAST.eval(env, "withNone(non_noneable=1)[1]");
+    Object nonNull = BuildFileAST.eval(env, "withNone(noneable=2, non_noneable=1)[1]");
+
+    assertEquals(Runtime.NONE, none);
+    assertEquals(Runtime.NONE, defaultNone);
+    assertEquals(2, nonNull);
+
+    expectedException.expect(EvalException.class);
+    expectedException.expectMessage("cannot be None");
+    BuildFileAST.eval(env, "withNone(noneable=2, non_noneable=None)[1]");
   }
 }

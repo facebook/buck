@@ -24,6 +24,7 @@ import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandle;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 /**
  * An instance of the skylark annotation that we create and pass around to piggy-back off skylark
@@ -52,13 +53,15 @@ class BuckStarlarkCallable implements SkylarkCallable {
    *     interpreted by the skylark framework, and should correspond to {@link
    *     BuckStarlarkParam#defaultValue()}. This will be mapped to the end of the list of parameters
    *     of the method. Any additional parameters of the given method will have no defaults.
+   * @param noneableParams named parameters that are allowed to be `None`
    * @return an instance of the annotation to expose the function to skylark
    */
   static BuckStarlarkCallable fromMethod(
       String name,
       MethodHandle method,
       List<String> namedParams,
-      List<String> defaultSkylarkValues) {
+      List<String> defaultSkylarkValues,
+      Set<String> noneableParams) {
     Class<?>[] parameters = method.type().parameterArray();
     boolean useLocation = false;
     // Use class equality here because otherwise a last argument of 'Object' could get confused
@@ -90,8 +93,10 @@ class BuckStarlarkCallable implements SkylarkCallable {
       String namedParam = namedParamsIndex >= 0 ? namedParams.get(namedParamsIndex--) : null;
       String defaultValue =
           defaultValuesIndex >= 0 ? defaultSkylarkValues.get(defaultValuesIndex--) : null;
-
-      skylarkParams[i] = BuckStarlarkParam.fromParam(parameters[i], namedParam, defaultValue);
+      // TODO(pjameson): T60486516, ideally we can infer this by seeing an Optional/SkylarkOptional
+      boolean noneable = namedParam != null && noneableParams.contains(namedParam);
+      skylarkParams[i] =
+          BuckStarlarkParam.fromParam(parameters[i], namedParam, defaultValue, noneable);
     }
 
     return new BuckStarlarkCallable(name, skylarkParams, useLocation);

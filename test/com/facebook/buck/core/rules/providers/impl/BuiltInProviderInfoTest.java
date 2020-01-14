@@ -36,6 +36,7 @@ import com.google.devtools.build.lib.syntax.Identifier;
 import com.google.devtools.build.lib.syntax.IntegerLiteral;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParserInputSource;
+import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 import com.google.devtools.build.lib.syntax.StringLiteral;
 import com.google.devtools.build.lib.vfs.PathFragment;
@@ -144,6 +145,23 @@ public class BuiltInProviderInfoTest {
       Map<String, String> validated = s.getContents(String.class, String.class, "stuff");
       return new ImmutableSomeInfoWithInstantiateAndLocation(
           ImmutableList.copyOf(validated.keySet()), Integer.toString(myInfo), location);
+    }
+  }
+
+  @ImmutableInfo(
+      args = {"noneable_val", "val"},
+      noneable = {"noneable_val"})
+  public abstract static class SomeInfoWithNoneable
+      extends BuiltInProviderInfo<SomeInfoWithNoneable> {
+    public static final BuiltInProvider<SomeInfoWithNoneable> PROVIDER =
+        BuiltInProvider.of(ImmutableSomeInfoWithNoneable.class);
+
+    public abstract Object noneableVal();
+
+    public abstract Object val();
+
+    public static SomeInfoWithNoneable instantiateFromSkylark(Object noneableVal, Object val) {
+      return new ImmutableSomeInfoWithNoneable(noneableVal, val);
     }
   }
 
@@ -389,5 +407,35 @@ public class BuiltInProviderInfoTest {
     assertEquals("1", someInfo.myInfo());
     assertEquals(location.getPath(), someInfo.location().getPath());
     assertEquals(location.getStartLineAndColumn(), someInfo.location().getStartLineAndColumn());
+  }
+
+  @Test
+  public void allowsNoneAsAParamToStaticMethod() throws InterruptedException, EvalException {
+    Mutability mutability = Mutability.create("providertest");
+
+    Environment env =
+        Environment.builder(mutability)
+            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
+            .setGlobals(
+                Environment.GlobalFrame.createForBuiltins(
+                    ImmutableMap.of(
+                        SomeInfoWithNoneable.PROVIDER.getName(),
+                        SomeInfoWithNoneable.PROVIDER,
+                        "None",
+                        Runtime.NONE)))
+            .build();
+
+    Object none = BuildFileAST.eval(env, "SomeInfoWithNoneable(noneable_val=None, val=1)");
+    Object strValue = BuildFileAST.eval(env, "SomeInfoWithNoneable(noneable_val=\"foo\", val=1)");
+
+    assertThat(none, Matchers.instanceOf(SomeInfoWithNoneable.class));
+    assertThat(strValue, Matchers.instanceOf(SomeInfoWithNoneable.class));
+
+    assertEquals(Runtime.NONE, ((SomeInfoWithNoneable) none).noneableVal());
+    assertEquals("foo", ((SomeInfoWithNoneable) strValue).noneableVal());
+
+    thrown.expect(EvalException.class);
+    thrown.expectMessage("cannot be None");
+    BuildFileAST.eval(env, "SomeInfoWithNoneable(noneable_val=None, val=None)");
   }
 }

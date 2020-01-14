@@ -26,6 +26,7 @@ import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.devtools.build.lib.events.Location;
 import java.lang.reflect.Constructor;
@@ -35,6 +36,7 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
@@ -55,8 +57,14 @@ public class BuiltInProvider<T extends BuiltInProviderInfo<T>> extends BuckStarl
       Class<? extends T> infoClass,
       Constructor<? extends T> infoConstructor,
       List<String> infoApiFields,
-      List<String> defaultSkylarkValues) {
-    super(infoClass.getSimpleName(), infoConstructor, infoApiFields, defaultSkylarkValues);
+      List<String> defaultSkylarkValues,
+      Set<String> noneableParams) {
+    super(
+        infoClass.getSimpleName(),
+        infoConstructor,
+        infoApiFields,
+        defaultSkylarkValues,
+        noneableParams);
     this.key = ImmutableBuiltInKey.of(infoClass);
     infoConstructor.setAccessible(true);
     this.infoFactory = Either.ofLeft(infoConstructor);
@@ -66,8 +74,14 @@ public class BuiltInProvider<T extends BuiltInProviderInfo<T>> extends BuckStarl
       Class<? extends T> infoClass,
       Method infoFactory,
       List<String> infoApiFields,
-      List<String> defaultSkylarkValues) {
-    super(infoClass.getSimpleName(), infoFactory, infoApiFields, defaultSkylarkValues);
+      List<String> defaultSkylarkValues,
+      Set<String> noneableParams) {
+    super(
+        infoClass.getSimpleName(),
+        infoFactory,
+        infoApiFields,
+        defaultSkylarkValues,
+        noneableParams);
     this.key = ImmutableBuiltInKey.of(infoClass);
     infoFactory.setAccessible(true);
     this.infoFactory = Either.ofRight(infoFactory);
@@ -95,6 +109,7 @@ public class BuiltInProvider<T extends BuiltInProviderInfo<T>> extends BuckStarl
     ImmutableMap<String, Method> methodMap = MethodLookup.getMethods(infoApiClass);
     ImmutableList<String> argNames = ImmutableList.copyOf(info.args());
     ImmutableList<String> defaultSkylarkValues = ImmutableList.copyOf(info.defaultSkylarkValues());
+    ImmutableSet<String> noneableParams = ImmutableSet.copyOf(info.noneable());
 
     List<Class<?>> types =
         Lists.transform(
@@ -110,9 +125,11 @@ public class BuiltInProvider<T extends BuiltInProviderInfo<T>> extends BuckStarl
     @Nullable Method skylarkFactory = findSkylarkFactory(infoApiClass, argNames);
 
     if (skylarkFactory != null) {
-      return new BuiltInProvider<>(infoApiClass, skylarkFactory, argNames, defaultSkylarkValues);
+      return new BuiltInProvider<>(
+          infoApiClass, skylarkFactory, argNames, defaultSkylarkValues, noneableParams);
     } else {
-      return fromConstructor(infoClass, infoApiClass, types, argNames, defaultSkylarkValues);
+      return fromConstructor(
+          infoClass, infoApiClass, types, argNames, defaultSkylarkValues, noneableParams);
     }
   }
 
@@ -121,11 +138,16 @@ public class BuiltInProvider<T extends BuiltInProviderInfo<T>> extends BuckStarl
       Class<U> infoApiClass,
       List<Class<?>> structTypes,
       ImmutableList<String> argNames,
-      ImmutableList<String> defaultSkylarkValues) {
+      ImmutableList<String> defaultSkylarkValues,
+      ImmutableSet<String> noneableParams) {
 
     try {
       return new BuiltInProvider<>(
-          infoApiClass, findConstructor(infoClass, structTypes), argNames, defaultSkylarkValues);
+          infoApiClass,
+          findConstructor(infoClass, structTypes),
+          argNames,
+          defaultSkylarkValues,
+          noneableParams);
     } catch (NoSuchMethodException e) {
       throw new IllegalArgumentException(
           String.format(
