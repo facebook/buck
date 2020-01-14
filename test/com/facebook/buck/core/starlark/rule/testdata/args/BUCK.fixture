@@ -1,4 +1,20 @@
-load("//:defs.bzl", "add", "add_all", "add_all_args_failure", "add_all_failure", "add_args_failure", "add_failure", "init", "init_failure", "init_list", "init_list_failure")
+load(
+    "//:defs.bzl",
+    "add",
+    "add_all",
+    "add_all_args_failure",
+    "add_all_failure",
+    "add_args_failure",
+    "add_failure",
+    "init",
+    "init_failure",
+    "init_list",
+    "init_list_failure",
+    "unbound_add_all_failure",
+    "unbound_add_failure",
+    "unbound_init_failure",
+    "unbound_init_list_failure",
+)
 
 add(name = "add")
 
@@ -19,3 +35,11 @@ init_failure(name = "init_failure")
 init_list(name = "init_list")
 
 init_list_failure(name = "init_list_failure")
+
+unbound_add_failure(name = "unbound_add_failure")
+
+unbound_add_all_failure(name = "unbound_add_all_failure")
+
+unbound_init_failure(name = "unbound_init_failure")
+
+unbound_init_list_failure(name = "unbound_init_list_failure")

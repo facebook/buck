@@ -19,6 +19,7 @@ package com.facebook.buck.core.rules.actions.lib.args;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.core.artifact.BoundArtifact;
+import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
@@ -87,6 +88,9 @@ public interface CommandLineArgs extends AddsToRuleKey {
     return getArgs()
         .map(
             o -> {
+              if (o instanceof OutputArtifact) {
+                o = ((OutputArtifact) o).getArtifact();
+              }
               if (o instanceof Artifact) {
                 Artifact artifact = (Artifact) o;
                 if (artifact.isBound()) {

@@ -61,7 +61,7 @@ def _test_file_impl(ctx):
 def _impl(ctx):
     f = ctx.actions.declare_file("out.txt")
 
-    src_args = ctx.actions.args().add(f)
+    src_args = ctx.actions.args().add(f.as_output())
 
     executable = None
     for src in ctx.attr.srcs:

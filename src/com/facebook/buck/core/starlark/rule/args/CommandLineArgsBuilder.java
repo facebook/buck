@@ -17,6 +17,7 @@
 package com.facebook.buck.core.starlark.rule.args;
 
 import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgException;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgs;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgsFactory;
@@ -53,7 +54,8 @@ public class CommandLineArgsBuilder implements CommandLineArgsBuilderApi {
     if (arg instanceof String
         || arg instanceof Integer
         || arg instanceof CommandLineItem
-        || arg instanceof Artifact) {
+        || arg instanceof Artifact
+        || arg instanceof OutputArtifact) {
       return arg;
     }
     throw new CommandLineArgException(arg);

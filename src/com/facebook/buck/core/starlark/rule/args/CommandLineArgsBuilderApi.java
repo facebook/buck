@@ -17,6 +17,7 @@
 package com.facebook.buck.core.starlark.rule.args;
 
 import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.artifact.OutputArtifact;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.Param;
@@ -51,6 +52,7 @@ public interface CommandLineArgsBuilderApi extends SkylarkValue {
               @ParamType(type = Integer.class),
               @ParamType(type = Artifact.class),
               @ParamType(type = Label.class),
+              @ParamType(type = OutputArtifact.class)
             }),
         @Param(
             name = "value",
@@ -62,6 +64,7 @@ public interface CommandLineArgsBuilderApi extends SkylarkValue {
               @ParamType(type = Integer.class),
               @ParamType(type = Artifact.class),
               @ParamType(type = Label.class),
+              @ParamType(type = OutputArtifact.class)
             })
       },
       useLocation = true)

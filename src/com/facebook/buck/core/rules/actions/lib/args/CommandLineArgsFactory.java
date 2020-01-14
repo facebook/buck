@@ -17,6 +17,7 @@
 package com.facebook.buck.core.rules.actions.lib.args;
 
 import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.artifact.OutputArtifact;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.build.lib.actions.CommandLineItem;
 
@@ -48,8 +49,18 @@ public class CommandLineArgsFactory {
       if (arg instanceof String
           || arg instanceof Integer
           || arg instanceof CommandLineItem
-          || arg instanceof Artifact) {
+          || arg instanceof OutputArtifact) {
         foundNonCommandLineArg = true;
+      } else if (arg instanceof Artifact) {
+        foundNonCommandLineArg = true;
+        Artifact artifact = (Artifact) arg;
+        if (!artifact.isBound()) {
+          throw new CommandLineArgException(
+              "Artifact %s was not used as the output to an action. Either make it the output of "
+                  + "an action first to specify that it should be an input, or call "
+                  + "`.as_output()` on it when adding it to indicate it should be an output.",
+              arg);
+        }
       } else if (arg instanceof CommandLineArgs) {
         foundCommandLineArg = true;
       } else {

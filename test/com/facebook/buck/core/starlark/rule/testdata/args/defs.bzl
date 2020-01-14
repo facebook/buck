@@ -31,6 +31,22 @@ def _init_list_impl(ctx):
 def _init_list_failure_impl(ctx):
     ctx.actions.args([{}])
 
+def _unbound_add_failure_impl(ctx):
+    f = ctx.actions.declare_file("out.txt")
+    ctx.actions.args().add(f)
+
+def _unbound_add_all_failure_impl(ctx):
+    f = ctx.actions.declare_file("out.txt")
+    ctx.actions.args().add_all([f])
+
+def _unbound_init_failure_impl(ctx):
+    f = ctx.actions.declare_file("out.txt")
+    ctx.actions.args(f)
+
+def _unbound_init_list_failure_impl(ctx):
+    f = ctx.actions.declare_file("out.txt")
+    ctx.actions.args([f])
+
 add = rule(
     attrs = {},
     implementation = _add_impl,
@@ -78,4 +94,21 @@ init_list = rule(
 init_list_failure = rule(
     attrs = {},
     implementation = _init_list_failure_impl,
+)
+
+unbound_add_failure = rule(
+    attrs = {},
+    implementation = _unbound_add_failure_impl,
+)
+unbound_add_all_failure = rule(
+    attrs = {},
+    implementation = _unbound_add_all_failure_impl,
+)
+unbound_init_failure = rule(
+    attrs = {},
+    implementation = _unbound_init_failure_impl,
+)
+unbound_init_list_failure = rule(
+    attrs = {},
+    implementation = _unbound_init_list_failure_impl,
 )

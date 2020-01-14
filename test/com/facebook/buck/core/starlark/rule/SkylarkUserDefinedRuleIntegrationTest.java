@@ -440,6 +440,18 @@ public class SkylarkUserDefinedRuleIntegrationTest {
     assertThat(
         workspace.runBuckBuild("//:init_list_failure").assertFailure().getStderr(),
         Matchers.containsString("Invalid command line argument type"));
+    assertThat(
+        workspace.runBuckBuild("//:unbound_add_failure").assertFailure().getStderr(),
+        Matchers.containsString("was not used as the output to an action"));
+    assertThat(
+        workspace.runBuckBuild("//:unbound_add_all_failure").assertFailure().getStderr(),
+        Matchers.containsString("was not used as the output to an action"));
+    assertThat(
+        workspace.runBuckBuild("//:unbound_init_failure").assertFailure().getStderr(),
+        Matchers.containsString("was not used as the output to an action"));
+    assertThat(
+        workspace.runBuckBuild("//:unbound_init_list_failure").assertFailure().getStderr(),
+        Matchers.containsString("was not used as the output to an action"));
   }
 
   private static ImmutableList<String> splitStderr(ProcessResult result) {
