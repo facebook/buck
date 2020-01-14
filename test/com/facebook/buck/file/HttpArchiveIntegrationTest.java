@@ -243,9 +243,6 @@ public class HttpArchiveIntegrationTest {
 
   @Test
   public void downloadsZipFileAndValidatesItWithNoSymlinksOnWindows() throws IOException {
-    // TODO: Windows has some issues w/ symlinks in zip files. Once fixed, remove this distinction
-    Assume.assumeThat(Platform.detect(), is(WINDOWS));
-
     rewriteBuckFileTemplate(workspace);
 
     Path outputPath =
@@ -494,9 +491,6 @@ public class HttpArchiveIntegrationTest {
 
   @Test
   public void stripsZipPrefixIfRequestedWithNoSymlinksOnWindows() throws IOException {
-    // TODO: Windows has some issues w/ symlinks in zip files. Once fixed, remove this distinction
-    Assume.assumeThat(Platform.detect(), is(WINDOWS));
-
     rewriteBuckFileTemplate(workspace);
 
     Path outputPath =
