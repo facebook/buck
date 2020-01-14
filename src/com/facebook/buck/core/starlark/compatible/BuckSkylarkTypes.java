@@ -202,4 +202,25 @@ public class BuckSkylarkTypes {
   public static Object skylarkValueFromNullable(@Nullable Object object) {
     return object == null ? Runtime.NONE : object;
   }
+
+  /**
+   * Check that a value is either {@link Runtime#NONE} or an instance of {@code clazz}
+   *
+   * @param location location of evaluation
+   * @param clazz the class that the object should be an instance of if not {@link Runtime#NONE}
+   * @param object the object to check
+   * @return the original value if it is of a correct type
+   * @throws EvalException if the object is not of the correct type
+   */
+  public static Object validateNoneOrType(Location location, Class<?> clazz, Object object)
+      throws EvalException {
+    if (object == Runtime.NONE || clazz.isAssignableFrom(object.getClass())) {
+      return object;
+    }
+    throw new EvalException(
+        location,
+        String.format(
+            "Invalid type provided. Expected %s, got %s",
+            clazz.getSimpleName(), object.getClass().getSimpleName()));
+  }
 }
