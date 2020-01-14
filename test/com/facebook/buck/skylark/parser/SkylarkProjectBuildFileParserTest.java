@@ -42,6 +42,7 @@ import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.implicit.ImplicitInclude;
+import com.facebook.buck.parser.options.ImplicitNativeRulesState;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.skylark.function.SkylarkBuildModule;
@@ -989,15 +990,14 @@ public class SkylarkProjectBuildFileParserTest {
             options,
             BuckEventBusForTests.newInstance(),
             skylarkFilesystem,
-            BuckGlobals.builder()
-                .setSkylarkFunctionModule(SkylarkBuildModule.BUILD_MODULE)
-                .setDisableImplicitNativeRules(options.getDisableImplicitNativeRules())
-                .setDescriptions(options.getDescriptions())
-                .setRuleFunctionFactory(new RuleFunctionFactory(new DefaultTypeCoercerFactory()))
-                .setEnableUserDefinedRules(options.getEnableUserDefinedRules())
-                .setLabelCache(LabelCache.newLabelCache())
-                .setKnownUserDefinedRuleTypes(knownRuleTypesProvider.getUserDefinedRuleTypes(cell))
-                .build(),
+            BuckGlobals.of(
+                SkylarkBuildModule.BUILD_MODULE,
+                options.getDescriptions(),
+                options.getUserDefinedRulesState(),
+                options.getImplicitNativeRulesState(),
+                new RuleFunctionFactory(new DefaultTypeCoercerFactory()),
+                LabelCache.newLabelCache(),
+                knownRuleTypesProvider.getUserDefinedRuleTypes(cell)),
             new PrintingEventHandler(EnumSet.allOf(EventKind.class)),
             NativeGlobber::create);
 
@@ -1098,7 +1098,9 @@ public class SkylarkProjectBuildFileParserTest {
         buildFile, Collections.singletonList("prebuilt_jar(name='foo', binary_jar='guava.jar')"));
 
     ProjectBuildFileParserOptions options =
-        getDefaultParserOptions().setDisableImplicitNativeRules(true).build();
+        getDefaultParserOptions()
+            .setImplicitNativeRulesState(ImplicitNativeRulesState.of(false))
+            .build();
 
     parser = createParserWithOptions(eventCollector, options);
     thrown.expect(BuildFileParseException.class);
@@ -1132,7 +1134,9 @@ public class SkylarkProjectBuildFileParserTest {
         Arrays.asList("def make_jar(*args, **kwargs):", "    prebuilt_jar(*args, **kwargs)"));
 
     ProjectBuildFileParserOptions options =
-        getDefaultParserOptions().setDisableImplicitNativeRules(true).build();
+        getDefaultParserOptions()
+            .setImplicitNativeRulesState(ImplicitNativeRulesState.of(false))
+            .build();
 
     parser = createParserWithOptions(eventCollector, options);
     thrown.expect(BuildFileParseException.class);
@@ -1167,7 +1171,9 @@ public class SkylarkProjectBuildFileParserTest {
             "def make_jar(*args, **kwargs):", "    native.prebuilt_jar(*args, **kwargs)"));
 
     ProjectBuildFileParserOptions options =
-        getDefaultParserOptions().setDisableImplicitNativeRules(true).build();
+        getDefaultParserOptions()
+            .setImplicitNativeRulesState(ImplicitNativeRulesState.of(false))
+            .build();
 
     parser = createParserWithOptions(new PrintingEventHandler(EventKind.ALL_EVENTS), options);
 
@@ -1186,7 +1192,9 @@ public class SkylarkProjectBuildFileParserTest {
         buildFile, Collections.singletonList("prebuilt_jar(name='foo', binary_jar='guava.jar')"));
 
     ProjectBuildFileParserOptions options =
-        getDefaultParserOptions().setDisableImplicitNativeRules(false).build();
+        getDefaultParserOptions()
+            .setImplicitNativeRulesState(ImplicitNativeRulesState.of(true))
+            .build();
 
     parser = createParserWithOptions(new PrintingEventHandler(EventKind.ALL_EVENTS), options);
 
@@ -1213,7 +1221,9 @@ public class SkylarkProjectBuildFileParserTest {
         Arrays.asList("def make_jar(*args, **kwargs):", "    prebuilt_jar(*args, **kwargs)"));
 
     ProjectBuildFileParserOptions options =
-        getDefaultParserOptions().setDisableImplicitNativeRules(false).build();
+        getDefaultParserOptions()
+            .setImplicitNativeRulesState(ImplicitNativeRulesState.of(true))
+            .build();
 
     parser = createParserWithOptions(eventCollector, options);
     thrown.expect(BuildFileParseException.class);

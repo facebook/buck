@@ -35,6 +35,7 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.parser.options.UserDefinedRulesState;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -83,7 +84,7 @@ public class SkylarkUserDefinedRulesParserTest {
         skylarkFilesystem,
         eventHandler,
         SkylarkProjectBuildFileParserTestUtils.getDefaultParserOptions(cell, knownRuleTypesProvider)
-            .setEnableUserDefinedRules(true)
+            .setUserDefinedRulesState(UserDefinedRulesState.of(true))
             .build(),
         knownRuleTypesProvider,
         cell);

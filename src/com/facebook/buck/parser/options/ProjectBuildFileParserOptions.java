@@ -88,13 +88,13 @@ public abstract class ProjectBuildFileParserOptions {
   public abstract List<String> getBuildFileImportWhitelist();
 
   @Value.Default
-  public boolean getDisableImplicitNativeRules() {
-    return false;
+  public ImplicitNativeRulesState getImplicitNativeRulesState() {
+    return ImplicitNativeRulesState.ENABLED;
   }
 
   @Value.Default
-  public boolean getEnableUserDefinedRules() {
-    return false;
+  public UserDefinedRulesState getUserDefinedRulesState() {
+    return UserDefinedRulesState.DISABLED;
   }
 
   @Value.Default

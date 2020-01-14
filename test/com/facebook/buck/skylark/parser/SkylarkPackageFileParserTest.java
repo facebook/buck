@@ -95,15 +95,14 @@ public class SkylarkPackageFileParserTest {
             options,
             BuckEventBusForTests.newInstance(),
             skylarkFilesystem,
-            BuckGlobals.builder()
-                .setSkylarkFunctionModule(SkylarkPackageModule.PACKAGE_MODULE)
-                .setRuleFunctionFactory(new RuleFunctionFactory(new DefaultTypeCoercerFactory()))
-                .setDescriptions(options.getDescriptions())
-                .setDisableImplicitNativeRules(options.getDisableImplicitNativeRules())
-                .setEnableUserDefinedRules(options.getEnableUserDefinedRules())
-                .setLabelCache(LabelCache.newLabelCache())
-                .setKnownUserDefinedRuleTypes(knownRuleTypesProvider.getUserDefinedRuleTypes(cell))
-                .build(),
+            BuckGlobals.of(
+                SkylarkPackageModule.PACKAGE_MODULE,
+                options.getDescriptions(),
+                options.getUserDefinedRulesState(),
+                options.getImplicitNativeRulesState(),
+                new RuleFunctionFactory(new DefaultTypeCoercerFactory()),
+                LabelCache.newLabelCache(),
+                knownRuleTypesProvider.getUserDefinedRuleTypes(cell)),
             eventCollector);
   }
 

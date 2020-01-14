@@ -38,6 +38,7 @@ import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.parser.events.ParseBuckProfilerReportEvent;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.implicit.PackageImplicitIncludesFinder;
+import com.facebook.buck.parser.options.ImplicitNativeRulesState;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.parser.syntax.ImmutableListWithSelects;
 import com.facebook.buck.parser.syntax.ImmutableSelectorValue;
@@ -361,7 +362,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
     argBuilder.add("--ignore_paths", ignorePathsJson.get().toString());
 
     // Disable native rules if requested
-    if (options.getDisableImplicitNativeRules()) {
+    if (options.getImplicitNativeRulesState() == ImplicitNativeRulesState.DISABLED) {
       argBuilder.add("--disable_implicit_native_rules");
     }
 

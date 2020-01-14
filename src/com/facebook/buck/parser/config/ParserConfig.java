@@ -27,6 +27,8 @@ import com.facebook.buck.io.watchman.WatchmanWatcher;
 import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.parser.exceptions.MissingBuildFileException;
 import com.facebook.buck.parser.implicit.ImplicitInclude;
+import com.facebook.buck.parser.options.ImplicitNativeRulesState;
+import com.facebook.buck.parser.options.UserDefinedRulesState;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -273,8 +275,9 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
    *     only accessible in extension files under the 'native' object
    */
   @Value.Lazy
-  public boolean getDisableImplicitNativeRules() {
-    return getDelegate().getBooleanValue("parser", "disable_implicit_native_rules", false);
+  public ImplicitNativeRulesState getImplicitNativeRulesState() {
+    return ImplicitNativeRulesState.of(
+        !getDelegate().getBooleanValue("parser", "disable_implicit_native_rules", false));
   }
 
   /** @return whether Buck should warn about deprecated syntax. */
@@ -435,8 +438,9 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
    *     time.
    */
   @Value.Lazy
-  public boolean getEnableUserDefinedRules() {
-    return getDelegate().getBooleanValue("parser", "enable_user_defined_rules", false);
+  public UserDefinedRulesState getUserDefinedRulesState() {
+    return UserDefinedRulesState.of(
+        getDelegate().getBooleanValue("parser", "enable_user_defined_rules", false));
   }
 
   /** @return Whether to enable parsing of PACKAGE files and apply their attributes to nodes. */

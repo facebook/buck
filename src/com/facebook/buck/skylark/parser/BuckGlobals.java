@@ -19,7 +19,9 @@ package com.facebook.buck.skylark.parser;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.core.starlark.knowntypes.KnownUserDefinedRuleTypes;
-import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.parser.options.ImplicitNativeRulesState;
+import com.facebook.buck.parser.options.UserDefinedRulesState;
 import com.facebook.buck.skylark.function.SkylarkBuiltInProviders;
 import com.facebook.buck.skylark.function.SkylarkFunctionModule;
 import com.facebook.buck.skylark.function.SkylarkProviderFunction;
@@ -47,7 +49,7 @@ import org.immutables.value.Value.Lazy;
  * performance and easier maintenance, since there is only one place to check for variable
  * definitions.
  */
-@BuckStyleValueWithBuilder
+@BuckStyleValue
 public abstract class BuckGlobals {
 
   static {
@@ -60,9 +62,26 @@ public abstract class BuckGlobals {
     GlobalFrame globals = Environment.DEFAULT_GLOBALS;
   }
 
-  abstract LoadingCache<String, Label> getLabelCache();
-
   abstract SkylarkFunctionModule getSkylarkFunctionModule();
+
+  /** @return A set of rules supported by Buck. */
+  abstract ImmutableSet<BaseDescription<?>> getDescriptions();
+
+  /**
+   * @return Whether implicit native rules should not be available in the context of extension file.
+   */
+  abstract ImplicitNativeRulesState getImplicitNativeRulesState();
+
+  /**
+   * @return Whether or not modules, providers, and other functions for user defined rules should be
+   *     exported into .bzl files' execution environment
+   */
+  abstract UserDefinedRulesState getUserDefinedRulesState();
+
+  /** @return A Skylark rule function factory. */
+  abstract RuleFunctionFactory getRuleFunctionFactory();
+
+  abstract LoadingCache<String, Label> getLabelCache();
 
   abstract KnownUserDefinedRuleTypes getKnownUserDefinedRuleTypes();
 
@@ -73,7 +92,7 @@ public abstract class BuckGlobals {
     addBuckGlobals(builder);
     builder.put("native", getNativeModule());
     builder.put("struct", StructProvider.STRUCT);
-    if (getEnableUserDefinedRules()) {
+    if (getUserDefinedRulesState() == UserDefinedRulesState.ENABLED) {
       Runtime.setupSkylarkLibrary(builder, new SkylarkRuleFunctions(getLabelCache()));
       Runtime.setupSkylarkLibrary(builder, new AttrModule());
       builder.putAll(SkylarkBuiltInProviders.PROVIDERS);
@@ -85,35 +104,18 @@ public abstract class BuckGlobals {
     return GlobalFrame.createForBuiltins(builder.build());
   }
 
-  /**
-   * @return Whether or not modules, providers, and other functions for user defined rules should be
-   *     exported into .bzl files' execution environment
-   */
-  abstract boolean getEnableUserDefinedRules();
-
   /** Disable implicit native rules depending on configuration */
   @Lazy
   Environment.GlobalFrame getBuckBuildFileContextGlobals() {
     ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
     addBuckGlobals(builder);
-    if (!getDisableImplicitNativeRules()) {
+    if (getImplicitNativeRulesState() == ImplicitNativeRulesState.ENABLED) {
       builder.putAll(getBuckRuleFunctions());
     }
     Runtime.setupSkylarkLibrary(builder, getSkylarkFunctionModule());
     addNativeModuleFunctions(builder);
     return GlobalFrame.createForBuiltins(builder.build());
   }
-
-  /**
-   * @return Whether implicit native rules should not be available in the context of extension file.
-   */
-  abstract boolean getDisableImplicitNativeRules();
-
-  /** @return A Skylark rule function factory. */
-  abstract RuleFunctionFactory getRuleFunctionFactory();
-
-  /** @return A set of rules supported by Buck. */
-  abstract ImmutableSet<BaseDescription<?>> getDescriptions();
 
   /**
    * @return The list of functions supporting all native Buck functions like {@code java_library}.
@@ -156,9 +158,22 @@ public abstract class BuckGlobals {
     MethodLibrary.addBindingsToBuilder(builder);
   }
 
-  public static Builder builder() {
-    return new Builder();
+  /** Create an instance of {@link BuckGlobals} */
+  public static BuckGlobals of(
+      SkylarkFunctionModule skylarkFunctionModule,
+      ImmutableSet<BaseDescription<?>> descriptions,
+      UserDefinedRulesState userDefinedRulesState,
+      ImplicitNativeRulesState implicitNativeRulesState,
+      RuleFunctionFactory ruleFunctionFactory,
+      LoadingCache<String, Label> labelCache,
+      KnownUserDefinedRuleTypes knownUserDefinedRuleTypes) {
+    return ImmutableBuckGlobals.of(
+        skylarkFunctionModule,
+        descriptions,
+        implicitNativeRulesState,
+        userDefinedRulesState,
+        ruleFunctionFactory,
+        labelCache,
+        knownUserDefinedRuleTypes);
   }
-
-  public static class Builder extends ImmutableBuckGlobals.Builder {}
 }
