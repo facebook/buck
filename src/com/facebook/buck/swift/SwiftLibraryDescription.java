@@ -320,6 +320,7 @@ public class SwiftLibraryDescription
               .map(version -> swiftPlatform.get().getSwiftTarget().withTargetSdkVersion(version))
               .orElse(swiftPlatform.get().getSwiftTarget()),
           projectFilesystem,
+          graphBuilder,
           params.copyAppendingExtraDeps(
               () ->
                   ImmutableSet.<BuildRule>builder()
@@ -501,6 +502,7 @@ public class SwiftLibraryDescription
         buildTarget,
         swiftTarget.orElse(swiftPlatform.getSwiftTarget()),
         projectFilesystem,
+        graphBuilder,
         paramsWithSrcDeps,
         swiftPlatform.getSwiftc(),
         args.getFrameworks(),
