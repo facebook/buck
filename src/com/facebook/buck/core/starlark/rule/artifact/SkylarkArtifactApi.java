@@ -16,10 +16,12 @@
 
 package com.facebook.buck.core.starlark.rule.artifact;
 
+import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkModule;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkModuleCategory;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkValue;
+import com.google.devtools.build.lib.syntax.EvalException;
 
 /**
  * Helper struct fields that should be available to users of Artifact inside of user defined rules
@@ -66,4 +68,12 @@ public interface SkylarkArtifactApi extends SkylarkValue {
       doc = "The path of this file relative to its root. This excludes the aforementioned root.",
       structField = true)
   String getShortPath();
+
+  @SkylarkCallable(
+      name = "as_output",
+      doc =
+          "Get an instance of this artifact that signals it is intended to be used as an output. "
+              + "This is normally only of use with `ctx.action.run()`, or `ctx.action.args()`",
+      useLocation = true)
+  SkylarkOutputArtifactApi asOutputArtifact(Location location) throws EvalException;
 }

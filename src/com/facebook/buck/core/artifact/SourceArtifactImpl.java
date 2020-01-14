@@ -17,10 +17,13 @@
 package com.facebook.buck.core.artifact;
 
 import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.starlark.rule.artifact.SkylarkOutputArtifactApi;
 import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.facebook.buck.io.file.MorePaths;
 import com.google.devtools.build.lib.cmdline.Label;
+import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
+import com.google.devtools.build.lib.syntax.EvalException;
 import java.util.Optional;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
@@ -86,5 +89,11 @@ public abstract class SourceArtifactImpl extends AbstractArtifact
     printer.append("<source file '");
     printer.append(getShortPath());
     printer.append("'>");
+  }
+
+  @Override
+  public SkylarkOutputArtifactApi asOutputArtifact(Location location) throws EvalException {
+    throw new EvalException(
+        location, String.format("source file %s cannot be used as an output artifact", this));
   }
 }

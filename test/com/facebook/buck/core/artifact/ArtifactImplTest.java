@@ -30,6 +30,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.events.Location;
+import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Printer;
 import com.google.devtools.build.lib.vfs.PathFragment;
 import java.nio.file.Path;
@@ -242,7 +243,7 @@ public class ArtifactImplTest {
   }
 
   @Test
-  public void toStringMakesSense() {
+  public void toStringMakesSense() throws EvalException {
     BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
     Path packagePath = Paths.get("my", "foo__");
     Location location =
@@ -281,9 +282,39 @@ public class ArtifactImplTest {
     String expectedBoundWithoutLocation =
         String.format("Artifact<%s, bound to %s>", artifactPathString, key2);
 
+    String expectedWithLocationAsOutput =
+        String.format(
+            "Artifact<%s, as output, declared at %s:3:4>", artifactPathString, extensionPathString);
+
+    String expectedWithoutLocationAsOutput =
+        String.format("Artifact<%s, as output, declared>", artifactPathString);
+
     assertEquals(expectedWithLocation, declaredWithLocation.toString());
+    assertEquals(
+        expectedWithLocationAsOutput,
+        declaredWithLocation.asOutputArtifact(Location.BUILTIN).toString());
     assertEquals(expectedBoundWithLocation, boundWithLocation.toString());
     assertEquals(expectedWithoutLocation, declaredWithoutLocation.toString());
+    assertEquals(
+        expectedWithoutLocationAsOutput,
+        declaredWithoutLocation.asOutputArtifact(Location.BUILTIN).toString());
     assertEquals(expectedBoundWithoutLocation, boundWithoutLocation.toString());
+  }
+
+  @Test
+  public void refusesToCreateOutputArtifactIfBound() throws EvalException {
+    BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
+    Path packagePath = Paths.get("my/foo__");
+    Path path = Paths.get("bar");
+    ArtifactImpl artifact = ArtifactImpl.of(target, genDir, packagePath, path, Location.BUILTIN);
+    ImmutableActionAnalysisDataKey key =
+        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
+    BuildArtifact materialized = artifact.materialize(key);
+
+    assertTrue(materialized.isBound());
+
+    expectedException.expect(EvalException.class);
+    expectedException.expectMessage("cannot be used as an output artifact");
+    artifact.asOutputArtifact(Location.BUILTIN);
   }
 }

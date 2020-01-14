@@ -21,12 +21,18 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.google.devtools.build.lib.events.Location;
+import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Printer;
 import com.google.devtools.build.lib.syntax.Runtime;
 import java.nio.file.Paths;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class SourceArtifactImplTest {
+  @Rule public ExpectedException thrown = ExpectedException.none();
+
   @Test
   public void skylarkFunctionsWork() {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -42,5 +48,16 @@ public class SourceArtifactImplTest {
     assertEquals(expectedShortPath, artifact.getShortPath());
     assertTrue(artifact.isSource());
     assertEquals(String.format("<source file '%s'>", expectedShortPath), Printer.repr(artifact));
+  }
+
+  @Test
+  public void cannotBeUsedAsOutputArtifact() throws EvalException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+
+    SourceArtifactImpl artifact =
+        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("foo", "bar.cpp")));
+
+    thrown.expect(EvalException.class);
+    artifact.asOutputArtifact(Location.BUILTIN);
   }
 }
