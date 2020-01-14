@@ -16,14 +16,24 @@
 
 package com.facebook.buck.features.dotnet;
 
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.rules.analysis.context.DependencyOnlyRuleAnalysisContext;
+import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
+import com.facebook.buck.core.rules.providers.collect.impl.ProviderInfoCollectionImpl;
+import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
+import com.facebook.buck.core.toolchain.RuleAnalysisLegacyToolchain;
 import com.facebook.buck.core.toolchain.Toolchain;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.SystemToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.google.common.collect.ImmutableList;
+import com.google.devtools.build.lib.syntax.SkylarkDict;
+import java.util.function.Consumer;
 
 /** Toolchain for dotnet */
 @BuckStyleValue
-abstract class DotnetToolchain implements Toolchain {
+abstract class DotnetToolchain implements RuleAnalysisLegacyToolchain, Toolchain {
   static final String DEFAULT_NAME = "dotnet-toolchain";
 
   abstract DotnetBuckConfig getDotnetBuckConfig();
@@ -37,5 +47,19 @@ abstract class DotnetToolchain implements Toolchain {
   @Override
   public String getName() {
     return DEFAULT_NAME;
+  }
+
+  @Override
+  public ProviderInfoCollection getProviders(
+      DependencyOnlyRuleAnalysisContext context, TargetConfiguration targetConfiguration) {
+    // TODO(pjameson): Empty for the moment, will eventually return a real toolchain provider
+    return ProviderInfoCollectionImpl.builder()
+        .build(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of()));
+  }
+
+  @Override
+  public void visitToolDependencies(
+      TargetConfiguration targetConfiguration, Consumer<BuildTarget> builder) {
+    getCsharpCompiler().getParseTimeDeps(targetConfiguration).forEach(builder);
   }
 }
