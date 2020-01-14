@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.Matchers.not;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.HttpdForTests;
@@ -247,17 +248,25 @@ public class HttpArchiveIntegrationTest {
 
     Path outputPath =
         workspace
-            .getBuckPaths()
-            .getGenDir()
-            .resolve("test_no_symlinks.zip")
+            .resolve(
+                BuildTargetPaths.getGenPath(
+                    workspace.getProjectFileSystem(),
+                    BuildTargetFactory.newInstance("//:test_no_symlinks.zip"),
+                    "%s"))
             .resolve("test_no_symlinks.zip");
     Path scratchDownloadPath =
-        workspace.getBuckPaths().getScratchDir().resolve("test_no_symlinks.zip#archive-download");
+        workspace.resolve(
+            BuildTargetPaths.getScratchPath(
+                workspace.getProjectFileSystem(),
+                BuildTargetFactory.newInstance("//:test_no_symlinks.zip#archive-download"),
+                "%s"));
     Path downloadPath =
         workspace
-            .getBuckPaths()
-            .getGenDir()
-            .resolve("test_no_symlinks.zip#archive-download")
+            .resolve(
+                BuildTargetPaths.getGenPath(
+                    workspace.getProjectFileSystem(),
+                    BuildTargetFactory.newInstance("//:test_no_symlinks.zip#archive-download"),
+                    "%s"))
             .resolve("test_no_symlinks.zip");
     Path expectedMainDotJavaPath = outputPath.resolve("root").resolve(mainDotJavaPath);
     Path expectedEchoDotShPath = outputPath.resolve("root").resolve(echoDotShPath);
