@@ -20,7 +20,6 @@ import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rules.actions.AbstractAction;
-import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.actions.ActionExecutionContext;
 import com.facebook.buck.core.rules.actions.ActionExecutionResult;
 import com.facebook.buck.core.rules.actions.ActionRegistry;
@@ -46,9 +45,6 @@ public class RunAction extends AbstractAction {
 
   /**
    * @param registry the {@link ActionRegistry} to registry this action for.
-   * @param inputs the input {@link Artifact} for this {@link Action}. They can be either outputs of
-   *     other {@link Action}s or be source files
-   * @param outputs the outputs for this {@link Action}
    * @param shortName the short name to use in logging, console activity, etc. See {@link
    *     #getShortName()}
    * @param args the arguments to evaluate and use when executing the application. This evaluation
@@ -57,12 +53,10 @@ public class RunAction extends AbstractAction {
    */
   public RunAction(
       ActionRegistry registry,
-      ImmutableSortedSet<Artifact> inputs,
-      ImmutableSortedSet<Artifact> outputs,
       String shortName,
       CommandLineArgs args,
       ImmutableMap<String, String> env) {
-    this(registry, getAllInputsAndOutputs(inputs, outputs, args), shortName, args, env);
+    this(registry, getAllInputsAndOutputs(args), shortName, args, env);
   }
 
   private RunAction(
@@ -77,16 +71,11 @@ public class RunAction extends AbstractAction {
   }
 
   private static Pair<ImmutableSortedSet<Artifact>, ImmutableSortedSet<Artifact>>
-      getAllInputsAndOutputs(
-          ImmutableSortedSet<Artifact> inputs,
-          ImmutableSortedSet<Artifact> outputs,
-          CommandLineArgs args) {
-    ImmutableSortedSet.Builder<Artifact> allInputs = ImmutableSortedSet.naturalOrder();
-    ImmutableSortedSet.Builder<Artifact> allOutputs = ImmutableSortedSet.naturalOrder();
-    allInputs.addAll(inputs);
-    allOutputs.addAll(outputs);
-    args.visitInputsAndOutputs(allInputs::add, allOutputs::add);
-    return new Pair<>(allInputs.build(), allOutputs.build());
+      getAllInputsAndOutputs(CommandLineArgs args) {
+    ImmutableSortedSet.Builder<Artifact> inputs = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<Artifact> outputs = ImmutableSortedSet.naturalOrder();
+    args.visitInputsAndOutputs(inputs::add, outputs::add);
+    return new Pair<>(inputs.build(), outputs.build());
   }
 
   @Override

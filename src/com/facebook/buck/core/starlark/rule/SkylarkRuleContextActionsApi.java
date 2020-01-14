@@ -124,20 +124,6 @@ public interface SkylarkRuleContextActionsApi {
       useLocation = true,
       parameters = {
         @Param(
-            name = "outputs",
-            doc = "The files that will be written by this action",
-            named = true,
-            type = SkylarkList.class,
-            noneable = false,
-            generic1 = Artifact.class,
-            defaultValue = "[]"),
-        @Param(
-            name = "inputs",
-            doc = "A list of files that will be used by this action",
-            named = true,
-            type = SkylarkList.class,
-            defaultValue = "[]"),
-        @Param(
             name = "arguments",
             doc =
                 "The list of arguments to pass to executable. This must be a list containing only strings or objects from ctx.actions.args()",
@@ -159,12 +145,6 @@ public interface SkylarkRuleContextActionsApi {
             type = SkylarkDict.class,
             defaultValue = "None")
       })
-  void run(
-      SkylarkList<Artifact> outputs,
-      SkylarkList<Artifact> inputs,
-      SkylarkList<Object> arguments,
-      Object shortName,
-      Object userEnv,
-      Location location)
+  void run(SkylarkList<Object> arguments, Object shortName, Object userEnv, Location location)
       throws EvalException;
 }

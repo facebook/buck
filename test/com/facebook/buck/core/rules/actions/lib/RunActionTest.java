@@ -97,8 +97,6 @@ public class RunActionTest {
     RunAction action =
         new RunAction(
             runner.getRegistry(),
-            ImmutableSortedSet.of(),
-            ImmutableSortedSet.of(),
             "list",
             CommandLineArgsFactory.from(ImmutableList.of(script, "--foo", "bar")),
             ImmutableMap.of("CUSTOM_ENV", "value"));
@@ -113,8 +111,6 @@ public class RunActionTest {
     RunAction action =
         new RunAction(
             runner.getRegistry(),
-            ImmutableSortedSet.of(),
-            ImmutableSortedSet.of(),
             "list",
             CommandLineArgsFactory.from(ImmutableList.of()),
             ImmutableMap.of());
@@ -137,8 +133,6 @@ public class RunActionTest {
     RunAction action =
         new RunAction(
             runner.getRegistry(),
-            ImmutableSortedSet.of(),
-            ImmutableSortedSet.of(),
             "list",
             CommandLineArgsFactory.from(ImmutableList.of(script, "--foo", "bar")),
             ImmutableMap.of());
@@ -165,8 +159,6 @@ public class RunActionTest {
     RunAction action =
         new RunAction(
             runner.getRegistry(),
-            ImmutableSortedSet.of(),
-            ImmutableSortedSet.of(),
             "list",
             CommandLineArgsFactory.from(ImmutableList.of(sourceScript, "--foo", "bar")),
             ImmutableMap.of());
@@ -184,8 +176,6 @@ public class RunActionTest {
     RunAction action =
         new RunAction(
             runner.getRegistry(),
-            ImmutableSortedSet.of(),
-            ImmutableSortedSet.of(),
             "list",
             CommandLineArgsFactory.from(ImmutableList.of(script, "--foo", "bar")),
             ImmutableMap.of());
@@ -210,8 +200,6 @@ public class RunActionTest {
     RunAction action =
         new RunAction(
             runner.getRegistry(),
-            ImmutableSortedSet.of(),
-            ImmutableSortedSet.of(),
             "list",
             CommandLineArgsFactory.from(ImmutableList.of(script, "--foo", "bar")),
             ImmutableMap.of("EXIT_CODE", "1"));
@@ -225,8 +213,7 @@ public class RunActionTest {
   @Test
   public void getsInputsFromCommandLineArgs() throws IOException, EvalException {
     Artifact otherInput = runner.declareArtifact(Paths.get("other.txt"));
-    Artifact output1 = runner.declareArtifact(Paths.get("out1.txt"));
-    Artifact output2 = runner.declareArtifact(Paths.get("out2.txt"));
+    Artifact output = runner.declareArtifact(Paths.get("out2.txt"));
     runner.runAction(
         new WriteAction(
             runner.getRegistry(),
@@ -238,16 +225,14 @@ public class RunActionTest {
     RunAction action =
         new RunAction(
             runner.getRegistry(),
-            ImmutableSortedSet.of(otherInput),
-            ImmutableSortedSet.of(output1),
             "list",
             CommandLineArgsFactory.from(
                 ImmutableList.of(
-                    script, "--foo", "bar", output2.asOutputArtifact(Location.BUILTIN))),
+                    script, "--foo", "bar", otherInput, output.asOutputArtifact(Location.BUILTIN))),
             ImmutableMap.of());
 
     assertEquals(ImmutableSortedSet.of(otherInput, script), action.getInputs());
-    assertEquals(ImmutableSortedSet.of(output1, output2), action.getOutputs());
+    assertEquals(ImmutableSortedSet.of(output), action.getOutputs());
 
     StepExecutionResult result = runner.runAction(action).getResult();
     assertTrue(result.isSuccess());

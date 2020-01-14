@@ -41,7 +41,6 @@ import com.google.devtools.build.lib.syntax.SkylarkDict;
 import com.google.devtools.build.lib.syntax.SkylarkList;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -119,18 +118,8 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
 
   @Override
   public void run(
-      SkylarkList<Artifact> outputs,
-      SkylarkList<Artifact> inputs,
-      SkylarkList<Object> arguments,
-      Object shortName,
-      Object userEnv,
-      Location location)
+      SkylarkList<Object> arguments, Object shortName, Object userEnv, Location location)
       throws EvalException {
-    // TODO(pjameson): If no inputs are specified (NONE), extract them from the command line
-    // parameters. Also convert 'executable' to an input
-    List<Artifact> outputsValidated = outputs.getContents(Artifact.class, "outputs");
-    List<Artifact> inputsValidated = inputs.getContents(Artifact.class, "inputs");
-
     Map<String, String> userEnvValidated =
         SkylarkDict.castSkylarkDictOrNoneToDict(userEnv, String.class, String.class, null);
 
@@ -159,11 +148,6 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
     String shortNameValidated = EvalUtils.isNullOrNone(shortName) ? "" : (String) shortName;
 
     new RunAction(
-        registry,
-        ImmutableSortedSet.copyOf(inputsValidated),
-        ImmutableSortedSet.copyOf(outputsValidated),
-        shortNameValidated,
-        argumentsValidated,
-        ImmutableMap.copyOf(userEnvValidated));
+        registry, shortNameValidated, argumentsValidated, ImmutableMap.copyOf(userEnvValidated));
   }
 }

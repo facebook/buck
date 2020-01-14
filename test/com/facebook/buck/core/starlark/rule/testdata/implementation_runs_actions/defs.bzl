@@ -41,16 +41,12 @@ exit 0
 
 def _invalid_types_impl(ctx):
     t = ctx.attr.type
-    if t == "outputs":
-        ctx.actions.run(outputs = [1], inputs = [], arguments = ["echo"], short_name = None, env = None)
-    elif t == "inputs":
-        ctx.actions.run(outputs = [], inputs = [1], arguments = ["echo"], short_name = None, env = None)
-    elif t == "arguments":
-        ctx.actions.run(outputs = [], inputs = [], arguments = ["echo", []], short_name = None, env = None)
+    if t == "arguments":
+        ctx.actions.run(arguments = ["echo", []], short_name = None, env = None)
     elif t == "env":
-        ctx.actions.run(outputs = [], inputs = [], arguments = ["echo"], short_name = None, env = {"foo": 1})
+        ctx.actions.run(arguments = ["echo"], short_name = None, env = {"foo": 1})
     elif t == "zeroargs":
-        ctx.actions.run(outputs = [], inputs = [], arguments = [], short_name = None, env = None)
+        ctx.actions.run(arguments = [], short_name = None, env = None)
     else:
         fail("invalid failure type")
 

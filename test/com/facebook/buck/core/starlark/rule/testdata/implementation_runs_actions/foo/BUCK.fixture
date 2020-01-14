@@ -31,16 +31,6 @@ my_rule(
 )
 
 invalid_types(
-    name = "invalid_outputs",
-    type = "outputs",
-)
-
-invalid_types(
-    name = "invalid_inputs",
-    type = "inputs",
-)
-
-invalid_types(
     name = "invalid_arguments",
     type = "arguments",
 )

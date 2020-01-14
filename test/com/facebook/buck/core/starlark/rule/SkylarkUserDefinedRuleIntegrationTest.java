@@ -524,14 +524,6 @@ public class SkylarkUserDefinedRuleIntegrationTest {
     workspace.setUp();
 
     assertThat(
-        workspace.runBuckBuild("//foo:invalid_outputs").assertFailure().getStderr().trim(),
-        Matchers.containsString("expected type 'Artifact' for 'outputs'"));
-
-    assertThat(
-        workspace.runBuckBuild("//foo:invalid_inputs").assertFailure().getStderr(),
-        Matchers.containsString("expected type 'Artifact' for 'inputs'"));
-
-    assertThat(
         workspace.runBuckBuild("//foo:invalid_arguments").assertFailure().getStderr(),
         Matchers.containsString("Invalid command line argument"));
 
