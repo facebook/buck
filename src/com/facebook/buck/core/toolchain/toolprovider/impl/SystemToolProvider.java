@@ -16,18 +16,25 @@
 
 package com.facebook.buck.core.toolchain.toolprovider.impl;
 
+import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgsFactory;
+import com.facebook.buck.core.rules.analysis.context.DependencyOnlyRuleAnalysisContext;
+import com.facebook.buck.core.rules.providers.lib.ImmutableRunInfo;
+import com.facebook.buck.core.rules.providers.lib.RunInfo;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
+import com.facebook.buck.core.toolchain.toolprovider.RuleAnalysisLegacyToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.ExecutableFinder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.devtools.build.lib.syntax.SkylarkDict;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
@@ -38,7 +45,7 @@ import org.immutables.value.Value;
  * A {@link ToolProvider} which returns a {@link HashedFileTool} found from searching the system.
  */
 @BuckStyleValue
-public abstract class SystemToolProvider implements ToolProvider {
+public abstract class SystemToolProvider implements ToolProvider, RuleAnalysisLegacyToolProvider {
   abstract ExecutableFinder getExecutableFinder();
 
   abstract Function<Path, SourcePath> getSourcePathConverter();
@@ -49,24 +56,36 @@ public abstract class SystemToolProvider implements ToolProvider {
 
   abstract Optional<String> getSource();
 
-  @Value.Lazy
-  public Tool resolve() {
+  private SourcePath resolveSourcePath() {
     return getExecutableFinder()
         .getOptionalExecutable(getName(), getEnvironment())
         .map(getSourcePathConverter())
-        .map(HashedFileTool::new)
-        .orElseThrow(
-            () -> {
-              StringBuilder msg = new StringBuilder();
-              msg.append(String.format("Cannot find system executable \"%s\"", getName()));
-              getSource().ifPresent(source -> msg.append("from ").append(source));
-              return new HumanReadableException(msg.toString());
-            });
+        .orElseThrow(this::systemExecutableNotFoundException);
+  }
+
+  @Value.Lazy
+  public Tool resolve() {
+    return new HashedFileTool(resolveSourcePath());
+  }
+
+  private HumanReadableException systemExecutableNotFoundException() {
+    StringBuilder msg = new StringBuilder();
+    msg.append(String.format("Cannot find system executable \"%s\"", getName()));
+    getSource().ifPresent(source -> msg.append("from ").append(source));
+    return new HumanReadableException(msg.toString());
   }
 
   @Override
   public Tool resolve(BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
     return resolve();
+  }
+
+  @Override
+  public RunInfo getRunInfo(
+      DependencyOnlyRuleAnalysisContext context, TargetConfiguration targetConfiguration) {
+    Artifact executable = context.resolveSrc(resolveSourcePath());
+    return new ImmutableRunInfo(
+        SkylarkDict.empty(), CommandLineArgsFactory.from(ImmutableList.of(executable)));
   }
 
   @Override
