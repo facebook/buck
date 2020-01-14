@@ -1,0 +1,4 @@
+legacy_toolchain(
+    name = "invalid",
+    toolchain_name = "invalid-toolchain",
+)

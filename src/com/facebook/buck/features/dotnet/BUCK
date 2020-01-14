@@ -28,6 +28,7 @@ buck_module(
         "//third-party/java/infer-annotations:infer-annotations",
     ],
     visibility = [
+        "//test/com/facebook/buck/core/toolchain/rule:rule",
         "//test/com/facebook/buck/features/dotnet:",
         "//test/com/facebook/buck/rules/modern:subclass_exclusion",
         "//test/com/facebook/buck/skylark/parser:parser",

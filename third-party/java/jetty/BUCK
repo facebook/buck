@@ -13,6 +13,7 @@ java_library(
         "//src/com/facebook/buck/httpserver:",
         "//test/com/facebook/buck/artifact_cache:artifact_cache",
         "//test/com/facebook/buck/cli:cli",
+        "//test/com/facebook/buck/core/toolchain/rule:",
         "//test/com/facebook/buck/doctor:",
         "//test/com/facebook/buck/event/listener:",
         "//test/com/facebook/buck/event/listener/integration:",
