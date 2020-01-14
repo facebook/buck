@@ -33,6 +33,9 @@ import com.facebook.buck.core.toolchain.toolprovider.impl.ToolProviders;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.ProvidesCxxPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.swift.SwiftToolchainBuildRule;
+import com.facebook.buck.swift.toolchain.SwiftPlatform;
+import com.facebook.buck.swift.toolchain.SwiftTargetTriple;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -46,7 +49,8 @@ import java.util.Optional;
  */
 public class ApplePlatformBuildRule extends NoopBuildRule {
 
-  private final ProvidesCxxPlatform cxxPlatformRule;
+  private final ProvidesCxxPlatform cxxToolchainRule;
+  private final Optional<SwiftToolchainBuildRule> swiftToolchainRule;
   private final Path sdkPath;
   private final Path platformPath;
   private final ActionGraphBuilder actionGraphBuilder;
@@ -57,12 +61,14 @@ public class ApplePlatformBuildRule extends NoopBuildRule {
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder actionGraphBuilder,
       ApplePlatformDescriptionArg descriptionArgs,
-      ProvidesCxxPlatform cxxPlatformRule) {
+      ProvidesCxxPlatform cxxToolchainRule,
+      Optional<SwiftToolchainBuildRule> swiftToolchainRule) {
     super(buildTarget, projectFilesystem);
 
     this.actionGraphBuilder = actionGraphBuilder;
     this.descriptionArgs = descriptionArgs;
-    this.cxxPlatformRule = cxxPlatformRule;
+    this.cxxToolchainRule = cxxToolchainRule;
+    this.swiftToolchainRule = swiftToolchainRule;
 
     SourcePathResolverAdapter pathResolver = actionGraphBuilder.getSourcePathResolver();
     this.sdkPath = pathResolver.getAbsolutePath(descriptionArgs.getSdkPath());
@@ -100,7 +106,19 @@ public class ApplePlatformBuildRule extends NoopBuildRule {
   }
 
   public CxxPlatform getCxxPlatform(Flavor flavor) {
-    return cxxPlatformRule.getPlatformWithFlavor(flavor);
+    return cxxToolchainRule.getPlatformWithFlavor(flavor);
+  }
+
+  /** Provides SwiftPlatform for given platform flavor if defined */
+  public Optional<SwiftPlatform> getSwiftPlatform(Flavor flavor) {
+    ApplePlatform applePlatform = ApplePlatform.fromFlavor(flavor);
+    SwiftTargetTriple swiftTarget =
+        SwiftTargetTriple.of(
+            ApplePlatform.findArchitecture(flavor).orElseThrow(IllegalArgumentException::new),
+            "apple",
+            applePlatform.getSwiftName().orElse(applePlatform.getName()),
+            descriptionArgs.getMinVersion());
+    return swiftToolchainRule.map(rule -> rule.getSwiftPlatform(swiftTarget));
   }
 
   public AppleSdkPaths.Builder getAppleSdkPathsBuilder() {

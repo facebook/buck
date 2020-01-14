@@ -98,6 +98,7 @@ public class AppleToolchainBuildRule extends NoopBuildRule {
     return platformRule
         .getAppleCxxPlatformBuilder()
         .setCxxPlatform(cxxPlatformBuilder.build())
+        .setSwiftPlatform(platformRule.getSwiftPlatform(flavor))
         .setXcodeVersion(xcodeVersion)
         .setXcodeBuildVersion(xcodeBuildVersion)
         .setAppleSdkPaths(

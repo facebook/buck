@@ -65,8 +65,8 @@ public class AppleToolchainIntegrationTest {
                 + "ranlib applied.%n"
                 + "linker: fpath: %s/apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/Frameworks%n"
                 + "linker: frameworks: Foundation,UIKit%n"
-                + "linker: lpath:  %s/apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/lib%n"
-                + "linker: libs:  objc%n",
+                + "linker: lpath: %s/apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/lib%n"
+                + "linker: libs: objc%n",
             rootPath,
             rootPath),
         workspace.getFileContents(output.resolve("TestApp")));
@@ -98,8 +98,8 @@ public class AppleToolchainIntegrationTest {
                 + "ranlib applied.%n"
                 + "linker: fpath: %s/apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/Frameworks%n"
                 + "linker: frameworks: Foundation,UIKit%n"
-                + "linker: lpath:  %s/apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/lib%n"
-                + "linker: libs:  objc%n"
+                + "linker: lpath: %s/apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/lib%n"
+                + "linker: libs: objc%n"
                 + "universal file:%n"
                 + "strip:%n"
                 + "linker: input:%n"
@@ -114,8 +114,8 @@ public class AppleToolchainIntegrationTest {
                 + "ranlib applied.%n"
                 + "linker: fpath: %s/apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/Frameworks%n"
                 + "linker: frameworks: Foundation,UIKit%n"
-                + "linker: lpath:  %s/apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/lib%n"
-                + "linker: libs:  objc%n",
+                + "linker: lpath: %s/apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/lib%n"
+                + "linker: libs: objc%n",
             rootPath,
             rootPath,
             rootPath,
@@ -149,10 +149,51 @@ public class AppleToolchainIntegrationTest {
                 + "ranlib applied.%n"
                 + "linker: fpath: %s/apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/Frameworks%n"
                 + "linker: frameworks: Foundation,UIKit%n"
-                + "linker: lpath:  %s/apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/lib%n"
-                + "linker: libs:  objc%n",
+                + "linker: lpath: %s/apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/lib%n"
+                + "linker: libs: objc%n",
             rootPath,
             rootPath),
         workspace.getFileContents(output.resolve("TestApp")));
+  }
+
+  @Test
+  public void testBuildWithCustomAppleToolchainWithSwift() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "apple_toolchain", tmp);
+    CxxToolchainHelper.addCxxToolchainToWorkspace(workspace);
+    workspace.addBuckConfigLocalOption(
+        "apple", "toolchain_target", "//apple_toolchain:toolchain_swift");
+    workspace.setUp();
+    Path output = workspace.buildAndReturnOutput("//:TestSwiftBinary#iphoneos-arm64");
+    Path rootPath = workspace.getProjectFileSystem().getRootPath();
+    Path swiftLibraryPath =
+        BuildTargetPaths.getGenPath(
+            workspace.getProjectFileSystem(),
+            BuildTargetFactory.newInstance("//:SwiftLibrary#iphoneos-arm64,swift-compile"),
+            "%s");
+    Path anotherSwiftLibraryPath =
+        BuildTargetPaths.getGenPath(
+            workspace.getProjectFileSystem(),
+            BuildTargetFactory.newInstance("//:AnotherSwiftLibrary#iphoneos-arm64,swift-compile"),
+            "%s");
+    assertEquals(
+        String.format(
+            "linker: input:%n"
+                + swiftLibraryPath
+                + "/SwiftLibrary.o%n"
+                + "swift compile: swift code%n"
+                + "linker: input:%n"
+                + anotherSwiftLibraryPath
+                + "/AnotherSwiftLibrary.o%n"
+                + "swift compile: extra swift code%n"
+                + "linker: fpath: %s/apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/Frameworks%n"
+                + "linker: frameworks: Foundation%n"
+                + "linker: lpath: %n"
+                + "linker: libs: %n"
+                + "linker: ast_paths: %s/SwiftLibrary.swiftmodule,%s/AnotherSwiftLibrary.swiftmodule%n",
+            rootPath,
+            swiftLibraryPath,
+            anotherSwiftLibraryPath),
+        workspace.getFileContents(output));
   }
 }

@@ -91,6 +91,50 @@ apple_platform(
     visibility = ["PUBLIC"],
 )
 
+apple_toolchain(
+    name = "toolchain_swift",
+    apple_platforms = {
+        "iphoneos-arm64": ":platform_swift",
+    },
+    developer_path = "Developer",
+    xcode_version = "1130",
+    xcode_build_version = "11C29",
+    visibility = ["PUBLIC"],
+)
+
+apple_platform(
+    name = "platform_swift",
+    platform_path = "Developer/iPhoneOS.platform",
+    sdk_path = "Developer/iPhoneOS.platform/iPhoneOS.sdk",
+    sdk_name = "iphoneos",
+    version = "13.2",
+    build_version = "17B102",
+    min_version = "13.2",
+    actool = "//tools:unimplemented",
+    ibtool = "//tools:unimplemented",
+    momc = "//tools:unimplemented",
+    xctest = "//tools:unimplemented",
+    dsymutil = "//apple_toolchain/tools:dsymutil_workaround",
+    libtool = "//tools:unimplemented",
+    lipo = "//apple_toolchain/tools:lipo",
+    lldb = "//apple_toolchain/tools:lldb",
+    copy_scene_kit_assets = "//tools:unimplemented",
+    codesign = "//apple_toolchain/tools:codesign",
+    codesign_allocate = "//tools:unimplemented",
+    cxx_toolchain = ":cxx_toolchain",
+    swift_toolchain = ":swift_toolchain",
+    visibility = ["PUBLIC"],
+)
+
+swift_toolchain(
+    name = "swift_toolchain",
+    swiftc = "//apple_toolchain/tools:swiftc",
+    swiftc_flags = [
+        "-test-arg1",
+        "-test-arg2",
+    ],
+)
+
 cxx_toolchain(
     name = "cxx_toolchain",
     archiver_type = "bsd",

@@ -17,3 +17,5 @@ define_impl("dsymutil_workaround")
 define_impl("lipo")
 
 define_impl("lldb")
+
+define_impl("swiftc")

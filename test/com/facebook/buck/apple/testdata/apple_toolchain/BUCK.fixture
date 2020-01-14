@@ -28,3 +28,22 @@ apple_library(
         "header.h",
     ],
 )
+
+apple_binary(
+    name = "TestSwiftBinary",
+    frameworks = [
+        "$SDKROOT/Frameworks/Foundation.framework",
+    ],
+    deps = [":SwiftLibrary"],
+)
+
+swift_library(
+    name = "SwiftLibrary",
+    srcs = ["main.swift"],
+    deps = [":AnotherSwiftLibrary"],
+)
+
+swift_library(
+    name = "AnotherSwiftLibrary",
+    srcs = ["extra.swift"],
+)

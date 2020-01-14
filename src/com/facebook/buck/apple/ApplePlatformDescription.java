@@ -28,6 +28,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.ProvidesCxxPlatform;
+import com.facebook.buck.swift.SwiftToolchainBuildRule;
 import com.google.common.base.Verify;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -44,17 +45,26 @@ public class ApplePlatformDescription
       ApplePlatformDescriptionArg args) {
     Verify.verify(!buildTarget.isFlavored());
     ActionGraphBuilder actionGraphBuilder = context.getActionGraphBuilder();
-    BuildRule cxxPlatformRule = actionGraphBuilder.getRule(args.getCxxToolchain());
-    if (!(cxxPlatformRule instanceof ProvidesCxxPlatform)) {
+    BuildRule cxxToolchainRule = actionGraphBuilder.getRule(args.getCxxToolchain());
+    if (!(cxxToolchainRule instanceof ProvidesCxxPlatform)) {
       throw new HumanReadableException(
-          "Expected %s to be an instance of cxx_platform.", cxxPlatformRule.getBuildTarget());
+          "Expected %s to be an instance of cxx_toolchain.", cxxToolchainRule.getBuildTarget());
+    }
+    Optional<BuildRule> swiftToolchainRule =
+        args.getSwiftToolchain().map(actionGraphBuilder::getRule);
+    if (swiftToolchainRule.isPresent()
+        && !(swiftToolchainRule.get() instanceof SwiftToolchainBuildRule)) {
+      throw new HumanReadableException(
+          "Expected %s to be an instance of swift_toolchain.",
+          swiftToolchainRule.get().getBuildTarget());
     }
     return new ApplePlatformBuildRule(
         buildTarget,
         context.getProjectFilesystem(),
         actionGraphBuilder,
         args,
-        (ProvidesCxxPlatform) cxxPlatformRule);
+        (ProvidesCxxPlatform) cxxToolchainRule,
+        swiftToolchainRule.map(SwiftToolchainBuildRule.class::cast));
   }
 
   @Override
