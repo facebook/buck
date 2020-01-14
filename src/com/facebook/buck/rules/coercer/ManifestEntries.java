@@ -18,42 +18,35 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /**
  * Manifest entries to be injected into the AndroidManifest.xml file via AAPT command line flags.
  */
-@JsonDeserialize(as = ManifestEntries.class)
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractManifestEntries implements AddsToRuleKey {
-  @Value.Parameter
-  @AddToRuleKey
-  protected abstract Optional<Integer> getMinSdkVersion();
+@JsonDeserialize(as = ImmutableManifestEntries.class)
+@BuckStyleValueWithBuilder
+public abstract class ManifestEntries implements AddsToRuleKey {
 
-  @Value.Parameter
   @AddToRuleKey
-  protected abstract Optional<Integer> getTargetSdkVersion();
+  public abstract Optional<Integer> getMinSdkVersion();
 
-  @Value.Parameter
   @AddToRuleKey
-  protected abstract Optional<Integer> getVersionCode();
+  public abstract Optional<Integer> getTargetSdkVersion();
 
-  @Value.Parameter
   @AddToRuleKey
-  protected abstract Optional<String> getVersionName();
+  public abstract Optional<Integer> getVersionCode();
 
-  @Value.Parameter
   @AddToRuleKey
-  protected abstract Optional<Boolean> getDebugMode();
+  public abstract Optional<String> getVersionName();
 
-  @Value.Parameter
   @AddToRuleKey
-  protected abstract Optional<ImmutableMap<String, String>> getPlaceholders();
+  public abstract Optional<Boolean> getDebugMode();
+
+  @AddToRuleKey
+  public abstract Optional<ImmutableMap<String, String>> getPlaceholders();
 
   /** @return true if and only if at least one of the parameters is non-absent. */
   public boolean hasAny() {
@@ -69,4 +62,10 @@ abstract class AbstractManifestEntries implements AddsToRuleKey {
   public static ManifestEntries empty() {
     return ManifestEntries.builder().build();
   }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends ImmutableManifestEntries.Builder {}
 }

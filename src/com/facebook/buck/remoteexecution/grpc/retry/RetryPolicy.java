@@ -16,7 +16,7 @@
 
 package com.facebook.buck.remoteexecution.grpc.retry;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -26,9 +26,8 @@ import org.immutables.value.Value;
  * Immutable policy describing how requests should be retried in terms of delay between retries, the
  * executor to use, and maximum number of retries.
  */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractRetryPolicy {
+@BuckStyleValueWithBuilder
+public abstract class RetryPolicy {
 
   @Value.Default
   public int getMaxRetries() {
@@ -55,4 +54,10 @@ abstract class AbstractRetryPolicy {
     return Executors.newSingleThreadScheduledExecutor(
         new ThreadFactoryBuilder().setNameFormat("retryer-%s").setDaemon(true).build());
   }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends ImmutableRetryPolicy.Builder {}
 }

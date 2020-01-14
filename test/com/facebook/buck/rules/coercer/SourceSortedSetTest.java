@@ -28,7 +28,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.rules.coercer.AbstractSourceSortedSet.Type;
 import com.facebook.buck.versions.FixedTargetNodeTranslator;
 import com.facebook.buck.versions.TargetNodeTranslator;
 import com.google.common.collect.ImmutableMap;
@@ -161,7 +160,7 @@ public class SourceSortedSetTest {
 
     SourceSortedSet result = SourceSortedSet.concat(Arrays.asList(unnamedList1, unnamedList2));
 
-    assertEquals(Type.UNNAMED, result.getType());
+    assertEquals(SourceSortedSet.Type.UNNAMED, result.getType());
     assertEquals(2, result.getUnnamedSources().get().size());
     assertEquals(sourcePath1, result.getUnnamedSources().get().first());
     assertEquals(sourcePath2, result.getUnnamedSources().get().last());
@@ -181,7 +180,7 @@ public class SourceSortedSetTest {
 
     SourceSortedSet result = SourceSortedSet.concat(Arrays.asList(namedList1, namedList2));
 
-    assertEquals(Type.NAMED, result.getType());
+    assertEquals(SourceSortedSet.Type.NAMED, result.getType());
     assertEquals(2, result.getNamedSources().get().size());
     assertEquals(sourcePath1, result.getNamedSources().get().get("name1"));
     assertEquals(sourcePath2, result.getNamedSources().get().get("name2"));

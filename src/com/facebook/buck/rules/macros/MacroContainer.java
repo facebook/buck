@@ -16,20 +16,36 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import org.immutables.value.Value;
 
 /** Packages up a {@link Macro} along some configuration. */
-@Value.Immutable(copy = true)
-@BuckStyleImmutable
-abstract class AbstractMacroContainer {
+@BuckStyleValueWithBuilder
+public abstract class MacroContainer {
 
   @Value.Parameter
-  abstract Macro getMacro();
+  public abstract Macro getMacro();
 
   @Value.Parameter
   @Value.Default
-  boolean isOutputToFile() {
+  public boolean isOutputToFile() {
     return false;
   }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static MacroContainer of(Macro macro, boolean outputToFile) {
+    return ImmutableMacroContainer.of(macro, outputToFile);
+  }
+
+  public final MacroContainer withMacro(Macro value) {
+    if (getMacro() == value) {
+      return this;
+    }
+    return of(value, isOutputToFile());
+  }
+
+  public static class Builder extends ImmutableMacroContainer.Builder {}
 }

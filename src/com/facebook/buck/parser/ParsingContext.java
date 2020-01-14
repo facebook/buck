@@ -17,10 +17,10 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.config.ParserConfig.ApplyDefaultFlavorsMode;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import org.immutables.builder.Builder;
 import org.immutables.value.Value;
 
 /**
@@ -31,16 +31,13 @@ import org.immutables.value.Value;
  * passed. Some of the parameters are mandatory and they must be passed to the {@code builder()}
  * method.
  */
-@Value.Immutable(copy = true)
-@BuckStyleImmutable
-public abstract class AbstractParsingContext {
+@BuckStyleValueWithBuilder
+public abstract class ParsingContext {
 
   /** Cell for which the parsing request is performed */
-  @Builder.Parameter
   public abstract Cell getCell();
 
   /** An executor used during parsing request to perform async computations */
-  @Builder.Parameter
   public abstract ListeningExecutorService getExecutor();
 
   /** Whether to enable profiling during parsing request. */
@@ -90,4 +87,47 @@ public abstract class AbstractParsingContext {
   public boolean useUnconfiguredSelectorResolver() {
     return false;
   }
+
+  public final ParsingContext withCell(Cell value) {
+    if (getCell().equals(value)) {
+      return this;
+    }
+
+    return new Builder().from(this).setCell(value).build();
+  }
+
+  public final ParsingContext withSpeculativeParsing(SpeculativeParsing value) {
+    if (getSpeculativeParsing().equals(value)) {
+      return this;
+    }
+    return new Builder().from(this).setSpeculativeParsing(value).build();
+  }
+
+  public final ParsingContext withExcludeUnsupportedTargets(boolean value) {
+    if (excludeUnsupportedTargets() == value) {
+      return this;
+    }
+    return new Builder().from(this).setExcludeUnsupportedTargets(value).build();
+  }
+
+  public final ParsingContext withApplyDefaultFlavorsMode(
+      ParserConfig.ApplyDefaultFlavorsMode value) {
+    if (getApplyDefaultFlavorsMode().equals(value)) {
+      return this;
+    }
+    return new Builder().from(this).setApplyDefaultFlavorsMode(value).build();
+  }
+
+  public final ParsingContext withUseUnconfiguredSelectorResolver(boolean value) {
+    if (useUnconfiguredSelectorResolver() == value) {
+      return this;
+    }
+    return new Builder().from(this).setUseUnconfiguredSelectorResolver(value).build();
+  }
+
+  public static Builder builder(Cell cell, ListeningExecutorService executor) {
+    return new Builder().setCell(cell).setExecutor(executor);
+  }
+
+  public static class Builder extends ImmutableParsingContext.Builder {}
 }

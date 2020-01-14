@@ -21,7 +21,7 @@ import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.versions.TargetNodeTranslator;
 import com.facebook.buck.versions.TargetTranslatable;
 import com.google.common.base.Preconditions;
@@ -43,9 +43,8 @@ import org.immutables.value.Value;
  * <code>srcs</code> parameter of rules where source "names" may be important (e.g. to control
  * layout of C++ headers).
  */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractSourceSortedSet implements TargetTranslatable<SourceSortedSet> {
+@BuckStyleValue
+public abstract class SourceSortedSet implements TargetTranslatable<SourceSortedSet> {
 
   public static final SourceSortedSet EMPTY =
       SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of());
@@ -55,13 +54,10 @@ abstract class AbstractSourceSortedSet implements TargetTranslatable<SourceSorte
     NAMED,
   }
 
-  @Value.Parameter
   public abstract Type getType();
 
-  @Value.Parameter
   public abstract Optional<ImmutableSortedSet<SourcePath>> getUnnamedSources();
 
-  @Value.Parameter
   public abstract Optional<ImmutableSortedMap<String, SourcePath>> getNamedSources();
 
   @Value.Check
@@ -152,11 +148,12 @@ abstract class AbstractSourceSortedSet implements TargetTranslatable<SourceSorte
     if (!namedSources.isPresent() && !unNamedSources.isPresent()) {
       return Optional.empty();
     }
-    SourceSortedSet.Builder builder = SourceSortedSet.builder();
-    builder.setType(getType());
-    builder.setNamedSources(namedSources.orElse(getNamedSources()));
-    builder.setUnnamedSources(unNamedSources.orElse(getUnnamedSources()));
-    return Optional.of(builder.build());
+    SourceSortedSet set =
+        of(
+            getType(),
+            unNamedSources.orElse(getUnnamedSources()),
+            namedSources.orElse(getNamedSources()));
+    return Optional.of(set);
   }
 
   /** Concatenates elements of the given lists into a single list. */
@@ -168,6 +165,13 @@ abstract class AbstractSourceSortedSet implements TargetTranslatable<SourceSorte
     } else {
       return concatNamed(elements);
     }
+  }
+
+  public static SourceSortedSet of(
+      SourceSortedSet.Type type,
+      Optional<? extends ImmutableSortedSet<SourcePath>> unnamedSources,
+      Optional<? extends ImmutableSortedMap<String, SourcePath>> namedSources) {
+    return ImmutableSourceSortedSet.of(type, unnamedSources, namedSources);
   }
 
   private static Type findType(Iterable<SourceSortedSet> elements) {

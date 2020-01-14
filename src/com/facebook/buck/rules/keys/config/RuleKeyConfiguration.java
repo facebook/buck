@@ -17,24 +17,27 @@
 package com.facebook.buck.rules.keys.config;
 
 import com.facebook.buck.core.module.BuckModuleHashStrategy;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /** Provides rule key configuration options. */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractRuleKeyConfiguration {
+@BuckStyleValue
+public abstract class RuleKeyConfiguration {
 
   /** The seed of all rule keys. */
-  @Value.Parameter
   public abstract int getSeed();
 
-  @Value.Parameter
   public abstract String getCoreKey();
 
-  @Value.Parameter
   public abstract long getBuildInputRuleKeyFileSizeLimit();
 
-  @Value.Parameter
   public abstract BuckModuleHashStrategy getBuckModuleHashStrategy();
+
+  public static RuleKeyConfiguration of(
+      int seed,
+      String coreKey,
+      long buildInputRuleKeyFileSizeLimit,
+      BuckModuleHashStrategy buckModuleHashStrategy) {
+    return ImmutableRuleKeyConfiguration.of(
+        seed, coreKey, buildInputRuleKeyFileSizeLimit, buckModuleHashStrategy);
+  }
 }

@@ -19,21 +19,21 @@ package com.facebook.buck.rules.keys;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 import java.util.Optional;
 import org.immutables.value.Value;
 
-@BuckStyleImmutable
+@BuckStyleValue
 @JsonSerialize
-@Value.Immutable
-abstract class AbstractDependencyFileEntry {
-  @Value.Parameter
+@JsonDeserialize(as = ImmutableDependencyFileEntry.class)
+public abstract class DependencyFileEntry {
+
   public abstract Path pathToFile();
 
-  @Value.Parameter
   public abstract Optional<Path> pathWithinArchive();
 
   @Value.Check
@@ -57,11 +57,19 @@ abstract class AbstractDependencyFileEntry {
 
   public static DependencyFileEntry fromSourcePath(
       SourcePath sourcePath, SourcePathResolverAdapter resolver) {
-    DependencyFileEntry.Builder builder = DependencyFileEntry.builder();
-    builder.setPathToFile(getPathToFile(resolver, sourcePath));
+    Optional<Path> pathWithinArchive = Optional.empty();
     if (sourcePath instanceof ArchiveMemberSourcePath) {
-      builder.setPathWithinArchive(((ArchiveMemberSourcePath) sourcePath).getMemberPath());
+      pathWithinArchive = Optional.of(((ArchiveMemberSourcePath) sourcePath).getMemberPath());
     }
-    return builder.build();
+    return DependencyFileEntry.of(getPathToFile(resolver, sourcePath), pathWithinArchive);
+  }
+
+  public static DependencyFileEntry of(
+      Path pathToFile, Optional<? extends Path> pathWithinArchive) {
+    return ImmutableDependencyFileEntry.of(pathToFile, pathWithinArchive);
+  }
+
+  public static DependencyFileEntry of(Path pathToFile) {
+    return of(pathToFile, Optional.empty());
   }
 }

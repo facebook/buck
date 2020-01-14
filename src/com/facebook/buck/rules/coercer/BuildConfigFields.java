@@ -19,7 +19,7 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.coercer.BuildConfigFields.Field;
 import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
@@ -37,22 +37,22 @@ import org.immutables.value.Value;
  * type, variable name, and value.
  */
 @Value.Enclosing
-@Value.Immutable(copy = false, singleton = true)
-@BuckStyleImmutable
-abstract class AbstractBuildConfigFields implements Iterable<Field> {
+@BuckStyleValue
+public abstract class BuildConfigFields implements Iterable<Field> {
 
   /** An individual field in a {@link BuildConfigFields}. */
-  @Value.Immutable
-  abstract static class AbstractField {
+  @BuckStyleValue
+  public abstract static class Field {
 
-    @Value.Parameter
     public abstract String getType();
 
-    @Value.Parameter
     public abstract String getName();
 
-    @Value.Parameter
     public abstract String getValue();
+
+    public static BuildConfigFields.Field of(String type, String name, String value) {
+      return ImmutableBuildConfigFields.Field.of(type, name, value);
+    }
 
     /**
      * @return a string that could be passed to {@link
@@ -64,6 +64,9 @@ abstract class AbstractBuildConfigFields implements Iterable<Field> {
       return String.format("%s %s = %s", getType(), getName(), getValue());
     }
   }
+
+  private static final BuildConfigFields INSTANCE =
+      ImmutableBuildConfigFields.of(ImmutableMap.of());
 
   private static final Pattern VARIABLE_DEFINITION_PATTERN =
       Pattern.compile(
@@ -82,19 +85,25 @@ abstract class AbstractBuildConfigFields implements Iterable<Field> {
       input -> {
         Matcher matcher = VARIABLE_DEFINITION_PATTERN.matcher(input);
         if (matcher.matches()) {
-          return Field.builder()
-              .setType(matcher.group("type"))
-              .setName(matcher.group("name"))
-              .setValue(matcher.group("value"))
-              .build();
+          return Field.of(matcher.group("type"), matcher.group("name"), matcher.group("value"));
         } else {
           throw new HumanReadableException(
               "Not a valid BuildConfig variable declaration: %s", input);
         }
       };
 
-  @Value.Parameter
-  protected abstract Map<String, Field> getNameToField();
+  public abstract Map<String, Field> getNameToField();
+
+  public static BuildConfigFields of(Map<String, ? extends BuildConfigFields.Field> nameToField) {
+    if (nameToField.isEmpty()) {
+      return INSTANCE;
+    }
+    return ImmutableBuildConfigFields.of(nameToField);
+  }
+
+  public static BuildConfigFields of() {
+    return INSTANCE;
+  }
 
   public static BuildConfigFields fromFieldDeclarations(Iterable<String> declarations) {
     return fromFields(FluentIterable.from(declarations).transform(TRANSFORM::apply));
@@ -103,7 +112,7 @@ abstract class AbstractBuildConfigFields implements Iterable<Field> {
   /** @return a {@link BuildConfigFields} that contains the specified fields in iteration order. */
   public static BuildConfigFields fromFields(Iterable<Field> fields) {
     ImmutableMap<String, Field> entries = FluentIterable.from(fields).uniqueIndex(Field::getName);
-    return BuildConfigFields.builder().putAllNameToField(entries).build();
+    return of(entries);
   }
 
   /**
@@ -120,7 +129,7 @@ abstract class AbstractBuildConfigFields implements Iterable<Field> {
         nameToFieldBuilder.put(field.getName(), field);
       }
     }
-    return BuildConfigFields.of(nameToFieldBuilder.build());
+    return of(nameToFieldBuilder.build());
   }
 
   /**

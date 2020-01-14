@@ -22,20 +22,12 @@ import com.facebook.buck.rules.keys.config.impl.BuckVersion;
 public class TestRuleKeyConfigurationFactory {
 
   public static RuleKeyConfiguration create() {
-    return RuleKeyConfiguration.builder()
-        .setSeed(0)
-        .setCoreKey(BuckVersion.getVersion())
-        .setBuildInputRuleKeyFileSizeLimit(Long.MAX_VALUE)
-        .setBuckModuleHashStrategy(new NoOpBuckModuleHashStrategy())
-        .build();
+    return RuleKeyConfiguration.of(
+        0, BuckVersion.getVersion(), Long.MAX_VALUE, new NoOpBuckModuleHashStrategy());
   }
 
   public static RuleKeyConfiguration createWithSeed(int seed) {
-    return RuleKeyConfiguration.builder()
-        .setSeed(seed)
-        .setCoreKey(BuckVersion.getVersion())
-        .setBuildInputRuleKeyFileSizeLimit(Long.MAX_VALUE)
-        .setBuckModuleHashStrategy(new NoOpBuckModuleHashStrategy())
-        .build();
+    return RuleKeyConfiguration.of(
+        seed, BuckVersion.getVersion(), Long.MAX_VALUE, new NoOpBuckModuleHashStrategy());
   }
 }

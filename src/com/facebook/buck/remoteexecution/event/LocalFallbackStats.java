@@ -16,13 +16,11 @@
 
 package com.facebook.buck.remoteexecution.event;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 
 /** Statistics regarding the LocalFallbackStrategy. */
-@Value.Immutable
-@BuckStyleImmutable
-interface AbstractLocalFallbackStats {
+@BuckStyleValueWithBuilder
+public interface LocalFallbackStats {
 
   /** The total number of actions executed both remote and local. */
   int getTotalExecutedRules();
@@ -32,4 +30,10 @@ interface AbstractLocalFallbackStats {
 
   /** For all the actions that fallback'ed to run locally, the ones that finished successful. */
   int getLocallySuccessfulRules();
+
+  static Builder builder() {
+    return new Builder();
+  }
+
+  class Builder extends ImmutableLocalFallbackStats.Builder {}
 }

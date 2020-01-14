@@ -23,7 +23,7 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 import java.nio.file.Path;
@@ -37,9 +37,8 @@ import org.immutables.value.Value;
 /**
  * Frameworks can be specified as either a path to a file, or a path prefixed by a build setting.
  */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractFrameworkPath implements Comparable<AbstractFrameworkPath>, AddsToRuleKey {
+@BuckStyleValue
+public abstract class FrameworkPath implements Comparable<FrameworkPath>, AddsToRuleKey {
 
   /** The type of framework entry this object represents. */
   protected enum Type {
@@ -49,15 +48,12 @@ abstract class AbstractFrameworkPath implements Comparable<AbstractFrameworkPath
     SOURCE_PATH,
   }
 
-  @Value.Parameter
   @AddToRuleKey
-  protected abstract Type getType();
+  public abstract Type getType();
 
-  @Value.Parameter
   @AddToRuleKey
   public abstract Optional<SourceTreePath> getSourceTreePath();
 
-  @Value.Parameter
   @AddToRuleKey
   public abstract Optional<SourcePath> getSourcePath();
 
@@ -95,6 +91,13 @@ abstract class AbstractFrameworkPath implements Comparable<AbstractFrameworkPath
     return convertToPath(resolver, relativizer, input).getParent();
   }
 
+  public static FrameworkPath of(
+      FrameworkPath.Type type,
+      Optional<? extends SourceTreePath> sourceTreePath,
+      Optional<? extends SourcePath> sourcePath) {
+    return ImmutableFrameworkPath.of(type, sourceTreePath, sourcePath);
+  }
+
   private static Path convertToPath(
       Function<SourcePath, Path> resolver,
       Function<? super Path, Path> relativizer,
@@ -127,7 +130,7 @@ abstract class AbstractFrameworkPath implements Comparable<AbstractFrameworkPath
   }
 
   @Override
-  public int compareTo(AbstractFrameworkPath o) {
+  public int compareTo(FrameworkPath o) {
     if (this == o) {
       return 0;
     }
