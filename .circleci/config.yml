@@ -1,0 +1,25 @@
+version: 2
+
+jobs:
+  ci_build:
+    machine
+      image: ubuntu-1604:201903-01
+    steps:
+      - checkout
+      - run:
+          name: Run Ant Build
+          command: |
+            set -eux
+            export TERM=dumb
+            export ANT_OPTS='-Xmx1000m'
+            export BUCK_PEX_LOCATION="./new_buck.pex"
+            echo '-Xmx750m' > .buckjavaargs.local
+            pyenv install -s 3.6.2
+            pyenv global 3.6.2 system
+            export PATH="$(pyenv root)/shims:$PATH"
+            sudo apt update && sudo apt install android-sdk
+            ant
+            ./bin/buck build buck --out ./new_buck.pex
+workflows:
+  all_jobs:
+    jobs:
