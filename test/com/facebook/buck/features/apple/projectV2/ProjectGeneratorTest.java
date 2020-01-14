@@ -83,8 +83,6 @@ import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
-import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternParser;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -2517,13 +2515,16 @@ public class ProjectGeneratorTest {
     assertThat(target.getProductType(), equalTo(ProductTypes.STATIC_LIBRARY));
 
     assertHasConfigurations(target, "Debug");
-    assertKeepsConfigurationsInGenGroup(result.generatedProject, target);
+    assertKeepsConfigurationsInGenGroup(result.generatedProject, buildTarget, target);
     XCBuildConfiguration configuration =
         target.getBuildConfigurationList().getBuildConfigurationsByName().asMap().get("Debug");
     assertEquals(configuration.getBuildSettings().count(), 0);
 
     PBXFileReference xcconfigReference = configuration.getBaseConfigurationReference();
-    assertEquals(xcconfigReference.getPath(), "../buck-out/gen/foo/lib-Debug.xcconfig");
+    Path xcconfigRelativeReferencePath =
+        Paths.get("..")
+            .resolve(BuildConfiguration.getXcconfigPath(projectFilesystem, buildTarget, "Debug"));
+    assertEquals(xcconfigReference.getPath(), xcconfigRelativeReferencePath.toString());
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
     assertEquals(
@@ -4789,26 +4790,23 @@ public class ProjectGeneratorTest {
     }
   }
 
-  private void assertKeepsConfigurationsInGenGroup(PBXProject project, PBXTarget target) {
+  private void assertKeepsConfigurationsInGenGroup(
+      PBXProject project, BuildTarget buildTarget, PBXTarget target) {
     Map<String, XCBuildConfiguration> buildConfigurationMap =
         target.getBuildConfigurationList().getBuildConfigurationsByName().asMap();
 
-    PBXGroup buckOutGroup =
-        PBXTestUtils.assertHasSubgroupAndReturnIt(project.getMainGroup(), "buck-out");
-    PBXGroup genGroup = PBXTestUtils.assertHasSubgroupAndReturnIt(buckOutGroup, "gen");
+    Path buckOutPath = BuildConfiguration.getXcconfigPath(projectFilesystem, buildTarget, "");
+    PBXGroup configsGroup = project.getMainGroup();
 
-    BuildTargetPattern buildTargetPattern =
-        BuildTargetPatternParser.parse(target.getName(), projectCell.getCellNameResolver());
-    PBXGroup configsGroup = genGroup;
     // File should be located in the buck-out/gen/{target-path}, so iterate through the path
     // components
     // to find the configs directory.
-    for (Path component :
-        buildTargetPattern
-            .getCellRelativeBasePath()
-            .getPath()
-            .toPath(projectFilesystem.getFileSystem())) {
-      configsGroup = PBXTestUtils.assertHasSubgroupAndReturnIt(configsGroup, component.toString());
+    for (Path pathComponent :
+        buckOutPath
+            .getParent()) { // last component will be {target_name}-.xcconfig, which we don't care
+      // about.
+      configsGroup =
+          PBXTestUtils.assertHasSubgroupAndReturnIt(configsGroup, pathComponent.toString());
     }
 
     List<PBXReference> configReferences = configsGroup.getChildren();
