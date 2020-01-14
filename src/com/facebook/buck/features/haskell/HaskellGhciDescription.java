@@ -35,6 +35,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
@@ -103,7 +104,7 @@ public class HaskellGhciDescription
     LOG.verbose("%s: omnibus roots: %s", baseTarget, omnibusRoots);
     LOG.verbose("%s: excluded roots: %s", baseTarget, excludedRoots);
 
-    HaskellGhciOmnibusSpec.Builder builder = HaskellGhciOmnibusSpec.builder();
+    ImmutableHaskellGhciOmnibusSpec.Builder builder = ImmutableHaskellGhciOmnibusSpec.builder();
 
     // Calculate excluded roots/deps, and add them to the link.
     ImmutableList<? extends NativeLinkable> transitiveExcludedLinkables =
@@ -334,9 +335,8 @@ public class HaskellGhciDescription
   }
 
   /** Composition of {@link NativeLinkableGroup}s in the omnibus link. */
-  @Value.Immutable
-  @BuckStyleImmutable
-  interface AbstractHaskellGhciOmnibusSpec {
+  @BuckStyleValueWithBuilder
+  interface HaskellGhciOmnibusSpec {
 
     // All native nodes which are to be statically linked into the giant combined shared library.
     ImmutableSet<NativeLinkable> getBody();

@@ -470,7 +470,7 @@ public class HaskellDescriptionUtils {
     haskellVisitor.start();
 
     // Build the omnibus composition spec.
-    HaskellGhciOmnibusSpec omnibusSpec =
+    HaskellGhciDescription.HaskellGhciOmnibusSpec omnibusSpec =
         HaskellGhciDescription.getOmnibusSpec(
             buildTarget,
             graphBuilder,

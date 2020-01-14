@@ -18,7 +18,7 @@ package com.facebook.buck.features.python;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.step.fs.SymlinkPaths;
 import com.google.common.annotations.VisibleForTesting;
@@ -36,15 +36,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import org.immutables.value.Value;
 
 /**
  * Contains Python components (e.g. modules, resources) to be used by an executing Python binary
  * step (e.g. {@link PexStep}).
  */
-@Value.Immutable(copy = true)
-@BuckStyleImmutable
-abstract class AbstractPythonResolvedPackageComponents {
+@BuckStyleValueWithBuilder
+abstract class PythonResolvedPackageComponents {
 
   protected abstract ImmutableMultimap<BuildTarget, PythonComponents.Resolved> getModules();
 

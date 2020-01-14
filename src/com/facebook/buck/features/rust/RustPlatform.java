@@ -19,19 +19,17 @@ package com.facebook.buck.features.rust;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorConvertible;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /** Abstracting the tooling/flags/libraries used to build Rust rules. */
-@Value.Immutable
-@BuckStyleImmutable
-interface AbstractRustPlatform extends FlavorConvertible {
+@BuckStyleValueWithBuilder
+interface RustPlatform extends FlavorConvertible {
 
   // TODO: For now, we rely on Rust platforms having the same "name" as the C/C++ platforms they
   // wrap, due to having to lookup the Rust platform in the C/C++ interfaces that Rust rules

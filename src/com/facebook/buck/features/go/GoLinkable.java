@@ -14,31 +14,34 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.features.d;
+package com.facebook.buck.features.go;
 
-import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.google.common.collect.ImmutableSortedSet;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import java.nio.file.Path;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractDIncludes implements AddsToRuleKey {
+@BuckStyleValue
+abstract class GoLinkable {
 
-  public abstract SourcePath getLinkTree();
+  abstract ImmutableMap<Path, SourcePath> getGoLinkInput();
 
-  @AddToRuleKey
-  @Value.NaturalOrder
-  public abstract ImmutableSortedSet<SourcePath> getSources();
+  abstract ImmutableSet<BuildTarget> getExportedDeps();
 
   public Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return ImmutableSortedSet.<BuildRule>naturalOrder()
-        .addAll(ruleFinder.filterBuildRuleInputs(getLinkTree()))
-        .addAll(ruleFinder.filterBuildRuleInputs(getSources()))
-        .build();
+    return ruleFinder.filterBuildRuleInputs(getGoLinkInput().values());
+  }
+
+  static GoLinkable of(ImmutableMap<Path, SourcePath> goLinkInput) {
+    return of(goLinkInput, ImmutableSet.of());
+  }
+
+  static GoLinkable of(
+      ImmutableMap<Path, SourcePath> goLinkInput, ImmutableSet<BuildTarget> exportedDeps) {
+    return ImmutableGoLinkable.of(goLinkInput, exportedDeps);
   }
 }

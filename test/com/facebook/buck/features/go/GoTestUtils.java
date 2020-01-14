@@ -24,7 +24,7 @@ import java.nio.file.Paths;
 public class GoTestUtils {
 
   public static final GoPlatform DEFAULT_PLATFORM =
-      GoPlatform.builder()
+      ImmutableGoPlatform.builder()
           .setFlavor(CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR)
           .setGoOs(GoOs.LINUX)
           .setGoArch(GoArch.AMD64)
@@ -40,7 +40,7 @@ public class GoTestUtils {
           .build();
 
   public static final GoPlatform CUSTOM_PLATFORM_WITH_LINKER_ARGS =
-      GoPlatform.builder()
+      ImmutableGoPlatform.builder()
           .setFlavor(CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR)
           .setGoOs(GoOs.LINUX)
           .setGoArch(GoArch.AMD64)

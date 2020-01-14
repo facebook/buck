@@ -75,7 +75,7 @@ public abstract class PythonPackageComponents implements AddsToRuleKey {
   }
 
   public PythonResolvedPackageComponents resolve(SourcePathResolverAdapter resolver) {
-    return PythonResolvedPackageComponents.builder()
+    return ImmutablePythonResolvedPackageComponents.builder()
         .putAllModules(
             Multimaps.transformValues(
                 getModules(), c -> Objects.requireNonNull(c).resolvePythonComponents(resolver)))

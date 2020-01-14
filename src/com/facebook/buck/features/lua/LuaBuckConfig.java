@@ -44,7 +44,7 @@ public class LuaBuckConfig {
 
   private LuaPlatform getPlatform(
       String section, TargetConfiguration targetConfiguration, CxxPlatform cxxPlatform) {
-    return LuaPlatform.builder()
+    return ImmutableLuaPlatform.builder()
         .setLua(
             delegate
                 .getView(ToolConfig.class)

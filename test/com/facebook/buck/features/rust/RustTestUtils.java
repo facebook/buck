@@ -31,7 +31,7 @@ import com.google.common.collect.ImmutableList;
 public class RustTestUtils {
 
   public static final RustPlatform DEFAULT_PLATFORM =
-      RustPlatform.builder()
+      ImmutableRustPlatform.builder()
           .setRustCompiler(new ConstantToolProvider(new CommandTool.Builder().build()))
           .setLinker(new ConstantToolProvider(new CommandTool.Builder().build()))
           .setLinkerProvider(

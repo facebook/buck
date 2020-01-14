@@ -76,15 +76,13 @@ public class PrebuiltGoLibraryDescription
       SourcePath output = graphBuilder.requireRule(buildTarget).getSourcePathToOutput();
       return Optional.of(
           metadataClass.cast(
-              GoLinkable.builder()
-                  .setGoLinkInput(
-                      ImmutableMap.of(
-                          args.getPackageName()
-                              .map(Paths::get)
-                              .orElse(goBuckConfig.getDefaultPackageName(buildTarget)),
-                          output))
-                  .setExportedDeps(args.getExportedDeps())
-                  .build()));
+              GoLinkable.of(
+                  ImmutableMap.of(
+                      args.getPackageName()
+                          .map(Paths::get)
+                          .orElse(goBuckConfig.getDefaultPackageName(buildTarget)),
+                      output),
+                  args.getExportedDeps())));
     } else if (buildTarget.getFlavors().contains(GoDescriptors.TRANSITIVE_LINKABLES_FLAVOR)) {
       Preconditions.checkState(platform.isPresent());
 

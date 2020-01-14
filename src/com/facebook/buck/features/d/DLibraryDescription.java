@@ -81,10 +81,8 @@ public class DLibraryDescription
     BuildTarget sourceTreeTarget =
         buildTarget.withAppendedFlavors(DDescriptionUtils.SOURCE_LINK_TREE);
     DIncludes dIncludes =
-        DIncludes.builder()
-            .setLinkTree(DefaultBuildTargetSourcePath.of(sourceTreeTarget))
-            .setSources(args.getSrcs().getPaths())
-            .build();
+        ImmutableDIncludes.of(
+            DefaultBuildTargetSourcePath.of(sourceTreeTarget), args.getSrcs().getPaths());
 
     if (buildTarget.getFlavors().contains(CxxDescriptionEnhancer.STATIC_FLAVOR)) {
       graphBuilder.requireRule(sourceTreeTarget);

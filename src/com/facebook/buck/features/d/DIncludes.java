@@ -14,27 +14,30 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.features.ocaml;
+package com.facebook.buck.features.d;
 
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.google.common.collect.ImmutableList;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableSortedSet;
 import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractOcamlGeneratedBuildRules {
-  public abstract ImmutableList<BuildRule> getRules();
+@BuckStyleValue
+abstract class DIncludes implements AddsToRuleKey {
 
-  public abstract ImmutableSortedSet<BuildRule> getNativeCompileDeps();
+  public abstract SourcePath getLinkTree();
 
-  public abstract ImmutableSortedSet<BuildRule> getBytecodeCompileDeps();
+  @AddToRuleKey
+  @Value.NaturalOrder
+  public abstract ImmutableSortedSet<SourcePath> getSources();
 
-  public abstract ImmutableList<SourcePath> getObjectFiles();
-
-  public abstract BuildRule getBytecodeLink();
-
-  public abstract OcamlBuildContext getOcamlContext();
+  public Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
+    return ImmutableSortedSet.<BuildRule>naturalOrder()
+        .addAll(ruleFinder.filterBuildRuleInputs(getLinkTree()))
+        .addAll(ruleFinder.filterBuildRuleInputs(getSources()))
+        .build();
+  }
 }

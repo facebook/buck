@@ -17,12 +17,11 @@
 package com.facebook.buck.features.project.intellij.aggregation;
 
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.features.project.intellij.model.IjModule;
 import com.facebook.buck.features.project.intellij.model.IjModuleType;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
-import org.immutables.value.Value;
 
 /**
  * Represents a module during aggregation.
@@ -30,9 +29,8 @@ import org.immutables.value.Value;
  * <p>This module is used only for aggregation and discarded after. It contains a minimal
  * information necessary to create {@link IjModule}.
  */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractAggregationModule {
+@BuckStyleValueWithBuilder
+public abstract class AggregationModule {
 
   @SuppressWarnings(
       "rawtypes") // https://github.com/immutables/immutables/issues/548 requires us to use

@@ -326,14 +326,13 @@ public class PythonTestDescription
 
     // Build up the list of everything going into the python test.
     PythonPackagable root =
-        PythonBinaryPackagable.builder()
-            .setBuildTarget(buildTarget)
-            .setFilesystem(projectFilesystem)
-            .addAllPythonPackageDeps(deps)
-            .setPythonModules(PythonMappedComponents.of(modules))
-            .setPythonResources(PythonMappedComponents.of(ImmutableSortedMap.copyOf(resources)))
-            .setPythonZipSafe(args.getZipSafe())
-            .build();
+        ImmutablePythonBinaryPackagable.of(
+            buildTarget,
+            projectFilesystem,
+            deps,
+            Optional.of(PythonMappedComponents.of(modules)),
+            Optional.of(PythonMappedComponents.of(ImmutableSortedMap.copyOf(resources))),
+            args.getZipSafe());
 
     CellPathResolver cellRoots = context.getCellPathResolver();
     StringWithMacrosConverter macrosConverter =

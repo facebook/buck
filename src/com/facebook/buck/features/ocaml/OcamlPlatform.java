@@ -20,18 +20,16 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorConvertible;
 import com.facebook.buck.core.toolchain.Toolchain;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.cxx.toolchain.CompilerProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /** Abstracting the tooling/flags/libraries used to build OCaml rules. */
-@Value.Immutable
-@BuckStyleImmutable
-interface AbstractOcamlPlatform extends Toolchain, FlavorConvertible {
+@BuckStyleValueWithBuilder
+interface OcamlPlatform extends Toolchain, FlavorConvertible {
 
   // TODO: For now, we rely on OCaml platforms having the same "name" as the C/C++ platforms they
   // wrap, due to having to lookup the OCaml platform in the C/C++ interfaces that OCaml rules

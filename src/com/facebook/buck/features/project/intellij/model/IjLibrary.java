@@ -17,7 +17,7 @@
 package com.facebook.buck.features.project.intellij.model;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.features.project.intellij.IjDependencyListBuilder;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -25,9 +25,8 @@ import java.nio.file.Path;
 import org.immutables.value.Value;
 
 /** Represents a prebuilt library (.jar or .aar) as seen by IntelliJ. */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractIjLibrary implements IjProjectElement {
+@BuckStyleValueWithBuilder
+public abstract class IjLibrary implements IjProjectElement {
   @Override
   public abstract String getName();
 
@@ -74,4 +73,10 @@ abstract class AbstractIjLibrary implements IjProjectElement {
       dependencyListBuilder.addLibrary(getName(), scope, false /* exported */);
     }
   }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends ImmutableIjLibrary.Builder {}
 }

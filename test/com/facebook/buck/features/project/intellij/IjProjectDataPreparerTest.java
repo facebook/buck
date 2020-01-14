@@ -438,21 +438,16 @@ public class IjProjectDataPreparerTest {
     // Libraries don't go into the index.
     assertEquals(
         ImmutableSet.of(
-            ModuleIndexEntry.builder()
-                .setFileUrl("file://$PROJECT_DIR$/project_root.iml")
-                .setFilePath(Paths.get("project_root.iml"))
-                .build(),
-            ModuleIndexEntry.builder()
-                .setGroup("modules")
-                .setFileUrl("file://$PROJECT_DIR$/java/com/example/base/java_com_example_base.iml")
-                .setFilePath(Paths.get("java/com/example/base/java_com_example_base.iml"))
-                .build(),
-            ModuleIndexEntry.builder()
-                .setGroup("modules")
-                .setFileUrl(
-                    "file://$PROJECT_DIR$/javatests/com/example/base/javatests_com_example_base.iml")
-                .setFilePath(Paths.get("javatests/com/example/base/javatests_com_example_base.iml"))
-                .build()),
+            ModuleIndexEntry.of(
+                "file://$PROJECT_DIR$/project_root.iml", Paths.get("project_root.iml"), null),
+            ModuleIndexEntry.of(
+                "file://$PROJECT_DIR$/java/com/example/base/java_com_example_base.iml",
+                Paths.get("java/com/example/base/java_com_example_base.iml"),
+                "modules"),
+            ModuleIndexEntry.of(
+                "file://$PROJECT_DIR$/javatests/com/example/base/javatests_com_example_base.iml",
+                Paths.get("javatests/com/example/base/javatests_com_example_base.iml"),
+                "modules")),
         dataPreparer.getModuleIndexEntries());
   }
 
@@ -495,21 +490,16 @@ public class IjProjectDataPreparerTest {
             androidManifestParser);
     assertEquals(
         ImmutableSet.of(
-            ModuleIndexEntry.builder()
-                .setGroup("modules")
-                .setFileUrl(
-                    "file://$PROJECT_DIR$/../dep/java/com/example/___dep_java_com_example.iml")
-                .setFilePath(Paths.get("../dep/java/com/example/___dep_java_com_example.iml"))
-                .build(),
-            ModuleIndexEntry.builder()
-                .setGroup("modules")
-                .setFileUrl("file://$PROJECT_DIR$/java/com/example/java_com_example.iml")
-                .setFilePath(Paths.get("java/com/example/java_com_example.iml"))
-                .build(),
-            ModuleIndexEntry.builder()
-                .setFileUrl("file://$PROJECT_DIR$/project_root.iml")
-                .setFilePath(Paths.get("project_root.iml"))
-                .build()),
+            ModuleIndexEntry.of(
+                "file://$PROJECT_DIR$/../dep/java/com/example/___dep_java_com_example.iml",
+                Paths.get("../dep/java/com/example/___dep_java_com_example.iml"),
+                "modules"),
+            ModuleIndexEntry.of(
+                "file://$PROJECT_DIR$/java/com/example/java_com_example.iml",
+                Paths.get("java/com/example/java_com_example.iml"),
+                "modules"),
+            ModuleIndexEntry.of(
+                "file://$PROJECT_DIR$/project_root.iml", Paths.get("project_root.iml"), null)),
         dataPreparer.getModuleIndexEntries());
   }
 

@@ -76,12 +76,10 @@ public class IntellijModulesListParser {
           filepathWithoutProjectPrefix = filepath;
         }
         builder.add(
-            ModuleIndexEntry.builder()
-                .setFilePath(Paths.get(filepathWithoutProjectPrefix))
-                .setFileUrl(fileurl)
-                .setGroup(
-                    moduleEntry.hasAttribute("group") ? moduleEntry.getAttribute("group") : null)
-                .build());
+            ModuleIndexEntry.of(
+                fileurl,
+                Paths.get(filepathWithoutProjectPrefix),
+                moduleEntry.hasAttribute("group") ? moduleEntry.getAttribute("group") : null));
       }
     } catch (XPathExpressionException e) {
       throw new HumanReadableException("Illegal xpath expression.", e);

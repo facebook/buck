@@ -123,9 +123,7 @@ public class GoTestDescription
       Path packageName = getGoPackageName(graphBuilder, buildTarget, args);
 
       SourcePath output = graphBuilder.requireRule(buildTarget).getSourcePathToOutput();
-      return Optional.of(
-          metadataClass.cast(
-              GoLinkable.builder().setGoLinkInput(ImmutableMap.of(packageName, output)).build()));
+      return Optional.of(metadataClass.cast(GoLinkable.of(ImmutableMap.of(packageName, output))));
     } else if (buildTarget.getFlavors().contains(GoDescriptors.TRANSITIVE_LINKABLES_FLAVOR)
         && buildTarget.getFlavors().contains(TEST_LIBRARY_FLAVOR)) {
       Preconditions.checkState(platform.isPresent());

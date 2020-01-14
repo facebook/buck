@@ -25,10 +25,10 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
 public class LuaTestUtils {
 
   public static final LuaPlatform DEFAULT_PLATFORM =
-      LuaPlatform.builder()
+      ImmutableLuaPlatform.builder()
           .setLua(new ConstantToolProvider(new CommandTool.Builder().addArg("lua").build()))
           .setExtension(".lex")
-          .setPackageStyle(AbstractLuaPlatform.PackageStyle.STANDALONE)
+          .setPackageStyle(LuaPlatform.PackageStyle.STANDALONE)
           .setPackager(new ConstantToolProvider(new CommandTool.Builder().build()))
           .setShouldCacheBinaries(true)
           .setNativeLinkStrategy(NativeLinkStrategy.SEPARATE)

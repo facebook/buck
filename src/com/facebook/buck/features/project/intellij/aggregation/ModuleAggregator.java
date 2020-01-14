@@ -43,7 +43,7 @@ class ModuleAggregator {
           module.getExcludes().stream().map(modulePath::resolve).forEach(excludesBuilder::add);
         });
 
-    return AggregationModule.builder()
+    return ImmutableAggregationModule.builder()
         .from(rootModule)
         .addAllTargets(targets.build())
         .setExcludes(excludesBuilder.build())
@@ -57,7 +57,7 @@ class ModuleAggregator {
       Collection<AggregationModule> modulesToAggregate) {
 
     return aggregate(
-        AggregationModule.builder()
+        ImmutableAggregationModule.builder()
             .setModuleBasePath(moduleBasePath)
             .setModuleType(moduleType)
             .setAggregationTag(aggregationTag)

@@ -72,7 +72,7 @@ public class OcamlToolchainFactory implements ToolchainFactory<OcamlToolchain> {
                                                         .getPath(section, field)
                                                         .orElse(defaultValue),
                                                     context.getEnvironment())))));
-    return OcamlPlatform.builder()
+    return ImmutableOcamlPlatform.builder()
         .setOcamlCompiler(getTool.apply("ocaml.compiler", DEFAULT_OCAML_COMPILER))
         .setOcamlDepTool(getTool.apply("dep.tool", DEFAULT_OCAML_DEP_TOOL))
         .setYaccCompiler(getTool.apply("yacc.compiler", DEFAULT_OCAML_YACC_COMPILER))

@@ -46,9 +46,9 @@ public class DefaultAggregationModuleFactory implements AggregationModuleFactory
 
     context.finishModuleCreation();
 
-    return AggregationModule.builder()
-        .setModuleBasePath(moduleBasePath)
+    return ImmutableAggregationModule.builder()
         .setTargets(targetNodes)
+        .setModuleBasePath(moduleBasePath)
         .setAggregationTag(context.getAggregationTag())
         .setModuleType(context.getModuleType())
         .build();

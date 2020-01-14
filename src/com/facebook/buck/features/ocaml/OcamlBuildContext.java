@@ -27,7 +27,7 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.cxx.CxxHeaders;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxSource;
@@ -46,7 +46,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /**
  * OCaml build context
@@ -55,9 +54,8 @@ import org.immutables.value.Value;
  * is used throughout this file -- not to be confused with the "native" terminology used in
  * com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput.
  */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractOcamlBuildContext implements AddsToRuleKey {
+@BuckStyleValueWithBuilder
+abstract class OcamlBuildContext implements AddsToRuleKey {
   static final String OCAML_COMPILED_BYTECODE_DIR = "bc";
   static final String OCAML_COMPILED_DIR = "opt";
   private static final String OCAML_GENERATED_SOURCE_DIR = "gen";
@@ -357,11 +355,11 @@ abstract class AbstractOcamlBuildContext implements AddsToRuleKey {
     return addPrefix("-ccopt", getLdFlags());
   }
 
-  public static OcamlBuildContext.Builder builder(
+  public static Builder builder(
       OcamlPlatform ocamlPlatform,
       BuildRuleResolver resolver,
       TargetConfiguration targetConfiguration) {
-    return OcamlBuildContext.builder()
+    return new Builder()
         .setOcamlDepTool(ocamlPlatform.getOcamlDepTool().resolve(resolver, targetConfiguration))
         .setOcamlCompiler(ocamlPlatform.getOcamlCompiler().resolve(resolver, targetConfiguration))
         .setOcamlDebug(ocamlPlatform.getOcamlDebug().resolve(resolver, targetConfiguration))
@@ -373,4 +371,6 @@ abstract class AbstractOcamlBuildContext implements AddsToRuleKey {
         .setCFlags(ocamlPlatform.getCFlags())
         .setLdFlags(ocamlPlatform.getLdFlags());
   }
+
+  public static class Builder extends ImmutableOcamlBuildContext.Builder {}
 }

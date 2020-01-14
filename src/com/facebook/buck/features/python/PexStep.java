@@ -43,7 +43,7 @@ public class PexStep extends ShellStep {
   // The main module that begins execution in the PEX.
   private final String entry;
 
-  private final AbstractPythonResolvedPackageComponents components;
+  private final PythonResolvedPackageComponents components;
 
   private final PythonVersion pythonVersion;
   private final Path pythonPath;
@@ -59,7 +59,7 @@ public class PexStep extends ShellStep {
       PythonVersion pythonVersion,
       Path destination,
       String entry,
-      AbstractPythonResolvedPackageComponents components,
+      PythonResolvedPackageComponents components,
       ImmutableSet<String> preloadLibraries) {
     super(filesystem.getRootPath());
 

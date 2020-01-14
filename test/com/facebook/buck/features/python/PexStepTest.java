@@ -60,7 +60,7 @@ public class PexStepTest {
   private static final String ENTRY_POINT = "entry_point.main";
 
   private static final PythonResolvedPackageComponents COMPONENTS =
-      PythonResolvedPackageComponents.builder()
+      ImmutablePythonResolvedPackageComponents.builder()
           .putModules(
               TARGET,
               new PythonMappedComponents.Resolved(
@@ -114,7 +114,10 @@ public class PexStepTest {
             PYTHON_VERSION,
             DEST_PATH,
             ENTRY_POINT,
-            COMPONENTS.withZipSafe(false),
+            ImmutablePythonResolvedPackageComponents.builder()
+                .from(COMPONENTS)
+                .setZipSafe(false)
+                .build(),
             PRELOAD_LIBRARIES);
     String command =
         Joiner.on(" ").join(step.getShellCommandInternal(TestExecutionContext.newInstance()));
@@ -148,15 +151,18 @@ public class PexStepTest {
             PYTHON_VERSION,
             DEST_PATH,
             ENTRY_POINT,
-            COMPONENTS.withModules(
-                ImmutableMultimap.of(
-                    TARGET,
-                    new PythonMappedComponents.Resolved(
-                        ImmutableSortedMap.of(Paths.get("m"), Paths.get("/src/m"))),
-                    TARGET,
-                    new PythonModuleDirComponents.Resolved(realDir1),
-                    TARGET,
-                    new PythonModuleDirComponents.Resolved(realDir2))),
+            ImmutablePythonResolvedPackageComponents.builder()
+                .from(COMPONENTS)
+                .setModules(
+                    ImmutableMultimap.of(
+                        TARGET,
+                        new PythonMappedComponents.Resolved(
+                            ImmutableSortedMap.of(Paths.get("m"), Paths.get("/src/m"))),
+                        TARGET,
+                        new PythonModuleDirComponents.Resolved(realDir1),
+                        TARGET,
+                        new PythonModuleDirComponents.Resolved(realDir2)))
+                .build(),
             PRELOAD_LIBRARIES);
 
     Map<String, Object> args =

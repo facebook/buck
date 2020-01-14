@@ -17,7 +17,7 @@
 package com.facebook.buck.features.project.intellij.model;
 
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.features.project.intellij.IjProjectPaths;
 import com.facebook.buck.features.project.intellij.aggregation.AggregationMode;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
@@ -28,13 +28,12 @@ import java.util.List;
 import java.util.Optional;
 import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractIjProjectConfig {
+@BuckStyleValueWithBuilder
+public abstract class IjProjectConfig {
 
   public abstract JavaBuckConfig getJavaBuckConfig();
 
-  protected abstract BuckConfig getBuckConfig();
+  public abstract BuckConfig getBuckConfig();
 
   @Value.Default
   public boolean isAutogenerateAndroidFacetSourcesEnabled() {
@@ -115,4 +114,10 @@ abstract class AbstractIjProjectConfig {
   public abstract boolean isMultiCellModuleSupportEnabled();
 
   public abstract boolean isGeneratingDummyRDotJavaEnabled();
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends ImmutableIjProjectConfig.Builder {}
 }

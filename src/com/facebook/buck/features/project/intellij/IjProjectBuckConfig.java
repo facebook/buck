@@ -101,7 +101,7 @@ public class IjProjectBuckConfig {
         .build();
   }
 
-  public static IjProjectConfig.Builder createBuilder(BuckConfig buckConfig) {
+  static IjProjectConfig.Builder createBuilder(BuckConfig buckConfig) {
     return IjProjectConfig.builder()
         .setAutogenerateAndroidFacetSourcesEnabled(
             !buckConfig.getBooleanValue(

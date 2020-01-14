@@ -17,7 +17,7 @@
 package com.facebook.buck.features.project.intellij.model;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.features.project.intellij.IjDependencyListBuilder;
 import com.facebook.buck.features.project.intellij.Util;
 import com.facebook.buck.features.project.intellij.model.folders.IjFolder;
@@ -32,9 +32,8 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 /** Represents a single IntelliJ module. */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractIjModule implements IjProjectElement {
+@BuckStyleValueWithBuilder
+public abstract class IjModule implements IjProjectElement {
 
   @Override
   @Value.Derived
@@ -128,4 +127,10 @@ abstract class AbstractIjModule implements IjProjectElement {
         || another instanceof IjModule
             && getModuleBasePath().equals(((IjModule) another).getModuleBasePath());
   }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends ImmutableIjModule.Builder {}
 }

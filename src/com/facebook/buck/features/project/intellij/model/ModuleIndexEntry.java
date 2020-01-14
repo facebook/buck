@@ -14,40 +14,35 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.features.project.intellij.model.folders;
+package com.facebook.buck.features.project.intellij.model;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import java.io.File;
 import java.nio.file.Path;
 import javax.annotation.Nullable;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractIjSourceFolder implements Comparable<IjSourceFolder> {
-  public abstract String getType();
+@BuckStyleValue
+public abstract class ModuleIndexEntry implements Comparable<ModuleIndexEntry> {
+  public abstract String getFileUrl();
 
-  public abstract String getUrl();
-
-  public abstract Path getPath();
-
-  public abstract boolean getIsTestSource();
-
-  public abstract boolean getIsResourceFolder();
-
-  public abstract IjResourceFolderType getIjResourceFolderType();
+  public abstract Path getFilePath();
 
   @Nullable
-  public abstract Path getRelativeOutputPath();
-
-  @Nullable
-  public abstract String getPackagePrefix();
+  public abstract String getGroup();
 
   @Override
-  public int compareTo(IjSourceFolder o) {
+  public int compareTo(ModuleIndexEntry o) {
     if (this == o) {
       return 0;
     }
 
-    return getUrl().compareTo(o.getUrl());
+    return getFilePath()
+        .toString()
+        .replace(File.separatorChar, ' ')
+        .compareTo(o.getFilePath().toString().replace(File.separatorChar, ' '));
+  }
+
+  public static ModuleIndexEntry of(String fileUrl, Path filePath, @Nullable String group) {
+    return ImmutableModuleIndexEntry.of(fileUrl, filePath, group);
   }
 }

@@ -311,18 +311,16 @@ public class PythonBinaryDescription
 
     // Build up the list of all components going into the python binary.
     PythonPackagable root =
-        PythonBinaryPackagable.builder()
-            .setBuildTarget(buildTarget)
-            .setFilesystem(projectFilesystem)
-            .setPythonPackageDeps(
-                PythonUtil.getDeps(
-                        pythonPlatform, cxxPlatform, args.getDeps(), args.getPlatformDeps())
-                    .stream()
-                    .map(graphBuilder::getRule)
-                    .collect(ImmutableList.toImmutableList()))
-            .setPythonModules(modules)
-            .setPythonZipSafe(args.getZipSafe())
-            .build();
+        ImmutablePythonBinaryPackagable.of(
+            buildTarget,
+            projectFilesystem,
+            PythonUtil.getDeps(pythonPlatform, cxxPlatform, args.getDeps(), args.getPlatformDeps())
+                .stream()
+                .map(graphBuilder::getRule)
+                .collect(ImmutableList.toImmutableList()),
+            modules,
+            Optional.empty(),
+            args.getZipSafe());
 
     CellPathResolver cellRoots = context.getCellPathResolver();
     StringWithMacrosConverter macrosConverter =

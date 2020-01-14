@@ -14,27 +14,25 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.features.go;
+package com.facebook.buck.features.ocaml;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import java.nio.file.Path;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractGoLinkable {
+@BuckStyleValue
+abstract class OcamlGeneratedBuildRules {
+  public abstract ImmutableList<BuildRule> getRules();
 
-  abstract ImmutableMap<Path, SourcePath> getGoLinkInput();
+  public abstract ImmutableSortedSet<BuildRule> getNativeCompileDeps();
 
-  abstract ImmutableSet<BuildTarget> getExportedDeps();
+  public abstract ImmutableSortedSet<BuildRule> getBytecodeCompileDeps();
 
-  public Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return ruleFinder.filterBuildRuleInputs(getGoLinkInput().values());
-  }
+  public abstract ImmutableList<SourcePath> getObjectFiles();
+
+  public abstract BuildRule getBytecodeLink();
+
+  public abstract OcamlBuildContext getOcamlContext();
 }

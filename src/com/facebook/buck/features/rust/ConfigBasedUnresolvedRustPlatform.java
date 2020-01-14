@@ -101,8 +101,8 @@ public class ConfigBasedUnresolvedRustPlatform implements UnresolvedRustPlatform
                             tp,
                             true))
             .orElseGet(cxxPlatform::getLd);
-    RustPlatform.Builder builder =
-        RustPlatform.builder()
+    ImmutableRustPlatform.Builder builder =
+        ImmutableRustPlatform.builder()
             .setRustCompiler(rustCompiler)
             .addAllRustLibraryFlags(
                 rustBuckConfig.getRustcLibraryFlags(name).stream()

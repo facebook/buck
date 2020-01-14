@@ -16,14 +16,12 @@
 
 package com.facebook.buck.features.project.intellij.model;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.features.project.intellij.model.folders.IjSourceFolder;
 import com.google.common.collect.ImmutableList;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractContentRoot implements Comparable<ContentRoot> {
+@BuckStyleValue
+public abstract class ContentRoot implements Comparable<ContentRoot> {
   public abstract String getUrl();
 
   public abstract ImmutableList<IjSourceFolder> getFolders();
@@ -35,5 +33,9 @@ abstract class AbstractContentRoot implements Comparable<ContentRoot> {
     }
 
     return getUrl().compareTo(o.getUrl());
+  }
+
+  public static ContentRoot of(String url, ImmutableList<IjSourceFolder> folders) {
+    return ImmutableContentRoot.of(url, folders);
   }
 }

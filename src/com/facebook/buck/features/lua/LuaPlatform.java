@@ -25,16 +25,14 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.cxx.AbstractCxxLibraryGroup;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
 import java.util.Optional;
-import org.immutables.value.Value;
 
-@Value.Immutable(copy = true)
-@BuckStyleImmutable
-abstract class AbstractLuaPlatform implements FlavorConvertible {
+@BuckStyleValueWithBuilder
+public abstract class LuaPlatform implements FlavorConvertible {
 
   public static final String FLAVOR_DOMAIN_NAME = "Lua Platform";
 
@@ -82,6 +80,37 @@ abstract class AbstractLuaPlatform implements FlavorConvertible {
             new SystemLuaCxxLibrary(
                 UnconfiguredBuildTargetView.of(BaseName.of("//system"), "lua")
                     .configure(targetConfiguration)));
+  }
+
+  public LuaPlatform withLua(ToolProvider lua) {
+    if (getLua().equals(lua)) {
+      return this;
+    }
+    return ImmutableLuaPlatform.builder().from(this).setLua(lua).build();
+  }
+
+  public LuaPlatform withPackageStyle(PackageStyle packageStyle) {
+    if (getPackageStyle().equals(packageStyle)) {
+      return this;
+    }
+    return ImmutableLuaPlatform.builder().from(this).setPackageStyle(packageStyle).build();
+  }
+
+  public LuaPlatform withNativeLinkStrategy(NativeLinkStrategy nativeLinkStrategy) {
+    if (getNativeLinkStrategy().equals(nativeLinkStrategy)) {
+      return this;
+    }
+    return ImmutableLuaPlatform.builder()
+        .from(this)
+        .setNativeLinkStrategy(nativeLinkStrategy)
+        .build();
+  }
+
+  public LuaPlatform withExtension(String extension) {
+    if (getExtension().equals(extension)) {
+      return this;
+    }
+    return ImmutableLuaPlatform.builder().from(this).setExtension(extension).build();
   }
 
   protected enum PackageStyle {

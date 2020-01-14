@@ -16,7 +16,7 @@
 
 package com.facebook.buck.features.project.intellij.model;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.features.project.intellij.lang.android.AndroidManifestParser;
 import com.facebook.buck.features.project.intellij.lang.android.AndroidProjectType;
 import com.google.common.base.Preconditions;
@@ -25,24 +25,22 @@ import com.google.common.collect.Ordering;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.Set;
 import org.immutables.value.Value;
 
 /**
  * The information necessary to add the Android facet to the module. This essentially means the Java
  * code in the given module is written against the Android SDK.
  */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractIjModuleAndroidFacet {
+@BuckStyleValueWithBuilder
+public abstract class IjModuleAndroidFacet {
   /** @return set of paths to all AndroidManifest.xml files. */
   public abstract ImmutableSet<Path> getManifestPaths();
 
   /** @return paths to resources (usually stuff under the res/ folder). */
-  public abstract Set<Path> getResourcePaths();
+  public abstract ImmutableSet<Path> getResourcePaths();
 
   /** @return paths to assets (usually stuff under the assets/ folder). */
-  public abstract Set<Path> getAssetPaths();
+  public abstract ImmutableSet<Path> getAssetPaths();
 
   /** @return paths to the proguard configuration. */
   public abstract Optional<Path> getProguardConfigPath();
@@ -70,9 +68,7 @@ abstract class AbstractIjModuleAndroidFacet {
   @Value.Lazy
   public Optional<String> getMinSdkVersion() {
     Ordering<String> byIntegerValue = Ordering.natural().onResultOf(Integer::valueOf);
-    return getMinSdkVersions().stream()
-        .filter(AbstractIjModuleAndroidFacet::isInteger)
-        .min(byIntegerValue);
+    return getMinSdkVersions().stream().filter(IjModuleAndroidFacet::isInteger).min(byIntegerValue);
   }
 
   private static boolean isInteger(String s) {
@@ -150,4 +146,10 @@ abstract class AbstractIjModuleAndroidFacet {
     }
     return androidManifestPath;
   }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends ImmutableIjModuleAndroidFacet.Builder {}
 }

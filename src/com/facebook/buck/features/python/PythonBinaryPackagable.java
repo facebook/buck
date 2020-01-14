@@ -18,7 +18,7 @@ package com.facebook.buck.features.python;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.io.file.MorePaths;
@@ -33,9 +33,8 @@ import org.immutables.value.Value;
  * Utility class to model Python binary/test rules as {@link PythonPackagable}s for graph traversals
  * (e.g. {@code PythonUtil.getAllComponents())}.
  */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractPythonBinaryPackagable implements PythonPackagable {
+@BuckStyleValue
+abstract class PythonBinaryPackagable implements PythonPackagable {
 
   @Override
   public abstract BuildTarget getBuildTarget();

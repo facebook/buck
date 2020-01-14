@@ -102,10 +102,7 @@ public class DBinaryDescription
             /* compilerFlags */ ImmutableList.of(),
             args.getSrcs(),
             args.getLinkerFlags(),
-            DIncludes.builder()
-                .setLinkTree(sourceTree.getSourcePathToOutput())
-                .addAllSources(args.getSrcs().getPaths())
-                .build());
+            ImmutableDIncludes.of(sourceTree.getSourcePathToOutput(), args.getSrcs().getPaths()));
     graphBuilder.addToIndex(nativeLinkable);
 
     // Create a Tool for the executable.

@@ -21,23 +21,21 @@ import com.facebook.buck.core.model.FlavorConvertible;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /** Abstracting the tooling/flags/libraries used to build Go rules. */
-@Value.Immutable(copy = true)
-@BuckStyleImmutable
-abstract class AbstractGoPlatform implements FlavorConvertible, AddsToRuleKey {
+@BuckStyleValueWithBuilder
+abstract class GoPlatform implements FlavorConvertible, AddsToRuleKey {
 
   @AddToRuleKey
-  abstract GoOs getGoOs();
+  public abstract GoOs getGoOs();
 
   @AddToRuleKey
-  abstract GoArch getGoArch();
+  public abstract GoArch getGoArch();
 
   @Override
   public abstract Flavor getFlavor();
@@ -63,4 +61,18 @@ abstract class AbstractGoPlatform implements FlavorConvertible, AddsToRuleKey {
   public abstract CxxPlatform getCxxPlatform();
 
   public abstract ImmutableList<String> getExternalLinkerFlags();
+
+  public GoPlatform withGoOs(GoOs goOs) {
+    if (getGoOs().equals(goOs)) {
+      return this;
+    }
+    return ImmutableGoPlatform.builder().from(this).setGoOs(goOs).build();
+  }
+
+  public GoPlatform withGoArch(GoArch goArch) {
+    if (getGoArch().equals(goArch)) {
+      return this;
+    }
+    return ImmutableGoPlatform.builder().from(this).setGoArch(goArch).build();
+  }
 }
