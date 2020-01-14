@@ -27,6 +27,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
+import com.facebook.buck.core.rules.providers.lib.ImmutableRunInfo;
+import com.facebook.buck.core.rules.providers.lib.RunInfo;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -41,34 +43,13 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.stream.Stream;
 import org.junit.Test;
 
 public class AggregateCommandLineArgsTest {
 
-  static class EnvCommandLineArgs implements CommandLineArgs {
-    private final ImmutableSortedMap<String, String> env;
-    private final ImmutableList<Object> args;
-
-    EnvCommandLineArgs(ImmutableSortedMap<String, String> env, ImmutableList<Object> args) {
-      this.env = env;
-      this.args = args;
-    }
-
-    @Override
-    public ImmutableSortedMap<String, String> getEnvironmentVariables() {
-      return env;
-    }
-
-    @Override
-    public Stream<Object> getArgs() {
-      return args.stream();
-    }
-
-    @Override
-    public int getEstimatedArgsCount() {
-      return args.size();
-    }
+  private static RunInfo createRunInfo(
+      ImmutableSortedMap<String, String> env, ImmutableList<Object> args) {
+    return new ImmutableRunInfo(env, new ListCommandLineArgs(args));
   }
 
   @Test
@@ -82,10 +63,8 @@ public class AggregateCommandLineArgsTest {
     CommandLineArgs args =
         new AggregateCommandLineArgs(
             ImmutableList.of(
-                new EnvCommandLineArgs(
-                    ImmutableSortedMap.of("FOO", "foo_val"), ImmutableList.of(path1)),
-                new EnvCommandLineArgs(
-                    ImmutableSortedMap.of("BAZ", "baz_val"), ImmutableList.of(path2, 1)),
+                createRunInfo(ImmutableSortedMap.of("FOO", "foo_val"), ImmutableList.of(path1)),
+                createRunInfo(ImmutableSortedMap.of("BAZ", "baz_val"), ImmutableList.of(path2, 1)),
                 CommandLineArgsFactory.from(ImmutableList.of("foo", "bar"))));
 
     CommandLine cli =
@@ -129,20 +108,20 @@ public class AggregateCommandLineArgsTest {
         ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("some_bin")));
     Artifact path2 =
         ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("other_file")));
-    EnvCommandLineArgs envArgs1 =
-        new EnvCommandLineArgs(ImmutableSortedMap.of("FOO", "foo_val"), ImmutableList.of(path1));
+    RunInfo envArgs1 =
+        createRunInfo(ImmutableSortedMap.of("FOO", "foo_val"), ImmutableList.of(path1));
     ListCommandLineArgs listArgs1 =
         new ListCommandLineArgs(ImmutableList.of(path1, 1, "foo", path2));
-    EnvCommandLineArgs envArgs2 =
-        new EnvCommandLineArgs(ImmutableSortedMap.of("FOO", "foo_val"), ImmutableList.of(path1));
+    RunInfo envArgs2 =
+        createRunInfo(ImmutableSortedMap.of("FOO", "foo_val"), ImmutableList.of(path1));
     ListCommandLineArgs listArgs2 =
         new ListCommandLineArgs(ImmutableList.of(path1, 1, "foo", path2));
-    EnvCommandLineArgs envArgs3 =
-        new EnvCommandLineArgs(ImmutableSortedMap.of("BAR", "bar_val"), ImmutableList.of(path1));
+    RunInfo envArgs3 =
+        createRunInfo(ImmutableSortedMap.of("BAR", "bar_val"), ImmutableList.of(path1));
     ListCommandLineArgs listArgs3 =
         new ListCommandLineArgs(ImmutableList.of(path1, 1, "foo", path2));
-    EnvCommandLineArgs envArgs4 =
-        new EnvCommandLineArgs(ImmutableSortedMap.of("FOO", "foo_val"), ImmutableList.of(path1));
+    RunInfo envArgs4 =
+        createRunInfo(ImmutableSortedMap.of("FOO", "foo_val"), ImmutableList.of(path1));
     ListCommandLineArgs listArgs4 =
         new ListCommandLineArgs(ImmutableList.of(path1, 1, "foo", path2, path3));
     ListCommandLineArgs listArgs5 =
