@@ -17,7 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.model.BuildId;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.runner.FileClassPathRunner;
 import com.facebook.buck.test.selectors.TestSelectorList;
@@ -38,9 +38,8 @@ import org.immutables.value.Value;
  * Holds and formats the arguments and system properties that should be passed to the JVM to run
  * JUnit.
  */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractJUnitJvmArgs {
+@BuckStyleValueWithBuilder
+abstract class JUnitJvmArgs {
   private static final String BUILD_ID_PROPERTY = "com.facebook.buck.buildId";
   private static final String MODULE_BASE_PATH_PROPERTY = "com.facebook.buck.moduleBasePath";
   private static final String STD_OUT_LOG_LEVEL_PROPERTY = "com.facebook.buck.stdOutLogLevel";

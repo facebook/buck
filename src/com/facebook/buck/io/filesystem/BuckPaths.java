@@ -17,15 +17,14 @@
 package com.facebook.buck.io.filesystem;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.util.BuckConstant;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 
-@Value.Immutable(copy = true)
-@BuckStyleImmutable
-abstract class AbstractBuckPaths {
+@BuckStyleValue
+public abstract class BuckPaths {
 
   /**
    * Default value for {@link #shouldIncludeTargetConfigHash()} when it is not specified by user.
@@ -38,11 +37,9 @@ abstract class AbstractBuckPaths {
     return BuckPaths.of(cellName, buckOut, buckOut, buckOutIncludeTargetConfigHash);
   }
 
-  @Value.Parameter
   public abstract CanonicalCellName getCellName();
 
   /** The relative path to the directory where Buck will generate its files. */
-  @Value.Parameter
   public abstract Path getBuckOut();
 
   @Value.Check
@@ -56,11 +53,9 @@ abstract class AbstractBuckPaths {
    * support configuring all output paths. However, for now, only certain paths below will use this
    * path.
    */
-  @Value.Parameter
   public abstract Path getConfiguredBuckOut();
 
   /** Whether to include the target configuration hash on buck-out. */
-  @Value.Parameter
   public abstract boolean shouldIncludeTargetConfigHash();
 
   /** The version the buck output directory was created for */
@@ -152,5 +147,28 @@ abstract class AbstractBuckPaths {
 
   public Path getSymlinkPathForDir(Path unconfiguredDirInBuckOut) {
     return getConfiguredBuckOut().resolve(getBuckOut().relativize(unconfiguredDirInBuckOut));
+  }
+
+  public static BuckPaths of(
+      CanonicalCellName cellName,
+      Path buckOut,
+      Path configuredBuckOut,
+      boolean shouldIncludeTargetConfigHash) {
+    return ImmutableBuckPaths.of(
+        cellName, buckOut, configuredBuckOut, shouldIncludeTargetConfigHash);
+  }
+
+  public BuckPaths withConfiguredBuckOut(Path configuredBuckOut) {
+    if (getConfiguredBuckOut().equals(configuredBuckOut)) {
+      return this;
+    }
+    return of(getCellName(), getBuckOut(), configuredBuckOut, shouldIncludeTargetConfigHash());
+  }
+
+  public BuckPaths withBuckOut(Path buckOut) {
+    if (getBuckOut().equals(buckOut)) {
+      return this;
+    }
+    return of(getCellName(), buckOut, getConfiguredBuckOut(), shouldIncludeTargetConfigHash());
   }
 }

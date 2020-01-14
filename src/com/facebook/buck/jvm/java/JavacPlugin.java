@@ -36,7 +36,7 @@ abstract class JavacPlugin extends NoopBuildRuleWithDeclaredAndExtraDeps {
     this.resolvedProperties = new ResolvedJavacPluginProperties(properties);
   }
 
-  public AbstractJavacPluginProperties getUnresolvedProperties() {
+  public JavacPluginProperties getUnresolvedProperties() {
     return properties; // Shut up PMD
   }
 

@@ -65,7 +65,7 @@ public class JUnitStepTest {
 
     int javaVersion = 8;
     JUnitJvmArgs args =
-        JUnitJvmArgs.builder()
+        ImmutableJUnitJvmArgs.builder()
             .setBuildId(pretendBuildId)
             .setBuckModuleBaseSourceCodePath(modulePath)
             .setTargetJavaVersion(javaVersion)
@@ -143,7 +143,7 @@ public class JUnitStepTest {
 
     int javaVersion = 11;
     JUnitJvmArgs args =
-        JUnitJvmArgs.builder()
+        ImmutableJUnitJvmArgs.builder()
             .setBuildId(pretendBuildId)
             .setBuckModuleBaseSourceCodePath(modulePath)
             .setTargetJavaVersion(javaVersion)
@@ -208,7 +208,7 @@ public class JUnitStepTest {
     Path classpathFile = filesystem.resolve("foo");
 
     JUnitJvmArgs args =
-        JUnitJvmArgs.builder()
+        ImmutableJUnitJvmArgs.builder()
             .setBuildId(pretendBuildId)
             .setBuckModuleBaseSourceCodePath(modulePath)
             .setTargetJavaVersion(8)
@@ -259,7 +259,7 @@ public class JUnitStepTest {
 
     int javaVersion = 8;
     JUnitJvmArgs args =
-        JUnitJvmArgs.builder()
+        ImmutableJUnitJvmArgs.builder()
             .setClasspathFile(classpathFile)
             .setBuildId(pretendBuildId)
             .setBuckModuleBaseSourceCodePath(modulePath)

@@ -42,11 +42,11 @@ import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
-import com.facebook.buck.jvm.java.AbstractJavacLanguageLevelOptions;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
+import com.facebook.buck.jvm.java.JavacLanguageLevelOptions;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.SpeculativeParsing;
@@ -233,7 +233,7 @@ public class IjProjectCommandHelper {
 
   private ImmutableSet<BuildTarget> writeProjectAndGetRequiredBuildTargets(
       TargetGraphCreationResult targetGraphCreationResult) throws IOException {
-    AbstractJavacLanguageLevelOptions languageLevelOptions =
+    JavacLanguageLevelOptions languageLevelOptions =
         buckConfig.getView(JavaBuckConfig.class).getJavacLanguageLevelOptions();
 
     IjProject project =

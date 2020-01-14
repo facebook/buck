@@ -58,7 +58,7 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaLibrary;
-import com.facebook.buck.jvm.java.AbstractJavacPluginProperties.Type;
+import com.facebook.buck.jvm.java.JavacPluginProperties.Type;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
@@ -916,7 +916,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             /* srcs */ ImmutableSortedSet.of("foo/Bar.java"),
             /* deps */ ImmutableSortedSet.of(),
             /* exportedDeps */ ImmutableSortedSet.of(),
-            Optional.of(AbstractJavacOptions.SpoolMode.DIRECT_TO_JAR),
+            Optional.of(JavacOptions.SpoolMode.DIRECT_TO_JAR),
             /* postprocessClassesCommands */ ImmutableList.of());
 
     BuildContext buildContext = createBuildContext();
@@ -939,7 +939,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             /* srcs */ ImmutableSortedSet.of("foo/Bar.java"),
             /* deps */ ImmutableSortedSet.of(),
             /* exportedDeps */ ImmutableSortedSet.of(),
-            Optional.of(AbstractJavacOptions.SpoolMode.DIRECT_TO_JAR),
+            Optional.of(JavacOptions.SpoolMode.DIRECT_TO_JAR),
             /* postprocessClassesCommands */ ImmutableList.of("process_class_files.py"));
 
     BuildContext buildContext = createBuildContext();
@@ -962,7 +962,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             /* srcs */ ImmutableSortedSet.of("foo/Bar.java"),
             /* deps */ ImmutableSortedSet.of(),
             /* exportedDeps */ ImmutableSortedSet.of(),
-            Optional.of(AbstractJavacOptions.SpoolMode.INTERMEDIATE_TO_DISK),
+            Optional.of(JavacOptions.SpoolMode.INTERMEDIATE_TO_DISK),
             /* postprocessClassesCommands */ ImmutableList.of());
 
     BuildContext buildContext = createBuildContext();
@@ -1323,7 +1323,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
       ImmutableSet<String> srcs,
       ImmutableSortedSet<BuildRule> deps,
       ImmutableSortedSet<BuildRule> exportedDeps,
-      Optional<AbstractJavacOptions.SpoolMode> spoolMode,
+      Optional<JavacOptions.SpoolMode> spoolMode,
       ImmutableList<String> postprocessClassesCommands)
       throws NoSuchBuildTargetException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
@@ -1590,19 +1590,19 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   // standard javac plugin, test scenarios.
   private class TestJavaPluginScenario {
 
-    private final AbstractJavacPluginParams.Builder annotationProcessorParams;
-    private final AbstractJavacPluginParams.Builder standardJavacPluginParams;
+    private final JavacPluginParams.Builder annotationProcessorParams;
+    private final JavacPluginParams.Builder standardJavacPluginParams;
 
     public TestJavaPluginScenario() {
       annotationProcessorParams = JavacPluginParams.builder();
       standardJavacPluginParams = JavacPluginParams.builder();
     }
 
-    public AbstractJavacPluginParams.Builder getAnnotationProcessingParamsBuilder() {
+    public JavacPluginParams.Builder getAnnotationProcessingParamsBuilder() {
       return annotationProcessorParams;
     }
 
-    public AbstractJavacPluginParams.Builder getStandardJavacPluginParamsBuilder() {
+    public JavacPluginParams.Builder getStandardJavacPluginParamsBuilder() {
       return standardJavacPluginParams;
     }
 

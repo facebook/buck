@@ -18,13 +18,11 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import org.immutables.value.Value;
-import org.immutables.value.Value.Immutable;
 
-@BuckStyleImmutable
-@Immutable
-public abstract class AbstractJavacLanguageLevelOptions implements AddsToRuleKey {
+@BuckStyleValueWithBuilder
+public abstract class JavacLanguageLevelOptions implements AddsToRuleKey {
 
   public static final JavacLanguageLevelOptions DEFAULT =
       JavacLanguageLevelOptions.builder().build();
@@ -43,4 +41,10 @@ public abstract class AbstractJavacLanguageLevelOptions implements AddsToRuleKey
   public String getTargetLevel() {
     return TARGETED_JAVA_VERSION;
   }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends ImmutableJavacLanguageLevelOptions.Builder {}
 }

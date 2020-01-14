@@ -114,7 +114,7 @@ public class ExternalJavacProvider implements JavacProvider {
     if (Strings.isNullOrEmpty(output)) {
       version = actualPath.toString();
     } else {
-      version = JavacVersion.of(output).toString();
+      version = ImmutableJavacVersion.of(output).toString();
     }
     return VersionedTool.of(actualPath, "external_javac", version);
   }

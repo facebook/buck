@@ -16,14 +16,11 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractJavacVersion {
+@BuckStyleValue
+abstract class JavacVersion {
 
-  @Value.Parameter
   public abstract String getVersionString();
 
   @Override

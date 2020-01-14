@@ -89,15 +89,15 @@ public class Jsr199JavacIntegrationTest {
     assertEquals(
         String.format(
             "javac -source %s -target %s -g " + "-d %s " + "-classpath '' " + "@" + pathToSrcsList,
-            AbstractJavacLanguageLevelOptions.TARGETED_JAVA_VERSION,
-            AbstractJavacLanguageLevelOptions.TARGETED_JAVA_VERSION,
+            JavacLanguageLevelOptions.TARGETED_JAVA_VERSION,
+            JavacLanguageLevelOptions.TARGETED_JAVA_VERSION,
             pathToOutputDir),
         javac.getDescription(
             ImmutableList.of(
                 "-source",
-                AbstractJavacLanguageLevelOptions.TARGETED_JAVA_VERSION,
+                JavacLanguageLevelOptions.TARGETED_JAVA_VERSION,
                 "-target",
-                AbstractJavacLanguageLevelOptions.TARGETED_JAVA_VERSION,
+                JavacLanguageLevelOptions.TARGETED_JAVA_VERSION,
                 "-g",
                 "-d",
                 pathToOutputDir,

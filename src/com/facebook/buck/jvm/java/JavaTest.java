@@ -233,7 +233,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     BuildId buildId = buckEventBus.getBuildId();
     TestSelectorList testSelectorList = options.getTestSelectorList();
     JUnitJvmArgs args =
-        JUnitJvmArgs.builder()
+        ImmutableJUnitJvmArgs.builder()
             .setTargetJavaVersion(targetJavaVersion)
             .setTestType(testType)
             .setDirectoryForTestResults(outDir)

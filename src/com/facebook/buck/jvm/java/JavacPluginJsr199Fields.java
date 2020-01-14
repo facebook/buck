@@ -16,16 +16,15 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.net.URL;
 import org.immutables.value.Value;
 
 /** Fields required by Jsr199Javac in order to configure compiler. */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractJavacPluginJsr199Fields {
+@BuckStyleValue
+public abstract class JavacPluginJsr199Fields {
 
   public abstract boolean getCanReuseClassLoader();
 

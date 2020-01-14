@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
-import static com.facebook.buck.jvm.java.AbstractJavacLanguageLevelOptions.TARGETED_JAVA_VERSION;
+import static com.facebook.buck.jvm.java.JavacLanguageLevelOptions.TARGETED_JAVA_VERSION;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasKey;
@@ -266,7 +266,7 @@ public class JavaBuckConfigTest {
 
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(localConfig));
 
-    AbstractJavacLanguageLevelOptions options = config.getJavacLanguageLevelOptions();
+    JavacLanguageLevelOptions options = config.getJavacLanguageLevelOptions();
 
     assertEquals(sourceLevel, options.getSourceLevel());
     assertEquals(targetLevel, options.getTargetLevel());
@@ -276,7 +276,7 @@ public class JavaBuckConfigTest {
   public void shouldSetJavaTargetAndSourceVersionDefaultToSaneValues() throws IOException {
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
 
-    AbstractJavacLanguageLevelOptions options = config.getJavacLanguageLevelOptions();
+    JavacLanguageLevelOptions options = config.getJavacLanguageLevelOptions();
 
     assertEquals(TARGETED_JAVA_VERSION, options.getSourceLevel());
     assertEquals(TARGETED_JAVA_VERSION, options.getTargetLevel());

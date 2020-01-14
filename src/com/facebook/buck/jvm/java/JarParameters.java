@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -24,9 +24,8 @@ import java.util.function.Predicate;
 import java.util.logging.Level;
 import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractJarParameters {
+@BuckStyleValueWithBuilder
+public abstract class JarParameters {
   @Value.Default
   public boolean getHashEntries() {
     return false;
@@ -59,4 +58,10 @@ abstract class AbstractJarParameters {
   public Level getDuplicatesLogLevel() {
     return Level.INFO;
   }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends ImmutableJarParameters.Builder {}
 }

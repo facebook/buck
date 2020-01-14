@@ -23,7 +23,7 @@ import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.google.common.collect.ImmutableSet;
@@ -36,9 +36,8 @@ import org.immutables.value.Value;
  * input properties in particular can be expensive to compute, so this object should be cached when
  * possible.
  */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractJavacPluginProperties implements AddsToRuleKey {
+@BuckStyleValueWithBuilder
+abstract class JavacPluginProperties implements AddsToRuleKey {
 
   enum Type {
     JAVAC_PLUGIN,
@@ -75,17 +74,14 @@ abstract class AbstractJavacPluginProperties implements AddsToRuleKey {
   }
 
   public ResolvedJavacPluginProperties resolve() {
-    return new ResolvedJavacPluginProperties((JavacPluginProperties) this);
+    return new ResolvedJavacPluginProperties(this);
   }
 
-  abstract static class Builder {
-    public abstract Builder addInputs(SourcePath... elements);
+  public static Builder builder() {
+    return new Builder();
+  }
 
-    public abstract Builder addClasspathEntries(SourcePath... elements);
-
-    public abstract Builder addAllClasspathEntries(Iterable<? extends SourcePath> elements);
-
-    public abstract JavacPluginProperties build();
+  static class Builder extends ImmutableJavacPluginProperties.Builder {
 
     public JavacPluginProperties.Builder addDep(BuildRule rule) {
       if (rule.getClass().isAnnotationPresent(BuildsAnnotationProcessor.class)) {
@@ -115,7 +111,7 @@ abstract class AbstractJavacPluginProperties implements AddsToRuleKey {
                 + "must refer only to prebuilt jar, java binary, or java library targets.",
             rule.getFullyQualifiedName());
       }
-      return (JavacPluginProperties.Builder) this;
+      return this;
     }
   }
 }

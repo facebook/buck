@@ -16,12 +16,12 @@
 
 package com.facebook.buck.jvm.java;
 
-import static com.facebook.buck.jvm.java.AbstractJavacPluginProperties.Type.ANNOTATION_PROCESSOR;
+import static com.facebook.buck.jvm.java.JavacPluginProperties.Type.ANNOTATION_PROCESSOR;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -41,14 +41,13 @@ import org.immutables.value.Value;
  * the information through buck in a more descriptive package rather than passing all the components
  * separately.
  */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractJavacPluginParams implements AddsToRuleKey {
+@BuckStyleValueWithBuilder
+public abstract class JavacPluginParams implements AddsToRuleKey {
 
   public static final JavacPluginParams EMPTY = builder().build();
 
   @AddToRuleKey
-  protected abstract ImmutableList<ResolvedJavacPluginProperties> getPluginProperties();
+  public abstract ImmutableList<ResolvedJavacPluginProperties> getPluginProperties();
 
   @Value.NaturalOrder
   @AddToRuleKey
@@ -56,7 +55,7 @@ abstract class AbstractJavacPluginParams implements AddsToRuleKey {
 
   @Value.Default
   @AddToRuleKey
-  protected boolean getProcessOnly() {
+  public boolean getProcessOnly() {
     return false;
   }
 
@@ -81,7 +80,7 @@ abstract class AbstractJavacPluginParams implements AddsToRuleKey {
 
   /** A customized Builder for JavacPluginParams. */
   @org.immutables.builder.Builder.AccessibleFields
-  public static class Builder extends JavacPluginParams.Builder {
+  public static class Builder extends ImmutableJavacPluginParams.Builder {
     private Set<String> legacyAnnotationProcessorNames = new LinkedHashSet<>();
     private List<BuildRule> legacyAnnotationProcessorDeps = new ArrayList<>();
 
@@ -91,11 +90,11 @@ abstract class AbstractJavacPluginParams implements AddsToRuleKey {
       }
 
       return getLegacyProcessors().stream()
-          .map(AbstractJavacPluginProperties::resolve)
+          .map(JavacPluginProperties::resolve)
           .collect(ImmutableList.toImmutableList());
     }
 
-    private ImmutableList<AbstractJavacPluginProperties> getLegacyProcessors() {
+    private ImmutableList<JavacPluginProperties> getLegacyProcessors() {
       JavacPluginProperties.Builder legacySafeProcessorsBuilder =
           JavacPluginProperties.builder()
               .setType(ANNOTATION_PROCESSOR)
@@ -110,7 +109,7 @@ abstract class AbstractJavacPluginParams implements AddsToRuleKey {
 
       JavacPluginProperties legacySafeProcessors = legacySafeProcessorsBuilder.build();
 
-      ImmutableList.Builder<AbstractJavacPluginProperties> resultBuilder = ImmutableList.builder();
+      ImmutableList.Builder<JavacPluginProperties> resultBuilder = ImmutableList.builder();
       if (!legacySafeProcessors.isEmpty()) {
         resultBuilder.add(legacySafeProcessors);
       }

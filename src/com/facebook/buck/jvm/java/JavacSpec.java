@@ -18,22 +18,21 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import java.util.Optional;
 import org.immutables.value.Value;
 
-@Value.Immutable(copy = true)
-@BuckStyleImmutable
-abstract class AbstractJavacSpec {
-  protected abstract Optional<SourcePath> getJavacPath();
+@BuckStyleValueWithBuilder
+public abstract class JavacSpec {
+  public abstract Optional<SourcePath> getJavacPath();
 
-  protected abstract Optional<SourcePath> getJavacJarPath();
+  public abstract Optional<SourcePath> getJavacJarPath();
 
-  protected abstract Optional<String> getCompilerClassName();
+  public abstract Optional<String> getCompilerClassName();
 
   @Value.Lazy
   public JavacProvider getJavacProvider() {
-    return ExternalJavacProvider.getProviderForSpec((JavacSpec) this);
+    return ExternalJavacProvider.getProviderForSpec(this);
   }
 
   public Javac.Source getJavacSource() {
@@ -49,4 +48,10 @@ abstract class AbstractJavacSpec {
       return Javac.Source.JDK;
     }
   }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends ImmutableJavacSpec.Builder {}
 }

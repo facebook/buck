@@ -24,7 +24,7 @@ import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -38,15 +38,15 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
 /**
  * Represents the command line options that should be passed to javac. Note that the options do not
  * include either the classpath or the directory for storing class files.
  */
-@Value.Immutable(copy = true)
-@BuckStyleImmutable
-abstract class AbstractJavacOptions implements AddsToRuleKey {
+@BuckStyleValueWithBuilder
+public abstract class JavacOptions implements AddsToRuleKey {
 
   /** The method in which the compiler output is spooled. */
   public enum SpoolMode {
@@ -68,7 +68,7 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
 
   @Value.Default
   @AddToRuleKey
-  protected SpoolMode getSpoolMode() {
+  public SpoolMode getSpoolMode() {
     return SpoolMode.INTERMEDIATE_TO_DISK;
   }
 
@@ -107,7 +107,7 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
 
   // TODO(cjhopman): This should use SourcePaths
   @AddToRuleKey
-  protected abstract Optional<String> getBootclasspath();
+  public abstract Optional<String> getBootclasspath();
 
   // TODO(cjhopman): This should be resolved to the appropriate source.
   // TODO(cjhopman): Should this be added to the rulekey?
@@ -127,7 +127,7 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
 
   @Value.Default
   @CustomFieldBehavior(DefaultFieldSerialization.class)
-  protected boolean trackJavacPhaseEvents() {
+  public boolean trackJavacPhaseEvents() {
     return false;
   }
 
@@ -148,13 +148,45 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
   public JavacOptions withBootclasspathFromContext(ExtraClasspathProvider extraClasspathProvider) {
     String extraClasspath =
         Joiner.on(File.pathSeparator).join(extraClasspathProvider.getExtraClasspath());
-    JavacOptions options = (JavacOptions) this;
+    JavacOptions options = this;
 
     if (!extraClasspath.isEmpty()) {
       return options.withBootclasspath(extraClasspath);
     }
 
     return options;
+  }
+
+  public JavacOptions withExtraArguments(ImmutableList<String> extraArguments) {
+    if (getExtraArguments().equals(extraArguments)) {
+      return this;
+    }
+    return builder().from(this).setExtraArguments(extraArguments).build();
+  }
+
+  public JavacOptions withLanguageLevelOptions(JavacLanguageLevelOptions languageLevelOptions) {
+    if (getLanguageLevelOptions().equals(languageLevelOptions)) {
+      return this;
+    }
+    return builder().from(this).setLanguageLevelOptions(languageLevelOptions).build();
+  }
+
+  public JavacOptions withBootclasspath(@Nullable String bootclasspath) {
+    if (getBootclasspath().equals(Optional.ofNullable(bootclasspath))) {
+      return this;
+    }
+    return builder().from(this).setBootclasspath(bootclasspath).build();
+  }
+
+  public JavacOptions withJavaAnnotationProcessorParams(
+      JavacPluginParams javaAnnotationProcessorParams) {
+    if (getJavaAnnotationProcessorParams().equals(javaAnnotationProcessorParams)) {
+      return this;
+    }
+    return builder()
+        .from(this)
+        .setJavaAnnotationProcessorParams(javaAnnotationProcessorParams)
+        .build();
   }
 
   /**
@@ -271,8 +303,14 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
   }
 
   public static JavacOptions.Builder builder(JavacOptions options) {
-    JavacOptions.Builder builder = JavacOptions.builder();
+    Builder builder = builder();
 
     return builder.from(options);
   }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends ImmutableJavacOptions.Builder {}
 }
