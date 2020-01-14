@@ -73,7 +73,9 @@ public class AuditRuleTypesCommandTest {
     TestConsole console = new TestConsole();
 
     AuditRuleTypesCommand.collectAndDumpBuildRuleTypesInformation(
-        console, KnownNativeRuleTypes.of(DESCRIPTIONS, ImmutableList.of()), true);
+        console,
+        KnownNativeRuleTypes.of(DESCRIPTIONS, ImmutableList.of(), ImmutableList.of()),
+        true);
 
     @SuppressWarnings("PMD.LooseCoupling")
     List<String> buildRuleTypes =
@@ -88,7 +90,9 @@ public class AuditRuleTypesCommandTest {
     TestConsole console = new TestConsole();
 
     AuditRuleTypesCommand.collectAndDumpBuildRuleTypesInformation(
-        console, KnownNativeRuleTypes.of(DESCRIPTIONS, ImmutableList.of()), false);
+        console,
+        KnownNativeRuleTypes.of(DESCRIPTIONS, ImmutableList.of(), ImmutableList.of()),
+        false);
 
     List<String> buildRuleTypes =
         Splitter.on(System.lineSeparator())

@@ -83,7 +83,9 @@ public class BuildCommandErrorsIntegrationTest {
             knownConfigurationDescriptions) ->
             cell ->
                 KnownNativeRuleTypes.of(
-                    ImmutableList.of(mockDescription), knownConfigurationDescriptions));
+                    ImmutableList.of(mockDescription),
+                    knownConfigurationDescriptions,
+                    ImmutableList.of()));
   }
 
   // TODO(cjhopman): Add cases for errors in other phases of the build (watchman, parsing,

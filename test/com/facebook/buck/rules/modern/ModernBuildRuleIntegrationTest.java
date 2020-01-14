@@ -63,7 +63,8 @@ public class ModernBuildRuleIntegrationTest {
             cell ->
                 KnownNativeRuleTypes.of(
                     ImmutableList.of(new TemporaryWritingDescription()),
-                    knownConfigurationDescriptions));
+                    knownConfigurationDescriptions,
+                    ImmutableList.of()));
     workspace.setUp();
   }
 

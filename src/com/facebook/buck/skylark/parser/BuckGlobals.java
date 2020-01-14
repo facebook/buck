@@ -17,6 +17,7 @@
 package com.facebook.buck.skylark.parser;
 
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.rules.providers.impl.BuiltInProvider;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.core.starlark.knowntypes.KnownUserDefinedRuleTypes;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
@@ -40,6 +41,7 @@ import com.google.devtools.build.lib.syntax.Environment.GlobalFrame;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.MethodLibrary;
 import com.google.devtools.build.lib.syntax.Runtime;
+import java.util.function.Function;
 import org.immutables.value.Value.Lazy;
 
 /**
@@ -85,6 +87,8 @@ public abstract class BuckGlobals {
 
   abstract KnownUserDefinedRuleTypes getKnownUserDefinedRuleTypes();
 
+  abstract ImmutableSet<BuiltInProvider<?>> getPerFeatureProviders();
+
   /** Always disable implicit native imports in skylark rules, they should utilize native.foo */
   @Lazy
   Environment.GlobalFrame getBuckLoadContextGlobals() {
@@ -96,6 +100,7 @@ public abstract class BuckGlobals {
       Runtime.setupSkylarkLibrary(builder, new SkylarkRuleFunctions(getLabelCache()));
       Runtime.setupSkylarkLibrary(builder, new AttrModule());
       builder.putAll(SkylarkBuiltInProviders.PROVIDERS);
+      builder.putAll(getPerFeatureProvidersForBuildFile());
     } else {
       // TODO(T48021397): provider() has some legacy behavior we'll need to migrate. The more
       // correct provider() is made available for user-defined rules in
@@ -125,6 +130,17 @@ public abstract class BuckGlobals {
     return getDescriptions().stream()
         .map(getRuleFunctionFactory()::create)
         .collect(ImmutableMap.toImmutableMap(BaseFunction::getName, r -> r));
+  }
+
+  /**
+   * @return A mapping of all per-language providers that should be exported into build files and
+   *     their names. e.g. {@code DotnetLibraryProviderInfo} -> {@code
+   *     DotnetLibraryProviderInfo.PROVIDER}
+   */
+  @Lazy
+  ImmutableMap<String, BuiltInProvider<?>> getPerFeatureProvidersForBuildFile() {
+    return getPerFeatureProviders().stream()
+        .collect(ImmutableMap.toImmutableMap(BuiltInProvider::getName, Function.identity()));
   }
 
   /**
@@ -166,7 +182,8 @@ public abstract class BuckGlobals {
       ImplicitNativeRulesState implicitNativeRulesState,
       RuleFunctionFactory ruleFunctionFactory,
       LoadingCache<String, Label> labelCache,
-      KnownUserDefinedRuleTypes knownUserDefinedRuleTypes) {
+      KnownUserDefinedRuleTypes knownUserDefinedRuleTypes,
+      ImmutableSet<BuiltInProvider<?>> perFeatureProviders) {
     return ImmutableBuckGlobals.of(
         skylarkFunctionModule,
         descriptions,
@@ -174,6 +191,7 @@ public abstract class BuckGlobals {
         userDefinedRulesState,
         ruleFunctionFactory,
         labelCache,
-        knownUserDefinedRuleTypes);
+        knownUserDefinedRuleTypes,
+        perFeatureProviders);
   }
 }

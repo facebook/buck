@@ -75,7 +75,8 @@ public class InstallTriggerIntegrationTest {
                     ImmutableList.of(
                         new InstallTriggerDescription(),
                         new ExportFileDescription(FakeBuckConfig.builder().build())),
-                    knownConfigurationDescriptions));
+                    knownConfigurationDescriptions,
+                    ImmutableList.of()));
     workspace.setUp();
   }
 

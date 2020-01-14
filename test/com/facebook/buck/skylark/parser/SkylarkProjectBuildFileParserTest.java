@@ -30,6 +30,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
@@ -44,6 +45,7 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.implicit.ImplicitInclude;
 import com.facebook.buck.parser.options.ImplicitNativeRulesState;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
+import com.facebook.buck.parser.options.UserDefinedRulesState;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.skylark.function.SkylarkBuildModule;
 import com.facebook.buck.skylark.io.GlobSpec;
@@ -713,6 +715,43 @@ public class SkylarkProjectBuildFileParserTest {
   }
 
   @Test
+  public void canUsePerLanguageProvidersInExtensionFiles()
+      throws IOException, InterruptedException {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Path extensionFile = directory.resolve("build_rules.bzl");
+    Files.write(
+        buildFile,
+        Arrays.asList(
+            "load('//src/test:build_rules.bzl', 'get_name')",
+            "prebuilt_jar(name=get_name('foo'), binary_jar='')"));
+    Files.write(
+        extensionFile,
+        Arrays.asList(
+            "def get_name(x):",
+            "    if \"DotnetLibraryProviderInfo\" not in str(DotnetLibraryProviderInfo):",
+            "        fail(\"Name was not as expected\")",
+            "    return x + \"_custom\""));
+
+    ProjectBuildFileParserOptions options =
+        getDefaultParserOptions().setUserDefinedRulesState(UserDefinedRulesState.ENABLED).build();
+    knownRuleTypesProvider.getNativeRuleTypes(cell).getDescriptions();
+    System.err.println(
+        String.format(
+            "Got %s descriptions\n%s providers\n%s from PM\n",
+            knownRuleTypesProvider.getNativeRuleTypes(cell).getDescriptions(),
+            knownRuleTypesProvider.getNativeRuleTypes(cell).getPerFeatureProviders(),
+            BuckPluginManagerFactory.createPluginManager()
+                .getExtensions(DescriptionProvider.class)));
+    parser = createParserWithOptions(parser.eventHandler, options);
+    SkylarkProjectBuildFileParserTestUtils.getSingleRule(parser, buildFile);
+    Map<String, Object> rule = getSingleRule(buildFile);
+
+    assertThat(rule.get("name"), equalTo("foo_custom"));
+  }
+
+  @Test
   public void testImportFunction() throws Exception {
     Path directory = projectFilesystem.resolve("src").resolve("test");
     Files.createDirectories(directory);
@@ -981,6 +1020,8 @@ public class SkylarkProjectBuildFileParserTest {
             .setIgnorePaths(ImmutableSet.of())
             .setBuildFileName("BUCK")
             .setDescriptions(knownRuleTypesProvider.getNativeRuleTypes(cell).getDescriptions())
+            .setPerFeatureProviders(
+                knownRuleTypesProvider.getNativeRuleTypes(cell).getPerFeatureProviders())
             .setBuildFileImportWhitelist(ImmutableList.of())
             .setPythonInterpreter("skylark")
             .setCellRoots(ImmutableMap.of("tp2", anotherCell))
@@ -997,7 +1038,8 @@ public class SkylarkProjectBuildFileParserTest {
                 options.getImplicitNativeRulesState(),
                 new RuleFunctionFactory(new DefaultTypeCoercerFactory()),
                 LabelCache.newLabelCache(),
-                knownRuleTypesProvider.getUserDefinedRuleTypes(cell)),
+                knownRuleTypesProvider.getUserDefinedRuleTypes(cell),
+                options.getPerFeatureProviders()),
             new PrintingEventHandler(EnumSet.allOf(EventKind.class)),
             NativeGlobber::create);
 

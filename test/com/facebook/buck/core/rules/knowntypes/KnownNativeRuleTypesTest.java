@@ -61,7 +61,7 @@ public class KnownNativeRuleTypesTest {
             new KnownRuleTestDescription("Bar"),
             new KnownRuleTestDescription("Raz"));
 
-    KnownNativeRuleTypes.of(buildDescriptions, ImmutableList.of());
+    KnownNativeRuleTypes.of(buildDescriptions, ImmutableList.of(), ImmutableList.of());
   }
 
   @Test

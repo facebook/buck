@@ -25,6 +25,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
+import com.facebook.buck.core.rules.providers.impl.BuiltInProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -44,6 +45,8 @@ public abstract class KnownNativeRuleTypes implements KnownRuleTypes {
 
   public abstract ImmutableList<ConfigurationRuleDescription<?, ?>>
       getKnownConfigurationDescriptions();
+
+  public abstract ImmutableList<BuiltInProvider<?>> getPerFeatureProviders();
 
   @Value.Lazy
   public ImmutableMap<String, RuleType> getNativeTypesByName() {
@@ -120,7 +123,9 @@ public abstract class KnownNativeRuleTypes implements KnownRuleTypes {
 
   public static KnownNativeRuleTypes of(
       ImmutableList<Description<?>> knownBuildDescriptions,
-      ImmutableList<ConfigurationRuleDescription<?, ?>> knownConfigurationDescriptions) {
-    return ImmutableKnownNativeRuleTypes.of(knownBuildDescriptions, knownConfigurationDescriptions);
+      ImmutableList<ConfigurationRuleDescription<?, ?>> knownConfigurationDescriptions,
+      ImmutableList<BuiltInProvider<?>> perFeatureProviders) {
+    return ImmutableKnownNativeRuleTypes.of(
+        knownBuildDescriptions, knownConfigurationDescriptions, perFeatureProviders);
   }
 }

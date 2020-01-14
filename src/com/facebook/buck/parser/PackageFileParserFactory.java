@@ -108,7 +108,8 @@ public class PackageFileParserFactory implements FileParserFactory<PackageFileMa
             buildFileParserOptions.getImplicitNativeRulesState(),
             new RuleFunctionFactory(typeCoercerFactory),
             LabelCache.newLabelCache(),
-            knownRuleTypesProvider.getUserDefinedRuleTypes(cell));
+            knownRuleTypesProvider.getUserDefinedRuleTypes(cell),
+            buildFileParserOptions.getPerFeatureProviders());
 
     HumanReadableExceptionAugmentor augmentor;
     try {

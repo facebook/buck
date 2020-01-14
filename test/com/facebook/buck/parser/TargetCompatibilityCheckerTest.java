@@ -353,7 +353,9 @@ public class TargetCompatibilityCheckerTest {
     ConstructorArgMarshaller marshaller = new DefaultConstructorArgMarshaller(typeCoercerFactory);
     KnownNativeRuleTypes knownRuleTypes =
         KnownNativeRuleTypes.of(
-            ImmutableList.of(new TestRuleRuleDescription()), ImmutableList.of());
+            ImmutableList.of(new TestRuleRuleDescription()),
+            ImmutableList.of(),
+            ImmutableList.of());
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//:target");
 

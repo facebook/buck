@@ -86,6 +86,7 @@ public class SkylarkPackageFileParserTest {
             .setRawConfig(
                 ImmutableMap.of("dummy_section", ImmutableMap.of("dummy_key", "dummy_value")))
             .setDescriptions(ImmutableSet.of())
+            .setPerFeatureProviders(ImmutableList.of())
             .setBuildFileImportWhitelist(ImmutableList.of())
             .setPythonInterpreter("skylark")
             .build();
@@ -102,7 +103,8 @@ public class SkylarkPackageFileParserTest {
                 options.getImplicitNativeRulesState(),
                 new RuleFunctionFactory(new DefaultTypeCoercerFactory()),
                 LabelCache.newLabelCache(),
-                knownRuleTypesProvider.getUserDefinedRuleTypes(cell)),
+                knownRuleTypesProvider.getUserDefinedRuleTypes(cell),
+                options.getPerFeatureProviders()),
             eventCollector);
   }
 

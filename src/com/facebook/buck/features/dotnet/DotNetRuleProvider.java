@@ -18,15 +18,18 @@ package com.facebook.buck.features.dotnet;
 
 import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.description.DescriptionCreationContext;
+import com.facebook.buck.core.model.targetgraph.BuiltInProviderProvider;
 import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
 import com.facebook.buck.core.rules.analysis.config.RuleAnalysisComputationMode;
 import com.facebook.buck.core.rules.analysis.config.RuleAnalysisConfig;
+import com.facebook.buck.core.rules.providers.impl.BuiltInProvider;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import org.pf4j.Extension;
 
 @Extension
-public class DotnetDescriptionsProvider implements DescriptionProvider {
+public class DotNetRuleProvider implements DescriptionProvider, BuiltInProviderProvider {
   @Override
   public Collection<Description<?>> getDescriptions(DescriptionCreationContext context) {
     if (context
@@ -38,5 +41,10 @@ public class DotnetDescriptionsProvider implements DescriptionProvider {
           new CsharpLibraryDescription(), new PrebuiltDotnetLibraryRuleDescription());
     }
     return Arrays.asList(new CsharpLibraryDescription(), new PrebuiltDotnetLibraryDescription());
+  }
+
+  @Override
+  public Collection<BuiltInProvider<?>> getBuiltInProviders() {
+    return Collections.singletonList(DotnetLibraryProviderInfo.PROVIDER);
   }
 }

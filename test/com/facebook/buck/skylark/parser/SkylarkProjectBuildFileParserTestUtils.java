@@ -86,6 +86,8 @@ public class SkylarkProjectBuildFileParserTestUtils {
         .setBuildFileName("BUCK")
         .setRawConfig(ImmutableMap.of("dummy_section", ImmutableMap.of("dummy_key", "dummy_value")))
         .setDescriptions(knownRuleTypesProvider.getNativeRuleTypes(cell).getDescriptions())
+        .setPerFeatureProviders(
+            knownRuleTypesProvider.getNativeRuleTypes(cell).getPerFeatureProviders())
         .setBuildFileImportWhitelist(ImmutableList.of())
         .setPythonInterpreter("skylark");
   }
@@ -107,7 +109,8 @@ public class SkylarkProjectBuildFileParserTestUtils {
             options.getImplicitNativeRulesState(),
             new RuleFunctionFactory(new DefaultTypeCoercerFactory()),
             LabelCache.newLabelCache(),
-            knownRuleTypesProvider.getUserDefinedRuleTypes(cell)),
+            knownRuleTypesProvider.getUserDefinedRuleTypes(cell),
+            options.getPerFeatureProviders()),
         eventHandler,
         NativeGlobber::create);
   }

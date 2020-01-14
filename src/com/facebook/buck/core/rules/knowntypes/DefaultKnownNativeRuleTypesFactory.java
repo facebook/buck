@@ -19,6 +19,7 @@ package com.facebook.buck.core.rules.knowntypes;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
+import com.facebook.buck.core.rules.providers.impl.BuiltInProvider;
 import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.collect.ImmutableList;
@@ -56,6 +57,9 @@ public class DefaultKnownNativeRuleTypesFactory implements KnownNativeRuleTypesF
             cell.getToolchainProvider(),
             pluginManager,
             sandboxExecutionStrategyFactory);
-    return KnownNativeRuleTypes.of(knownBuildRuleDescriptions, knownConfigurationDescriptions);
+    ImmutableList<BuiltInProvider<?>> knownBuiltInProviders =
+        KnownBuildRuleDescriptionsFactory.createBuiltInProviders(pluginManager);
+    return KnownNativeRuleTypes.of(
+        knownBuildRuleDescriptions, knownConfigurationDescriptions, knownBuiltInProviders);
   }
 }

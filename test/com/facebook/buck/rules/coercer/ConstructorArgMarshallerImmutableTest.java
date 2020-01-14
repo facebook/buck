@@ -99,7 +99,8 @@ public class ConstructorArgMarshallerImmutableTest {
     basePath = Paths.get("example", "path");
     marshaller = new DefaultConstructorArgMarshaller(new DefaultTypeCoercerFactory());
     filesystem = new FakeProjectFilesystem();
-    knownRuleTypes = KnownNativeRuleTypes.of(ImmutableList.of(), ImmutableList.of());
+    knownRuleTypes =
+        KnownNativeRuleTypes.of(ImmutableList.of(), ImmutableList.of(), ImmutableList.of());
   }
 
   private <T extends BuildRuleArg> T invokePopulate2(

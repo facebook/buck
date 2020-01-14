@@ -50,7 +50,9 @@ public class HybridKnownRuleTypesTest {
   @Before
   public void setUp() throws LabelSyntaxException, EvalException {
     KnownRuleTestDescription description = new KnownRuleTestDescription("FooBar");
-    nativeRuleTypes = KnownNativeRuleTypes.of(ImmutableList.of(description), ImmutableList.of());
+    nativeRuleTypes =
+        KnownNativeRuleTypes.of(
+            ImmutableList.of(description), ImmutableList.of(), ImmutableList.of());
     userDefinedRuleTypes = new KnownUserDefinedRuleTypes();
     ImmutableStringAttribute attr =
         ImmutableStringAttribute.of("default", "", false, ImmutableList.of());

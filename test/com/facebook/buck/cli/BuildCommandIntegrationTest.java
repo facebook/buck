@@ -549,7 +549,9 @@ public class BuildCommandIntegrationTest {
             knownConfigurationDescriptions) ->
             cell ->
                 KnownNativeRuleTypes.of(
-                    ImmutableList.of(new ThrowInConstructor()), knownConfigurationDescriptions));
+                    ImmutableList.of(new ThrowInConstructor()),
+                    knownConfigurationDescriptions,
+                    ImmutableList.of()));
     ProcessResult result = workspace.runBuckBuild(":qq");
     result.assertFailure();
     MatcherAssert.assertThat(result.getStderr(), Matchers.containsString("test test test"));

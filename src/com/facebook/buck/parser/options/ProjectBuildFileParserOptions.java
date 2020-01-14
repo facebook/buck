@@ -17,6 +17,7 @@
 package com.facebook.buck.parser.options;
 
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.rules.providers.impl.BuiltInProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.watchman.Watchman;
@@ -86,6 +87,8 @@ public abstract class ProjectBuildFileParserOptions {
   public abstract Optional<Long> getWatchmanQueryTimeoutMs();
 
   public abstract List<String> getBuildFileImportWhitelist();
+
+  public abstract ImmutableSet<BuiltInProvider<?>> getPerFeatureProviders();
 
   @Value.Default
   public ImplicitNativeRulesState getImplicitNativeRulesState() {

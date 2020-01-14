@@ -264,7 +264,8 @@ public class TargetNodeTest {
     ConstructorArgMarshaller marshaller = new DefaultConstructorArgMarshaller(coercerFactory);
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     KnownNativeRuleTypes knownRuleTypes =
-        KnownNativeRuleTypes.of(ImmutableList.of(new ExampleDescription()), ImmutableList.of());
+        KnownNativeRuleTypes.of(
+            ImmutableList.of(new ExampleDescription()), ImmutableList.of(), ImmutableList.of());
     DataTransferObjectDescriptor<ExampleDescriptionArg> builder =
         knownRuleTypes.getConstructorArgDescriptor(
             coercerFactory, knownRuleTypes.getRuleType("example"), ExampleDescriptionArg.class);

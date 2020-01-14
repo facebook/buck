@@ -62,7 +62,9 @@ public class RuleAnalysisRulesBuildIntegrationTest {
             knownConfigurationDescriptions) ->
             cell ->
                 KnownNativeRuleTypes.of(
-                    ImmutableList.of(new FakeRuleRuleDescription()), ImmutableList.of()));
+                    ImmutableList.of(new FakeRuleRuleDescription()),
+                    ImmutableList.of(),
+                    ImmutableList.of()));
 
     Path resultPath = workspace.buildAndReturnOutput("//:bar");
 
@@ -84,7 +86,9 @@ public class RuleAnalysisRulesBuildIntegrationTest {
             knownConfigurationDescriptions) ->
             cell ->
                 KnownNativeRuleTypes.of(
-                    ImmutableList.of(new BasicRuleRuleDescription()), ImmutableList.of()));
+                    ImmutableList.of(new BasicRuleRuleDescription()),
+                    ImmutableList.of(),
+                    ImmutableList.of()));
 
     Path resultPath = workspace.buildAndReturnOutput("//:bar");
 
@@ -247,6 +251,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
             cell ->
                 KnownNativeRuleTypes.of(
                     ImmutableList.of(new BasicRuleRuleDescription(), new LegacyRuleDescription()),
+                    ImmutableList.of(),
                     ImmutableList.of()));
 
     Path resultPath = workspace.buildAndReturnOutput("//:bar");
@@ -326,7 +331,9 @@ public class RuleAnalysisRulesBuildIntegrationTest {
             knownConfigurationDescriptions) ->
             cell ->
                 KnownNativeRuleTypes.of(
-                    ImmutableList.of(new BasicRuleRuleDescription()), ImmutableList.of()));
+                    ImmutableList.of(new BasicRuleRuleDescription()),
+                    ImmutableList.of(),
+                    ImmutableList.of()));
 
     Path resultPath = workspace.buildAndReturnOutput("//:bar");
 

@@ -322,7 +322,8 @@ public class ModernBuildRuleStrategyIntegrationTest {
                         new FailingRuleDescription(),
                         new DuplicateOutputsDescription(),
                         new CheckSerializationDescription()),
-                    knownConfigurationDescriptions));
+                    knownConfigurationDescriptions,
+                    ImmutableList.of()));
     workspace.setUp();
     workspace.addBuckConfigLocalOption("modern_build_rule", "strategy", strategy.toString());
     workspace.addBuckConfigLocalOption("remoteexecution", "type", executionType.toString());

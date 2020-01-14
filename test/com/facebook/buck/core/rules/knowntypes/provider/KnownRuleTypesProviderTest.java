@@ -45,7 +45,8 @@ public class KnownRuleTypesProviderTest {
   class TestFactory implements KnownNativeRuleTypesFactory {
     @Override
     public KnownNativeRuleTypes create(Cell cell) {
-      return KnownNativeRuleTypes.of(ImmutableList.of(fakeDescription), ImmutableList.of());
+      return KnownNativeRuleTypes.of(
+          ImmutableList.of(fakeDescription), ImmutableList.of(), ImmutableList.of());
     }
   }
 

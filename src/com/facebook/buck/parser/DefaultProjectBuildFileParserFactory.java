@@ -166,6 +166,8 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
             .setBuildFileName(cell.getBuckConfigView(ParserConfig.class).getBuildFileName())
             .setDefaultIncludes(parserConfig.getDefaultIncludes())
             .setDescriptions(knownRuleTypesProvider.getNativeRuleTypes(cell).getDescriptions())
+            .setPerFeatureProviders(
+                knownRuleTypesProvider.getNativeRuleTypes(cell).getPerFeatureProviders())
             .setUseWatchmanGlob(useWatchmanGlob)
             .setWatchmanGlobStatResults(watchmanGlobStatResults)
             .setWatchmanUseGlobGenerator(watchmanUseGlobGenerator)
@@ -333,7 +335,8 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
             buildFileParserOptions.getImplicitNativeRulesState(),
             new RuleFunctionFactory(typeCoercerFactory),
             LabelCache.newLabelCache(),
-            knownUserDefinedRuleTypes);
+            knownUserDefinedRuleTypes,
+            buildFileParserOptions.getPerFeatureProviders());
 
     HumanReadableExceptionAugmentor augmentor;
     try {

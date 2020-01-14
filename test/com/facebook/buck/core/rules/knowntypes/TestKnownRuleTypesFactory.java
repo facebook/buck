@@ -40,6 +40,7 @@ public class TestKnownRuleTypesFactory {
             toolchainProvider,
             pluginManager,
             sandboxExecutionStrategyFactory),
-        ImmutableList.of());
+        ImmutableList.of(),
+        KnownBuildRuleDescriptionsFactory.createBuiltInProviders(pluginManager));
   }
 }

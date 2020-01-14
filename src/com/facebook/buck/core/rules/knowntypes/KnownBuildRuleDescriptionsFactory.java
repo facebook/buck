@@ -19,7 +19,9 @@ package com.facebook.buck.core.rules.knowntypes;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.description.DescriptionCreationContext;
+import com.facebook.buck.core.model.targetgraph.BuiltInProviderProvider;
 import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
+import com.facebook.buck.core.rules.providers.impl.BuiltInProvider;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
@@ -51,6 +53,16 @@ class KnownBuildRuleDescriptionsFactory {
       builder.addAll(provider.getDescriptions(descriptionCreationContext));
     }
 
+    return builder.build();
+  }
+
+  static ImmutableList<BuiltInProvider<?>> createBuiltInProviders(PluginManager pluginManager) {
+    ImmutableList.Builder<BuiltInProvider<?>> builder = ImmutableList.builder();
+    List<BuiltInProviderProvider> providerProviders =
+        pluginManager.getExtensions(BuiltInProviderProvider.class);
+    for (BuiltInProviderProvider provider : providerProviders) {
+      builder.addAll(provider.getBuiltInProviders());
+    }
     return builder.build();
   }
 }

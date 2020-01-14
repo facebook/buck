@@ -30,5 +30,6 @@ buck_module(
     visibility = [
         "//test/com/facebook/buck/features/dotnet:",
         "//test/com/facebook/buck/rules/modern:subclass_exclusion",
+        "//test/com/facebook/buck/skylark/parser:parser",
     ],
 )

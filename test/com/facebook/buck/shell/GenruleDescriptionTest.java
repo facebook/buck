@@ -73,7 +73,8 @@ public class GenruleDescriptionTest {
             FakeBuckConfig.builder().build(),
             new NoSandboxExecutionStrategy());
     KnownNativeRuleTypes knownRuleTypes =
-        KnownNativeRuleTypes.of(ImmutableList.of(genruleDescription), ImmutableList.of());
+        KnownNativeRuleTypes.of(
+            ImmutableList.of(genruleDescription), ImmutableList.of(), ImmutableList.of());
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     DataTransferObjectDescriptor<GenruleDescriptionArg> builder =
