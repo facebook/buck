@@ -94,6 +94,7 @@ java_library(
         "BashStep.java",
         "DefaultShellStep.java",
         "RunShTestAndRecordResultStep.java",
+        "RunTestAndRecordResultStep.java",
         "Shell.java",
         "ShellStep.java",
         "SymlinkFilesIntoDirectoryStep.java",

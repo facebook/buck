@@ -125,7 +125,7 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
                 Arg.stringify(args, buildContext.getSourcePathResolver()),
                 Arg.stringify(env, buildContext.getSourcePathResolver()),
                 testRuleTimeoutMs,
-                getBuildTarget().getFullyQualifiedName(),
+                getBuildTarget(),
                 getPathToTestOutputResult()))
         .build();
   }
