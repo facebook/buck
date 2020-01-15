@@ -3,7 +3,7 @@ version: 2
 jobs:
   ci_build:
     environment:
-      WORKINGDIR: ~
+      WORKINGDIR: "~"
       BUCKROOT: ~/buck
       ANDROIDSDK: ~/android-sdk
     working_directory: ${WORKINGDIR}
