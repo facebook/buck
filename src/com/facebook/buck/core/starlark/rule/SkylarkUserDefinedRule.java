@@ -52,6 +52,8 @@ import javax.annotation.Nullable;
  */
 public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExportable {
 
+  private static final String TEST_RULE_SUFFIX = "_test";
+
   private boolean isExported = false;
   @Nullable private String name = null;
   @Nullable private Label label = null;
@@ -307,7 +309,21 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
   }
 
   @Override
-  public void export(Label extensionLabel, String exportedName) {
+  public void export(Label extensionLabel, String exportedName) throws EvalException {
+    if (exportedName.endsWith(TEST_RULE_SUFFIX) && !shouldBeTestRule()) {
+      throw new EvalException(
+          location,
+          String.format(
+              "Only rules with `test = True` may end with `%s`. Got %s",
+              TEST_RULE_SUFFIX, exportedName));
+    }
+    if (!exportedName.endsWith(TEST_RULE_SUFFIX) && shouldBeTestRule()) {
+      throw new EvalException(
+          location,
+          String.format(
+              "Rules with `test = True` must end with `%s`. Got %s",
+              TEST_RULE_SUFFIX, exportedName));
+    }
     this.name = UserDefinedRuleNames.getIdentifier(extensionLabel, exportedName);
     this.label = extensionLabel;
     this.exportedName = exportedName;

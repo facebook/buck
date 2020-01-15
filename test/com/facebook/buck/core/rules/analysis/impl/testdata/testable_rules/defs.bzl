@@ -10,7 +10,7 @@ def _impl(ctx):
         TestInfo(
             labels = ["foo", "bar", "foo"],
             contacts = ["foo@example.com", "bar@example.com", "foo@example.com"],
-            test_name = "testable_rule",
+            test_name = "testable_rule_test",
             test_case_name = ctx.label.name,
             type = "json",
         ),
@@ -32,7 +32,7 @@ def _without_run_impl(ctx):
         ),
     ]
 
-testable_rule = rule(
+testable_rule_test = rule(
     implementation = _impl,
     attrs = {
         "exit": attr.int(),
@@ -41,7 +41,7 @@ testable_rule = rule(
     test = True,
 )
 
-without_run = rule(
+without_run_test = rule(
     implementation = _without_run_impl,
     attrs = {},
     test = True,

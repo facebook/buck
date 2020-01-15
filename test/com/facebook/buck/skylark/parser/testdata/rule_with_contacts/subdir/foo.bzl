@@ -5,7 +5,7 @@ def _impl(ctx):
     out = ctx.declare_file("out.txt")
     out.write(out, " ".join(ctx.attr.contacts))
 
-some_rule = rule(
+some_rule_test = rule(
     attrs = {},
     implementation = _impl,
     test = True,

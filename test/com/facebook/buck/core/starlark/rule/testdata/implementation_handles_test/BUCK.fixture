@@ -1,4 +1,4 @@
-load("//:defs.bzl", "nontest_error_rule", "test_error_rule", "test_rule_wrapper")
+load("//:defs.bzl", "nontest_error_rule", "test_error_rule_test", "test_rule_wrapper")
 
 test_rule_wrapper(
     name = "implicit_default_implicit_run_implicit_test_info",
@@ -74,7 +74,7 @@ test_rule_wrapper(
     infer_run_info = False,
 )
 
-test_error_rule(
+test_error_rule_test(
     name = "test_without_run_info",
     test_info = True,
     run_info = False,

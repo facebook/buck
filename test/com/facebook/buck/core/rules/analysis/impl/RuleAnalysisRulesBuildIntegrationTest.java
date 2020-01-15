@@ -510,7 +510,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
         true,
         ImmutableList.of("foo", "bar"),
         ImmutableList.of("foo@example.com", "bar@example.com"),
-        "testable_rule",
+        "testable_rule_test",
         BuildTargetFactory.newInstance(successTarget).getShortName(),
         0);
     validateTestResults(
@@ -520,7 +520,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
         false,
         ImmutableList.of("foo", "bar"),
         ImmutableList.of("foo@example.com", "bar@example.com"),
-        "testable_rule",
+        "testable_rule_test",
         BuildTargetFactory.newInstance(failureTarget).getShortName(),
         100);
   }

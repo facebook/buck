@@ -862,4 +862,31 @@ public class SkylarkUserDefinedRulesParserTest {
     thrown.expect(NullPointerException.class);
     parser.getManifest(buildFile);
   }
+
+  @Test
+  public void testRulesMustEndInTest() throws IOException, InterruptedException {
+    setupWorkspace("basic_rule");
+    Path buildFile = projectFilesystem.resolve("non_test_rule_name").resolve("BUCK");
+
+    EventCollector collector = new EventCollector(EnumSet.allOf(EventKind.class));
+    parser = createParser(collector);
+
+    thrown.expect(BuildFileParseException.class);
+    thrown.expectMessage("Only rules with `test = True` may end with `_test`");
+    parser.getManifest(buildFile);
+  }
+
+  @Test
+  public void nonTestRulesMustNotEndInTest() throws IOException, InterruptedException {
+
+    setupWorkspace("basic_rule");
+    Path buildFile = projectFilesystem.resolve("test_rule_name").resolve("BUCK");
+
+    EventCollector collector = new EventCollector(EnumSet.allOf(EventKind.class));
+    parser = createParser(collector);
+
+    thrown.expect(BuildFileParseException.class);
+    thrown.expectMessage("Rules with `test = True` must end with `_test`");
+    parser.getManifest(buildFile);
+  }
 }

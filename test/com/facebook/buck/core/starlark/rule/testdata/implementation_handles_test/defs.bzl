@@ -43,7 +43,7 @@ def _impl(ctx):
             ),
         )
     if ctx.attr.test_info:
-        ret.append(TestInfo(test_name = "test_rule", test_case_name = "main"))
+        ret.append(TestInfo(test_name = "test_rule_test", test_case_name = "main"))
     return ret
 
 def _error_impl(ctx):
@@ -62,7 +62,7 @@ def _error_impl(ctx):
         ret.append(TestInfo(test_name = "test_error_rule", test_case_name = "main"))
     return ret
 
-inferring_test_rule = rule(
+inferring_test_rule_test = rule(
     attrs = {
         "contents": attr.string(),
         "default_info": attr.bool(),
@@ -76,7 +76,7 @@ inferring_test_rule = rule(
     test = True,
 )
 
-noninferring_test_rule = rule(
+noninferring_test_rule_test = rule(
     attrs = {
         "contents": attr.string(),
         "default_info": attr.bool(),
@@ -90,7 +90,7 @@ noninferring_test_rule = rule(
     test = True,
 )
 
-test_error_rule = rule(
+test_error_rule_test = rule(
     attrs = {
         "num_outputs": attr.int(),
         "run_info": attr.bool(),
@@ -124,6 +124,6 @@ def script_and_contents():
 def test_rule_wrapper(infer_run_info, **kwargs):
     script, contents = script_and_contents()
     if infer_run_info:
-        inferring_test_rule(script = script, contents = contents, **kwargs)
+        inferring_test_rule_test(script = script, contents = contents, **kwargs)
     else:
-        noninferring_test_rule(script = script, contents = contents, **kwargs)
+        noninferring_test_rule_test(script = script, contents = contents, **kwargs)
