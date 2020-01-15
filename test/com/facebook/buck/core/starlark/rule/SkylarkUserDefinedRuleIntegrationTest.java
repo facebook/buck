@@ -451,12 +451,18 @@ public class SkylarkUserDefinedRuleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "args", tmp);
 
     workspace.setUp();
-
-    // TODO(pjameson): Write args out to file so we can validate their values
-    workspace.runBuckBuild("//:add").assertSuccess();
-    workspace.runBuckBuild("//:add_all").assertSuccess();
-    workspace.runBuckBuild("//:init").assertSuccess();
-    workspace.runBuckBuild("//:init_list").assertSuccess();
+    assertEquals(
+        ImmutableList.of("1", "--foo", "bar"),
+        workspace.getProjectFileSystem().readLines(workspace.buildAndReturnOutput("//:add")));
+    assertEquals(
+        ImmutableList.of("1", "2", "--foo", "bar"),
+        workspace.getProjectFileSystem().readLines(workspace.buildAndReturnOutput("//:add_all")));
+    assertEquals(
+        ImmutableList.of("2", "--foo"),
+        workspace.getProjectFileSystem().readLines(workspace.buildAndReturnOutput("//:init")));
+    assertEquals(
+        ImmutableList.of("2", "--foo", "bar"),
+        workspace.getProjectFileSystem().readLines(workspace.buildAndReturnOutput("//:init_list")));
 
     assertThat(
         workspace.runBuckBuild("//:add_failure").assertFailure().getStderr(),

@@ -20,6 +20,7 @@ import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.starlark.rule.args.CommandLineArgsBuilderApi;
 import com.facebook.buck.core.starlark.rule.artifact.SkylarkArtifactApi;
 import com.google.devtools.build.lib.events.Location;
+import com.google.devtools.build.lib.skylarkbuildapi.CommandLineArgsApi;
 import com.google.devtools.build.lib.skylarkinterface.Param;
 import com.google.devtools.build.lib.skylarkinterface.ParamType;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
@@ -90,11 +91,14 @@ public interface SkylarkRuleContextActionsApi {
               @ParamType(type = String.class)
             },
             named = true),
-        // TODO(pjameson): Once Arg is implemented, accept that as well?
         @Param(
             name = "content",
             doc = "The content to write to this file",
-            type = String.class,
+            allowedTypes = {
+              @ParamType(type = CommandLineArgsBuilderApi.class),
+              @ParamType(type = CommandLineArgsApi.class),
+              @ParamType(type = String.class)
+            },
             named = true),
         @Param(
             name = "is_executable",
@@ -103,7 +107,7 @@ public interface SkylarkRuleContextActionsApi {
             named = true,
             defaultValue = "False")
       })
-  Artifact write(Object output, String content, boolean isExecutable, Location location)
+  Artifact write(Object output, Object content, boolean isExecutable, Location location)
       throws EvalException;
 
   @SkylarkCallable(

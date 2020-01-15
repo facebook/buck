@@ -1,10 +1,12 @@
 """ Module docstring """
 
 def _add_impl(ctx):
-    ctx.actions.args().add(1).add("--foo", "bar")
+    a = ctx.actions.args().add(1).add("--foo", "bar")
+    ctx.actions.write("out.txt", a)
 
 def _add_all_impl(ctx):
-    ctx.actions.args().add(1).add_all([2, "--foo", "bar"])
+    a = ctx.actions.args().add(1).add_all([2, "--foo", "bar"])
+    ctx.actions.write("out.txt", a)
 
 def _add_failure_impl(ctx):
     ctx.actions.args().add([])
@@ -19,14 +21,15 @@ def _add_all_args_failure_impl(ctx):
     ctx.actions.args().add_all([ctx.actions.args()])
 
 def _init_impl(ctx):
-    ctx.actions.args(2)
-    ctx.actions.args("--foo")
+    a = ctx.actions.args(2).add("--foo")
+    ctx.actions.write("out.txt", a)
 
 def _init_failure_impl(ctx):
     ctx.actions.args({})
 
 def _init_list_impl(ctx):
-    ctx.actions.args([2, "--foo", "bar"])
+    a = ctx.actions.args([2, "--foo", "bar"])
+    ctx.actions.write("out.txt", a)
 
 def _init_list_failure_impl(ctx):
     ctx.actions.args([{}])

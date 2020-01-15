@@ -75,16 +75,36 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
   }
 
   @Override
-  public Artifact write(Object output, String content, boolean isExecutable, Location location)
+  public Artifact write(Object output, Object content, boolean isExecutable, Location location)
       throws EvalException {
     Artifact destArtifact = getArtifactFromArtifactOrString(location, output);
     try {
-      new WriteAction(
-          registry,
-          ImmutableSortedSet.of(),
-          ImmutableSortedSet.of(destArtifact),
-          content,
-          isExecutable);
+      if (content instanceof String) {
+        new WriteAction(
+            registry,
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(destArtifact),
+            (String) content,
+            isExecutable);
+      } else if (content instanceof CommandLineArgsBuilder) {
+        new WriteAction(
+            registry,
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(destArtifact),
+            ((CommandLineArgsBuilder) content).build(),
+            isExecutable);
+      } else if (content instanceof CommandLineArgs) {
+        new WriteAction(
+            registry,
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(destArtifact),
+            (CommandLineArgs) content,
+            isExecutable);
+      } else {
+        throw new EvalException(
+            location, String.format("Invalid type for content: %s", content.getClass()));
+      }
+
       return destArtifact;
     } catch (HumanReadableException e) {
       throw new EvalException(location, e.getHumanReadableErrorMessage());

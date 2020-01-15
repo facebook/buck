@@ -24,10 +24,14 @@ import com.facebook.buck.core.rules.actions.ActionExecutionContext;
 import com.facebook.buck.core.rules.actions.ActionExecutionResult;
 import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.core.rules.actions.DefaultActionRegistry;
+import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgStringifier;
+import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgs;
+import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * {@link Action} that writes specified contents to all of the given output {@link
@@ -35,7 +39,7 @@ import java.util.Optional;
  */
 public class WriteAction extends AbstractAction {
 
-  private final String contents;
+  private final Either<String, CommandLineArgs> contents;
   private final boolean isExecutable;
 
   /**
@@ -54,6 +58,34 @@ public class WriteAction extends AbstractAction {
       ImmutableSortedSet<Artifact> outputs,
       String contents,
       boolean isExecutable) {
+    this(actionRegistry, inputs, outputs, Either.ofLeft(contents), isExecutable);
+  }
+
+  /**
+   * Create an instance of {@link WriteAction}
+   *
+   * @param actionRegistry the {@link DefaultActionRegistry} to register this action
+   * @param inputs the input {@link Artifact} for this {@link Action}. They can be either outputs of
+   *     other {@link Action}s or be source files
+   * @param outputs the outputs for this {@link Action}
+   * @param contents the contents to write
+   * @param isExecutable whether the output is executable
+   */
+  public WriteAction(
+      ActionRegistry actionRegistry,
+      ImmutableSortedSet<Artifact> inputs,
+      ImmutableSortedSet<Artifact> outputs,
+      CommandLineArgs contents,
+      boolean isExecutable) {
+    this(actionRegistry, inputs, outputs, Either.ofRight(contents), isExecutable);
+  }
+
+  private WriteAction(
+      ActionRegistry actionRegistry,
+      ImmutableSortedSet<Artifact> inputs,
+      ImmutableSortedSet<Artifact> outputs,
+      Either<String, CommandLineArgs> contents,
+      boolean isExecutable) {
     super(actionRegistry, inputs, outputs, "write");
     this.contents = contents;
     this.isExecutable = isExecutable;
@@ -62,9 +94,16 @@ public class WriteAction extends AbstractAction {
   @Override
   public ActionExecutionResult execute(ActionExecutionContext executionContext) {
     ArtifactFilesystem filesystem = executionContext.getArtifactFilesystem();
+    String stringContents =
+        contents.transform(
+            s -> s,
+            args ->
+                args.getArgs()
+                    .map(arg -> CommandLineArgStringifier.asString(filesystem, false, arg))
+                    .collect(Collectors.joining("\n")));
     for (Artifact output : outputs) {
       try {
-        filesystem.writeContentsToPath(contents, output);
+        filesystem.writeContentsToPath(stringContents, output);
 
         if (isExecutable) {
           filesystem.makeExecutable(output);
