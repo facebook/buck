@@ -31,12 +31,21 @@ def append_sys_path(buck_root):
     sys.path.insert(0, os.path.join(buck_root, "third-party/py/setuptools"))
 
 
+def find_buck_root():
+    f = os.path.abspath(__file__)
+    while not os.path.exists(os.path.join(f, "third-party/py/pex/BUCK")):
+        p = os.path.dirname(f)
+        if p == f:  # FS root
+            raise Exception("buck root not found for {}".format(__file__))
+        f = p
+    return f
+
+
 # This script can be executed either from a pex file or in a standalone mode.
 # A pex file should contain all the necessary dependencies, but in standalone mode
 # these dependencies need to be configured before importing them.
 if not zipfile.is_zipfile(sys.argv[0]):
-    append_sys_path(os.sep.join(__file__.split(os.sep)[:-4]))
-    append_sys_path(os.sep.join(__file__.split(os.sep)[:-7]))
+    append_sys_path(find_buck_root())
 
 import pkg_resources  # noqa isort:skip
 
