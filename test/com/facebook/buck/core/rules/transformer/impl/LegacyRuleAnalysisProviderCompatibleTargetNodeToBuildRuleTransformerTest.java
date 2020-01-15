@@ -56,6 +56,7 @@ import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.impl.RuleAnalysisLegacyBuildRuleView;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.collect.impl.TestProviderInfoCollectionImpl;
+import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -68,6 +69,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.devtools.build.lib.syntax.SkylarkDict;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -198,7 +200,9 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
               assertSame(target, ruleAnalysisKey.getBuildTarget());
               return ImmutableFakeRuleAnalysisResultImpl.of(
                   target,
-                  TestProviderInfoCollectionImpl.builder().build(),
+                  TestProviderInfoCollectionImpl.builder()
+                      .build(
+                          new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableSet.of(artifact))),
                   fakeActionAnalysisRegistry.getRegistered().entrySet().stream()
                       .collect(
                           ImmutableMap.toImmutableMap(

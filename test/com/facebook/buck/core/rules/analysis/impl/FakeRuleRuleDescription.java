@@ -70,7 +70,7 @@ public class FakeRuleRuleDescription implements RuleDescription<FakeRuleDescript
         ImmutableSortedSet.of(artifact),
         actionExecution);
     return TestProviderInfoCollectionImpl.builder()
-        .build(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of()));
+        .build(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of(artifact)));
   }
 
   @Override

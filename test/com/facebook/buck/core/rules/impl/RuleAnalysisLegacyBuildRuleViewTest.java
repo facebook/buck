@@ -49,6 +49,7 @@ import com.facebook.buck.core.rules.analysis.impl.ImmutableFakeRuleAnalysisResul
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.collect.impl.TestProviderInfoCollectionImpl;
+import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -60,8 +61,10 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.devtools.build.lib.syntax.SkylarkDict;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -157,7 +160,7 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
     ProviderInfoCollection providerInfoCollection =
         TestProviderInfoCollectionImpl.builder()
             .put(new FakeInfo(new FakeBuiltInProvider("foo")))
-            .build();
+            .build(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableSet.of(artifact)));
 
     Map<ID, ActionAnalysisData> actionAnalysisDataMap =
         actionAnalysisRegistry.getRegistered().entrySet().stream()
