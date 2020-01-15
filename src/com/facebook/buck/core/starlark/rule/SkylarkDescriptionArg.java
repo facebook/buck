@@ -164,6 +164,18 @@ public class SkylarkDescriptionArg implements SkylarkDescriptionArgBuilder, Buil
     return (ImmutableSortedSet<String>) getPostCoercionValue("labels");
   }
 
+  /** @return contacts for this rule, or an empty set of `contacts` was not set */
+  @SuppressWarnings("unchecked")
+  public ImmutableSortedSet<String> getContacts() {
+    // Unchecked as we validate this type with the Attribute
+    Object rawValue = getPostCoercionValue("contacts");
+    if (rawValue == null) {
+      return ImmutableSortedSet.of();
+    } else {
+      return (ImmutableSortedSet<String>) rawValue;
+    }
+  }
+
   @Override
   public ImmutableList<UnconfiguredBuildTargetView> getTargetCompatibleWith() {
     return ImmutableList.of();

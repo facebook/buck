@@ -32,7 +32,9 @@ import com.facebook.buck.core.rules.providers.collect.impl.ProviderInfoCollectio
 import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
 import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
 import com.facebook.buck.core.rules.providers.lib.ImmutableRunInfo;
+import com.facebook.buck.core.rules.providers.lib.ImmutableTestInfo;
 import com.facebook.buck.core.rules.providers.lib.RunInfo;
+import com.facebook.buck.core.rules.providers.lib.TestInfo;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.core.starlark.eventhandler.ConsoleEventHandler;
 import com.google.common.collect.ImmutableList;
@@ -50,6 +52,7 @@ import com.google.devtools.build.lib.syntax.SkylarkDict;
 import com.google.devtools.build.lib.syntax.SkylarkList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import javax.annotation.Nullable;
 
 /**
@@ -114,15 +117,19 @@ public class SkylarkDescription implements RuleDescription<SkylarkDescriptionArg
 
     ProviderInfoCollectionImpl.Builder infos = ProviderInfoCollectionImpl.builder();
     boolean inferRunInfo = args.getRule().shouldInferRunInfo();
+    boolean isTest = args.getRule().shouldBeTestRule();
 
     @Nullable DefaultInfo suppliedDefaultInfo = null;
     @Nullable RunInfo suppliedRunInfo = null;
+    @Nullable TestInfo suppliedTestInfo = null;
     for (SkylarkProviderInfo skylarkInfo : implResult) {
       ProviderInfo<?> info = skylarkInfo.getProviderInfo();
       if (DefaultInfo.PROVIDER.equals(info.getProvider()) && suppliedDefaultInfo == null) {
         suppliedDefaultInfo = (DefaultInfo) info;
       } else if (RunInfo.PROVIDER.equals(info.getProvider())) {
         suppliedRunInfo = (RunInfo) info;
+      } else if (TestInfo.PROVIDER.equals(info.getProvider())) {
+        suppliedTestInfo = (TestInfo) info;
       } else {
         infos.put(info);
       }
@@ -163,9 +170,43 @@ public class SkylarkDescription implements RuleDescription<SkylarkDescriptionArg
                   ImmutableList.of(
                       Iterables.getOnlyElement(suppliedDefaultInfo.defaultOutputs()))));
     }
+    if (isTest && suppliedTestInfo == null) {
+      suppliedTestInfo =
+          ImmutableTestInfo.of(
+              args.getName(),
+              "main",
+              args.getLabels(),
+              args.getContacts(),
+              Optional.empty(),
+              false,
+              "custom");
+    }
 
     if (suppliedRunInfo != null) {
       infos.put(suppliedRunInfo);
+    }
+
+    if (suppliedTestInfo != null) {
+      if (isTest) {
+        if (suppliedRunInfo == null) {
+          throw new EvalException(
+              implementation.getLocation(),
+              String.format(
+                  "Rule %s for %s was marked as a test rule, but did not return a RunInfo object. "
+                      + "Either set `infer_run_info` to True to make Buck infer a RunInfo instance, "
+                      + "or return a RunInfo instance from your implementation function",
+                  implementation.getFullName(), ctx.getLabel()));
+        }
+        infos.put(suppliedTestInfo);
+      } else {
+        throw new EvalException(
+            implementation.getLocation(),
+            String.format(
+                "Rule %s for %s was not marked as a test rule, but returned a TestInfo provider. "
+                    + "Please mark it as a test rule so that the rule() call, and the return value "
+                    + "are consistent.",
+                implementation.getFullName(), ctx.getLabel()));
+      }
     }
 
     try {

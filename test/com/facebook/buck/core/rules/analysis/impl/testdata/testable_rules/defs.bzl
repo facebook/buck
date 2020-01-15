@@ -19,9 +19,11 @@ def _impl(ctx):
 def _without_run_impl(ctx):
     output = ctx.actions.declare_file("out.txt")
     ctx.actions.write(output, "contents")
+    output2 = ctx.actions.declare_file("out2.txt")
+    ctx.actions.write(output2, "contents")
 
     return [
-        DefaultInfo(default_outputs = [output]),
+        DefaultInfo(default_outputs = [output, output2]),
         TestInfo(
             labels = ["foo", "bar", "foo"],
             contacts = ["foo@example.com", "bar@example.com", "foo@example.com"],
@@ -36,9 +38,11 @@ testable_rule = rule(
         "exit": attr.int(),
         "script": attr.source(),
     },
+    test = True,
 )
 
 without_run = rule(
     implementation = _without_run_impl,
     attrs = {},
+    test = True,
 )

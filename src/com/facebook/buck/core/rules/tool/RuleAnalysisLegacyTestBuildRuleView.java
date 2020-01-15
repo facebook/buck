@@ -53,7 +53,7 @@ import java.util.concurrent.Callable;
  * As {@link RuleAnalysisLegacyBuildRuleView}, but also implements {@link TestRule} so that this
  * rule can be run by {@code buck test}
  */
-public class RuleAnalysisLegacyTestBuildRuleView extends RuleAnalysisLegacyBuildRuleView
+public class RuleAnalysisLegacyTestBuildRuleView extends RuleAnalysisLegacyBinaryBuildRuleView
     implements TestRule, ExternalTestRunnerRule {
 
   private final RunInfo runInfo;

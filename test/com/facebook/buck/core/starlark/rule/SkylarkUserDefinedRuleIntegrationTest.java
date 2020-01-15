@@ -808,4 +808,59 @@ public class SkylarkUserDefinedRuleIntegrationTest {
         Matchers.containsString(
             "This provider can only be inferred if the rule returns a single default"));
   }
+
+  @Test
+  public void testsIfTestAndRunInfoReturned() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "implementation_handles_test", tmp);
+    workspace.setUp();
+
+    workspace
+        .runBuckCommand("test", "//:implicit_default_implicit_run_implicit_test_info")
+        .assertSuccess();
+    workspace.runBuckCommand("test", "//:implicit_default_implicit_run_test_info").assertSuccess();
+    workspace.runBuckCommand("test", "//:implicit_default_run_implicit_test_info").assertSuccess();
+    workspace.runBuckCommand("test", "//:implicit_default_run_test_info").assertSuccess();
+    workspace.runBuckCommand("test", "//:default_implicit_run_implicit_test_info").assertSuccess();
+    workspace.runBuckCommand("test", "//:default_implicit_run_test_info").assertSuccess();
+    workspace.runBuckCommand("test", "//:default_run_implicit_test_info").assertSuccess();
+    workspace.runBuckCommand("test", "//:default_run_test_info").assertSuccess();
+    workspace.runBuckCommand("test", "//:failing_test").assertTestFailure();
+  }
+
+  @Test
+  public void failsIfTestInfoReturnedOnNonTestRule() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "implementation_handles_test", tmp);
+    workspace.setUp();
+
+    String stderr =
+        workspace.runBuckCommand("test", "//:nontest_with_test").assertFailure().getStderr();
+
+    assertThat(stderr, Matchers.containsString("Please mark it as a test rule "));
+  }
+
+  @Test
+  public void failsIfTestInfoReturnedButNoRunInfo() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "implementation_handles_test", tmp);
+    workspace.setUp();
+
+    String stderr =
+        workspace.runBuckCommand("test", "//:test_without_run_info").assertFailure().getStderr();
+
+    assertThat(
+        stderr,
+        Matchers.containsString(
+            "Either set `infer_run_info` to True to make Buck infer a RunInfo"));
+  }
+
+  @Test
+  public void testRulesCanBeRun() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "implementation_handles_test", tmp);
+    workspace.setUp();
+
+    workspace.runBuckCommand("run", "//:default_run_test_info").assertSuccess();
+  }
 }

@@ -660,7 +660,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckTest("//:without_run").assertFailure();
-    assertThat(result.getStderr(), Matchers.containsString("without a RunInfo provider"));
+    assertThat(result.getStderr(), Matchers.containsString("did not return a RunInfo object"));
   }
 
   private static class RuleOutput {
