@@ -515,6 +515,22 @@ public class SkylarkUserDefinedRulesParserTest {
   }
 
   @Test
+  public void failsIfInferRunInfoIsNotABoolean() throws IOException, InterruptedException {
+    setupWorkspace("rule_with_wrong_types");
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+
+    Path buildFile = projectFilesystem.resolve(Paths.get("infer_run_info_type", "subdir", "BUCK"));
+
+    parser = createParser(eventCollector);
+
+    assertParserFails(
+        eventCollector,
+        parser,
+        buildFile,
+        "expected value of type 'bool' for parameter 'infer_run_info'");
+  }
+
+  @Test
   public void failsIfAttributeDictValueIsNotAnAttrObject()
       throws IOException, InterruptedException {
     setupWorkspace("rule_with_wrong_types");

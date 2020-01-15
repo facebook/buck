@@ -99,7 +99,8 @@ public class FakeSkylarkUserDefinedRuleFactory {
             implementation,
             IMPLICIT_ATTRIBUTES,
             HIDDEN_IMPLICIT_ATTRIBUTES,
-            ImmutableMap.of(attrName, attr));
+            ImmutableMap.of(attrName, attr),
+            false);
     ret.export(Label.parseAbsolute(label, ImmutableMap.of()), exportedName);
 
     return ret;

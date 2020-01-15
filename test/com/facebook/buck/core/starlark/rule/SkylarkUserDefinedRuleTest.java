@@ -139,7 +139,8 @@ public class SkylarkUserDefinedRuleTest {
             SimpleFunction.of(1),
             TEST_IMPLICIT_ATTRIBUTES,
             HIDDEN_IMPLICIT_ATTRIBUTES,
-            params);
+            params,
+            false);
     rule.export(Label.parseAbsolute("@foo//bar:extension.bzl", ImmutableMap.of()), "baz_rule");
 
     assertEquals("@foo//bar:extension.bzl:baz_rule", rule.getName());
@@ -165,7 +166,8 @@ public class SkylarkUserDefinedRuleTest {
             SimpleFunction.of(1),
             TEST_IMPLICIT_ATTRIBUTES,
             HIDDEN_IMPLICIT_ATTRIBUTES,
-            params);
+            params,
+            false);
     rule.export(Label.parseAbsolute("@foo//bar:extension.bzl", ImmutableMap.of()), "baz_rule");
 
     assertEquals(expectedOrder, rule.getSignature().getSignature().getNames());
@@ -194,7 +196,8 @@ public class SkylarkUserDefinedRuleTest {
             SimpleFunction.of(1),
             TEST_IMPLICIT_ATTRIBUTES,
             HIDDEN_IMPLICIT_ATTRIBUTES,
-            params);
+            params,
+            false);
     rule.export(Label.parseAbsolute("@foo//bar:extension.bzl", ImmutableMap.of()), "baz_rule");
 
     assertEquals(expectedOrder, rule.getSignature().getSignature().getNames());
@@ -213,7 +216,8 @@ public class SkylarkUserDefinedRuleTest {
         SimpleFunction.of(0),
         TEST_IMPLICIT_ATTRIBUTES,
         HIDDEN_IMPLICIT_ATTRIBUTES,
-        params);
+        params,
+        false);
   }
 
   @Test
@@ -229,7 +233,8 @@ public class SkylarkUserDefinedRuleTest {
         SimpleFunction.of(2),
         TEST_IMPLICIT_ATTRIBUTES,
         HIDDEN_IMPLICIT_ATTRIBUTES,
-        params);
+        params,
+        false);
   }
 
   @Test
@@ -247,7 +252,8 @@ public class SkylarkUserDefinedRuleTest {
         SimpleFunction.of(1),
         TEST_IMPLICIT_ATTRIBUTES,
         HIDDEN_IMPLICIT_ATTRIBUTES,
-        params);
+        params,
+        false);
   }
 
   @Test
@@ -267,7 +273,8 @@ public class SkylarkUserDefinedRuleTest {
             SimpleFunction.of(1),
             TEST_IMPLICIT_ATTRIBUTES,
             HIDDEN_IMPLICIT_ATTRIBUTES,
-            params);
+            params,
+            false);
     rule.export(Label.parseAbsolute("@foo//bar:extension.bzl", ImmutableMap.of()), "baz_rule");
 
     try (Mutability mutability = Mutability.create("argtest")) {
@@ -313,7 +320,8 @@ public class SkylarkUserDefinedRuleTest {
             SimpleFunction.of(1),
             TEST_IMPLICIT_ATTRIBUTES,
             HIDDEN_IMPLICIT_ATTRIBUTES,
-            params);
+            params,
+            false);
     rule.export(Label.parseAbsolute("@foo//bar:extension.bzl", ImmutableMap.of()), "baz_rule");
 
     try (Mutability mutability = Mutability.create("argtest")) {
@@ -352,7 +360,8 @@ public class SkylarkUserDefinedRuleTest {
             SimpleFunction.of(1),
             TEST_IMPLICIT_ATTRIBUTES,
             HIDDEN_IMPLICIT_ATTRIBUTES,
-            params);
+            params,
+            false);
     rule.export(Label.parseAbsolute("@foo//bar:extension.bzl", ImmutableMap.of()), "baz_rule");
 
     try (Mutability mutability = Mutability.create("argtest")) {
@@ -384,7 +393,8 @@ public class SkylarkUserDefinedRuleTest {
         SimpleFunction.of(1),
         TEST_IMPLICIT_ATTRIBUTES,
         HIDDEN_IMPLICIT_ATTRIBUTES,
-        params);
+        params,
+        false);
   }
 
   @Test
@@ -400,7 +410,8 @@ public class SkylarkUserDefinedRuleTest {
         SimpleFunction.of(1),
         TEST_IMPLICIT_ATTRIBUTES,
         HIDDEN_IMPLICIT_ATTRIBUTES,
-        params);
+        params,
+        false);
   }
 
   @Test
@@ -429,7 +440,8 @@ public class SkylarkUserDefinedRuleTest {
             SimpleFunction.of(1),
             TEST_IMPLICIT_ATTRIBUTES,
             HIDDEN_IMPLICIT_ATTRIBUTES,
-            params);
+            params,
+            false);
     rule.export(Label.parseAbsolute("@foo//bar:extension.bzl", ImmutableMap.of()), "baz_rule");
 
     try (Mutability mutability = Mutability.create("argtest")) {
@@ -474,7 +486,8 @@ public class SkylarkUserDefinedRuleTest {
             SimpleFunction.of(1),
             TEST_IMPLICIT_ATTRIBUTES,
             HIDDEN_IMPLICIT_ATTRIBUTES,
-            params);
+            params,
+            false);
 
     ImmutableMap<String, ParamInfo> paramInfos = rule.getAllParamInfo();
 

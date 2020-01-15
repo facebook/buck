@@ -59,6 +59,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
   private final BaseFunction implementation;
   private final ImmutableMap<String, Attribute<?>> attrs;
   private final Set<String> hiddenImplicitAttributes;
+  private final boolean shouldInferRunInfo;
   private final ImmutableMap<String, ParamInfo> params;
 
   private SkylarkUserDefinedRule(
@@ -66,7 +67,8 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
       Location location,
       BaseFunction implementation,
       ImmutableMap<String, Attribute<?>> attrs,
-      Set<String> hiddenImplicitAttributes) {
+      Set<String> hiddenImplicitAttributes,
+      boolean shouldInferRunInfo) {
     /**
      * The name is incomplete until {@link #export(Label, String)} is called, so we know what is on
      * the left side of the assignment operator to create a function name
@@ -75,6 +77,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
     this.implementation = implementation;
     this.attrs = attrs;
     this.hiddenImplicitAttributes = hiddenImplicitAttributes;
+    this.shouldInferRunInfo = shouldInferRunInfo;
     this.params =
         getAttrs().entrySet().stream()
             .collect(
@@ -142,7 +145,8 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
       BaseFunction implementation,
       ImmutableMap<String, Attribute<?>> implicitAttributes,
       Set<String> hiddenImplicitAttributes,
-      Map<String, AttributeHolder> attrs)
+      Map<String, AttributeHolder> attrs,
+      boolean inferRunInfo)
       throws EvalException {
 
     validateImplementation(location, implementation);
@@ -153,7 +157,12 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
     FunctionSignature.WithValues<Object, SkylarkType> signature =
         createSignature(validatedAttrs, location);
     return new SkylarkUserDefinedRule(
-        signature, location, implementation, validatedAttrs, hiddenImplicitAttributes);
+        signature,
+        location,
+        implementation,
+        validatedAttrs,
+        hiddenImplicitAttributes,
+        inferRunInfo);
   }
 
   private static void validateImplementation(Location location, BaseFunction implementation)
@@ -275,6 +284,11 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
     return Preconditions.checkNotNull(
         exportedName,
         "Tried to get exported name before function has been assigned to a variable and exported");
+  }
+
+  /** Whether RunInfo should be inferred for this rule */
+  public boolean shouldInferRunInfo() {
+    return shouldInferRunInfo;
   }
 
   @Override

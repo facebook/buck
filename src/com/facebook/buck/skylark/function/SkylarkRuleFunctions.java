@@ -88,6 +88,7 @@ public class SkylarkRuleFunctions implements SkylarkRuleFunctionsApi {
   public SkylarkUserDefinedRule rule(
       BaseFunction implementation,
       SkylarkDict<String, AttributeHolder> attrs,
+      boolean inferRunInfo,
       Location loc,
       FuncallExpression ast,
       Environment env)
@@ -98,7 +99,12 @@ public class SkylarkRuleFunctions implements SkylarkRuleFunctionsApi {
         attrs.getContents(String.class, AttributeHolder.class, "attrs keyword of rule()");
 
     return SkylarkUserDefinedRule.of(
-        loc, implementation, IMPLICIT_ATTRIBUTES, HIDDEN_IMPLICIT_ATTRIBUTES, checkedAttributes);
+        loc,
+        implementation,
+        IMPLICIT_ATTRIBUTES,
+        HIDDEN_IMPLICIT_ATTRIBUTES,
+        checkedAttributes,
+        inferRunInfo);
   }
 
   @Override
