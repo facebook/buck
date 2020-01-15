@@ -21,6 +21,7 @@ import com.facebook.buck.core.description.RuleDescription;
 import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
+import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgsFactory;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisException;
 import com.facebook.buck.core.rules.providers.Provider;
@@ -30,11 +31,14 @@ import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.collect.impl.ProviderInfoCollectionImpl;
 import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
 import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
+import com.facebook.buck.core.rules.providers.lib.ImmutableRunInfo;
+import com.facebook.buck.core.rules.providers.lib.RunInfo;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.core.starlark.eventhandler.ConsoleEventHandler;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.events.EventKind;
@@ -90,7 +94,7 @@ public class SkylarkDescription implements RuleDescription<SkylarkDescriptionArg
           SkylarkList.castSkylarkListOrNoneToList(implResult, SkylarkProviderInfo.class, null);
 
       // TODO: Verify that we get providers back, validate types, etc, etc
-      return getProviderInfos(returnedProviders, ImmutableSet.of(), ctx, implementation);
+      return getProviderInfos(returnedProviders, ImmutableSet.of(), ctx, implementation, args);
     } catch (EvalException e) {
       throw new RuleAnalysisException(e, e.print());
     } catch (InterruptedException e) {
@@ -104,28 +108,64 @@ public class SkylarkDescription implements RuleDescription<SkylarkDescriptionArg
       List<SkylarkProviderInfo> implResult,
       ImmutableSet<Artifact> declaredOutputs,
       SkylarkRuleContext ctx,
-      BaseFunction implementation)
+      BaseFunction implementation,
+      SkylarkDescriptionArg args)
       throws EvalException {
 
     ProviderInfoCollectionImpl.Builder infos = ProviderInfoCollectionImpl.builder();
+    boolean inferRunInfo = args.getRule().shouldInferRunInfo();
 
     @Nullable DefaultInfo suppliedDefaultInfo = null;
+    @Nullable RunInfo suppliedRunInfo = null;
     for (SkylarkProviderInfo skylarkInfo : implResult) {
       ProviderInfo<?> info = skylarkInfo.getProviderInfo();
       if (DefaultInfo.PROVIDER.equals(info.getProvider()) && suppliedDefaultInfo == null) {
         suppliedDefaultInfo = (DefaultInfo) info;
+      } else if (RunInfo.PROVIDER.equals(info.getProvider())) {
+        suppliedRunInfo = (RunInfo) info;
       } else {
         infos.put(info);
       }
     }
     if (suppliedDefaultInfo == null) {
-      // TODO: If we have output params set, use those artifacts
       ImmutableSet<Artifact> outputs = declaredOutputs;
       if (outputs.isEmpty()) {
         outputs = ctx.getOutputs();
       }
-
       suppliedDefaultInfo = new ImmutableDefaultInfo(SkylarkDict.empty(), outputs);
+    }
+    if (inferRunInfo) {
+      if (suppliedRunInfo != null) {
+        throw new EvalException(
+            implementation.getLocation(),
+            String.format(
+                "Rule %s for %s specified `infer_run_info`, however a `RunInfo` object was "
+                    + "explicitly returned. Either remove RunInfo from the returned values and "
+                    + "allow Buck to infer a RunInfo value, or remove `infer_run_info` from the "
+                    + "`rule()` declaration",
+                implementation.getFullName(), ctx.getLabel()));
+      }
+      if (suppliedDefaultInfo.defaultOutputs().size() != 1) {
+        throw new EvalException(
+            implementation.getLocation(),
+            String.format(
+                "Rule %s for %s specified `infer_run_info`, but a RunInfo provider could not be "
+                    + "inferred. This provider can only be inferred if the rule returns a single "
+                    + "default output in DefaultInfo, rather than %s outputs",
+                implementation.getFullName(),
+                ctx.getLabel(),
+                suppliedDefaultInfo.defaultOutputs().size()));
+      }
+      suppliedRunInfo =
+          new ImmutableRunInfo(
+              ImmutableMap.of(),
+              CommandLineArgsFactory.from(
+                  ImmutableList.of(
+                      Iterables.getOnlyElement(suppliedDefaultInfo.defaultOutputs()))));
+    }
+
+    if (suppliedRunInfo != null) {
+      infos.put(suppliedRunInfo);
     }
 
     try {

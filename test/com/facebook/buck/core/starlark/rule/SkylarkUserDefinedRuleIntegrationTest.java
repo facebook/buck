@@ -709,4 +709,103 @@ public class SkylarkUserDefinedRuleIntegrationTest {
     assertEquals(expected, filesystem.readFileIfItExists(outputPath2).get().trim());
     assertEquals(expected, filesystem.readFileIfItExists(outputPath3).get().trim());
   }
+
+  @Test
+  public void runsIfRunInfoReturned() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "implementation_handles_executable", tmp);
+    workspace.setUp();
+
+    ImmutableList<String> expectedWithRun =
+        ImmutableList.of(
+            "Message on stdout", "arg[rulearg1]", "arg[arg1]", "arg[arg2]", "CUSTOM_ENV: CUSTOM");
+    ImmutableList<String> expectedWithoutRun =
+        ImmutableList.of("Message on stdout", "arg[arg1]", "arg[arg2]", "CUSTOM_ENV: ");
+
+    ImmutableList<String> actualReturnedDefaultAndRun =
+        ImmutableList.copyOf(
+            workspace
+                .runBuckCommand("run", "//:with_default_and_run_info", "--", "arg1", "arg2")
+                .assertSuccess()
+                .getStdout()
+                .split("\\r?\\n"));
+
+    ImmutableList<String> actualReturnedDefault =
+        ImmutableList.copyOf(
+            workspace
+                .runBuckCommand("run", "//:with_default_info", "--", "arg1", "arg2")
+                .assertSuccess()
+                .getStdout()
+                .split("\\r?\\n"));
+
+    ImmutableList<String> actualReturnedRun =
+        ImmutableList.copyOf(
+            workspace
+                .runBuckCommand("run", "//:with_run_info", "--", "arg1", "arg2")
+                .assertSuccess()
+                .getStdout()
+                .split("\\r?\\n"));
+
+    ImmutableList<String> actualReturnedNeither =
+        ImmutableList.copyOf(
+            workspace
+                .runBuckCommand(
+                    "run", "//:with_implicit_default_and_run_info", "--", "arg1", "arg2")
+                .assertSuccess()
+                .getStdout()
+                .split("\\r?\\n"));
+
+    assertEquals(expectedWithRun, actualReturnedDefaultAndRun);
+    assertEquals(expectedWithoutRun, actualReturnedDefault);
+    assertEquals(expectedWithRun, actualReturnedRun);
+    assertEquals(expectedWithoutRun, actualReturnedNeither);
+  }
+
+  @Test
+  public void failsIfRunInfoReturnedOnInferringRule() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "implementation_handles_executable", tmp);
+    workspace.setUp();
+
+    String runOutput =
+        workspace
+            .runBuckCommand("build", "//:with_inferring_and_explicit_run_info")
+            .assertFailure()
+            .getStderr();
+
+    assertThat(
+        runOutput,
+        Matchers.containsString("specified `infer_run_info`, however a `RunInfo` object was"));
+  }
+
+  @Test
+  public void failsIfRunInfoNotProvidedButZeroOrMoreThanOneArtifactsReturnedInDefaultInfo()
+      throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "implementation_handles_executable", tmp);
+    workspace.setUp();
+
+    String zeroOutputsOut =
+        workspace
+            .runBuckCommand("build", "//:with_zero_outputs_implicit_run")
+            .assertFailure()
+            .getStderr();
+    String twoOutputsOut =
+        workspace
+            .runBuckCommand("build", "//:with_two_outputs_implicit_run")
+            .assertFailure()
+            .getStderr();
+
+    assertThat(
+        zeroOutputsOut,
+        Matchers.containsString(
+            "This provider can only be inferred if the rule returns a single default"));
+    assertThat(
+        twoOutputsOut,
+        Matchers.containsString(
+            "This provider can only be inferred if the rule returns a single default"));
+  }
 }
