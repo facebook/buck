@@ -427,8 +427,10 @@ public class SourcePathResolverTest {
     assertEquals(Paths.get("foo", "bar").toString(), actual3);
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void getSourcePathNameOnArchiveMemberSourcePath() {
+    exception.expect(IllegalArgumentException.class);
+
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolverAdapter pathResolver =
         new SourcePathResolverAdapter(DefaultSourcePathResolver.from(graphBuilder));
@@ -484,8 +486,10 @@ public class SourcePathResolverTest {
         rule.getBuildTarget(), "srcs", ImmutableSet.of(sourcePath1, sourcePath2));
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test
   public void getRelativePathCanOnlyReturnARelativePath() {
+    exception.expect(IllegalStateException.class);
+
     BuildRuleResolver resolver = new TestActionGraphBuilder();
     SourcePathResolverAdapter pathResolver =
         new SourcePathResolverAdapter(DefaultSourcePathResolver.from(resolver));
