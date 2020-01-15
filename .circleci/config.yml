@@ -50,6 +50,8 @@ jobs:
             echo '-Xmx750m' > .buckjavaargs.local
             export PATH=${ANDROIDSDK}/tools/bin:$PATH
             export PATH="$(pyenv root)/shims:$PATH"
+            export ANDROIDSDK=${ANDROIDSDK}
+            export TERM=dumb
             ./bin/buck build buck --out ./new_buck.pex
             export BUCK_NUM_THREADS=3
             ./new_buck.pex build --num-threads=${BUCK_NUM_THREADS} src/... test/...
