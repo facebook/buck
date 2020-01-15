@@ -176,12 +176,22 @@ public class AppleToolchainIntegrationTest {
             workspace.getProjectFileSystem(),
             BuildTargetFactory.newInstance("//:AnotherSwiftLibrary#iphoneos-arm64,swift-compile"),
             "%s");
+    Path companionLibraryPath =
+        BuildTargetPaths.getGenPath(
+            workspace.getProjectFileSystem(),
+            BuildTargetFactory.newInstance("//:SwiftCompanionLibrary#iphoneos-arm64,swift-compile"),
+            "%s");
     assertEquals(
         String.format(
             "linker: input:%n"
                 + swiftLibraryPath
                 + "/SwiftLibrary.o%n"
                 + "swift compile: swift code%n"
+                + "linker: input:%n"
+                + companionLibraryPath
+                + "/SwiftCompanionLibrary.o%n"
+                + "swift compile: swift source 1%n"
+                + "swift compile: swift source 2%n"
                 + "linker: input:%n"
                 + anotherSwiftLibraryPath
                 + "/AnotherSwiftLibrary.o%n"
@@ -190,9 +200,10 @@ public class AppleToolchainIntegrationTest {
                 + "linker: frameworks: Foundation%n"
                 + "linker: lpath: %n"
                 + "linker: libs: %n"
-                + "linker: ast_paths: %s/SwiftLibrary.swiftmodule,%s/AnotherSwiftLibrary.swiftmodule%n",
+                + "linker: ast_paths: %s/SwiftLibrary.swiftmodule,%s/SwiftCompanionLibrary.swiftmodule,%s/AnotherSwiftLibrary.swiftmodule%n",
             rootPath,
             swiftLibraryPath,
+            companionLibraryPath,
             anotherSwiftLibraryPath),
         workspace.getFileContents(output));
   }

@@ -203,7 +203,6 @@ public class AppleTestDescription
           appleLibraryDescription.createSwiftBuildRule(
               buildTarget,
               projectFilesystem,
-              params,
               graphBuilder,
               context.getCellPathResolver(),
               args,

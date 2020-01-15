@@ -271,7 +271,6 @@ public class AppleLibraryDescription
   public Optional<BuildRule> createSwiftBuildRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       AppleNativeTargetDescriptionArg args,
@@ -345,7 +344,6 @@ public class AppleLibraryDescription
                     buildTarget,
                     cellRoots,
                     graphBuilder,
-                    params,
                     args,
                     projectFilesystem,
                     cxxPlatform,
@@ -377,7 +375,6 @@ public class AppleLibraryDescription
         createSwiftBuildRule(
             buildTarget,
             context.getProjectFilesystem(),
-            params,
             graphBuilder,
             context.getCellPathResolver(),
             args,

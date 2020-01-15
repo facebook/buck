@@ -31,12 +31,13 @@ assert options.test_arg1
 assert options.test_arg2
 assert options.emit_module
 
-source = args[-1]
+sources = [arg for arg in args if arg.endswith(".swift")]
 
 with open(options.output, "w") as output:
-    output.write("swift compile: ")
-    with open(source) as inputfile:
-        output.write(inputfile.read())
+    for source in sources:
+        output.write("swift compile: ")
+        with open(source) as inputfile:
+            output.write(inputfile.read())
 
 with open(options.emit_module_path, "w") as module:
     module.write("Module: " + options.module_name + "\n")

@@ -24,7 +24,6 @@ import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
@@ -61,7 +60,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Ordering;
 import com.google.common.collect.Streams;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -70,7 +68,6 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 /** A build rule which compiles one or more Swift sources into a Swift module. */
 public class SwiftCompile extends AbstractBuildRule {
@@ -113,7 +110,6 @@ public class SwiftCompile extends AbstractBuildRule {
 
   @AddToRuleKey private final boolean importUnderlyingModule;
 
-  private final BuildRuleParams buildRuleParams;
   private BuildableSupport.DepsSupplier depsSupplier;
 
   SwiftCompile(
@@ -123,7 +119,6 @@ public class SwiftCompile extends AbstractBuildRule {
       SwiftTargetTriple swiftTarget,
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
-      BuildRuleParams params,
       Tool swiftCompiler,
       ImmutableSet<FrameworkPath> frameworks,
       String moduleName,
@@ -138,7 +133,6 @@ public class SwiftCompile extends AbstractBuildRule {
       boolean importUnderlyingModule) {
     super(buildTarget, projectFilesystem);
     this.cxxPlatform = cxxPlatform;
-    this.buildRuleParams = params;
     this.frameworks = frameworks;
     this.swiftBuckConfig = swiftBuckConfig;
     this.swiftCompiler = swiftCompiler;
@@ -328,8 +322,7 @@ public class SwiftCompile extends AbstractBuildRule {
 
   @Override
   public SortedSet<BuildRule> getBuildDeps() {
-    return Stream.concat(depsSupplier.get().stream(), buildRuleParams.getBuildDeps().stream())
-        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+    return depsSupplier.get();
   }
 
   @Override

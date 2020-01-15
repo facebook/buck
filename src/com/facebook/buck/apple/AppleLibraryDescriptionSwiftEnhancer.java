@@ -22,7 +22,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.CxxLibraryGroup;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
@@ -53,7 +52,6 @@ public class AppleLibraryDescriptionSwiftEnhancer {
       BuildTarget target,
       CellPathResolver cellRoots,
       ActionGraphBuilder graphBuilder,
-      BuildRuleParams params,
       AppleNativeTargetDescriptionArg args,
       ProjectFilesystem filesystem,
       CxxPlatform platform,
@@ -78,8 +76,6 @@ public class AppleLibraryDescriptionSwiftEnhancer {
     ImmutableSortedSet.Builder<BuildRule> sortedDeps = ImmutableSortedSet.naturalOrder();
     sortedDeps.addAll(inputDeps);
 
-    BuildRuleParams paramsWithDeps = params.withExtraDeps(sortedDeps.build());
-
     PreprocessorFlags.Builder flagsBuilder = PreprocessorFlags.builder();
     inputs.forEach(input -> flagsBuilder.addAllIncludes(input.getIncludes()));
     inputs.forEach(input -> flagsBuilder.addAllFrameworkPaths(input.getFrameworks()));
@@ -96,7 +92,6 @@ public class AppleLibraryDescriptionSwiftEnhancer {
         swiftPlatform,
         swiftBuckConfig,
         target,
-        paramsWithDeps,
         graphBuilder,
         cellRoots,
         filesystem,
