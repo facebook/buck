@@ -140,6 +140,7 @@ public class SkylarkUserDefinedRuleTest {
             TEST_IMPLICIT_ATTRIBUTES,
             HIDDEN_IMPLICIT_ATTRIBUTES,
             params,
+            false,
             false);
     rule.export(Label.parseAbsolute("@foo//bar:extension.bzl", ImmutableMap.of()), "baz_rule");
 
@@ -167,6 +168,7 @@ public class SkylarkUserDefinedRuleTest {
             TEST_IMPLICIT_ATTRIBUTES,
             HIDDEN_IMPLICIT_ATTRIBUTES,
             params,
+            false,
             false);
     rule.export(Label.parseAbsolute("@foo//bar:extension.bzl", ImmutableMap.of()), "baz_rule");
 
@@ -197,6 +199,7 @@ public class SkylarkUserDefinedRuleTest {
             TEST_IMPLICIT_ATTRIBUTES,
             HIDDEN_IMPLICIT_ATTRIBUTES,
             params,
+            false,
             false);
     rule.export(Label.parseAbsolute("@foo//bar:extension.bzl", ImmutableMap.of()), "baz_rule");
 
@@ -217,6 +220,7 @@ public class SkylarkUserDefinedRuleTest {
         TEST_IMPLICIT_ATTRIBUTES,
         HIDDEN_IMPLICIT_ATTRIBUTES,
         params,
+        false,
         false);
   }
 
@@ -234,6 +238,7 @@ public class SkylarkUserDefinedRuleTest {
         TEST_IMPLICIT_ATTRIBUTES,
         HIDDEN_IMPLICIT_ATTRIBUTES,
         params,
+        false,
         false);
   }
 
@@ -253,6 +258,7 @@ public class SkylarkUserDefinedRuleTest {
         TEST_IMPLICIT_ATTRIBUTES,
         HIDDEN_IMPLICIT_ATTRIBUTES,
         params,
+        false,
         false);
   }
 
@@ -274,6 +280,7 @@ public class SkylarkUserDefinedRuleTest {
             TEST_IMPLICIT_ATTRIBUTES,
             HIDDEN_IMPLICIT_ATTRIBUTES,
             params,
+            false,
             false);
     rule.export(Label.parseAbsolute("@foo//bar:extension.bzl", ImmutableMap.of()), "baz_rule");
 
@@ -321,6 +328,7 @@ public class SkylarkUserDefinedRuleTest {
             TEST_IMPLICIT_ATTRIBUTES,
             HIDDEN_IMPLICIT_ATTRIBUTES,
             params,
+            false,
             false);
     rule.export(Label.parseAbsolute("@foo//bar:extension.bzl", ImmutableMap.of()), "baz_rule");
 
@@ -361,6 +369,7 @@ public class SkylarkUserDefinedRuleTest {
             TEST_IMPLICIT_ATTRIBUTES,
             HIDDEN_IMPLICIT_ATTRIBUTES,
             params,
+            false,
             false);
     rule.export(Label.parseAbsolute("@foo//bar:extension.bzl", ImmutableMap.of()), "baz_rule");
 
@@ -394,6 +403,7 @@ public class SkylarkUserDefinedRuleTest {
         TEST_IMPLICIT_ATTRIBUTES,
         HIDDEN_IMPLICIT_ATTRIBUTES,
         params,
+        false,
         false);
   }
 
@@ -411,6 +421,7 @@ public class SkylarkUserDefinedRuleTest {
         TEST_IMPLICIT_ATTRIBUTES,
         HIDDEN_IMPLICIT_ATTRIBUTES,
         params,
+        false,
         false);
   }
 
@@ -441,6 +452,7 @@ public class SkylarkUserDefinedRuleTest {
             TEST_IMPLICIT_ATTRIBUTES,
             HIDDEN_IMPLICIT_ATTRIBUTES,
             params,
+            false,
             false);
     rule.export(Label.parseAbsolute("@foo//bar:extension.bzl", ImmutableMap.of()), "baz_rule");
 
@@ -487,6 +499,7 @@ public class SkylarkUserDefinedRuleTest {
             TEST_IMPLICIT_ATTRIBUTES,
             HIDDEN_IMPLICIT_ATTRIBUTES,
             params,
+            false,
             false);
 
     ImmutableMap<String, ParamInfo> paramInfos = rule.getAllParamInfo();

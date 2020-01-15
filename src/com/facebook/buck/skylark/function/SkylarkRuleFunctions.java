@@ -51,6 +51,9 @@ public class SkylarkRuleFunctions implements SkylarkRuleFunctionsApi {
   public static final ImmutableMap<String, Attribute<?>> IMPLICIT_ATTRIBUTES =
       SkylarkRuleFunctionImplicitAttributes.compute();
 
+  public static final ImmutableMap<String, Attribute<?>> IMPLICIT_TEST_ATTRIBUTES =
+      SkylarkRuleFunctionImplicitAttributes.computeTest();
+
   /**
    * The hidden attributes from IMPLICIT_ATTRIBUTES that are hidden from user's for user defined
    * rules
@@ -89,6 +92,7 @@ public class SkylarkRuleFunctions implements SkylarkRuleFunctionsApi {
       BaseFunction implementation,
       SkylarkDict<String, AttributeHolder> attrs,
       boolean inferRunInfo,
+      boolean test,
       Location loc,
       FuncallExpression ast,
       Environment env)
@@ -101,10 +105,11 @@ public class SkylarkRuleFunctions implements SkylarkRuleFunctionsApi {
     return SkylarkUserDefinedRule.of(
         loc,
         implementation,
-        IMPLICIT_ATTRIBUTES,
+        test ? IMPLICIT_TEST_ATTRIBUTES : IMPLICIT_ATTRIBUTES,
         HIDDEN_IMPLICIT_ATTRIBUTES,
         checkedAttributes,
-        inferRunInfo);
+        inferRunInfo,
+        test);
   }
 
   @Override

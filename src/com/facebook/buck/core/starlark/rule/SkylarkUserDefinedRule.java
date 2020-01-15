@@ -60,6 +60,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
   private final ImmutableMap<String, Attribute<?>> attrs;
   private final Set<String> hiddenImplicitAttributes;
   private final boolean shouldInferRunInfo;
+  private final boolean shouldBeTestRule;
   private final ImmutableMap<String, ParamInfo> params;
 
   private SkylarkUserDefinedRule(
@@ -68,7 +69,8 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
       BaseFunction implementation,
       ImmutableMap<String, Attribute<?>> attrs,
       Set<String> hiddenImplicitAttributes,
-      boolean shouldInferRunInfo) {
+      boolean shouldInferRunInfo,
+      boolean shouldBeTestRule) {
     /**
      * The name is incomplete until {@link #export(Label, String)} is called, so we know what is on
      * the left side of the assignment operator to create a function name
@@ -78,6 +80,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
     this.attrs = attrs;
     this.hiddenImplicitAttributes = hiddenImplicitAttributes;
     this.shouldInferRunInfo = shouldInferRunInfo;
+    this.shouldBeTestRule = shouldBeTestRule;
     this.params =
         getAttrs().entrySet().stream()
             .collect(
@@ -146,7 +149,8 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
       ImmutableMap<String, Attribute<?>> implicitAttributes,
       Set<String> hiddenImplicitAttributes,
       Map<String, AttributeHolder> attrs,
-      boolean inferRunInfo)
+      boolean inferRunInfo,
+      boolean test)
       throws EvalException {
 
     validateImplementation(location, implementation);
@@ -162,7 +166,8 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
         implementation,
         validatedAttrs,
         hiddenImplicitAttributes,
-        inferRunInfo);
+        inferRunInfo,
+        test);
   }
 
   private static void validateImplementation(Location location, BaseFunction implementation)
@@ -289,6 +294,11 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
   /** Whether RunInfo should be inferred for this rule */
   public boolean shouldInferRunInfo() {
     return shouldInferRunInfo;
+  }
+
+  /** Whether this rule is expected to be a test rule or not */
+  public boolean shouldBeTestRule() {
+    return shouldBeTestRule;
   }
 
   @Override

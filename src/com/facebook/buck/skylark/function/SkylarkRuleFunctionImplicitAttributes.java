@@ -17,6 +17,7 @@
 package com.facebook.buck.skylark.function;
 
 import com.facebook.buck.core.description.arg.BuildRuleArg;
+import com.facebook.buck.core.description.arg.HasContacts;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -44,10 +45,26 @@ class SkylarkRuleFunctionImplicitAttributes {
 
   private SkylarkRuleFunctionImplicitAttributes() {}
 
-  static ImmutableMap<String, Attribute<?>> compute() {
-    ImmutableMap.Builder<String, Attribute<?>> attrs = ImmutableMap.builder();
+  private static void addCommon(ImmutableMap.Builder<String, Attribute<?>> builder) {
     // BuildRuleArg defines attributes of all build rules, native or user defined
     for (Method method : BuildRuleArg.class.getMethods()) {
+      Optional<Pair<String, Attribute<?>>> pair = methodToAttribute(method);
+      if (pair.isPresent()) {
+        builder.put(pair.get().getFirst(), pair.get().getSecond());
+      }
+    }
+  }
+
+  static ImmutableMap<String, Attribute<?>> compute() {
+    ImmutableMap.Builder<String, Attribute<?>> attrs = ImmutableMap.builder();
+    addCommon(attrs);
+    return attrs.build();
+  }
+
+  static ImmutableMap<String, Attribute<?>> computeTest() {
+    ImmutableMap.Builder<String, Attribute<?>> attrs = ImmutableMap.builder();
+    addCommon(attrs);
+    for (Method method : HasContacts.class.getMethods()) {
       Optional<Pair<String, Attribute<?>>> pair = methodToAttribute(method);
       if (pair.isPresent()) {
         attrs.put(pair.get().getFirst(), pair.get().getSecond());

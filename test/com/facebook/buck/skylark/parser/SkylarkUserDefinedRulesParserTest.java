@@ -531,6 +531,34 @@ public class SkylarkUserDefinedRulesParserTest {
   }
 
   @Test
+  public void failsIfTestIsNotBoolean() throws IOException, InterruptedException {
+    setupWorkspace("rule_with_wrong_types");
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+
+    Path buildFile = projectFilesystem.resolve(Paths.get("test_type", "subdir", "BUCK"));
+
+    parser = createParser(eventCollector);
+
+    assertParserFails(
+        eventCollector, parser, buildFile, "expected value of type 'bool' for parameter 'test'");
+  }
+
+  @Test
+  public void testAttributesAreAvailableForTestRules() throws IOException, InterruptedException {
+    setupWorkspace("rule_with_contacts");
+    EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
+
+    Path buildFile = projectFilesystem.resolve(Paths.get("subdir", "BUCK"));
+
+    parser = createParser(eventCollector);
+
+    BuildFileManifest manifest = parser.getManifest(buildFile);
+    assertEquals(
+        ImmutableList.of("foo@example.com", "bar@example.com"),
+        manifest.getTargets().get("target1").get("contacts"));
+  }
+
+  @Test
   public void failsIfAttributeDictValueIsNotAnAttrObject()
       throws IOException, InterruptedException {
     setupWorkspace("rule_with_wrong_types");
