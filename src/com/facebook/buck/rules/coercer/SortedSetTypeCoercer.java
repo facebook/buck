@@ -30,7 +30,7 @@ public class SortedSetTypeCoercer<T extends Comparable<? super T>>
   private final TypeCoercer<T> elementTypeCoercer;
   private final SortedSetConcatable<T> concatable = new SortedSetConcatable<>();
 
-  SortedSetTypeCoercer(TypeCoercer<T> elementTypeCoercer) {
+  public SortedSetTypeCoercer(TypeCoercer<T> elementTypeCoercer) {
     super(elementTypeCoercer);
     this.elementTypeCoercer = elementTypeCoercer;
   }

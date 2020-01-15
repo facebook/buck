@@ -18,7 +18,10 @@ package com.facebook.buck.core.starlark.rule;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.skylark.function.FakeSkylarkUserDefinedRuleFactory;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.syntax.EvalException;
 import org.junit.Rule;
@@ -68,5 +71,20 @@ public class SkylarkDescriptionArgTest {
 
     arg.setPostCoercionValue("baz", 1);
     assertEquals(1, arg.getPostCoercionValue("baz"));
+  }
+
+  @Test
+  public void getsLabelsAndLicenses() throws LabelSyntaxException, EvalException {
+    ImmutableSortedSet<DefaultBuildTargetSourcePath> licenses =
+        ImmutableSortedSet.of(
+            DefaultBuildTargetSourcePath.of(BuildTargetFactory.newInstance("//:LICENSE")),
+            DefaultBuildTargetSourcePath.of(BuildTargetFactory.newInstance("//:LICENSE2")));
+    SkylarkDescriptionArg arg =
+        new SkylarkDescriptionArg(FakeSkylarkUserDefinedRuleFactory.createSimpleRule());
+    arg.setPostCoercionValue("labels", ImmutableSortedSet.of("foo", "bar"));
+    arg.setPostCoercionValue("licenses", licenses);
+
+    assertEquals(ImmutableSortedSet.of("bar", "foo"), arg.getLabels());
+    assertEquals(licenses, arg.getLicenses());
   }
 }

@@ -41,6 +41,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.events.Event;
 import com.google.devtools.build.lib.events.EventCollector;
@@ -637,8 +638,8 @@ public class SkylarkUserDefinedRulesParserTest {
                 .put("buck.type", "//subdir:foo.bzl:some_rule")
                 .put("attr1", 3)
                 .put("attr2", 2)
-                .put("licenses", ImmutableList.of())
-                .put("labels", ImmutableList.of())
+                .put("licenses", ImmutableSortedSet.of())
+                .put("labels", ImmutableSortedSet.of())
                 .put("default_target_platform", Optional.empty())
                 .put("target_compatible_with", ImmutableList.of())
                 .put("compatible_with", ImmutableList.of())
@@ -668,8 +669,8 @@ public class SkylarkUserDefinedRulesParserTest {
                 .put("buck.type", "//subdir:foo.bzl:some_rule")
                 .put("attr1", 3)
                 .put("attr2", 2)
-                .put("licenses", ImmutableList.of())
-                .put("labels", ImmutableList.of())
+                .put("licenses", ImmutableSortedSet.of())
+                .put("labels", ImmutableSortedSet.of())
                 .put("default_target_platform", Optional.empty())
                 .put("target_compatible_with", ImmutableList.of())
                 .put("compatible_with", ImmutableList.of())
@@ -681,8 +682,8 @@ public class SkylarkUserDefinedRulesParserTest {
                 .put("buck.type", "//subdir:foo.bzl:some_rule")
                 .put("attr1", 4)
                 .put("attr2", 5)
-                .put("licenses", ImmutableList.of())
-                .put("labels", ImmutableList.of())
+                .put("licenses", ImmutableSortedSet.of())
+                .put("labels", ImmutableSortedSet.of())
                 .put("default_target_platform", Optional.empty())
                 .put("target_compatible_with", ImmutableList.of())
                 .put("compatible_with", ImmutableList.of())

@@ -14,6 +14,11 @@ def _impl(ctx):
             fail("expected attr.string_list to equal ['foo', 'baz']")
         if ctx.attr.int_list != [3, 4]:
             fail("expected attr.int_list to equal [3, 4]")
+        if list(ctx.attr.labels) != ["bar", "foo"]:
+            fail("expected attr.labels to have two elements: ['foo', 'bar']")
+        license_labels = sorted([str(f.owner) for f in ctx.attr.licenses])
+        if license_labels != ["//foo:LICENSE", "//foo:LICENSE2"]:
+            fail("expected attr.licenses to equal ['//foo:LICENSE', '//foo:LICENSE2']")
     elif ctx.label.name == "defaults":
         if ctx.attr.int != 0:
             fail("expected attr.int to equal '0'")
@@ -23,6 +28,10 @@ def _impl(ctx):
             fail("expected attr.string_list to equal ['foo', 'bar']")
         if ctx.attr.int_list != [1, 2]:
             fail("expected attr.int_list to equal [1, 2]")
+        if len(ctx.attr.labels) != 0:
+            fail("expected attr.labels to equal []")
+        if len(ctx.attr.licenses) != 0:
+            fail("expected attr.licenses to equal []")
     else:
         fail("invalid target name")
 
@@ -42,3 +51,9 @@ my_rule = rule(
     },
     implementation = _impl,
 )
+
+def _write(ctx):
+    out = ctx.actions.declare_file(ctx.attr.filename)
+    ctx.actions.write(out, "some license")
+
+write = rule(implementation = _write, attrs = {"filename": attr.string()})

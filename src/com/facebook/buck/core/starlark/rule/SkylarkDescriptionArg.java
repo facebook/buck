@@ -151,13 +151,17 @@ public class SkylarkDescriptionArg implements SkylarkDescriptionArgBuilder, Buil
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public ImmutableSet<SourcePath> getLicenses() {
-    throw new AssertionError("not implemented");
+    // Unchecked as we validate this type with the Attribute
+    return ((ImmutableSortedSet<SourcePath>) getPostCoercionValue("licenses"));
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public ImmutableSortedSet<String> getLabels() {
-    throw new AssertionError("not implemented");
+    // Unchecked as we validate this type with the Attribute
+    return (ImmutableSortedSet<String>) getPostCoercionValue("labels");
   }
 
   @Override

@@ -36,6 +36,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.timing.AbstractFakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.events.Location;
@@ -85,6 +86,8 @@ public class SkylarkDescriptionTest {
     SkylarkDescriptionArg args = new SkylarkDescriptionArg(rule);
     args.setPostCoercionValue("name", "a");
     args.setPostCoercionValue("baz", "");
+    args.setPostCoercionValue("labels", ImmutableSortedSet.of());
+    args.setPostCoercionValue("licenses", ImmutableSortedSet.of());
     args.build();
     ProviderInfoCollection infos = description.ruleImpl(context, target, args);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -124,6 +127,8 @@ public class SkylarkDescriptionTest {
     SkylarkDescriptionArg args = new SkylarkDescriptionArg(rule);
     args.setPostCoercionValue("name", "a");
     args.setPostCoercionValue("baz", "");
+    args.setPostCoercionValue("labels", ImmutableSortedSet.of());
+    args.setPostCoercionValue("licenses", ImmutableSortedSet.of());
     args.build();
     ProviderInfoCollection infos = description.ruleImpl(context, target, args);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
