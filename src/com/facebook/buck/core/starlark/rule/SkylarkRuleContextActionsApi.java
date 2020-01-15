@@ -76,14 +76,19 @@ public interface SkylarkRuleContextActionsApi {
       doc =
           "Creates a file write action. When the action is executed, it will write the given "
               + "content to a file. This is used to generate files using information available "
-              + "in the analysis phase",
+              + "in the analysis phase. Returns the artifact in `output`",
       useLocation = true,
       parameters = {
         @Param(
             name = "output",
             doc =
-                "The file to write to. This must have been declared previously either as an output, or via declare_file",
-            type = SkylarkArtifactApi.class,
+                "The file to write to. This may either be a string, in which case the Artifact "
+                    + "is declared for you, or it must have been returned from "
+                    + "ctx.actions.declare_file",
+            allowedTypes = {
+              @ParamType(type = SkylarkArtifactApi.class),
+              @ParamType(type = String.class)
+            },
             named = true),
         // TODO(pjameson): Once Arg is implemented, accept that as well?
         @Param(
@@ -98,7 +103,7 @@ public interface SkylarkRuleContextActionsApi {
             named = true,
             defaultValue = "False")
       })
-  void write(Artifact output, String content, boolean isExecutable, Location location)
+  Artifact write(Object output, String content, boolean isExecutable, Location location)
       throws EvalException;
 
   @SkylarkCallable(

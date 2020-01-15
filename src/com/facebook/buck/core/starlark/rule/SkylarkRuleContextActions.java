@@ -69,31 +69,47 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
 
   @Override
   public Artifact copyFile(Artifact src, Object dest, Location location) throws EvalException {
-    Artifact destArtifact;
-    if (dest instanceof String) {
-      destArtifact = declareFile((String) dest, location);
-    } else if (dest instanceof Artifact) {
-      destArtifact = (Artifact) dest;
-    } else {
-      /**
-       * Should not be hit; these types are validated in {@link
-       * SkylarkRuleContextActionsApi#copyFile(Artifact, Object, Location)} decorator
-       */
-      throw new EvalException(location, "Invalid dest object provided");
-    }
+    Artifact destArtifact = getArtifactFromArtifactOrString(location, dest);
     new CopyAction(registry, src, destArtifact, CopySourceMode.FILE);
     return destArtifact;
   }
 
   @Override
-  public void write(Artifact output, String content, boolean isExecutable, Location location)
+  public Artifact write(Object output, String content, boolean isExecutable, Location location)
       throws EvalException {
+    Artifact destArtifact = getArtifactFromArtifactOrString(location, output);
     try {
       new WriteAction(
-          registry, ImmutableSortedSet.of(), ImmutableSortedSet.of(output), content, isExecutable);
+          registry,
+          ImmutableSortedSet.of(),
+          ImmutableSortedSet.of(destArtifact),
+          content,
+          isExecutable);
+      return destArtifact;
     } catch (HumanReadableException e) {
       throw new EvalException(location, e.getHumanReadableErrorMessage());
     }
+  }
+
+  /**
+   * @return An output artifact. If {@code arg} is a string, a new artifact is declared and
+   *     returned. If {@code arg} is an artifact, it is returned without any changes
+   */
+  private Artifact getArtifactFromArtifactOrString(Location location, Object arg)
+      throws EvalException {
+    Artifact destArtifact;
+    if (arg instanceof String) {
+      destArtifact = declareFile((String) arg, location);
+    } else if (arg instanceof Artifact) {
+      destArtifact = (Artifact) arg;
+    } else {
+      /**
+       * Should not be hit; these types are validated in the {@link
+       * com.google.devtools.build.lib.skylarkinterface.SkylarkCallable} decorators
+       */
+      throw new EvalException(location, "Invalid output object provided");
+    }
+    return destArtifact;
   }
 
   @Override

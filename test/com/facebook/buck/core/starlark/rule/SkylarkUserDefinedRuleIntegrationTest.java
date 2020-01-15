@@ -142,22 +142,58 @@ public class SkylarkUserDefinedRuleIntegrationTest {
         BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//foo:with_spaces"))
             .resolve("bar")
             .resolve("with spaces.txt");
+    Path exeStringPath =
+        BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//foo:exe_string_output"))
+            .resolve("bar")
+            .resolve("exe.sh");
+    Path textStringPath =
+        BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//foo:text_string_output"))
+            .resolve("bar")
+            .resolve("text.txt");
+    Path withSpacesStringPath =
+        BuildPaths.getGenDir(
+                filesystem, BuildTargetFactory.newInstance("//foo:with_spaces_string_output"))
+            .resolve("bar")
+            .resolve("with spaces.txt");
 
     assertFalse(filesystem.exists(exePath));
     assertFalse(filesystem.exists(textPath));
+    assertFalse(filesystem.exists(withSpacesPath));
+    assertFalse(filesystem.exists(exeStringPath));
+    assertFalse(filesystem.exists(textStringPath));
+    assertFalse(filesystem.exists(withSpacesStringPath));
 
-    workspace.runBuckBuild("//foo:exe", "//foo:text", "//foo:with_spaces").assertSuccess();
+    workspace
+        .runBuckBuild(
+            "//foo:exe",
+            "//foo:text",
+            "//foo:with_spaces",
+            "//foo:exe_string_output",
+            "//foo:text_string_output",
+            "//foo:with_spaces_string_output")
+        .assertSuccess();
 
     assertEquals("exe content", filesystem.readFileIfItExists(filesystem.resolve(exePath)).get());
     assertEquals("text content", filesystem.readFileIfItExists(filesystem.resolve(textPath)).get());
     assertEquals(
         "with spaces content",
         filesystem.readFileIfItExists(filesystem.resolve(withSpacesPath)).get());
+    assertEquals(
+        "exe content", filesystem.readFileIfItExists(filesystem.resolve(exeStringPath)).get());
+    assertEquals(
+        "text content", filesystem.readFileIfItExists(filesystem.resolve(textStringPath)).get());
+    assertEquals(
+        "with spaces content",
+        filesystem.readFileIfItExists(filesystem.resolve(withSpacesStringPath)).get());
+
     // Executable works a bit differently on windows
     if (!Platform.isWindows()) {
       assertTrue(filesystem.isExecutable(exePath));
       assertFalse(filesystem.isExecutable(textPath));
       assertFalse(filesystem.isExecutable(withSpacesPath));
+      assertTrue(filesystem.isExecutable(exeStringPath));
+      assertFalse(filesystem.isExecutable(textStringPath));
+      assertFalse(filesystem.isExecutable(withSpacesStringPath));
     }
   }
 
