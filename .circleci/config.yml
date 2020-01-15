@@ -3,7 +3,7 @@ version: 2
 jobs:
   ci_build:
     environment:
-      WORKINGDIR: "~/buck"
+      WORKINGDIR: "/home/circleci/buck"
       ANDROIDSDK: "~/android-sdk"
     working_directory: ${WORKINGDIR}
     machine:
