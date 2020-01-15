@@ -28,6 +28,7 @@ import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.sandbox.SandboxProperties;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -66,7 +67,7 @@ abstract class AbstractGenruleBuildableBuilder {
   }
 
   @Value.Default
-  public Optional<ImmutableMap<String, ImmutableList<String>>> getOuts() {
+  public Optional<ImmutableMap<String, ImmutableSet<String>>> getOuts() {
     return Optional.empty();
   }
 

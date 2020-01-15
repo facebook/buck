@@ -30,8 +30,8 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.sandbox.SandboxConfig;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.versions.VersionRoot;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -120,7 +120,7 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
     // stable.
     Optional<String> getOut();
 
-    Optional<ImmutableMap<String, ImmutableList<String>>> getOuts();
+    Optional<ImmutableMap<String, ImmutableSet<String>>> getOuts();
 
     Optional<Boolean> getExecutable();
 

@@ -220,7 +220,7 @@ public class GenruleBuildable implements Buildable {
       Optional<Arg> cmdExe,
       Optional<String> type,
       Optional<String> out,
-      Optional<ImmutableMap<String, ImmutableList<String>>> outs,
+      Optional<ImmutableMap<String, ImmutableSet<String>>> outs,
       boolean enableSandboxingInGenrule,
       boolean isCacheable,
       String environmentExpansionSeparator,
@@ -239,13 +239,10 @@ public class GenruleBuildable implements Buildable {
         outs.map(
             outputs -> {
               ImmutableMap.Builder<OutputLabel, ImmutableSet<String>> builder =
-                  new ImmutableMap.Builder<>();
+                  ImmutableMap.builderWithExpectedSize(outputs.size() + 1);
               outputs
                   .entrySet()
-                  .forEach(
-                      e ->
-                          builder.put(
-                              OutputLabel.of(e.getKey()), ImmutableSet.copyOf(e.getValue())));
+                  .forEach(e -> builder.put(OutputLabel.of(e.getKey()), e.getValue()));
               builder.put(OutputLabel.defaultLabel(), DEFAULT_OUTS);
               return builder.build();
             });
@@ -260,10 +257,10 @@ public class GenruleBuildable implements Buildable {
     Preconditions.checkArgument(
         out.isPresent() ^ outs.isPresent(), "Genrule unexpectedly has both 'out' and 'outs'.");
     if (outs.isPresent()) {
-      ImmutableMap<String, ImmutableList<String>> outputs = outs.get();
+      ImmutableMap<String, ImmutableSet<String>> outputs = outs.get();
       ImmutableMap.Builder<OutputLabel, ImmutableSet<OutputPath>> mapBuilder =
           ImmutableMap.builderWithExpectedSize(outputs.size());
-      for (Map.Entry<String, ImmutableList<String>> outputLabelToOutputs : outputs.entrySet()) {
+      for (Map.Entry<String, ImmutableSet<String>> outputLabelToOutputs : outputs.entrySet()) {
         mapBuilder.put(
             OutputLabel.of(outputLabelToOutputs.getKey()),
             outputLabelToOutputs.getValue().stream()

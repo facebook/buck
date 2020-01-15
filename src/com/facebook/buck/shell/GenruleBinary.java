@@ -27,8 +27,8 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.SourceSet;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 
 /** Same as a Genrule, but marked as a binary. */
@@ -44,7 +44,7 @@ public class GenruleBinary extends Genrule implements BinaryBuildRule {
       Optional<Arg> cmdExe,
       Optional<String> type,
       Optional<String> out,
-      Optional<ImmutableMap<String, ImmutableList<String>>> outs,
+      Optional<ImmutableMap<String, ImmutableSet<String>>> outs,
       boolean isCacheable,
       Optional<String> environmentExpansionSeparator,
       Optional<AndroidTools> androidTools,

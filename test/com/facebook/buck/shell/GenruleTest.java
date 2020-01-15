@@ -990,9 +990,9 @@ public class GenruleTest {
             .setOuts(
                 ImmutableMap.of(
                     "label1",
-                    ImmutableList.of("output1a", "output1b"),
+                    ImmutableSet.of("output1a", "output1b"),
                     "label2",
-                    ImmutableList.of("output2a")))
+                    ImmutableSet.of("output2a")))
             .build(graphBuilder, new FakeProjectFilesystem());
 
     assertThat(genrule.getSourcePathToOutput(OutputLabel.defaultLabel()), Matchers.empty());
@@ -1010,9 +1010,9 @@ public class GenruleTest {
             .setOuts(
                 ImmutableMap.of(
                     "label1",
-                    ImmutableList.of("output1a", "output1b"),
+                    ImmutableSet.of("output1a", "output1b"),
                     "label2",
-                    ImmutableList.of("output2a")))
+                    ImmutableSet.of("output2a")))
             .build(graphBuilder, new FakeProjectFilesystem());
 
     ImmutableSet<Path> actual =
@@ -1037,9 +1037,9 @@ public class GenruleTest {
             .setOuts(
                 ImmutableMap.of(
                     "label1",
-                    ImmutableList.of("output1a", "output1b"),
+                    ImmutableSet.of("output1a", "output1b"),
                     "label2",
-                    ImmutableList.of("output2a")))
+                    ImmutableSet.of("output2a")))
             .build(graphBuilder, new FakeProjectFilesystem());
 
     ImmutableMap<OutputLabel, ImmutableSet<Path>> actual =

@@ -65,7 +65,6 @@ import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.ExportFileDescriptionArg;
 import com.facebook.buck.shell.GenruleDescriptionArg;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -337,7 +336,7 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
       return getGenPathForOutput(buildTarget, filesystem, constructorArg.getOut().get());
     }
     OutputLabel outputLabel = targetWithOutputs.getOutputLabel();
-    ImmutableMap<String, ImmutableList<String>> outputLabelToOutputs =
+    ImmutableMap<String, ImmutableSet<String>> outputLabelToOutputs =
         constructorArg.getOuts().get();
     return Iterables.getOnlyElement(
         outputLabelToOutputs.entrySet().stream()
