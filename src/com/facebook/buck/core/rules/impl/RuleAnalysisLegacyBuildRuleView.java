@@ -39,6 +39,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -129,10 +130,12 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule
   @Nullable
   @Override
   public SourcePath getSourcePathToOutput() {
+    Set<Artifact> artifacts = providerInfoCollection.getDefaultInfo().defaultOutputs();
+    if (artifacts.isEmpty()) {
+      return null;
+    }
     // TODO: support multiple outputs
-    return action
-        .map(a -> Iterables.getOnlyElement(a.getOutputs()).asBound().getSourcePath())
-        .orElse(null);
+    return Iterables.getOnlyElement(artifacts).asBound().getSourcePath();
   }
 
   @Override
