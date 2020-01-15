@@ -3,9 +3,8 @@ version: 2
 jobs:
   ci_build:
     environment:
-      WORKINGDIR: "~"
-      BUCKROOT: ~/buck
-      ANDROIDSDK: ~/android-sdk
+      WORKINGDIR: "~/buck"
+      ANDROIDSDK: "~/android-sdk"
     working_directory: ${WORKINGDIR}
     machine:
       image: ubuntu-1604:201903-01
@@ -26,6 +25,7 @@ jobs:
       - run:
           name: Install GoLang 1.10.1
           command: |
+            cd ~
             wget https://storage.googleapis.com/golang/go1.10.1.linux-amd64.tar.gz
             sudo tar -xzf go1.10.1.linux-amd64.tar.gz -C /usr/local
             go version
@@ -38,7 +38,7 @@ jobs:
       - run:
           name: Run Ant Build
           command: |
-            cd ${BUCKROOT}
+            cd ${WORKINGDIR}
             set -eux
             export TERM=dumb
             export ANT_OPTS='-Xmx1000m'
@@ -46,7 +46,7 @@ jobs:
       - run:
           name: Run Buck Build
           command: |
-            cd ~/buck
+            cd ${WORKINGDIR}
             echo '-Xmx750m' > .buckjavaargs.local
             export PATH=${ANDROIDSDK}/tools/bin:$PATH
             export PATH="$(pyenv root)/shims:$PATH"
