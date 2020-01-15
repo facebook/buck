@@ -30,4 +30,8 @@ public class RuleAnalysisException extends HumanReadableException {
       @Nullable Throwable cause, String humanReadableFormatString, Object... args) {
     super(cause, humanReadableFormatString, args);
   }
+
+  public RuleAnalysisException(@Nullable Throwable cause, String message) {
+    super(cause, message);
+  }
 }
