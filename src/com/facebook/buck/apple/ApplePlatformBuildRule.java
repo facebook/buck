@@ -22,14 +22,10 @@ import com.facebook.buck.apple.toolchain.AppleSdk;
 import com.facebook.buck.apple.toolchain.AppleSdkPaths;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.impl.NoopBuildRule;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
-import com.facebook.buck.core.toolchain.tool.impl.Tools;
-import com.facebook.buck.core.toolchain.toolprovider.impl.ToolProviders;
+import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.ProvidesCxxPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -49,60 +45,86 @@ import java.util.Optional;
  */
 public class ApplePlatformBuildRule extends NoopBuildRule {
 
-  private final ProvidesCxxPlatform cxxToolchainRule;
-  private final Optional<SwiftToolchainBuildRule> swiftToolchainRule;
   private final Path sdkPath;
   private final Path platformPath;
-  private final ActionGraphBuilder actionGraphBuilder;
-  private final ApplePlatformDescriptionArg descriptionArgs;
+  private final String sdkName;
+  private final String version;
+  private final Optional<String> buildVersion;
+  private final String minVersion;
+  private final Tool actool;
+  private final Tool dsymutil;
+  private final Tool ibtool;
+  private final Tool libtool;
+  private final Tool lipo;
+  private final Tool lldb;
+  private final Tool momc;
+  private final Tool xctest;
+  private final Optional<Tool> copySceneKitAssets;
+  private final ToolProvider codesign;
+  private final Tool codesignAllocate;
+  private final ProvidesCxxPlatform cxxToolchainRule;
+  private final Optional<SwiftToolchainBuildRule> swiftToolchainRule;
 
   public ApplePlatformBuildRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      ActionGraphBuilder actionGraphBuilder,
-      ApplePlatformDescriptionArg descriptionArgs,
+      Path platformPath,
+      Path sdkPath,
+      String sdkName,
+      String version,
+      Optional<String> buildVersion,
+      String minVersion,
+      Tool actool,
+      Tool dsymutil,
+      Tool ibtool,
+      Tool libtool,
+      Tool lipo,
+      Tool lldb,
+      Tool momc,
+      Tool xctest,
+      Optional<Tool> copySceneKitAssets,
+      ToolProvider codesign,
+      Tool codesignAllocate,
       ProvidesCxxPlatform cxxToolchainRule,
       Optional<SwiftToolchainBuildRule> swiftToolchainRule) {
     super(buildTarget, projectFilesystem);
 
-    this.actionGraphBuilder = actionGraphBuilder;
-    this.descriptionArgs = descriptionArgs;
+    this.platformPath = platformPath;
+    this.sdkPath = sdkPath;
+    this.sdkName = sdkName;
+    this.version = version;
+    this.buildVersion = buildVersion;
+    this.minVersion = minVersion;
+    this.actool = actool;
+    this.dsymutil = dsymutil;
+    this.ibtool = ibtool;
+    this.libtool = libtool;
+    this.lipo = lipo;
+    this.lldb = lldb;
+    this.momc = momc;
+    this.xctest = xctest;
+    this.copySceneKitAssets = copySceneKitAssets;
+    this.codesign = codesign;
+    this.codesignAllocate = codesignAllocate;
     this.cxxToolchainRule = cxxToolchainRule;
     this.swiftToolchainRule = swiftToolchainRule;
-
-    SourcePathResolverAdapter pathResolver = actionGraphBuilder.getSourcePathResolver();
-    this.sdkPath = pathResolver.getAbsolutePath(descriptionArgs.getSdkPath());
-    this.platformPath = pathResolver.getAbsolutePath(descriptionArgs.getPlatformPath());
   }
 
   public AppleCxxPlatform.Builder getAppleCxxPlatformBuilder() {
-    // We are seeing a stack overflow in dsymutil during (fat) LTO
-    // builds. Upstream dsymutil was patched to avoid recursion in the
-    // offending path in https://reviews.llvm.org/D48899, and
-    // https://reviews.llvm.org/D45172 mentioned that there is much
-    // more stack space available when single threaded.
-    Tool dsymutil = Tools.resolveTool(descriptionArgs.getDsymutil(), actionGraphBuilder);
-    if (descriptionArgs.getWorkAroundDsymutilLtoStackOverflowBug().orElse(false)) {
-      dsymutil = new CommandTool.Builder(dsymutil).addArg("-num-threads=1").build();
-    }
     return AppleCxxPlatform.builder()
-        .setMinVersion(descriptionArgs.getMinVersion())
-        .setBuildVersion(descriptionArgs.getBuildVersion())
-        .setActool(Tools.resolveTool(descriptionArgs.getActool(), actionGraphBuilder))
-        .setLibtool(Tools.resolveTool(descriptionArgs.getLibtool(), actionGraphBuilder))
-        .setIbtool(Tools.resolveTool(descriptionArgs.getIbtool(), actionGraphBuilder))
-        .setMomc(Tools.resolveTool(descriptionArgs.getMomc(), actionGraphBuilder))
-        .setCopySceneKitAssets(
-            descriptionArgs
-                .getCopySceneKitAssets()
-                .map(path -> Tools.resolveTool(path, actionGraphBuilder)))
-        .setXctest(Tools.resolveTool(descriptionArgs.getXctest(), actionGraphBuilder))
+        .setMinVersion(minVersion)
+        .setBuildVersion(buildVersion)
+        .setActool(actool)
+        .setLibtool(libtool)
+        .setIbtool(ibtool)
+        .setMomc(momc)
+        .setCopySceneKitAssets(copySceneKitAssets)
+        .setXctest(xctest)
         .setDsymutil(dsymutil)
-        .setLipo(Tools.resolveTool(descriptionArgs.getLipo(), actionGraphBuilder))
-        .setLldb(Tools.resolveTool(descriptionArgs.getLldb(), actionGraphBuilder))
-        .setCodesignProvider(ToolProviders.getToolProvider(descriptionArgs.getCodesign()))
-        .setCodesignAllocate(
-            Tools.resolveTool(descriptionArgs.getCodesignAllocate(), actionGraphBuilder));
+        .setLipo(lipo)
+        .setLldb(lldb)
+        .setCodesignProvider(codesign)
+        .setCodesignAllocate(codesignAllocate);
   }
 
   public CxxPlatform getCxxPlatform(Flavor flavor) {
@@ -117,7 +139,7 @@ public class ApplePlatformBuildRule extends NoopBuildRule {
             ApplePlatform.findArchitecture(flavor).orElseThrow(IllegalArgumentException::new),
             "apple",
             applePlatform.getSwiftName().orElse(applePlatform.getName()),
-            descriptionArgs.getMinVersion());
+            minVersion);
     return swiftToolchainRule.map(rule -> rule.getSwiftPlatform(swiftTarget));
   }
 
@@ -132,8 +154,8 @@ public class ApplePlatformBuildRule extends NoopBuildRule {
   public AppleSdk getAppleSdk(Flavor flavor) {
     ApplePlatform applePlatform = ApplePlatform.fromFlavor(flavor);
     return AppleSdk.builder()
-        .setName(descriptionArgs.getSdkName())
-        .setVersion(descriptionArgs.getVersion())
+        .setName(sdkName)
+        .setVersion(version)
         .setToolchains(ImmutableList.of())
         .setApplePlatform(applePlatform)
         .setArchitectures(applePlatform.getArchitectures())

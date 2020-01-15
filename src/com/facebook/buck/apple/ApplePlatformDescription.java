@@ -26,6 +26,11 @@ import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
+import com.facebook.buck.core.toolchain.tool.impl.Tools;
+import com.facebook.buck.core.toolchain.toolprovider.impl.ToolProviders;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.ProvidesCxxPlatform;
 import com.facebook.buck.swift.SwiftToolchainBuildRule;
@@ -58,11 +63,39 @@ public class ApplePlatformDescription
           "Expected %s to be an instance of swift_toolchain.",
           swiftToolchainRule.get().getBuildTarget());
     }
+
+    SourcePathResolverAdapter pathResolver = actionGraphBuilder.getSourcePathResolver();
+
+    // We are seeing a stack overflow in dsymutil during (fat) LTO
+    // builds. Upstream dsymutil was patched to avoid recursion in the
+    // offending path in https://reviews.llvm.org/D48899, and
+    // https://reviews.llvm.org/D45172 mentioned that there is much
+    // more stack space available when single threaded.
+    Tool dsymutil = Tools.resolveTool(args.getDsymutil(), actionGraphBuilder);
+    if (args.getWorkAroundDsymutilLtoStackOverflowBug().orElse(false)) {
+      dsymutil = new CommandTool.Builder(dsymutil).addArg("-num-threads=1").build();
+    }
+
     return new ApplePlatformBuildRule(
         buildTarget,
         context.getProjectFilesystem(),
-        actionGraphBuilder,
-        args,
+        pathResolver.getAbsolutePath(args.getPlatformPath()),
+        pathResolver.getAbsolutePath(args.getSdkPath()),
+        args.getSdkName(),
+        args.getVersion(),
+        args.getBuildVersion(),
+        args.getMinVersion(),
+        Tools.resolveTool(args.getActool(), actionGraphBuilder),
+        dsymutil,
+        Tools.resolveTool(args.getIbtool(), actionGraphBuilder),
+        Tools.resolveTool(args.getLibtool(), actionGraphBuilder),
+        Tools.resolveTool(args.getLipo(), actionGraphBuilder),
+        Tools.resolveTool(args.getLldb(), actionGraphBuilder),
+        Tools.resolveTool(args.getMomc(), actionGraphBuilder),
+        Tools.resolveTool(args.getXctest(), actionGraphBuilder),
+        args.getCopySceneKitAssets().map(path -> Tools.resolveTool(path, actionGraphBuilder)),
+        ToolProviders.getToolProvider(args.getCodesign()),
+        Tools.resolveTool(args.getCodesignAllocate(), actionGraphBuilder),
         (ProvidesCxxPlatform) cxxToolchainRule,
         swiftToolchainRule.map(SwiftToolchainBuildRule.class::cast));
   }
