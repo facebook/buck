@@ -29,6 +29,7 @@ import com.facebook.buck.apple.clang.ModuleMapMode;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
@@ -562,11 +563,13 @@ class HeaderSearchPaths {
         (nativeNode, headerVisibility) -> {
           if (headerVisibility.equals(HeaderVisibility.PUBLIC)
               && NodeHelper.isModularAppleLibrary(nativeNode)) {
+            Flavor defaultPlatformFlavor =
+                targetNode.getConstructorArg().getDefaultPlatform().orElse(cxxPlatform.getFlavor());
             BuildTarget flavoredBuildTarget =
                 NodeHelper.getModularMapTarget(
                     nativeNode,
                     HeaderMode.forModuleMapMode(getModuleMapMode(nativeNode)),
-                    cxxPlatform);
+                    defaultPlatformFlavor);
 
             Path symlinkPath =
                 CxxDescriptionEnhancer.getHeaderSymlinkTreePath(

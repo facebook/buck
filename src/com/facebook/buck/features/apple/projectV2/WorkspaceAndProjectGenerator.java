@@ -756,7 +756,12 @@ public class WorkspaceAndProjectGenerator {
                           .getConstructorArg()
                           .getModulemapMode()
                           .orElse(appleConfig.moduleMapMode()));
-              return NodeHelper.getModularMapTarget(modularNode, headerMode, defaultCxxPlatform);
+              Flavor defaultPlatformFlavor =
+                  modularNode
+                      .getConstructorArg()
+                      .getDefaultPlatform()
+                      .orElse(defaultCxxPlatform.getFlavor());
+              return NodeHelper.getModularMapTarget(modularNode, headerMode, defaultPlatformFlavor);
             })
         .collect(ImmutableSet.toImmutableSet());
   }
