@@ -26,6 +26,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleConfig;
+import com.facebook.buck.apple.xcode.AbstractPBXObjectFactory;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
@@ -64,12 +65,13 @@ public class XcodeNativeTargetProjectWriterTest {
   private SourcePathResolverAdapter sourcePathResolverAdapter;
   private BuildRuleResolver buildRuleResolver;
   private NewCellPathResolver newCellPathResolver;
+  private AbstractPBXObjectFactory objectFactory;
 
   @Before
   public void setUp() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
     projectFilesystem = new FakeProjectFilesystem();
-    generatedProject = new PBXProject("TestProject");
+    generatedProject = new PBXProject("TestProject", AbstractPBXObjectFactory.DefaultFactory());
     buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     appleConfig = AppleProjectHelper.createDefaultAppleConfig(new FakeProjectFilesystem());
     buildRuleResolver = new TestActionGraphBuilder();
@@ -80,6 +82,7 @@ public class XcodeNativeTargetProjectWriterTest {
         CellMappingsFactory.create(
             projectFilesystem.getRootPath(),
             Configs.createDefaultConfig(projectFilesystem.getRootPath()));
+    objectFactory = AbstractPBXObjectFactory.DefaultFactory();
   }
 
   @Test
@@ -98,7 +101,11 @@ public class XcodeNativeTargetProjectWriterTest {
 
     XcodeNativeTargetProjectWriter projectWriter =
         new XcodeNativeTargetProjectWriter(
-            pathRelativizer, sourcePathResolverAdapter::getRelativePath, true, newCellPathResolver);
+            pathRelativizer,
+            sourcePathResolverAdapter::getRelativePath,
+            true,
+            newCellPathResolver,
+            objectFactory);
     projectWriter.writeTargetToProject(nativeTargetAttributes, generatedProject);
 
     assertTargetExistsAndReturnTarget(generatedProject, "bar");
@@ -122,7 +129,8 @@ public class XcodeNativeTargetProjectWriterTest {
             pathRelativizer,
             sourcePathResolverAdapter::getRelativePath,
             false,
-            newCellPathResolver);
+            newCellPathResolver,
+            objectFactory);
     XcodeNativeTargetProjectWriter.Result result =
         projectWriter.writeTargetToProject(nativeTargetAttributes, generatedProject);
 
@@ -158,7 +166,8 @@ public class XcodeNativeTargetProjectWriterTest {
             pathRelativizer,
             sourcePathResolverAdapter::getRelativePath,
             false,
-            newCellPathResolver);
+            newCellPathResolver,
+            objectFactory);
     XcodeNativeTargetProjectWriter.Result result =
         projectWriter.writeTargetToProject(targetAttributes, generatedProject);
 
@@ -190,7 +199,8 @@ public class XcodeNativeTargetProjectWriterTest {
             pathRelativizer,
             sourcePathResolverAdapter::getRelativePath,
             false,
-            newCellPathResolver);
+            newCellPathResolver,
+            objectFactory);
     XcodeNativeTargetProjectWriter.Result result =
         projectWriter.writeTargetToProject(targetAttributes, generatedProject);
 
@@ -211,7 +221,8 @@ public class XcodeNativeTargetProjectWriterTest {
             pathRelativizer,
             sourcePathResolverAdapter::getRelativePath,
             false,
-            newCellPathResolver);
+            newCellPathResolver,
+            objectFactory);
     XcodeNativeTargetProjectWriter.Result result =
         projectWriter.writeTargetToProject(targetAttributes, generatedProject);
 
@@ -242,7 +253,8 @@ public class XcodeNativeTargetProjectWriterTest {
             pathRelativizer,
             sourcePathResolverAdapter::getRelativePath,
             false,
-            newCellPathResolver);
+            newCellPathResolver,
+            objectFactory);
     XcodeNativeTargetProjectWriter.Result result =
         projectWriter.writeTargetToProject(targetAttributes, generatedProject);
 

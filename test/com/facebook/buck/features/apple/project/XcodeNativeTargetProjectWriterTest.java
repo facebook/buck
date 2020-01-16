@@ -41,6 +41,7 @@ import com.facebook.buck.apple.AppleBundleDestination;
 import com.facebook.buck.apple.AppleResourceDescriptionArg;
 import com.facebook.buck.apple.XcodePostbuildScriptBuilder;
 import com.facebook.buck.apple.XcodePrebuildScriptBuilder;
+import com.facebook.buck.apple.xcode.AbstractPBXObjectFactory;
 import com.facebook.buck.apple.xcode.xcodeproj.CopyFilePhaseDestinationSpec;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXCopyFilesBuildPhase;
@@ -90,7 +91,7 @@ public class XcodeNativeTargetProjectWriterTest {
   @Before
   public void setUp() {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
-    generatedProject = new PBXProject("TestProject");
+    generatedProject = new PBXProject("TestProject", AbstractPBXObjectFactory.DefaultFactory());
     buildRuleResolver = new TestActionGraphBuilder();
     sourcePathResolverAdapter = buildRuleResolver.getSourcePathResolver();
     pathRelativizer =

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple.xcode.xcodeproj;
 
+import com.facebook.buck.apple.xcode.AbstractPBXObjectFactory;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -48,7 +49,11 @@ public class PBXGroup extends PBXReference {
   private final LoadingCache<SourceTreePath, PBXFileReference> fileReferencesBySourceTreePath;
   private final LoadingCache<SourceTreePath, XCVersionGroup> childVersionGroupsBySourceTreePath;
 
-  public PBXGroup(String name, @Nullable String path, SourceTree sourceTree) {
+  public PBXGroup(
+      String name,
+      @Nullable String path,
+      SourceTree sourceTree,
+      AbstractPBXObjectFactory objectFactory) {
     super(name, path, sourceTree);
 
     sortPolicy = SortPolicy.BY_NAME;
@@ -60,7 +65,7 @@ public class PBXGroup extends PBXReference {
                 new CacheLoader<String, PBXGroup>() {
                   @Override
                   public PBXGroup load(String key) {
-                    PBXGroup group = new PBXGroup(key, null, SourceTree.GROUP);
+                    PBXGroup group = objectFactory.createPBXGroup(key, null, SourceTree.GROUP);
                     children.add(group);
                     return group;
                   }
@@ -72,7 +77,8 @@ public class PBXGroup extends PBXReference {
                 new CacheLoader<String, PBXVariantGroup>() {
                   @Override
                   public PBXVariantGroup load(String key) {
-                    PBXVariantGroup group = new PBXVariantGroup(key, null, SourceTree.GROUP);
+                    PBXVariantGroup group =
+                        objectFactory.createVariantGroup(key, null, SourceTree.GROUP);
                     children.add(group);
                     return group;
                   }
@@ -84,7 +90,7 @@ public class PBXGroup extends PBXReference {
                 new CacheLoader<SourceTreePath, PBXFileReference>() {
                   @Override
                   public PBXFileReference load(SourceTreePath key) {
-                    PBXFileReference ref = key.createFileReference();
+                    PBXFileReference ref = key.createFileReference(objectFactory);
                     children.add(ref);
                     return ref;
                   }
@@ -96,7 +102,7 @@ public class PBXGroup extends PBXReference {
                 new CacheLoader<SourceTreePath, XCVersionGroup>() {
                   @Override
                   public XCVersionGroup load(SourceTreePath key) {
-                    XCVersionGroup ref = key.createVersionGroup();
+                    XCVersionGroup ref = key.createVersionGroup(objectFactory);
                     children.add(ref);
                     return ref;
                   }

@@ -39,6 +39,7 @@ import com.facebook.buck.apple.InfoPlistSubstitution;
 import com.facebook.buck.apple.PrebuiltAppleFrameworkDescription;
 import com.facebook.buck.apple.PrebuiltAppleFrameworkDescriptionArg;
 import com.facebook.buck.apple.XCodeDescriptions;
+import com.facebook.buck.apple.xcode.AbstractPBXObjectFactory;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
@@ -161,6 +162,8 @@ public class XcodeNativeTargetGenerator {
   private final FlagParser flagParser;
   private final Path sourceRoot;
 
+  private final AbstractPBXObjectFactory objectFactory;
+
   /**
    * Mapping from an apple_library target to the associated apple_bundle which names it as its
    * 'binary'
@@ -189,7 +192,8 @@ public class XcodeNativeTargetGenerator {
       SwiftBuckConfig swiftBuckConfig,
       SwiftAttributeParser swiftAttributeParser,
       FlagParser flagParser,
-      Optional<ImmutableMap<BuildTarget, TargetNode<?>>> sharedLibraryToBundle) {
+      Optional<ImmutableMap<BuildTarget, TargetNode<?>>> sharedLibraryToBundle,
+      AbstractPBXObjectFactory objectFactory) {
     this.xcodeDescriptions = xcodeDescriptions;
     this.targetGraph = targetGraph;
     this.dependenciesCache = dependenciesCache;
@@ -214,6 +218,7 @@ public class XcodeNativeTargetGenerator {
     this.swiftAttributeParser = swiftAttributeParser;
     this.headerSearchPaths = headerSearchPaths;
     this.flagParser = flagParser;
+    this.objectFactory = objectFactory;
   }
 
   /**
@@ -635,7 +640,7 @@ public class XcodeNativeTargetGenerator {
 
     Path scriptPath = halideBuckConfig.getXcodeCompileScriptPath();
     Optional<String> script = projectFilesystem.readFileIfItExists(scriptPath);
-    PBXShellScriptBuildPhase scriptPhase = new PBXShellScriptBuildPhase();
+    PBXShellScriptBuildPhase scriptPhase = objectFactory.createShellScriptBuildPhase();
     scriptPhase.setShellScript(script.orElse(""));
 
     xcodeNativeTargetAttributesBuilder.setProduct(

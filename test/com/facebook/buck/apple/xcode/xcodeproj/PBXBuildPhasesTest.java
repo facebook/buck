@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNull;
 import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
+import com.facebook.buck.apple.xcode.AbstractPBXObjectFactory;
 import com.facebook.buck.apple.xcode.GidGenerator;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import com.facebook.buck.apple.xcode.xcodeproj.CopyFilePhaseDestinationSpec;
@@ -42,9 +43,9 @@ public class PBXBuildPhasesTest {
 
   @Before
   public void setUp() {
-    project = new PBXProject("TestProject");
+    project = new PBXProject("TestProject", AbstractPBXObjectFactory.DefaultFactory());
     serializer = new XcodeprojSerializer(new GidGenerator(), project);
-    target = new PBXNativeTarget("TestTarget");
+    target = new PBXNativeTarget("TestTarget", AbstractPBXObjectFactory.DefaultFactory());
     project.getTargets().add(target);
   }
 

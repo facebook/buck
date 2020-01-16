@@ -17,24 +17,25 @@
 package com.facebook.buck.apple.xcode.xcodeproj;
 
 import com.dd.plist.NSDictionary;
+import com.facebook.buck.apple.xcode.AbstractPBXObjectFactory;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import com.google.common.collect.Ordering;
 import java.util.ArrayList;
 import java.util.List;
 
 /** The root object representing the project itself. */
-public class PBXProject extends PBXContainer {
+public final class PBXProject extends PBXContainer {
   private String name;
   private final PBXGroup mainGroup;
   private final List<PBXTarget> targets;
   private final XCConfigurationList buildConfigurationList;
   private final String compatibilityVersion;
 
-  public PBXProject(String name) {
+  public PBXProject(String name, AbstractPBXObjectFactory objectFactory) {
     this.name = name;
-    this.mainGroup = new PBXGroup("mainGroup", null, PBXReference.SourceTree.GROUP);
+    this.mainGroup = objectFactory.createPBXGroup("mainGroup", null, PBXReference.SourceTree.GROUP);
     this.targets = new ArrayList<>();
-    this.buildConfigurationList = new XCConfigurationList();
+    this.buildConfigurationList = objectFactory.createConfigurationList();
     this.compatibilityVersion = "Xcode 3.2";
   }
 

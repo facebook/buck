@@ -24,6 +24,8 @@ import com.facebook.buck.apple.AppleDependenciesCache;
 import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
 import com.facebook.buck.apple.AppleTestDescriptionArg;
 import com.facebook.buck.apple.XCodeDescriptions;
+import com.facebook.buck.apple.xcode.GidGenerator;
+import com.facebook.buck.apple.xcode.PBXObjectGIDFactory;
 import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
@@ -253,8 +255,10 @@ public class WorkspaceAndProjectGenerator {
         ImmutableMap.builder();
     ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder = ImmutableMap.builder();
 
+    PBXObjectGIDFactory objectFactory = new PBXObjectGIDFactory(new GidGenerator());
     XcodeProjectWriteOptions xcodeProjectWriteOptions =
-        XcodeProjectWriteOptions.of(new PBXProject(workspaceName), outputDirectory);
+        XcodeProjectWriteOptions.of(
+            objectFactory.createProject(workspaceName), objectFactory, outputDirectory);
 
     generateProject(
         listeningExecutorService,

@@ -57,6 +57,7 @@ import com.facebook.buck.apple.clang.ModuleMapMode;
 import com.facebook.buck.apple.clang.UmbrellaHeader;
 import com.facebook.buck.apple.clang.UmbrellaHeaderModuleMap;
 import com.facebook.buck.apple.clang.VFSOverlay;
+import com.facebook.buck.apple.xcode.AbstractPBXObjectFactory;
 import com.facebook.buck.apple.xcode.GidGenerator;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import com.facebook.buck.apple.xcode.xcodeproj.CopyFilePhaseDestinationSpec;
@@ -382,7 +383,7 @@ public class ProjectGenerator {
         projectFilesystem.getRootPath(),
         this.pathRelativizer.outputDirToRootRelative(Paths.get(".")));
 
-    this.project = new PBXProject(projectName);
+    this.project = new PBXProject(projectName, AbstractPBXObjectFactory.DefaultFactory());
     this.headerSymlinkTrees = new ArrayList<>();
 
     this.targetNodeToGeneratedProjectTargetBuilder = ImmutableMultimap.builder();

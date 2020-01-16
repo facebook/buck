@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple.xcode.xcodeproj;
 
+import com.facebook.buck.apple.xcode.AbstractPBXObjectFactory;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -33,7 +34,11 @@ public class XCVersionGroup extends PBXReference {
 
   private final LoadingCache<SourceTreePath, PBXFileReference> fileReferencesBySourceTreePath;
 
-  public XCVersionGroup(String name, @Nullable String path, SourceTree sourceTree) {
+  public XCVersionGroup(
+      String name,
+      @Nullable String path,
+      SourceTree sourceTree,
+      AbstractPBXObjectFactory objectFactory) {
     super(name, path, sourceTree);
     children = new ArrayList<>();
 
@@ -43,7 +48,7 @@ public class XCVersionGroup extends PBXReference {
                 new CacheLoader<SourceTreePath, PBXFileReference>() {
                   @Override
                   public PBXFileReference load(SourceTreePath key) {
-                    PBXFileReference ref = key.createFileReference();
+                    PBXFileReference ref = key.createFileReference(objectFactory);
                     children.add(ref);
                     return ref;
                   }

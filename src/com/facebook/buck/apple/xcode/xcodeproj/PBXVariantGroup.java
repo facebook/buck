@@ -16,19 +16,25 @@
 
 package com.facebook.buck.apple.xcode.xcodeproj;
 
+import com.facebook.buck.apple.xcode.AbstractPBXObjectFactory;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import java.util.Objects;
 import javax.annotation.Nullable;
 
-public class PBXVariantGroup extends PBXGroup {
+/** Group for referencing localized resources. */
+public final class PBXVariantGroup extends PBXGroup {
 
   private final LoadingCache<VirtualNameAndSourceTreePath, PBXFileReference>
       variantFileReferencesByNameAndSourceTreePath;
 
-  public PBXVariantGroup(String name, @Nullable String path, SourceTree sourceTree) {
-    super(name, path, sourceTree);
+  public PBXVariantGroup(
+      String name,
+      @Nullable String path,
+      SourceTree sourceTree,
+      AbstractPBXObjectFactory objectFactory) {
+    super(name, path, sourceTree, objectFactory);
 
     variantFileReferencesByNameAndSourceTreePath =
         CacheBuilder.newBuilder()
@@ -37,7 +43,8 @@ public class PBXVariantGroup extends PBXGroup {
                   @Override
                   public PBXFileReference load(VirtualNameAndSourceTreePath key) {
                     PBXFileReference ref =
-                        key.getSourceTreePath().createFileReference(key.getVirtualName());
+                        key.getSourceTreePath()
+                            .createFileReference(key.getVirtualName(), objectFactory);
                     getChildren().add(ref);
                     return ref;
                   }

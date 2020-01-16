@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple.xcode.xcodeproj;
 
+import com.facebook.buck.apple.xcode.AbstractPBXObjectFactory;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehavior;
@@ -62,16 +63,17 @@ public class SourceTreePath implements Comparable<SourceTreePath>, AddsToRuleKey
     return path;
   }
 
-  public PBXFileReference createFileReference(String name) {
-    return new PBXFileReference(name, path.toString(), sourceTree, defaultType);
+  public PBXFileReference createFileReference(String name, AbstractPBXObjectFactory objectFactory) {
+    return objectFactory.createFileReference(name, path.toString(), sourceTree, defaultType);
   }
 
-  public PBXFileReference createFileReference() {
-    return createFileReference(path.getFileName().toString());
+  public PBXFileReference createFileReference(AbstractPBXObjectFactory objectFactory) {
+    return createFileReference(path.getFileName().toString(), objectFactory);
   }
 
-  public XCVersionGroup createVersionGroup() {
-    return new XCVersionGroup(path.getFileName().toString(), path.toString(), sourceTree);
+  public XCVersionGroup createVersionGroup(AbstractPBXObjectFactory objectFactory) {
+    return objectFactory.createVersionGroup(
+        path.getFileName().toString(), path.toString(), sourceTree);
   }
 
   @Override

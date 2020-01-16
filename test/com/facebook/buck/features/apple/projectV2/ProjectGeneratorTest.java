@@ -53,6 +53,9 @@ import com.facebook.buck.apple.SceneKitAssetsBuilder;
 import com.facebook.buck.apple.XCodeDescriptions;
 import com.facebook.buck.apple.XCodeDescriptionsFactory;
 import com.facebook.buck.apple.clang.HeaderMap;
+import com.facebook.buck.apple.xcode.AbstractPBXObjectFactory;
+import com.facebook.buck.apple.xcode.GidGenerator;
+import com.facebook.buck.apple.xcode.PBXObjectGIDFactory;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXContainerItemProxy;
@@ -4655,7 +4658,10 @@ public class ProjectGeneratorTest {
   }
 
   private XcodeProjectWriteOptions xcodeProjectWriteOptions() {
-    return XcodeProjectWriteOptions.of(new PBXProject(PROJECT_NAME), OUTPUT_DIRECTORY);
+    return XcodeProjectWriteOptions.of(
+        new PBXProject(PROJECT_NAME, AbstractPBXObjectFactory.DefaultFactory()),
+        new PBXObjectGIDFactory(new GidGenerator()),
+        OUTPUT_DIRECTORY);
   }
 
   private ProjectGenerator createProjectGenerator(

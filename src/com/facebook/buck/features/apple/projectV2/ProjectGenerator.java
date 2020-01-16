@@ -20,13 +20,13 @@ import com.dd.plist.NSDictionary;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleDependenciesCache;
 import com.facebook.buck.apple.XCodeDescriptions;
+import com.facebook.buck.apple.xcode.AbstractPBXObjectFactory;
 import com.facebook.buck.apple.xcode.GidGenerator;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXContainerItemProxy;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXNativeTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXTargetDependency;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -282,7 +282,8 @@ public class ProjectGenerator {
               swiftBuckConfig,
               swiftAttributeParser,
               flagParser,
-              sharedLibraryToBundle);
+              sharedLibraryToBundle,
+              xcodeProjectWriteOptions.objectFactory());
 
       ImmutableList.Builder<XcodeNativeTargetGenerator.Result> generationResultsBuilder =
           ImmutableList.builder();
@@ -369,7 +370,8 @@ public class ProjectGenerator {
                 pathRelativizer,
                 projectSourcePathResolver::resolveSourcePath,
                 options.shouldUseShortNamesForTargets(),
-                projectCell.getNewCellPathResolver());
+                projectCell.getNewCellPathResolver(),
+                xcodeProjectWriteOptions.objectFactory());
         XcodeNativeTargetProjectWriter.Result targetWriteResult =
             nativeTargetProjectWriter.writeTargetToProject(
                 nativeTargetAttributes, xcodeProjectWriteOptions.project());
@@ -383,7 +385,6 @@ public class ProjectGenerator {
       ImmutableMap<TargetNode<?>, PBXNativeTarget> targetNodeToGeneratedProjectTarget =
           targetNodeToGeneratedProjectTargetBuilder.build();
 
-      GidGenerator gidGenerator = new GidGenerator();
       for (XcodeNativeTargetGenerator.Result result : generationResults) {
         Optional<PBXNativeTarget> nativeTarget =
             targetNodeToGeneratedProjectTarget.containsKey(result.targetNode)
@@ -395,7 +396,7 @@ public class ProjectGenerator {
                 addPBXTargetDependency(
                     xcodeProjectWriteOptions.project(),
                     target,
-                    gidGenerator,
+                    xcodeProjectWriteOptions.objectFactory(),
                     dep,
                     targetNodeToGeneratedProjectTarget);
               }
@@ -432,7 +433,7 @@ public class ProjectGenerator {
         outputConfig.setBuildSettings(projectBuildSettings);
       }
 
-      writeProjectFile(xcodeProjectWriteOptions, gidGenerator);
+      writeProjectFile(xcodeProjectWriteOptions);
 
       ImmutableMap.Builder<BuildTarget, PBXTarget> buildTargetToPbxTargetMap =
           ImmutableMap.builder();
@@ -463,9 +464,9 @@ public class ProjectGenerator {
   }
 
   /** Create the project bundle structure and write {@code project.pbxproj}. */
-  private void writeProjectFile(
-      XcodeProjectWriteOptions xcodeProjectWriteOptions, GidGenerator gidGenerator)
+  private void writeProjectFile(XcodeProjectWriteOptions xcodeProjectWriteOptions)
       throws IOException {
+    GidGenerator gidGenerator = new GidGenerator();
     PBXProject project = xcodeProjectWriteOptions.project();
 
     XcodeprojSerializer serializer = new XcodeprojSerializer(gidGenerator, project);
@@ -493,7 +494,7 @@ public class ProjectGenerator {
   private void addPBXTargetDependency(
       PBXProject project,
       PBXNativeTarget pbxTarget,
-      GidGenerator gidGenerator,
+      AbstractPBXObjectFactory objectFactory,
       BuildTarget dependency,
       ImmutableMap<TargetNode<?>, ? extends PBXTarget> targetNodeToProjectTarget) {
     // Xcode appears to only support target dependencies if both targets are within the same
@@ -507,19 +508,13 @@ public class ProjectGenerator {
 
     PBXTarget dependencyPBXTarget = targetNodeToProjectTarget.get(targetGraph.get(dependency));
     if (dependencyPBXTarget != null) {
-      if (project.getGlobalID() == null) {
-        project.setGlobalID(project.generateGid(gidGenerator));
-      }
-      if (dependencyPBXTarget.getGlobalID() == null) {
-        dependencyPBXTarget.setGlobalID(dependencyPBXTarget.generateGid(gidGenerator));
-      }
       PBXContainerItemProxy dependencyProxy =
-          new PBXContainerItemProxy(
+          objectFactory.createContainerItemProxy(
               project,
               dependencyPBXTarget.getGlobalID(),
               PBXContainerItemProxy.ProxyType.TARGET_REFERENCE);
 
-      pbxTarget.getDependencies().add(new PBXTargetDependency(dependencyProxy));
+      pbxTarget.getDependencies().add(objectFactory.createTargetDependency(dependencyProxy));
     }
   }
 }

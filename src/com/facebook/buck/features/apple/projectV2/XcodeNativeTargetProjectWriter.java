@@ -25,6 +25,7 @@ import com.facebook.buck.apple.AppleResourceDescriptionArg;
 import com.facebook.buck.apple.AppleWrapperResourceArg;
 import com.facebook.buck.apple.GroupedSource;
 import com.facebook.buck.apple.RuleUtils;
+import com.facebook.buck.apple.xcode.AbstractPBXObjectFactory;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFrameworksBuildPhase;
@@ -90,17 +91,20 @@ class XcodeNativeTargetProjectWriter {
   private final PathRelativizer pathRelativizer;
   private final Function<SourcePath, Path> sourcePathResolver;
   private final boolean shouldUseShortNamesForTargets;
+  private final AbstractPBXObjectFactory objectFactory;
   private final NewCellPathResolver newCellPathResolver;
 
   public XcodeNativeTargetProjectWriter(
       PathRelativizer pathRelativizer,
       Function<SourcePath, Path> sourcePathResolver,
       boolean shouldUseShortNamesForTargets,
-      NewCellPathResolver newCellPathResolver) {
+      NewCellPathResolver newCellPathResolver,
+      AbstractPBXObjectFactory objectFactory) {
     this.pathRelativizer = pathRelativizer;
     this.sourcePathResolver = sourcePathResolver;
     this.shouldUseShortNamesForTargets = shouldUseShortNamesForTargets;
     this.newCellPathResolver = newCellPathResolver;
+    this.objectFactory = objectFactory;
   }
 
   public Result writeTargetToProject(
@@ -108,8 +112,8 @@ class XcodeNativeTargetProjectWriter {
     ProjectFileWriter projectFileWriter =
         new ProjectFileWriter(project, pathRelativizer, sourcePathResolver);
 
-    PBXSourcesBuildPhase sourcesBuildPhase = new PBXSourcesBuildPhase();
-    PBXHeadersBuildPhase headersBuildPhase = new PBXHeadersBuildPhase();
+    PBXSourcesBuildPhase sourcesBuildPhase = objectFactory.createSourcesBuildPhase();
+    PBXHeadersBuildPhase headersBuildPhase = objectFactory.createHeadersBuildPhase();
 
     // Phases
     addPhasesAndGroupsForSources(
@@ -128,7 +132,7 @@ class XcodeNativeTargetProjectWriter {
             .map(
                 buildTarget -> {
                   PBXNativeTarget nativeTarget =
-                      new PBXNativeTarget(getXcodeTargetName(buildTarget));
+                      objectFactory.createNativeTarget(getXcodeTargetName(buildTarget));
                   // Source files must be compiled in order to be indexed.
                   if (!sourcesBuildPhase.getFiles().isEmpty()) {
                     nativeTarget.getBuildPhases().add(sourcesBuildPhase);
@@ -363,7 +367,7 @@ class XcodeNativeTargetProjectWriter {
       ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags) {
     PBXFileReference fileReference = result.getFileReference();
     SourceTreePath sourceTreePath = result.getSourceTreePath();
-    PBXBuildFile buildFile = new PBXBuildFile(fileReference);
+    PBXBuildFile buildFile = objectFactory.createBuildFile(fileReference);
     sourcesBuildPhase.getFiles().add(buildFile);
 
     ImmutableList<String> customLangPreprocessorFlags = ImmutableList.of();
@@ -392,7 +396,7 @@ class XcodeNativeTargetProjectWriter {
       HeaderVisibility visibility,
       boolean frameworkHeadersEnabled,
       Optional<ProductType> productType) {
-    PBXBuildFile buildFile = new PBXBuildFile(fileReference);
+    PBXBuildFile buildFile = objectFactory.createBuildFile(fileReference);
     if (visibility != HeaderVisibility.PRIVATE) {
       productType.ifPresent(
           type -> {
@@ -515,7 +519,7 @@ class XcodeNativeTargetProjectWriter {
    */
   private void addBuckBuildPhase(
       BuildTarget target, Path shell, Path buildScriptPath, PBXNativeTarget nativeTarget) {
-    PBXShellScriptBuildPhase buckBuildPhase = new PBXShellScriptBuildPhase();
+    PBXShellScriptBuildPhase buckBuildPhase = objectFactory.createShellScriptBuildPhase();
     buckBuildPhase.setName(Optional.of("Buck Build"));
     buckBuildPhase.setShellPath(shell.toString());
 
@@ -565,7 +569,7 @@ class XcodeNativeTargetProjectWriter {
                     pathRelativizer.outputDirToRootRelative(coreDataModelPath),
                     Optional.empty()));
 
-        PBXBuildFile buildFile = new PBXBuildFile(versionGroup);
+        PBXBuildFile buildFile = objectFactory.createBuildFile(versionGroup);
         sourcesBuildPhase.getFiles().add(buildFile);
 
         for (Path versionPath : versionInformation.getAllVersionPaths()) {
@@ -607,7 +611,7 @@ class XcodeNativeTargetProjectWriter {
 
     PBXGroup sharedFrameworksGroup =
         project.getMainGroup().getOrCreateChildGroupByName("Frameworks");
-    PBXFrameworksBuildPhase frameworksBuildPhase = new PBXFrameworksBuildPhase();
+    PBXFrameworksBuildPhase frameworksBuildPhase = objectFactory.createFrameworksBuildPhase();
     target.getBuildPhases().add(frameworksBuildPhase);
 
     for (FrameworkPath framework : systemFrameworkPaths) {
@@ -625,7 +629,7 @@ class XcodeNativeTargetProjectWriter {
       }
       PBXFileReference fileReference =
           sharedFrameworksGroup.getOrCreateFileReferenceBySourceTreePath(sourceTreePath);
-      frameworksBuildPhase.getFiles().add(new PBXBuildFile(fileReference));
+      frameworksBuildPhase.getFiles().add(objectFactory.createBuildFile(fileReference));
     }
   }
 

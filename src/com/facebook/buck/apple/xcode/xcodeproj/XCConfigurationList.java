@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple.xcode.xcodeproj;
 
+import com.facebook.buck.apple.xcode.AbstractPBXObjectFactory;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -33,7 +34,7 @@ public class XCConfigurationList extends PBXProjectItem {
 
   private final LoadingCache<String, XCBuildConfiguration> buildConfigurationsByName;
 
-  public XCConfigurationList() {
+  public XCConfigurationList(AbstractPBXObjectFactory objectFactory) {
     buildConfigurations = new ArrayList<>();
     defaultConfigurationName = Optional.empty();
     defaultConfigurationIsVisible = false;
@@ -44,7 +45,8 @@ public class XCConfigurationList extends PBXProjectItem {
                 new CacheLoader<String, XCBuildConfiguration>() {
                   @Override
                   public XCBuildConfiguration load(String key) {
-                    XCBuildConfiguration configuration = new XCBuildConfiguration(key);
+                    XCBuildConfiguration configuration =
+                        objectFactory.createBuildConfiguration(key);
                     buildConfigurations.add(configuration);
                     return configuration;
                   }

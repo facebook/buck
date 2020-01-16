@@ -94,7 +94,7 @@ public abstract class AbstractPBXObjectFactory {
 final class DefaultPBXObjectFactory extends AbstractPBXObjectFactory {
   @Override
   public PBXProject createProject(String name) {
-    return new PBXProject(name);
+    return new PBXProject(name, this);
   }
 
   @Override
@@ -127,7 +127,7 @@ final class DefaultPBXObjectFactory extends AbstractPBXObjectFactory {
   @Override
   public PBXGroup createPBXGroup(
       String name, @Nullable String path, PBXReference.SourceTree sourceTree) {
-    return new PBXGroup(name, path, sourceTree);
+    return new PBXGroup(name, path, sourceTree, this);
   }
 
   @Override
@@ -137,7 +137,7 @@ final class DefaultPBXObjectFactory extends AbstractPBXObjectFactory {
 
   @Override
   public PBXNativeTarget createNativeTarget(String name) {
-    return new PBXNativeTarget(name);
+    return new PBXNativeTarget(name, this);
   }
 
   @Override
@@ -158,12 +158,12 @@ final class DefaultPBXObjectFactory extends AbstractPBXObjectFactory {
   @Override
   public PBXVariantGroup createVariantGroup(
       String name, @Nullable String path, PBXReference.SourceTree sourceTree) {
-    return new PBXVariantGroup(name, path, sourceTree);
+    return new PBXVariantGroup(name, path, sourceTree, this);
   }
 
   @Override
   public XCConfigurationList createConfigurationList() {
-    return new XCConfigurationList();
+    return new XCConfigurationList(this);
   }
 
   @Override
@@ -174,6 +174,6 @@ final class DefaultPBXObjectFactory extends AbstractPBXObjectFactory {
   @Override
   public XCVersionGroup createVersionGroup(
       String name, @Nullable String path, PBXReference.SourceTree sourceTree) {
-    return new XCVersionGroup(name, path, sourceTree);
+    return new XCVersionGroup(name, path, sourceTree, this);
   }
 }

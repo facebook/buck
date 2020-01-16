@@ -16,6 +16,7 @@
 
 package com.facebook.buck.features.apple.projectV2;
 
+import com.facebook.buck.apple.xcode.AbstractPBXObjectFactory;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import java.nio.file.Path;
@@ -26,6 +27,9 @@ import org.immutables.value.Value;
 abstract class XcodeProjectWriteOptions {
   /** The project being written to. */
   public abstract PBXProject project();
+
+  /** The object factory to use for generating PBXObjects */
+  public abstract AbstractPBXObjectFactory objectFactory();
 
   /**
    * The directory containing the xcodeproj; this would be the parent directory.
@@ -45,7 +49,8 @@ abstract class XcodeProjectWriteOptions {
     return this.xcodeProjPath().resolve("project.pbxproj");
   }
 
-  public static XcodeProjectWriteOptions of(PBXProject project, Path sourceRoot) {
-    return ImmutableXcodeProjectWriteOptions.of(project, sourceRoot);
+  public static XcodeProjectWriteOptions of(
+      PBXProject project, AbstractPBXObjectFactory pbxObjectFactory, Path sourceRoot) {
+    return ImmutableXcodeProjectWriteOptions.of(project, pbxObjectFactory, sourceRoot);
   }
 }

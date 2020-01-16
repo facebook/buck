@@ -16,10 +16,12 @@
 
 package com.facebook.buck.apple.xcode.xcodeproj;
 
+import com.facebook.buck.apple.xcode.AbstractPBXObjectFactory;
+
 /** Target backed by shell scripts or nothing (only specifying dependencies). */
-public class PBXAggregateTarget extends PBXTarget {
-  public PBXAggregateTarget(String name) {
-    super(name);
+public final class PBXAggregateTarget extends PBXTarget {
+  public PBXAggregateTarget(String name, AbstractPBXObjectFactory objectFactory) {
+    super(name, objectFactory);
   }
 
   @Override

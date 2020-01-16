@@ -47,7 +47,7 @@ public final class PBXObjectGIDFactory extends AbstractPBXObjectFactory {
 
   @Override
   public PBXProject createProject(String name) {
-    return objectWithGid(new PBXProject(name));
+    return objectWithGid(new PBXProject(name, this));
   }
 
   @Override
@@ -81,7 +81,7 @@ public final class PBXObjectGIDFactory extends AbstractPBXObjectFactory {
   @Override
   public PBXGroup createPBXGroup(
       String name, @Nullable String path, PBXReference.SourceTree sourceTree) {
-    return objectWithGid(new PBXGroup(name, path, sourceTree));
+    return objectWithGid(new PBXGroup(name, path, sourceTree, this));
   }
 
   @Override
@@ -91,7 +91,7 @@ public final class PBXObjectGIDFactory extends AbstractPBXObjectFactory {
 
   @Override
   public PBXNativeTarget createNativeTarget(String name) {
-    return objectWithGid(new PBXNativeTarget(name));
+    return objectWithGid(new PBXNativeTarget(name, this));
   }
 
   @Override
@@ -112,12 +112,12 @@ public final class PBXObjectGIDFactory extends AbstractPBXObjectFactory {
   @Override
   public PBXVariantGroup createVariantGroup(
       String name, @Nullable String path, PBXReference.SourceTree sourceTree) {
-    return objectWithGid(new PBXVariantGroup(name, path, sourceTree));
+    return objectWithGid(new PBXVariantGroup(name, path, sourceTree, this));
   }
 
   @Override
   public XCConfigurationList createConfigurationList() {
-    return objectWithGid(new XCConfigurationList());
+    return objectWithGid(new XCConfigurationList(this));
   }
 
   @Override
@@ -128,7 +128,7 @@ public final class PBXObjectGIDFactory extends AbstractPBXObjectFactory {
   @Override
   public XCVersionGroup createVersionGroup(
       String name, @Nullable String path, PBXReference.SourceTree sourceTree) {
-    return objectWithGid(new XCVersionGroup(name, path, sourceTree));
+    return objectWithGid(new XCVersionGroup(name, path, sourceTree, this));
   }
 
   private <T extends PBXObject> T objectWithGid(T obj) {
