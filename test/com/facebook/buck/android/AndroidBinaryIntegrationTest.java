@@ -111,7 +111,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
     setWorkspaceCompilationMode(workspace);
-    filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    filesystem = workspace.getProjectFileSystem();
   }
 
   @Test

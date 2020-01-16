@@ -28,7 +28,6 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -110,7 +109,7 @@ public class AndroidBinaryInstallIntegrationTest {
     AssumeAndroidPlatform.get(projectWorkspace).assumeNdkIsAvailable();
     projectWorkspace.addBuckConfigLocalOption(
         "install", "concurrent_install", concurrentInstallType.toString());
-    filesystem = TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot());
+    filesystem = projectWorkspace.getProjectFileSystem();
     executionContext = TestExecutionContext.newInstanceWithRealProcessExecutor();
     currentBuildState = null;
     apkVersionCode = "1";

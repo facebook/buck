@@ -23,7 +23,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -53,7 +52,7 @@ public class AaptPackageResourcesIntegrationTest {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
-    filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    filesystem = workspace.getProjectFileSystem();
   }
 
   @Test

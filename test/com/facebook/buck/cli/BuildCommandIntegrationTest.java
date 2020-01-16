@@ -43,7 +43,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.file.MorePaths;
-import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import com.facebook.buck.testutil.ProcessResult;
@@ -188,7 +188,7 @@ public class BuildCommandIntegrationTest {
     ProcessResult runBuckResult =
         workspace.runBuckBuild("--show-json-output", "//:foo", "//:bar", "//:ex ample");
     runBuckResult.assertSuccess();
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     assertThat(
         runBuckResult.getStdout(),
         Matchers.containsString(

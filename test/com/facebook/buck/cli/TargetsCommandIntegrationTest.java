@@ -43,8 +43,6 @@ import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystem;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import com.facebook.buck.support.cli.args.GlobalCliOptions;
@@ -99,9 +97,9 @@ public class TargetsCommandIntegrationTest {
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
-  private static Path getLegacyGenDir(String buildTarget, ProjectWorkspace workspace) {
-    DefaultProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+  private static Path getLegacyGenDir(String buildTarget, ProjectWorkspace workspace)
+      throws IOException {
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     BuildTarget target = BuildTargetFactory.newInstance(buildTarget);
     // targets like genrule use the legacy path (without double underscore suffix)
     return BuildTargetPaths.getGenPath(filesystem, target, "%s");
@@ -211,8 +209,7 @@ public class TargetsCommandIntegrationTest {
             this, "targets_command_annotation_processor", tmp);
     workspace.setUp();
 
-    DefaultProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     ProcessResult result = workspace.runBuckCommand("targets", "--show-output", "//:");
     result.assertSuccess();
@@ -228,8 +225,7 @@ public class TargetsCommandIntegrationTest {
             this, "targets_command_annotation_processor", tmp);
     workspace.setUp();
 
-    DefaultProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     ProcessResult result = workspace.runBuckCommand("targets", "--show-full-output", "//:");
     result.assertSuccess();
@@ -342,8 +338,7 @@ public class TargetsCommandIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand("targets", "--show-output", "...");
     result.assertSuccess();
-    DefaultProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     BuildTarget javaLibTarget = BuildTargetFactory.newInstance("//:java_lib");
     assertEquals(
         linesToText(

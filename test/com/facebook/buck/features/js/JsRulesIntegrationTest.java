@@ -33,7 +33,6 @@ import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.impl.TargetConfigurationHasher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.PredicateMatcher;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -69,7 +68,7 @@ public class JsRulesIntegrationTest {
     assumeFalse(Platform.detect() == Platform.WINDOWS);
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "js_rules", tmp);
     workspace.setUp();
-    projectFilesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    projectFilesystem = workspace.getProjectFileSystem();
     genPath = projectFilesystem.getBuckPaths().getGenDir();
     if (projectFilesystem.getBuckPaths().shouldIncludeTargetConfigHash()) {
       genPath =

@@ -22,7 +22,6 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -60,7 +59,7 @@ public class WorkerToolRuleIntegrationTest {
    */
   @Test
   public void testGenrulesThatUseWorkerMacros() throws Exception {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     BuildTarget target1 = workspace.newBuildTarget("//:test1");
     BuildTarget target2 = workspace.newBuildTarget("//:test2");
     BuildTarget target3 = workspace.newBuildTarget("//:test3");
@@ -86,7 +85,7 @@ public class WorkerToolRuleIntegrationTest {
    */
   @Test
   public void testGenrulesThatUseWorkerMacrosWithConcurrency() throws Exception {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     BuildTarget target1 = workspace.newBuildTarget("//:test4");
     BuildTarget target2 = workspace.newBuildTarget("//:test5");
 
@@ -114,7 +113,7 @@ public class WorkerToolRuleIntegrationTest {
 
   @Test
   public void testPersistentWorkerToolReusesProcess() throws Exception {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     BuildTarget target1 = workspace.newBuildTarget("//:test6");
     String fullyQualifiedName = target1.getFullyQualifiedName();
 
@@ -135,7 +134,7 @@ public class WorkerToolRuleIntegrationTest {
 
   @Test
   public void testPersistentWorkerToolReusesProcessOnlyIfUnchanged() throws Exception {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     BuildTarget target1 = workspace.newBuildTarget("//:test6");
     String fullyQualifiedName = target1.getFullyQualifiedName();
 
@@ -158,7 +157,7 @@ public class WorkerToolRuleIntegrationTest {
 
   @Test
   public void testWorkerToolArgs() throws Exception {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     BuildTarget target1 = workspace.newBuildTarget("//:test8");
     BuildTarget target2 = workspace.newBuildTarget("//:test9");
 

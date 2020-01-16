@@ -40,7 +40,6 @@ import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionType;
 import com.facebook.buck.remoteexecution.grpc.server.GrpcServer;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleBuildStrategy;
@@ -353,7 +352,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
     workspace.addBuckConfigLocalOption("remoteexecution", "cas_port", Integer.toString(remotePort));
     workspace.addBuckConfigLocalOption("remoteexecution", "cas_insecure", "yes");
 
-    filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    filesystem = workspace.getProjectFileSystem();
 
     if (strategy == ModernBuildRuleBuildStrategy.HYBRID_LOCAL) {
       workspace.addBuckConfigLocalOption(
