@@ -23,8 +23,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -32,7 +30,6 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -43,26 +40,20 @@ public class BuildKeepGoingIntegrationTest {
 
   @Rule public TemporaryPaths tmpFolderForBuildReport = new TemporaryPaths();
 
-  private ProjectFilesystem filesystem;
-  private String genruleOutputPath;
-
-  @Before
-  public void setUp() {
-    filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-    // genrule uses legacy format
-    genruleOutputPath =
-        BuildTargetPaths.getGenPath(
-                filesystem, BuildTargetFactory.newInstance("//:rule_with_output"), "%s")
-            .resolve("rule_with_output.txt")
-            .toString();
-  }
-
   @Test
   public void testKeepGoingWithMultipleSuccessfulTargets() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "keep_going", tmp).setUp();
 
     ProcessResult result = buildTwoGoodRulesAndAssertSuccess(workspace);
+    // genrule uses legacy format
+    String genruleOutputPath =
+        BuildTargetPaths.getGenPath(
+                workspace.getProjectFileSystem(),
+                BuildTargetFactory.newInstance("//:rule_with_output"),
+                "%s")
+            .resolve("rule_with_output.txt")
+            .toString();
     String expectedReport =
         linesToText(
             "OK   //:rule_with_output BUILT_LOCALLY " + genruleOutputPath,
@@ -76,6 +67,14 @@ public class BuildKeepGoingIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "keep_going", tmp).setUp();
 
+    // genrule uses legacy format
+    String genruleOutputPath =
+        BuildTargetPaths.getGenPath(
+                workspace.getProjectFileSystem(),
+                BuildTargetFactory.newInstance("//:rule_with_output"),
+                "%s")
+            .resolve("rule_with_output.txt")
+            .toString();
     ProcessResult result =
         workspace
             .runBuckBuild("--keep-going", "//:rule_with_output", "//:failing_rule")
@@ -96,6 +95,14 @@ public class BuildKeepGoingIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "keep_going", tmp).setUp();
     workspace.enableDirCache();
 
+    // genrule uses legacy format
+    String genruleOutputPath =
+        BuildTargetPaths.getGenPath(
+                workspace.getProjectFileSystem(),
+                BuildTargetFactory.newInstance("//:rule_with_output"),
+                "%s")
+            .resolve("rule_with_output.txt")
+            .toString();
     ProcessResult result1 = buildTwoGoodRulesAndAssertSuccess(workspace);
     String expectedReport1 =
         linesToText(

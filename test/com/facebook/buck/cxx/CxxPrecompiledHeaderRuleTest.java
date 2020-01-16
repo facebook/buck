@@ -64,7 +64,6 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
@@ -111,9 +110,9 @@ public class CxxPrecompiledHeaderRuleTest {
   public void setUp() throws IOException {
     CxxPrecompiledHeaderTestUtils.assumePrecompiledHeadersAreSupported();
 
-    filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_precompiled_header_rule", tmp);
+    filesystem = workspace.getProjectFileSystem();
     workspace.setUp();
 
     preprocessorSupportingPch =

@@ -199,8 +199,7 @@ public class NdkCxxPlatformIntegrationTest {
     // TODO: fix for Clang
     assumeTrue("clang is not supported", compiler != NdkCompilerType.CLANG);
     ProjectWorkspace workspace = setupWorkspace("ndk_debug_paths", tmp);
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     BuildTarget target =
         BuildTargetFactory.newInstance(
@@ -230,8 +229,7 @@ public class NdkCxxPlatformIntegrationTest {
 
     // Run another build in a location with a longer PWD, to verify that this doesn't affect output.
     ProjectWorkspace longPwdWorkspace = setupWorkspace("ndk_debug_paths", tmp_long_pwd);
-    ProjectFilesystem longPwdFilesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem longPwdFilesystem = longPwdWorkspace.getProjectFileSystem();
     longPwdWorkspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
     lib =
         longPwdWorkspace.getPath(

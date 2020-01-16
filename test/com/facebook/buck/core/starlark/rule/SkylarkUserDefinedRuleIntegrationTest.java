@@ -26,8 +26,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystem;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -127,8 +125,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "implementation_writes_files", tmp);
 
     workspace.setUp();
-    DefaultProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     Path exePath =
         BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//foo:exe"))
@@ -372,8 +369,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "implementation_gets_artifacts_from_source_list", tmp);
-    DefaultProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     workspace.setUp();
 
@@ -392,8 +388,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "implementation_gets_artifacts_from_source", tmp);
 
-    DefaultProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     workspace.setUp();
 
@@ -412,8 +407,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "implementation_gets_dep_from_dep", tmp);
 
-    DefaultProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     workspace.setUp();
 
@@ -431,8 +425,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "implementation_gets_deps_from_dep_list", tmp);
-    DefaultProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     workspace.setUp();
 
@@ -549,7 +542,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "implementation_runs_actions", tmp);
 
     workspace.setUp();
-    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     ProcessResult zeroResult = workspace.runBuckBuild("//foo:returning_zero").assertSuccess();
     ProcessResult oneResult = workspace.runBuckBuild("//foo:returning_one").assertFailure();
@@ -646,7 +639,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "user_defined_providers", tmp);
     workspace.setUp();
 
-    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     Path expectedLeafPath =
         BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//foo:leaf"))
@@ -665,7 +658,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "compatible_with", tmp);
     workspace.setUp();
 
-    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     ProcessResult result = workspace.runBuckBuild("//:file");
     result.assertFailure();
@@ -695,8 +688,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "implementation_gets_artifacts_from_output", tmp);
 
-    DefaultProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     Path outputPath =
         BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//:with_contents"))
             .resolve("some_out.txt");
@@ -734,8 +726,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "implementation_gets_artifacts_from_output_list", tmp);
 
-    DefaultProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     Path outputPath =
         BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//:with_contents"))
             .resolve("some_out.txt");
@@ -772,8 +763,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "implementation_copies_files", tmp);
 
-    DefaultProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     Path outputPath1 =
         BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//:write_string"))
             .resolve("out.txt");
