@@ -1,17 +1,20 @@
 version: 2
 
 jobs:
-  ci_build:
+  ci_build_openjdk8:
     environment:
       BUCKROOT: "/home/circleci/buck"
       ANDROIDSDK: "/home/circleci/android-sdk"
     working_directory: "/home/circleci/buck"
     machine:
       image: ubuntu-1604:201903-01
-      java:
-        version: 'oraclejdk8'
     steps:
       - checkout
+      - run:
+          name: Install OpenJDK8
+          sudo apt-get update && sudo apt-get install openjdk-8-jdk
+          sudo update-java-alternatives -s java-1.8.0-openjdk-amd64
+          java -version
       - run:
           name: Install Android SDK
           command: |
@@ -61,5 +64,5 @@ workflows:
   version: 2
   all_jobs:
     jobs:
-      - ci_build
+      - ci_build_openjdk8
 
