@@ -25,7 +25,6 @@ import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper.SymbolGetter;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -51,12 +50,10 @@ public class AndroidAarIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-  private ProjectFilesystem filesystem;
-
   @Before
   public void setUp() throws Exception {
-    filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-    AssumeAndroidPlatform.get(filesystem).assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()))
+        .assumeSdkIsAvailable();
   }
 
   @Test
@@ -70,7 +67,9 @@ public class AndroidAarIntegrationTest {
     Path aar =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem, BuildTargetFactory.newInstance(target), AndroidAar.AAR_FORMAT));
+                workspace.getProjectFileSystem(),
+                BuildTargetFactory.newInstance(target),
+                AndroidAar.AAR_FORMAT));
     ZipInspector zipInspector = new ZipInspector(aar);
     zipInspector.assertFileExists("AndroidManifest.xml");
     zipInspector.assertFileExists("classes.jar");
@@ -103,7 +102,9 @@ public class AndroidAarIntegrationTest {
     Path aar =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem, BuildTargetFactory.newInstance(target), AndroidAar.AAR_FORMAT));
+                workspace.getProjectFileSystem(),
+                BuildTargetFactory.newInstance(target),
+                AndroidAar.AAR_FORMAT));
     ZipInspector zipInspector = new ZipInspector(aar);
     zipInspector.assertFileExists("AndroidManifest.xml");
     zipInspector.assertFileExists("classes.jar");
@@ -136,7 +137,9 @@ public class AndroidAarIntegrationTest {
     Path aar =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem, BuildTargetFactory.newInstance(target), AndroidAar.AAR_FORMAT));
+                workspace.getProjectFileSystem(),
+                BuildTargetFactory.newInstance(target),
+                AndroidAar.AAR_FORMAT));
 
     Path contents = tmp.getRoot().resolve("aar-contents");
     ArchiveFormat.ZIP
@@ -194,7 +197,9 @@ public class AndroidAarIntegrationTest {
     Path aar =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem, BuildTargetFactory.newInstance(target), AndroidAar.AAR_FORMAT));
+                workspace.getProjectFileSystem(),
+                BuildTargetFactory.newInstance(target),
+                AndroidAar.AAR_FORMAT));
     ZipInspector zipInspector = new ZipInspector(aar);
     zipInspector.assertFileExists("AndroidManifest.xml");
     zipInspector.assertFileExists("classes.jar");
@@ -224,7 +229,9 @@ public class AndroidAarIntegrationTest {
     Path aar =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem, BuildTargetFactory.newInstance(target), AndroidAar.AAR_FORMAT));
+                workspace.getProjectFileSystem(),
+                BuildTargetFactory.newInstance(target),
+                AndroidAar.AAR_FORMAT));
     ZipInspector zipInspector = new ZipInspector(aar);
     zipInspector.assertFileExists("AndroidManifest.xml");
     zipInspector.assertFileExists("classes.jar");
@@ -253,7 +260,9 @@ public class AndroidAarIntegrationTest {
     Path aar =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem, BuildTargetFactory.newInstance(target), AndroidAar.AAR_FORMAT));
+                workspace.getProjectFileSystem(),
+                BuildTargetFactory.newInstance(target),
+                AndroidAar.AAR_FORMAT));
     ZipInspector zipInspector = new ZipInspector(aar);
     zipInspector.assertFileExists("AndroidManifest.xml");
     zipInspector.assertFileExists("classes.jar");
@@ -273,13 +282,15 @@ public class AndroidAarIntegrationTest {
     AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
     String target = "//apps/aar_build_config:app_with_relinker";
     workspace.runBuckBuild(target).assertSuccess();
-    SymbolGetter syms = AndroidNdkHelper.getSymbolGetter(filesystem, tmp);
+    SymbolGetter syms = AndroidNdkHelper.getSymbolGetter(workspace.getProjectFileSystem(), tmp);
     Symbols sym;
 
     Path aar =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem, BuildTargetFactory.newInstance(target), AndroidAar.AAR_FORMAT));
+                workspace.getProjectFileSystem(),
+                BuildTargetFactory.newInstance(target),
+                AndroidAar.AAR_FORMAT));
     sym = syms.getDynamicSymbols(aar, "assets/lib/x86/libnative_xdsodce_top.so");
     assertTrue(sym.global.contains("_Z10JNI_OnLoadii"));
     assertTrue(sym.undefined.contains("_Z10midFromTopi"));
@@ -311,7 +322,9 @@ public class AndroidAarIntegrationTest {
     Path aar =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem, BuildTargetFactory.newInstance(target), AndroidAar.AAR_FORMAT));
+                workspace.getProjectFileSystem(),
+                BuildTargetFactory.newInstance(target),
+                AndroidAar.AAR_FORMAT));
     ZipInspector zipInspector = new ZipInspector(aar);
     zipInspector.assertFileExists("AndroidManifest.xml");
     zipInspector.assertFileExists("classes.jar");

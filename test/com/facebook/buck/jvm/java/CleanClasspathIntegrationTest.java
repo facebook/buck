@@ -22,7 +22,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -49,7 +48,7 @@ public class CleanClasspathIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "classpath_corruption_regression", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     // Build //:example so that content is written to buck-out/gen/.
     BuildTarget target = BuildTargetFactory.newInstance("//:example");

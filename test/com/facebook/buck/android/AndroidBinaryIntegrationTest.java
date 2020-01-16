@@ -42,7 +42,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -461,11 +460,10 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testDxFindsReferencedResources() {
+  public void testDxFindsReferencedResources() throws IOException {
     workspace.runBuckBuild(SIMPLE_TARGET).assertSuccess();
     BuildTarget dexTarget = BuildTargetFactory.newInstance("//java/com/sample/lib:lib#d8");
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     Optional<String> resourcesFromMetadata =
         DexProducedFromJavaLibrary.getMetadataResources(filesystem, dexTarget);
     assertTrue(resourcesFromMetadata.isPresent());
@@ -473,11 +471,10 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testD8FindsReferencedResources() {
+  public void testD8FindsReferencedResources() throws IOException {
     workspace.runBuckBuild(RES_D8_TARGET).assertSuccess();
     BuildTarget dexTarget = BuildTargetFactory.newInstance("//java/com/sample/lib:lib#d8");
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     Optional<String> resourcesFromMetadata =
         DexProducedFromJavaLibrary.getMetadataResources(filesystem, dexTarget);
     assertTrue(resourcesFromMetadata.isPresent());
@@ -485,13 +482,12 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testDexGroupsReferencedResources() {
+  public void testDexGroupsReferencedResources() throws IOException {
     workspace.runBuckBuild(RES_GROUPS_TARGET).assertSuccess();
     BuildTarget dexTarget =
         BuildTargetFactory.newInstance(
             "//apps/multidex:app_with_resources_and_groups#secondary_dexes_1");
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     Path resourcesFile =
         BuildTargetPaths.getGenPath(filesystem, dexTarget, "%s")
             .resolve("referenced_resources.txt");

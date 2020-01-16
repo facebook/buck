@@ -36,7 +36,6 @@ import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
@@ -123,8 +122,6 @@ public class CxxPreprocessAndCompileIntegrationTest {
   public void sanitizeSymlinkedWorkingDirectory() throws IOException {
     TemporaryFolder folder = new TemporaryFolder();
     folder.create();
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(folder.getRoot().toPath());
 
     // Setup up a symlink to our working directory.
     Path symlinkedRoot = folder.getRoot().toPath().resolve("symlinked-root");
@@ -143,7 +140,10 @@ public class CxxPreprocessAndCompileIntegrationTest {
         .assertSuccess();
 
     // Verify that we still sanitized this path correctly.
-    Path lib = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s/libsimple.a"));
+    Path lib =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                workspace.getProjectFileSystem(), target, "%s/libsimple.a"));
     String contents = Files.asByteSource(lib.toFile()).asCharSource(Charsets.ISO_8859_1).read();
     assertFalse(lib.toString(), contents.contains(tmp.getRoot().toString()));
     assertFalse(lib.toString(), contents.contains(symlinkedRoot.toString()));

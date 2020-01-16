@@ -25,7 +25,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -55,7 +54,7 @@ public class CalculateSourceAbiIntegrationTest {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "source_abi", tmp);
     workspace.setUp();
 
-    filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    filesystem = workspace.getProjectFileSystem();
   }
 
   @Test
