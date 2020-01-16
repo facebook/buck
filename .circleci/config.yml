@@ -38,7 +38,7 @@ install_python: &install_python
 install_groovy: &install_groovy
   name: Install Groovy
   command: |
-    echo '' | sudo apt-add-repository ppa:groovy-dev/groovy
+    echo -e '\x0D' | sudo apt-add-repository ppa:groovy-dev/groovy
     sudo apt-get update && sudo apt-get install groovy
     groovy -version
 
