@@ -8,6 +8,8 @@ jobs:
     working_directory: "/home/circleci/buck"
     machine:
       image: ubuntu-1604:201903-01
+      java:
+        version: 'oraclejdk8'
     steps:
       - checkout
       - run:
