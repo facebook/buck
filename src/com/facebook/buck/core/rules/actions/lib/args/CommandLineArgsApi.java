@@ -28,4 +28,16 @@ public interface CommandLineArgsApi extends SkylarkValue {
   default void repr(SkylarkPrinter printer) {
     printer.append("<command line arguments>");
   }
+
+  @Override
+  default boolean isImmutable() {
+    /**
+     * We already validate that the types added here are Immutable in {@link CommandLineArgsFactory}
+     * there is no need to do further validation.
+     *
+     * <p>See also {@link AggregateCommandLineArgs}, {@link ListCommandLineArgs}, {@link
+     * com.facebook.buck.core.rules.providers.lib.RunInfo}
+     */
+    return true;
+  }
 }

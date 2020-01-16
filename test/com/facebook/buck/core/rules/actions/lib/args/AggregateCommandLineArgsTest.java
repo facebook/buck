@@ -18,6 +18,8 @@ package com.facebook.buck.core.rules.actions.lib.args;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
@@ -31,24 +33,31 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
 import com.facebook.buck.core.rules.actions.lib.WriteAction;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
+import com.facebook.buck.core.rules.providers.impl.UserDefinedProvider;
+import com.facebook.buck.core.rules.providers.impl.UserDefinedProviderInfo;
 import com.facebook.buck.core.rules.providers.lib.ImmutableRunInfo;
 import com.facebook.buck.core.rules.providers.lib.RunInfo;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.starlark.compatible.TestMutableEnv;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
+import com.google.devtools.build.lib.cmdline.Label;
+import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 public class AggregateCommandLineArgsTest {
@@ -245,5 +254,25 @@ public class AggregateCommandLineArgsTest {
     assertNotEquals(ruleKey1, ruleKey4);
     assertEquals(ruleKey4, ruleKey5);
     assertNotEquals(ruleKey4, ruleKey6);
+  }
+
+  @Test
+  public void isImmutable() throws LabelSyntaxException, EvalException, InterruptedException {
+    CommandLineArgs args1 = CommandLineArgsFactory.from(ImmutableList.of(1, 2, 3));
+    CommandLineArgs args2 = CommandLineArgsFactory.from(ImmutableList.of(1, 2, 3));
+    CommandLineArgs args = CommandLineArgsFactory.from(ImmutableList.of(args1, args2));
+
+    assertThat(args, Matchers.instanceOf(AggregateCommandLineArgs.class));
+    assertTrue(args.isImmutable());
+
+    UserDefinedProvider provider = new UserDefinedProvider(Location.BUILTIN, new String[] {"foo"});
+    provider.export(Label.parseAbsolute("//:foo.bzl", ImmutableMap.of()), "provider");
+    try (TestMutableEnv env = new TestMutableEnv()) {
+      UserDefinedProviderInfo providerInfo =
+          (UserDefinedProviderInfo)
+              provider.callWithArgArray(new Object[] {args}, null, env.getEnv(), Location.BUILTIN);
+      assertEquals(args, providerInfo.getValue("foo"));
+      assertTrue(providerInfo.isImmutable());
+    }
   }
 }

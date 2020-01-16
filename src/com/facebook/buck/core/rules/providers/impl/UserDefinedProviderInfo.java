@@ -93,4 +93,13 @@ public class UserDefinedProviderInfo
   public String getErrorMessageForUnknownField(String field) {
     return String.format("%s has no field named %s", provider.toString(), field);
   }
+
+  @Override
+  public boolean isImmutable() {
+    /**
+     * This is guaranteed by {@link UserDefinedProvider#call(Object[], FuncallExpression,
+     * Environment)}
+     */
+    return true;
+  }
 }

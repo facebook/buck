@@ -34,13 +34,18 @@ import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgException;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgs;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgsFactory;
 import com.facebook.buck.core.rules.actions.lib.args.ExecCompatibleCommandLineBuilder;
+import com.facebook.buck.core.rules.providers.impl.UserDefinedProvider;
+import com.facebook.buck.core.rules.providers.impl.UserDefinedProviderInfo;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
+import com.facebook.buck.core.starlark.compatible.TestMutableEnv;
 import com.facebook.buck.core.starlark.rule.args.CommandLineArgsBuilder;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.devtools.build.lib.cmdline.Label;
+import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
@@ -213,6 +218,24 @@ public class RunInfoTest {
 
       assertEquals(ImmutableList.of(artifact), inputs.build());
       assertEquals(ImmutableList.of(artifact2), outputs.build());
+    }
+  }
+
+  @Test
+  public void isImmutable() throws LabelSyntaxException, EvalException, InterruptedException {
+    CommandLineArgs args1 = CommandLineArgsFactory.from(ImmutableList.of(1, 2, 3));
+    CommandLineArgs args = new ImmutableRunInfo(ImmutableMap.of(), args1);
+
+    assertTrue(args.isImmutable());
+
+    UserDefinedProvider provider = new UserDefinedProvider(Location.BUILTIN, new String[] {"foo"});
+    provider.export(Label.parseAbsolute("//:foo.bzl", ImmutableMap.of()), "provider");
+    try (TestMutableEnv env = new TestMutableEnv()) {
+      UserDefinedProviderInfo providerInfo =
+          (UserDefinedProviderInfo)
+              provider.callWithArgArray(new Object[] {args}, null, env.getEnv(), Location.BUILTIN);
+      assertEquals(args, providerInfo.getValue("foo"));
+      assertTrue(providerInfo.isImmutable());
     }
   }
 }
