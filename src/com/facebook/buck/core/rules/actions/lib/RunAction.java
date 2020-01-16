@@ -20,6 +20,7 @@ import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.actions.AbstractAction;
 import com.facebook.buck.core.rules.actions.ActionExecutionContext;
 import com.facebook.buck.core.rules.actions.ActionExecutionResult;
@@ -41,8 +42,8 @@ import java.util.Optional;
 
 /** Action that runs command line applications with provided arguments and environment */
 public class RunAction extends AbstractAction {
-  private final CommandLineArgs args;
-  private final ImmutableMap<String, String> env;
+  @AddToRuleKey private final CommandLineArgs args;
+  @AddToRuleKey private final ImmutableMap<String, String> env;
 
   /**
    * @param registry the {@link ActionRegistry} to registry this action for.

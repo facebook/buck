@@ -89,28 +89,27 @@ class ReflectiveAlterKeyLoader extends CacheLoader<Class<?>, ImmutableCollection
   private void getExtractorsForActions(
       Class<? extends Action> current,
       ImmutableSortedMap.Builder<ValueExtractor, AlterRuleKey> sortedExtractors) {
-
-    /**
-     * We skip adding any fields in {@link AbstractAction} since {@link RuleKeyFieldLoader} takes
-     * care of the generic {@link Action} interface based rule keys
-     */
-    if (AbstractAction.class.equals(current)) {
-      return;
-    }
-
     for (Field field : current.getDeclaredFields()) {
       Preconditions.checkArgument(
           Modifier.isFinal(field.getModifiers()),
           "All fields of Action must be final but %s.%s is not.",
           current.getSimpleName(),
           field.getName());
-      try {
-        AbstractAction.class.getDeclaredField(field.getName());
-      } catch (NoSuchFieldException e) {
-        field.setAccessible(true);
-        ValueExtractor valueExtractor = new FieldValueExtractor(field);
-        sortedExtractors.put(valueExtractor, createAlterRuleKey(valueExtractor, false));
+      AddToRuleKey annotation = field.getAnnotation(AddToRuleKey.class);
+      if (annotation == null) {
+        // Only AbstractAction gets to hide fields from its rulekey.
+        if (AbstractAction.class.equals(current)) {
+          continue;
+        }
+        throw new RuntimeException(
+            String.format(
+                "All fields of Action must annotated with @AddToRuleKey.",
+                current.getSimpleName(),
+                field.getName()));
       }
+      field.setAccessible(true);
+      ValueExtractor valueExtractor = new FieldValueExtractor(field);
+      sortedExtractors.put(valueExtractor, createAlterRuleKey(valueExtractor, false));
     }
   }
 

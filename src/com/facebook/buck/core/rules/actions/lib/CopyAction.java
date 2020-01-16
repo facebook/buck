@@ -19,6 +19,7 @@ package com.facebook.buck.core.rules.actions.lib;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.core.artifact.OutputArtifact;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.actions.AbstractAction;
 import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.actions.ActionExecutionContext;
@@ -34,8 +35,7 @@ import java.util.Optional;
 
 /** {@link Action} that copies specified contents to the given output {@link Artifact}s */
 public class CopyAction extends AbstractAction {
-
-  private final CopySourceMode mode;
+  @AddToRuleKey private final CopySourceMode mode;
 
   /**
    * Create an instance of {@link CopyAction}

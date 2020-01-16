@@ -19,6 +19,7 @@ package com.facebook.buck.core.rules.actions.lib;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.core.artifact.OutputArtifact;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.actions.AbstractAction;
 import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.actions.ActionExecutionContext;
@@ -39,9 +40,8 @@ import java.util.stream.Collectors;
  * com.facebook.buck.core.artifact.Artifact}s
  */
 public class WriteAction extends AbstractAction {
-
-  private final Either<String, CommandLineArgs> contents;
-  private final boolean isExecutable;
+  @AddToRuleKey private final Either<String, CommandLineArgs> contents;
+  @AddToRuleKey private final boolean isExecutable;
 
   /**
    * Create an instance of {@link WriteAction}

@@ -18,6 +18,7 @@ package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.OutputArtifact;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.actions.AbstractAction;
 import com.facebook.buck.core.rules.actions.ActionExecutionContext;
 import com.facebook.buck.core.rules.actions.ActionExecutionResult;
@@ -29,8 +30,8 @@ import java.util.Optional;
 /** Just a Fake do nothing Action for rulekey tests */
 class SomeAction extends AbstractAction {
 
-  private final int i;
-  private final String a;
+  @AddToRuleKey private final int i;
+  @AddToRuleKey private final String a;
 
   protected SomeAction(ActionRegistry actionRegistry, int i, String a) {
     super(actionRegistry, ImmutableSortedSet.of(), ImmutableSortedSet.of(), "some");

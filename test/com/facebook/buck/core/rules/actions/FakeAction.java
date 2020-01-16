@@ -29,9 +29,9 @@ import java.util.Objects;
 
 public class FakeAction extends AbstractAction {
 
-  private final HashableWrapper hasheableWrapper;
-  private final ImmutableSortedSet<Artifact> srcs;
-  private final ImmutableSortedSet<Artifact> deps;
+  @AddToRuleKey private final HashableWrapper hasheableWrapper;
+  @AddToRuleKey private final ImmutableSortedSet<Artifact> srcs;
+  @AddToRuleKey private final ImmutableSortedSet<Artifact> deps;
 
   public FakeAction(
       ActionRegistry actionRegistry,
