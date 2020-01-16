@@ -38,8 +38,10 @@ install_python: &install_python
 install_groovy: &install_groovy
   name: Install Groovy
   command: |
-    #echo -e '\x0D' | sudo apt-add-repository ppa:groovy-dev/groovy
-    sudo apt-get update && sudo apt-get install groovy
+    #sudo apt-get update && sudo apt-get install groovy
+    curl -s get.sdkman.io | bash
+    source "$HOME/.sdkman/bin/sdkman-init.sh"
+    sdk install groovy 2.5.0
     groovy -version
 
 run_ant_build: &run_ant_build
@@ -129,6 +131,7 @@ jobs:
             export PATH=${ANDROIDSDK}/tools/bin:$PATH
             export PATH="$(pyenv root)/shims:$PATH"
             export ANDROID_SDK=${ANDROIDSDK}
+            export GROOVY_HOME=$HOME/.sdkman/candidates/groovy/current
             set -eux
             ./new_buck.pex test --num-threads=${BUCK_NUM_THREADS} --all --test-selectors '!.*[Ii]ntegration.*'
 
