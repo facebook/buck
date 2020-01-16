@@ -16,7 +16,7 @@
 
 package com.facebook.buck.apple.toolchain.impl;
 
-import com.facebook.buck.apple.AppleToolchainBuildRule;
+import com.facebook.buck.apple.AppleToolchainSetBuildRule;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.UnresolvedAppleCxxPlatform;
 import com.facebook.buck.core.model.BuildTarget;
@@ -33,16 +33,17 @@ import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
 /**
- * Used to provide a {@link AppleCxxPlatform} that is specified as a apple_toolchain build target.
+ * Used to provide a {@link AppleCxxPlatform} that is specified as a apple_toolchain_set build
+ * target.
  */
 public class ProviderBackedUnresolvedAppleCxxPlatform implements UnresolvedAppleCxxPlatform {
-  private final BuildTarget toolchainTarget;
+  private final BuildTarget toolchainSetTarget;
   private final Flavor flavor;
   private final UnresolvedCxxPlatform cxxPlatformProvider;
   private final UnresolvedSwiftPlatform swiftPlatformProvider;
 
-  public ProviderBackedUnresolvedAppleCxxPlatform(BuildTarget toolchainTarget, Flavor flavor) {
-    this.toolchainTarget = toolchainTarget;
+  public ProviderBackedUnresolvedAppleCxxPlatform(BuildTarget toolchainSetTarget, Flavor flavor) {
+    this.toolchainSetTarget = toolchainSetTarget;
     this.flavor = flavor;
     this.cxxPlatformProvider =
         new UnresolvedCxxPlatform() {
@@ -98,14 +99,14 @@ public class ProviderBackedUnresolvedAppleCxxPlatform implements UnresolvedApple
 
   @Override
   public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {
-    return ImmutableList.of(toolchainTarget);
+    return ImmutableList.of(toolchainSetTarget);
   }
 
   @Override
   public AppleCxxPlatform resolve(BuildRuleResolver ruleResolver) {
-    BuildRule rule = ruleResolver.getRule(toolchainTarget);
-    Verify.verify(rule instanceof AppleToolchainBuildRule);
-    return ((AppleToolchainBuildRule) rule).getAppleCxxPlatform(flavor);
+    BuildRule rule = ruleResolver.getRule(toolchainSetTarget);
+    Verify.verify(rule instanceof AppleToolchainSetBuildRule);
+    return ((AppleToolchainSetBuildRule) rule).getAppleCxxPlatform(flavor);
   }
 
   @Override

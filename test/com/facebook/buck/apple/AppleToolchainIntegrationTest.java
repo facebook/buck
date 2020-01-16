@@ -45,7 +45,8 @@ public class AppleToolchainIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_toolchain", tmp);
     CxxToolchainHelper.addCxxToolchainToWorkspace(workspace);
-    workspace.addBuckConfigLocalOption("apple", "toolchain_target", "//apple_toolchain:toolchain");
+    workspace.addBuckConfigLocalOption(
+        "apple", "toolchain_set_target", "//apple_toolchain:toolchain");
     workspace.setUp();
     Path output = workspace.buildAndReturnOutput("//:TestApp#iphoneos-arm64");
     assertEquals("signed by codesign\n", workspace.getFileContents(output.resolve("app_signed")));
@@ -77,7 +78,8 @@ public class AppleToolchainIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_toolchain", tmp);
     CxxToolchainHelper.addCxxToolchainToWorkspace(workspace);
-    workspace.addBuckConfigLocalOption("apple", "toolchain_target", "//apple_toolchain:toolchain");
+    workspace.addBuckConfigLocalOption(
+        "apple", "toolchain_set_target", "//apple_toolchain:toolchain");
     workspace.setUp();
     Path output = workspace.buildAndReturnOutput("//:TestApp#iphoneos-arm64,iphoneos-armv7");
     assertEquals("signed by codesign\n", workspace.getFileContents(output.resolve("app_signed")));
@@ -129,7 +131,7 @@ public class AppleToolchainIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_toolchain", tmp);
     CxxToolchainHelper.addCxxToolchainToWorkspace(workspace);
     workspace.addBuckConfigLocalOption(
-        "apple", "toolchain_target", "//apple_toolchain:toolchain_dsymutil");
+        "apple", "toolchain_set_target", "//apple_toolchain:toolchain_dsymutil");
     workspace.setUp();
     Path output = workspace.buildAndReturnOutput("//:TestApp#iphoneos-arm64");
     assertEquals("signed by codesign\n", workspace.getFileContents(output.resolve("app_signed")));
@@ -162,7 +164,7 @@ public class AppleToolchainIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_toolchain", tmp);
     CxxToolchainHelper.addCxxToolchainToWorkspace(workspace);
     workspace.addBuckConfigLocalOption(
-        "apple", "toolchain_target", "//apple_toolchain:toolchain_swift");
+        "apple", "toolchain_set_target", "//apple_toolchain:toolchain_swift");
     workspace.setUp();
     Path output = workspace.buildAndReturnOutput("//:TestSwiftBinary#iphoneos-arm64");
     Path rootPath = workspace.getProjectFileSystem().getRootPath();

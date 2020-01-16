@@ -40,7 +40,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * This {@link BuildRule} creates {@link AppleCxxPlatform} using {@link ApplePlatformBuildRule}.
  * It's a {@link NoopBuildRule} with no build steps or outputs.
  */
-public class AppleToolchainBuildRule extends NoopBuildRule {
+public class AppleToolchainSetBuildRule extends NoopBuildRule {
 
   private final Map<String, ApplePlatformBuildRule> applePlatformMapping;
   private final Optional<Path> developerPath;
@@ -49,7 +49,7 @@ public class AppleToolchainBuildRule extends NoopBuildRule {
 
   private final Map<Flavor, AppleCxxPlatform> resolvedCache;
 
-  public AppleToolchainBuildRule(
+  public AppleToolchainSetBuildRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       ImmutableSortedMap<String, ApplePlatformBuildRule> applePlatformMapping,

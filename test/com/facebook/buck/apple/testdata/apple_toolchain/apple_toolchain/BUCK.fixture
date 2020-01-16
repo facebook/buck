@@ -1,4 +1,4 @@
-apple_toolchain(
+apple_toolchain_set(
     name = "toolchain",
     apple_platforms = {
         "iphoneos-arm64": ":platform1",
@@ -56,7 +56,7 @@ apple_platform(
     visibility = ["PUBLIC"],
 )
 
-apple_toolchain(
+apple_toolchain_set(
     name = "toolchain_dsymutil",
     apple_platforms = {
         "iphoneos-arm64": ":platform_dsymutil",
@@ -91,7 +91,7 @@ apple_platform(
     visibility = ["PUBLIC"],
 )
 
-apple_toolchain(
+apple_toolchain_set(
     name = "toolchain_swift",
     apple_platforms = {
         "iphoneos-arm64": ":platform_swift",

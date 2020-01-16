@@ -52,11 +52,11 @@ public class AppleCxxPlatformsProviderFactory
       ToolchainCreationContext context,
       TargetConfiguration toolchainTargetConfiguration) {
     AppleConfig appleConfig = context.getBuckConfig().getView(AppleConfig.class);
-    Optional<BuildTarget> toolchainTarget =
-        appleConfig.getAppleToolchainTarget(toolchainTargetConfiguration);
-    if (toolchainTarget.isPresent()) {
+    Optional<BuildTarget> toolchainSetTarget =
+        appleConfig.getAppleToolchainSetTarget(toolchainTargetConfiguration);
+    if (toolchainSetTarget.isPresent()) {
       return Optional.of(
-          AppleCxxPlatformsProvider.of(createDynamicPlatforms(toolchainTarget.get())));
+          AppleCxxPlatformsProvider.of(createDynamicPlatforms(toolchainSetTarget.get())));
     }
     Optional<AppleSdkLocation> appleSdkLocation =
         toolchainProvider.getByNameIfPresent(
@@ -121,10 +121,10 @@ public class AppleCxxPlatformsProviderFactory
   }
 
   private static FlavorDomain<UnresolvedAppleCxxPlatform> createDynamicPlatforms(
-      BuildTarget toolchainTarget) {
+      BuildTarget toolchainSetTarget) {
     ImmutableList<UnresolvedAppleCxxPlatform> unresolvedAppleCxxPlatforms =
         ApplePlatform.ALL_PLATFORM_FLAVORS.stream()
-            .map(flavor -> new ProviderBackedUnresolvedAppleCxxPlatform(toolchainTarget, flavor))
+            .map(flavor -> new ProviderBackedUnresolvedAppleCxxPlatform(toolchainSetTarget, flavor))
             .collect(ImmutableList.toImmutableList());
     return FlavorDomain.from("Apple C++ Platform", unresolvedAppleCxxPlatforms);
   }

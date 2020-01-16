@@ -154,8 +154,8 @@ public class AppleConfig implements ConfigView<BuckConfig> {
                     delegate.resolveNonNullPathOutsideTheProjectFilesystem(Paths.get(string)))));
   }
 
-  public Optional<BuildTarget> getAppleToolchainTarget(TargetConfiguration targetConfiguration) {
-    return delegate.getBuildTarget(APPLE_SECTION, "toolchain_target", targetConfiguration);
+  public Optional<BuildTarget> getAppleToolchainSetTarget(TargetConfiguration targetConfiguration) {
+    return delegate.getBuildTarget(APPLE_SECTION, "toolchain_set_target", targetConfiguration);
   }
 
   private static Path normalizePath(Path path) {

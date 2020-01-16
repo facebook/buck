@@ -35,18 +35,18 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 /**
- * Defines an apple_toolchain rule that allows a {@link AppleCxxPlatform} to be configured as a
+ * Defines an apple_toolchain_set rule that allows a {@link AppleCxxPlatform} to be configured as a
  * build target.
  */
-public class AppleToolchainDescription
-    implements DescriptionWithTargetGraph<AppleToolchainDescriptionArg> {
+public class AppleToolchainSetDescription
+    implements DescriptionWithTargetGraph<AppleToolchainSetDescriptionArg> {
 
   @Override
   public BuildRule createBuildRule(
       BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
-      AppleToolchainDescriptionArg args) {
+      AppleToolchainSetDescriptionArg args) {
     Verify.verify(!buildTarget.isFlavored());
 
     ImmutableSortedMap.Builder<String, ApplePlatformBuildRule> appleSdkMappingBuilder =
@@ -63,7 +63,7 @@ public class AppleToolchainDescription
       }
       appleSdkMappingBuilder.put(entry.getKey(), (ApplePlatformBuildRule) applePlatformRule);
     }
-    return new AppleToolchainBuildRule(
+    return new AppleToolchainSetBuildRule(
         buildTarget,
         context.getProjectFilesystem(),
         appleSdkMappingBuilder.build(),
@@ -79,17 +79,17 @@ public class AppleToolchainDescription
   }
 
   @Override
-  public Class<AppleToolchainDescriptionArg> getConstructorArgType() {
-    return AppleToolchainDescriptionArg.class;
+  public Class<AppleToolchainSetDescriptionArg> getConstructorArgType() {
+    return AppleToolchainSetDescriptionArg.class;
   }
 
   /**
-   * An apple_toolchain is a mapping from platform name to apple_sdk with several common fields for
-   * all SDKs.
+   * An apple_toolchain_set is a mapping from platform name to apple_platform with several common
+   * fields for all SDKs.
    */
   @Value.Immutable
   @BuckStyleImmutable
-  interface AbstractAppleToolchainDescriptionArg extends BuildRuleArg {
+  interface AbstractAppleToolchainSetDescriptionArg extends BuildRuleArg {
     /** Mapping from apple platform name to apple_platform rule. */
     ImmutableSortedMap<String, BuildTarget> getApplePlatforms();
 

@@ -124,7 +124,7 @@ public class AppleDescriptionProvider implements DescriptionProvider {
             swiftBuckConfig,
             appleLibraryDescription),
         new SceneKitAssetsDescription(),
-        new AppleToolchainDescription(),
+        new AppleToolchainSetDescription(),
         new ApplePlatformDescription());
   }
 }

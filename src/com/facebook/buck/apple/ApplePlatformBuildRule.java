@@ -40,8 +40,8 @@ import java.util.Optional;
 
 /**
  * This {@link BuildRule} holds {@link ApplePlatformDescriptionArg} to create {@link
- * AppleCxxPlatform} in {@link AppleToolchainBuildRule}. It's a {@link NoopBuildRule} with no build
- * steps or outputs.
+ * AppleCxxPlatform} in {@link AppleToolchainSetBuildRule}. It's a {@link NoopBuildRule} with no
+ * build steps or outputs.
  */
 public class ApplePlatformBuildRule extends NoopBuildRule {
 
