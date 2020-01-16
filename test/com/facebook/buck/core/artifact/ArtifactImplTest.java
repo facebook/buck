@@ -317,4 +317,24 @@ public class ArtifactImplTest {
     expectedException.expectMessage("cannot be used as an output artifact");
     artifact.asOutputArtifact(Location.BUILTIN);
   }
+
+  @Test
+  public void isImmutable() throws EvalException {
+    BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
+    Path packagePath = Paths.get("my/foo__");
+    Path path = Paths.get("bar");
+    ArtifactImpl artifact = ArtifactImpl.of(target, genDir, packagePath, path, Location.BUILTIN);
+
+    assertFalse(artifact.isBound());
+    assertTrue(artifact.isImmutable());
+
+    assertTrue(artifact.asOutputArtifact(Location.BUILTIN).isImmutable());
+
+    ImmutableActionAnalysisDataKey key =
+        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
+    BuildArtifact materialized = artifact.materialize(key);
+
+    assertTrue(materialized.isBound());
+    assertTrue(artifact.isImmutable());
+  }
 }

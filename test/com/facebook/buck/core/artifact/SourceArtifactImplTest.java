@@ -48,6 +48,8 @@ public class SourceArtifactImplTest {
     assertEquals(expectedShortPath, artifact.getShortPath());
     assertTrue(artifact.isSource());
     assertEquals(String.format("<source file '%s'>", expectedShortPath), Printer.repr(artifact));
+
+    assertTrue(artifact.isImmutable());
   }
 
   @Test

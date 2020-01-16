@@ -35,6 +35,11 @@ import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 @BuckStyleValue
 public abstract class OutputArtifact implements SkylarkOutputArtifactApi {
 
+  @Override
+  public boolean isImmutable() {
+    return true;
+  }
+
   public abstract ArtifactImpl getArtifact();
 
   @Override

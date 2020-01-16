@@ -76,4 +76,12 @@ public interface SkylarkArtifactApi extends SkylarkValue {
               + "This is normally only of use with `ctx.action.run()`, or `ctx.action.args()`",
       useLocation = true)
   SkylarkOutputArtifactApi asOutputArtifact(Location location) throws EvalException;
+
+  @Override
+  default boolean isImmutable() {
+    // The user-facing attributes of Artifact do not change over the lifetime
+    // of the object. An apt comparison is String. It is "immutable", but it has
+    // a mutable field that caches the hashcode
+    return true;
+  }
 }
