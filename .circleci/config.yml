@@ -35,6 +35,13 @@ install_python: &install_python
     pyenv global 3.6.2 system
     python --version
 
+install_groovy: &install_groovy
+  name: Install Groovy
+  command: |
+    echo '' | sudo apt-add-repository ppa:groovy-dev/groovy
+    sudo apt-get update && sudo apt-get install groovy
+    groovy -version
+
 run_ant_build: &run_ant_build
   name: Run Ant Build
   command: |
@@ -44,11 +51,25 @@ run_ant_build: &run_ant_build
     export ANT_OPTS='-Xmx1000m'
     ant
 
+run_buck_build: &run_buck_build
+  name: Run Buck Build
+  command: |
+    cd ${BUCKROOT}
+    echo '-Xmx750m' > .buckjavaargs.local
+    export PATH=${ANDROIDSDK}/tools/bin:$PATH
+    export PATH="$(pyenv root)/shims:$PATH"
+    export ANDROID_SDK=${ANDROIDSDK}
+    set -eux
+    export TERM=dumb
+    ./bin/buck build buck --out ./new_buck.pex || { cat buck-out/log/buck-0.log; exit 1; }
+
 jobs:
   ci_build_openjdk8:
     environment:
       BUCKROOT: "/home/circleci/buck"
       ANDROIDSDK: "/home/circleci/android-sdk"
+      TERM: "dumb"
+      BUCK_NUM_THREADS: 3
     working_directory: "/home/circleci/buck"
     machine:
       image: ubuntu-1604:201903-01
@@ -65,21 +86,23 @@ jobs:
       - run:
           <<: *run_ant_build
       - run:
-          name: Run Buck Build
+          <<: *run_buck_build
+      - run:
+          name: Run Tests
           command: |
             cd ${BUCKROOT}
-            echo '-Xmx750m' > .buckjavaargs.local
             export PATH=${ANDROIDSDK}/tools/bin:$PATH
             export PATH="$(pyenv root)/shims:$PATH"
             export ANDROID_SDK=${ANDROIDSDK}
-            export TERM=dumb
-            ./bin/buck build buck --out ./new_buck.pex
-            export BUCK_NUM_THREADS=3
+            set -eux
             ./new_buck.pex build --num-threads=${BUCK_NUM_THREADS} src/... test/...
+
   ci_unit_groovy:
     environment:
       BUCKROOT: "/home/circleci/buck"
       ANDROIDSDK: "/home/circleci/android-sdk"
+      TERM: "dumb"
+      BUCK_NUM_THREADS: 3
     working_directory: "/home/circleci/buck"
     machine:
       image: ubuntu-1604:201903-01
@@ -89,6 +112,24 @@ jobs:
           <<: *install_openjdk8
       - run:
           <<: *install_androidsdk
+      - run:
+          <<: *install_groovy
+      - run:
+          <<: *install_golang
+      - run:
+          <<: *install_python
+      - run:
+          <<: *run_ant_build
+      - run:
+          name: Run Tests
+          command: |
+            cd ${BUCKROOT}
+            export PATH=${ANDROIDSDK}/tools/bin:$PATH
+            export PATH="$(pyenv root)/shims:$PATH"
+            export ANDROID_SDK=${ANDROIDSDK}
+            set -eux
+            ./new_buck.pex test --num-threads=${BUCK_NUM_THREADS} --all --test-selectors '!.*[Ii]ntegration.*'
+
 workflows:
   version: 2
   all_jobs:
