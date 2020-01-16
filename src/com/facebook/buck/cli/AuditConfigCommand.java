@@ -18,7 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.support.cli.args.BuckCellArg;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
 import com.facebook.buck.util.ExitCode;
@@ -35,7 +35,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import org.immutables.value.Value;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
@@ -66,19 +65,14 @@ public class AuditConfigCommand extends AbstractCommand {
     return arguments;
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractConfigValue {
-    @Value.Parameter
+  @BuckStyleValue
+  abstract static class ConfigValue {
     public abstract String getKey();
 
-    @Value.Parameter
     public abstract String getSection();
 
-    @Value.Parameter
     public abstract String getProperty();
 
-    @Value.Parameter
     public abstract Optional<String> getValue();
   }
 
@@ -100,7 +94,7 @@ public class AuditConfigCommand extends AbstractCommand {
                   section.forEach(
                       (key, val) ->
                           builder.add(
-                              ConfigValue.of(
+                              ImmutableConfigValue.of(
                                   String.join(".", section_name, key),
                                   section_name,
                                   key,
@@ -137,12 +131,12 @@ public class AuditConfigCommand extends AbstractCommand {
                       .forEach(
                           (key, val) ->
                               builder.add(
-                                  ConfigValue.of(
+                                  ImmutableConfigValue.of(
                                       String.join(".", input, key), input, key, Optional.of(val))));
                 } else {
                   // Dump specified value
                   builder.add(
-                      ConfigValue.of(
+                      ImmutableConfigValue.of(
                           input,
                           parts[0],
                           parts[1],

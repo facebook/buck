@@ -25,7 +25,6 @@ import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.DirArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
-import com.facebook.buck.artifact_cache.HttpArtifactCacheEventFetchData;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.core.build.engine.BuildRuleStatus;
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
@@ -410,8 +409,8 @@ public class SuperConsoleEventBusListenerTest {
     CacheResult remoteCacheResult =
         CacheResult.hit(
             remoteCacheMode.name(), remoteCacheMode, ImmutableMap.of(), remoteArtifactSizeBytes);
-    HttpArtifactCacheEventFetchData.Builder fetchDataBuilder =
-        HttpArtifactCacheEventFetchData.builder()
+    HttpArtifactCacheEvent.HttpArtifactCacheEventFetchData.Builder fetchDataBuilder =
+        HttpArtifactCacheEvent.HttpArtifactCacheEventFetchData.builder()
             .setFetchResult(remoteCacheResult)
             .setArtifactSizeBytes(remoteArtifactSizeBytes);
 

@@ -65,7 +65,7 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
   @Override
   protected FetchResult fetchImpl(@Nullable BuildTarget target, RuleKey ruleKey, LazyPath output)
       throws IOException {
-    FetchResult.Builder resultBuilder = FetchResult.builder();
+    ImmutableFetchResult.Builder resultBuilder = ImmutableFetchResult.builder();
     Request.Builder requestBuilder = new Request.Builder().get();
 
     String getParams = "";
@@ -102,7 +102,7 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
             getProjectFilesystem()
                 .createTempFile(file.getParent(), file.getFileName().toString(), ".tmp");
 
-        FetchResponseReadResult fetchedData;
+        HttpArtifactCacheBinaryProtocol.FetchResponseReadResult fetchedData;
         try (OutputStream tempFileOutputStream = getProjectFilesystem().newFileOutputStream(temp)) {
           fetchedData =
               HttpArtifactCacheBinaryProtocol.readFetchResponse(input, tempFileOutputStream);
@@ -156,7 +156,7 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
 
   @Override
   protected StoreResult storeImpl(ArtifactInfo info, Path file) throws IOException {
-    StoreResult.Builder resultBuilder = StoreResult.builder();
+    ImmutableStoreResult.Builder resultBuilder = ImmutableStoreResult.builder();
 
     // Build the request, hitting the multi-key endpoint.
     Request.Builder builder = new Request.Builder();
@@ -187,7 +187,8 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
 
           @Override
           public void writeTo(BufferedSink bufferedSink) throws IOException {
-            StoreWriteResult writeResult = storeRequest.write(bufferedSink.outputStream());
+            HttpArtifactCacheBinaryProtocol.StoreWriteResult writeResult =
+                storeRequest.write(bufferedSink.outputStream());
             resultBuilder.setArtifactContentHash(
                 writeResult.getArtifactContentHashCode().toString());
           }

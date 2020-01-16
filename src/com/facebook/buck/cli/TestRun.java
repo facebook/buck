@@ -17,26 +17,21 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.test.rule.TestRule;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.test.TestResults;
 import java.util.List;
 import java.util.concurrent.Callable;
-import org.immutables.value.Value;
 
 /** Immutable value type holding data about the test(s) invoked by a {@link TestRule}. */
-@Value.Immutable
-@BuckStyleImmutable
-interface AbstractTestRun {
-  @Value.Parameter
+@BuckStyleValue
+interface TestRun {
+
   TestRule getTest();
 
-  @Value.Parameter
   List<Step> getSteps();
 
-  @Value.Parameter
   Callable<TestResults> getTestResultsCallable();
 
-  @Value.Parameter
   TestRule.TestReportingCallback getTestReportingCallback();
 }

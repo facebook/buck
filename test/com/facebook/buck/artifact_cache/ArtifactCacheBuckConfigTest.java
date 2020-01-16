@@ -250,12 +250,7 @@ public class ArtifactCacheBuckConfigTest {
     assertThat(
         config.getServedLocalCache(),
         Matchers.equalTo(
-            Optional.of(
-                DirCacheEntry.builder()
-                    .setMaxSizeBytes(Optional.empty())
-                    .setCacheDir(cacheDir)
-                    .setCacheReadMode(CacheReadMode.READONLY)
-                    .build())));
+            Optional.of(DirCacheEntry.of(cacheDir, Optional.empty(), CacheReadMode.READONLY))));
 
     config =
         createFromText(
@@ -267,12 +262,7 @@ public class ArtifactCacheBuckConfigTest {
     assertThat(
         config.getServedLocalCache(),
         Matchers.equalTo(
-            Optional.of(
-                DirCacheEntry.builder()
-                    .setMaxSizeBytes(Optional.of(42L))
-                    .setCacheDir(cacheDir)
-                    .setCacheReadMode(CacheReadMode.READONLY)
-                    .build())));
+            Optional.of(DirCacheEntry.of(cacheDir, Optional.of(42L), CacheReadMode.READONLY))));
   }
 
   @Test
@@ -287,12 +277,7 @@ public class ArtifactCacheBuckConfigTest {
     assertThat(
         config.getServedLocalCache(),
         Matchers.equalTo(
-            Optional.of(
-                DirCacheEntry.builder()
-                    .setMaxSizeBytes(Optional.empty())
-                    .setCacheDir(cacheDir)
-                    .setCacheReadMode(CacheReadMode.READWRITE)
-                    .build())));
+            Optional.of(DirCacheEntry.of(cacheDir, Optional.empty(), CacheReadMode.READWRITE))));
   }
 
   @Test

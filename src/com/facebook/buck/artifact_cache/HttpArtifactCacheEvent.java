@@ -19,7 +19,7 @@ package com.facebook.buck.artifact_cache;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -31,7 +31,6 @@ import com.google.common.collect.Iterables;
 import java.util.Objects;
 import java.util.Optional;
 import javax.annotation.Nullable;
-import org.immutables.value.Value;
 
 /** Event produced for HttpArtifactCache operations containing different stats. */
 public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
@@ -274,9 +273,8 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
     }
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  interface AbstractHttpArtifactCacheEventFetchData {
+  @BuckStyleValueWithBuilder
+  public interface HttpArtifactCacheEventFetchData {
     Optional<Long> getResponseSizeBytes();
 
     Optional<CacheResult> getFetchResult();
@@ -292,11 +290,16 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
     Optional<String> getErrorMessage();
 
     ImmutableSet<RuleKey> getAssociatedRuleKeys();
+
+    class Builder extends ImmutableHttpArtifactCacheEventFetchData.Builder {}
+
+    static Builder builder() {
+      return new Builder();
+    }
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  interface AbstractHttpArtifactCacheEventStoreData {
+  @BuckStyleValueWithBuilder
+  public interface HttpArtifactCacheEventStoreData {
     Optional<Long> getRequestSizeBytes();
 
     Optional<Boolean> wasStoreSuccessful();
@@ -310,6 +313,12 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
     Optional<String> getErrorMessage();
 
     StoreType getStoreType();
+
+    class Builder extends ImmutableHttpArtifactCacheEventStoreData.Builder {}
+
+    static Builder builder() {
+      return new Builder();
+    }
   }
 
   static class MultiFetchStarted extends Started {

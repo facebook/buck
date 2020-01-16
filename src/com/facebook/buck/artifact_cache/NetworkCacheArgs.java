@@ -20,18 +20,16 @@ import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.slb.HttpService;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.Optional;
 import java.util.function.Function;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-interface AbstractNetworkCacheArgs {
+@BuckStyleValueWithBuilder
+interface NetworkCacheArgs {
   Function<String, UnconfiguredBuildTargetView> getUnconfiguredBuildTargetFactory();
 
   TargetConfigurationSerializer getTargetConfigurationSerializer();

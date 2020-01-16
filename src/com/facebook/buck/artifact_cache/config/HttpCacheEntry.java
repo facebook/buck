@@ -16,16 +16,14 @@
 
 package com.facebook.buck.artifact_cache.config;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.net.URI;
 import java.util.Optional;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractHttpCacheEntry {
+@BuckStyleValueWithBuilder
+public abstract class HttpCacheEntry {
   public abstract URI getUrl();
 
   public abstract int getConnectTimeoutSeconds();

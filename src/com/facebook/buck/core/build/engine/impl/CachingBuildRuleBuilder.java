@@ -1130,14 +1130,13 @@ class CachingBuildRuleBuilder {
                 rule.getProjectFilesystem()),
         cacheResult -> {
           RuleKeyCacheResult ruleKeyCacheResult =
-              RuleKeyCacheResult.builder()
-                  .setBuildTarget(rule.getFullyQualifiedName())
-                  .setRuleKey(defaultKey.toString())
-                  .setRuleKeyType(RuleKeyType.DEFAULT)
-                  .setCacheResult(cacheResult.getType())
-                  .setRequestTimestampMillis(cacheRequestTimestampMillis)
-                  .setTwoLevelContentHashKey(cacheResult.twoLevelContentHashKey())
-                  .build();
+              RuleKeyCacheResult.of(
+                  rule.getFullyQualifiedName(),
+                  defaultKey.toString(),
+                  cacheRequestTimestampMillis,
+                  RuleKeyType.DEFAULT,
+                  cacheResult.getType(),
+                  cacheResult.twoLevelContentHashKey());
           ruleKeyCacheCheckTimestampsMillis =
               new Pair<>(cacheRequestTimestampMillis, System.currentTimeMillis());
           eventBus.post(new RuleKeyCacheResultEvent(ruleKeyCacheResult, cacheHitExpected));

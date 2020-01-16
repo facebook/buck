@@ -16,21 +16,37 @@
 
 package com.facebook.buck.artifact_cache.config;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import java.nio.file.Path;
 import java.util.Optional;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractSQLiteCacheEntry {
+@BuckStyleValue
+public abstract class DirCacheEntry {
   public abstract Optional<String> getName();
 
   public abstract Path getCacheDir();
 
   public abstract Optional<Long> getMaxSizeBytes();
 
-  public abstract Optional<Long> getMaxInlinedSizeBytes();
-
   public abstract CacheReadMode getCacheReadMode();
+
+  public static DirCacheEntry of(
+      Path cacheDir, Optional<Long> maxSizeBytes, CacheReadMode cacheReadMode) {
+    return of(Optional.empty(), cacheDir, maxSizeBytes, cacheReadMode);
+  }
+
+  public static DirCacheEntry of(
+      Optional<String> name,
+      Path cacheDir,
+      Optional<Long> maxSizeBytes,
+      CacheReadMode cacheReadMode) {
+    return ImmutableDirCacheEntry.of(name, cacheDir, maxSizeBytes, cacheReadMode);
+  }
+
+  public DirCacheEntry withCacheReadMode(CacheReadMode cacheReadMode) {
+    if (getCacheReadMode().equals(cacheReadMode)) {
+      return this;
+    }
+    return ImmutableDirCacheEntry.of(getName(), getCacheDir(), getMaxSizeBytes(), cacheReadMode);
+  }
 }

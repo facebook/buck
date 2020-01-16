@@ -14,17 +14,21 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.artifact_cache;
+package com.facebook.buck.artifact_cache.config;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import java.util.List;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import java.nio.file.Path;
+import java.util.Optional;
 
-/** Result of delete from cache command. */
-@Value.Immutable(copy = true)
-@BuckStyleImmutable
-public abstract class AbstractCacheDeleteResult {
+@BuckStyleValue
+public abstract class SQLiteCacheEntry {
+  public abstract Optional<String> getName();
 
-  @Value.Parameter
-  public abstract List<String> getCacheNames();
+  public abstract Path getCacheDir();
+
+  public abstract Optional<Long> getMaxSizeBytes();
+
+  public abstract Optional<Long> getMaxInlinedSizeBytes();
+
+  public abstract CacheReadMode getCacheReadMode();
 }

@@ -31,7 +31,7 @@ import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -66,7 +66,6 @@ import java.util.Optional;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
-import org.immutables.value.Value;
 
 public class Build implements Closeable {
 
@@ -257,13 +256,9 @@ public class Build implements Closeable {
         resultBuilder.put(rule, Optional.ofNullable(buildResults.get(i)));
       }
 
-      return BuildExecutionResult.builder()
-          .setFailures(
-              buildResults.stream()
-                  .filter(input -> !input.isSuccess())
-                  .collect(Collectors.toList()))
-          .setResults(resultBuilder)
-          .build();
+      return ImmutableBuildExecutionResult.of(
+          resultBuilder,
+          buildResults.stream().filter(input -> !input.isSuccess()).collect(Collectors.toList()));
     }
   }
 
@@ -278,11 +273,9 @@ public class Build implements Closeable {
       resultBuilder.put(rule, Optional.ofNullable(results.get(i)));
     }
 
-    return BuildExecutionResult.builder()
-        .setFailures(
-            results.stream().filter(input -> !input.isSuccess()).collect(Collectors.toList()))
-        .setResults(resultBuilder)
-        .build();
+    return ImmutableBuildExecutionResult.of(
+        resultBuilder,
+        results.stream().filter(input -> !input.isSuccess()).collect(Collectors.toList()));
   }
 
   /** Starts building the given BuildRules asynchronously. */
@@ -457,9 +450,8 @@ public class Build implements Closeable {
     // when it doesn't do anything.
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractBuildExecutionResult {
+  @BuckStyleValue
+  abstract static class BuildExecutionResult {
 
     /**
      * @return Keys are build rules built during this invocation of Buck. Values reflect the success

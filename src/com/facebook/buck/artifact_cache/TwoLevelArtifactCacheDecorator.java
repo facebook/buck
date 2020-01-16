@@ -143,7 +143,7 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
               outputFileFetchResultFuture,
               (CacheResult outputFileFetchResult) -> {
                 outputFileFetchResult =
-                    outputFileFetchResult.withTwoLevelContentHashKey(contentHashKey);
+                    outputFileFetchResult.withTwoLevelContentHashKey(Optional.of(contentHashKey));
 
                 if (!outputFileFetchResult.getType().isSuccess()) {
                   LOG.verbose("Missed second-level lookup.");
@@ -168,16 +168,18 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
                 // Note: in the case of a hit, we return fetchResult, rather than
                 // outputFileFetchResult,
                 // so that the client gets the correct metadata.
-                CacheResult finalResult = fetchResult.withTwoLevelContentHashKey(contentHashKey);
+                CacheResult finalResult =
+                    fetchResult.withTwoLevelContentHashKey(Optional.of(contentHashKey));
 
                 // The two level content hash was not part of the original metadata that was stored
                 // to the cache, don't include it in the result.
                 finalResult =
                     finalResult.withMetadata(
-                        ImmutableMap.copyOf(
-                            RichStream.from(finalResult.getMetadata().entrySet())
-                                .filter(e -> !Objects.equals(e.getKey(), METADATA_KEY))
-                                .toOnceIterable()));
+                        Optional.of(
+                            ImmutableMap.copyOf(
+                                RichStream.from(finalResult.getMetadata().entrySet())
+                                    .filter(e -> !Objects.equals(e.getKey(), METADATA_KEY))
+                                    .toOnceIterable())));
                 return Futures.immediateFuture(finalResult);
               },
               MoreExecutors.directExecutor());

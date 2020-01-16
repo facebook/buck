@@ -14,21 +14,16 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.artifact_cache.config;
+package com.facebook.buck.cli;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import java.nio.file.Path;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.util.ExitCode;
 import java.util.Optional;
-import org.immutables.value.Value;
 
-@Value.Immutable(copy = true)
-@BuckStyleImmutable
-abstract class AbstractDirCacheEntry {
-  public abstract Optional<String> getName();
+@BuckStyleValue
+interface InstallResult {
 
-  public abstract Path getCacheDir();
+  ExitCode getExitCode();
 
-  public abstract Optional<Long> getMaxSizeBytes();
-
-  public abstract CacheReadMode getCacheReadMode();
+  Optional<Long> getLaunchedPid();
 }

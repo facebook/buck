@@ -34,6 +34,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.impl.PathReferenceRuleWithMultipleOutputs;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -60,7 +61,7 @@ import org.junit.rules.ExpectedException;
 public class BuildReportTest {
   @Rule public final ExpectedException exception = ExpectedException.none();
 
-  private BuildExecutionResult buildExecutionResult;
+  private Build.BuildExecutionResult buildExecutionResult;
   private SourcePathResolverAdapter resolver;
   private Cell rootCell;
   private ActionGraphBuilder graphBuilder;
@@ -124,10 +125,7 @@ public class BuildReportTest {
         rule6, Optional.of(BuildResult.success(rule1, BUILT_LOCALLY, CacheResult.miss())));
 
     buildExecutionResult =
-        BuildExecutionResult.builder()
-            .setResults(ruleToResult)
-            .setFailures(ImmutableSet.of(rule2Failure))
-            .build();
+        ImmutableBuildExecutionResult.of(ruleToResult, ImmutableSet.of(rule2Failure));
   }
 
   @Test

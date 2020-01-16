@@ -4267,7 +4267,7 @@ public class CachingBuildEngineTest {
         throw new RuntimeException(e);
       }
       return Futures.immediateFuture(
-          CacheResult.hit("dir", ArtifactCacheMode.dir).withMetadata(metadata));
+          CacheResult.hit("dir", ArtifactCacheMode.dir).withMetadata(Optional.of(metadata)));
     }
 
     @Override

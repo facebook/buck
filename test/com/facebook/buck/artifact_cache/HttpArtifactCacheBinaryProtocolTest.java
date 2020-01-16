@@ -92,7 +92,7 @@ public class HttpArtifactCacheBinaryProtocolTest {
     ByteArrayInputStream fetchResponseInputStream =
         new ByteArrayInputStream(fetchResponseOutputStream.toByteArray());
     ByteArrayOutputStream fetchResponsePayload = new ByteArrayOutputStream();
-    FetchResponseReadResult responseReadResult =
+    HttpArtifactCacheBinaryProtocol.FetchResponseReadResult responseReadResult =
         HttpArtifactCacheBinaryProtocol.readFetchResponse(
             new DataInputStream(fetchResponseInputStream), fetchResponsePayload);
 
@@ -125,7 +125,7 @@ public class HttpArtifactCacheBinaryProtocolTest {
 
     try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         DataInputStream inputStream = new DataInputStream(new ByteArrayInputStream(expectedData))) {
-      FetchResponseReadResult result =
+      HttpArtifactCacheBinaryProtocol.FetchResponseReadResult result =
           HttpArtifactCacheBinaryProtocol.readFetchResponse(inputStream, outputStream);
       assertThat(result.getRuleKeys(), Matchers.contains(ruleKey));
       assertThat(outputStream.toByteArray(), Matchers.equalTo(data.getBytes(Charsets.UTF_8)));
@@ -199,7 +199,7 @@ public class HttpArtifactCacheBinaryProtocolTest {
     storeRequest.write(storeRequestOutputStream);
 
     ByteArrayOutputStream storeRequestPayloadStream = new ByteArrayOutputStream();
-    StoreResponseReadResult readStoreRequest =
+    HttpArtifactCacheBinaryProtocol.StoreResponseReadResult readStoreRequest =
         HttpArtifactCacheBinaryProtocol.readStoreRequest(
             new DataInputStream(new ByteArrayInputStream(storeRequestOutputStream.toByteArray())),
             storeRequestPayloadStream);
@@ -236,7 +236,8 @@ public class HttpArtifactCacheBinaryProtocolTest {
     assertThat(storeRequest.getContentLength(), Matchers.is(178L));
 
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-    StoreWriteResult writeResult = storeRequest.write(byteArrayOutputStream);
+    HttpArtifactCacheBinaryProtocol.StoreWriteResult writeResult =
+        storeRequest.write(byteArrayOutputStream);
     assertThat(
         writeResult.getArtifactContentHashCode(),
         Matchers.equalTo(HashCode.fromString("2c0b14a4")));

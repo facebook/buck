@@ -234,7 +234,7 @@ public class MultiArtifactCache implements ArtifactCache {
             cacheNames.addAll(deleteResult.getCacheNames());
           }
 
-          return CacheDeleteResult.builder().setCacheNames(cacheNames.build()).build();
+          return CacheDeleteResult.of(cacheNames.build());
         },
         MoreExecutors.directExecutor());
   }

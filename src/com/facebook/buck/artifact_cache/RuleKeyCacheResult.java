@@ -16,25 +16,39 @@
 
 package com.facebook.buck.artifact_cache;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.keys.RuleKeyType;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 // CacheResult enriched with meta-data about the rule key that was used to make the cache request.
 // Additionally it includes the request timestamp, and the two-level content hash (if one exists).
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractRuleKeyCacheResult {
-  abstract String buildTarget();
+@BuckStyleValue
+public abstract class RuleKeyCacheResult {
+  public abstract String buildTarget();
 
-  abstract String ruleKey();
+  public abstract String ruleKey();
 
-  abstract long requestTimestampMillis();
+  public abstract long requestTimestampMillis();
 
-  abstract RuleKeyType ruleKeyType();
+  public abstract RuleKeyType ruleKeyType();
 
-  abstract CacheResultType cacheResult();
+  public abstract CacheResultType cacheResult();
 
-  abstract Optional<String> twoLevelContentHashKey();
+  public abstract Optional<String> twoLevelContentHashKey();
+
+  public static RuleKeyCacheResult of(
+      String buildTarget,
+      String ruleKey,
+      long requestTimestampMillis,
+      RuleKeyType ruleKeyType,
+      CacheResultType cacheResult,
+      Optional<String> twoLevelContentHashKey) {
+    return ImmutableRuleKeyCacheResult.of(
+        buildTarget,
+        ruleKey,
+        requestTimestampMillis,
+        ruleKeyType,
+        cacheResult,
+        twoLevelContentHashKey);
+  }
 }

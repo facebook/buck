@@ -125,7 +125,7 @@ public class ThriftArtifactCacheTest {
     ListeningExecutorService service = MoreExecutors.newDirectExecutorService();
     CellPathResolver cellPathResolver = TestCellPathResolver.get(filesystem);
     NetworkCacheArgs networkArgs =
-        NetworkCacheArgs.builder()
+        ImmutableNetworkCacheArgs.builder()
             .setCacheName("default_cache_name")
             .setRepository("default_repository")
             .setCacheReadMode(CacheReadMode.READONLY)
@@ -260,7 +260,7 @@ public class ThriftArtifactCacheTest {
     ListeningExecutorService service = MoreExecutors.newDirectExecutorService();
     CellPathResolver cellPathResolver = TestCellPathResolver.get(filesystem);
     NetworkCacheArgs networkArgs =
-        NetworkCacheArgs.builder()
+        ImmutableNetworkCacheArgs.builder()
             .setCacheName("default_cache_name")
             .setRepository("default_repository")
             .setCacheReadMode(CacheReadMode.READONLY)
@@ -359,7 +359,7 @@ public class ThriftArtifactCacheTest {
             false,
             "test://",
             "hostname")) {
-      MultiFetchResult result = cache.multiFetchImpl(requests);
+      AbstractAsynchronousCache.MultiFetchResult result = cache.multiFetchImpl(requests);
       assertEquals(4, result.getResults().size());
       assertEquals(CacheResultType.MISS, result.getResults().get(0).getCacheResult().getType());
       assertEquals(
@@ -389,7 +389,7 @@ public class ThriftArtifactCacheTest {
     ListeningExecutorService service = MoreExecutors.newDirectExecutorService();
     CellPathResolver cellPathResolver = TestCellPathResolver.get(filesystem);
     NetworkCacheArgs networkArgs =
-        NetworkCacheArgs.builder()
+        ImmutableNetworkCacheArgs.builder()
             .setCacheName("default_cache_name")
             .setRepository("default_repository")
             .setCacheReadMode(CacheReadMode.READONLY)
@@ -450,7 +450,7 @@ public class ThriftArtifactCacheTest {
             false,
             "test://",
             "hostname")) {
-      MultiContainsResult result = cache.multiContainsImpl(ruleKeys);
+      AbstractAsynchronousCache.MultiContainsResult result = cache.multiContainsImpl(ruleKeys);
       assertEquals(4, result.getCacheResults().size());
       assertEquals(CacheResultType.MISS, result.getCacheResults().get(key0).getType());
       assertEquals(CacheResultType.CONTAINS, result.getCacheResults().get(key1).getType());
@@ -482,7 +482,7 @@ public class ThriftArtifactCacheTest {
     ListeningExecutorService service = MoreExecutors.newDirectExecutorService();
     CellPathResolver cellPathResolver = TestCellPathResolver.get(filesystem);
     NetworkCacheArgs networkArgs =
-        NetworkCacheArgs.builder()
+        ImmutableNetworkCacheArgs.builder()
             .setCacheName("default_cache_name")
             .setRepository("default_repository")
             .setCacheReadMode(CacheReadMode.READWRITE)

@@ -223,7 +223,7 @@ public class AbstractAsynchronousCacheTest {
       return () ->
           new AbstractAsynchronousCache.StoreEvents.StoreRequestEvents() {
             @Override
-            public void finished(StoreResult result) {}
+            public void finished(AbstractAsynchronousCache.StoreResult result) {}
 
             @Override
             public void failed(IOException e, String errorMessage) {}
@@ -237,7 +237,7 @@ public class AbstractAsynchronousCacheTest {
     public CacheEventListener.FetchRequestEvents fetchStarted(BuildTarget target, RuleKey ruleKey) {
       return new FetchRequestEvents() {
         @Override
-        public void finished(FetchResult result) {}
+        public void finished(AbstractAsynchronousCache.FetchResult result) {}
 
         @Override
         public void failed(IOException e, String errorMessage, CacheResult result) {}
@@ -252,7 +252,7 @@ public class AbstractAsynchronousCacheTest {
         public void skipped(int keyIndex) {}
 
         @Override
-        public void finished(int keyIndex, FetchResult thisResult) {}
+        public void finished(int keyIndex, AbstractAsynchronousCache.FetchResult thisResult) {}
 
         @Override
         public void failed(int keyIndex, IOException e, String msg, CacheResult result) {}
@@ -318,15 +318,17 @@ public class AbstractAsynchronousCacheTest {
         }
         cacheResults.put(ruleKey, cacheResult);
       }
-      return MultiContainsResult.builder().setCacheResults(cacheResults.build()).build();
+      return ImmutableMultiContainsResult.builder().setCacheResults(cacheResults.build()).build();
     }
 
     private FetchResult hit() {
-      return FetchResult.builder().setCacheResult(CacheResult.hit(getName(), getMode())).build();
+      return ImmutableFetchResult.builder()
+          .setCacheResult(CacheResult.hit(getName(), getMode()))
+          .build();
     }
 
     private FetchResult skip() {
-      return FetchResult.builder().setCacheResult(CacheResult.skipped()).build();
+      return ImmutableFetchResult.builder().setCacheResult(CacheResult.skipped()).build();
     }
 
     @Override
@@ -352,7 +354,7 @@ public class AbstractAsynchronousCacheTest {
       while (result.size() < keys.size()) {
         result.add(skip());
       }
-      return MultiFetchResult.of(ImmutableList.copyOf(result));
+      return ImmutableMultiFetchResult.of(ImmutableList.copyOf(result));
     }
 
     @Override

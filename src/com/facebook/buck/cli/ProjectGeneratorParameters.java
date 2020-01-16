@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.facebook.buck.util.Console;
@@ -25,11 +25,9 @@ import com.facebook.buck.util.config.Config;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.function.Function;
-import org.immutables.value.Value.Immutable;
 
-@BuckStyleImmutable
-@Immutable(copy = false)
-public abstract class AbstractProjectGeneratorParameters {
+@BuckStyleValue
+public abstract class ProjectGeneratorParameters {
 
   public abstract CommandRunnerParams getCommandRunnerParams();
 

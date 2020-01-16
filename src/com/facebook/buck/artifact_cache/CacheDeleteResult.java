@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.artifact_cache.config;
+package com.facebook.buck.artifact_cache;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.google.common.collect.ImmutableSet;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.google.common.collect.ImmutableList;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractArtifactCacheEntries {
-  public abstract ImmutableSet<HttpCacheEntry> getHttpCacheEntries();
+/** Result of delete from cache command. */
+@BuckStyleValue
+public abstract class CacheDeleteResult {
 
-  public abstract ImmutableSet<DirCacheEntry> getDirCacheEntries();
+  public abstract ImmutableList<String> getCacheNames();
 
-  public abstract ImmutableSet<SQLiteCacheEntry> getSQLiteCacheEntries();
+  public static CacheDeleteResult of(ImmutableList<String> cacheNames) {
+    return ImmutableCacheDeleteResult.of(cacheNames);
+  }
 }

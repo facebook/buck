@@ -18,30 +18,35 @@ package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractArtifactInfo {
-  abstract ImmutableSet<RuleKey> getRuleKeys();
+@BuckStyleValueWithBuilder
+public abstract class ArtifactInfo {
+  public abstract ImmutableSet<RuleKey> getRuleKeys();
 
-  abstract ImmutableMap<String, String> getMetadata();
+  public abstract ImmutableMap<String, String> getMetadata();
 
-  abstract Optional<BuildTarget> getBuildTarget();
+  public abstract Optional<BuildTarget> getBuildTarget();
 
-  abstract Optional<String> getRepository();
+  public abstract Optional<String> getRepository();
 
   @Value.Default
-  long getBuildTimeMs() {
+  public long getBuildTimeMs() {
     return -1;
   }
 
   @Value.Default
-  boolean isManifest() {
+  public boolean isManifest() {
     return false;
   }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends ImmutableArtifactInfo.Builder {}
 }

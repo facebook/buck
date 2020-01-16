@@ -675,7 +675,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
     }
 
     return factory.newInstance(
-        NetworkCacheArgs.builder()
+        ImmutableNetworkCacheArgs.builder()
             .setCacheName(cacheMode.name())
             .setCacheMode(cacheMode)
             .setRepository(config.getRepository())

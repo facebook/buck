@@ -178,19 +178,18 @@ public abstract class CommandRunnerParams {
         getBuckConfig()
             .getView(CachingBuildEngineBuckConfig.class)
             .getManifestServiceIfEnabled(getManifestServiceSupplier());
-    return BuildExecutorArgs.builder()
-        .setConsole(getConsole())
-        .setBuckEventBus(getBuckEventBus())
-        .setPlatform(getPlatform())
-        .setClock(getClock())
-        .setRootCell(getCell())
-        .setExecutors(getExecutors())
-        .setProjectFilesystemFactory(getProjectFilesystemFactory())
-        .setBuildInfoStoreManager(getBuildInfoStoreManager())
-        .setArtifactCacheFactory(getArtifactCacheFactory())
-        .setRuleKeyConfiguration(getRuleKeyConfiguration())
-        .setManifestService(manifestService)
-        .build();
+    return BuildExecutorArgs.of(
+        getConsole(),
+        getBuckEventBus(),
+        getPlatform(),
+        getClock(),
+        getCell(),
+        getExecutors(),
+        getProjectFilesystemFactory(),
+        getBuildInfoStoreManager(),
+        getArtifactCacheFactory(),
+        getRuleKeyConfiguration(),
+        manifestService);
   }
 
   public CommandRunnerParams withArtifactCacheFactory(ArtifactCacheFactory artifactCacheFactory) {

@@ -17,65 +17,79 @@
 package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.log.views.JsonViews;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import org.immutables.value.Value;
 
 /**
  * Utility class to help outputting the information to the machine-readable log. It helps in the
  * serialization & deserialization process.
  */
-@Value.Immutable
-@BuckStyleImmutable
-@JsonDeserialize(as = CacheCountersSummary.class)
-abstract class AbstractCacheCountersSummary {
+@BuckStyleValue
+@JsonDeserialize(as = ImmutableCacheCountersSummary.class)
+public abstract class CacheCountersSummary {
 
-  @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)
   public abstract ImmutableMap<ArtifactCacheMode, AtomicInteger> getCacheHitsPerMode();
 
-  @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)
   public abstract ImmutableMap<ArtifactCacheMode, AtomicInteger> getCacheErrorsPerMode();
 
-  @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)
   public abstract ImmutableMap<ArtifactCacheMode, AtomicLong> getCacheBytesPerMode();
 
-  @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)
   public abstract int getTotalCacheHits();
 
-  @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)
   public abstract int getTotalCacheErrors();
 
-  @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)
   public abstract int getTotalCacheMisses();
 
-  @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)
   public abstract int getTotalCacheIgnores();
 
-  @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)
   public abstract long getTotalCacheBytes();
 
-  @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)
   public abstract int getTotalCacheLocalKeyUnchangedHits();
 
-  @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)
   public abstract AtomicInteger getSuccessUploadCount();
 
-  @Value.Parameter
   @JsonView(JsonViews.MachineReadableLog.class)
   public abstract AtomicInteger getFailureUploadCount();
+
+  public static CacheCountersSummary of(
+      Map<ArtifactCacheMode, ? extends AtomicInteger> cacheHitsPerMode,
+      Map<ArtifactCacheMode, ? extends AtomicInteger> cacheErrorsPerMode,
+      Map<ArtifactCacheMode, ? extends AtomicLong> cacheBytesPerMode,
+      int totalCacheHits,
+      int totalCacheErrors,
+      int totalCacheMisses,
+      int totalCacheIgnores,
+      long totalCacheBytes,
+      int totalCacheLocalKeyUnchangedHits,
+      AtomicInteger successUploadCount,
+      AtomicInteger failureUploadCount) {
+    return ImmutableCacheCountersSummary.of(
+        cacheHitsPerMode,
+        cacheErrorsPerMode,
+        cacheBytesPerMode,
+        totalCacheHits,
+        totalCacheErrors,
+        totalCacheMisses,
+        totalCacheIgnores,
+        totalCacheBytes,
+        totalCacheLocalKeyUnchangedHits,
+        successUploadCount,
+        failureUploadCount);
+  }
 }

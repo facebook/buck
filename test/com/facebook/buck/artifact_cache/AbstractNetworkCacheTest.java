@@ -79,7 +79,7 @@ public class AbstractNetworkCacheTest {
 
     AbstractNetworkCache cache =
         new AbstractNetworkCache(
-            NetworkCacheArgs.builder()
+            ImmutableNetworkCacheArgs.builder()
                 .setCacheName("AbstractNetworkCacheTest")
                 .setCacheMode(ArtifactCacheMode.http)
                 .setRepository("some_repository")
@@ -115,7 +115,7 @@ public class AbstractNetworkCacheTest {
           @Override
           protected StoreResult storeImpl(ArtifactInfo info, Path file) {
             storeCallCount.incrementAndGet();
-            return StoreResult.builder().build();
+            return ImmutableStoreResult.builder().build();
           }
 
           @Override

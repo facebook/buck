@@ -65,7 +65,8 @@ public class NetworkStatsTrackerTest {
     finishedBuilder
         .getFetchBuilder()
         .setFetchResult(
-            CacheResult.hit("dontcare", ArtifactCacheMode.http).withArtifactSizeBytes(100))
+            CacheResult.hit("dontcare", ArtifactCacheMode.http)
+                .withArtifactSizeBytes(Optional.of(100L)))
         .setArtifactSizeBytes(100);
     eventBus.post(finishedBuilder.build());
 
@@ -82,7 +83,8 @@ public class NetworkStatsTrackerTest {
     finishedBuilder
         .getFetchBuilder()
         .setFetchResult(
-            CacheResult.hit("dontcare", ArtifactCacheMode.http).withArtifactSizeBytes(200))
+            CacheResult.hit("dontcare", ArtifactCacheMode.http)
+                .withArtifactSizeBytes(Optional.of(200L)))
         .setArtifactSizeBytes(200);
     eventBus.post(finishedBuilder.build());
 

@@ -18,7 +18,6 @@ package com.facebook.buck.event.listener.stats.cache;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent.StoreType;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
-import com.facebook.buck.artifact_cache.HttpArtifactCacheEventStoreData;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
@@ -102,7 +101,7 @@ public class RemoteCacheUploadStatsTest {
       HttpArtifactCacheEvent.Started startedEvent, boolean wasSuccessful, long artifactSizeBytes) {
     HttpArtifactCacheEvent.Finished.Builder finishedEventBuilder =
         HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent);
-    HttpArtifactCacheEventStoreData.Builder storeDataBuilder =
+    HttpArtifactCacheEvent.HttpArtifactCacheEventStoreData.Builder storeDataBuilder =
         finishedEventBuilder.getStoreBuilder();
 
     storeDataBuilder.setWasStoreSuccessful(wasSuccessful).setStoreType(StoreType.ARTIFACT);

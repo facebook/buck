@@ -16,47 +16,31 @@
 
 package com.facebook.buck.command;
 
-import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
 import com.facebook.buck.command.config.BuildBuckConfig;
-import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.build.engine.config.CachingBuildEngineBuckConfig;
 import com.facebook.buck.core.build.engine.delegate.CachingBuildEngineDelegate;
 import com.facebook.buck.core.build.engine.impl.CachingBuildEngine;
 import com.facebook.buck.core.build.engine.type.BuildType;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
-import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
-import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.rules.modern.builders.ModernBuildRuleBuilderFactory;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
-import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
-import com.facebook.buck.util.concurrent.ExecutorPool;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
-import com.facebook.buck.util.environment.Platform;
-import com.facebook.buck.util.timing.Clock;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import java.nio.file.Path;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /** Used to build a given set of targets. */
 public class BuildExecutor {
@@ -195,36 +179,5 @@ public class BuildExecutor {
 
   public Build getBuild() {
     return build;
-  }
-}
-
-/** Common arguments for running a build. */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractBuildExecutorArgs {
-  public abstract Console getConsole();
-
-  public abstract BuckEventBus getBuckEventBus();
-
-  public abstract Platform getPlatform();
-
-  public abstract Clock getClock();
-
-  public abstract Cell getRootCell();
-
-  public abstract ImmutableMap<ExecutorPool, ListeningExecutorService> getExecutors();
-
-  public abstract ProjectFilesystemFactory getProjectFilesystemFactory();
-
-  public abstract BuildInfoStoreManager getBuildInfoStoreManager();
-
-  public abstract ArtifactCacheFactory getArtifactCacheFactory();
-
-  public abstract RuleKeyConfiguration getRuleKeyConfiguration();
-
-  public abstract Optional<ManifestService> getManifestService();
-
-  public BuckConfig getBuckConfig() {
-    return getRootCell().getBuckConfig();
   }
 }

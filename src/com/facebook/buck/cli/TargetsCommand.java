@@ -62,7 +62,7 @@ import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.core.util.graph.CycleException;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -134,7 +134,6 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
-import org.immutables.value.Value;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
@@ -1150,7 +1149,7 @@ public class TargetsCommand extends AbstractCommand {
 
       // TODO rewrite targets so that this doesn't alter the ActionGraph
       for (TargetNode<?> targetNode : targetGraphAndTargetNodes.getSecond()) {
-        TargetResult.Builder builder =
+        ImmutableTargetResult.Builder builder =
             targetResultBuilders.getOrCreate(targetNode.getBuildTarget());
         Objects.requireNonNull(builder);
         if (actionGraph.isPresent() && isShowRuleKey) {
@@ -1167,7 +1166,7 @@ public class TargetsCommand extends AbstractCommand {
             AbstractBreadthFirstTraversal.traverse(
                 rule,
                 traversedRule -> {
-                  TargetResult.Builder showOptionsBuilder =
+                  ImmutableTargetResult.Builder showOptionsBuilder =
                       targetResultBuilders.getOrCreate(traversedRule.getBuildTarget());
                   showOptionsBuilder.setRuleKey(
                       Futures.getUnchecked(
@@ -1186,7 +1185,7 @@ public class TargetsCommand extends AbstractCommand {
 
       ImmutableSortedMap.Builder<BuildTarget, TargetResult> builder =
           ImmutableSortedMap.naturalOrder();
-      for (Map.Entry<BuildTarget, TargetResult.Builder> entry :
+      for (Map.Entry<BuildTarget, ImmutableTargetResult.Builder> entry :
           targetResultBuilders.map.entrySet()) {
         builder.put(entry.getKey(), entry.getValue().build());
       }
@@ -1195,7 +1194,7 @@ public class TargetsCommand extends AbstractCommand {
   }
 
   private void processBuildRules(
-      Map<BuildTarget, TargetResult.Builder> buildTargetToTargetBuilderMap,
+      Map<BuildTarget, ImmutableTargetResult.Builder> buildTargetToTargetBuilderMap,
       TargetGraph targetGraph,
       ActionGraphBuilder graphBuilder,
       CommandRunnerParams params) {
@@ -1512,16 +1511,15 @@ public class TargetsCommand extends AbstractCommand {
    */
   private static class TargetResultBuilders {
 
-    final Map<BuildTarget, TargetResult.Builder> map = new HashMap<>();
+    final Map<BuildTarget, ImmutableTargetResult.Builder> map = new HashMap<>();
 
-    TargetResult.Builder getOrCreate(BuildTarget target) {
-      return map.computeIfAbsent(target, ignored -> TargetResult.builder());
+    ImmutableTargetResult.Builder getOrCreate(BuildTarget target) {
+      return map.computeIfAbsent(target, ignored -> ImmutableTargetResult.builder());
     }
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractTargetResult {
+  @BuckStyleValueWithBuilder
+  abstract static class TargetResult {
 
     public abstract Optional<String> getOutputPath();
 

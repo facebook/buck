@@ -54,7 +54,7 @@ import javax.annotation.Nullable;
 public class BuildReport {
   private static final Logger LOG = Logger.get(BuildReport.class);
 
-  private final BuildExecutionResult buildExecutionResult;
+  private final Build.BuildExecutionResult buildExecutionResult;
   private final SourcePathResolverAdapter pathResolver;
   private final Cell rootCell;
 
@@ -63,7 +63,7 @@ public class BuildReport {
    * @param pathResolver source path resolver which can be used for the result.
    */
   public BuildReport(
-      BuildExecutionResult buildExecutionResult,
+      Build.BuildExecutionResult buildExecutionResult,
       SourcePathResolverAdapter pathResolver,
       Cell rootCell) {
     this.buildExecutionResult = buildExecutionResult;

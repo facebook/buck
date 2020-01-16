@@ -20,7 +20,8 @@ import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
@@ -49,7 +50,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nullable;
-import org.immutables.value.Value;
 
 public abstract class AbstractAsynchronousCache implements ArtifactCache {
   private static final Logger LOG = Logger.get(AbstractAsynchronousCache.class);
@@ -720,9 +720,8 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
   }
 
   /** Return type used by the implementations of this abstract class. */
-  @BuckStyleImmutable
-  @Value.Immutable
-  interface AbstractFetchResult {
+  @BuckStyleValueWithBuilder
+  interface FetchResult {
     Optional<Long> getResponseSizeBytes();
 
     Optional<BuildTarget> getBuildTarget();
@@ -737,27 +736,23 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
   }
 
   /** Return type used by the implementations of this abstract class. */
-  @BuckStyleImmutable
-  @Value.Immutable
-  interface AbstractMultiContainsResult {
+  @BuckStyleValueWithBuilder
+  interface MultiContainsResult {
     Optional<Long> getResponseSizeBytes();
 
     ImmutableMap<RuleKey, CacheResult> getCacheResults();
   }
 
   /** Return type used by the implementations of this abstract class. */
-  @BuckStyleImmutable
-  @Value.Immutable
-  interface AbstractMultiFetchResult {
+  @BuckStyleValue
+  interface MultiFetchResult {
     /** At least one of the results must be non-skipped. */
-    @Value.Parameter
     ImmutableList<FetchResult> getResults();
   }
 
   /** Return type used by the implementations of this abstract class. */
-  @BuckStyleImmutable
-  @Value.Immutable
-  interface AbstractStoreResult {
+  @BuckStyleValueWithBuilder
+  interface StoreResult {
     Optional<Long> getRequestSizeBytes();
 
     Optional<String> getArtifactContentHash();

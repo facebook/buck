@@ -18,8 +18,6 @@ package com.facebook.buck.event.listener;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
-import com.facebook.buck.artifact_cache.HttpArtifactCacheEventFetchData;
-import com.facebook.buck.artifact_cache.HttpArtifactCacheEventStoreData;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
@@ -67,7 +65,7 @@ public class HttpArtifactCacheEventListener implements BuckEventListener {
     String buildIdString = event.getBuildId().toString();
 
     if (event.getOperation() == ArtifactCacheEvent.Operation.FETCH) {
-      HttpArtifactCacheEventFetchData data = event.getFetchData();
+      HttpArtifactCacheEvent.HttpArtifactCacheEventFetchData data = event.getFetchData();
       String hiveRow =
           HiveRowFormatter.newFormatter()
               .appendString(buildIdString)
@@ -84,7 +82,7 @@ public class HttpArtifactCacheEventListener implements BuckEventListener {
               .build();
       fetchRequestLogger.log(hiveRow);
     } else { // ArtifactCacheEvent.Operation.STORE
-      HttpArtifactCacheEventStoreData data = event.getStoreData();
+      HttpArtifactCacheEvent.HttpArtifactCacheEventStoreData data = event.getStoreData();
       String hiveRow =
           HiveRowFormatter.newFormatter()
               .appendString(buildIdString)

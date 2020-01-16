@@ -14,18 +14,16 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.artifact_cache.config;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.util.ExitCode;
-import java.util.Optional;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.google.common.collect.ImmutableSet;
 
-@Value.Immutable
-@BuckStyleImmutable
-interface AbstractInstallResult {
+@BuckStyleValue
+public abstract class ArtifactCacheEntries {
+  public abstract ImmutableSet<HttpCacheEntry> getHttpCacheEntries();
 
-  ExitCode getExitCode();
+  public abstract ImmutableSet<DirCacheEntry> getDirCacheEntries();
 
-  Optional<Long> getLaunchedPid();
+  public abstract ImmutableSet<SQLiteCacheEntry> getSQLiteCacheEntries();
 }

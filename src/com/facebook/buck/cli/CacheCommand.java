@@ -280,19 +280,18 @@ public class CacheCommand extends AbstractCommand {
         .getBuckEventBus()
         .post(
             CacheCountersSummaryEvent.newSummary(
-                CacheCountersSummary.builder()
-                    .setCacheHitsPerMode(cacheHitsPerMode)
-                    .setCacheErrorsPerMode(cacheErrorsPerMode)
-                    .setTotalCacheHits(cacheHits)
-                    .setTotalCacheErrors(cacheErrors)
-                    .setTotalCacheMisses(cacheMisses)
-                    .setTotalCacheIgnores(cacheIgnored)
-                    .setTotalCacheLocalKeyUnchangedHits(localKeyUnchanged)
-                    .setFailureUploadCount(new AtomicInteger(0))
-                    .setSuccessUploadCount(new AtomicInteger(0))
-                    .setCacheBytesPerMode(cacheBytesPerMode)
-                    .setTotalCacheBytes(cacheBytes)
-                    .build()));
+                CacheCountersSummary.of(
+                    cacheHitsPerMode,
+                    cacheErrorsPerMode,
+                    cacheBytesPerMode,
+                    cacheHits,
+                    cacheErrors,
+                    cacheMisses,
+                    cacheIgnored,
+                    cacheBytes,
+                    localKeyUnchanged,
+                    new AtomicInteger(0),
+                    new AtomicInteger(0))));
 
     ExitCode exitCode = (totalRuns == goodRuns) ? ExitCode.SUCCESS : ExitCode.BUILD_ERROR;
     params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
