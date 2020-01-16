@@ -71,7 +71,10 @@ public class DefaultActionRegistry extends BuildArtifactFactory implements Actio
     for (Artifact input : action.getInputs()) {
       if (!input.isBound()) {
         throw new ActionCreationException(
-            action, "Input Artifact %s should be bound to an Action, but is actually not", input);
+            action,
+            target,
+            "Input Artifact %s should be bound to an Action, but is actually not",
+            input);
       }
     }
 

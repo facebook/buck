@@ -17,26 +17,27 @@
 package com.facebook.buck.core.rules.actions;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
 
 /** Represents an error during action creation */
 public class ActionCreationException extends HumanReadableException {
-
-  public ActionCreationException(Throwable e, Action action) {
+  public ActionCreationException(Throwable e, Action action, BuildTarget owningTarget) {
     super(
         e,
         "Got exception creating action %s of target: %s, inputs: %s, output: %s.",
         action.getShortName(),
-        action.getOwner(),
+        owningTarget,
         action.getInputs(),
         action.getOutputs());
   }
 
-  public ActionCreationException(Action action, String fmt, Object... fmtArgs) {
+  public ActionCreationException(
+      Action action, BuildTarget owningTarget, String fmt, Object... fmtArgs) {
     super(
         "Error %s when creating action %s of target: %s, inputs: %s, output: %s.",
         String.format(fmt, fmtArgs),
         action.getShortName(),
-        action.getOwner(),
+        owningTarget,
         action.getInputs(),
         action.getOutputs());
   }
