@@ -37,12 +37,12 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * This {@link BuildRule} creates {@link AppleCxxPlatform} using {@link ApplePlatformBuildRule}.
+ * This {@link BuildRule} creates {@link AppleCxxPlatform} using {@link AppleToolchainBuildRule}.
  * It's a {@link NoopBuildRule} with no build steps or outputs.
  */
 public class AppleToolchainSetBuildRule extends NoopBuildRule {
 
-  private final Map<String, ApplePlatformBuildRule> applePlatformMapping;
+  private final Map<String, AppleToolchainBuildRule> applePlatformMapping;
   private final Optional<Path> developerPath;
   private final String xcodeVersion;
   private final String xcodeBuildVersion;
@@ -52,7 +52,7 @@ public class AppleToolchainSetBuildRule extends NoopBuildRule {
   public AppleToolchainSetBuildRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      ImmutableSortedMap<String, ApplePlatformBuildRule> applePlatformMapping,
+      ImmutableSortedMap<String, AppleToolchainBuildRule> applePlatformMapping,
       Optional<Path> developerPath,
       String xcodeVersion,
       String xcodeBuildVersion) {
@@ -74,7 +74,7 @@ public class AppleToolchainSetBuildRule extends NoopBuildRule {
       throw new HumanReadableException(
           "Apple platform '%s' is not defined in %s", flavor, getBuildTarget());
     }
-    ApplePlatformBuildRule platformRule = applePlatformMapping.get(flavor.getName());
+    AppleToolchainBuildRule platformRule = applePlatformMapping.get(flavor.getName());
 
     CxxPlatform.Builder cxxPlatformBuilder =
         CxxPlatform.builder().from(platformRule.getCxxPlatform(flavor));

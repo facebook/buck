@@ -38,16 +38,16 @@ import com.google.common.base.Verify;
 import java.util.Optional;
 import org.immutables.value.Value;
 
-/** Defines an apple_platform rule which provides values to fill {@link AppleCxxPlatform}. */
-public class ApplePlatformDescription
-    implements DescriptionWithTargetGraph<ApplePlatformDescriptionArg> {
+/** Defines an apple_toolchain rule which provides values to fill {@link AppleCxxPlatform}. */
+public class AppleToolchainDescription
+    implements DescriptionWithTargetGraph<AppleToolchainDescriptionArg> {
 
   @Override
   public BuildRule createBuildRule(
       BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
-      ApplePlatformDescriptionArg args) {
+      AppleToolchainDescriptionArg args) {
     Verify.verify(!buildTarget.isFlavored());
     ActionGraphBuilder actionGraphBuilder = context.getActionGraphBuilder();
     BuildRule cxxToolchainRule = actionGraphBuilder.getRule(args.getCxxToolchain());
@@ -76,7 +76,7 @@ public class ApplePlatformDescription
       dsymutil = new CommandTool.Builder(dsymutil).addArg("-num-threads=1").build();
     }
 
-    return new ApplePlatformBuildRule(
+    return new AppleToolchainBuildRule(
         buildTarget,
         context.getProjectFilesystem(),
         pathResolver.getAbsolutePath(args.getPlatformPath()),
@@ -101,16 +101,17 @@ public class ApplePlatformDescription
   }
 
   @Override
-  public Class<ApplePlatformDescriptionArg> getConstructorArgType() {
-    return ApplePlatformDescriptionArg.class;
+  public Class<AppleToolchainDescriptionArg> getConstructorArgType() {
+    return AppleToolchainDescriptionArg.class;
   }
 
   /**
-   * apple_platform defines tools, cxx and swift toolchains and some properties of Apple Platform.
+   * apple_toolchain defines tools, cxx and swift toolchains and some properties of
+   * AppleCxxPlatform.
    */
   @Value.Immutable
   @BuckStyleImmutable
-  interface AbstractApplePlatformDescriptionArg extends BuildRuleArg {
+  interface AbstractAppleToolchainDescriptionArg extends BuildRuleArg {
     /** Path to Apple platform */
     SourcePath getPlatformPath();
 

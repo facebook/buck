@@ -39,11 +39,11 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 /**
- * This {@link BuildRule} holds {@link ApplePlatformDescriptionArg} to create {@link
+ * This {@link BuildRule} holds {@link AppleToolchainDescriptionArg} to create {@link
  * AppleCxxPlatform} in {@link AppleToolchainSetBuildRule}. It's a {@link NoopBuildRule} with no
  * build steps or outputs.
  */
-public class ApplePlatformBuildRule extends NoopBuildRule {
+public class AppleToolchainBuildRule extends NoopBuildRule {
 
   private final Path sdkPath;
   private final Path platformPath;
@@ -65,7 +65,7 @@ public class ApplePlatformBuildRule extends NoopBuildRule {
   private final ProvidesCxxPlatform cxxToolchainRule;
   private final Optional<SwiftToolchainBuildRule> swiftToolchainRule;
 
-  public ApplePlatformBuildRule(
+  public AppleToolchainBuildRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       Path platformPath,

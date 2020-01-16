@@ -1,6 +1,6 @@
 apple_toolchain_set(
     name = "toolchain",
-    apple_platforms = {
+    apple_toolchains = {
         "iphoneos-arm64": ":platform1",
         "iphoneos-armv7": ":platform2",
     },
@@ -10,7 +10,7 @@ apple_toolchain_set(
     visibility = ["PUBLIC"],
 )
 
-apple_platform(
+apple_toolchain(
     name = "platform1",
     platform_path = "Developer/iPhoneOS.platform",
     sdk_path = "Developer/iPhoneOS.platform/iPhoneOS.sdk",
@@ -33,7 +33,7 @@ apple_platform(
     visibility = ["PUBLIC"],
 )
 
-apple_platform(
+apple_toolchain(
     name = "platform2",
     platform_path = "Developer/iPhoneOS.platform",
     sdk_path = "Developer/iPhoneOS.platform/iPhoneOS.sdk",
@@ -58,7 +58,7 @@ apple_platform(
 
 apple_toolchain_set(
     name = "toolchain_dsymutil",
-    apple_platforms = {
+    apple_toolchains = {
         "iphoneos-arm64": ":platform_dsymutil",
     },
     developer_path = "Developer",
@@ -67,7 +67,7 @@ apple_toolchain_set(
     visibility = ["PUBLIC"],
 )
 
-apple_platform(
+apple_toolchain(
     name = "platform_dsymutil",
     platform_path = "Developer/iPhoneOS.platform",
     sdk_path = "Developer/iPhoneOS.platform/iPhoneOS.sdk",
@@ -93,7 +93,7 @@ apple_platform(
 
 apple_toolchain_set(
     name = "toolchain_swift",
-    apple_platforms = {
+    apple_toolchains = {
         "iphoneos-arm64": ":platform_swift",
     },
     developer_path = "Developer",
@@ -102,7 +102,7 @@ apple_toolchain_set(
     visibility = ["PUBLIC"],
 )
 
-apple_platform(
+apple_toolchain(
     name = "platform_swift",
     platform_path = "Developer/iPhoneOS.platform",
     sdk_path = "Developer/iPhoneOS.platform/iPhoneOS.sdk",

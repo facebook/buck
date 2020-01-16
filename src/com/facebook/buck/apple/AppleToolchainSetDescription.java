@@ -49,19 +49,19 @@ public class AppleToolchainSetDescription
       AppleToolchainSetDescriptionArg args) {
     Verify.verify(!buildTarget.isFlavored());
 
-    ImmutableSortedMap.Builder<String, ApplePlatformBuildRule> appleSdkMappingBuilder =
+    ImmutableSortedMap.Builder<String, AppleToolchainBuildRule> appleSdkMappingBuilder =
         new ImmutableSortedMap.Builder<>(Ordering.natural());
-    for (Map.Entry<String, BuildTarget> entry : args.getApplePlatforms().entrySet()) {
+    for (Map.Entry<String, BuildTarget> entry : args.getAppleToolchains().entrySet()) {
       if (!ApplePlatform.ALL_PLATFORM_FLAVORS.contains(InternalFlavor.of(entry.getKey()))) {
         throw new HumanReadableException(
             "%s: Invalid Apple platform name: %s", buildTarget, entry.getKey());
       }
-      BuildRule applePlatformRule = context.getActionGraphBuilder().getRule(entry.getValue());
-      if (!(applePlatformRule instanceof ApplePlatformBuildRule)) {
+      BuildRule appleToolchainRule = context.getActionGraphBuilder().getRule(entry.getValue());
+      if (!(appleToolchainRule instanceof AppleToolchainBuildRule)) {
         throw new HumanReadableException(
-            "Expected %s to be an instance of apple_platform.", entry.getValue());
+            "Expected %s to be an instance of apple_toolchain.", entry.getValue());
       }
-      appleSdkMappingBuilder.put(entry.getKey(), (ApplePlatformBuildRule) applePlatformRule);
+      appleSdkMappingBuilder.put(entry.getKey(), (AppleToolchainBuildRule) appleToolchainRule);
     }
     return new AppleToolchainSetBuildRule(
         buildTarget,
@@ -84,14 +84,14 @@ public class AppleToolchainSetDescription
   }
 
   /**
-   * An apple_toolchain_set is a mapping from platform name to apple_platform with several common
-   * fields for all SDKs.
+   * An apple_toolchain_set is a mapping from platform name to apple_toolchain with several common
+   * fields.
    */
   @Value.Immutable
   @BuckStyleImmutable
   interface AbstractAppleToolchainSetDescriptionArg extends BuildRuleArg {
-    /** Mapping from apple platform name to apple_platform rule. */
-    ImmutableSortedMap<String, BuildTarget> getApplePlatforms();
+    /** Mapping from apple platform name to apple_toolchain rule. */
+    ImmutableSortedMap<String, BuildTarget> getAppleToolchains();
 
     /** Developer directory of the toolchain */
     Optional<SourcePath> getDeveloperPath();
