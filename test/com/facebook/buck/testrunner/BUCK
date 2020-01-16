@@ -121,7 +121,7 @@ standard_java_test(
 )
 
 python_test(
-    name = "check-allowed-entries-in-testrunner-jar",
+    name = "test-entries-in-testrunner-jar",
     srcs = [
         "check-allowed-entries-in-archive.py",
     ],
