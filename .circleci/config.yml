@@ -1,5 +1,49 @@
 version: 2
 
+install_openjdk8: &install_openjdk8
+  name: Install OpenJDK8
+  command: |
+    sudo apt-get update && sudo apt-get install openjdk-8-jdk
+    sudo update-java-alternatives -s java-1.8.0-openjdk-amd64
+    java -version
+
+install_androidsdk: &install_androidsdk
+  name: Install Android SDK
+  command: |
+    mkdir ${ANDROIDSDK}
+    cd ${ANDROIDSDK}
+    wget https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip
+    unzip sdk-tools-linux-4333796.zip
+    export PATH=${ANDROIDSDK}/tools/bin:$PATH
+    echo 'y' |sdkmanager --install tools
+    echo 'y' |sdkmanager --install platform-tools
+    echo 'y' |sdkmanager --install "build-tools;23.0.2"
+    echo 'y' |sdkmanager --install "platforms;android-23"
+
+install_golang: &install_golang
+  name: Install GoLang 1.10.1
+  command: |
+    cd ~
+    wget https://storage.googleapis.com/golang/go1.10.1.linux-amd64.tar.gz
+    sudo tar -xzf go1.10.1.linux-amd64.tar.gz -C /usr/local
+    go version
+
+install_python: &install_python
+  name: Install Python 3.6.2
+  command: |
+    pyenv install -s 3.6.2
+    pyenv global 3.6.2 system
+    python --version
+
+run_ant_build: &run_ant_build
+  name: Run Ant Build
+  command: |
+    cd ${BUCKROOT}
+    set -eux
+    export TERM=dumb
+    export ANT_OPTS='-Xmx1000m'
+    ant
+
 jobs:
   ci_build_openjdk8:
     environment:
@@ -11,44 +55,15 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install OpenJDK8
-          command: |
-            sudo apt-get update && sudo apt-get install openjdk-8-jdk
-            sudo update-java-alternatives -s java-1.8.0-openjdk-amd64
-            java -version
+          <<: *install_openjdk8
       - run:
-          name: Install Android SDK
-          command: |
-            mkdir ${ANDROIDSDK}
-            cd ${ANDROIDSDK}
-            wget https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip
-            unzip sdk-tools-linux-4333796.zip
-            export PATH=${ANDROIDSDK}/tools/bin:$PATH
-            echo 'y' |sdkmanager --install tools
-            echo 'y' |sdkmanager --install platform-tools
-            echo 'y' |sdkmanager --install "build-tools;23.0.2"
-            echo 'y' |sdkmanager --install "platforms;android-23"
+          <<: *install_androidsdk
       - run:
-          name: Install GoLang 1.10.1
-          command: |
-            cd ~
-            wget https://storage.googleapis.com/golang/go1.10.1.linux-amd64.tar.gz
-            sudo tar -xzf go1.10.1.linux-amd64.tar.gz -C /usr/local
-            go version
+          <<: *install_golang
       - run:
-          name: Install Python 3.6.2
-          command: |
-            pyenv install -s 3.6.2
-            pyenv global 3.6.2 system
-            python --version
+          <<: *install_python
       - run:
-          name: Run Ant Build
-          command: |
-            cd ${BUCKROOT}
-            set -eux
-            export TERM=dumb
-            export ANT_OPTS='-Xmx1000m'
-            ant
+          <<: *run_ant_build
       - run:
           name: Run Buck Build
           command: |
@@ -61,9 +76,23 @@ jobs:
             ./bin/buck build buck --out ./new_buck.pex
             export BUCK_NUM_THREADS=3
             ./new_buck.pex build --num-threads=${BUCK_NUM_THREADS} src/... test/...
+  ci_unit_groovy:
+    environment:
+      BUCKROOT: "/home/circleci/buck"
+      ANDROIDSDK: "/home/circleci/android-sdk"
+    working_directory: "/home/circleci/buck"
+    machine:
+      image: ubuntu-1604:201903-01
+    steps:
+      - checkout
+      - run:
+          <<: *install_openjdk8
+      - run:
+          <<: *install_androidsdk
 workflows:
   version: 2
   all_jobs:
     jobs:
       - ci_build_openjdk8
+      - ci_unit_groovy
 
