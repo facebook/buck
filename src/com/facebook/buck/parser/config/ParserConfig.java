@@ -439,8 +439,9 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
    */
   @Value.Lazy
   public UserDefinedRulesState getUserDefinedRulesState() {
-    return UserDefinedRulesState.of(
-        getDelegate().getBooleanValue("parser", "enable_user_defined_rules", false));
+    return getDelegate()
+        .getEnum("parser", "user_defined_rules", UserDefinedRulesState.class)
+        .orElse(UserDefinedRulesState.DISABLED);
   }
 
   /** @return Whether to enable parsing of PACKAGE files and apply their attributes to nodes. */

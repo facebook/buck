@@ -433,7 +433,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "runnable_rules", tmp);
 
     workspace.addBuckConfigLocalOption("parser", "default_build_file_syntax", "skylark");
-    workspace.addBuckConfigLocalOption("parser", "enable_user_defined_rules", "true");
+    workspace.addBuckConfigLocalOption("parser", "user_defined_rules", "enabled");
     workspace.addBuckConfigLocalOption("rule_analysis", "mode", "PROVIDER_COMPATIBLE");
 
     String successTarget =
