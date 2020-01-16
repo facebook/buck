@@ -49,9 +49,13 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class CsharpLibraryIntegrationTest {
 
-  private static final String CSC_DIR =
-      "C:/tools/toolchains/vs2017_15.5/BuildTools/MSBuild/15.0/Bin/Roslyn";
-  private static final String CSC_EXE = String.format("%s/csc.exe", CSC_DIR);
+  private static final ImmutableList<String> CSC_DIRS =
+      ImmutableList.of(
+          "C:/tools/toolchains/vs2017_15.5/BuildTools/MSBuild/15.0/Bin/Roslyn",
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Professional\\MSBuild\\15.0\\Bin\\Roslyn");
+  private static final String CSC_EXE = "csc.exe";
+
+  private Path cscExe = Paths.get(".");
 
   private ProjectWorkspace workspace;
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
@@ -74,13 +78,17 @@ public class CsharpLibraryIntegrationTest {
 
   @Before
   public void setUp() throws IOException {
-    checkAssumptions();
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "csc-tests", tmp);
+    setUp("csc-tests");
+  }
+
+  public void setUp(String scenario) throws IOException {
+    cscExe = checkAssumptions();
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, scenario, tmp);
     workspace.setUp();
     workspace.enableDirCache();
     if (configureCsc) {
       TestDataHelper.overrideBuckconfig(
-          workspace, ImmutableMap.of("dotnet", ImmutableMap.of("csc", CSC_EXE)));
+          workspace, ImmutableMap.of("dotnet", ImmutableMap.of("csc", cscExe.toString())));
     }
     TestDataHelper.overrideBuckconfig(
         workspace,
@@ -176,11 +184,16 @@ public class CsharpLibraryIntegrationTest {
     fail("Implement me, please!");
   }
 
-  private void checkAssumptions() {
+  private Path checkAssumptions() {
     assumeTrue("Running on windows", Platform.detect() == Platform.WINDOWS);
-    Optional<Path> csc =
-        new ExecutableFinder().getOptionalExecutable(Paths.get(CSC_EXE), ImmutableMap.of());
+    Optional<Path> csc = Optional.empty();
+    for (String cscDir : CSC_DIRS) {
+      csc =
+          new ExecutableFinder()
+              .getOptionalExecutable(Paths.get(cscDir, CSC_EXE), ImmutableMap.of());
+    }
     assumeTrue(String.format("csc.exe (%s) is available", CSC_EXE), csc.isPresent());
+    return csc.get();
   }
 
   private ImmutableMap<String, String> getEnv() {
@@ -189,7 +202,7 @@ public class CsharpLibraryIntegrationTest {
       return defaultEnv;
     } else {
       HashMap<String, String> patchedEnv = new HashMap<>(defaultEnv);
-      patchedEnv.put("PATH", String.format("%s;%s", CSC_DIR, defaultEnv.get("PATH")));
+      patchedEnv.put("PATH", String.format("%s;%s", cscExe.getParent(), defaultEnv.get("PATH")));
       return ImmutableMap.copyOf(patchedEnv);
     }
   }
