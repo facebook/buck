@@ -42,7 +42,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Optional;
 
 /**
  * Simple helper class that makes running an {@link Action} easier and allows tests to focus on
@@ -98,20 +97,18 @@ public class TestActionExecutionRunner {
 
     StepExecutionResult executionResult =
         step.execute(
-            ExecutionContext.of(
-                Console.createNullConsole(),
-                testEventBus,
-                Platform.UNKNOWN,
-                ImmutableMap.of(),
-                new FakeJavaPackageFinder(),
-                ImmutableMap.of(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                TestCellPathResolver.get(projectFilesystem),
-                projectFilesystem.getRootPath(),
-                processExecutor,
-                projectFilesystemFactory));
+            ExecutionContext.builder()
+                .setConsole(Console.createNullConsole())
+                .setBuckEventBus(testEventBus)
+                .setPlatform(Platform.UNKNOWN)
+                .setEnvironment(ImmutableMap.of())
+                .setJavaPackageFinder(new FakeJavaPackageFinder())
+                .setExecutors(ImmutableMap.of())
+                .setCellPathResolver(TestCellPathResolver.get(projectFilesystem))
+                .setBuildCellRootPath(projectFilesystem.getRootPath())
+                .setProcessExecutor(processExecutor)
+                .setProjectFilesystemFactory(projectFilesystemFactory)
+                .build());
 
     return ImmutableExecutionDetails.of(action, consoleEventListener, executionResult);
   }

@@ -342,10 +342,6 @@ public class Manifest {
   }
 
   public ManifestStats getStats() {
-    return ManifestStats.builder()
-        .setNumDepFiles(entries.size())
-        .setNumInputs(inputs.size())
-        .setNumHashes(hashes.size())
-        .build();
+    return ImmutableManifestStats.of(entries.size(), hashes.size(), inputs.size());
   }
 }

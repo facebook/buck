@@ -200,10 +200,7 @@ public class ArchiveTest {
             /* cacheable */ true);
 
     BuildContext buildContext =
-        BuildContext.builder()
-            .from(FakeBuildContext.NOOP_CONTEXT)
-            .setSourcePathResolver(resolver.getSourcePathResolver())
-            .build();
+        FakeBuildContext.NOOP_CONTEXT.withSourcePathResolver(resolver.getSourcePathResolver());
 
     ImmutableList<Step> steps = archive.getBuildSteps(buildContext, new FakeBuildableContext());
     Step archiveStep = FluentIterable.from(steps).filter(ArchiveStep.class).first().get();

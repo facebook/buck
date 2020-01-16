@@ -672,18 +672,15 @@ public class TestCommand extends BuildCommand {
             testRules = filterTestRules(params.getBuckConfig(), explicitBuildTargets, testRules);
           }
           BuildContext buildContext =
-              BuildContext.builder()
-                  .setSourcePathResolver(
-                      actionGraphAndBuilder.getActionGraphBuilder().getSourcePathResolver())
-                  .setBuildCellRootPath(params.getCell().getRoot())
-                  .setJavaPackageFinder(params.getJavaPackageFinder())
-                  .setEventBus(params.getBuckEventBus())
-                  .setShouldDeleteTemporaries(
-                      params
-                          .getBuckConfig()
-                          .getView(BuildBuckConfig.class)
-                          .getShouldDeleteTemporaries())
-                  .build();
+              BuildContext.of(
+                  actionGraphAndBuilder.getActionGraphBuilder().getSourcePathResolver(),
+                  params.getCell().getRoot(),
+                  params.getJavaPackageFinder(),
+                  params.getBuckEventBus(),
+                  params
+                      .getBuckConfig()
+                      .getView(BuildBuckConfig.class)
+                      .getShouldDeleteTemporaries());
 
           // Once all of the rules are built, then run the tests.
           Optional<ImmutableList<String>> externalTestRunner =

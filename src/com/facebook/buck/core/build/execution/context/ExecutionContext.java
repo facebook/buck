@@ -21,7 +21,7 @@ import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.rulekey.RuleKeyDiagnosticsMode;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ThrowableConsoleEvent;
@@ -45,60 +45,45 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import org.immutables.value.Value;
 
-@Value.Immutable(copy = true)
-@BuckStyleImmutable
+@BuckStyleValueWithBuilder
 /** The context exposed for executing {@link com.facebook.buck.step.Step}s */
-abstract class AbstractExecutionContext implements Closeable {
+public abstract class ExecutionContext implements Closeable {
 
-  @Value.Parameter
-  abstract Console getConsole();
+  public abstract Console getConsole();
 
-  @Value.Parameter
-  abstract BuckEventBus getBuckEventBus();
+  public abstract BuckEventBus getBuckEventBus();
 
-  @Value.Parameter
-  abstract Platform getPlatform();
+  public abstract Platform getPlatform();
 
-  @Value.Parameter
-  abstract ImmutableMap<String, String> getEnvironment();
+  public abstract ImmutableMap<String, String> getEnvironment();
 
-  @Value.Parameter
-  abstract JavaPackageFinder getJavaPackageFinder();
+  public abstract JavaPackageFinder getJavaPackageFinder();
 
-  @Value.Parameter
-  abstract Map<ExecutorPool, ListeningExecutorService> getExecutors();
+  public abstract ImmutableMap<ExecutorPool, ListeningExecutorService> getExecutors();
 
-  @Value.Parameter
-  abstract Optional<TargetDevice> getTargetDevice();
+  public abstract Optional<TargetDevice> getTargetDevice();
 
-  @Value.Parameter
-  abstract Optional<AndroidDevicesHelper> getAndroidDevicesHelper();
+  public abstract Optional<AndroidDevicesHelper> getAndroidDevicesHelper();
 
   /**
    * Worker process pools that are persisted across buck invocations inside buck daemon. If buck is
    * running without daemon, there will be no persisted pools.
    */
-  @Value.Parameter
-  abstract Optional<ConcurrentMap<String, WorkerProcessPool>> getPersistentWorkerPools();
+  public abstract Optional<ConcurrentMap<String, WorkerProcessPool>> getPersistentWorkerPools();
 
-  @Value.Parameter
-  abstract CellPathResolver getCellPathResolver();
+  public abstract CellPathResolver getCellPathResolver();
 
   /** See {@link com.facebook.buck.core.build.context.BuildContext#getBuildCellRootPath}. */
-  @Value.Parameter
-  abstract Path getBuildCellRootPath();
+  public abstract Path getBuildCellRootPath();
 
-  @Value.Parameter
-  abstract ProcessExecutor getProcessExecutor();
+  public abstract ProcessExecutor getProcessExecutor();
 
-  @Value.Parameter
-  abstract ProjectFilesystemFactory getProjectFilesystemFactory();
+  public abstract ProjectFilesystemFactory getProjectFilesystemFactory();
 
   @Value.Default
   public long getDefaultTestTimeoutMillis() {
@@ -221,4 +206,32 @@ abstract class AbstractExecutionContext implements Closeable {
       }
     }
   }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public ExecutionContext withProcessExecutor(ProcessExecutor processExecutor) {
+    if (getProcessExecutor() == processExecutor) {
+      return this;
+    }
+
+    return builder().from(this).setProcessExecutor(processExecutor).build();
+  }
+
+  public ExecutionContext withBuildCellRootPath(Path cellRootPath) {
+    if (getBuildCellRootPath().equals(cellRootPath)) {
+      return this;
+    }
+    return builder().from(this).setBuildCellRootPath(cellRootPath).build();
+  }
+
+  public ExecutionContext withConsole(Console console) {
+    if (getConsole() == console) {
+      return this;
+    }
+    return builder().from(this).setConsole(console).build();
+  }
+
+  public static class Builder extends ImmutableExecutionContext.Builder {}
 }

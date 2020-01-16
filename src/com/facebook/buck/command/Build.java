@@ -21,7 +21,6 @@ import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.engine.BuildEngine;
 import com.facebook.buck.core.build.engine.BuildEngineBuildContext;
-import com.facebook.buck.core.build.engine.BuildEngineResult;
 import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
@@ -102,25 +101,18 @@ public class Build implements Closeable {
 
   private BuildEngineBuildContext createBuildContext(boolean isKeepGoing) {
     BuildId buildId = executionContext.getBuildId();
-    return BuildEngineBuildContext.builder()
-        .setBuildContext(
-            BuildContext.builder()
-                .setSourcePathResolver(graphBuilder.getSourcePathResolver())
-                .setBuildCellRootPath(rootCell.getRoot())
-                .setJavaPackageFinder(javaPackageFinder)
-                .setEventBus(executionContext.getBuckEventBus())
-                .setShouldDeleteTemporaries(
-                    rootCell
-                        .getBuckConfig()
-                        .getView(BuildBuckConfig.class)
-                        .getShouldDeleteTemporaries())
-                .build())
-        .setClock(clock)
-        .setArtifactCache(artifactCache)
-        .setBuildId(buildId)
-        .putAllEnvironment(executionContext.getEnvironment())
-        .setKeepGoing(isKeepGoing)
-        .build();
+    return BuildEngineBuildContext.of(
+        BuildContext.of(
+            graphBuilder.getSourcePathResolver(),
+            rootCell.getRoot(),
+            javaPackageFinder,
+            executionContext.getBuckEventBus(),
+            rootCell.getBuckConfig().getView(BuildBuckConfig.class).getShouldDeleteTemporaries()),
+        artifactCache,
+        clock,
+        buildId,
+        executionContext.getEnvironment(),
+        isKeepGoing);
   }
 
   public ActionGraphBuilder getGraphBuilder() {
@@ -140,7 +132,7 @@ public class Build implements Closeable {
       throws Exception {
 
     ImmutableList<BuildRule> rulesToBuild = getRulesToBuild(targetsish);
-    List<BuildEngineResult> resultFutures = initializeBuild(rulesToBuild);
+    List<BuildEngine.BuildEngineResult> resultFutures = initializeBuild(rulesToBuild);
     return waitForBuildToFinishAndPrintFailuresToEventBus(
         rulesToBuild, resultFutures, eventBus, console, pathToBuildReport);
   }
@@ -279,7 +271,7 @@ public class Build implements Closeable {
   }
 
   /** Starts building the given BuildRules asynchronously. */
-  private List<BuildEngineResult> initializeBuild(ImmutableList<BuildRule> rulesToBuild)
+  private List<BuildEngine.BuildEngineResult> initializeBuild(ImmutableList<BuildRule> rulesToBuild)
       throws IOException {
     setupBuildSymlinks();
 
@@ -289,12 +281,14 @@ public class Build implements Closeable {
   }
 
   private BuildExecutionResult waitForBuildToFinish(
-      ImmutableList<BuildRule> rulesToBuild, List<BuildEngineResult> resultFutures)
+      ImmutableList<BuildRule> rulesToBuild, List<BuildEngine.BuildEngineResult> resultFutures)
       throws ExecutionException, InterruptedException, CleanBuildShutdownException {
     // Get the Future representing the build and then block until everything is built.
     ListenableFuture<List<BuildResult>> buildFuture =
         Futures.allAsList(
-            resultFutures.stream().map(BuildEngineResult::getResult).collect(Collectors.toList()));
+            resultFutures.stream()
+                .map(BuildEngine.BuildEngineResult::getResult)
+                .collect(Collectors.toList()));
     List<BuildResult> results;
     try {
       results = buildFuture.get();
@@ -391,7 +385,7 @@ public class Build implements Closeable {
    */
   public ExitCode waitForBuildToFinishAndPrintFailuresToEventBus(
       ImmutableList<BuildRule> rulesToBuild,
-      List<BuildEngineResult> resultFutures,
+      List<BuildEngine.BuildEngineResult> resultFutures,
       BuckEventBus eventBus,
       Console console,
       Optional<Path> pathToBuildReport)

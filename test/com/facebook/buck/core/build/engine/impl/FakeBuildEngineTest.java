@@ -48,12 +48,13 @@ public class FakeBuildEngineTest {
     assertThat(
         fakeEngine
             .build(
-                BuildEngineBuildContext.builder()
-                    .setBuildContext(FakeBuildContext.NOOP_CONTEXT)
-                    .setArtifactCache(new NoopArtifactCache())
-                    .setBuildId(new BuildId())
-                    .setClock(new DefaultClock())
-                    .build(),
+                BuildEngineBuildContext.of(
+                    FakeBuildContext.NOOP_CONTEXT,
+                    new NoopArtifactCache(),
+                    new DefaultClock(),
+                    new BuildId(),
+                    ImmutableMap.of(),
+                    false),
                 TestExecutionContext.newInstance(),
                 fakeBuildRule)
             .getResult()

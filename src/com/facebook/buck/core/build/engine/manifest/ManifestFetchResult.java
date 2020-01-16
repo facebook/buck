@@ -18,15 +18,14 @@ package com.facebook.buck.core.build.engine.manifest;
 
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.google.common.base.Preconditions;
 import java.util.Optional;
 import org.immutables.value.Value;
 
 /** Provides a results summary of a manifest-based cache fetch process. */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractManifestFetchResult {
+@BuckStyleValueWithBuilder
+public abstract class ManifestFetchResult {
 
   // Return whether results indicate a valid manifest.
   private boolean isManifestValid() {
@@ -52,17 +51,23 @@ abstract class AbstractManifestFetchResult {
   }
 
   /** @return the result of fetching the manifest from cache. */
-  abstract CacheResult getManifestCacheResult();
+  public abstract CacheResult getManifestCacheResult();
 
   /** @return the error generated when trying to load the manifest. */
-  abstract Optional<String> getManifestLoadError();
+  public abstract Optional<String> getManifestLoadError();
 
   /** @return stats for the fetched manifest. */
-  abstract Optional<ManifestStats> getManifestStats();
+  public abstract Optional<ManifestStats> getManifestStats();
 
   /** @return the matching dep file rule key found in the manifest. */
   abstract Optional<RuleKey> getDepFileRuleKey();
 
   /** @return the result from fetching the rule outputs via the found dep file rule key. */
-  abstract Optional<CacheResult> getRuleCacheResult();
+  public abstract Optional<CacheResult> getRuleCacheResult();
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends ImmutableManifestFetchResult.Builder {}
 }

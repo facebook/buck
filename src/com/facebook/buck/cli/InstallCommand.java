@@ -1158,7 +1158,7 @@ public class InstallCommand extends BuildCommand {
                 waitForDebugger ? " (waiting for debugger)" : "",
                 launchedPid.get()));
 
-    return ImmutableInstallResult.of(ExitCode.SUCCESS, Optional.of(launchedPid.get()));
+    return ImmutableInstallResult.of(ExitCode.SUCCESS, launchedPid);
   }
 
   /**

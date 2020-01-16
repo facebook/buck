@@ -17,9 +17,8 @@
 package com.facebook.buck.core.build.engine;
 
 import com.facebook.buck.artifact_cache.CacheResult;
-import com.facebook.buck.core.build.engine.BuildResult.Builder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -32,26 +31,25 @@ import org.immutables.value.Value;
  * com.facebook.buck.core.build.engine.impl.CachingBuildEngine#buildOnceDepsAreBuilt()} can return a
  * strongly typed value.
  */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractBuildResult {
+@BuckStyleValueWithBuilder
+public abstract class BuildResult {
 
-  abstract BuildRule getRule();
+  public abstract BuildRule getRule();
 
-  abstract BuildRuleStatus getStatus();
+  public abstract BuildRuleStatus getStatus();
 
-  abstract Optional<CacheResult> getCacheResult();
+  public abstract Optional<CacheResult> getCacheResult();
 
   /** Signals that the cache upload for this rule (if there were one) has completed. */
-  abstract Optional<ListenableFuture<Unit>> getUploadCompleteFuture();
+  public abstract Optional<ListenableFuture<Unit>> getUploadCompleteFuture();
 
-  abstract Optional<BuildRuleSuccessType> getSuccessOptional();
+  public abstract Optional<BuildRuleSuccessType> getSuccessOptional();
 
-  abstract Optional<String> getStrategyResult();
+  public abstract Optional<String> getStrategyResult();
 
-  abstract Optional<Throwable> getFailureOptional();
+  public abstract Optional<Throwable> getFailureOptional();
 
-  abstract Optional<Set<String>> getDepsWithCacheMisses();
+  public abstract Optional<Set<String>> getDepsWithCacheMisses();
 
   @Value.Check
   void check() {
@@ -133,4 +131,10 @@ abstract class AbstractBuildResult {
   public boolean isSuccess() {
     return getStatus() == BuildRuleStatus.SUCCESS;
   }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends ImmutableBuildResult.Builder {}
 }

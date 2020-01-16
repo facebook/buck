@@ -16,13 +16,11 @@
 
 package com.facebook.buck.core.build.engine.manifest;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /** Statistics about a {@link Manifest}. */
-@Value.Immutable
-@BuckStyleImmutable
-interface AbstractManifestStats {
+@BuckStyleValue
+public interface ManifestStats {
   int getNumDepFiles();
 
   int getNumHashes();

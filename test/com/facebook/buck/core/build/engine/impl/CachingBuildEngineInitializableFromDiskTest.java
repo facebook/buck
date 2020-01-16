@@ -54,6 +54,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -410,12 +411,13 @@ public class CachingBuildEngineInitializableFromDiskTest extends CommonFixture {
   }
 
   private BuildEngineBuildContext createBuildContext(BuildId buildId) {
-    return BuildEngineBuildContext.builder()
-        .setBuildContext(FakeBuildContext.withSourcePathResolver(pathResolver))
-        .setClock(new DefaultClock())
-        .setBuildId(buildId)
-        .setArtifactCache(artifactCache)
-        .build();
+    return BuildEngineBuildContext.of(
+        FakeBuildContext.withSourcePathResolver(pathResolver),
+        artifactCache,
+        new DefaultClock(),
+        buildId,
+        ImmutableMap.of(),
+        false);
   }
 
   private void writeDepfileInput(String content) throws IOException {

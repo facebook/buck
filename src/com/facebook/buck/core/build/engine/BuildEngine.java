@@ -19,11 +19,10 @@ package com.facebook.buck.core.build.engine;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.util.concurrent.ExecutionException;
 import javax.annotation.Nullable;
-import org.immutables.value.Value;
 
 /**
  * A build engine is responsible for building a given build rule, which includes all its transitive
@@ -59,10 +58,13 @@ public interface BuildEngine {
    */
   void terminateBuildWithFailure(Throwable failure);
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract class AbstractBuildEngineResult {
+  @BuckStyleValue
+  abstract class BuildEngineResult {
     /** @return a future that will contain the result of running the rule */
     public abstract ListenableFuture<BuildResult> getResult();
+
+    public static BuildEngineResult of(ListenableFuture<BuildResult> result) {
+      return ImmutableBuildEngineResult.of(result);
+    }
   }
 }

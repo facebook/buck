@@ -26,17 +26,17 @@ import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.collect.ImmutableMap;
+import java.util.Map;
 import org.immutables.value.Value;
 
 /** Per-build context used by {@link BuildEngine}. */
-@Value.Immutable(copy = true)
-@BuckStyleImmutable
-abstract class AbstractBuildEngineBuildContext {
+@BuckStyleValue
+public abstract class BuildEngineBuildContext {
   /**
    * {@code BuildContext} used by various rules to generate {@link com.facebook.buck.step.Step}s.
    */
@@ -44,11 +44,11 @@ abstract class AbstractBuildEngineBuildContext {
 
   public abstract ArtifactCache getArtifactCache();
 
-  protected abstract Clock getClock();
+  public abstract Clock getClock();
 
-  protected abstract BuildId getBuildId();
+  public abstract BuildId getBuildId();
 
-  protected abstract ImmutableMap<String, String> getEnvironment();
+  public abstract ImmutableMap<String, String> getEnvironment();
 
   @Value.Default
   public boolean isKeepGoing() {
@@ -85,5 +85,68 @@ abstract class AbstractBuildEngineBuildContext {
 
   public final BuckEventBus getEventBus() {
     return getBuildContext().getEventBus();
+  }
+
+  public static BuildEngineBuildContext of(
+      BuildContext buildContext,
+      ArtifactCache artifactCache,
+      Clock clock,
+      BuildId buildId,
+      Map<String, ? extends String> environment,
+      boolean keepGoing) {
+    return ImmutableBuildEngineBuildContext.of(
+        buildContext, artifactCache, clock, buildId, environment, keepGoing);
+  }
+
+  public BuildEngineBuildContext withBuildContext(BuildContext buildContext) {
+    if (getBuildContext().equals(buildContext)) {
+      return this;
+    }
+    return of(
+        buildContext,
+        getArtifactCache(),
+        getClock(),
+        getBuildId(),
+        getEnvironment(),
+        isKeepGoing());
+  }
+
+  public BuildEngineBuildContext withArtifactCache(ArtifactCache artifactCache) {
+    if (getArtifactCache() == artifactCache) {
+      return this;
+    }
+    return of(
+        getBuildContext(),
+        artifactCache,
+        getClock(),
+        getBuildId(),
+        getEnvironment(),
+        isKeepGoing());
+  }
+
+  public BuildEngineBuildContext withKeepGoing(boolean keepGoing) {
+    if (isKeepGoing() == keepGoing) {
+      return this;
+    }
+    return of(
+        getBuildContext(),
+        getArtifactCache(),
+        getClock(),
+        getBuildId(),
+        getEnvironment(),
+        keepGoing);
+  }
+
+  public BuildEngineBuildContext withBuildId(BuildId buildId) {
+    if (getBuildId().equals(buildId)) {
+      return this;
+    }
+    return of(
+        getBuildContext(),
+        getArtifactCache(),
+        getClock(),
+        buildId,
+        getEnvironment(),
+        isKeepGoing());
   }
 }

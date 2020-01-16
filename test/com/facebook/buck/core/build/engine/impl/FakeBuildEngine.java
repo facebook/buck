@@ -18,7 +18,6 @@ package com.facebook.buck.core.build.engine.impl;
 
 import com.facebook.buck.core.build.engine.BuildEngine;
 import com.facebook.buck.core.build.engine.BuildEngineBuildContext;
-import com.facebook.buck.core.build.engine.BuildEngineResult;
 import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
@@ -37,11 +36,11 @@ public class FakeBuildEngine implements BuildEngine {
   }
 
   @Override
-  public BuildEngineResult build(
+  public BuildEngine.BuildEngineResult build(
       BuildEngineBuildContext buildContext, ExecutionContext executionContext, BuildRule rule) {
     SettableFuture<BuildResult> future = SettableFuture.create();
     future.set(buildResults.get(rule.getBuildTarget()));
-    return BuildEngineResult.builder().setResult(future).build();
+    return BuildEngineResult.of(future);
   }
 
   @Override

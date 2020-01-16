@@ -105,20 +105,18 @@ public class ActionExecutionStepTest {
     assertEquals(
         StepExecutionResult.builder().setExitCode(0).setStderr(Optional.of("my std err")).build(),
         step.execute(
-            ExecutionContext.of(
-                Console.createNullConsole(),
-                testEventBus,
-                Platform.UNKNOWN,
-                ImmutableMap.of(),
-                new FakeJavaPackageFinder(),
-                ImmutableMap.of(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                TestCellPathResolver.get(projectFilesystem),
-                baseCell,
-                new FakeProcessExecutor(),
-                new FakeProjectFilesystemFactory())));
+            ExecutionContext.builder()
+                .setConsole(Console.createNullConsole())
+                .setBuckEventBus(testEventBus)
+                .setPlatform(Platform.UNKNOWN)
+                .setEnvironment(ImmutableMap.of())
+                .setJavaPackageFinder(new FakeJavaPackageFinder())
+                .setExecutors(ImmutableMap.of())
+                .setCellPathResolver(TestCellPathResolver.get(projectFilesystem))
+                .setBuildCellRootPath(baseCell)
+                .setProcessExecutor(new FakeProcessExecutor())
+                .setProjectFilesystemFactory(new FakeProjectFilesystemFactory())
+                .build()));
 
     assertThat(
         consoleEventListener.getLogMessages(),
@@ -161,20 +159,18 @@ public class ActionExecutionStepTest {
     assertEquals(
         StepExecutionResult.builder().setExitCode(-1).setStderr(Optional.of("my std err")).build(),
         step.execute(
-            ExecutionContext.of(
-                Console.createNullConsole(),
-                testEventBus,
-                Platform.UNKNOWN,
-                ImmutableMap.of(),
-                new FakeJavaPackageFinder(),
-                ImmutableMap.of(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                TestCellPathResolver.get(projectFilesystem),
-                baseCell,
-                new FakeProcessExecutor(),
-                new DefaultProjectFilesystemFactory())));
+            ExecutionContext.builder()
+                .setConsole(Console.createNullConsole())
+                .setBuckEventBus(testEventBus)
+                .setPlatform(Platform.UNKNOWN)
+                .setEnvironment(ImmutableMap.of())
+                .setJavaPackageFinder(new FakeJavaPackageFinder())
+                .setExecutors(ImmutableMap.of())
+                .setCellPathResolver(TestCellPathResolver.get(projectFilesystem))
+                .setBuildCellRootPath(baseCell)
+                .setProcessExecutor(new FakeProcessExecutor())
+                .setProjectFilesystemFactory(new DefaultProjectFilesystemFactory())
+                .build()));
     assertTrue(projectFilesystem.isDirectory(packagePath));
   }
 
@@ -214,20 +210,18 @@ public class ActionExecutionStepTest {
     assertEquals(
         StepExecutionResult.builder().setExitCode(-1).setStderr(Optional.of("my std err")).build(),
         step.execute(
-            ExecutionContext.of(
-                Console.createNullConsole(),
-                testEventBus,
-                Platform.UNKNOWN,
-                ImmutableMap.of(),
-                new FakeJavaPackageFinder(),
-                ImmutableMap.of(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                TestCellPathResolver.get(projectFilesystem),
-                baseCell,
-                new FakeProcessExecutor(),
-                new DefaultProjectFilesystemFactory())));
+            ExecutionContext.builder()
+                .setConsole(Console.createNullConsole())
+                .setBuckEventBus(testEventBus)
+                .setPlatform(Platform.UNKNOWN)
+                .setEnvironment(ImmutableMap.of())
+                .setJavaPackageFinder(new FakeJavaPackageFinder())
+                .setExecutors(ImmutableMap.of())
+                .setCellPathResolver(TestCellPathResolver.get(projectFilesystem))
+                .setBuildCellRootPath(baseCell)
+                .setProcessExecutor(new FakeProcessExecutor())
+                .setProjectFilesystemFactory(new DefaultProjectFilesystemFactory())
+                .build()));
     assertFalse(projectFilesystem.exists(expectedPath));
   }
 }

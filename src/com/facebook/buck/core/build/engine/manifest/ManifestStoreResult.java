@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.build.engine.manifest;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -24,9 +24,8 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 /** Provides a results summary of a manifest-based cache store/update process. */
-@Value.Immutable
-@BuckStyleImmutable
-interface AbstractManifestStoreResult {
+@BuckStyleValueWithBuilder
+public interface ManifestStoreResult {
 
   // Since some value combinations are mutually-exclusive (and would be more properly modeled by
   // tagged unions), do some consistency checks.
@@ -48,4 +47,10 @@ interface AbstractManifestStoreResult {
 
   /** @return a future wrapping the asynchronous cache upload. */
   Optional<ListenableFuture<Unit>> getStoreFuture();
+
+  static Builder builder() {
+    return new Builder();
+  }
+
+  static class Builder extends ImmutableManifestStoreResult.Builder {}
 }

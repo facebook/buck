@@ -49,8 +49,8 @@ import com.facebook.buck.core.build.action.resolver.BuildEngineActionToBuildRule
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
+import com.facebook.buck.core.build.engine.BuildEngine;
 import com.facebook.buck.core.build.engine.BuildEngineBuildContext;
-import com.facebook.buck.core.build.engine.BuildEngineResult;
 import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.build.engine.BuildRuleStatus;
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
@@ -275,12 +275,13 @@ public class CachingBuildEngineTest {
       fileHashCache =
           StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
       buildContext =
-          BuildEngineBuildContext.builder()
-              .setBuildContext(FakeBuildContext.NOOP_CONTEXT)
-              .setArtifactCache(cache)
-              .setBuildId(new BuildId())
-              .setClock(new IncrementingFakeClock())
-              .build();
+          BuildEngineBuildContext.of(
+              FakeBuildContext.NOOP_CONTEXT,
+              cache,
+              new IncrementingFakeClock(),
+              new BuildId(),
+              ImmutableMap.of(),
+              false);
       buildContext.getEventBus().register(listener);
       graphBuilder = new TestActionGraphBuilder();
       pathResolver = graphBuilder.getSourcePathResolver();
@@ -546,12 +547,13 @@ public class CachingBuildEngineTest {
           .andDelegateTo(new FakeArtifactCacheThatWritesAZipFile(desiredZipEntries, metadata));
 
       BuildEngineBuildContext buildContext =
-          BuildEngineBuildContext.builder()
-              .setBuildContext(FakeBuildContext.withSourcePathResolver(pathResolver))
-              .setClock(new DefaultClock())
-              .setBuildId(new BuildId())
-              .setArtifactCache(artifactCache)
-              .build();
+          BuildEngineBuildContext.of(
+              FakeBuildContext.withSourcePathResolver(pathResolver),
+              artifactCache,
+              new DefaultClock(),
+              new BuildId(),
+              ImmutableMap.of(),
+              false);
 
       // Build the rule!
       replayAll();
@@ -639,12 +641,13 @@ public class CachingBuildEngineTest {
           .andDelegateTo(new FakeArtifactCacheThatWritesAZipFile(desiredZipEntries, metadata));
 
       BuildEngineBuildContext buildContext =
-          BuildEngineBuildContext.builder()
-              .setBuildContext(FakeBuildContext.withSourcePathResolver(pathResolver))
-              .setClock(new DefaultClock())
-              .setBuildId(new BuildId())
-              .setArtifactCache(artifactCache)
-              .build();
+          BuildEngineBuildContext.of(
+              FakeBuildContext.withSourcePathResolver(pathResolver),
+              artifactCache,
+              new DefaultClock(),
+              new BuildId(),
+              ImmutableMap.of(),
+              false);
 
       // Build the rule!
       replayAll();
@@ -991,10 +994,10 @@ public class CachingBuildEngineTest {
           listeningDecorator(Executors.newFixedThreadPool(4));
       try (CachingBuildEngine cachingBuildEngine =
           cachingBuildEngineFactory().setExecutorService(executorService).build()) {
-        BuildEngineResult engineResultOne =
+        BuildEngine.BuildEngineResult engineResultOne =
             cachingBuildEngine.build(
                 buildContext, TestExecutionContext.newInstance(), interleavedRuleOne);
-        BuildEngineResult engineResultTwo =
+        BuildEngine.BuildEngineResult engineResultTwo =
             cachingBuildEngine.build(
                 buildContext, TestExecutionContext.newInstance(), interleavedRuleTwo);
         assertThat(engineResultOne.getResult().get().getStatus(), equalTo(BuildRuleStatus.SUCCESS));
