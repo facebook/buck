@@ -34,15 +34,15 @@ import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.apple.xcode.xcodeproj.XCConfigurationList;
 import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
 
 /** A factory for creating PBXObjects that assigns a Global ID on initialization. */
 public final class PBXObjectGIDFactory extends AbstractPBXObjectFactory {
-  private final GidGenerator gidGenerator;
+  private final ConcurrentHashMap<String, Integer> classNameToCounterMap;
 
-  /** @param gidGenerator The Gid Generator to use for generating Global IDs for the PBX Objects */
-  public PBXObjectGIDFactory(GidGenerator gidGenerator) {
-    this.gidGenerator = gidGenerator;
+  public PBXObjectGIDFactory() {
+    this.classNameToCounterMap = new ConcurrentHashMap<>();
   }
 
   @Override
@@ -132,7 +132,10 @@ public final class PBXObjectGIDFactory extends AbstractPBXObjectFactory {
   }
 
   private <T extends PBXObject> T objectWithGid(T obj) {
-    String gid = gidGenerator.generateGid(obj.isa(), obj.stableHash());
+    int counter = classNameToCounterMap.getOrDefault(obj.isa(), 0);
+    String gid = String.format("%08X%08X%08X", obj.isa().hashCode(), 0, counter++);
+    classNameToCounterMap.put(obj.isa(), counter);
+
     obj.setGlobalID(gid);
     return obj;
   }

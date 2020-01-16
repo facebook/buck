@@ -54,7 +54,6 @@ import com.facebook.buck.apple.XCodeDescriptions;
 import com.facebook.buck.apple.XCodeDescriptionsFactory;
 import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.apple.xcode.AbstractPBXObjectFactory;
-import com.facebook.buck.apple.xcode.GidGenerator;
 import com.facebook.buck.apple.xcode.PBXObjectGIDFactory;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
@@ -3313,26 +3312,6 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void generatedGidsForTargetsAreStable() throws IOException, InterruptedException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "foo");
-    TargetNode<?> node = AppleLibraryBuilder.createBuilder(buildTarget).build();
-
-    ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
-    ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
-
-    PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:foo");
-    String expectedGID =
-        String.format("%08X%08X%08X", target.isa().hashCode(), target.getName().hashCode(), 0);
-    assertEquals(
-        "expected GID has correct value (value from which it's derived have not changed)",
-        "E66DC04E2245423200000000",
-        expectedGID);
-    assertEquals("generated GID is same as expected", expectedGID, target.getGlobalID());
-  }
-
-  @Test
   public void generatedTargetConfigurationHasRepoRootSet()
       throws IOException, InterruptedException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "rule");
@@ -4660,7 +4639,7 @@ public class ProjectGeneratorTest {
   private XcodeProjectWriteOptions xcodeProjectWriteOptions() {
     return XcodeProjectWriteOptions.of(
         new PBXProject(PROJECT_NAME, AbstractPBXObjectFactory.DefaultFactory()),
-        new PBXObjectGIDFactory(new GidGenerator()),
+        new PBXObjectGIDFactory(),
         OUTPUT_DIRECTORY);
   }
 
