@@ -24,7 +24,6 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.google.common.collect.ImmutableList;
@@ -56,10 +55,19 @@ public class CxxLuaExtensionDescriptionTest {
         new TestActionGraphBuilder(TargetGraphFactory.newInstance(builder.build()));
     SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     CxxLuaExtension rule = builder.build(graphBuilder);
-    NativeLinkableInput input =
-        rule.getTargetForPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
-            .getNativeLinkTargetInput(graphBuilder, pathResolver);
     assertThat(
-        Arg.stringify(input.getArgs(), pathResolver), Matchers.not(Matchers.hasItems("--flag")));
+        Arg.stringify(
+            rule.getTargetForPlatform(CxxPlatformUtils.DEFAULT_PLATFORM, true)
+                .getNativeLinkTargetInput(graphBuilder, pathResolver)
+                .getArgs(),
+            pathResolver),
+        Matchers.hasItems("--flag"));
+    assertThat(
+        Arg.stringify(
+            rule.getTargetForPlatform(CxxPlatformUtils.DEFAULT_PLATFORM, false)
+                .getNativeLinkTargetInput(graphBuilder, pathResolver)
+                .getArgs(),
+            pathResolver),
+        Matchers.not(Matchers.hasItems("--flag")));
   }
 }

@@ -904,7 +904,8 @@ class NativeLibraryMergeEnhancer {
     }
 
     @Override
-    public Optional<NativeLinkTarget> getNativeLinkTarget(ActionGraphBuilder graphBuilder) {
+    public Optional<NativeLinkTarget> getNativeLinkTarget(
+        ActionGraphBuilder graphBuilder, boolean includePrivateLinkerFlags) {
       return Optional.empty();
     }
 
@@ -920,7 +921,8 @@ class NativeLibraryMergeEnhancer {
       }
 
       for (NativeLinkable linkable : Iterables.concat(usingGlue, constituents.getLinkables())) {
-        Optional<NativeLinkTarget> nativeLinkTarget = linkable.getNativeLinkTarget(graphBuilder);
+        Optional<NativeLinkTarget> nativeLinkTarget =
+            linkable.getNativeLinkTarget(graphBuilder, true);
         if (nativeLinkTarget.isPresent()) {
           // If this constituent is a NativeLinkTarget, use its input to get raw objects and
           // linker flags.

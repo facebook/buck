@@ -91,7 +91,8 @@ class OmnibusNode implements NativeLinkable {
   }
 
   @Override
-  public Optional<NativeLinkTarget> getNativeLinkTarget(ActionGraphBuilder graphBuilder) {
+  public Optional<NativeLinkTarget> getNativeLinkTarget(
+      ActionGraphBuilder graphBuilder, boolean includePrivateLinkerFlags) {
     return Optional.empty();
   }
 

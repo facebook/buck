@@ -70,10 +70,11 @@ public class PlatformLockedNativeLinkableGroup implements NativeLinkable {
   }
 
   @Override
-  public Optional<NativeLinkTarget> getNativeLinkTarget(ActionGraphBuilder graphBuilder) {
+  public Optional<NativeLinkTarget> getNativeLinkTarget(
+      ActionGraphBuilder graphBuilder, boolean includePrivateLinkerFlags) {
     return underlyingGroup
         .getNativeLinkTarget(cxxPlatform, graphBuilder)
-        .map(g -> g.getTargetForPlatform(cxxPlatform));
+        .map(g -> g.getTargetForPlatform(cxxPlatform, includePrivateLinkerFlags));
   }
 
   @Override

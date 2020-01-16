@@ -57,13 +57,16 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
-import com.facebook.buck.cxx.toolchain.nativelink.PlatformMappedCache;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.util.stream.RichStream;
+import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.versions.VersionPropagator;
+import com.google.common.base.Throwables;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
@@ -71,12 +74,14 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimaps;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.concurrent.ExecutionException;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import org.immutables.value.Value;
 
@@ -117,7 +122,8 @@ public class CxxLuaExtensionDescription
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       LuaPlatform luaPlatform,
-      CxxLuaExtensionDescriptionArg args) {
+      CxxLuaExtensionDescriptionArg args,
+      boolean includePrivateLinkerFlags) {
 
     CxxPlatform cxxPlatform = luaPlatform.getCxxPlatform();
     StringWithMacrosConverter macrosConverter =
@@ -199,7 +205,20 @@ public class CxxLuaExtensionDescription
                 PicType.PIC)
             .requirePreprocessAndCompileRules(srcs);
 
-    return SourcePathArg.from(picObjects.values());
+    ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
+
+    if (includePrivateLinkerFlags) {
+      CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
+              args.getLinkerFlags(), args.getPlatformLinkerFlags(), cxxPlatform)
+          .stream()
+          .map(macrosConverter::convert)
+          .forEach(argsBuilder::add);
+    }
+
+    // Add object files into the args.
+    argsBuilder.addAll(SourcePathArg.from(picObjects.values()));
+
+    return argsBuilder.build();
   }
 
   private BuildRule createExtensionBuildRule(
@@ -212,9 +231,6 @@ public class CxxLuaExtensionDescription
     CxxPlatform cxxPlatform = luaPlatform.getCxxPlatform();
     String extensionName = getExtensionName(buildTarget, cxxPlatform);
     Path extensionPath = getExtensionPath(projectFilesystem, buildTarget, cxxPlatform);
-    StringWithMacrosConverter macrosConverter =
-        CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
-            buildTarget, cellRoots, graphBuilder, cxxPlatform);
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxBuckConfig,
         cxxPlatform,
@@ -241,20 +257,15 @@ public class CxxLuaExtensionDescription
         ImmutableSet.of(),
         ImmutableSet.of(),
         NativeLinkableInput.builder()
-            .addAllArgs(
-                CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
-                        args.getLinkerFlags(), args.getPlatformLinkerFlags(), cxxPlatform)
-                    .stream()
-                    .map(macrosConverter::convert)
-                    .collect(Collectors.toList()))
-            .addAllArgs(
+            .setArgs(
                 getExtensionArgs(
                     buildTarget.withoutFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor()),
                     projectFilesystem,
                     graphBuilder,
                     cellRoots,
                     luaPlatform,
-                    args))
+                    args,
+                    true))
             .build(),
         Optional.empty(),
         cellRoots);
@@ -290,8 +301,7 @@ public class CxxLuaExtensionDescription
     // Otherwise, we return the generic placeholder of this library, that dependents can use
     // get the real build rules via querying the action graph.
     return new CxxLuaExtension(buildTarget, projectFilesystem, params) {
-      private final PlatformMappedCache<NativeLinkTarget> targetsCache =
-          new PlatformMappedCache<>();
+      private final NativeLinkTargetCache targetsCache = new NativeLinkTargetCache();
 
       @Override
       public String getModule(CxxPlatform cxxPlatform) {
@@ -308,9 +318,11 @@ public class CxxLuaExtensionDescription
       }
 
       @Override
-      public NativeLinkTarget getTargetForPlatform(CxxPlatform cxxPlatform) {
+      public NativeLinkTarget getTargetForPlatform(
+          CxxPlatform cxxPlatform, boolean includePrivateLinkerFlags) {
         return targetsCache.get(
             cxxPlatform,
+            includePrivateLinkerFlags,
             () -> {
               ImmutableList<NativeLinkable> nativeLinkables =
                   RichStream.from(args.getCxxDeps().get(graphBuilder, cxxPlatform))
@@ -324,7 +336,8 @@ public class CxxLuaExtensionDescription
                       graphBuilder,
                       cellRoots,
                       luaPlatforms.getValue(cxxPlatform.getFlavor()),
-                      args);
+                      args,
+                      includePrivateLinkerFlags);
               NativeLinkableInput linkableInput =
                   NativeLinkableInput.builder()
                       .addAllArgs(extensionArgs)
@@ -337,6 +350,26 @@ public class CxxLuaExtensionDescription
                   linkableInput,
                   Optional.empty());
             });
+      }
+
+      class NativeLinkTargetCache {
+        // Use the Flavor as a key because hashing the CxxPlatform is expensive.
+        private final Cache<Pair<Flavor, Boolean>, NativeLinkTarget> cache =
+            CacheBuilder.newBuilder().build();
+
+        /** Returns either a cached or computed linkable. */
+        public NativeLinkTarget get(
+            CxxPlatform cxxPlatform,
+            boolean includePrivateLinkerFlags,
+            Supplier<NativeLinkTarget> supplier) {
+          try {
+            return cache.get(
+                new Pair<>(cxxPlatform.getFlavor(), includePrivateLinkerFlags), supplier::get);
+          } catch (ExecutionException e) {
+            Throwables.throwIfUnchecked(e.getCause());
+            throw new UncheckedExecutionException(e.getCause());
+          }
+        }
       }
     };
   }

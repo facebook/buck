@@ -305,7 +305,7 @@ public class PythonUtil {
         if (node instanceof CxxPythonExtension) {
           CxxPythonExtension extension = (CxxPythonExtension) node;
           NativeLinkTarget target =
-              extension.getNativeLinkTarget(pythonPlatform, cxxPlatform, graphBuilder);
+              extension.getNativeLinkTarget(pythonPlatform, cxxPlatform, graphBuilder, false);
           extensions.put(target.getBuildTarget(), extension);
           omnibusRoots.addIncludedRoot(target);
           List<BuildRule> cxxpydeps = new ArrayList<>();
@@ -351,7 +351,7 @@ public class PythonUtil {
           NativeLinkable linkable =
               ((NativeLinkableGroup) node).getNativeLinkable(cxxPlatform, graphBuilder);
           nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);
-          omnibusRoots.addPotentialRoot(linkable);
+          omnibusRoots.addPotentialRoot(linkable, false);
         }
         return deps;
       }
@@ -436,7 +436,7 @@ public class PythonUtil {
             Maps.uniqueIndex(
                 entry
                     .getValue()
-                    .getNativeLinkTarget(pythonPlatform, cxxPlatform, graphBuilder)
+                    .getNativeLinkTarget(pythonPlatform, cxxPlatform, graphBuilder, false)
                     .getNativeLinkTargetDeps(graphBuilder),
                 NativeLinkable::getBuildTarget));
       }

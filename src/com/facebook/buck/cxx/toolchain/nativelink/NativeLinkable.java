@@ -66,8 +66,11 @@ public interface NativeLinkable {
   /**
    * Optionally returns a {@link NativeLinkTarget}. Most implementations of NativeLinkable are
    * themselves instances of NativeLinkTarget.
+   *
+   * @param includePrivateLinkerFlags whether to include rule-specific non-exported linker flags.
    */
-  Optional<NativeLinkTarget> getNativeLinkTarget(ActionGraphBuilder graphBuilder);
+  Optional<NativeLinkTarget> getNativeLinkTarget(
+      ActionGraphBuilder graphBuilder, boolean includePrivateLinkerFlags);
 
   /** @return The preferred {@link NativeLinkableGroup.Linkage} for this linkable. */
   NativeLinkableGroup.Linkage getPreferredLinkage();

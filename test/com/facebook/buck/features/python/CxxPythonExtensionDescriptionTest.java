@@ -348,7 +348,7 @@ public class CxxPythonExtensionDescriptionTest {
             CxxTestUtils.createDefaultPlatforms());
     CxxPythonExtension rule = builder.build(graphBuilder);
     NativeLinkTarget nativeLinkTarget =
-        rule.getNativeLinkTarget(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
+        rule.getNativeLinkTarget(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder, true);
     assertThat(
         nativeLinkTarget.getNativeLinkTargetMode(),
         Matchers.equalTo(NativeLinkTargetMode.library()));
@@ -373,7 +373,7 @@ public class CxxPythonExtensionDescriptionTest {
     CxxPythonExtension rule =
         builder.setDeps(ImmutableSortedSet.of(dep.getBuildTarget())).build(graphBuilder);
     NativeLinkTarget nativeLinkTarget =
-        rule.getNativeLinkTarget(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
+        rule.getNativeLinkTarget(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder, true);
     assertThat(
         FluentIterable.from(nativeLinkTarget.getNativeLinkTargetDeps(graphBuilder))
             .transform(d -> d.getBuildTarget()),
@@ -397,7 +397,7 @@ public class CxxPythonExtensionDescriptionTest {
     python2Builder.build(graphBuilder, filesystem, targetGraph);
     CxxPythonExtension rule = builder.build(graphBuilder, filesystem, targetGraph);
     NativeLinkTarget nativeLinkTarget =
-        rule.getNativeLinkTarget(platform, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
+        rule.getNativeLinkTarget(platform, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder, true);
     assertThat(
         FluentIterable.from(nativeLinkTarget.getNativeLinkTargetDeps(graphBuilder))
             .transform(d -> d.getBuildTarget()),
@@ -417,12 +417,20 @@ public class CxxPythonExtensionDescriptionTest {
         new TestActionGraphBuilder(TargetGraphFactory.newInstance(builder.build()));
     SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     CxxPythonExtension rule = builder.build(graphBuilder);
-    NativeLinkTarget nativeLinkTarget =
-        rule.getNativeLinkTarget(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
-    NativeLinkableInput input =
-        nativeLinkTarget.getNativeLinkTargetInput(graphBuilder, pathResolver);
     assertThat(
-        Arg.stringify(input.getArgs(), pathResolver), Matchers.not(Matchers.hasItems("--flag")));
+        Arg.stringify(
+            rule.getNativeLinkTarget(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder, true)
+                .getNativeLinkTargetInput(graphBuilder, pathResolver)
+                .getArgs(),
+            pathResolver),
+        Matchers.hasItems("--flag"));
+    assertThat(
+        Arg.stringify(
+            rule.getNativeLinkTarget(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder, false)
+                .getNativeLinkTargetInput(graphBuilder, pathResolver)
+                .getArgs(),
+            pathResolver),
+        Matchers.not(Matchers.hasItems("--flag")));
   }
 
   @Test
@@ -450,13 +458,13 @@ public class CxxPythonExtensionDescriptionTest {
                     .build())
             .build(graphBuilder);
     NativeLinkTarget py2NativeLinkTarget =
-        rule.getNativeLinkTarget(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
+        rule.getNativeLinkTarget(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder, true);
     assertThat(
         FluentIterable.from(py2NativeLinkTarget.getNativeLinkTargetDeps(graphBuilder))
             .transform(d -> d.getBuildTarget()),
         Matchers.hasItem(dep.getBuildTarget()));
     NativeLinkTarget py3NativeLinkTarget =
-        rule.getNativeLinkTarget(PY3, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
+        rule.getNativeLinkTarget(PY3, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder, true);
     assertThat(
         FluentIterable.from(py3NativeLinkTarget.getNativeLinkTargetDeps(graphBuilder))
             .transform(d -> d.getBuildTarget()),

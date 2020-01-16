@@ -53,13 +53,15 @@ public interface LegacyNativeLinkTargetGroup extends NativeLinkTargetGroup {
   Optional<Path> getNativeLinkTargetOutputPath();
 
   @Override
-  default NativeLinkTarget getTargetForPlatform(CxxPlatform cxxPlatform) {
-    return new PlatformLockedNativeLinkTargetGroup(this, cxxPlatform);
+  default NativeLinkTarget getTargetForPlatform(
+      CxxPlatform cxxPlatform, boolean includePrivateLinkerFlags) {
+    return new PlatformLockedNativeLinkTargetGroup(this, cxxPlatform, includePrivateLinkerFlags);
   }
 
   /** @return the {@link NativeLinkableInput} used to link this target. */
   NativeLinkableInput getNativeLinkTargetInput(
       CxxPlatform cxxPlatform,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolverAdapter pathResolver);
+      SourcePathResolverAdapter pathResolver,
+      boolean includePrivateLinkerFlags);
 }

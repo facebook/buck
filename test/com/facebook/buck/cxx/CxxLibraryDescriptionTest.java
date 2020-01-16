@@ -67,6 +67,7 @@ import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.impl.StaticUnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.file.MorePaths;
@@ -1126,15 +1127,26 @@ public class CxxLibraryDescriptionTest {
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(TargetGraphFactory.newInstance(ruleBuilder.build()));
     CxxLibraryGroup rule = (CxxLibraryGroup) ruleBuilder.build(graphBuilder);
-    NativeLinkableInput input =
-        rule.getNativeLinkTargetInput(
-            CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder, graphBuilder.getSourcePathResolver());
+    NativeLinkable linkable =
+        rule.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
     assertThat(
-        Arg.stringify(input.getArgs(), graphBuilder.getSourcePathResolver()),
-        not(hasItem("--flag")));
+        Arg.stringify(
+            linkable
+                .getNativeLinkTarget(graphBuilder, true)
+                .get()
+                .getNativeLinkTargetInput(graphBuilder, graphBuilder.getSourcePathResolver())
+                .getArgs(),
+            graphBuilder.getSourcePathResolver()),
+        Matchers.allOf(hasItem("--flag"), hasItem("--exported-flag")));
     assertThat(
-        Arg.stringify(input.getArgs(), graphBuilder.getSourcePathResolver()),
-        hasItem("--exported-flag"));
+        Arg.stringify(
+            linkable
+                .getNativeLinkTarget(graphBuilder, false)
+                .get()
+                .getNativeLinkTargetInput(graphBuilder, graphBuilder.getSourcePathResolver())
+                .getArgs(),
+            graphBuilder.getSourcePathResolver()),
+        Matchers.allOf(not(hasItem("--flag")), hasItem("--exported-flag")));
   }
 
   @Test
@@ -1204,7 +1216,8 @@ public class CxxLibraryDescriptionTest {
         (CxxLibraryGroup) libraryBuilder.build(graphBuilder, filesystem, targetGraph);
     assertThat(
         library
-            .getNativeLinkTargetInput(platform, graphBuilder, graphBuilder.getSourcePathResolver())
+            .getNativeLinkTargetInput(
+                platform, graphBuilder, graphBuilder.getSourcePathResolver(), true)
             .getLibraries(),
         equalTo(libraries));
   }

@@ -31,11 +31,15 @@ import java.util.Optional;
 public class PlatformLockedNativeLinkTargetGroup implements NativeLinkTarget {
   private final LegacyNativeLinkTargetGroup underlyingGroup;
   private final CxxPlatform cxxPlatform;
+  boolean includePrivateLinkerFlags;
 
   public PlatformLockedNativeLinkTargetGroup(
-      LegacyNativeLinkTargetGroup underlyingGroup, CxxPlatform cxxPlatform) {
+      LegacyNativeLinkTargetGroup underlyingGroup,
+      CxxPlatform cxxPlatform,
+      boolean includePrivateLinkerFlags) {
     this.underlyingGroup = underlyingGroup;
     this.cxxPlatform = cxxPlatform;
+    this.includePrivateLinkerFlags = includePrivateLinkerFlags;
   }
 
   @Override
@@ -59,7 +63,8 @@ public class PlatformLockedNativeLinkTargetGroup implements NativeLinkTarget {
   @Override
   public NativeLinkableInput getNativeLinkTargetInput(
       ActionGraphBuilder graphBuilder, SourcePathResolverAdapter pathResolver) {
-    return underlyingGroup.getNativeLinkTargetInput(cxxPlatform, graphBuilder, pathResolver);
+    return underlyingGroup.getNativeLinkTargetInput(
+        cxxPlatform, graphBuilder, pathResolver, includePrivateLinkerFlags);
   }
 
   @Override

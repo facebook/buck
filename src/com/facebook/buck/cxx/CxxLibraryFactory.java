@@ -319,7 +319,7 @@ public class CxxLibraryFactory {
               .concat(RichStream.from(delegatePostExportedLinkerFlags))
               .toImmutableList();
         },
-        (cxxPlatform, ruleResolverInner, pathResolverInner) ->
+        (cxxPlatform, ruleResolverInner, pathResolverInner, includePrivateLinkerFlags) ->
             getSharedLibraryNativeLinkTargetInput(
                 buildTarget,
                 projectFilesystem,
@@ -329,12 +329,18 @@ public class CxxLibraryFactory {
                 cxxPlatform,
                 args,
                 cxxDeps.get(ruleResolverInner, cxxPlatform),
-                ImmutableList.of(),
+                includePrivateLinkerFlags
+                    ? CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
+                        args.getLinkerFlags(), args.getPlatformLinkerFlags(), cxxPlatform)
+                    : ImmutableList.of(),
                 CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
                     args.getExportedLinkerFlags(),
                     args.getExportedPlatformLinkerFlags(),
                     cxxPlatform),
-                ImmutableList.of(),
+                includePrivateLinkerFlags
+                    ? CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
+                        args.getPostLinkerFlags(), args.getPostPlatformLinkerFlags(), cxxPlatform)
+                    : ImmutableList.of(),
                 CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
                     args.getExportedPostLinkerFlags(),
                     args.getExportedPostPlatformLinkerFlags(),
@@ -871,7 +877,7 @@ public class CxxLibraryFactory {
     NativeLinkTarget linkTarget =
         ((NativeLinkTargetGroup)
                 graphBuilder.requireRule(baseTarget.withoutFlavors(cxxPlatform.getFlavor())))
-            .getTargetForPlatform(cxxPlatform);
+            .getTargetForPlatform(cxxPlatform, true);
 
     NativeLinkTargetMode linkTargetMode = linkTarget.getNativeLinkTargetMode();
     Preconditions.checkArgument(linkTargetMode.getType().equals(LinkType.SHARED));

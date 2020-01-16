@@ -83,7 +83,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimaps;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.immutables.value.Value;
 
@@ -250,9 +249,21 @@ public class CxxPythonExtensionDescription
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
       CxxPythonExtensionDescriptionArg args,
-      ImmutableSet<BuildRule> deps) {
+      ImmutableSet<BuildRule> deps,
+      boolean includePrivateLinkerFlags) {
 
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
+
+    if (includePrivateLinkerFlags) {
+      CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
+              args.getLinkerFlags(), args.getPlatformLinkerFlags(), cxxPlatform)
+          .stream()
+          .map(
+              CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
+                      target, cellRoots, graphBuilder, cxxPlatform)
+                  ::convert)
+          .forEach(argsBuilder::add);
+    }
 
     // Embed a origin-relative library path into the binary so it can find the shared libraries.
     argsBuilder.addAll(
@@ -340,16 +351,7 @@ public class CxxPythonExtensionDescription
         ImmutableSet.of(),
         ImmutableSet.of(),
         NativeLinkableInput.builder()
-            .addAllArgs(
-                CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
-                        args.getLinkerFlags(), args.getPlatformLinkerFlags(), cxxPlatform)
-                    .stream()
-                    .map(
-                        CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
-                                buildTarget, cellRoots, graphBuilder, cxxPlatform)
-                            ::convert)
-                    .collect(Collectors.toList()))
-            .addAllArgs(
+            .setArgs(
                 getExtensionArgs(
                     buildTarget.withoutFlavors(LinkerMapMode.FLAVOR_DOMAIN.getFlavors()),
                     projectFilesystem,
@@ -357,7 +359,8 @@ public class CxxPythonExtensionDescription
                     cellRoots,
                     cxxPlatform,
                     args,
-                    deps))
+                    deps,
+                    true))
             .setFrameworks(args.getFrameworks())
             .setLibraries(args.getLibraries())
             .build(),
@@ -497,7 +500,10 @@ public class CxxPythonExtensionDescription
 
       @Override
       public NativeLinkTarget getNativeLinkTarget(
-          PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+          PythonPlatform pythonPlatform,
+          CxxPlatform cxxPlatform,
+          ActionGraphBuilder graphBuilder,
+          boolean includePrivateLinkerFlags) {
         ImmutableList<NativeLinkable> linkTargetDeps =
             RichStream.from(getPlatformDeps(graphBuilder, pythonPlatform, cxxPlatform, args))
                 .filter(NativeLinkableGroup.class)
@@ -515,7 +521,8 @@ public class CxxPythonExtensionDescription
                         cellRoots,
                         cxxPlatform,
                         args,
-                        getPlatformDeps(graphBuilder, pythonPlatform, cxxPlatform, args)))
+                        getPlatformDeps(graphBuilder, pythonPlatform, cxxPlatform, args),
+                        includePrivateLinkerFlags))
                 .addAllFrameworks(args.getFrameworks())
                 .build();
         return new NativeLinkTargetInfo(

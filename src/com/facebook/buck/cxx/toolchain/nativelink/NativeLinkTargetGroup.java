@@ -23,5 +23,8 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 public interface NativeLinkTargetGroup {
   BuildTarget getBuildTarget();
 
-  NativeLinkTarget getTargetForPlatform(CxxPlatform cxxPlatform);
+  /**
+   * @param includePrivateLinkerFlags whether to include rule-specific non-exported linker flags.
+   */
+  NativeLinkTarget getTargetForPlatform(CxxPlatform cxxPlatform, boolean includePrivateLinkerFlags);
 }
