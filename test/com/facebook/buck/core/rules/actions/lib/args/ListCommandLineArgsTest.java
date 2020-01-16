@@ -73,7 +73,7 @@ public class ListCommandLineArgsTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:some_rule");
     ActionRegistryForTests registry = new ActionRegistryForTests(target, filesystem);
     Artifact artifact3 = registry.declareArtifact(Paths.get("out.txt"), Location.BUILTIN);
-    OutputArtifact artifact3Output = (OutputArtifact) artifact3.asOutputArtifact(Location.BUILTIN);
+    OutputArtifact artifact3Output = artifact3.asOutputArtifact(Location.BUILTIN);
     Path artifact3Path = BuildPaths.getGenDir(filesystem, target).resolve("out.txt");
 
     CommandLineArgs args =
@@ -82,7 +82,11 @@ public class ListCommandLineArgsTest {
             CommandLineArgs.DEFAULT_FORMAT_STRING);
 
     new WriteAction(
-        registry, ImmutableSortedSet.of(), ImmutableSortedSet.of(artifact3), "contents", false);
+        registry,
+        ImmutableSortedSet.of(),
+        ImmutableSortedSet.of(artifact3Output),
+        "contents",
+        false);
 
     assertEquals(
         ImmutableList.of(
@@ -97,11 +101,11 @@ public class ListCommandLineArgsTest {
     assertEquals(5, args.getEstimatedArgsCount());
 
     ImmutableSortedSet.Builder<Artifact> inputs = ImmutableSortedSet.naturalOrder();
-    ImmutableSortedSet.Builder<Artifact> outputs = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<OutputArtifact> outputs = ImmutableSortedSet.naturalOrder();
     args.visitInputsAndOutputs(inputs::add, outputs::add);
 
     assertEquals(ImmutableSortedSet.of(path1, path2), inputs.build());
-    assertEquals(ImmutableSortedSet.of(artifact3), outputs.build());
+    assertEquals(ImmutableSortedSet.of(artifact3Output), outputs.build());
   }
 
   @Test
@@ -115,7 +119,7 @@ public class ListCommandLineArgsTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:some_rule");
     ActionRegistryForTests registry = new ActionRegistryForTests(target, filesystem);
     Artifact artifact3 = registry.declareArtifact(Paths.get("out.txt"), Location.BUILTIN);
-    OutputArtifact artifact3Output = (OutputArtifact) artifact3.asOutputArtifact(Location.BUILTIN);
+    OutputArtifact artifact3Output = artifact3.asOutputArtifact(Location.BUILTIN);
     Path artifact3Path = BuildPaths.getGenDir(filesystem, target).resolve("out.txt");
 
     CommandLineArgs args =
@@ -123,7 +127,11 @@ public class ListCommandLineArgsTest {
             ImmutableList.of(path1, 1, "foo", path2, artifact3Output), "--prefix=%s");
 
     new WriteAction(
-        registry, ImmutableSortedSet.of(), ImmutableSortedSet.of(artifact3), "contents", false);
+        registry,
+        ImmutableSortedSet.of(),
+        ImmutableSortedSet.of(artifact3Output),
+        "contents",
+        false);
 
     assertEquals(
         ImmutableList.of(
@@ -147,7 +155,7 @@ public class ListCommandLineArgsTest {
 
     ImmutableSortedSet.Builder<Artifact> inputs = ImmutableSortedSet.naturalOrder();
     ImmutableSortedSet.Builder<Artifact> outputs = ImmutableSortedSet.naturalOrder();
-    args.visitInputsAndOutputs(inputs::add, outputs::add);
+    args.visitInputsAndOutputs(inputs::add, o -> outputs.add(o.getArtifact()));
 
     assertEquals(ImmutableSortedSet.of(path1, path2), inputs.build());
     assertEquals(ImmutableSortedSet.of(artifact3), outputs.build());

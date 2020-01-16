@@ -17,6 +17,7 @@
 package com.facebook.buck.core.rules.providers.lib;
 
 import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgs;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgsFactory;
@@ -101,7 +102,7 @@ public abstract class RunInfo extends BuiltInProviderInfo<RunInfo> implements Co
   }
 
   @Override
-  public void visitInputsAndOutputs(Consumer<Artifact> inputs, Consumer<Artifact> outputs) {
+  public void visitInputsAndOutputs(Consumer<Artifact> inputs, Consumer<OutputArtifact> outputs) {
     args().visitInputsAndOutputs(inputs, outputs);
   }
 }

@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildPaths;
@@ -31,6 +32,8 @@ import com.facebook.buck.step.impl.TestActionExecutionRunner;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.devtools.build.lib.events.Location;
+import com.google.devtools.build.lib.syntax.EvalException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -54,11 +57,13 @@ public class WriteActionTest {
   }
 
   @Test
-  public void writesContentsToFile() throws ActionCreationException, IOException {
+  public void writesContentsToFile() throws ActionCreationException, IOException, EvalException {
 
     Artifact output1 = runner.declareArtifact(Paths.get("bar1"));
     Artifact output2 = runner.declareArtifact(Paths.get("bar2"));
-    ImmutableSortedSet<Artifact> outputs = ImmutableSortedSet.of(output1, output2);
+    ImmutableSortedSet<OutputArtifact> outputs =
+        ImmutableSortedSet.of(
+            output1.asOutputArtifact(Location.BUILTIN), output2.asOutputArtifact(Location.BUILTIN));
 
     TestActionExecutionRunner.ExecutionDetails<WriteAction> result =
         runner.runAction(
@@ -86,7 +91,7 @@ public class WriteActionTest {
   }
 
   @Test
-  public void writesCommandLineArgumentsToFile() throws IOException {
+  public void writesCommandLineArgumentsToFile() throws IOException, EvalException {
     Artifact output1 = runner.declareArtifact(Paths.get("bar1"));
     Artifact output2 = runner.declareArtifact(Paths.get("bar2"));
     Artifact input = runner.declareArtifact(Paths.get("bar3"));
@@ -95,11 +100,13 @@ public class WriteActionTest {
         new WriteAction(
             runner.getRegistry(),
             ImmutableSortedSet.of(),
-            ImmutableSortedSet.of(input),
+            ImmutableSortedSet.of(input.asOutputArtifact(Location.BUILTIN)),
             "contents",
             false));
 
-    ImmutableSortedSet<Artifact> outputs = ImmutableSortedSet.of(output1, output2);
+    ImmutableSortedSet<OutputArtifact> outputs =
+        ImmutableSortedSet.of(
+            output1.asOutputArtifact(Location.BUILTIN), output2.asOutputArtifact(Location.BUILTIN));
 
     TestActionExecutionRunner.ExecutionDetails<WriteAction> result =
         runner.runAction(
@@ -137,10 +144,13 @@ public class WriteActionTest {
   }
 
   @Test
-  public void writesContentsToNestedFile() throws ActionCreationException, IOException {
+  public void writesContentsToNestedFile()
+      throws ActionCreationException, IOException, EvalException {
     Artifact output1 = runner.declareArtifact(Paths.get("foo").resolve("bar1"));
     Artifact output2 = runner.declareArtifact(Paths.get("foo").resolve("bar2"));
-    ImmutableSortedSet<Artifact> outputs = ImmutableSortedSet.of(output1, output2);
+    ImmutableSortedSet<OutputArtifact> outputs =
+        ImmutableSortedSet.of(
+            output1.asOutputArtifact(Location.BUILTIN), output2.asOutputArtifact(Location.BUILTIN));
 
     TestActionExecutionRunner.ExecutionDetails<WriteAction> result =
         runner.runAction(
@@ -168,10 +178,12 @@ public class WriteActionTest {
   }
 
   @Test
-  public void setsFileExecutable() throws ActionCreationException, IOException {
+  public void setsFileExecutable() throws ActionCreationException, IOException, EvalException {
     Artifact output1 = runner.declareArtifact(Paths.get("foo").resolve("bar1"));
     Artifact output2 = runner.declareArtifact(Paths.get("foo").resolve("bar2"));
-    ImmutableSortedSet<Artifact> outputs = ImmutableSortedSet.of(output1, output2);
+    ImmutableSortedSet<OutputArtifact> outputs =
+        ImmutableSortedSet.of(
+            output1.asOutputArtifact(Location.BUILTIN), output2.asOutputArtifact(Location.BUILTIN));
 
     TestActionExecutionRunner.ExecutionDetails<WriteAction> result =
         runner.runAction(

@@ -18,6 +18,7 @@ package com.facebook.buck.core.rules.actions.lib;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
+import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rules.actions.AbstractAction;
 import com.facebook.buck.core.rules.actions.ActionExecutionContext;
@@ -61,7 +62,7 @@ public class RunAction extends AbstractAction {
 
   private RunAction(
       ActionRegistry registry,
-      Pair<ImmutableSortedSet<Artifact>, ImmutableSortedSet<Artifact>> inputsAndOutputs,
+      Pair<ImmutableSortedSet<Artifact>, ImmutableSortedSet<OutputArtifact>> inputsAndOutputs,
       String shortName,
       CommandLineArgs args,
       ImmutableMap<String, String> env) {
@@ -70,10 +71,10 @@ public class RunAction extends AbstractAction {
     this.env = env;
   }
 
-  private static Pair<ImmutableSortedSet<Artifact>, ImmutableSortedSet<Artifact>>
+  private static Pair<ImmutableSortedSet<Artifact>, ImmutableSortedSet<OutputArtifact>>
       getAllInputsAndOutputs(CommandLineArgs args) {
     ImmutableSortedSet.Builder<Artifact> inputs = ImmutableSortedSet.naturalOrder();
-    ImmutableSortedSet.Builder<Artifact> outputs = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<OutputArtifact> outputs = ImmutableSortedSet.naturalOrder();
     args.visitInputsAndOutputs(inputs::add, outputs::add);
     return new Pair<>(inputs.build(), outputs.build());
   }

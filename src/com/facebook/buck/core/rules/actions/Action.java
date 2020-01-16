@@ -17,6 +17,7 @@
 package com.facebook.buck.core.rules.actions;
 
 import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.build.action.BuildEngineAction;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -36,7 +37,7 @@ public interface Action extends BuildEngineAction {
   ImmutableSortedSet<Artifact> getInputs();
 
   /** @return the set of outputs this action generates */
-  ImmutableSortedSet<Artifact> getOutputs();
+  ImmutableSortedSet<OutputArtifact> getOutputs();
 
   @Override
   ImmutableSortedSet<SourcePath> getSourcePathOutputs();

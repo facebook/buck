@@ -179,8 +179,7 @@ public class RunInfoTest {
       BuildTarget target = BuildTargetFactory.newInstance("//:some_rule");
       ActionRegistryForTests registry = new ActionRegistryForTests(target, filesystem);
       Artifact artifact2 = registry.declareArtifact(Paths.get("out.txt"), Location.BUILTIN);
-      OutputArtifact artifact2Output =
-          (OutputArtifact) artifact2.asOutputArtifact(Location.BUILTIN);
+      OutputArtifact artifact2Output = artifact2.asOutputArtifact(Location.BUILTIN);
       Path artifact2Path = BuildPaths.getGenDir(filesystem, target).resolve("out.txt");
 
       Environment environment = getEnv(mut);
@@ -200,7 +199,11 @@ public class RunInfoTest {
       env.pop("foo", "", Location.BUILTIN, environment);
 
       new WriteAction(
-          registry, ImmutableSortedSet.of(), ImmutableSortedSet.of(artifact2), "contents", false);
+          registry,
+          ImmutableSortedSet.of(),
+          ImmutableSortedSet.of(artifact2Output),
+          "contents",
+          false);
 
       CommandLine cli =
           new ExecCompatibleCommandLineBuilder(new ArtifactFilesystem(filesystem)).build(info);
@@ -213,11 +216,11 @@ public class RunInfoTest {
       assertEquals(4, info.getEstimatedArgsCount());
 
       ImmutableList.Builder<Artifact> inputs = ImmutableList.builder();
-      ImmutableList.Builder<Artifact> outputs = ImmutableList.builder();
+      ImmutableList.Builder<OutputArtifact> outputs = ImmutableList.builder();
       info.visitInputsAndOutputs(inputs::add, outputs::add);
 
       assertEquals(ImmutableList.of(artifact), inputs.build());
-      assertEquals(ImmutableList.of(artifact2), outputs.build());
+      assertEquals(ImmutableList.of(artifact2Output), outputs.build());
     }
   }
 

@@ -19,6 +19,7 @@ package com.facebook.buck.core.rules.impl;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.core.artifact.BoundArtifact;
+import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
@@ -117,9 +118,9 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule
       return ImmutableList.of();
     }
 
-    for (Artifact artifact : action.get().getOutputs()) {
+    for (OutputArtifact artifact : action.get().getOutputs()) {
       buildableContext.recordArtifact(
-          Objects.requireNonNull(artifact.asBound().asBuildArtifact())
+          Objects.requireNonNull(artifact.getArtifact().asBound().asBuildArtifact())
               .getSourcePath()
               .getResolvedPath());
     }

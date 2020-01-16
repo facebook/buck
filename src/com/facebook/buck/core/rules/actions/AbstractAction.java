@@ -19,6 +19,7 @@ package com.facebook.buck.core.rules.actions;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.BoundArtifact;
 import com.facebook.buck.core.artifact.BuildArtifact;
+import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -32,7 +33,7 @@ public abstract class AbstractAction implements Action {
 
   protected final BuildTarget owner;
   protected final ImmutableSortedSet<Artifact> inputs;
-  protected final ImmutableSortedSet<Artifact> outputs;
+  protected final ImmutableSortedSet<OutputArtifact> outputs;
   protected final String shortName;
   private final String id;
 
@@ -45,7 +46,7 @@ public abstract class AbstractAction implements Action {
   protected AbstractAction(
       ActionRegistry registry,
       ImmutableSortedSet<Artifact> inputs,
-      ImmutableSortedSet<Artifact> outputs,
+      ImmutableSortedSet<OutputArtifact> outputs,
       String shortName) {
     this.inputs = inputs;
     this.outputs = outputs;
@@ -66,14 +67,15 @@ public abstract class AbstractAction implements Action {
   }
 
   @Override
-  public final ImmutableSortedSet<Artifact> getOutputs() {
+  public final ImmutableSortedSet<OutputArtifact> getOutputs() {
     return outputs;
   }
 
   @Override
   public ImmutableSortedSet<SourcePath> getSourcePathOutputs() {
     return ImmutableSortedSet.copyOf(
-        Iterables.transform(getOutputs(), artifact -> artifact.asBound().getSourcePath()));
+        Iterables.transform(
+            getOutputs(), artifact -> artifact.getArtifact().asBound().getSourcePath()));
   }
 
   @Override

@@ -79,7 +79,7 @@ public class AggregateCommandLineArgsTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:some_rule");
     ActionRegistryForTests registry = new ActionRegistryForTests(target, filesystem);
     Artifact artifact3 = registry.declareArtifact(Paths.get("out.txt"), Location.BUILTIN);
-    OutputArtifact artifact3Output = (OutputArtifact) artifact3.asOutputArtifact(Location.BUILTIN);
+    OutputArtifact artifact3Output = artifact3.asOutputArtifact(Location.BUILTIN);
     Path artifact3Path = BuildPaths.getGenDir(filesystem, target).resolve("out.txt");
 
     CommandLineArgs args =
@@ -90,7 +90,11 @@ public class AggregateCommandLineArgsTest {
                 CommandLineArgsFactory.from(ImmutableList.of("foo", "bar", artifact3Output))));
 
     new WriteAction(
-        registry, ImmutableSortedSet.of(), ImmutableSortedSet.of(artifact3), "contents", false);
+        registry,
+        ImmutableSortedSet.of(),
+        ImmutableSortedSet.of(artifact3Output),
+        "contents",
+        false);
 
     CommandLine cli =
         new ExecCompatibleCommandLineBuilder(new ArtifactFilesystem(filesystem)).build(args);
@@ -109,11 +113,11 @@ public class AggregateCommandLineArgsTest {
         ImmutableSortedMap.of("FOO", "foo_val", "BAZ", "baz_val"), cli.getEnvironmentVariables());
 
     ImmutableSortedSet.Builder<Artifact> inputs = ImmutableSortedSet.naturalOrder();
-    ImmutableSortedSet.Builder<Artifact> outputs = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<OutputArtifact> outputs = ImmutableSortedSet.naturalOrder();
     args.visitInputsAndOutputs(inputs::add, outputs::add);
 
     assertEquals(ImmutableSortedSet.of(path1, path2), inputs.build());
-    assertEquals(ImmutableSortedSet.of(artifact3), outputs.build());
+    assertEquals(ImmutableSortedSet.of(artifact3Output), outputs.build());
   }
 
   @Test
@@ -151,7 +155,7 @@ public class AggregateCommandLineArgsTest {
 
     ImmutableSortedSet.Builder<Artifact> inputs = ImmutableSortedSet.naturalOrder();
     ImmutableSortedSet.Builder<Artifact> outputs = ImmutableSortedSet.naturalOrder();
-    args.visitInputsAndOutputs(inputs::add, outputs::add);
+    args.visitInputsAndOutputs(inputs::add, o -> outputs.add(o.getArtifact()));
 
     assertEquals(ImmutableSortedSet.of(path1, path2, path3, path4), inputs.build());
   }

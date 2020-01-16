@@ -70,7 +70,8 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
   @Override
   public Artifact copyFile(Artifact src, Object dest, Location location) throws EvalException {
     Artifact destArtifact = getArtifactFromArtifactOrString(location, dest);
-    new CopyAction(registry, src, destArtifact, CopySourceMode.FILE);
+    new CopyAction(
+        registry, src, destArtifact.asOutputArtifact(Location.BUILTIN), CopySourceMode.FILE);
     return destArtifact;
   }
 
@@ -79,27 +80,20 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
       throws EvalException {
     Artifact destArtifact = getArtifactFromArtifactOrString(location, output);
     try {
+      ImmutableSortedSet<OutputArtifact> outputs =
+          ImmutableSortedSet.of(destArtifact.asOutputArtifact(Location.BUILTIN));
       if (content instanceof String) {
-        new WriteAction(
-            registry,
-            ImmutableSortedSet.of(),
-            ImmutableSortedSet.of(destArtifact),
-            (String) content,
-            isExecutable);
+        new WriteAction(registry, ImmutableSortedSet.of(), outputs, (String) content, isExecutable);
       } else if (content instanceof CommandLineArgsBuilder) {
         new WriteAction(
             registry,
             ImmutableSortedSet.of(),
-            ImmutableSortedSet.of(destArtifact),
+            outputs,
             ((CommandLineArgsBuilder) content).build(),
             isExecutable);
       } else if (content instanceof CommandLineArgs) {
         new WriteAction(
-            registry,
-            ImmutableSortedSet.of(),
-            ImmutableSortedSet.of(destArtifact),
-            (CommandLineArgs) content,
-            isExecutable);
+            registry, ImmutableSortedSet.of(), outputs, (CommandLineArgs) content, isExecutable);
       } else {
         throw new EvalException(
             location, String.format("Invalid type for content: %s", content.getClass()));
@@ -194,8 +188,7 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
       } else if (firstArgument instanceof OutputArtifact) {
         shortNameValidated =
             String.format(
-                "run action %s",
-                ((Artifact) ((OutputArtifact) firstArgument).getArtifact()).getBasename());
+                "run action %s", ((OutputArtifact) firstArgument).getArtifact().getBasename());
       } else {
         shortNameValidated = String.format("run action %s", firstArgument);
       }

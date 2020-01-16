@@ -81,7 +81,7 @@ public class DefaultActionRegistry extends BuildArtifactFactory implements Actio
     String uniqueID = normalizedShortName.concat(String.format("-%s", uniqueCounter));
 
     ActionAnalysisDataKey key = ImmutableActionAnalysisDataKey.of(target, new ID(uniqueID));
-    action.getOutputs().forEach(artifact -> bindtoBuildArtifact(key, artifact));
+    action.getOutputs().forEach(artifact -> bindtoBuildArtifact(key, artifact.getArtifact()));
 
     ActionWrapperData actionAnalysisData = ImmutableActionWrapperDataImpl.of(key, action);
     actionRegistry.registerAction(actionAnalysisData);

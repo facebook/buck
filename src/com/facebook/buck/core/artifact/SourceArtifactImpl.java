@@ -17,7 +17,6 @@
 package com.facebook.buck.core.artifact;
 
 import com.facebook.buck.core.sourcepath.PathSourcePath;
-import com.facebook.buck.core.starlark.rule.artifact.SkylarkOutputArtifactApi;
 import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.facebook.buck.io.file.MorePaths;
 import com.google.devtools.build.lib.cmdline.Label;
@@ -92,7 +91,7 @@ public abstract class SourceArtifactImpl extends AbstractArtifact
   }
 
   @Override
-  public SkylarkOutputArtifactApi asOutputArtifact(Location location) throws EvalException {
+  public OutputArtifact asOutputArtifact(Location location) throws EvalException {
     throw new EvalException(
         location, String.format("source file %s cannot be used as an output artifact", this));
   }

@@ -134,5 +134,5 @@ public interface CommandLineArgs extends AddsToRuleKey, CommandLineArgsApi {
    * Add any artifacts from {@link #getArgsAndFormatStrings()} to {@code inputs} and {@code
    * outputs}, inferring based on type
    */
-  void visitInputsAndOutputs(Consumer<Artifact> inputs, Consumer<Artifact> outputs);
+  void visitInputsAndOutputs(Consumer<Artifact> inputs, Consumer<OutputArtifact> outputs);
 }

@@ -135,14 +135,14 @@ public class ArtifactFilesystem {
   }
 
   /** Create the package paths that actions will write into if it does not exist */
-  public void createPackagePaths(ImmutableSet<Artifact> outputs) throws IOException {
+  public void createPackagePaths(ImmutableSet<OutputArtifact> outputs) throws IOException {
     /*
      * Normally we'd just want to completely delete this directory if it exists. However, for
      * rules with multiple actions / outputs, they will all go in the same per-rule directory.
      * If only one action needs to re-run, we can't have the other action's files go missing.
      */
     RichStream.from(outputs)
-        .map(output -> output.asBound().asBuildArtifact())
+        .map(output -> output.getArtifact().asBound().asBuildArtifact())
         .filter(Objects::nonNull)
         .map(ba -> BuildPaths.getGenDir(filesystem, ba.getSourcePath().getTarget()))
         .distinct()
@@ -150,9 +150,9 @@ public class ArtifactFilesystem {
   }
 
   /** Remove build artifacts (only) that exist on the underlying filesystem. */
-  public void removeBuildArtifacts(ImmutableSet<Artifact> outputs) throws IOException {
+  public void removeBuildArtifacts(ImmutableSet<OutputArtifact> outputs) throws IOException {
     RichStream.from(outputs)
-        .map(output -> output.asBound().asBuildArtifact())
+        .map(output -> output.getArtifact().asBound().asBuildArtifact())
         .filter(Objects::nonNull)
         .map(this::resolveToPath)
         .forEachThrowing(filesystem::deleteRecursivelyIfExists);

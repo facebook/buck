@@ -33,14 +33,18 @@ import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
  * fashion)
  */
 @BuckStyleValue
-public abstract class OutputArtifact implements SkylarkOutputArtifactApi {
+public abstract class OutputArtifact
+    implements SkylarkOutputArtifactApi, Comparable<OutputArtifact> {
+  abstract ArtifactImpl getImpl();
 
   @Override
   public boolean isImmutable() {
     return true;
   }
 
-  public abstract ArtifactImpl getArtifact();
+  public Artifact getArtifact() {
+    return getImpl();
+  }
 
   @Override
   public void repr(SkylarkPrinter printer) {
@@ -49,6 +53,11 @@ public abstract class OutputArtifact implements SkylarkOutputArtifactApi {
 
   @Override
   public String toString() {
-    return ArtifactImpl.toString(getArtifact(), true);
+    return ArtifactImpl.toString(getImpl(), true);
+  }
+
+  @Override
+  public int compareTo(OutputArtifact o) {
+    return getImpl().compareTo(o.getImpl());
   }
 }

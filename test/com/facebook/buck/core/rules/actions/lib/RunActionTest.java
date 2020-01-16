@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
+import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgException;
@@ -57,7 +58,7 @@ public class RunActionTest {
   private Path scriptPath;
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() throws IOException, EvalException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "run_scripts", tmp);
     workspace.setUp();
@@ -73,7 +74,7 @@ public class RunActionTest {
         new WriteAction(
             runner.getRegistry(),
             ImmutableSortedSet.of(),
-            ImmutableSortedSet.of(script),
+            ImmutableSortedSet.of(script.asOutputArtifact(Location.BUILTIN)),
             filesystem.readFileIfItExists(scriptPath).get(),
             true));
   }
@@ -218,21 +219,21 @@ public class RunActionTest {
         new WriteAction(
             runner.getRegistry(),
             ImmutableSortedSet.of(),
-            ImmutableSortedSet.of(otherInput),
+            ImmutableSortedSet.of(otherInput.asOutputArtifact(Location.BUILTIN)),
             "contents",
             false));
 
+    OutputArtifact outputArtifact = output.asOutputArtifact(Location.BUILTIN);
     RunAction action =
         new RunAction(
             runner.getRegistry(),
             "list",
             CommandLineArgsFactory.from(
-                ImmutableList.of(
-                    script, "--foo", "bar", otherInput, output.asOutputArtifact(Location.BUILTIN))),
+                ImmutableList.of(script, "--foo", "bar", otherInput, outputArtifact)),
             ImmutableMap.of());
 
     assertEquals(ImmutableSortedSet.of(otherInput, script), action.getInputs());
-    assertEquals(ImmutableSortedSet.of(output), action.getOutputs());
+    assertEquals(ImmutableSortedSet.of(outputArtifact), action.getOutputs());
 
     StepExecutionResult result = runner.runAction(action).getResult();
     assertTrue(result.isSuccess());

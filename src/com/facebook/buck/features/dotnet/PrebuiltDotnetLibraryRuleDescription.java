@@ -28,6 +28,8 @@ import com.facebook.buck.core.rules.providers.collect.impl.ProviderInfoCollectio
 import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
 import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.google.common.collect.ImmutableSet;
+import com.google.devtools.build.lib.events.Location;
+import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 import java.nio.file.Paths;
 
@@ -48,7 +50,15 @@ public class PrebuiltDotnetLibraryRuleDescription
     Artifact assembly = context.resolveSrc(args.getAssembly());
     Artifact output = context.actionRegistry().declareArtifact(Paths.get(assembly.getBasename()));
 
-    new CopyAction(context.actionRegistry(), assembly, output, CopySourceMode.FILE);
+    try {
+      new CopyAction(
+          context.actionRegistry(),
+          assembly,
+          output.asOutputArtifact(Location.BUILTIN),
+          CopySourceMode.FILE);
+    } catch (EvalException e) {
+      throw new RuntimeException(e);
+    }
 
     return ProviderInfoCollectionImpl.builder()
         .put(new ImmutableDotnetLibraryProviderInfo(output))

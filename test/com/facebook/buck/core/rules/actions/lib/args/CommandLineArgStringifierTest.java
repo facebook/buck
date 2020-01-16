@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
+import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildPaths;
@@ -97,13 +98,17 @@ public class CommandLineArgStringifierTest {
 
     Artifact artifact = registry.declareArtifact(Paths.get("foo", "bar.cpp"));
     Artifact shortArtifact = registry.declareArtifact(Paths.get("foo"));
-    Object artifactOutput = artifact.asOutputArtifact(Location.BUILTIN);
-    Object shortArtifactOutput = shortArtifact.asOutputArtifact(Location.BUILTIN);
+    OutputArtifact artifactOutput = artifact.asOutputArtifact(Location.BUILTIN);
+    OutputArtifact shortArtifactOutput = shortArtifact.asOutputArtifact(Location.BUILTIN);
 
     new WriteAction(
-        registry, ImmutableSortedSet.of(), ImmutableSortedSet.of(artifact), "out", false);
+        registry, ImmutableSortedSet.of(), ImmutableSortedSet.of(artifactOutput), "out", false);
     new WriteAction(
-        registry, ImmutableSortedSet.of(), ImmutableSortedSet.of(shortArtifact), "out", false);
+        registry,
+        ImmutableSortedSet.of(),
+        ImmutableSortedSet.of(shortArtifactOutput),
+        "out",
+        false);
 
     Path expectedPath =
         BuildPaths.getGenDir(filesystem, target).resolve(Paths.get("foo", "bar.cpp"));

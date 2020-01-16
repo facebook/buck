@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.rules.actions.AbstractAction;
 import com.facebook.buck.core.rules.actions.ActionExecutionContext;
 import com.facebook.buck.core.rules.actions.ActionExecutionResult;
@@ -40,7 +41,7 @@ class SomeAction extends AbstractAction {
   protected SomeAction(
       ActionRegistry actionRegistry,
       ImmutableSortedSet<Artifact> inputs,
-      ImmutableSortedSet<Artifact> outputs,
+      ImmutableSortedSet<OutputArtifact> outputs,
       int i,
       String a) {
     super(actionRegistry, inputs, outputs, "some");

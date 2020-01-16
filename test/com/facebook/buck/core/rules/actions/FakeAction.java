@@ -17,10 +17,14 @@
 package com.facebook.buck.core.rules.actions;
 
 import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
+import com.google.devtools.build.lib.events.Location;
+import com.google.devtools.build.lib.syntax.EvalException;
 import java.util.Objects;
 
 public class FakeAction extends AbstractAction {
@@ -36,7 +40,19 @@ public class FakeAction extends AbstractAction {
       ImmutableSortedSet<Artifact> outputs,
       FakeActionExecuteLambda executeFunction) {
     super(
-        actionRegistry, ImmutableSortedSet.copyOf(Sets.union(srcs, deps)), outputs, "fake-action");
+        actionRegistry,
+        ImmutableSortedSet.copyOf(Sets.union(srcs, deps)),
+        outputs.stream()
+            .map(
+                artifact -> {
+                  try {
+                    return artifact.asOutputArtifact(Location.BUILTIN);
+                  } catch (EvalException e) {
+                    throw new RuntimeException(e);
+                  }
+                })
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())),
+        "fake-action");
     this.hasheableWrapper = new HashableWrapper(executeFunction);
     this.srcs = srcs;
     this.deps = deps;
@@ -44,7 +60,13 @@ public class FakeAction extends AbstractAction {
 
   @Override
   public ActionExecutionResult execute(ActionExecutionContext executionContext) {
-    return hasheableWrapper.executeFunction.apply(srcs, deps, outputs, executionContext);
+    return hasheableWrapper.executeFunction.apply(
+        srcs,
+        deps,
+        outputs.stream()
+            .map(OutputArtifact::getArtifact)
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())),
+        executionContext);
   }
 
   @Override

@@ -23,6 +23,7 @@ import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.core.artifact.BuildArtifactFactoryForTests;
 import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
+import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -138,14 +139,14 @@ public class CommandLineArgsFactoryTest {
     Artifact artifact =
         artifactFactory.createDeclaredArtifact(Paths.get("out.txt"), Location.BUILTIN);
 
-    CommandLineArgs args =
-        CommandLineArgsFactory.from(ImmutableList.of(artifact.asOutputArtifact(Location.BUILTIN)));
+    OutputArtifact artifactOutput = artifact.asOutputArtifact(Location.BUILTIN);
+    CommandLineArgs args = CommandLineArgsFactory.from(ImmutableList.of(artifactOutput));
 
     ImmutableList.Builder<Artifact> inputs = ImmutableList.builder();
-    ImmutableList.Builder<Artifact> outputs = ImmutableList.builder();
+    ImmutableList.Builder<OutputArtifact> outputs = ImmutableList.builder();
     args.visitInputsAndOutputs(inputs::add, outputs::add);
 
     assertEquals(ImmutableList.of(), inputs.build());
-    assertEquals(ImmutableList.of(artifact), outputs.build());
+    assertEquals(ImmutableList.of(artifactOutput), outputs.build());
   }
 }

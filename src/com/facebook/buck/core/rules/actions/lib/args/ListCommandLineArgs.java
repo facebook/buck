@@ -63,13 +63,13 @@ class ListCommandLineArgs implements CommandLineArgs {
   }
 
   @Override
-  public void visitInputsAndOutputs(Consumer<Artifact> inputs, Consumer<Artifact> outputs) {
+  public void visitInputsAndOutputs(Consumer<Artifact> inputs, Consumer<OutputArtifact> outputs) {
     objects.forEach(
         arg -> {
           if (arg instanceof Artifact) {
             inputs.accept((Artifact) arg);
           } else if (arg instanceof OutputArtifact) {
-            outputs.accept(((OutputArtifact) arg).getArtifact());
+            outputs.accept((OutputArtifact) arg);
           }
         });
   }

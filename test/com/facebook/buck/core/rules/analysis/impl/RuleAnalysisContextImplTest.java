@@ -24,6 +24,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.BuildArtifact;
 import com.facebook.buck.core.artifact.BuildArtifactFactoryForTests;
+import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -50,6 +51,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 import java.nio.file.Paths;
@@ -221,7 +223,11 @@ public class RuleAnalysisContextImplTest {
     ActionWrapperData actionWrapperData = (ActionWrapperData) actionAnalysisData;
     assertSame(target, actionWrapperData.getAction().getOwner());
     assertSame(inputs, actionWrapperData.getAction().getInputs());
-    assertEquals(outputs, actionWrapperData.getAction().getOutputs());
+    assertEquals(
+        outputs,
+        actionWrapperData.getAction().getOutputs().stream()
+            .map(OutputArtifact::getArtifact)
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
 
     assertSame(actionFunction, ((FakeAction) actionWrapperData.getAction()).getExecuteFunction());
   }

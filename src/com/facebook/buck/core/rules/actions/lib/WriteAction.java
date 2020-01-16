@@ -18,6 +18,7 @@ package com.facebook.buck.core.rules.actions.lib;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
+import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.rules.actions.AbstractAction;
 import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.actions.ActionExecutionContext;
@@ -55,7 +56,7 @@ public class WriteAction extends AbstractAction {
   public WriteAction(
       ActionRegistry actionRegistry,
       ImmutableSortedSet<Artifact> inputs,
-      ImmutableSortedSet<Artifact> outputs,
+      ImmutableSortedSet<OutputArtifact> outputs,
       String contents,
       boolean isExecutable) {
     this(actionRegistry, inputs, outputs, Either.ofLeft(contents), isExecutable);
@@ -74,7 +75,7 @@ public class WriteAction extends AbstractAction {
   public WriteAction(
       ActionRegistry actionRegistry,
       ImmutableSortedSet<Artifact> inputs,
-      ImmutableSortedSet<Artifact> outputs,
+      ImmutableSortedSet<OutputArtifact> outputs,
       CommandLineArgs contents,
       boolean isExecutable) {
     this(actionRegistry, inputs, outputs, Either.ofRight(contents), isExecutable);
@@ -83,7 +84,7 @@ public class WriteAction extends AbstractAction {
   private WriteAction(
       ActionRegistry actionRegistry,
       ImmutableSortedSet<Artifact> inputs,
-      ImmutableSortedSet<Artifact> outputs,
+      ImmutableSortedSet<OutputArtifact> outputs,
       Either<String, CommandLineArgs> contents,
       boolean isExecutable) {
     super(actionRegistry, inputs, outputs, "write");
@@ -101,12 +102,12 @@ public class WriteAction extends AbstractAction {
                 args.getArgsAndFormatStrings()
                     .map(arg -> CommandLineArgStringifier.asString(filesystem, false, arg))
                     .collect(Collectors.joining("\n")));
-    for (Artifact output : outputs) {
+    for (OutputArtifact output : outputs) {
       try {
-        filesystem.writeContentsToPath(stringContents, output);
+        filesystem.writeContentsToPath(stringContents, output.getArtifact());
 
         if (isExecutable) {
-          filesystem.makeExecutable(output);
+          filesystem.makeExecutable(output.getArtifact());
         }
       } catch (IOException e) {
         return ActionExecutionResult.failure(

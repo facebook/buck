@@ -64,7 +64,7 @@ public class RuleKeyFieldLoader {
         Iterables.transform(
             action.getOutputs(),
             output ->
-                Objects.requireNonNull(output.asBound().asBuildArtifact())
+                Objects.requireNonNull(output.getArtifact().asBound().asBuildArtifact())
                     .getOutputPath()
                     .toString()
                     .hashCode()));

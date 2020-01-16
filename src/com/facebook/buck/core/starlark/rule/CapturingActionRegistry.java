@@ -18,6 +18,7 @@ package com.facebook.buck.core.starlark.rule;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactDeclarationException;
+import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
@@ -59,7 +60,7 @@ class CapturingActionRegistry implements ActionRegistry {
 
   @Override
   public String registerActionAnalysisDataForAction(Action action) throws ActionCreationException {
-    outputs.addAll(action.getOutputs());
+    action.getOutputs().stream().map(OutputArtifact::getArtifact).forEach(outputs::add);
     return delegate.registerActionAnalysisDataForAction(action);
   }
 

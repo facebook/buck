@@ -19,7 +19,6 @@ package com.facebook.buck.core.artifact;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
-import com.facebook.buck.core.starlark.rule.artifact.SkylarkOutputArtifactApi;
 import com.facebook.buck.io.file.MorePaths;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
@@ -225,7 +224,7 @@ class ArtifactImpl extends AbstractArtifact
   }
 
   @Override
-  public SkylarkOutputArtifactApi asOutputArtifact(Location location) throws EvalException {
+  public OutputArtifact asOutputArtifact(Location location) throws EvalException {
     if (isBound()) {
       throw new EvalException(
           location,
@@ -244,7 +243,7 @@ class ArtifactImpl extends AbstractArtifact
     repr(printer, this, false);
   }
 
-  static void repr(SkylarkPrinter printer, ArtifactImpl artifact, boolean isOutputArtifact) {
+  static void repr(SkylarkPrinter printer, Artifact artifact, boolean isOutputArtifact) {
     printer.append("<generated ");
     if (isOutputArtifact) {
       printer.append("output");

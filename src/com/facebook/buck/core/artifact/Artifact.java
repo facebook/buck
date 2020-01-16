@@ -17,6 +17,8 @@
 package com.facebook.buck.core.artifact;
 
 import com.facebook.buck.core.starlark.rule.artifact.SkylarkArtifactApi;
+import com.google.devtools.build.lib.events.Location;
+import com.google.devtools.build.lib.syntax.EvalException;
 
 /**
  * An {@link Artifact} is a file used during the build stage. It can either be a source file for the
@@ -36,4 +38,7 @@ public interface Artifact extends SkylarkArtifactApi, Comparable<Artifact> {
 
   /** @return a view of this artifact as a {@link DeclaredArtifact} */
   DeclaredArtifact asDeclared();
+
+  @Override
+  OutputArtifact asOutputArtifact(Location location) throws EvalException;
 }

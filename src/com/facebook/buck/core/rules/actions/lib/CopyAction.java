@@ -18,6 +18,7 @@ package com.facebook.buck.core.rules.actions.lib;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
+import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.rules.actions.AbstractAction;
 import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.actions.ActionExecutionContext;
@@ -45,7 +46,7 @@ public class CopyAction extends AbstractAction {
    * @param mode the {@link CopySourceMode} as needed by the filesystem
    */
   public CopyAction(
-      ActionRegistry actionRegistry, Artifact input, Artifact output, CopySourceMode mode) {
+      ActionRegistry actionRegistry, Artifact input, OutputArtifact output, CopySourceMode mode) {
     super(
         actionRegistry,
         ImmutableSortedSet.of(input),
@@ -58,7 +59,7 @@ public class CopyAction extends AbstractAction {
   public ActionExecutionResult execute(ActionExecutionContext executionContext) {
     ArtifactFilesystem filesystem = executionContext.getArtifactFilesystem();
     Artifact toCopy = Iterables.getOnlyElement(inputs);
-    Artifact dest = Iterables.getOnlyElement(outputs);
+    Artifact dest = Iterables.getOnlyElement(outputs).getArtifact();
 
     try {
       filesystem.copy(toCopy, dest, mode);
