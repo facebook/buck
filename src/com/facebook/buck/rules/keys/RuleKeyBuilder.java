@@ -20,7 +20,6 @@ import static com.facebook.buck.rules.keys.RuleKeyScopedHasher.ContainerScope;
 import static com.facebook.buck.rules.keys.hasher.RuleKeyHasher.Container;
 import static com.facebook.buck.rules.keys.hasher.RuleKeyHasher.Wrapper;
 
-import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -266,11 +265,6 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
           "Unrecognized SourcePath implementation: " + sourcePath.getClass());
     }
     return this;
-  }
-
-  @Override
-  protected AbstractRuleKeyBuilder<RULE_KEY> setArtifact(Artifact artifact) throws IOException {
-    return setSourcePath(artifact.asBound().getSourcePath());
   }
 
   @Override

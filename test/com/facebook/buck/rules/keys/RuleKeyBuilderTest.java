@@ -19,10 +19,6 @@ package com.facebook.buck.rules.keys;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
-import com.facebook.buck.core.artifact.BuildArtifact;
-import com.facebook.buck.core.artifact.BuildTargetSourcePathToArtifactConverter;
-import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
-import com.facebook.buck.core.artifact.SourceArtifact;
 import com.facebook.buck.core.build.action.BuildEngineAction;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -40,7 +36,6 @@ import com.facebook.buck.core.rules.resolver.impl.FakeActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
-import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -126,9 +121,6 @@ public class RuleKeyBuilderTest {
   private static final ProjectFilesystem FILESYSTEM = new FakeProjectFilesystem();
   private static final SourcePath SOURCE_PATH_1 = PathSourcePath.of(FILESYSTEM, PATH_1);
   private static final SourcePath SOURCE_PATH_2 = PathSourcePath.of(FILESYSTEM, PATH_2);
-  private static final PathSourcePath SOURCE_PATH_3 = PathSourcePath.of(FILESYSTEM, PATH_3);
-  private static final SourceArtifact SOURCE_ARTIFACT =
-      ImmutableSourceArtifactImpl.of(SOURCE_PATH_3);
 
   private static final ArchiveMemberSourcePath ARCHIVE_PATH_1 =
       ArchiveMemberSourcePath.of(SOURCE_PATH_1, Paths.get("member"));
@@ -138,10 +130,6 @@ public class RuleKeyBuilderTest {
       DefaultBuildTargetSourcePath.of(TARGET_1);
   private static final DefaultBuildTargetSourcePath TARGET_PATH_2 =
       DefaultBuildTargetSourcePath.of(TARGET_2);
-  private static final ExplicitBuildTargetSourcePath TARGET_PATH_3 =
-      ExplicitBuildTargetSourcePath.of(TARGET_2, Paths.get("example/three"));
-  private static final BuildArtifact BUILD_ARTIFACT =
-      BuildTargetSourcePathToArtifactConverter.convert(FILESYSTEM, TARGET_PATH_3);
 
   @Test
   public void testUniqueness() {
@@ -195,8 +183,6 @@ public class RuleKeyBuilderTest {
           ARCHIVE_PATH_2,
           TARGET_PATH_1,
           TARGET_PATH_2,
-          SOURCE_ARTIFACT,
-          BUILD_ARTIFACT,
 
           // Buck rules & appendables
           RULE_1,

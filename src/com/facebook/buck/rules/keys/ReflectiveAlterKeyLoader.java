@@ -137,6 +137,10 @@ class ReflectiveAlterKeyLoader extends CacheLoader<Class<?>, ImmutableCollection
       method.setAccessible(true);
       AddToRuleKey annotation = method.getAnnotation(AddToRuleKey.class);
       if (annotation != null) {
+        if (method.isSynthetic()) {
+          continue;
+        }
+
         Preconditions.checkState(
             hasImmutableAnnotation(current) && AddsToRuleKey.class.isAssignableFrom(current),
             "AddToRuleKey can only be applied to methods of Immutables. It cannot be applied to %s.%s(...)",

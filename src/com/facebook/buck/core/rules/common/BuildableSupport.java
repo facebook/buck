@@ -16,7 +16,6 @@
 
 package com.facebook.buck.core.rules.common;
 
-import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -142,11 +141,6 @@ public final class BuildableSupport {
     }
 
     @Override
-    protected AbstractRuleKeyBuilder<Stream<BuildRule>> setArtifact(Artifact artifact) {
-      return setSourcePath(artifact.asBound().getSourcePath());
-    }
-
-    @Override
     protected AbstractRuleKeyBuilder<Stream<BuildRule>> setSourcePath(SourcePath sourcePath) {
       ruleFinder.getRule(sourcePath).ifPresent(streamBuilder);
       return this;
@@ -196,12 +190,6 @@ public final class BuildableSupport {
       } else {
         AlterRuleKeys.amendKey(this, appendable);
       }
-      return this;
-    }
-
-    @Override
-    protected AbstractRuleKeyBuilder<Stream<SourcePath>> setArtifact(Artifact artifact) {
-      streamBuilder.add(artifact.asBound().getSourcePath());
       return this;
     }
 

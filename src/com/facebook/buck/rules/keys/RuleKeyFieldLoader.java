@@ -23,9 +23,7 @@ import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterables;
 import java.nio.file.Path;
-import java.util.Objects;
 
 public class RuleKeyFieldLoader {
 
@@ -58,17 +56,6 @@ public class RuleKeyFieldLoader {
 
   private void setFields(AbstractRuleKeyBuilder<?> builder, Action action) {
     builder.setReflectively(".id", action.getID());
-    builder.setReflectively(".inputs", action.getInputs());
-    builder.setReflectively(
-        ".outputs",
-        Iterables.transform(
-            action.getOutputs(),
-            output ->
-                Objects.requireNonNull(output.getArtifact().asBound().asBuildArtifact())
-                    .getOutputPath()
-                    .toString()
-                    .hashCode()));
-
     AlterRuleKeys.amendKey(builder, action);
   }
 

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.artifact;
 
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.starlark.rule.artifact.SkylarkArtifactApi;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
@@ -26,7 +27,7 @@ import com.google.devtools.build.lib.syntax.EvalException;
  *
  * <p>This is the interface exposed to users.
  */
-public interface Artifact extends SkylarkArtifactApi, Comparable<Artifact> {
+public interface Artifact extends SkylarkArtifactApi, Comparable<Artifact>, AddsToRuleKey {
 
   /** TODO: we should make the below package protected. */
 

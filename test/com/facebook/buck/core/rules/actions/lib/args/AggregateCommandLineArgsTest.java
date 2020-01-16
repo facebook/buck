@@ -161,7 +161,7 @@ public class AggregateCommandLineArgsTest {
   }
 
   @Test
-  public void ruleKeyChangesOnChanges() throws IOException {
+  public void ruleKeyChangesOnChanges() throws IOException, EvalException {
     BuildTarget target = BuildTargetFactory.newInstance("//:test");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
@@ -175,11 +175,11 @@ public class AggregateCommandLineArgsTest {
     BuildArtifactFactoryForTests buildArtifactFactory =
         new BuildArtifactFactoryForTests(target, filesystem);
     Artifact path3 =
-        buildArtifactFactory.createBuildArtifact(Paths.get("_foo_output_"), Location.BUILTIN);
+        buildArtifactFactory.createDeclaredArtifact(Paths.get("_foo_output_"), Location.BUILTIN);
     Artifact path4 =
-        buildArtifactFactory.createBuildArtifact(Paths.get("_foo_output_"), Location.BUILTIN);
+        buildArtifactFactory.createDeclaredArtifact(Paths.get("_foo_output_"), Location.BUILTIN);
     Artifact path5 =
-        buildArtifactFactory.createBuildArtifact(Paths.get("_bar_output_"), Location.BUILTIN);
+        buildArtifactFactory.createDeclaredArtifact(Paths.get("_bar_output_"), Location.BUILTIN);
 
     Artifact path1 =
         ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("some_bin")));
@@ -204,13 +204,16 @@ public class AggregateCommandLineArgsTest {
         createRunInfo(ImmutableSortedMap.of("FOO", "foo_val"), ImmutableList.of(path1));
     ListCommandLineArgs listArgs4 =
         new ListCommandLineArgs(
-            ImmutableList.of(path1, 1, "foo", path2, path3), CommandLineArgs.DEFAULT_FORMAT_STRING);
+            ImmutableList.of(path1, 1, "foo", path2, path3.asOutputArtifact(Location.BUILTIN)),
+            CommandLineArgs.DEFAULT_FORMAT_STRING);
     ListCommandLineArgs listArgs5 =
         new ListCommandLineArgs(
-            ImmutableList.of(path1, 1, "foo", path2, path4), CommandLineArgs.DEFAULT_FORMAT_STRING);
+            ImmutableList.of(path1, 1, "foo", path2, path4.asOutputArtifact(Location.BUILTIN)),
+            CommandLineArgs.DEFAULT_FORMAT_STRING);
     ListCommandLineArgs listArgs6 =
         new ListCommandLineArgs(
-            ImmutableList.of(path1, 1, "foo", path2, path5), CommandLineArgs.DEFAULT_FORMAT_STRING);
+            ImmutableList.of(path1, 1, "foo", path2, path5.asOutputArtifact(Location.BUILTIN)),
+            CommandLineArgs.DEFAULT_FORMAT_STRING);
 
     HashCode ruleKey1 =
         ruleKeyFactory

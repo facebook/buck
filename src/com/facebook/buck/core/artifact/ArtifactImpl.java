@@ -17,6 +17,7 @@
 package com.facebook.buck.core.artifact;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.io.file.MorePaths;
@@ -47,7 +48,7 @@ class ArtifactImpl extends AbstractArtifact
   private static final Path PARENT_PATH = Paths.get("..");
 
   private @Nullable ActionAnalysisDataKey actionAnalysisDataKey = null;
-  private @Nullable ExplicitBuildTargetSourcePath sourcePath;
+  @AddToRuleKey private @Nullable ExplicitBuildTargetSourcePath sourcePath;
 
   private final BuildTarget target;
   private final Path genDir;

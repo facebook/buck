@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.artifact;
 
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.facebook.buck.io.file.MorePaths;
@@ -39,6 +40,7 @@ public abstract class SourceArtifactImpl extends AbstractArtifact
 
   /** @return the path to the source file */
   @Override
+  @AddToRuleKey
   public abstract PathSourcePath getSourcePath();
 
   @Nullable

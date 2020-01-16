@@ -16,6 +16,8 @@
 
 package com.facebook.buck.core.artifact;
 
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.starlark.rule.artifact.SkylarkOutputArtifactApi;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
@@ -34,7 +36,7 @@ import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
  */
 @BuckStyleValue
 public abstract class OutputArtifact
-    implements SkylarkOutputArtifactApi, Comparable<OutputArtifact> {
+    implements SkylarkOutputArtifactApi, Comparable<OutputArtifact>, AddsToRuleKey {
   abstract ArtifactImpl getImpl();
 
   @Override
@@ -44,6 +46,11 @@ public abstract class OutputArtifact
 
   public Artifact getArtifact() {
     return getImpl();
+  }
+
+  @AddToRuleKey
+  private String pathForRuleKey() {
+    return getImpl().getOutputPath().toString();
   }
 
   @Override

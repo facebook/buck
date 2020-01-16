@@ -21,6 +21,7 @@ import com.facebook.buck.core.artifact.BoundArtifact;
 import com.facebook.buck.core.artifact.BuildArtifact;
 import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.google.common.collect.ImmutableSet;
@@ -32,10 +33,10 @@ import java.util.Objects;
 public abstract class AbstractAction implements Action {
 
   protected final BuildTarget owner;
-  protected final ImmutableSortedSet<Artifact> inputs;
-  protected final ImmutableSortedSet<OutputArtifact> outputs;
-  protected final String shortName;
   private final String id;
+  @AddToRuleKey protected final ImmutableSortedSet<Artifact> inputs;
+  @AddToRuleKey protected final ImmutableSortedSet<OutputArtifact> outputs;
+  @AddToRuleKey private final String shortName;
 
   /**
    * @param registry the {@link DefaultActionRegistry} to registry this action for.

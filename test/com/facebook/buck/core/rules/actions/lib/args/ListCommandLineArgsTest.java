@@ -39,7 +39,6 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.starlark.compatible.TestMutableEnv;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.google.common.collect.ImmutableList;
@@ -162,7 +161,7 @@ public class ListCommandLineArgsTest {
   }
 
   @Test
-  public void ruleKeyChangesOnChanges() throws IOException {
+  public void ruleKeyChangesOnChanges() throws IOException, EvalException {
     BuildTarget target = BuildTargetFactory.newInstance("//:test");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
@@ -171,7 +170,6 @@ public class ListCommandLineArgsTest {
     hashes.put(filesystem.resolve("other_file"), HashCode.fromString("bbbb"));
 
     FakeFileHashCache hashCache = new FakeFileHashCache(hashes);
-    DefaultRuleKeyFactory ruleKeyFactory = new TestDefaultRuleKeyFactory(hashCache, ruleFinder);
 
     Artifact path1 =
         ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("some_bin")));
@@ -181,9 +179,11 @@ public class ListCommandLineArgsTest {
      * Make sure that we have a build target source path. This tests that we don't run into problems
      * with infinite recursion. See {@link CommandLineArgs} for details
      */
-    Artifact path3 =
+    Artifact buildArtifact =
         new BuildArtifactFactoryForTests(target, filesystem)
-            .createBuildArtifact(Paths.get("other_file_2"), Location.BUILTIN);
+            .createDeclaredArtifact(Paths.get("other_file_2"), Location.BUILTIN);
+    OutputArtifact path3 = buildArtifact.asOutputArtifact(Location.BUILTIN);
+
     ListCommandLineArgs listArgs1 =
         new ListCommandLineArgs(
             ImmutableList.of(path1, 1, "foo", path2, path3), CommandLineArgs.DEFAULT_FORMAT_STRING);
@@ -197,24 +197,26 @@ public class ListCommandLineArgsTest {
         new ListCommandLineArgs(ImmutableList.of(path1, 1, "foo", path2, path3), "foo_%s");
 
     HashCode ruleKey1 =
-        ruleKeyFactory
+        new TestDefaultRuleKeyFactory(hashCache, ruleFinder)
             .newBuilderForTesting(new FakeBuildRule(target))
             .setReflectively("field", listArgs1)
             .build();
+
+    // Use a new factory to ensure cached values aren't reused.
     HashCode ruleKey2 =
-        ruleKeyFactory
+        new TestDefaultRuleKeyFactory(hashCache, ruleFinder)
             .newBuilderForTesting(new FakeBuildRule(target))
             .setReflectively("field", listArgs2)
             .build();
 
     hashCache.set(filesystem.resolve("some_bin"), HashCode.fromString("cccc"));
     HashCode ruleKey3 =
-        ruleKeyFactory
+        new TestDefaultRuleKeyFactory(hashCache, ruleFinder)
             .newBuilderForTesting(new FakeBuildRule(target))
             .setReflectively("field", listArgs3)
             .build();
     HashCode ruleKey4 =
-        ruleKeyFactory
+        new TestDefaultRuleKeyFactory(hashCache, ruleFinder)
             .newBuilderForTesting(new FakeBuildRule(target))
             .setReflectively("field", listArgs4)
             .build();
