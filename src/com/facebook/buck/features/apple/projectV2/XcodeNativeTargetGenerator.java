@@ -333,7 +333,7 @@ public class XcodeNativeTargetGenerator {
     public final ImmutableSet<BuildTarget> requiredBuildTargets;
     public final ImmutableSet<Path> xcconfigPaths;
     public final ImmutableSet<String> targetConfigNames;
-    public final ImmutableList<Path> headerSymlinkTrees;
+    public final Optional<HeaderSearchPathAttributes> headerSearchPathAttributes;
 
     public Result(TargetNode<?> targetNode, XCodeNativeTargetAttributes targetAttributes) {
       this(
@@ -343,7 +343,7 @@ public class XcodeNativeTargetGenerator {
           ImmutableSet.of(),
           ImmutableSet.of(),
           ImmutableSet.of(),
-          ImmutableList.of());
+          Optional.empty());
     }
 
     public Result(
@@ -353,14 +353,14 @@ public class XcodeNativeTargetGenerator {
         ImmutableSet<BuildTarget> requiredBuildTargets,
         ImmutableSet<Path> xcconfigPaths,
         ImmutableSet<String> targetConfigNames,
-        ImmutableList<Path> headerSymlinkTrees) {
+        Optional<HeaderSearchPathAttributes> headerSearchPathAttributes) {
       this.targetNode = targetNode;
       this.targetAttributes = targetAttributes;
       this.dependencies = dependencies;
       this.requiredBuildTargets = requiredBuildTargets;
       this.xcconfigPaths = xcconfigPaths;
       this.targetConfigNames = targetConfigNames;
-      this.headerSymlinkTrees = headerSymlinkTrees;
+      this.headerSearchPathAttributes = headerSearchPathAttributes;
     }
   }
 
@@ -377,7 +377,6 @@ public class XcodeNativeTargetGenerator {
     ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder = ImmutableSet.builder();
     ImmutableSet.Builder<Path> xcconfigPathsBuilder = ImmutableSet.builder();
     ImmutableSet.Builder<String> targetConfigNamesBuilder = ImmutableSet.builder();
-    ImmutableList.Builder<Path> headerSymlinkTreesBuilder = ImmutableList.builder();
 
     ImmutableXCodeNativeTargetAttributes.Builder nativeTargetBuilder =
         ImmutableXCodeNativeTargetAttributes.builder().setAppleConfig(appleConfig);
@@ -389,62 +388,79 @@ public class XcodeNativeTargetGenerator {
       return new Result(targetNode, nativeTargetBuilder.build());
     }
 
+    HeaderSearchPathAttributes headerSearchPathAttributes = null;
     ImmutableList<BuildTarget> dependencies = ImmutableList.of();
     if (targetNode.getDescription() instanceof AppleLibraryDescription) {
+      TargetNode<AppleNativeTargetDescriptionArg> libraryDescriptionTarget =
+          (TargetNode<AppleNativeTargetDescriptionArg>) targetNode;
+      headerSearchPathAttributes =
+          headerSearchPaths.getHeaderSearchPathAttributes(libraryDescriptionTarget);
       dependencies =
           generateAppleLibraryTarget(
               nativeTargetBuilder,
               requiredBuildTargetsBuilder,
               xcconfigPathsBuilder,
               targetConfigNamesBuilder,
-              headerSymlinkTreesBuilder,
-              (TargetNode<AppleNativeTargetDescriptionArg>) targetNode,
+              headerSearchPathAttributes,
+              libraryDescriptionTarget,
               Optional.empty());
     } else if (targetNode.getDescription() instanceof CxxLibraryDescription) {
+      TargetNode<CommonArg> libraryDescriptionTarget = (TargetNode<CommonArg>) targetNode;
+      headerSearchPathAttributes =
+          headerSearchPaths.getHeaderSearchPathAttributes(libraryDescriptionTarget);
       dependencies =
           generateCxxLibraryTarget(
               nativeTargetBuilder,
               requiredBuildTargetsBuilder,
               xcconfigPathsBuilder,
               targetConfigNamesBuilder,
-              headerSymlinkTreesBuilder,
-              (TargetNode<CommonArg>) targetNode,
+              headerSearchPathAttributes,
+              libraryDescriptionTarget,
               ImmutableSet.of(),
               ImmutableSet.of(),
               Optional.empty());
     } else if (targetNode.getDescription() instanceof AppleBinaryDescription) {
+      TargetNode<AppleNativeTargetDescriptionArg> binaryDescriptionTarget =
+          (TargetNode<AppleNativeTargetDescriptionArg>) targetNode;
+      headerSearchPathAttributes =
+          headerSearchPaths.getHeaderSearchPathAttributes(binaryDescriptionTarget);
       dependencies =
           generateAppleBinaryTarget(
               nativeTargetBuilder,
               requiredBuildTargetsBuilder,
               xcconfigPathsBuilder,
               targetConfigNamesBuilder,
-              headerSymlinkTreesBuilder,
-              (TargetNode<AppleNativeTargetDescriptionArg>) targetNode);
+              headerSearchPathAttributes,
+              binaryDescriptionTarget);
     } else if (targetNode.getDescription() instanceof AppleBundleDescription) {
       TargetNode<AppleBundleDescriptionArg> bundleTargetNode =
           (TargetNode<AppleBundleDescriptionArg>) targetNode;
-
+      TargetNode<AppleNativeTargetDescriptionArg> nativeTargetNode =
+          (TargetNode<AppleNativeTargetDescriptionArg>)
+              targetGraph.get(XcodeNativeTargetGenerator.getBundleBinaryTarget(bundleTargetNode));
+      headerSearchPathAttributes =
+          headerSearchPaths.getHeaderSearchPathAttributes(nativeTargetNode);
       dependencies =
           generateAppleBundleTarget(
               nativeTargetBuilder,
               requiredBuildTargetsBuilder,
               xcconfigPathsBuilder,
               targetConfigNamesBuilder,
-              headerSymlinkTreesBuilder,
+              headerSearchPathAttributes,
               bundleTargetNode,
-              (TargetNode<AppleNativeTargetDescriptionArg>)
-                  targetGraph.get(
-                      XcodeNativeTargetGenerator.getBundleBinaryTarget(bundleTargetNode)),
+              nativeTargetNode,
               Optional.empty());
     } else if (targetNode.getDescription() instanceof AppleTestDescription) {
+      TargetNode<AppleTestDescriptionArg> testNode =
+          (TargetNode<AppleTestDescriptionArg>) targetNode;
+      headerSearchPathAttributes = headerSearchPaths.getHeaderSearchPathAttributes(testNode);
       dependencies =
           generateAppleTestTarget(
-              (TargetNode<AppleTestDescriptionArg>) targetNode,
+              testNode,
               requiredBuildTargetsBuilder,
               xcconfigPathsBuilder,
               targetConfigNamesBuilder,
-              headerSymlinkTreesBuilder,
+              headerSearchPathAttributes,
               nativeTargetBuilder);
     } else if (targetNode.getDescription() instanceof AppleResourceDescription) {
       checkAppleResourceTargetNodeReferencingValidContents(
@@ -498,7 +514,7 @@ public class XcodeNativeTargetGenerator {
         requiredBuildTargetsBuilder.build(),
         xcconfigPathsBuilder.build(),
         targetConfigNamesBuilder.build(),
-        headerSymlinkTreesBuilder.build());
+        Optional.ofNullable(headerSearchPathAttributes));
   }
 
   private void addRequiredBuildTargetsFromAttributes(
@@ -671,7 +687,7 @@ public class XcodeNativeTargetGenerator {
       ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
       ImmutableSet.Builder<Path> xcconfigPathsBuilder,
       ImmutableSet.Builder<String> targetConfigNamesBuilder,
-      ImmutableList.Builder<Path> headerSymlinkTreesBuilder,
+      HeaderSearchPathAttributes headerSearchPathAttributes,
       ImmutableXCodeNativeTargetAttributes.Builder nativeTargetBuilder)
       throws IOException {
     AppleTestDescriptionArg args = testTargetNode.getConstructorArg();
@@ -693,7 +709,7 @@ public class XcodeNativeTargetGenerator {
         requiredBuildTargetsBuilder,
         xcconfigPathsBuilder,
         targetConfigNamesBuilder,
-        headerSymlinkTreesBuilder,
+        headerSearchPathAttributes,
         testTargetNode,
         testTargetNode,
         testHostBundle);
@@ -735,7 +751,7 @@ public class XcodeNativeTargetGenerator {
       ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
       ImmutableSet.Builder<Path> xcconfigPathsBuilder,
       ImmutableSet.Builder<String> targetConfigNamesBuilder,
-      ImmutableList.Builder<Path> headerSymlinkTreesBuilder,
+      HeaderSearchPathAttributes headerSearchPathAttributes,
       TargetNode<? extends HasAppleBundleFields> targetNode,
       TargetNode<? extends AppleNativeTargetDescriptionArg> binaryNode,
       Optional<TargetNode<AppleBundleDescriptionArg>> bundleLoaderNode)
@@ -783,7 +799,7 @@ public class XcodeNativeTargetGenerator {
             requiredBuildTargetsBuilder,
             xcconfigPathsBuilder,
             targetConfigNamesBuilder,
-            headerSymlinkTreesBuilder,
+            headerSearchPathAttributes,
             Optional.of(targetNode),
             binaryNode,
             "%s." + getExtensionString(targetNode.getConstructorArg().getExtension()),
@@ -817,7 +833,7 @@ public class XcodeNativeTargetGenerator {
       ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
       ImmutableSet.Builder<Path> xcconfigPathsBuilder,
       ImmutableSet.Builder<String> targetConfigNamesBuilder,
-      ImmutableList.Builder<Path> headerSymlinkTreesBuilder,
+      HeaderSearchPathAttributes headerSearchPathAttributes,
       TargetNode<AppleNativeTargetDescriptionArg> targetNode)
       throws IOException {
     ImmutableList<BuildTarget> result =
@@ -826,7 +842,7 @@ public class XcodeNativeTargetGenerator {
             requiredBuildTargetsBuilder,
             xcconfigPathsBuilder,
             targetConfigNamesBuilder,
-            headerSymlinkTreesBuilder,
+            headerSearchPathAttributes,
             Optional.empty(),
             targetNode,
             "%s",
@@ -848,7 +864,7 @@ public class XcodeNativeTargetGenerator {
       ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
       ImmutableSet.Builder<Path> xcconfigPathsBuilder,
       ImmutableSet.Builder<String> targetConfigNamesBuilder,
-      ImmutableList.Builder<Path> headerSymlinkTreesBuilder,
+      HeaderSearchPathAttributes headerSearchPathAttributes,
       TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode,
       Optional<TargetNode<AppleBundleDescriptionArg>> bundleLoaderNode)
       throws IOException {
@@ -858,7 +874,7 @@ public class XcodeNativeTargetGenerator {
             requiredBuildTargetsBuilder,
             xcconfigPathsBuilder,
             targetConfigNamesBuilder,
-            headerSymlinkTreesBuilder,
+            headerSearchPathAttributes,
             targetNode,
             AppleResources.collectDirectResources(targetGraph, targetNode),
             AppleBuildRules.collectDirectAssetCatalogs(targetGraph, targetNode),
@@ -873,7 +889,7 @@ public class XcodeNativeTargetGenerator {
       ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
       ImmutableSet.Builder<Path> xcconfigPathsBuilder,
       ImmutableSet.Builder<String> targetConfigNamesBuilder,
-      ImmutableList.Builder<Path> headerSymlinkTreesBuilder,
+      HeaderSearchPathAttributes headerSearchPathAttributes,
       TargetNode<? extends CommonArg> targetNode,
       ImmutableSet<AppleResourceDescriptionArg> directResources,
       ImmutableSet<AppleAssetCatalogDescriptionArg> directAssetCatalogs,
@@ -888,7 +904,7 @@ public class XcodeNativeTargetGenerator {
             requiredBuildTargetsBuilder,
             xcconfigPathsBuilder,
             targetConfigNamesBuilder,
-            headerSymlinkTreesBuilder,
+            headerSearchPathAttributes,
             Optional.empty(),
             targetNode,
             AppleBuildRules.getOutputFileNameFormatForLibrary(isShared),
@@ -1028,7 +1044,7 @@ public class XcodeNativeTargetGenerator {
       ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
       ImmutableSet.Builder<Path> xcconfigPathsBuilder,
       ImmutableSet.Builder<String> targetConfigNamesBuilder,
-      ImmutableList.Builder<Path> headerSymlinkTreesBuilder,
+      HeaderSearchPathAttributes headerSearchPathAttributes,
       Optional<? extends TargetNode<? extends HasAppleBundleFields>> bundle,
       TargetNode<? extends CommonArg> targetNode,
       String productOutputFormat,
@@ -1242,9 +1258,6 @@ public class XcodeNativeTargetGenerator {
     ImmutableList.Builder<BuildTarget> dependencies = ImmutableList.builder();
 
     extraSettingsBuilder.putAll(swiftDepsSettingsBuilder.build());
-
-    HeaderSearchPathAttributes headerSearchPathAttributes =
-        headerSearchPaths.getHeaderSearchPathAttributes(targetNode);
 
     ImmutableSortedMap<Path, SourcePath> publicCxxHeaders =
         headerSearchPathAttributes.publicCxxHeaders();
@@ -1507,14 +1520,6 @@ public class XcodeNativeTargetGenerator {
         options.shouldGenerateReadOnlyFiles(),
         targetConfigNamesBuilder,
         xcconfigPathsBuilder);
-
-    ImmutableList<SourcePath> sourcePathsToBuild =
-        headerSearchPaths.createHeaderSearchPaths(
-            headerSearchPathAttributes, headerSymlinkTreesBuilder);
-    for (SourcePath sourcePath : sourcePathsToBuild) {
-      Utils.addRequiredBuildTargetFromSourcePath(
-          sourcePath, requiredBuildTargetsBuilder, targetGraph, actionGraphBuilderForNode);
-    }
 
     if (bundle.isPresent()) {
       addEntitlementsPlistIntoTarget(bundle.get(), xcodeNativeTargetAttributesBuilder);

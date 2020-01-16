@@ -352,7 +352,16 @@ public class ProjectGenerator {
         requiredBuildTargetsBuilder.addAll(result.requiredBuildTargets);
         xcconfigPathsBuilder.addAll(result.xcconfigPaths);
         targetConfigNamesBuilder.addAll(result.targetConfigNames);
-        headerSymlinkTreesBuilder.addAll(result.headerSymlinkTrees);
+
+        if (result.headerSearchPathAttributes.isPresent()) {
+          ImmutableList<SourcePath> sourcePathsToBuild =
+              headerSearchPaths.createHeaderSearchPaths(
+                  result.headerSearchPathAttributes.get(), headerSymlinkTreesBuilder);
+          for (SourcePath sourcePath : sourcePathsToBuild) {
+            Utils.addRequiredBuildTargetFromSourcePath(
+                sourcePath, requiredBuildTargetsBuilder, targetGraph, actionGraphBuilderForNode);
+          }
+        }
 
         XCodeNativeTargetAttributes nativeTargetAttributes = result.targetAttributes;
         XcodeNativeTargetProjectWriter nativeTargetProjectWriter =
