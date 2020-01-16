@@ -17,9 +17,14 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
+import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.apple.toolchain.AppleSdk;
+import com.facebook.buck.apple.toolchain.AppleSdkPaths;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -32,13 +37,23 @@ import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.toolchain.tool.impl.Tools;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ToolProviders;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
+import com.facebook.buck.cxx.toolchain.PrefixMapDebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.ProvidesCxxPlatform;
 import com.facebook.buck.swift.SwiftToolchainBuildRule;
+import com.facebook.buck.swift.toolchain.SwiftPlatform;
+import com.facebook.buck.swift.toolchain.SwiftTargetTriple;
 import com.google.common.base.Verify;
+import com.google.common.collect.ImmutableBiMap;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import java.io.File;
+import java.nio.file.Path;
 import java.util.Optional;
 import org.immutables.value.Value;
 
-/** Defines an apple_toolchain rule which provides values to fill {@link AppleCxxPlatform}. */
+/** Defines an apple_toolchain rule which provides {@link AppleCxxPlatform}. */
 public class AppleToolchainDescription
     implements DescriptionWithTargetGraph<AppleToolchainDescriptionArg> {
 
@@ -49,6 +64,17 @@ public class AppleToolchainDescription
       BuildRuleParams params,
       AppleToolchainDescriptionArg args) {
     Verify.verify(!buildTarget.isFlavored());
+    UserFlavor targetFlavor =
+        UserFlavor.of(
+            Flavor.replaceInvalidCharacters(args.getSdkName() + "-" + args.getArchitecture()),
+            String.format("SDK: %s, architecture: %s", args.getSdkName(), args.getArchitecture()));
+    if (!ApplePlatform.isPlatformFlavor(targetFlavor)) {
+      throw new HumanReadableException(
+          "Can't find Apple platform for SDK: %s and architecture: %s",
+          args.getSdkName(), args.getArchitecture());
+    }
+    ApplePlatform applePlatform = ApplePlatform.fromFlavor(targetFlavor);
+
     ActionGraphBuilder actionGraphBuilder = context.getActionGraphBuilder();
     BuildRule cxxToolchainRule = actionGraphBuilder.getRule(args.getCxxToolchain());
     if (!(cxxToolchainRule instanceof ProvidesCxxPlatform)) {
@@ -76,28 +102,71 @@ public class AppleToolchainDescription
       dsymutil = new CommandTool.Builder(dsymutil).addArg("-num-threads=1").build();
     }
 
+    Path sdkPath = pathResolver.getAbsolutePath(args.getSdkPath());
+    Path platformPath = pathResolver.getAbsolutePath(args.getPlatformPath());
+    Optional<Path> developerPath = args.getDeveloperPath().map(pathResolver::getAbsolutePath);
+    AppleSdkPaths sdkPaths =
+        AppleSdkPaths.builder()
+            .setSdkPath(sdkPath)
+            .setPlatformPath(platformPath)
+            .setToolchainPaths(ImmutableList.of())
+            .setDeveloperPath(developerPath)
+            .build();
+
+    AppleSdk sdk =
+        AppleSdk.builder()
+            .setName(args.getSdkName())
+            .setVersion(args.getVersion())
+            .setToolchains(ImmutableList.of())
+            .setApplePlatform(applePlatform)
+            .setArchitectures(applePlatform.getArchitectures())
+            .build();
+
+    SwiftTargetTriple swiftTarget =
+        SwiftTargetTriple.of(
+            args.getArchitecture(),
+            "apple",
+            applePlatform.getSwiftName().orElse(applePlatform.getName()),
+            args.getMinVersion());
+    Optional<SwiftPlatform> swiftPlatform =
+        swiftToolchainRule
+            .map(SwiftToolchainBuildRule.class::cast)
+            .map(rule -> rule.getSwiftPlatform(swiftTarget));
+
+    AppleCxxPlatform appleCxxPlatform =
+        AppleCxxPlatform.builder()
+            .setMinVersion(args.getMinVersion())
+            .setBuildVersion(args.getBuildVersion())
+            .setActool(Tools.resolveTool(args.getActool(), actionGraphBuilder))
+            .setLibtool(Tools.resolveTool(args.getLibtool(), actionGraphBuilder))
+            .setIbtool(Tools.resolveTool(args.getIbtool(), actionGraphBuilder))
+            .setMomc(Tools.resolveTool(args.getMomc(), actionGraphBuilder))
+            .setCopySceneKitAssets(
+                args.getCopySceneKitAssets()
+                    .map(path -> Tools.resolveTool(path, actionGraphBuilder)))
+            .setXctest(Tools.resolveTool(args.getXctest(), actionGraphBuilder))
+            .setDsymutil(dsymutil)
+            .setLipo(Tools.resolveTool(args.getLipo(), actionGraphBuilder))
+            .setLldb(Tools.resolveTool(args.getLldb(), actionGraphBuilder))
+            .setCodesignProvider(ToolProviders.getToolProvider(args.getCodesign()))
+            .setCodesignAllocate(Tools.resolveTool(args.getCodesignAllocate(), actionGraphBuilder))
+            .setCxxPlatform(
+                getCxxPlatform(
+                    (ProvidesCxxPlatform) cxxToolchainRule,
+                    targetFlavor,
+                    sdkPath,
+                    platformPath,
+                    developerPath))
+            .setSwiftPlatform(swiftPlatform)
+            .setXcodeVersion(args.getXcodeVersion())
+            .setXcodeBuildVersion(args.getXcodeBuildVersion())
+            .setAppleSdkPaths(sdkPaths)
+            .setAppleSdk(sdk)
+            .setStubBinary(applePlatform.getStubBinaryPath().map(sdkPath::resolve))
+            .build();
+
     return new AppleToolchainBuildRule(
-        buildTarget,
-        context.getProjectFilesystem(),
-        pathResolver.getAbsolutePath(args.getPlatformPath()),
-        pathResolver.getAbsolutePath(args.getSdkPath()),
-        args.getSdkName(),
-        args.getVersion(),
-        args.getBuildVersion(),
-        args.getMinVersion(),
-        Tools.resolveTool(args.getActool(), actionGraphBuilder),
-        dsymutil,
-        Tools.resolveTool(args.getIbtool(), actionGraphBuilder),
-        Tools.resolveTool(args.getLibtool(), actionGraphBuilder),
-        Tools.resolveTool(args.getLipo(), actionGraphBuilder),
-        Tools.resolveTool(args.getLldb(), actionGraphBuilder),
-        Tools.resolveTool(args.getMomc(), actionGraphBuilder),
-        Tools.resolveTool(args.getXctest(), actionGraphBuilder),
-        args.getCopySceneKitAssets().map(path -> Tools.resolveTool(path, actionGraphBuilder)),
-        ToolProviders.getToolProvider(args.getCodesign()),
-        Tools.resolveTool(args.getCodesignAllocate(), actionGraphBuilder),
-        (ProvidesCxxPlatform) cxxToolchainRule,
-        swiftToolchainRule.map(SwiftToolchainBuildRule.class::cast));
+        buildTarget, context.getProjectFilesystem(), appleCxxPlatform);
   }
 
   @Override
@@ -105,21 +174,55 @@ public class AppleToolchainDescription
     return AppleToolchainDescriptionArg.class;
   }
 
+  private CxxPlatform getCxxPlatform(
+      ProvidesCxxPlatform cxxToolchainRule,
+      Flavor flavor,
+      Path sdkPath,
+      Path platformPath,
+      Optional<Path> developerPath) {
+    CxxPlatform.Builder cxxPlatformBuilder =
+        CxxPlatform.builder().from(cxxToolchainRule.getPlatformWithFlavor(flavor));
+
+    ImmutableBiMap.Builder<Path, String> sanitizerPathsBuilder = ImmutableBiMap.builder();
+    sanitizerPathsBuilder.put(sdkPath, "APPLE_SDKROOT");
+    sanitizerPathsBuilder.put(platformPath, "APPLE_PLATFORM_DIR");
+    developerPath.ifPresent(path -> sanitizerPathsBuilder.put(path, "APPLE_DEVELOPER_DIR"));
+    DebugPathSanitizer compilerDebugPathSanitizer =
+        new PrefixMapDebugPathSanitizer(
+            DebugPathSanitizer.getPaddedDir(".", 250, File.separatorChar),
+            sanitizerPathsBuilder.build());
+    cxxPlatformBuilder.setCompilerDebugPathSanitizer(compilerDebugPathSanitizer);
+
+    ImmutableMap.Builder<String, String> macrosBuilder = ImmutableMap.builder();
+    macrosBuilder.put("SDKROOT", sdkPath.toString());
+    macrosBuilder.put("PLATFORM_DIR", platformPath.toString());
+    macrosBuilder.put(
+        "CURRENT_ARCH",
+        ApplePlatform.findArchitecture(flavor).orElseThrow(IllegalStateException::new));
+    developerPath.ifPresent(path -> macrosBuilder.put("DEVELOPER_DIR", path.toString()));
+    cxxPlatformBuilder.setFlagMacros(macrosBuilder.build());
+
+    return cxxPlatformBuilder.build();
+  }
+
   /**
-   * apple_toolchain defines tools, cxx and swift toolchains and some properties of
+   * apple_toolchain defines tools, cxx and swift toolchains and other properties to define
    * AppleCxxPlatform.
    */
   @Value.Immutable
   @BuckStyleImmutable
   interface AbstractAppleToolchainDescriptionArg extends BuildRuleArg {
+    /** Name of SDK which should be used. */
+    String getSdkName();
+
+    /** Target architecture. */
+    String getArchitecture();
+
     /** Path to Apple platform */
     SourcePath getPlatformPath();
 
     /** Path to Apple SDK. */
     SourcePath getSdkPath();
-
-    /** Name of SDK which should be used. */
-    String getSdkName();
 
     /** Version of SDK. */
     String getVersion();
@@ -168,6 +271,15 @@ public class AppleToolchainDescription
 
     /** Target for the swift toolchain which should be used for this SDK. */
     Optional<BuildTarget> getSwiftToolchain();
+
+    /** Developer directory of the toolchain */
+    Optional<SourcePath> getDeveloperPath();
+
+    /** XCode version which can be found in DTXcode in XCode plist */
+    String getXcodeVersion();
+
+    /** XCode build version from from 'xcodebuild -version' */
+    String getXcodeBuildVersion();
 
     /** If work around for dsymutil should be used. */
     Optional<Boolean> getWorkAroundDsymutilLtoStackOverflowBug();

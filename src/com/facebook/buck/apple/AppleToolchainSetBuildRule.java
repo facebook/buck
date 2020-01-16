@@ -17,94 +17,30 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
-import com.facebook.buck.apple.toolchain.ApplePlatform;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.impl.NoopBuildRule;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
-import com.facebook.buck.cxx.toolchain.PrefixMapDebugPathSanitizer;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.google.common.collect.ImmutableBiMap;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedMap;
-import java.io.File;
-import java.nio.file.Path;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * This {@link BuildRule} creates {@link AppleCxxPlatform} using {@link AppleToolchainBuildRule}.
+ * This {@link BuildRule} provides {@link AppleCxxPlatform} using {@link AppleToolchainBuildRule}.
  * It's a {@link NoopBuildRule} with no build steps or outputs.
  */
 public class AppleToolchainSetBuildRule extends NoopBuildRule {
 
-  private final Map<String, AppleToolchainBuildRule> applePlatformMapping;
-  private final Optional<Path> developerPath;
-  private final String xcodeVersion;
-  private final String xcodeBuildVersion;
-
-  private final Map<Flavor, AppleCxxPlatform> resolvedCache;
+  private final FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain;
 
   public AppleToolchainSetBuildRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      ImmutableSortedMap<String, AppleToolchainBuildRule> applePlatformMapping,
-      Optional<Path> developerPath,
-      String xcodeVersion,
-      String xcodeBuildVersion) {
+      FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain) {
     super(buildTarget, projectFilesystem);
-
-    this.applePlatformMapping = applePlatformMapping;
-    this.developerPath = developerPath;
-    this.xcodeVersion = xcodeVersion;
-    this.xcodeBuildVersion = xcodeBuildVersion;
-    this.resolvedCache = new ConcurrentHashMap<>();
+    this.appleCxxPlatformsFlavorDomain = appleCxxPlatformsFlavorDomain;
   }
 
   public AppleCxxPlatform getAppleCxxPlatform(Flavor flavor) {
-    return resolvedCache.computeIfAbsent(flavor, this::computePlatform);
-  }
-
-  private AppleCxxPlatform computePlatform(Flavor flavor) {
-    if (!applePlatformMapping.containsKey(flavor.getName())) {
-      throw new HumanReadableException(
-          "Apple platform '%s' is not defined in %s", flavor, getBuildTarget());
-    }
-    AppleToolchainBuildRule platformRule = applePlatformMapping.get(flavor.getName());
-
-    CxxPlatform.Builder cxxPlatformBuilder =
-        CxxPlatform.builder().from(platformRule.getCxxPlatform(flavor));
-
-    ImmutableBiMap.Builder<Path, String> sanitizerPathsBuilder =
-        platformRule.getSanitizerPathsBuilder();
-    developerPath.ifPresent(path -> sanitizerPathsBuilder.put(path, "APPLE_DEVELOPER_DIR"));
-    DebugPathSanitizer compilerDebugPathSanitizer =
-        new PrefixMapDebugPathSanitizer(
-            DebugPathSanitizer.getPaddedDir(".", 250, File.separatorChar),
-            sanitizerPathsBuilder.build());
-    cxxPlatformBuilder.setCompilerDebugPathSanitizer(compilerDebugPathSanitizer);
-
-    ImmutableMap.Builder<String, String> macrosBuilder = platformRule.getMacrosBuilder();
-    macrosBuilder.put(
-        "CURRENT_ARCH",
-        ApplePlatform.findArchitecture(flavor).orElseThrow(IllegalStateException::new));
-    developerPath.ifPresent(path -> macrosBuilder.put("DEVELOPER_DIR", path.toString()));
-    cxxPlatformBuilder.setFlagMacros(macrosBuilder.build());
-
-    return platformRule
-        .getAppleCxxPlatformBuilder()
-        .setCxxPlatform(cxxPlatformBuilder.build())
-        .setSwiftPlatform(platformRule.getSwiftPlatform(flavor))
-        .setXcodeVersion(xcodeVersion)
-        .setXcodeBuildVersion(xcodeBuildVersion)
-        .setAppleSdkPaths(
-            platformRule.getAppleSdkPathsBuilder().setDeveloperPath(developerPath).build())
-        .setAppleSdk(platformRule.getAppleSdk(flavor))
-        .setStubBinary(platformRule.getStubBinaryPath(flavor))
-        .build();
+    return appleCxxPlatformsFlavorDomain.getValue(flavor);
   }
 }

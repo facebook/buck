@@ -16,27 +16,23 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Verify;
-import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.collect.Ordering;
-import java.util.Map;
-import java.util.Optional;
+import com.google.common.collect.ImmutableList;
 import org.immutables.value.Value;
 
 /**
- * Defines an apple_toolchain_set rule that allows a {@link AppleCxxPlatform} to be configured as a
- * build target.
+ * Defines an apple_toolchain_set rule that allows to list all available apple_toolchain targets
+ * which will be used to create {@link AppleCxxPlatform}.
  */
 public class AppleToolchainSetDescription
     implements DescriptionWithTargetGraph<AppleToolchainSetDescriptionArg> {
@@ -49,33 +45,20 @@ public class AppleToolchainSetDescription
       AppleToolchainSetDescriptionArg args) {
     Verify.verify(!buildTarget.isFlavored());
 
-    ImmutableSortedMap.Builder<String, AppleToolchainBuildRule> appleSdkMappingBuilder =
-        new ImmutableSortedMap.Builder<>(Ordering.natural());
-    for (Map.Entry<String, BuildTarget> entry : args.getAppleToolchains().entrySet()) {
-      if (!ApplePlatform.ALL_PLATFORM_FLAVORS.contains(InternalFlavor.of(entry.getKey()))) {
-        throw new HumanReadableException(
-            "%s: Invalid Apple platform name: %s", buildTarget, entry.getKey());
-      }
-      BuildRule appleToolchainRule = context.getActionGraphBuilder().getRule(entry.getValue());
+    ImmutableList.Builder<AppleCxxPlatform> appleCxxPlatformsBuilder = ImmutableList.builder();
+    for (BuildTarget target : args.getAppleToolchains()) {
+      BuildRule appleToolchainRule = context.getActionGraphBuilder().getRule(target);
       if (!(appleToolchainRule instanceof AppleToolchainBuildRule)) {
         throw new HumanReadableException(
-            "Expected %s to be an instance of apple_toolchain.", entry.getValue());
+            "Expected %s to be an instance of apple_toolchain.", target);
       }
-      appleSdkMappingBuilder.put(entry.getKey(), (AppleToolchainBuildRule) appleToolchainRule);
+      appleCxxPlatformsBuilder.add(
+          ((AppleToolchainBuildRule) appleToolchainRule).getAppleCxxPlatform());
     }
     return new AppleToolchainSetBuildRule(
         buildTarget,
         context.getProjectFilesystem(),
-        appleSdkMappingBuilder.build(),
-        args.getDeveloperPath()
-            .map(
-                sourcePath ->
-                    context
-                        .getActionGraphBuilder()
-                        .getSourcePathResolver()
-                        .getAbsolutePath(sourcePath)),
-        args.getXcodeVersion(),
-        args.getXcodeBuildVersion());
+        FlavorDomain.from("Apple C++ Platform", appleCxxPlatformsBuilder.build()));
   }
 
   @Override
@@ -83,23 +66,11 @@ public class AppleToolchainSetDescription
     return AppleToolchainSetDescriptionArg.class;
   }
 
-  /**
-   * An apple_toolchain_set is a mapping from platform name to apple_toolchain with several common
-   * fields.
-   */
+  /** An apple_toolchain_set is a list of available apple_toolchain targets. */
   @Value.Immutable
   @BuckStyleImmutable
   interface AbstractAppleToolchainSetDescriptionArg extends BuildRuleArg {
-    /** Mapping from apple platform name to apple_toolchain rule. */
-    ImmutableSortedMap<String, BuildTarget> getAppleToolchains();
-
-    /** Developer directory of the toolchain */
-    Optional<SourcePath> getDeveloperPath();
-
-    /** XCode version which can be found in DTXcode in XCode plist */
-    String getXcodeVersion();
-
-    /** XCode build version from from 'xcodebuild -version' */
-    String getXcodeBuildVersion();
+    /** List of available toolchains in apple_toolchain targets. */
+    ImmutableList<BuildTarget> getAppleToolchains();
   }
 }
