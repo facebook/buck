@@ -79,10 +79,9 @@ java_library(
     ],
 )
 
-java_library(
-    name = "meta-inf",
-    resources = glob(["resources/META-INF/**/*"]),
-    resources_root = "resources/",
+filegroup(
+    name = "plugin-xml",
+    srcs = ["resources/META-INF/plugin.xml"],
     visibility = ["PUBLIC"],
 )
 
