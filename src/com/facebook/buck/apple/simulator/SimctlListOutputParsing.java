@@ -66,11 +66,10 @@ public class SimctlListOutputParsing {
     Matcher matcher = SIMCTL_LIST_DEVICES_PATTERN.matcher(line);
     if (matcher.matches()) {
       AppleSimulator simulator =
-          AppleSimulator.builder()
-              .setName(matcher.group(DEVICE_NAME_GROUP))
-              .setUdid(matcher.group(DEVICE_UDID_GROUP))
-              .setSimulatorState(AppleSimulatorState.fromString(matcher.group(DEVICE_STATE_GROUP)))
-              .build();
+          ImmutableAppleSimulator.of(
+              matcher.group(DEVICE_NAME_GROUP),
+              matcher.group(DEVICE_UDID_GROUP),
+              AppleSimulatorState.fromString(matcher.group(DEVICE_STATE_GROUP)));
       LOG.debug("Got simulator: %s", simulator);
       simulatorsBuilder.add(simulator);
     }

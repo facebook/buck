@@ -16,12 +16,10 @@
 
 package com.facebook.buck.apple.simulator;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-@Value.Immutable
-@BuckStyleImmutable
-interface AbstractAppleSimulator {
+@BuckStyleValue
+public interface AppleSimulator {
   String getName();
 
   String getUdid();

@@ -16,16 +16,14 @@
 
 package com.facebook.buck.apple.toolchain;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
+import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.Set;
-import org.immutables.value.Value;
 
 /** Paths to Apple SDK directories under an installation of Xcode. */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractAppleSdkPaths {
+@BuckStyleValueWithBuilder
+public abstract class AppleSdkPaths {
   /**
    * Absolute path to the active DEVELOPER_DIR.
    *
@@ -42,7 +40,7 @@ abstract class AbstractAppleSdkPaths {
    *
    * <p>{@code [/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain]}
    */
-  public abstract Set<Path> getToolchainPaths();
+  public abstract ImmutableSet<Path> getToolchainPaths();
 
   /**
    * Absolute path to tools and files which depend on a particular platform.
@@ -62,4 +60,10 @@ abstract class AbstractAppleSdkPaths {
    * /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator8.0.sdk}
    */
   public abstract Path getSdkPath();
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends ImmutableAppleSdkPaths.Builder {}
 }

@@ -4211,10 +4211,9 @@ public class ProjectGeneratorTest {
             generatedHostAppTarget, PBXCopyFilesBuildPhase.class);
     assertEquals(
         copyBuildPhase.getDstSubfolderSpec(),
-        CopyFilePhaseDestinationSpec.builder()
-            .setDestination(PBXCopyFilesBuildPhase.Destination.PRODUCTS)
-            .setPath("$(CONTENTS_FOLDER_PATH)/Watch")
-            .build());
+        CopyFilePhaseDestinationSpec.of(
+            PBXCopyFilesBuildPhase.Destination.PRODUCTS,
+            Optional.of("$(CONTENTS_FOLDER_PATH)/Watch")));
   }
 
   @Test

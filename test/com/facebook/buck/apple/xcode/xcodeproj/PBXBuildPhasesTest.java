@@ -119,8 +119,7 @@ public class PBXBuildPhasesTest {
   }
 
   private PBXCopyFilesBuildPhase makeCopyFilesPhase() {
-    CopyFilePhaseDestinationSpec.Builder destSpecBuilder = CopyFilePhaseDestinationSpec.builder();
-    destSpecBuilder.setDestination(PBXCopyFilesBuildPhase.Destination.PRODUCTS);
-    return new PBXCopyFilesBuildPhase(destSpecBuilder.build());
+    return new PBXCopyFilesBuildPhase(
+        CopyFilePhaseDestinationSpec.of(PBXCopyFilesBuildPhase.Destination.PRODUCTS));
   }
 }

@@ -52,7 +52,7 @@ public class ProvisioningProfileStoreTest {
       String uuid,
       ImmutableMap<String, NSObject> entitlements,
       ImmutableSet<HashCode> fingerprints) {
-    return ProvisioningProfileMetadata.builder()
+    return ImmutableProvisioningProfileMetadata.builder()
         .setAppID(ProvisioningProfileMetadata.splitAppID(appID))
         .setExpirationDate(expirationDate)
         .setUUID(uuid)
@@ -223,18 +223,14 @@ public class ProvisioningProfileStoreTest {
   @Test
   public void testOnlyProfilesContainingValidFingerprintsAreMatched() {
     CodeSignIdentity validIdentity =
-        CodeSignIdentity.builder()
-            .setFingerprint(
-                CodeSignIdentity.toFingerprint("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"))
-            .setSubjectCommonName("iPhone Developer: Foo Bar (54321EDCBA)")
-            .build();
+        CodeSignIdentity.of(
+            CodeSignIdentity.toFingerprint("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"),
+            "iPhone Developer: Foo Bar (54321EDCBA)");
 
     CodeSignIdentity otherIdentity =
-        CodeSignIdentity.builder()
-            .setFingerprint(
-                CodeSignIdentity.toFingerprint("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"))
-            .setSubjectCommonName("iPhone Developer: Foo Bar (ABCDE12345)")
-            .build();
+        CodeSignIdentity.of(
+            CodeSignIdentity.toFingerprint("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"),
+            "iPhone Developer: Foo Bar (ABCDE12345)");
 
     ProvisioningProfileMetadata expected =
         makeTestMetadata(

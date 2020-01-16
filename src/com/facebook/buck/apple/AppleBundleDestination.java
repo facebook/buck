@@ -37,7 +37,7 @@ public enum AppleBundleDestination {
    * @param destinations Platform-specific set of concrete path values in a bundle.
    * @return Value of path relative to bundle root where resource will be copied.
    */
-  public Path getPath(AppleBundleDestinations destinations) {
+  public Path getPath(AbstractAppleBundleDestinations destinations) {
     switch (this) {
       case RESOURCES:
         return destinations.getResourcesPath();

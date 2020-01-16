@@ -16,16 +16,22 @@
 
 package com.facebook.buck.apple.xcode.xcodeproj;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import java.util.Optional;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-interface AbstractCopyFilePhaseDestinationSpec {
+@BuckStyleValue
+public interface CopyFilePhaseDestinationSpec {
 
-  @Value.Parameter
   PBXCopyFilesBuildPhase.Destination getDestination();
 
   Optional<String> getPath();
+
+  static CopyFilePhaseDestinationSpec of(PBXCopyFilesBuildPhase.Destination destination) {
+    return of(destination, Optional.empty());
+  }
+
+  static CopyFilePhaseDestinationSpec of(
+      PBXCopyFilesBuildPhase.Destination destination, Optional<String> path) {
+    return ImmutableCopyFilePhaseDestinationSpec.of(destination, path);
+  }
 }

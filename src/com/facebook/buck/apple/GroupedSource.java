@@ -18,7 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
@@ -29,9 +29,8 @@ import java.util.Optional;
 import java.util.function.Function;
 import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractGroupedSource {
+@BuckStyleValue
+public abstract class GroupedSource {
   /** The type of grouped source entry this object represents. */
   public enum Type {
     /** A single {@link SourceWithFlags}. */
@@ -46,22 +45,16 @@ abstract class AbstractGroupedSource {
     SOURCE_GROUP,
   }
 
-  @Value.Parameter
   protected abstract Type getType();
 
-  @Value.Parameter
   protected abstract Optional<SourceWithFlags> getSourceWithFlags();
 
-  @Value.Parameter
   protected abstract Optional<SourcePath> getSourcePath();
 
-  @Value.Parameter
   protected abstract Optional<String> getSourceGroupName();
 
-  @Value.Parameter
   protected abstract Optional<Path> getSourceGroupPathRelativeToTarget();
 
-  @Value.Parameter
   protected abstract Optional<List<GroupedSource>> getSourceGroup();
 
   @Value.Check
@@ -117,7 +110,7 @@ abstract class AbstractGroupedSource {
 
   /** Creates a {@link GroupedSource} given a {@link SourceWithFlags}. */
   public static GroupedSource ofSourceWithFlags(SourceWithFlags sourceWithFlags) {
-    return GroupedSource.of(
+    return ImmutableGroupedSource.of(
         Type.SOURCE_WITH_FLAGS,
         Optional.of(sourceWithFlags),
         Optional.empty(),
@@ -131,7 +124,7 @@ abstract class AbstractGroupedSource {
    * be included in sources.
    */
   public static GroupedSource ofIgnoredSource(SourcePath sourcePath) {
-    return GroupedSource.of(
+    return ImmutableGroupedSource.of(
         Type.IGNORED_SOURCE,
         Optional.empty(),
         Optional.of(sourcePath),
@@ -144,7 +137,7 @@ abstract class AbstractGroupedSource {
    * Creates a {@link GroupedSource} given a {@link SourcePath} representing a public header file.
    */
   public static GroupedSource ofPublicHeader(SourcePath headerPath) {
-    return GroupedSource.of(
+    return ImmutableGroupedSource.of(
         Type.PUBLIC_HEADER,
         Optional.empty(),
         Optional.of(headerPath),
@@ -157,7 +150,7 @@ abstract class AbstractGroupedSource {
    * Creates a {@link GroupedSource} given a {@link SourcePath} representing a private header file.
    */
   public static GroupedSource ofPrivateHeader(SourcePath headerPath) {
-    return GroupedSource.of(
+    return ImmutableGroupedSource.of(
         Type.PRIVATE_HEADER,
         Optional.empty(),
         Optional.of(headerPath),
@@ -171,7 +164,7 @@ abstract class AbstractGroupedSource {
       String sourceGroupName,
       Path sourceGroupPathRelativeToTarget,
       Collection<GroupedSource> sourceGroup) {
-    return GroupedSource.of(
+    return ImmutableGroupedSource.of(
         Type.SOURCE_GROUP,
         Optional.empty(),
         Optional.empty(),

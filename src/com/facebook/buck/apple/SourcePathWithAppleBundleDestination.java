@@ -19,30 +19,25 @@ package com.facebook.buck.apple;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /**
  * Simple type representing a {@link com.facebook.buck.core.sourcepath.SourcePath} and a destination
  * {@link com.facebook.buck.apple.AppleBundleDestination} in a resulting bundle where a file or a
  * directory with this path should be copied.
  */
-@Value.Immutable()
-@BuckStyleImmutable
-public abstract class AbstractSourcePathWithAppleBundleDestination
-    implements AddsToRuleKey, Comparable<AbstractSourcePathWithAppleBundleDestination> {
+@BuckStyleValue
+public abstract class SourcePathWithAppleBundleDestination
+    implements AddsToRuleKey, Comparable<SourcePathWithAppleBundleDestination> {
 
-  @Value.Parameter
   @AddToRuleKey
   public abstract SourcePath getSourcePath();
 
-  @Value.Parameter
   @AddToRuleKey
   public abstract AppleBundleDestination getDestination();
 
-  @Value.Parameter
   @AddToRuleKey
-  public abstract Boolean getCodesignOnCopy();
+  public abstract boolean getCodesignOnCopy();
 
   /**
    * Construct a new immutable {@code SourcePathWithAppleBundleDestination} instance with default
@@ -52,17 +47,22 @@ public abstract class AbstractSourcePathWithAppleBundleDestination
    * @return An immutable SourcePathWithAppleBundleDestination instance
    */
   public static SourcePathWithAppleBundleDestination of(SourcePath sourcePath) {
-    return SourcePathWithAppleBundleDestination.of(
-        sourcePath, AppleBundleDestination.defaultValue());
+    return of(sourcePath, AppleBundleDestination.defaultValue());
   }
 
   public static SourcePathWithAppleBundleDestination of(
       SourcePath sourcePath, AppleBundleDestination destination) {
-    return SourcePathWithAppleBundleDestination.of(sourcePath, destination, false);
+    return of(sourcePath, destination, false);
+  }
+
+  public static SourcePathWithAppleBundleDestination of(
+      SourcePath sourcePath, AppleBundleDestination destination, boolean codesignOnCopy) {
+    return ImmutableSourcePathWithAppleBundleDestination.of(
+        sourcePath, destination, codesignOnCopy);
   }
 
   @Override
-  public int compareTo(AbstractSourcePathWithAppleBundleDestination o) {
+  public int compareTo(SourcePathWithAppleBundleDestination o) {
     if (getSourcePath() != o.getSourcePath()) {
       return getSourcePath().compareTo(o.getSourcePath());
     }
@@ -70,7 +70,7 @@ public abstract class AbstractSourcePathWithAppleBundleDestination
       return getDestination().compareTo(o.getDestination());
     }
     if (getCodesignOnCopy() != o.getCodesignOnCopy()) {
-      return getCodesignOnCopy().compareTo(o.getCodesignOnCopy());
+      return Boolean.compare(getCodesignOnCopy(), o.getCodesignOnCopy());
     }
     return 0;
   }

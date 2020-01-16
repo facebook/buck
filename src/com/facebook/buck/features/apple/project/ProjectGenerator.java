@@ -1490,10 +1490,9 @@ public class ProjectGenerator {
           // To be on the safe side, we're explicitly marking the copy phase as only running for
           // deployment postprocessing (i.e., "Copy only when installing") and disabling
           // deployment postprocessing (it's enabled by default for release builds).
-          CopyFilePhaseDestinationSpec.Builder destSpecBuilder =
-              CopyFilePhaseDestinationSpec.builder();
-          destSpecBuilder.setDestination(PBXCopyFilesBuildPhase.Destination.PRODUCTS);
-          PBXCopyFilesBuildPhase copyFiles = new PBXCopyFilesBuildPhase(destSpecBuilder.build());
+          PBXCopyFilesBuildPhase copyFiles =
+              new PBXCopyFilesBuildPhase(
+                  CopyFilePhaseDestinationSpec.of(PBXCopyFilesBuildPhase.Destination.PRODUCTS));
           copyFiles.setRunOnlyForDeploymentPostprocessing(Optional.of(Boolean.TRUE));
           copyFiles.setName(Optional.of("Fake Swift Dependencies (Copy Files Phase)"));
 
@@ -3376,29 +3375,26 @@ public class ProjectGenerator {
         case APP:
           if (isWatchApplicationNode(targetNode)) {
             return Optional.of(
-                CopyFilePhaseDestinationSpec.builder()
-                    .setDestination(PBXCopyFilesBuildPhase.Destination.PRODUCTS)
-                    .setPath("$(CONTENTS_FOLDER_PATH)/Watch")
-                    .build());
+                CopyFilePhaseDestinationSpec.of(
+                    PBXCopyFilesBuildPhase.Destination.PRODUCTS,
+                    Optional.of("$(CONTENTS_FOLDER_PATH)/Watch")));
           } else {
             return Optional.of(
                 CopyFilePhaseDestinationSpec.of(PBXCopyFilesBuildPhase.Destination.EXECUTABLES));
           }
         case QLGENERATOR:
           return Optional.of(
-              CopyFilePhaseDestinationSpec.builder()
-                  .setDestination(PBXCopyFilesBuildPhase.Destination.QLGENERATOR)
-                  .setPath("$(CONTENTS_FOLDER_PATH)/Library/QuickLook")
-                  .build());
+              CopyFilePhaseDestinationSpec.of(
+                  PBXCopyFilesBuildPhase.Destination.QLGENERATOR,
+                  Optional.of("$(CONTENTS_FOLDER_PATH)/Library/QuickLook")));
         case BUNDLE:
           return Optional.of(
               CopyFilePhaseDestinationSpec.of(PBXCopyFilesBuildPhase.Destination.PLUGINS));
         case XPC:
           return Optional.of(
-              CopyFilePhaseDestinationSpec.builder()
-                  .setDestination(PBXCopyFilesBuildPhase.Destination.XPC)
-                  .setPath("$(CONTENTS_FOLDER_PATH)/XPCServices")
-                  .build());
+              CopyFilePhaseDestinationSpec.of(
+                  PBXCopyFilesBuildPhase.Destination.XPC,
+                  Optional.of("$(CONTENTS_FOLDER_PATH)/XPCServices")));
           // $CASES-OMITTED$
         default:
           return Optional.of(

@@ -335,11 +335,11 @@ public class XcodeNativeTargetProjectWriterTest {
   public void testCopyFilesBuildPhase() throws NoSuchBuildTargetException {
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
 
-    CopyFilePhaseDestinationSpec.Builder specBuilder = CopyFilePhaseDestinationSpec.builder();
-    specBuilder.setDestination(PBXCopyFilesBuildPhase.Destination.FRAMEWORKS);
-    specBuilder.setPath("foo.png");
+    PBXBuildPhase copyPhase =
+        new PBXCopyFilesBuildPhase(
+            CopyFilePhaseDestinationSpec.of(
+                PBXCopyFilesBuildPhase.Destination.FRAMEWORKS, Optional.of("foo.png")));
 
-    PBXBuildPhase copyPhase = new PBXCopyFilesBuildPhase(specBuilder.build());
     mutator.setCopyFilesPhases(ImmutableList.of(copyPhase));
 
     NewNativeTargetProjectMutator.Result result =
@@ -355,11 +355,11 @@ public class XcodeNativeTargetProjectWriterTest {
       throws NoSuchBuildTargetException {
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
 
-    CopyFilePhaseDestinationSpec.Builder specBuilder = CopyFilePhaseDestinationSpec.builder();
-    specBuilder.setDestination(PBXCopyFilesBuildPhase.Destination.FRAMEWORKS);
-    specBuilder.setPath("script/input.png");
+    PBXBuildPhase copyFilesPhase =
+        new PBXCopyFilesBuildPhase(
+            CopyFilePhaseDestinationSpec.of(
+                PBXCopyFilesBuildPhase.Destination.FRAMEWORKS, Optional.of("script/input.png")));
 
-    PBXBuildPhase copyFilesPhase = new PBXCopyFilesBuildPhase(specBuilder.build());
     mutator.setCopyFilesPhases(ImmutableList.of(copyFilesPhase));
 
     TargetNode<?> postbuildNode =

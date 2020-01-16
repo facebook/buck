@@ -168,7 +168,7 @@ public class ExternallyBuiltApplePackageTest {
                 new NoSandboxExecutionStrategy(),
                 graphBuilder,
                 params,
-                config.withPlatform(config.getPlatform().withBuildVersion(input)),
+                config.withPlatform(config.getPlatform().withBuildVersion(Optional.of(input))),
                 FakeSourcePath.of("Fake/Bundle/Location"),
                 true,
                 Optional.empty(),

@@ -18,18 +18,16 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
-import org.immutables.value.Value;
 
 /**
  * Information about a build target that represents a fat binary.
  *
  * <p>Fat binaries are represented by build targets having multiple platform flavors.
  */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractMultiarchFileInfo {
+@BuckStyleValue
+abstract class MultiarchFileInfo {
   public abstract BuildTarget getFatTarget();
 
   public abstract ImmutableList<BuildTarget> getThinTargets();

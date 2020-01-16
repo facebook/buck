@@ -21,17 +21,16 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform>, AddsToRuleKey {
+@BuckStyleValueWithBuilder
+public abstract class ApplePlatform implements Comparable<ApplePlatform>, AddsToRuleKey {
 
   public static final ApplePlatform IPHONEOS =
-      ApplePlatform.builder()
+      ImmutableApplePlatform.builder()
           .setName("iphoneos")
           .setSwiftName("ios")
           .setProvisioningProfileName("iOS")
@@ -41,7 +40,7 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
           .setStubBinaryPath(Optional.of("Library/Application Support/WatchKit/WK"))
           .build();
   public static final ApplePlatform IPHONESIMULATOR =
-      ApplePlatform.builder()
+      ImmutableApplePlatform.builder()
           .setName("iphonesimulator")
           .setSwiftName("ios")
           .setArchitectures(ImmutableList.of("i386", "x86_64"))
@@ -50,7 +49,7 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
           .setStubBinaryPath(Optional.of("Library/Application Support/WatchKit/WK"))
           .build();
   public static final ApplePlatform WATCHOS =
-      ApplePlatform.builder()
+      ImmutableApplePlatform.builder()
           .setName("watchos")
           .setProvisioningProfileName("iOS") // watchOS uses iOS provisioning profiles.
           .setArchitectures(ImmutableList.of("armv7k", "arm64_32"))
@@ -58,28 +57,28 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
           .setStubBinaryPath(Optional.of("Library/Application Support/WatchKit/WK"))
           .build();
   public static final ApplePlatform WATCHSIMULATOR =
-      ApplePlatform.builder()
+      ImmutableApplePlatform.builder()
           .setName("watchsimulator")
           .setArchitectures(ImmutableList.of("i386", "x86_64"))
           .setMinVersionFlagPrefix("-mwatchos-simulator-version-min=")
           .setStubBinaryPath(Optional.of("Library/Application Support/WatchKit/WK"))
           .build();
   public static final ApplePlatform APPLETVOS =
-      ApplePlatform.builder()
+      ImmutableApplePlatform.builder()
           .setName("appletvos")
           .setProvisioningProfileName("tvOS")
           .setArchitectures(ImmutableList.of("arm64"))
           .setMinVersionFlagPrefix("-mtvos-version-min=")
           .build();
   public static final ApplePlatform APPLETVSIMULATOR =
-      ApplePlatform.builder()
+      ImmutableApplePlatform.builder()
           .setName("appletvsimulator")
           .setArchitectures(ImmutableList.of("x86_64"))
           .setMinVersionFlagPrefix("-mtvos-simulator-version-min=")
           .setSwiftName("tvos")
           .build();
   public static final ApplePlatform MACOSX =
-      ApplePlatform.builder()
+      ImmutableApplePlatform.builder()
           .setName("macosx")
           .setArchitectures(ImmutableList.of("i386", "x86_64"))
           .setAppIncludesFrameworks(true)
@@ -182,7 +181,7 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
         return platform;
       }
     }
-    return ApplePlatform.builder().setName(name).build();
+    return ImmutableApplePlatform.builder().setName(name).build();
   }
 
   public static boolean isPlatformFlavor(Flavor flavor) {
@@ -226,7 +225,7 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
   }
 
   @Override
-  public int compareTo(AbstractApplePlatform other) {
+  public int compareTo(ApplePlatform other) {
     if (this == other) {
       return 0;
     }
@@ -238,4 +237,10 @@ abstract class AbstractApplePlatform implements Comparable<AbstractApplePlatform
   public final String getPlatformName() {
     return getName();
   }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends ImmutableApplePlatform.Builder {}
 }

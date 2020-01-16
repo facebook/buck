@@ -19,7 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.google.common.collect.ImmutableSet;
 import java.util.Set;
 import java.util.SortedSet;
@@ -27,12 +27,10 @@ import java.util.TreeSet;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.immutables.value.Value;
 
 /** Resources to be bundled into a bundle. */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractAppleBundleResources implements AddsToRuleKey {
+@BuckStyleValueWithBuilder
+public abstract class AppleBundleResources implements AddsToRuleKey {
   /**
    * Directories that should be copied into the bundle as directories of files with the same name.
    */
@@ -100,4 +98,10 @@ abstract class AbstractAppleBundleResources implements AddsToRuleKey {
         getResourceDirs().stream(),
         Stream.concat(getDirsContainingResourceDirs().stream(), getResourceFiles().stream()));
   }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends ImmutableAppleBundleResources.Builder {}
 }

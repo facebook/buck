@@ -86,17 +86,16 @@ public class MultiarchFileInfos {
       }
     }
 
-    MultiarchFileInfo.Builder builder =
-        MultiarchFileInfo.builder()
-            .setFatTarget(target)
-            .setRepresentativePlatformFlavor(Objects.requireNonNull(representativePlatformFlavor));
+    ImmutableList.Builder<BuildTarget> thinTargets = ImmutableList.builder();
 
     BuildTarget platformFreeTarget = target.withoutFlavors(appleCxxPlatforms.getFlavors());
     for (SortedSet<Flavor> flavorSet : thinFlavorSets) {
-      builder.addThinTargets(platformFreeTarget.withFlavors(flavorSet));
+      thinTargets.add(platformFreeTarget.withFlavors(flavorSet));
     }
 
-    return Optional.of(builder.build());
+    return Optional.of(
+        ImmutableMultiarchFileInfo.of(
+            target, thinTargets.build(), Objects.requireNonNull(representativePlatformFlavor)));
   }
 
   /** Assert that target supports multiple architectures. */

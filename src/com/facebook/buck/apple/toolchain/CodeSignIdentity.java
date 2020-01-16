@@ -18,17 +18,15 @@ package com.facebook.buck.apple.toolchain;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.hash.HashCode;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.immutables.value.Value;
 
 /** Represents a identity used in code signing. */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractCodeSignIdentity implements AddsToRuleKey {
+@BuckStyleValue
+public abstract class CodeSignIdentity implements AddsToRuleKey {
   private static final Pattern STRICT_HASH_PATTERN = Pattern.compile("(^[A-Fa-f0-9]{40}$)");
 
   /**
@@ -41,18 +39,10 @@ abstract class AbstractCodeSignIdentity implements AddsToRuleKey {
    * <p>Binaries signed with this identity will not be installable on real devices. This is only
    * intended for Buck unit tests.
    */
-  public static final CodeSignIdentity AD_HOC =
-      CodeSignIdentity.builder()
-          .setFingerprint(Optional.empty())
-          .setSubjectCommonName("Ad Hoc")
-          .build();
+  public static final CodeSignIdentity AD_HOC = CodeSignIdentity.of(Optional.empty(), "Ad Hoc");
 
   public static CodeSignIdentity ofAdhocSignedWithSubjectCommonName(String commonName) {
-    return CodeSignIdentity.builder()
-        .setFingerprint(Optional.empty())
-        .setSubjectCommonName(commonName)
-        .setShouldUseSubjectCommonNameToSign(true)
-        .build();
+    return CodeSignIdentity.of(Optional.empty(), commonName, true);
   }
 
   /**
@@ -72,13 +62,21 @@ abstract class AbstractCodeSignIdentity implements AddsToRuleKey {
   public abstract String getSubjectCommonName();
 
   /**
-   * @return True if {@link AbstractCodeSignIdentity#getSubjectCommonName()} can be used to sign if
-   *     {@link AbstractCodeSignIdentity#getFingerprint()} is empty.
+   * @return True if {@link CodeSignIdentity#getSubjectCommonName()} can be used to sign if {@link
+   *     CodeSignIdentity#getFingerprint()} is empty.
    */
   @AddToRuleKey(stringify = true)
-  @Value.Default
-  public boolean shouldUseSubjectCommonNameToSign() {
-    return false;
+  public abstract boolean shouldUseSubjectCommonNameToSign();
+
+  public static CodeSignIdentity of(Optional<HashCode> fingerPrint, String subjectCommonName) {
+    return of(fingerPrint, subjectCommonName, false);
+  }
+
+  public static CodeSignIdentity of(
+      Optional<? extends HashCode> fingerPrint,
+      String subjectCommonName,
+      boolean useSubjectCommonNameToSign) {
+    return ImmutableCodeSignIdentity.of(fingerPrint, subjectCommonName, useSubjectCommonNameToSign);
   }
 
   /** Convert a {@code String} into a fingerprint {@code HashCode} if it's in the correct format. */

@@ -16,29 +16,47 @@
 
 package com.facebook.buck.apple.toolchain;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import java.util.List;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
+import com.google.common.collect.ImmutableList;
 import java.util.Set;
-import org.immutables.value.Value;
 
 /** Metadata about an Apple SDK. */
-@Value.Immutable(copy = true)
-@BuckStyleImmutable
-interface AbstractAppleSdk {
+@BuckStyleValueWithBuilder
+public abstract class AppleSdk {
   /** The full name of the SDK. For example: {@code iphonesimulator8.0}. */
-  String getName();
+  public abstract String getName();
 
   /** The version number of the SDK. For example: {@code 8.0}. */
-  String getVersion();
+  public abstract String getVersion();
 
   /** The platform of the SDK. For example, {@code iphoneos}. */
-  ApplePlatform getApplePlatform();
+  public abstract ApplePlatform getApplePlatform();
 
   /** The architectures supported by the SDK. For example: {@code [i386, x86_64]}. */
-  Set<String> getArchitectures();
+  public abstract Set<String> getArchitectures();
 
   /**
    * The toolchains used by the SDK. For example: {@code ["com.apple.dt.toolchain.XcodeDefault"]}
    */
-  List<AppleToolchain> getToolchains();
+  public abstract ImmutableList<AppleToolchain> getToolchains();
+
+  public AppleSdk withName(String name) {
+    if (getName().equals(name)) {
+      return this;
+    }
+    return builder().from(this).setName(name).build();
+  }
+
+  public AppleSdk withVersion(String version) {
+    if (getVersion().equals(version)) {
+      return this;
+    }
+    return builder().from(this).setVersion(version).build();
+  }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends ImmutableAppleSdk.Builder {}
 }

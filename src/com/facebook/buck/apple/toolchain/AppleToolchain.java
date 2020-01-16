@@ -16,15 +16,13 @@
 
 package com.facebook.buck.apple.toolchain;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import java.nio.file.Path;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /** Metadata about an Apple toolchain. */
-@Value.Immutable
-@BuckStyleImmutable
-interface AbstractAppleToolchain {
+@BuckStyleValueWithBuilder
+public interface AppleToolchain {
   /** The identifier of the toolchain. For example: {@code com.apple.dt.XcodeDefault}. */
   String getIdentifier();
 
@@ -33,4 +31,10 @@ interface AbstractAppleToolchain {
 
   /** The path to the toolchain. For example, {@code .../XcodeDefault.xctoolchain}. */
   Path getPath();
+
+  static Builder builder() {
+    return new Builder();
+  }
+
+  class Builder extends ImmutableAppleToolchain.Builder {}
 }

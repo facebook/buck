@@ -20,7 +20,7 @@ import com.dd.plist.NSArray;
 import com.dd.plist.NSObject;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -35,9 +35,8 @@ import java.util.regex.Pattern;
 import org.immutables.value.Value;
 
 /** Metadata contained in a provisioning profile (.mobileprovision). */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractProvisioningProfileMetadata implements AddsToRuleKey {
+@BuckStyleValueWithBuilder
+public abstract class ProvisioningProfileMetadata implements AddsToRuleKey {
   private static final Pattern BUNDLE_ID_PATTERN = Pattern.compile("^([A-Z0-9]{10})\\.(.+)$");
 
   /**
@@ -118,4 +117,10 @@ abstract class AbstractProvisioningProfileMetadata implements AddsToRuleKey {
     }
     return filteredEntitlementsBuilder.build();
   }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends ImmutableProvisioningProfileMetadata.Builder {}
 }

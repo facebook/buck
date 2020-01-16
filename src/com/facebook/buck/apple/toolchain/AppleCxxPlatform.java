@@ -20,17 +20,15 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorConvertible;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import java.nio.file.Path;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /** Adds Apple-specific tools to {@link CxxPlatform}. */
-@Value.Immutable(copy = true)
-@BuckStyleImmutable
-abstract class AbstractAppleCxxPlatform implements FlavorConvertible {
+@BuckStyleValueWithBuilder
+public abstract class AppleCxxPlatform implements FlavorConvertible {
 
   public abstract CxxPlatform getCxxPlatform();
 
@@ -78,4 +76,24 @@ abstract class AbstractAppleCxxPlatform implements FlavorConvertible {
   public Flavor getFlavor() {
     return getCxxPlatform().getFlavor();
   }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public AppleCxxPlatform withBuildVersion(Optional<String> buildVersion) {
+    if (getBuildVersion().equals(buildVersion)) {
+      return this;
+    }
+    return builder().from(this).setBuildVersion(buildVersion).build();
+  }
+
+  public AppleCxxPlatform withAppleSdk(AppleSdk appleSdk) {
+    if (getAppleSdk().equals(appleSdk)) {
+      return this;
+    }
+    return builder().from(this).setAppleSdk(appleSdk).build();
+  }
+
+  public static class Builder extends ImmutableAppleCxxPlatform.Builder {}
 }
