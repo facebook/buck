@@ -18,6 +18,7 @@ package com.facebook.buck.core.starlark.rule.args;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.OutputArtifact;
+import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgsApi;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.Param;
@@ -52,7 +53,8 @@ public interface CommandLineArgsBuilderApi extends SkylarkValue {
               @ParamType(type = Integer.class),
               @ParamType(type = Artifact.class),
               @ParamType(type = Label.class),
-              @ParamType(type = OutputArtifact.class)
+              @ParamType(type = OutputArtifact.class),
+              @ParamType(type = CommandLineArgsApi.class)
             }),
         @Param(
             name = "value",
@@ -64,7 +66,8 @@ public interface CommandLineArgsBuilderApi extends SkylarkValue {
               @ParamType(type = Integer.class),
               @ParamType(type = Artifact.class),
               @ParamType(type = Label.class),
-              @ParamType(type = OutputArtifact.class)
+              @ParamType(type = OutputArtifact.class),
+              @ParamType(type = CommandLineArgsApi.class)
             }),
         @Param(
             name = "format",
@@ -89,7 +92,8 @@ public interface CommandLineArgsBuilderApi extends SkylarkValue {
         @Param(
             name = "values",
             doc =
-                "Values to add to the existing Args object. Must be one of str, int, Label, or Artifact",
+                "Values to add to the existing Args object. Must be one of str, int, Label, "
+                    + "Artifact or RunInfo",
             type = SkylarkList.class),
         @Param(
             name = "format",

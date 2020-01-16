@@ -40,7 +40,7 @@ import java.util.stream.Stream;
  * collections.
  */
 @BuckStyleImmutable
-public interface CommandLineArgs extends AddsToRuleKey {
+public interface CommandLineArgs extends AddsToRuleKey, CommandLineArgsApi {
 
   String DEFAULT_FORMAT_STRING = "%s";
 

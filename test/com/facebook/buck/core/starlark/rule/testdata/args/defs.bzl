@@ -1,11 +1,15 @@
 """ Module docstring """
 
+RI1 = RunInfo(env = {}, args = [1, 2, 3])
+RI2 = RunInfo(env = {}, args = [4, 5, 6])
+RI3 = RunInfo(env = {}, args = [7, 8, 9])
+
 def _add_impl(ctx):
-    a = ctx.actions.args().add(1).add("--foo", "bar")
+    a = ctx.actions.args().add(1).add("--foo", "bar").add(RI1).add(RI2, RI3)
     ctx.actions.write("out.txt", a)
 
 def _add_all_impl(ctx):
-    a = ctx.actions.args().add(1).add_all([2, "--foo", "bar"])
+    a = ctx.actions.args().add(1).add_all([2, "--foo", "bar"]).add_all([RI1, RI2, RI3])
     ctx.actions.write("out.txt", a)
 
 def _add_format_impl(ctx):
@@ -36,11 +40,15 @@ def _init_format_impl(ctx):
     a = ctx.actions.args(2, format = "--prefix=%s").add("--foo", format = "--other=%s")
     ctx.actions.write("out.txt", a)
 
+def _init_cliargs_impl(ctx):
+    a = ctx.actions.args(RI1)
+    ctx.actions.write("out.txt", a)
+
 def _init_failure_impl(ctx):
     ctx.actions.args({})
 
 def _init_list_impl(ctx):
-    a = ctx.actions.args([2, "--foo", "bar"])
+    a = ctx.actions.args([RI1, 2, "--foo", "bar"])
     ctx.actions.write("out.txt", a)
 
 def _init_list_format_impl(ctx):
@@ -138,10 +146,16 @@ init = rule(
     implementation = _init_impl,
 )
 
+init_cliargs = rule(
+    attrs = {},
+    implementation = _init_cliargs_impl,
+)
+
 init_failure = rule(
     attrs = {},
     implementation = _init_failure_impl,
 )
+
 init_list = rule(
     attrs = {},
     implementation = _init_list_impl,

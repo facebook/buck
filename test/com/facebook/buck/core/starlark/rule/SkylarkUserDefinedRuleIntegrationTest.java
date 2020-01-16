@@ -452,16 +452,21 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
     workspace.setUp();
     assertEquals(
-        ImmutableList.of("1", "--foo", "bar"),
+        ImmutableList.of("1", "--foo", "bar", "1", "2", "3", "4", "5", "6", "7", "8", "9"),
         workspace.getProjectFileSystem().readLines(workspace.buildAndReturnOutput("//:add")));
     assertEquals(
-        ImmutableList.of("1", "2", "--foo", "bar"),
+        ImmutableList.of("1", "2", "--foo", "bar", "1", "2", "3", "4", "5", "6", "7", "8", "9"),
         workspace.getProjectFileSystem().readLines(workspace.buildAndReturnOutput("//:add_all")));
     assertEquals(
         ImmutableList.of("2", "--foo"),
         workspace.getProjectFileSystem().readLines(workspace.buildAndReturnOutput("//:init")));
     assertEquals(
-        ImmutableList.of("2", "--foo", "bar"),
+        ImmutableList.of("1", "2", "3"),
+        workspace
+            .getProjectFileSystem()
+            .readLines(workspace.buildAndReturnOutput("//:init_cliargs")));
+    assertEquals(
+        ImmutableList.of("1", "2", "3", "2", "--foo", "bar"),
         workspace.getProjectFileSystem().readLines(workspace.buildAndReturnOutput("//:init_list")));
     assertEquals(
         ImmutableList.of("1", "--prefix=--foo", "--prefix=bar"),

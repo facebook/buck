@@ -9,6 +9,7 @@ load(
     "add_failure",
     "add_format",
     "init",
+    "init_cliargs",
     "init_failure",
     "init_format",
     "init_list",
@@ -38,6 +39,8 @@ add_args_failure(name = "add_args_failure")
 add_all_args_failure(name = "add_all_args_failure")
 
 init(name = "init")
+
+init_cliargs(name = "init_cliargs")
 
 init_format(name = "init_format")
 

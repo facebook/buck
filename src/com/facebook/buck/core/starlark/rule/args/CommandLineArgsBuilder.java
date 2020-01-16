@@ -55,7 +55,8 @@ public class CommandLineArgsBuilder implements CommandLineArgsBuilderApi {
         || arg instanceof Integer
         || arg instanceof CommandLineItem
         || arg instanceof Artifact
-        || arg instanceof OutputArtifact) {
+        || arg instanceof OutputArtifact
+        || arg instanceof CommandLineArgs) {
       return arg;
     }
     throw new CommandLineArgException(arg);
