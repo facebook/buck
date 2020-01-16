@@ -55,7 +55,7 @@ run_buck_build: &run_buck_build
   name: Run Buck Build
   command: |
     cd ${BUCKROOT}
-    echo '-Xmx750m' > .buckjavaargs.local
+    echo '-Xmx1024m' > .buckjavaargs.local
     export PATH=${ANDROIDSDK}/tools/bin:$PATH
     export PATH="$(pyenv root)/shims:$PATH"
     export ANDROID_SDK=${ANDROIDSDK}
