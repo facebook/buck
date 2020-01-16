@@ -4,12 +4,17 @@ load(
     "add_all",
     "add_all_args_failure",
     "add_all_failure",
+    "add_all_format",
     "add_args_failure",
     "add_failure",
+    "add_format",
     "init",
     "init_failure",
+    "init_format",
     "init_list",
     "init_list_failure",
+    "init_list_format",
+    "invalid_format",
     "unbound_add_all_failure",
     "unbound_add_failure",
     "unbound_init_failure",
@@ -19,6 +24,10 @@ load(
 add(name = "add")
 
 add_all(name = "add_all")
+
+add_format(name = "add_format")
+
+add_all_format(name = "add_all_format")
 
 add_failure(name = "add_failure")
 
@@ -30,9 +39,13 @@ add_all_args_failure(name = "add_all_args_failure")
 
 init(name = "init")
 
+init_format(name = "init_format")
+
 init_failure(name = "init_failure")
 
 init_list(name = "init_list")
+
+init_list_format(name = "init_list_format")
 
 init_list_failure(name = "init_list_failure")
 
@@ -43,3 +56,11 @@ unbound_add_all_failure(name = "unbound_add_all_failure")
 unbound_init_failure(name = "unbound_init_failure")
 
 unbound_init_list_failure(name = "unbound_init_list_failure")
+
+invalid_format(name = "add_empty_format", type = "add", format = " ")
+
+invalid_format(name = "add_all_empty_format", type = "add_all", format = " ")
+
+invalid_format(name = "init_empty_format", type = "init", format = " ")
+
+invalid_format(name = "init_list_empty_format", type = "init_list", format = " ")

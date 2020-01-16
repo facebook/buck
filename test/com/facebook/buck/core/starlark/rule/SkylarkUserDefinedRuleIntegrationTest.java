@@ -463,6 +463,26 @@ public class SkylarkUserDefinedRuleIntegrationTest {
     assertEquals(
         ImmutableList.of("2", "--foo", "bar"),
         workspace.getProjectFileSystem().readLines(workspace.buildAndReturnOutput("//:init_list")));
+    assertEquals(
+        ImmutableList.of("1", "--prefix=--foo", "--prefix=bar"),
+        workspace
+            .getProjectFileSystem()
+            .readLines(workspace.buildAndReturnOutput("//:add_format")));
+    assertEquals(
+        ImmutableList.of("1", "--prefix=2", "--prefix=--foo", "--prefix=bar"),
+        workspace
+            .getProjectFileSystem()
+            .readLines(workspace.buildAndReturnOutput("//:add_all_format")));
+    assertEquals(
+        ImmutableList.of("--prefix=2", "--prefix=--foo", "--prefix=bar"),
+        workspace
+            .getProjectFileSystem()
+            .readLines(workspace.buildAndReturnOutput("//:init_list_format")));
+    assertEquals(
+        ImmutableList.of("--prefix=2", "--other=--foo"),
+        workspace
+            .getProjectFileSystem()
+            .readLines(workspace.buildAndReturnOutput("//:init_format")));
 
     assertThat(
         workspace.runBuckBuild("//:add_failure").assertFailure().getStderr(),
@@ -494,6 +514,22 @@ public class SkylarkUserDefinedRuleIntegrationTest {
     assertThat(
         workspace.runBuckBuild("//:unbound_init_list_failure").assertFailure().getStderr(),
         Matchers.containsString("was not used as the output to an action"));
+
+    assertThat(
+        workspace.runBuckBuild("//:add_empty_format").assertFailure().getStderr(),
+        Matchers.containsString("must be a format string with one or more occurrences"));
+
+    assertThat(
+        workspace.runBuckBuild("//:add_all_empty_format").assertFailure().getStderr(),
+        Matchers.containsString("must be a format string with one or more occurrences"));
+
+    assertThat(
+        workspace.runBuckBuild("//:init_empty_format").assertFailure().getStderr(),
+        Matchers.containsString("must be a format string with one or more occurrences"));
+
+    assertThat(
+        workspace.runBuckBuild("//:init_list_empty_format").assertFailure().getStderr(),
+        Matchers.containsString("must be a format string with one or more occurrences"));
   }
 
   private static ImmutableList<String> splitStderr(ProcessResult result) {

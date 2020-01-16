@@ -133,13 +133,14 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
   }
 
   @Override
-  public CommandLineArgsBuilderApi args(Object args, Location location) throws EvalException {
+  public CommandLineArgsBuilderApi args(Object args, String formatString, Location location)
+      throws EvalException {
     CommandLineArgsBuilder builder = new CommandLineArgsBuilder();
     if (!EvalUtils.isNullOrNone(args)) {
       if (args instanceof SkylarkList) {
-        builder.addAll((SkylarkList<?>) args, location);
+        builder.addAll((SkylarkList<?>) args, formatString, location);
       } else {
-        builder.add(args, Runtime.UNBOUND, location);
+        builder.add(args, Runtime.UNBOUND, formatString, location);
       }
     }
     return builder;

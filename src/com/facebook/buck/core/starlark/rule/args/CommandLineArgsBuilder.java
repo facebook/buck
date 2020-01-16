@@ -62,9 +62,10 @@ public class CommandLineArgsBuilder implements CommandLineArgsBuilderApi {
   }
 
   @Override
-  public CommandLineArgsBuilder add(Object argNameOrValue, Object value, Location location)
+  public CommandLineArgsBuilder add(
+      Object argNameOrValue, Object value, String formatString, Location location)
       throws EvalException {
-
+    formatString = CommandLineArgsFactory.validateFormatString(formatString);
     try {
       ImmutableList<Object> args;
       if (value == Runtime.UNBOUND) {
@@ -72,7 +73,7 @@ public class CommandLineArgsBuilder implements CommandLineArgsBuilderApi {
       } else {
         args = ImmutableList.of(requireCorrectType(argNameOrValue), requireCorrectType(value));
       }
-      argsBuilder.add(CommandLineArgsFactory.from(args));
+      argsBuilder.add(CommandLineArgsFactory.from(args, formatString));
     } catch (CommandLineArgException e) {
       throw new EvalException(location, e.getHumanReadableErrorMessage());
     }
@@ -81,8 +82,8 @@ public class CommandLineArgsBuilder implements CommandLineArgsBuilderApi {
   }
 
   @Override
-  public CommandLineArgsBuilder addAll(SkylarkList<?> values, Location location)
-      throws EvalException {
+  public CommandLineArgsBuilder addAll(
+      SkylarkList<?> values, String formatString, Location location) throws EvalException {
 
     try {
       for (Object value : values) {
@@ -90,7 +91,7 @@ public class CommandLineArgsBuilder implements CommandLineArgsBuilderApi {
       }
       argsBuilder.add(
           CommandLineArgsFactory.from(
-              BuckSkylarkTypes.toJavaList(values, Object.class, "object class")));
+              BuckSkylarkTypes.toJavaList(values, Object.class, "object class"), formatString));
     } catch (CommandLineArgException e) {
       throw new EvalException(location, e.getHumanReadableErrorMessage());
     }

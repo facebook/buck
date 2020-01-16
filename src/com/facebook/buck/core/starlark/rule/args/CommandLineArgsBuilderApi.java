@@ -65,10 +65,21 @@ public interface CommandLineArgsBuilderApi extends SkylarkValue {
               @ParamType(type = Artifact.class),
               @ParamType(type = Label.class),
               @ParamType(type = OutputArtifact.class)
-            })
+            }),
+        @Param(
+            name = "format",
+            doc =
+                "A format string to apply after stringifying each argument. This must contain one "
+                    + "or more %s. Each will be replaced with the string value of each argument "
+                    + "at execution time.",
+            type = String.class,
+            named = true,
+            positional = false,
+            defaultValue = "\"%s\"")
       },
       useLocation = true)
-  CommandLineArgsBuilderApi add(Object argNameOrValue, Object value, Location location)
+  CommandLineArgsBuilderApi add(
+      Object argNameOrValue, Object value, String formatString, Location location)
       throws EvalException;
 
   @SkylarkCallable(
@@ -80,7 +91,17 @@ public interface CommandLineArgsBuilderApi extends SkylarkValue {
             doc =
                 "Values to add to the existing Args object. Must be one of str, int, Label, or Artifact",
             type = SkylarkList.class),
+        @Param(
+            name = "format",
+            doc =
+                "A format string to apply after stringifying each argument. This must contain one "
+                    + "or more %s. Each will be replaced with the string value of each argument "
+                    + "at execution time.",
+            type = String.class,
+            named = true,
+            defaultValue = "\"%s\"")
       },
       useLocation = true)
-  CommandLineArgsBuilderApi addAll(SkylarkList<?> values, Location location) throws EvalException;
+  CommandLineArgsBuilderApi addAll(SkylarkList<?> values, String formatString, Location location)
+      throws EvalException;
 }

@@ -38,8 +38,12 @@ public class SkylarkRuleContextArgsTest {
   public void addAddsArg() throws EvalException, LabelSyntaxException {
     CommandLineArgs args =
         new CommandLineArgsBuilder()
-            .add(1, Runtime.UNBOUND, Location.BUILTIN)
-            .add("--foo", Label.parseAbsolute("//foo:bar", ImmutableMap.of()), Location.BUILTIN)
+            .add(1, Runtime.UNBOUND, CommandLineArgs.DEFAULT_FORMAT_STRING, Location.BUILTIN)
+            .add(
+                "--foo",
+                Label.parseAbsolute("//foo:bar", ImmutableMap.of()),
+                CommandLineArgs.DEFAULT_FORMAT_STRING,
+                Location.BUILTIN)
             .build();
     ImmutableList<String> stringified =
         new ExecCompatibleCommandLineBuilder(new ArtifactFilesystem(new FakeProjectFilesystem()))
@@ -57,6 +61,7 @@ public class SkylarkRuleContextArgsTest {
                 SkylarkList.createImmutable(
                     ImmutableList.of(
                         1, "--foo", Label.parseAbsolute("//foo:bar", ImmutableMap.of()))),
+                CommandLineArgs.DEFAULT_FORMAT_STRING,
                 Location.BUILTIN)
             .build();
 

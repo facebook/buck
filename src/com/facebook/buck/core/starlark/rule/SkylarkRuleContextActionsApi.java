@@ -114,17 +114,28 @@ public interface SkylarkRuleContextActionsApi {
       name = "args",
       doc = "Get an instance of Args to construct command lines for actions",
       useLocation = true,
-      parameters =
-          @Param(
-              name = "args",
-              doc =
-                  "Values to initialize the new Args object with. If a list is provided, "
-                      + "these args are passed to `Args.add_all`. If a single non-list item is "
-                      + "provided, it is passed to `Args.add`.",
-              defaultValue = "None",
-              noneable = true,
-              type = Object.class))
-  CommandLineArgsBuilderApi args(Object args, Location location) throws EvalException;
+      parameters = {
+        @Param(
+            name = "args",
+            doc =
+                "Values to initialize the new Args object with. If a list is provided, "
+                    + "these args are passed to `Args.add_all`. If a single non-list item is "
+                    + "provided, it is passed to `Args.add`.",
+            defaultValue = "None",
+            noneable = true,
+            type = Object.class),
+        @Param(
+            name = "format",
+            doc =
+                "A format string to apply after stringifying each argument. This must contain one "
+                    + "or more %s. Each will be replaced with the string value of each argument "
+                    + "at execution time.",
+            type = String.class,
+            named = true,
+            defaultValue = "\"%s\"")
+      })
+  CommandLineArgsBuilderApi args(Object args, String formatString, Location location)
+      throws EvalException;
 
   @SkylarkCallable(
       name = "run",

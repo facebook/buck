@@ -31,6 +31,21 @@ import org.apache.commons.lang.StringUtils;
  */
 public class CommandLineArgsFactory {
   /**
+   * Throws an exception if the {@code formatString} is not a valid stringification format string
+   */
+  public static String validateFormatString(String formatString) throws CommandLineArgException {
+    if (formatString.equals(CommandLineArgs.DEFAULT_FORMAT_STRING)) {
+      return CommandLineArgs.DEFAULT_FORMAT_STRING;
+    }
+    if (StringUtils.countMatches(formatString, "%s") == 0) {
+      throw new CommandLineArgException(
+          "format string '%s' must be a format string with one or more occurrences of %%%%s",
+          formatString.replace("%s", "%%s"));
+    }
+    return formatString;
+  }
+
+  /**
    * Create a {@link CommandLineArgs} instance for a list of arguments
    *
    * @param args the list of primitive command line args
@@ -55,10 +70,7 @@ public class CommandLineArgsFactory {
     boolean foundCommandLineArg = false;
     boolean foundNonCommandLineArg = false;
 
-    if (!formatString.equals("%s") && StringUtils.countMatches(formatString, "%s") == 0) {
-      throw new CommandLineArgException(
-          "%s must be a format string with one or more occurrences of %%s", formatString);
-    }
+    String validatedFormatString = validateFormatString(formatString);
 
     // Yes, this means we loop over args.size() more than necessary sometimes. However, it also
     // allows us to do some quick conversions below. Worst case is 2N iterations, but best case is
@@ -97,7 +109,7 @@ public class CommandLineArgsFactory {
                   if (arg instanceof CommandLineArgs) {
                     return (CommandLineArgs) arg;
                   } else {
-                    return new ListCommandLineArgs(ImmutableList.of(arg), formatString);
+                    return new ListCommandLineArgs(ImmutableList.of(arg), validatedFormatString);
                   }
                 })
             .forEach(builder::add);
@@ -111,6 +123,6 @@ public class CommandLineArgsFactory {
       }
     }
 
-    return new ListCommandLineArgs(args, formatString);
+    return new ListCommandLineArgs(args, validatedFormatString);
   }
 }
