@@ -47,8 +47,11 @@ public abstract class RunInfoLegacyTool implements Tool {
         ImmutableList.builderWithExpectedSize(runInfo.args().getEstimatedArgsCount());
     runInfo
         .args()
-        .getArgs()
-        .map(ArgFactory::from)
+        .getArgsAndFormatStrings()
+        .map(
+            argAndFormat ->
+                ArgFactory.from(
+                    argAndFormat.getObject(), argAndFormat.getPostStringificationFormatString()))
         .forEach(arg -> arg.appendToCommandLine(command::add, resolver));
     return command.build();
   }

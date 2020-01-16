@@ -20,6 +20,7 @@ import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.OutputArtifact;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.build.lib.actions.CommandLineItem;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * Factory class that returns more efficient implementations of {@link CommandLineArgs} depending on
@@ -36,10 +37,28 @@ public class CommandLineArgsFactory {
    * @return A {@link CommandLineArgs} object for this collection of args
    * @throws CommandLineArgException if {@code args} contains an arg with an invalid type
    */
-  @SuppressWarnings("unchecked")
   public static CommandLineArgs from(ImmutableList<Object> args) throws CommandLineArgException {
+    return from(args, CommandLineArgs.DEFAULT_FORMAT_STRING);
+  }
+
+  /**
+   * Create a {@link CommandLineArgs} instance for a list of arguments
+   *
+   * @param args the list of primitive command line args
+   * @param formatString the format string to apply after stringifying arguments
+   * @return A {@link CommandLineArgs} object for this collection of args
+   * @throws CommandLineArgException if {@code args} contains an arg with an invalid type
+   */
+  @SuppressWarnings("unchecked")
+  public static CommandLineArgs from(ImmutableList<Object> args, String formatString)
+      throws CommandLineArgException {
     boolean foundCommandLineArg = false;
     boolean foundNonCommandLineArg = false;
+
+    if (!formatString.equals("%s") && StringUtils.countMatches(formatString, "%s") == 0) {
+      throw new CommandLineArgException(
+          "%s must be a format string with one or more occurrences of %%s", formatString);
+    }
 
     // Yes, this means we loop over args.size() more than necessary sometimes. However, it also
     // allows us to do some quick conversions below. Worst case is 2N iterations, but best case is
@@ -78,7 +97,7 @@ public class CommandLineArgsFactory {
                   if (arg instanceof CommandLineArgs) {
                     return (CommandLineArgs) arg;
                   } else {
-                    return new ListCommandLineArgs(ImmutableList.of(arg));
+                    return new ListCommandLineArgs(ImmutableList.of(arg), formatString);
                   }
                 })
             .forEach(builder::add);
@@ -92,6 +111,6 @@ public class CommandLineArgsFactory {
       }
     }
 
-    return new ListCommandLineArgs(args);
+    return new ListCommandLineArgs(args, formatString);
   }
 }

@@ -34,6 +34,7 @@ import java.util.stream.Stream;
 class ListCommandLineArgs implements CommandLineArgs {
 
   private final ImmutableList<Object> objects;
+  private final String formatString;
 
   /**
    * Create an instance of {@link ListCommandLineArgs}
@@ -41,8 +42,9 @@ class ListCommandLineArgs implements CommandLineArgs {
    * @param objects a list of command line arguments. These must have been validated by {@link
    *     CommandLineArgsFactory}
    */
-  ListCommandLineArgs(ImmutableList<Object> objects) {
+  ListCommandLineArgs(ImmutableList<Object> objects, String formatString) {
     this.objects = objects;
+    this.formatString = formatString;
   }
 
   @Override
@@ -51,8 +53,8 @@ class ListCommandLineArgs implements CommandLineArgs {
   }
 
   @Override
-  public Stream<Object> getArgs() {
-    return objects.stream();
+  public Stream<ArgAndFormatString> getArgsAndFormatStrings() {
+    return objects.stream().map(o -> ImmutableArgAndFormatString.of(o, formatString));
   }
 
   @Override

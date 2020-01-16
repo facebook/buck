@@ -86,7 +86,8 @@ public class ExecCompatibleCommandLineBuilderTest {
     CommandLineArgs args =
         new ImmutableRunInfo(
             ImmutableSortedMap.of(),
-            new ListCommandLineArgs(ImmutableList.of(ImmutableList.of("foo"))));
+            new ListCommandLineArgs(
+                ImmutableList.of(ImmutableList.of("foo")), CommandLineArgs.DEFAULT_FORMAT_STRING));
 
     thrown.expect(CommandLineArgException.class);
 

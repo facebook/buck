@@ -68,7 +68,9 @@ public class ListCommandLineArgsTest {
     Path artifact3Path = BuildPaths.getGenDir(filesystem, target).resolve("out.txt");
 
     CommandLineArgs args =
-        new ListCommandLineArgs(ImmutableList.of(path1, 1, "foo", path2, artifact3Output));
+        new ListCommandLineArgs(
+            ImmutableList.of(path1, 1, "foo", path2, artifact3Output),
+            CommandLineArgs.DEFAULT_FORMAT_STRING);
 
     new WriteAction(
         registry, ImmutableSortedSet.of(), ImmutableSortedSet.of(artifact3), "contents", false);
@@ -83,6 +85,55 @@ public class ListCommandLineArgsTest {
         new ExecCompatibleCommandLineBuilder(new ArtifactFilesystem(filesystem))
             .build(args)
             .getCommandLineArgs());
+    assertEquals(5, args.getEstimatedArgsCount());
+
+    ImmutableSortedSet.Builder<Artifact> inputs = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<Artifact> outputs = ImmutableSortedSet.naturalOrder();
+    args.visitInputsAndOutputs(inputs::add, outputs::add);
+
+    assertEquals(ImmutableSortedSet.of(path1, path2), inputs.build());
+    assertEquals(ImmutableSortedSet.of(artifact3), outputs.build());
+  }
+
+  @Test
+  public void formatsStrings() throws EvalException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+
+    Artifact path1 =
+        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("some_bin")));
+    Artifact path2 =
+        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("other_file")));
+    BuildTarget target = BuildTargetFactory.newInstance("//:some_rule");
+    ActionRegistryForTests registry = new ActionRegistryForTests(target, filesystem);
+    Artifact artifact3 = registry.declareArtifact(Paths.get("out.txt"), Location.BUILTIN);
+    OutputArtifact artifact3Output = (OutputArtifact) artifact3.asOutputArtifact(Location.BUILTIN);
+    Path artifact3Path = BuildPaths.getGenDir(filesystem, target).resolve("out.txt");
+
+    CommandLineArgs args =
+        new ListCommandLineArgs(
+            ImmutableList.of(path1, 1, "foo", path2, artifact3Output), "--prefix=%s");
+
+    new WriteAction(
+        registry, ImmutableSortedSet.of(), ImmutableSortedSet.of(artifact3), "contents", false);
+
+    assertEquals(
+        ImmutableList.of(
+            "--prefix=" + filesystem.resolve("some_bin").toAbsolutePath().toString(),
+            "--prefix=1",
+            "--prefix=foo",
+            "--prefix=other_file",
+            "--prefix=" + artifact3Path.toString()),
+        new ExecCompatibleCommandLineBuilder(new ArtifactFilesystem(filesystem))
+            .build(args)
+            .getCommandLineArgs());
+
+    assertEquals(
+        ImmutableList.of(
+            "foo=foo", String.format("%s=%s", artifact3Path.toString(), artifact3Path.toString())),
+        new ExecCompatibleCommandLineBuilder(new ArtifactFilesystem(filesystem))
+            .build(new ListCommandLineArgs(ImmutableList.of("foo", artifact3Output), "%s=%s"))
+            .getCommandLineArgs());
+
     assertEquals(5, args.getEstimatedArgsCount());
 
     ImmutableSortedSet.Builder<Artifact> inputs = ImmutableSortedSet.naturalOrder();
@@ -117,11 +168,16 @@ public class ListCommandLineArgsTest {
         new BuildArtifactFactoryForTests(target, filesystem)
             .createBuildArtifact(Paths.get("other_file_2"), Location.BUILTIN);
     ListCommandLineArgs listArgs1 =
-        new ListCommandLineArgs(ImmutableList.of(path1, 1, "foo", path2, path3));
+        new ListCommandLineArgs(
+            ImmutableList.of(path1, 1, "foo", path2, path3), CommandLineArgs.DEFAULT_FORMAT_STRING);
     ListCommandLineArgs listArgs2 =
-        new ListCommandLineArgs(ImmutableList.of(path1, 1, "foo", path2, path3));
+        new ListCommandLineArgs(
+            ImmutableList.of(path1, 1, "foo", path2, path3), CommandLineArgs.DEFAULT_FORMAT_STRING);
     ListCommandLineArgs listArgs3 =
-        new ListCommandLineArgs(ImmutableList.of(path1, 1, "foo", path2, path3));
+        new ListCommandLineArgs(
+            ImmutableList.of(path1, 1, "foo", path2, path3), CommandLineArgs.DEFAULT_FORMAT_STRING);
+    ListCommandLineArgs listArgs4 =
+        new ListCommandLineArgs(ImmutableList.of(path1, 1, "foo", path2, path3), "foo_%s");
 
     HashCode ruleKey1 =
         ruleKeyFactory
@@ -140,8 +196,14 @@ public class ListCommandLineArgsTest {
             .newBuilderForTesting(new FakeBuildRule(target))
             .setReflectively("field", listArgs3)
             .build();
+    HashCode ruleKey4 =
+        ruleKeyFactory
+            .newBuilderForTesting(new FakeBuildRule(target))
+            .setReflectively("field", listArgs4)
+            .build();
 
     assertEquals(ruleKey1, ruleKey2);
     assertNotEquals(ruleKey1, ruleKey3);
+    assertNotEquals(ruleKey3, ruleKey4);
   }
 }

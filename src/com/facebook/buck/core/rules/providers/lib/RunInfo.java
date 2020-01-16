@@ -91,8 +91,8 @@ public abstract class RunInfo extends BuiltInProviderInfo<RunInfo> implements Co
   }
 
   @Override
-  public Stream<Object> getArgs() {
-    return args().getArgs();
+  public Stream<ArgAndFormatString> getArgsAndFormatStrings() {
+    return args().getArgsAndFormatStrings();
   }
 
   @Override

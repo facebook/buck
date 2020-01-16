@@ -63,7 +63,7 @@ class AggregateCommandLineArgs implements CommandLineArgs {
   }
 
   @Override
-  public Stream<Object> getArgs() {
-    return args.stream().flatMap(CommandLineArgs::getArgs);
+  public Stream<ArgAndFormatString> getArgsAndFormatStrings() {
+    return args.stream().flatMap(CommandLineArgs::getArgsAndFormatStrings);
   }
 }

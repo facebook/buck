@@ -26,6 +26,10 @@ import com.google.devtools.build.lib.actions.CommandLineItem;
 public class ArgFactory {
   private ArgFactory() {}
 
+  public static Arg from(Object object, String formatString) {
+    return ImmutableFormatArg.of(from(object), formatString);
+  }
+
   /**
    * Convert a command line argument to an {@link Arg}
    *

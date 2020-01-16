@@ -170,12 +170,13 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
                   .collect(ImmutableList.toImmutableList()));
       firstArgument =
           argumentsValidated
-              .getArgs()
+              .getArgsAndFormatStrings()
               .findFirst()
               .orElseThrow(
                   () ->
                       new EvalException(
-                          location, "At least one argument must be provided to 'run()'"));
+                          location, "At least one argument must be provided to 'run()'"))
+              .getObject();
     } catch (CommandLineException e) {
       throw new EvalException(
           location,

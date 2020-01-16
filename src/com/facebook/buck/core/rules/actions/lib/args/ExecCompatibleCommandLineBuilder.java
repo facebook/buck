@@ -40,7 +40,7 @@ public class ExecCompatibleCommandLineBuilder implements CommandLineBuilder {
     ImmutableList.Builder<String> builder =
         ImmutableList.builderWithExpectedSize(commandLineArgs.getEstimatedArgsCount());
     Streams.mapWithIndex(
-            commandLineArgs.getArgs(),
+            commandLineArgs.getArgsAndFormatStrings(),
             (o, i) -> CommandLineArgStringifier.asString(filesystem, i == 0, o))
         .forEach(builder::add);
     return ImmutableCommandLine.of(env, builder.build());

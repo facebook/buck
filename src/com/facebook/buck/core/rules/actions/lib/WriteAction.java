@@ -98,7 +98,7 @@ public class WriteAction extends AbstractAction {
         contents.transform(
             s -> s,
             args ->
-                args.getArgs()
+                args.getArgsAndFormatStrings()
                     .map(arg -> CommandLineArgStringifier.asString(filesystem, false, arg))
                     .collect(Collectors.joining("\n")));
     for (Artifact output : outputs) {
