@@ -597,8 +597,8 @@ public class AndroidBinaryGraphEnhancerTest {
     BuildTarget javaLibDexBuildTarget =
         javaLibBuildTarget.withAppendedFlavors(AndroidBinaryGraphEnhancer.D8_FLAVOR);
 
-    AndroidBinaryResourcesGraphEnhancementResult resourcesEnhancementResult =
-        graphEnhancer.getResourcesGraphEnhancer().enhance(collection);
+    AndroidBinaryResourcesGraphEnhancer.AndroidBinaryResourcesGraphEnhancementResult
+        resourcesEnhancementResult = graphEnhancer.getResourcesGraphEnhancer().enhance(collection);
 
     HasDexFiles splitDexMergeEnhancerRule =
         graphEnhancer.createPreDexMergeSplitDexRule(preDexedLibraries, resourcesEnhancementResult);
@@ -733,8 +733,8 @@ public class AndroidBinaryGraphEnhancerTest {
     BuildTarget javaLibDexBuildTarget =
         javaLibBuildTarget.withAppendedFlavors(AndroidBinaryGraphEnhancer.D8_FLAVOR);
 
-    AndroidBinaryResourcesGraphEnhancementResult resourcesEnhancementResult =
-        graphEnhancer.getResourcesGraphEnhancer().enhance(collection);
+    AndroidBinaryResourcesGraphEnhancer.AndroidBinaryResourcesGraphEnhancementResult
+        resourcesEnhancementResult = graphEnhancer.getResourcesGraphEnhancer().enhance(collection);
 
     HasDexFiles splitDexMergeEnhancerRule =
         graphEnhancer.createPreDexMergeSplitDexRule(preDexedLibraries, resourcesEnhancementResult);
@@ -1088,8 +1088,8 @@ public class AndroidBinaryGraphEnhancerTest {
         false);
   }
 
-  private NonPredexedDexBuildableArgs defaultNonPredexedArgs() {
-    return NonPredexedDexBuildableArgs.builder()
+  private NonPreDexedDexBuildable.NonPredexedDexBuildableArgs defaultNonPredexedArgs() {
+    return ImmutableNonPredexedDexBuildableArgs.builder()
         .setSdkProguardConfig(ProGuardObfuscateStep.SdkProguardType.NONE)
         .setDexReorderDataDumpFile(FakeSourcePath.of(""))
         .setDexReorderToolFile(FakeSourcePath.of(""))

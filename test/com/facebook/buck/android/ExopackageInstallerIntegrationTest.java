@@ -605,8 +605,8 @@ public class ExopackageInstallerIntegrationTest {
 
     Optional<ExopackageInfo.ResourcesInfo> resourcesInfo = Optional.empty();
     if (!currentBuildState.resourcesContents.isEmpty()) {
-      ExopackageInfo.ResourcesInfo.Builder resourcesInfoBuilder =
-          ExopackageInfo.ResourcesInfo.builder();
+      ImmutableList.Builder<ExopackagePathAndHash> resourcesPaths = ImmutableList.builder();
+
       int n = 0;
       Iterator<String> resourcesContents = currentBuildState.resourcesContents.iterator();
       StringBuilder expectedMetadata = new StringBuilder();
@@ -619,7 +619,7 @@ public class ExopackageInstallerIntegrationTest {
         writeFile(resourcePath, content);
         Sha1HashCode resourceHash = filesystem.computeSha1(resourcePath);
         writeFile(hashPath, resourceHash.getHash());
-        resourcesInfoBuilder.addResourcesPaths(
+        resourcesPaths.add(
             ExopackagePathAndHash.of(
                 FakeSourcePath.of(filesystem, resourcePath),
                 FakeSourcePath.of(filesystem, hashPath)));
@@ -627,7 +627,7 @@ public class ExopackageInstallerIntegrationTest {
         prefix = "\n";
         builder.addExoFile("resources/" + resourceHash + ".apk", content);
       }
-      resourcesInfo = Optional.of(resourcesInfoBuilder.build());
+      resourcesInfo = Optional.of(ExopackageInfo.ResourcesInfo.of(resourcesPaths.build()));
       builder.addExoFile("resources/metadata.txt", expectedMetadata.toString());
     }
 
@@ -662,18 +662,17 @@ public class ExopackageInstallerIntegrationTest {
       moduleInfo = Optional.of(moduleInfoBuilder.build());
     }
 
-    ApkInfo apkInfo =
-        ApkInfo.builder()
-            .setApkPath(apkSourcePath)
-            .setManifestPath(manifestSourcePath)
-            .setExopackageInfo(
+    HasInstallableApk.ApkInfo apkInfo =
+        ImmutableApkInfo.of(
+            manifestSourcePath,
+            apkSourcePath,
+            Optional.of(
                 ExopackageInfo.builder()
                     .setDexInfo(dexInfo)
                     .setNativeLibsInfo(nativeLibsInfo)
                     .setResourcesInfo(resourcesInfo)
                     .setModuleInfo(moduleInfo)
-                    .build())
-            .build();
+                    .build()));
     device.setAllowedInstallCounts(
         expectedApksInstalled,
         expectedDexesInstalled,

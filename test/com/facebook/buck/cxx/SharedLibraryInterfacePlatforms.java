@@ -53,11 +53,7 @@ public class SharedLibraryInterfacePlatforms {
     String clangVersion = NdkCxxPlatforms.getDefaultClangVersionForNdk(ndkVersion);
     String compilerVersion = compilerType == NdkCompilerType.GCC ? gccVersion : clangVersion;
     NdkCxxPlatformCompiler compiler =
-        NdkCxxPlatformCompiler.builder()
-            .setType(compilerType)
-            .setVersion(compilerVersion)
-            .setGccVersion(gccVersion)
-            .build();
+        NdkCxxPlatformCompiler.of(compilerType, compilerVersion, gccVersion);
     ImmutableMap<TargetCpuType, UnresolvedNdkCxxPlatform> ndkPlatforms =
         NdkCxxPlatforms.getPlatforms(
             cxxBuckConfig,

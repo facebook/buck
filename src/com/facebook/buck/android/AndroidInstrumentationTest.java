@@ -133,7 +133,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
   }
 
   private static String tryToExtractInstrumentationTestRunnerFromManifest(
-      SourcePathResolverAdapter pathResolver, ApkInfo apkInfo) {
+      SourcePathResolverAdapter pathResolver, HasInstallableApk.ApkInfo apkInfo) {
     Path pathToManifest = pathResolver.getAbsolutePath(apkInfo.getManifestPath());
 
     if (!Files.isRegularFile(pathToManifest)) {
@@ -149,7 +149,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
   }
 
   private static String tryToExtractTargetPackageFromManifest(
-      SourcePathResolverAdapter pathResolver, ApkInfo apkInfo) {
+      SourcePathResolverAdapter pathResolver, HasInstallableApk.ApkInfo apkInfo) {
     Path pathToManifest = pathResolver.getAbsolutePath(apkInfo.getManifestPath());
 
     if (!Files.isRegularFile(pathToManifest)) {
@@ -274,7 +274,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
                         apkUnderTest, isExternalRun));
 
     AndroidInstrumentationTestJVMArgs jvmArgs =
-        AndroidInstrumentationTestJVMArgs.builder()
+        ImmutableAndroidInstrumentationTestJVMArgs.builder()
             .setApkUnderTestPath(apkUnderTestPath)
             .setApkUnderTestExopackageLocalDir(apkUnderTestSymlinkTreePath)
             .setPathToAdbExecutable(pathToAdbExecutable)

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JacocoConstants;
 import com.facebook.buck.jvm.java.runner.FileClassPathRunner;
@@ -29,9 +29,8 @@ import java.util.Map;
 import java.util.Optional;
 import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractAndroidInstrumentationTestJVMArgs {
+@BuckStyleValueWithBuilder
+abstract class AndroidInstrumentationTestJVMArgs {
 
   private static final String INSTRUMENTATION_TEST_RUNNER =
       "com.facebook.buck.testrunner.InstrumentationMain";

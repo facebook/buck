@@ -16,17 +16,16 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
-@BuckStyleImmutable
-@Value.Immutable(copy = false)
+@BuckStyleValueWithBuilder
 /** This class contains files needed to build a apk module within a app bundle. */
-public abstract class AbstractModuleInfo {
+public abstract class ModuleInfo {
 
   @Value.Parameter
   public abstract String getModuleName();

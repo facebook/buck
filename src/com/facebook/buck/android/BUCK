@@ -40,8 +40,8 @@ RULES_SRCS = [
     "Aapt2Compile.java",
     "Aapt2Link.java",
     "AaptPackageResources.java",
-    "AbstractAndroidGraphEnhancementResult.java",
-    "AbstractAndroidInstrumentationTestJVMArgs.java",
+    "AndroidGraphEnhancementResult.java",
+    "AndroidInstrumentationTestJVMArgs.java",
     "AndroidAar.java",
     "AndroidAarDescription.java",
     "AndroidAppModularity.java",
@@ -422,7 +422,7 @@ java_immutables_library(
 
 UTILS_API_SRCS = [
     "exopackage/AndroidDevicesHelper.java",
-    "exopackage/AbstractExopackageInfo.java",
+    "exopackage/ExopackageInfo.java",
     "exopackage/AndroidDevice.java",
     "HasInstallableApk.java",
     "exopackage/PackageInfo.java",

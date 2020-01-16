@@ -32,7 +32,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.common.BuildRules;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.ManifestEntries;
@@ -51,7 +51,6 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 class AndroidBinaryResourcesGraphEnhancer {
   static final Flavor MANIFEST_MERGE_FLAVOR = InternalFlavor.of("manifest_merge");
@@ -168,9 +167,8 @@ class AndroidBinaryResourcesGraphEnhancer {
     this.useAapt2LocaleFiltering = useAapt2LocaleFiltering;
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  interface AbstractAndroidBinaryResourcesGraphEnhancementResult {
+  @BuckStyleValueWithBuilder
+  interface AndroidBinaryResourcesGraphEnhancementResult {
 
     Optional<SourcePath> getRDotJavaDir();
 
@@ -215,8 +213,8 @@ class AndroidBinaryResourcesGraphEnhancer {
     ImmutableMap.Builder<APKModule, FilteredResourcesProvider> filteredResourcesProviderBuilder =
         ImmutableMap.builder();
 
-    AndroidBinaryResourcesGraphEnhancementResult.Builder resultBuilder =
-        AndroidBinaryResourcesGraphEnhancementResult.builder();
+    ImmutableAndroidBinaryResourcesGraphEnhancementResult.Builder resultBuilder =
+        ImmutableAndroidBinaryResourcesGraphEnhancementResult.builder();
 
     List<SourcePath> apkResourceDependencyList = new ArrayList<>();
 
@@ -416,7 +414,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   private void createMergeAndExoResources(
       AndroidPackageableCollection packageableCollection,
       Builder<SourcePath> pathToRDotTxtFiles,
-      AndroidBinaryResourcesGraphEnhancementResult.Builder resultBuilder,
+      ImmutableAndroidBinaryResourcesGraphEnhancementResult.Builder resultBuilder,
       AaptOutputInfo aaptOutputInfo,
       Optional<PackageStringAssets> packageStringAssets) {
     SourcePath pathToRDotTxt;

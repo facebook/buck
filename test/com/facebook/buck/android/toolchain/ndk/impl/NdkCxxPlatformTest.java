@@ -319,11 +319,7 @@ public class NdkCxxPlatformTest {
     NdkCxxPlatformTargetConfiguration targetConfiguration =
         NdkCxxPlatforms.getTargetConfiguration(
             TargetCpuType.X86,
-            NdkCxxPlatformCompiler.builder()
-                .setType(NdkCompilerType.GCC)
-                .setVersion("gcc-version")
-                .setGccVersion("clang-version")
-                .build(),
+            NdkCxxPlatformCompiler.of(NdkCompilerType.GCC, "gcc-version", "clang-version"),
             "android-16");
     MostFiles.writeLinesToFile(ImmutableList.of("r9c"), ndkRoot.resolve("RELEASE.TXT"));
     UnresolvedNdkCxxPlatform platform =
@@ -357,11 +353,7 @@ public class NdkCxxPlatformTest {
     NdkCxxPlatformTargetConfiguration targetConfiguration =
         NdkCxxPlatforms.getTargetConfiguration(
             TargetCpuType.X86,
-            NdkCxxPlatformCompiler.builder()
-                .setType(NdkCompilerType.GCC)
-                .setVersion("gcc-version")
-                .setGccVersion("clang-version")
-                .build(),
+            NdkCxxPlatformCompiler.of(NdkCompilerType.GCC, "gcc-version", "clang-version"),
             "android-12");
     MostFiles.writeLinesToFile(ImmutableList.of("r9c"), ndkRoot.resolve("RELEASE.TXT"));
     BuckConfig buckConfig =
@@ -458,11 +450,7 @@ public class NdkCxxPlatformTest {
     NdkCxxPlatformTargetConfiguration targetConfiguration =
         NdkCxxPlatforms.getTargetConfiguration(
             TargetCpuType.X86,
-            NdkCxxPlatformCompiler.builder()
-                .setType(NdkCompilerType.GCC)
-                .setVersion("gcc-version")
-                .setGccVersion("clang-version")
-                .build(),
+            NdkCxxPlatformCompiler.of(NdkCompilerType.GCC, "gcc-version", "clang-version"),
             "android-16");
     MostFiles.writeLinesToFile(ImmutableList.of("r9c"), ndkRoot.resolve("RELEASE.TXT"));
     BuckConfig buckConfig =
@@ -570,11 +558,7 @@ public class NdkCxxPlatformTest {
                   filesystem,
                   root,
                   UnconfiguredTargetConfiguration.INSTANCE,
-                  NdkCxxPlatformCompiler.builder()
-                      .setType(config.getFirst())
-                      .setVersion("gcc-version")
-                      .setGccVersion("clang-version")
-                      .build(),
+                  NdkCxxPlatformCompiler.of(config.getFirst(), "gcc-version", "clang-version"),
                   NdkCxxRuntime.GNUSTL,
                   NdkCxxRuntimeType.DYNAMIC,
                   ImmutableSet.of(NdkTargetArchAbi.X86),
@@ -624,11 +608,7 @@ public class NdkCxxPlatformTest {
             filesystem,
             root,
             UnconfiguredTargetConfiguration.INSTANCE,
-            NdkCxxPlatformCompiler.builder()
-                .setType(NdkCompilerType.GCC)
-                .setVersion("gcc-version")
-                .setGccVersion("clang-version")
-                .build(),
+            NdkCxxPlatformCompiler.of(NdkCompilerType.GCC, "gcc-version", "clang-version"),
             NdkCxxRuntime.GNUSTL,
             NdkCxxRuntimeType.DYNAMIC,
             ImmutableSet.of(NdkTargetArchAbi.X86),

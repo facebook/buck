@@ -197,7 +197,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
     ImmutableCollection<BuildRule> stripRules =
         graphBuilder.filterBuildRuleInputs(
             copyNativeLibraries.getStrippedObjectDescriptions().stream()
-                .map(StrippedObjectDescription::getSourcePath)
+                .map(CopyNativeLibraries.StrippedObjectDescription::getSourcePath)
                 .collect(ImmutableSet.toImmutableSet()));
     assertThat(
         stripRules,

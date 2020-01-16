@@ -18,12 +18,10 @@ package com.facebook.buck.android.toolchain.ndk;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-@Value.Immutable
-@BuckStyleImmutable
-interface AbstractNdkCxxPlatformCompiler extends AddsToRuleKey {
+@BuckStyleValue
+public interface NdkCxxPlatformCompiler extends AddsToRuleKey {
 
   @AddToRuleKey
   NdkCompilerType getType();
@@ -41,4 +39,8 @@ interface AbstractNdkCxxPlatformCompiler extends AddsToRuleKey {
    */
   @AddToRuleKey
   String getGccVersion();
+
+  static NdkCxxPlatformCompiler of(NdkCompilerType type, String version, String gccVersion) {
+    return ImmutableNdkCxxPlatformCompiler.of(type, version, gccVersion);
+  }
 }

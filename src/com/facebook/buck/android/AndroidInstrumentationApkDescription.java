@@ -163,8 +163,8 @@ public class AndroidInstrumentationApkDescription
         apkUnderTest.getProguardConfig().isPresent()
             || !ProGuardObfuscateStep.SdkProguardType.NONE.equals(
                 apkUnderTest.getSdkProguardConfig());
-    NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs =
-        NonPredexedDexBuildableArgs.builder()
+    NonPreDexedDexBuildable.NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs =
+        ImmutableNonPredexedDexBuildableArgs.builder()
             .setProguardAgentPath(proGuardConfig.getProguardAgentPath())
             .setProguardJarOverride(
                 proGuardConfig.getProguardJarOverride(buildTarget.getTargetConfiguration()))

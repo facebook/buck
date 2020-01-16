@@ -371,7 +371,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   }
 
   public static String tryToExtractPackageNameFromManifest(
-      SourcePathResolverAdapter pathResolver, ApkInfo apkInfo) {
+      SourcePathResolverAdapter pathResolver, HasInstallableApk.ApkInfo apkInfo) {
     Path pathToManifest = pathResolver.getAbsolutePath(apkInfo.getManifestPath());
     return tryToExtractPackageNameFromManifest(pathToManifest);
   }

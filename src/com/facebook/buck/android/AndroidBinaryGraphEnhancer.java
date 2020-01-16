@@ -144,7 +144,7 @@ public class AndroidBinaryGraphEnhancer {
   private final DxConfig dxConfig;
   private final String dexTool;
   private final AndroidBinaryResourcesGraphEnhancer androidBinaryResourcesGraphEnhancer;
-  private final NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs;
+  private final NonPreDexedDexBuildable.NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs;
   private final Supplier<ImmutableSet<JavaLibrary>> rulesToExcludeFromDex;
   private final AndroidNativeTargetConfigurationMatcher androidNativeTargetConfigurationMatcher;
 
@@ -209,7 +209,7 @@ public class AndroidBinaryGraphEnhancer {
       DxConfig dxConfig,
       String dexTool,
       Optional<Arg> postFilterResourcesCmd,
-      NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs,
+      NonPreDexedDexBuildable.NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs,
       Supplier<ImmutableSet<JavaLibrary>> rulesToExcludeFromDex,
       boolean useProtoFormat,
       AndroidNativeTargetConfigurationMatcher androidNativeTargetConfigurationMatcher,
@@ -414,8 +414,9 @@ public class AndroidBinaryGraphEnhancer {
       additionalJavaLibrariesBuilder.add(compileMergedNativeLibMapGenCode);
     }
 
-    AndroidBinaryResourcesGraphEnhancementResult resourcesEnhancementResult =
-        androidBinaryResourcesGraphEnhancer.enhance(packageableCollection);
+    AndroidBinaryResourcesGraphEnhancer.AndroidBinaryResourcesGraphEnhancementResult
+        resourcesEnhancementResult =
+            androidBinaryResourcesGraphEnhancer.enhance(packageableCollection);
 
     // BuildConfig deps should not be added for instrumented APKs because BuildConfig.class has
     // already been added to the APK under test.
@@ -482,7 +483,7 @@ public class AndroidBinaryGraphEnhancer {
               javaBuckConfig.shouldDesugarInterfaceMethods());
     }
 
-    return AndroidGraphEnhancementResult.builder()
+    return ImmutableAndroidGraphEnhancementResult.builder()
         .setPackageableCollection(packageableCollection)
         .setPrimaryResourcesApkPath(resourcesEnhancementResult.getPrimaryResourcesApkPath())
         .setPrimaryApkAssetZips(resourcesEnhancementResult.getPrimaryApkAssetZips())
@@ -506,7 +507,8 @@ public class AndroidBinaryGraphEnhancer {
 
   @Nonnull
   private ImmutableList<DexProducedFromJavaLibrary> createUberRDotJavaDexes(
-      AndroidBinaryResourcesGraphEnhancementResult resourcesEnhancementResult,
+      AndroidBinaryResourcesGraphEnhancer.AndroidBinaryResourcesGraphEnhancementResult
+          resourcesEnhancementResult,
       ImmutableList<? extends TrimUberRDotJava.UsesResources> preDexedLibrariesExceptRDotJava) {
     JavaLibrary compileUberRDotJava =
         createTrimAndCompileUberRDotJava(
@@ -515,7 +517,8 @@ public class AndroidBinaryGraphEnhancer {
   }
 
   private JavaLibrary createTrimAndCompileUberRDotJava(
-      AndroidBinaryResourcesGraphEnhancementResult resourcesEnhancementResult,
+      AndroidBinaryResourcesGraphEnhancer.AndroidBinaryResourcesGraphEnhancementResult
+          resourcesEnhancementResult,
       ImmutableList<? extends TrimUberRDotJava.UsesResources> preDexedLibrariesExceptRDotJava) {
     // Create rule to trim uber R.java sources.
     Collection<? extends TrimUberRDotJava.UsesResources> preDexedLibrariesForResourceIdFiltering =
@@ -776,7 +779,8 @@ public class AndroidBinaryGraphEnhancer {
   @VisibleForTesting
   PreDexSplitDexMerge createPreDexMergeSplitDexRule(
       ImmutableList<DexProducedFromJavaLibrary> preDexedLibrariesExceptRDotJava,
-      AndroidBinaryResourcesGraphEnhancementResult resourcesEnhancementResult) {
+      AndroidBinaryResourcesGraphEnhancer.AndroidBinaryResourcesGraphEnhancementResult
+          resourcesEnhancementResult) {
 
     ImmutableMultimap.Builder<APKModule, DexProducedFromJavaLibrary> moduleDexesBuilder =
         ImmutableMultimap.builder();

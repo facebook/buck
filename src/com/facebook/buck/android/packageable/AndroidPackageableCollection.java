@@ -19,7 +19,7 @@ package com.facebook.buck.android.packageable;
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
@@ -33,13 +33,12 @@ import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 /** A collection of Android content that should be included in an Android package (apk or aar). */
-@Value.Immutable
 @Value.Enclosing
-@BuckStyleImmutable
-interface AbstractAndroidPackageableCollection {
+@BuckStyleValueWithBuilder
+public interface AndroidPackageableCollection {
 
   @Value.Immutable
-  abstract class AbstractResourceDetails {
+  abstract class ResourceDetails {
 
     /**
      * A list of "res" directories that should be passed to the aapt command to build the APK,

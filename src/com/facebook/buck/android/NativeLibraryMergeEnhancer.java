@@ -37,8 +37,8 @@ import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.graph.TopologicalSort;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.cxx.CxxLinkOptions;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.LinkOutputPostprocessor;
@@ -318,8 +318,8 @@ class NativeLibraryMergeEnhancer {
       String mergeSoname = mergeConfigEntry.getKey();
       List<Pattern> patterns = mergeConfigEntry.getValue();
 
-      MergedNativeLibraryConstituents.Builder constituentsBuilder =
-          MergedNativeLibraryConstituents.builder().setSoname(mergeSoname);
+      ImmutableMergedNativeLibraryConstituents.Builder constituentsBuilder =
+          ImmutableMergedNativeLibraryConstituents.builder().setSoname(mergeSoname);
 
       for (Pattern pattern : patterns) {
         for (NativeLinkable linkable : allLinkables) {
@@ -372,7 +372,8 @@ class NativeLibraryMergeEnhancer {
     for (NativeLinkable linkable : allLinkables) {
       if (!linkableMembership.containsKey(linkable)) {
         linkableMembership.put(
-            linkable, MergedNativeLibraryConstituents.builder().addLinkables(linkable).build());
+            linkable,
+            ImmutableMergedNativeLibraryConstituents.builder().addLinkables(linkable).build());
       }
     }
     return linkableMembership;
@@ -602,10 +603,9 @@ class NativeLibraryMergeEnhancer {
    * Data object for internal use, representing the source libraries getting merged together into
    * one DSO. Libraries not being merged will have one linkable and no soname.
    */
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractMergedNativeLibraryConstituents
-      implements Comparable<AbstractMergedNativeLibraryConstituents> {
+  @BuckStyleValueWithBuilder
+  abstract static class MergedNativeLibraryConstituents
+      implements Comparable<MergedNativeLibraryConstituents> {
     public abstract Optional<String> getSoname();
 
     public abstract ImmutableSet<NativeLinkable> getLinkables();
@@ -633,7 +633,7 @@ class NativeLibraryMergeEnhancer {
     }
 
     @Override
-    public int compareTo(AbstractMergedNativeLibraryConstituents other) {
+    public int compareTo(MergedNativeLibraryConstituents other) {
       return toString().compareTo(other.toString());
     }
   }

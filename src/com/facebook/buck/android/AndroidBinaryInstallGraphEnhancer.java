@@ -76,7 +76,7 @@ class AndroidBinaryInstallGraphEnhancer {
   }
 
   private void enhanceForConcurrentExopackageInstall(ActionGraphBuilder graphBuilder) {
-    ApkInfo apkInfo = installableApk.getApkInfo();
+    HasInstallableApk.ApkInfo apkInfo = installableApk.getApkInfo();
     Preconditions.checkState(apkInfo.getExopackageInfo().isPresent());
 
     ExopackageDeviceDirectoryLister directoryLister =

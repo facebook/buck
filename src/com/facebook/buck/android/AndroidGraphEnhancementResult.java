@@ -21,16 +21,15 @@ import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.exopackage.ExopackagePathAndHash;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-interface AbstractAndroidGraphEnhancementResult {
+@BuckStyleValueWithBuilder
+interface AndroidGraphEnhancementResult {
   AndroidPackageableCollection getPackageableCollection();
 
   Optional<ImmutableMap<APKModule, CopyNativeLibraries>> getCopyNativeLibraries();

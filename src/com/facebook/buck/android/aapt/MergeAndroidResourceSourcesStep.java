@@ -24,7 +24,7 @@ import com.android.ide.common.res2.ResourceSet;
 import com.android.utils.ILogger;
 import com.facebook.buck.android.BuckEventAndroidLogger;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.step.Step;
@@ -37,19 +37,15 @@ import java.nio.file.Path;
 import org.immutables.value.Value;
 
 /** Merges multiple directories containing Android resource sources into one directory. */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractMergeAndroidResourceSourcesStep implements Step {
+@BuckStyleValue
+abstract class MergeAndroidResourceSourcesStep implements Step {
 
-  private static final Logger LOG = Logger.get(AbstractMergeAndroidResourceSourcesStep.class);
+  private static final Logger LOG = Logger.get(MergeAndroidResourceSourcesStep.class);
 
-  @Value.Parameter
   protected abstract ImmutableList<Path> getResPaths();
 
-  @Value.Parameter
   protected abstract Path getOutFolderPath();
 
-  @Value.Parameter
   protected abstract Path getTmpFolderPath();
 
   @Value.Check

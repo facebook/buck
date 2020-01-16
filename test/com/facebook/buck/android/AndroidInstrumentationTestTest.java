@@ -77,20 +77,16 @@ public class AndroidInstrumentationTestTest {
         new HasInstallableApk() {
           @Override
           public ApkInfo getApkInfo() {
-            return ApkInfo.builder()
-                .setApkPath(PathSourcePath.of(fakeFilesystem, Paths.get("ApkInfo")))
-                .setManifestPath(PathSourcePath.of(fakeFilesystem, Paths.get("AndroidManifest")))
-                .setExopackageInfo(
+            return ImmutableApkInfo.of(
+                PathSourcePath.of(fakeFilesystem, Paths.get("AndroidManifest")),
+                PathSourcePath.of(fakeFilesystem, Paths.get("ApkInfo")),
+                Optional.of(
                     ExopackageInfo.builder()
                         .setDexInfo(
-                            DexInfo.builder()
-                                .setMetadata(
-                                    PathSourcePath.of(fakeFilesystem, Paths.get("metadata")))
-                                .setDirectory(
-                                    PathSourcePath.of(fakeFilesystem, Paths.get("dexInfoDir")))
-                                .build())
-                        .build())
-                .build();
+                            DexInfo.of(
+                                PathSourcePath.of(fakeFilesystem, Paths.get("metadata")),
+                                PathSourcePath.of(fakeFilesystem, Paths.get("dexInfoDir"))))
+                        .build()));
           }
 
           @Override

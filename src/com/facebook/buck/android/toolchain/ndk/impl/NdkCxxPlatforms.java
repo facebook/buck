@@ -222,11 +222,7 @@ public class NdkCxxPlatforms {
             .orElse(NdkCxxPlatforms.getDefaultClangVersionForNdk(ndkVersion));
     String compilerVersion = compilerType == NdkCompilerType.GCC ? gccVersion : clangVersion;
     NdkCxxPlatformCompiler compiler =
-        NdkCxxPlatformCompiler.builder()
-            .setType(compilerType)
-            .setVersion(compilerVersion)
-            .setGccVersion(gccVersion)
-            .build();
+        NdkCxxPlatformCompiler.of(compilerType, compilerVersion, gccVersion);
     return getPlatforms(
         config,
         androidConfig,
@@ -460,11 +456,7 @@ public class NdkCxxPlatforms {
     if (targetCpuType == TargetCpuType.MIPS) {
       throw new AssertionError();
     }
-    return NdkCxxPlatformTargetConfiguration.builder()
-        .setTargetCpuType(targetCpuType)
-        .setTargetAppPlatform(androidPlatform)
-        .setCompiler(compiler)
-        .build();
+    return NdkCxxPlatformTargetConfiguration.of(targetCpuType, androidPlatform, compiler);
   }
 
   @VisibleForTesting

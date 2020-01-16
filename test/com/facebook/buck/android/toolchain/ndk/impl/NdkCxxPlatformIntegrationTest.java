@@ -295,11 +295,7 @@ public class NdkCxxPlatformIntegrationTest {
             .getNdkGccVersion()
             .orElse(NdkCxxPlatforms.getDefaultGccVersionForNdk(ndkVersion));
     NdkCxxPlatformCompiler ndkCxxPlatformCompiler =
-        NdkCxxPlatformCompiler.builder()
-            .setType(NdkCompilerType.GCC)
-            .setVersion(gccVersion)
-            .setGccVersion(gccVersion)
-            .build();
+        NdkCxxPlatformCompiler.of(NdkCompilerType.GCC, gccVersion, gccVersion);
     NdkCxxPlatformTargetConfiguration targetConfiguration =
         NdkCxxPlatforms.getTargetConfiguration(
             targetCpuType, ndkCxxPlatformCompiler, androidPlatform);

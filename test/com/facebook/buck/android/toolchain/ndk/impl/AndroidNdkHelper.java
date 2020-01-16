@@ -115,11 +115,7 @@ public class AndroidNdkHelper {
                 filesystem,
                 ndkPath,
                 UnconfiguredTargetConfiguration.INSTANCE,
-                NdkCxxPlatformCompiler.builder()
-                    .setType(compilerType)
-                    .setVersion(compilerVersion)
-                    .setGccVersion(gccVersion)
-                    .build(),
+                NdkCxxPlatformCompiler.of(compilerType, compilerVersion, gccVersion),
                 cxxRuntime,
                 NdkCxxRuntimeType.DYNAMIC,
                 getDefaultCpuAbis(ndkVersion),

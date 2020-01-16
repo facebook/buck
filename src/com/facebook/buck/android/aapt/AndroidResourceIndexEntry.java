@@ -31,39 +31,31 @@ package com.facebook.buck.android.aapt;
  * under the License.
  */
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ComparisonChain;
 import java.nio.file.Path;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractAndroidResourceIndexEntry
-    implements Comparable<AbstractAndroidResourceIndexEntry> {
+@BuckStyleValue
+abstract class AndroidResourceIndexEntry implements Comparable<AndroidResourceIndexEntry> {
 
-  @Value.Parameter
   @JsonProperty
   public abstract RDotTxtEntry.RType getType();
 
-  @Value.Parameter
   @JsonProperty
   public abstract String getName();
 
-  @Value.Parameter
   @JsonProperty
   public abstract Integer getLineNumber();
 
-  @Value.Parameter
   @JsonProperty
   public abstract Integer getColumnNumber();
 
-  @Value.Parameter
   @JsonProperty
   public abstract Path getResourceFilePath();
 
   @Override
-  public int compareTo(AbstractAndroidResourceIndexEntry that) {
+  public int compareTo(AndroidResourceIndexEntry that) {
     if (this == that) {
       return 0;
     }

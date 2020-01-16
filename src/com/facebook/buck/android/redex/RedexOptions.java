@@ -20,15 +20,13 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractRedexOptions implements AddsToRuleKey {
+@BuckStyleValue
+public abstract class RedexOptions implements AddsToRuleKey {
   @AddToRuleKey
   public abstract Tool getRedex();
 
@@ -37,4 +35,9 @@ abstract class AbstractRedexOptions implements AddsToRuleKey {
 
   @AddToRuleKey
   public abstract ImmutableList<Arg> getRedexExtraArgs();
+
+  public static RedexOptions of(
+      Tool redex, Optional<SourcePath> redexConfig, ImmutableList<Arg> redexExtraArgs) {
+    return ImmutableRedexOptions.of(redex, redexConfig, redexExtraArgs);
+  }
 }

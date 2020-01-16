@@ -45,8 +45,8 @@ import java.util.stream.Collectors;
 
 public class AndroidPackageableCollector {
 
-  private final AndroidPackageableCollection.Builder collectionBuilder =
-      AndroidPackageableCollection.builder();
+  private final ImmutableAndroidPackageableCollection.Builder collectionBuilder =
+      ImmutableAndroidPackageableCollection.builder();
 
   private final Map<APKModule, ResourceCollector> resourceCollectors = new HashMap<>();
 
@@ -105,8 +105,9 @@ public class AndroidPackageableCollector {
   }
 
   /**
-   * @param resourcesToExclude Only relevant to {@link AndroidInstrumentationApk} which needs to
-   *     remove resources that are already included in the
+   * @param resourcesToExclude Only relevant to {@link
+   *     com.facebook.buck.android.AndroidInstrumentationApk} which needs to remove resources that
+   *     are already included in the
    *     com.facebook.buck.android.AndroidInstrumentationApkDescription.AbstractAndroidInstrumentationApkDescriptionArg#apk.
    *     The same goes for native libs and native linkables, and their asset counterparts.
    */
@@ -385,7 +386,8 @@ public class AndroidPackageableCollector {
   }
 
   private class ResourceCollector {
-    private final ResourceDetails.Builder resourceDetailsBuilder = ResourceDetails.builder();
+    private final ImmutableAndroidPackageableCollection.ResourceDetails.Builder
+        resourceDetailsBuilder = ImmutableAndroidPackageableCollection.ResourceDetails.builder();
 
     private final ImmutableList.Builder<BuildTarget> resourcesWithNonEmptyResDir =
         ImmutableList.builder();

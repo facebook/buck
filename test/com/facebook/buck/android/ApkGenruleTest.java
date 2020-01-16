@@ -63,6 +63,7 @@ import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -266,10 +267,8 @@ public class ApkGenruleTest {
 
     @Override
     public ApkInfo getApkInfo() {
-      return ApkInfo.builder()
-          .setApkPath(FakeSourcePath.of("buck-out/gen/fb4a.apk"))
-          .setManifestPath(FakeSourcePath.of("spoof"))
-          .build();
+      return ImmutableApkInfo.of(
+          FakeSourcePath.of("spoof"), FakeSourcePath.of("buck-out/gen/fb4a.apk"), Optional.empty());
     }
   }
 }

@@ -21,7 +21,7 @@ import com.facebook.buck.android.toolchain.ndk.UnresolvedNdkCxxPlatform;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.impl.StaticUnresolvedCxxPlatform;
 import org.immutables.value.Value;
@@ -30,10 +30,8 @@ import org.immutables.value.Value;
  * Used to provide a {@link NdkCxxPlatform} that is fully specified before parsing/configuration
  * (specified in .buckconfig, for example).
  */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractStaticUnresolvedNdkCxxPlatform implements UnresolvedNdkCxxPlatform {
-  @Value.Parameter
+@BuckStyleValue
+public abstract class StaticUnresolvedNdkCxxPlatform implements UnresolvedNdkCxxPlatform {
   public abstract NdkCxxPlatform getStaticallyResolvedInstance();
 
   @Override
@@ -50,5 +48,9 @@ abstract class AbstractStaticUnresolvedNdkCxxPlatform implements UnresolvedNdkCx
   @Override
   public UnresolvedCxxPlatform getCxxPlatform() {
     return new StaticUnresolvedCxxPlatform(getStaticallyResolvedInstance().getCxxPlatform());
+  }
+
+  public static StaticUnresolvedNdkCxxPlatform of(NdkCxxPlatform staticallyResolvedInstance) {
+    return ImmutableStaticUnresolvedNdkCxxPlatform.of(staticallyResolvedInstance);
   }
 }

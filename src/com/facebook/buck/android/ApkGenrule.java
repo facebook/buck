@@ -109,10 +109,7 @@ public class ApkGenrule extends LegacyGenrule
 
   @Override
   public ApkInfo getApkInfo() {
-    return ApkInfo.builder()
-        .from(hasInstallableApk.getApkInfo())
-        .setApkPath(getSourcePathToOutput())
-        .build();
+    return hasInstallableApk.getApkInfo().withApkPath(getSourcePathToOutput());
   }
 
   @Override

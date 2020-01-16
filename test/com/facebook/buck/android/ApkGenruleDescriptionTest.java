@@ -35,6 +35,7 @@ import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.rules.macros.ClasspathMacro;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import java.nio.file.Paths;
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -83,10 +84,7 @@ public class ApkGenruleDescriptionTest {
 
     @Override
     public ApkInfo getApkInfo() {
-      return ApkInfo.builder()
-          .setApkPath(apkPath)
-          .setManifestPath(FakeSourcePath.of("nothing"))
-          .build();
+      return ImmutableApkInfo.of(FakeSourcePath.of("nothing"), apkPath, Optional.empty());
     }
 
     @Override

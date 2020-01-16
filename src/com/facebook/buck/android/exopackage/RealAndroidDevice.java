@@ -28,7 +28,7 @@ import com.facebook.buck.android.AdbHelper;
 import com.facebook.buck.android.agent.util.AgentUtil;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -72,7 +72,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
-import org.immutables.value.Value;
 
 @VisibleForTesting
 public class RealAndroidDevice implements AndroidDevice {
@@ -696,18 +695,17 @@ public class RealAndroidDevice implements AndroidDevice {
     };
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractRapidInstallMode {
+  @BuckStyleValue
+  abstract static class RapidInstallMode {
     abstract String getIpAddress();
   }
 
   private Optional<RapidInstallMode> getRapidInstallMode() {
     if (device.isEmulator() && rapidInstallTypes.contains("emu")) {
-      return Optional.of(RapidInstallMode.builder().setIpAddress("10.0.2.2").build()); // NOPMD
+      return Optional.of(ImmutableRapidInstallMode.of("10.0.2.2")); // NOPMD
     } else if (isLocalTransport() && rapidInstallTypes.contains("tcp")) {
       String hostIpAddr = device.getSerialNumber().replaceAll("\\.[0-9:]+$", ".1");
-      return Optional.of(RapidInstallMode.builder().setIpAddress(hostIpAddr).build());
+      return Optional.of(ImmutableRapidInstallMode.of(hostIpAddr));
     }
     return Optional.empty();
   }

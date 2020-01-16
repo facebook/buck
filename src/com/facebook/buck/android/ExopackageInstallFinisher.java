@@ -61,13 +61,13 @@ public class ExopackageInstallFinisher extends AbstractBuildRule {
   @AddToRuleKey private final SourcePath manifestPath;
 
   private final Supplier<ImmutableSortedSet<BuildRule>> depsSupplier;
-  private final ApkInfo apkInfo;
+  private final HasInstallableApk.ApkInfo apkInfo;
 
   public ExopackageInstallFinisher(
       BuildTarget installerTarget,
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder sourcePathRuleFinder,
-      ApkInfo apkInfo,
+      HasInstallableApk.ApkInfo apkInfo,
       ExopackageDeviceDirectoryLister directoryLister,
       ImmutableList<BuildRule> extraDeps) {
     super(installerTarget, projectFilesystem);

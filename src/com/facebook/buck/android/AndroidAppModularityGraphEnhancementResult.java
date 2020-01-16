@@ -22,15 +22,13 @@ import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractAndroidAppModularityGraphEnhancementResult implements AddsToRuleKey {
+@BuckStyleValueWithBuilder
+abstract class AndroidAppModularityGraphEnhancementResult implements AddsToRuleKey {
 
   public abstract AndroidPackageableCollection getPackageableCollection();
 

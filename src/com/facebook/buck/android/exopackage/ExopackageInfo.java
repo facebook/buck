@@ -17,40 +17,45 @@
 package com.facebook.buck.android.exopackage;
 
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.immutables.value.Value;
 
-@Value.Immutable
-@Value.Enclosing
-@BuckStyleImmutable
-abstract class AbstractExopackageInfo {
-  @Value.Immutable
-  interface AbstractDexInfo {
-    @Value.Parameter
+@BuckStyleValueWithBuilder
+public abstract class ExopackageInfo {
+  @BuckStyleValue
+  public interface DexInfo {
     SourcePath getMetadata();
 
-    @Value.Parameter
     SourcePath getDirectory();
+
+    static DexInfo of(SourcePath metadata, SourcePath directory) {
+      return ImmutableDexInfo.of(metadata, directory);
+    }
   }
 
-  @Value.Immutable
-  interface AbstractNativeLibsInfo {
-    @Value.Parameter
+  @BuckStyleValue
+  public interface NativeLibsInfo {
     SourcePath getMetadata();
 
-    @Value.Parameter
     SourcePath getDirectory();
+
+    static NativeLibsInfo of(SourcePath metadata, SourcePath directory) {
+      return ImmutableNativeLibsInfo.of(metadata, directory);
+    }
   }
 
-  @Value.Immutable
-  interface AbstractResourcesInfo {
-    @Value.Parameter
-    List<ExopackagePathAndHash> getResourcesPaths();
+  @BuckStyleValue
+  public interface ResourcesInfo {
+    ImmutableList<ExopackagePathAndHash> getResourcesPaths();
+
+    static ResourcesInfo of(ImmutableList<ExopackagePathAndHash> resourcesPaths) {
+      return ImmutableResourcesInfo.of(resourcesPaths);
+    }
   }
 
   public abstract Optional<ExopackageInfo.DexInfo> getDexInfo();
@@ -104,4 +109,10 @@ abstract class AbstractExopackageInfo {
             || getModuleInfo().isPresent(),
         "ExopackageInfo must have something to install.");
   }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends ImmutableExopackageInfo.Builder {}
 }

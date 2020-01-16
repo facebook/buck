@@ -20,57 +20,45 @@ import com.facebook.buck.apple.platform_type.ApplePlatformType;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractAppleBundleDestinations implements AddsToRuleKey {
+@BuckStyleValueWithBuilder
+abstract class AppleBundleDestinations implements AddsToRuleKey {
   @AddToRuleKey(stringify = true)
-  @Value.Parameter
   public abstract Path getMetadataPath();
 
   @AddToRuleKey(stringify = true)
-  @Value.Parameter
   public abstract Path getResourcesPath();
 
   @AddToRuleKey(stringify = true)
-  @Value.Parameter
   public abstract Path getExecutablesPath();
 
   @AddToRuleKey(stringify = true)
-  @Value.Parameter
   public abstract Path getFrameworksPath();
 
   @AddToRuleKey(stringify = true)
-  @Value.Parameter
   public abstract Path getPlugInsPath();
 
   @AddToRuleKey(stringify = true)
-  @Value.Parameter
   public abstract Path getWatchAppPath();
 
   @AddToRuleKey(stringify = true)
-  @Value.Parameter
   public abstract Path getHeadersPath();
 
   @AddToRuleKey(stringify = true)
-  @Value.Parameter
   public abstract Path getModulesPath();
 
   @AddToRuleKey(stringify = true)
-  @Value.Parameter
   public abstract Path getXPCServicesPath();
 
   @AddToRuleKey(stringify = true)
-  @Value.Parameter
   public abstract Path getQuickLookPath();
 
   private static final Path OSX_CONTENTS_PATH = Paths.get("Contents");
   public static final AppleBundleDestinations OSX_DESTINATIONS =
-      AppleBundleDestinations.builder()
+      ImmutableAppleBundleDestinations.builder()
           .setMetadataPath(OSX_CONTENTS_PATH)
           .setResourcesPath(OSX_CONTENTS_PATH.resolve("Resources"))
           .setExecutablesPath(OSX_CONTENTS_PATH.resolve("MacOS"))
@@ -85,7 +73,7 @@ abstract class AbstractAppleBundleDestinations implements AddsToRuleKey {
 
   private static final Path OSX_FRAMEWORK_CONTENTS_PATH = Paths.get("");
   public static final AppleBundleDestinations OSX_FRAMEWORK_DESTINATIONS =
-      AppleBundleDestinations.builder()
+      ImmutableAppleBundleDestinations.builder()
           .setMetadataPath(OSX_FRAMEWORK_CONTENTS_PATH.resolve("Resources"))
           .setResourcesPath(OSX_FRAMEWORK_CONTENTS_PATH.resolve("Resources"))
           .setExecutablesPath(OSX_FRAMEWORK_CONTENTS_PATH)
@@ -100,7 +88,7 @@ abstract class AbstractAppleBundleDestinations implements AddsToRuleKey {
 
   private static final Path IOS_CONTENTS_PATH = Paths.get("");
   public static final AppleBundleDestinations IOS_DESTINATIONS =
-      AppleBundleDestinations.builder()
+      ImmutableAppleBundleDestinations.builder()
           .setMetadataPath(IOS_CONTENTS_PATH)
           .setResourcesPath(IOS_CONTENTS_PATH)
           .setExecutablesPath(IOS_CONTENTS_PATH)
@@ -115,7 +103,7 @@ abstract class AbstractAppleBundleDestinations implements AddsToRuleKey {
 
   private static final Path IOS_FRAMEWORK_CONTENTS_PATH = Paths.get("");
   public static final AppleBundleDestinations IOS_FRAMEWORK_DESTINATIONS =
-      AppleBundleDestinations.builder()
+      ImmutableAppleBundleDestinations.builder()
           .setMetadataPath(IOS_FRAMEWORK_CONTENTS_PATH)
           .setResourcesPath(IOS_FRAMEWORK_CONTENTS_PATH)
           .setExecutablesPath(IOS_FRAMEWORK_CONTENTS_PATH)

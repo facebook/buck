@@ -84,7 +84,7 @@ class AndroidResourceIndexCollector implements ResourceCollector {
     }
 
     resources.add(
-        AndroidResourceIndexEntry.of(
+        ImmutableAndroidResourceIndexEntry.of(
             rType,
             name,
             documentLocation.getLineNumber(),

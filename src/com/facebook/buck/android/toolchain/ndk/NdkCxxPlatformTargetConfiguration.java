@@ -16,14 +16,20 @@
 
 package com.facebook.buck.android.toolchain.ndk;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
 import org.immutables.value.Value;
 
 /** A container for all configuration settings needed to define a build target. */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractNdkCxxPlatformTargetConfiguration {
+@BuckStyleValue
+public abstract class NdkCxxPlatformTargetConfiguration {
+
+  public static NdkCxxPlatformTargetConfiguration of(
+      TargetCpuType targetCpuType, String targetAppPlatform, NdkCxxPlatformCompiler compiler) {
+    return ImmutableNdkCxxPlatformTargetConfiguration.of(
+        targetCpuType, targetAppPlatform, compiler);
+  }
+
   public abstract TargetCpuType getTargetCpuType();
 
   public abstract String getTargetAppPlatform();

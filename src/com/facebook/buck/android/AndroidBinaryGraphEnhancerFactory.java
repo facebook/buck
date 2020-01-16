@@ -121,8 +121,8 @@ public class AndroidBinaryGraphEnhancerFactory {
               buildTarget);
     }
 
-    NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs =
-        NonPredexedDexBuildableArgs.builder()
+    NonPreDexedDexBuildable.NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs =
+        ImmutableNonPredexedDexBuildableArgs.builder()
             .setProguardAgentPath(proGuardConfig.getProguardAgentPath())
             .setProguardJarOverride(
                 proGuardConfig.getProguardJarOverride(buildTarget.getTargetConfiguration()))
