@@ -754,7 +754,6 @@ public final class MainRunner {
       // Remote Execution is in use. All RE builds should not use distributed build.
       final boolean isRemoteExecutionBuild =
           isRemoteExecutionBuild(command, buckConfig, executionEnvironment.getUsername());
-      ImmutableMap<String, String> environment = clientEnvironment;
       Optional<String> projectPrefix = Optional.empty();
       if (command.subcommand instanceof BuildCommand) {
         BuildCommand subcommand = (BuildCommand) command.subcommand;
@@ -819,7 +818,8 @@ public final class MainRunner {
 
       ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
       Watchman watchman =
-          buildWatchman(context, parserConfig, projectWatchList, environment, printConsole, clock);
+          buildWatchman(
+              context, parserConfig, projectWatchList, clientEnvironment, printConsole, clock);
 
       ImmutableList<ConfigurationRuleDescription<?, ?>> knownConfigurationDescriptions =
           PluginBasedKnownConfigurationDescriptionsFactory.createFromPlugins(pluginManager);
@@ -849,7 +849,7 @@ public final class MainRunner {
 
       ToolchainProviderFactory toolchainProviderFactory =
           new DefaultToolchainProviderFactory(
-              pluginManager, environment, processExecutor, executableFinder);
+              pluginManager, clientEnvironment, processExecutor, executableFinder);
 
       Cell rootCell =
           LocalCellProviderFactory.create(
@@ -1456,7 +1456,7 @@ public final class MainRunner {
                         parserAndCaches.getParser(),
                         buildEventBus,
                         platform,
-                        environment,
+                        clientEnvironment,
                         rootCell
                             .getBuckConfig()
                             .getView(JavaBuckConfig.class)
@@ -1505,7 +1505,7 @@ public final class MainRunner {
             handleAutoFix(
                 filesystem,
                 printConsole,
-                environment,
+                clientEnvironment,
                 command,
                 buckConfig,
                 buildId,
