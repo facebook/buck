@@ -164,14 +164,15 @@ public class Omnibus {
       @Override
       public Iterable<BuildTarget> visit(BuildTarget target) {
         NativeLinkable nativeLinkable = Objects.requireNonNull(nativeLinkables.get(target));
-        ImmutableMap<BuildTarget, NativeLinkable> deps =
-            Maps.uniqueIndex(
-                getDeps(nativeLinkable, actionGraphBuilder), NativeLinkable::getBuildTarget);
-        nativeLinkables.putAll(deps);
+        ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
+        for (NativeLinkable linkable : getDeps(nativeLinkable, actionGraphBuilder)) {
+          nativeLinkables.put(linkable.getBuildTarget(), linkable);
+          deps.add(linkable.getBuildTarget());
+        }
         if (!nativeLinkable.supportsOmnibusLinking()) {
           excluded.add(target);
         }
-        return deps.keySet();
+        return deps.build();
       }
     }.start();
 
@@ -180,12 +181,13 @@ public class Omnibus {
       @Override
       public Iterable<BuildTarget> visit(BuildTarget target) {
         NativeLinkable nativeLinkable = Objects.requireNonNull(nativeLinkables.get(target));
-        ImmutableMap<BuildTarget, NativeLinkable> deps =
-            Maps.uniqueIndex(
-                getDeps(nativeLinkable, actionGraphBuilder), NativeLinkable::getBuildTarget);
-        nativeLinkables.putAll(deps);
+        ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
+        for (NativeLinkable linkable : getDeps(nativeLinkable, actionGraphBuilder)) {
+          nativeLinkables.put(linkable.getBuildTarget(), linkable);
+          deps.add(linkable.getBuildTarget());
+        }
         excluded.add(target);
-        return deps.keySet();
+        return deps.build();
       }
     }.start();
 

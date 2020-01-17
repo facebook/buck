@@ -470,6 +470,16 @@ public class OmnibusTest {
         Matchers.hasItem(flag));
   }
 
+  @Test
+  public void duplicatedDepInExportedDeps() throws NoSuchBuildTargetException {
+    NativeLinkable a = new OmnibusNode("//:a");
+    NativeLinkable b = new OmnibusNode("//:b", ImmutableList.of(a), ImmutableList.of(a));
+    NativeLinkTarget root = new OmnibusRootNode("//:root", ImmutableList.of(b));
+
+    // Verify that building the spec doesn't crash when handling a duplicated dep.
+    Omnibus.buildSpec(ImmutableList.of(root), ImmutableList.of(), new TestActionGraphBuilder());
+  }
+
   private CxxLink getCxxLinkRule(SourcePathRuleFinder ruleFinder, SourcePath path) {
     return ((CxxLink) ruleFinder.getRule((ExplicitBuildTargetSourcePath) path));
   }
