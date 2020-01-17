@@ -20,6 +20,11 @@ install_androidsdk: &install_androidsdk
     echo 'y' |sdkmanager --install "build-tools;23.0.2"
     echo 'y' |sdkmanager --install "platforms;android-23"
 
+    # Install 32 bit libraries
+    # https://stackoverflow.com/questions/36911709/cannot-run-program-aapt
+    # Needed to run Android build-tools
+    sudo apt-get install gcc-multilib lib32z1 lib32stdc++6
+
 install_golang: &install_golang
   name: Install GoLang 1.10.1
   command: |
@@ -203,12 +208,6 @@ jobs:
           <<: *run_ant_build
       - run:
           <<: *run_buck_build
-      - run:
-          name: Install 32 bit libraries
-          # https://stackoverflow.com/questions/36911709/cannot-run-program-aapt
-          # Needed to run Android build-tools
-          command: |
-            sudo apt-get install gcc-multilib lib32z1 lib32stdc++6
       - run:
           name: Run Tests
           command: |
