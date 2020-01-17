@@ -174,4 +174,5 @@ workflows:
     jobs:
       - ci_build_openjdk8
       - ci_unit_groovy
+      - ci_ant
 
