@@ -18,18 +18,12 @@ package com.facebook.buck.testutil;
 
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.google.common.collect.ImmutableList;
-import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /** An for abstraction of {@link PlatformUtils} for Unix platforms (Mac OS, Linux) */
 public abstract class UnixUtils extends PlatformUtils {
-  //  TODO(gabrielrc): Don't rely on buck being there. It's built by Sandcastle using
-  //  scripts/facebook/sandcastle/lego_windows_build.ps1
-  //  scripts/facebook/sandcastle/buck_verify_build_release.sh
-  private static final String BUCK_EXE =
-      FileSystems.getDefault().getPath("new_buck.pex").toAbsolutePath().toString();
-
   protected UnixUtils() {}
 
   /** Returns a command builder for a unix platform */
@@ -41,7 +35,21 @@ public abstract class UnixUtils extends PlatformUtils {
   /** Returns a buck command builder for a unix platform, which runs buck through its .pex file */
   @Override
   public ImmutableList.Builder<String> getBuckCommandBuilder() {
-    return getCommandBuilder().add(BUCK_EXE);
+    String buckExe = EnvVariablesProvider.getSystemEnv().get("TEST_BUCK");
+    if (buckExe == null || buckExe.isEmpty()) {
+      throw new AssertionError("TEST_BUCK env variable must be set");
+    }
+
+    Path buckExePath = Paths.get(buckExe);
+    if (!Files.exists(buckExePath)) {
+      throw new AssertionError("TEST_BUCK path " + buckExe + " does not exist");
+    }
+
+    if (!buckExePath.isAbsolute()) {
+      throw new AssertionError("TEST_BUCK path " + buckExe + " must be absolute");
+    }
+
+    return getCommandBuilder().add(buckExe);
   }
 
   @Override

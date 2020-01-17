@@ -9,6 +9,9 @@ java_test(
     srcs = glob(
         TEST_SRCS,
     ),
+    env = {
+        "TEST_BUCK": "$(location //programs:buck)",
+    },
     deps = [
         "//programs:buck",
         "//src/com/facebook/buck/core/model:model",

@@ -9,6 +9,9 @@ java_test(
     srcs = glob(
         TEST_SRCS,
     ),
+    env = {
+        "TEST_BUCK": "$(location //programs:buck)",
+    },
     deps = [
         "//src/com/facebook/buck/apple/toolchain:toolchain",
         "//src/com/facebook/buck/util/environment:platform",

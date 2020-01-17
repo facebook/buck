@@ -32,6 +32,9 @@ java_library(
 java_test(
     name = "endtoend",
     srcs = TEST_SRCS,
+    env = {
+        "TEST_BUCK": "$(location //programs:buck)",
+    },
     visibility = [
         "//test/...",
     ],
