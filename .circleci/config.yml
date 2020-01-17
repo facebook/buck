@@ -135,6 +135,39 @@ jobs:
             set -eux
             ./new_buck.pex test --num-threads=${BUCK_NUM_THREADS} --all --test-selectors '!.*[Ii]ntegration.*'
 
+  ci_ant:
+    environment:
+      BUCKROOT: "/home/circleci/buck"
+      ANDROIDSDK: "/home/circleci/android-sdk"
+      TERM: "dumb"
+      BUCK_NUM_THREADS: 3
+    working_directory: "/home/circleci/buck"
+    machine:
+      image: ubuntu-1604:201903-01
+    steps:
+      - checkout
+      - run:
+          <<: *install_openjdk8
+      - run:
+          <<: *install_androidsdk
+      - run:
+          <<: *install_golang
+      - run:
+          <<: *install_python
+      - run:
+          <<: *run_ant_build
+      - run:
+          <<: *run_buck_build
+      - run:
+          name: Run Tests
+          command: |
+            cd ${BUCKROOT}
+            export PATH=${ANDROIDSDK}/tools/bin:$PATH
+            export ANDROID_SDK=${ANDROIDSDK}
+            set -eux
+            ant travis
+            ./scripts/travisci_test_java_file_format
+
 workflows:
   version: 2
   all_jobs:
