@@ -127,15 +127,6 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
       Path root,
       ProjectFilesystemDelegate delegate,
       @Nullable WindowsFS winFSInstance) {
-    this(cellName, root, new ProjectFilesystemDelegatePair(delegate, delegate), winFSInstance);
-  }
-  /** This function should be only used in tests, because it ignores hashes-in-path buckconfig. */
-  @VisibleForTesting
-  protected DefaultProjectFilesystem(
-      CanonicalCellName cellName,
-      Path root,
-      ProjectFilesystemDelegatePair projectFilesystemDelegatePair,
-      @Nullable WindowsFS winFSInstance) {
     this(
         root,
         ImmutableSet.of(),
@@ -144,8 +135,8 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
             root,
             // This function is only used in tests, so it's OK to not query buckconfig here
             BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_COFIG_HASH),
-        projectFilesystemDelegatePair.getGeneralDelegate(),
-        projectFilesystemDelegatePair,
+        delegate,
+        new ProjectFilesystemDelegatePair(delegate, delegate),
         winFSInstance);
   }
 
