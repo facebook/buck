@@ -16,22 +16,25 @@
 
 package com.facebook.buck.core.rules.schedule;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /** Used to override how the build engine schedules a build rule. */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractRuleScheduleInfo {
+@BuckStyleValue
+public abstract class RuleScheduleInfo {
 
-  public static final RuleScheduleInfo DEFAULT = RuleScheduleInfo.builder().build();
+  public static final RuleScheduleInfo DEFAULT = of();
 
   /**
    * @return the multiplier used to calculate the number of jobs to assign to a rule when running
    *     its steps.
    */
-  @Value.Default
-  public int getJobsMultiplier() {
-    return 1;
+  public abstract int getJobsMultiplier();
+
+  public static RuleScheduleInfo of() {
+    return RuleScheduleInfo.of(1);
+  }
+
+  public static RuleScheduleInfo of(int jobsMultiplier) {
+    return ImmutableRuleScheduleInfo.of(jobsMultiplier);
   }
 }

@@ -752,7 +752,7 @@ public class NdkCxxPlatforms {
       String tool,
       String version,
       ExecutableFinder executableFinder) {
-    return VersionedTool.of(getGccToolPath(toolchainPaths, tool, executableFinder), tool, version);
+    return VersionedTool.of(tool, getGccToolPath(toolchainPaths, tool, executableFinder), version);
   }
 
   private static Tool getCTool(
@@ -760,7 +760,7 @@ public class NdkCxxPlatforms {
       String tool,
       String version,
       ExecutableFinder executableFinder) {
-    return VersionedTool.of(getToolPath(toolchainPaths, tool, executableFinder), tool, version);
+    return VersionedTool.of(tool, getToolPath(toolchainPaths, tool, executableFinder), version);
   }
 
   private static ImmutableList<String> getCxxRuntimeIncludeFlags(
@@ -867,12 +867,8 @@ public class NdkCxxPlatforms {
     }
 
     return new GnuLinker(
-        VersionedTool.builder()
-            .setPath(getToolPath(toolchainPaths, tool, executableFinder))
-            .setName(tool)
-            .setVersion(version)
-            .setExtraArgs(flags.build())
-            .build());
+        VersionedTool.of(
+            tool, getToolPath(toolchainPaths, tool, executableFinder), version, flags.build()));
   }
 
   private static ImmutableList<String> getLdFlags(

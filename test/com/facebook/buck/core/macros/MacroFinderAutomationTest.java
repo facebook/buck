@@ -29,7 +29,7 @@ public class MacroFinderAutomationTest {
     assertThat(
         finder.next(),
         Matchers.equalTo(
-            MacroMatchResult.builder()
+            ImmutableMacroMatchResult.builder()
                 .setMacroType("macro")
                 .addMacroInput("arg1", " arg2' ")
                 .setStartIndex(0)

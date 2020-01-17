@@ -116,7 +116,7 @@ public class ExternalJavacProvider implements JavacProvider {
     } else {
       version = ImmutableJavacVersion.of(output).toString();
     }
-    return VersionedTool.of(actualPath, "external_javac", version);
+    return VersionedTool.of("external_javac", actualPath, version);
   }
 
   @Override

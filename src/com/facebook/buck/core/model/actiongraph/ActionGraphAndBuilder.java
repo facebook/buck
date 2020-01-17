@@ -18,21 +18,28 @@ package com.facebook.buck.core.model.actiongraph;
 
 import com.facebook.buck.core.build.action.resolver.BuildEngineActionToBuildRuleResolver;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /** Holds an ActionGraph with the BuildRuleResolver that created it. */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractActionGraphAndBuilder {
-  @Value.Parameter
+@BuckStyleValue
+public abstract class ActionGraphAndBuilder {
+
   public abstract ActionGraph getActionGraph();
 
-  @Value.Parameter
   public abstract ActionGraphBuilder getActionGraphBuilder();
 
-  @Value.Default
-  public BuildEngineActionToBuildRuleResolver getBuildEngineActionToBuildRuleResolver() {
-    return new BuildEngineActionToBuildRuleResolver();
+  public abstract BuildEngineActionToBuildRuleResolver getBuildEngineActionToBuildRuleResolver();
+
+  public static ActionGraphAndBuilder of(
+      ActionGraph actionGraph, ActionGraphBuilder actionGraphBuilder) {
+    return of(actionGraph, actionGraphBuilder, new BuildEngineActionToBuildRuleResolver());
+  }
+
+  public static ActionGraphAndBuilder of(
+      ActionGraph actionGraph,
+      ActionGraphBuilder actionGraphBuilder,
+      BuildEngineActionToBuildRuleResolver buildEngineActionToBuildRuleResolver) {
+    return ImmutableActionGraphAndBuilder.of(
+        actionGraph, actionGraphBuilder, buildEngineActionToBuildRuleResolver);
   }
 }

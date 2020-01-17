@@ -28,7 +28,6 @@ import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.AbstractRuleType;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
@@ -141,7 +140,7 @@ public class ConstructorArgMarshallerImmutableTest {
   RuleType ruleType(Class<?> dtoClass) {
     return RuleType.of(
         CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, dtoClass.getName()),
-        AbstractRuleType.Kind.BUILD);
+        RuleType.Kind.BUILD);
   }
 
   <T extends ConstructorArg> DataTransferObjectDescriptor<T> builder(Class<T> dtoClass) {

@@ -190,22 +190,22 @@ public class AndroidPlatformTargetProducer {
         aaptOverride.orElse(
             () ->
                 VersionedTool.of(
+                    "aapt" + binaryExtension,
                     PathSourcePath.of(
                         filesystem,
                         androidSdkDir
                             .resolve(androidBuildToolsLocation.getAaptPath())
                             .toAbsolutePath()),
-                    "aapt" + binaryExtension,
                     version)),
         aapt2Override.orElse(
             new ConstantToolProvider(
                 VersionedTool.of(
+                    "aapt2" + binaryExtension,
                     PathSourcePath.of(
                         filesystem,
                         androidSdkDir
                             .resolve(androidBuildToolsLocation.getAapt2Path())
                             .toAbsolutePath()),
-                    "aapt2" + binaryExtension,
                     version))),
         adbOverride.orElse(
             androidSdkDir.resolve("platform-tools/adb" + binaryExtension).toAbsolutePath()),

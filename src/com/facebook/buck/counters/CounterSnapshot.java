@@ -16,26 +16,30 @@
 
 package com.facebook.buck.counters;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSetMultimap;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractCounterSnapshot {
-  public static CounterSnapshot.Builder builderForCounter(Counter counter) {
-    CounterSnapshot.Builder builder = CounterSnapshot.builder();
+@BuckStyleValueWithBuilder
+public abstract class CounterSnapshot {
+  public static Builder builderForCounter(Counter counter) {
+    Builder builder = builder();
     builder.setTags(counter.getTags());
     builder.setCategory(counter.getCategory());
     return builder;
   }
 
-  abstract String getCategory();
+  public abstract String getCategory();
 
-  abstract ImmutableMap<String, String> getTags();
+  public abstract ImmutableMap<String, String> getTags();
 
-  abstract ImmutableSetMultimap<String, String> getTagSets();
+  public abstract ImmutableSetMultimap<String, String> getTagSets();
 
-  abstract ImmutableMap<String, Long> getValues();
+  public abstract ImmutableMap<String, Long> getValues();
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends ImmutableCounterSnapshot.Builder {}
 }

@@ -93,8 +93,8 @@ public class SwiftNativeLinkableGroupTest {
 
   @Before
   public void setUp() {
-    swiftcTool = VersionedTool.of(FakeSourcePath.of("swiftc"), "foo", "1.0");
-    swiftStdTool = VersionedTool.of(FakeSourcePath.of("swift-std"), "foo", "1.0");
+    swiftcTool = VersionedTool.of("foo", FakeSourcePath.of("swiftc"), "1.0");
+    swiftStdTool = VersionedTool.of("foo", FakeSourcePath.of("swift-std"), "1.0");
 
     setUpAppleSdks();
 

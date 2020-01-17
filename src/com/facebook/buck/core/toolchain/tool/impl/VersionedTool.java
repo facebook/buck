@@ -25,12 +25,11 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.util.function.ThrowingConsumer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
-import org.immutables.value.Value;
 
 /**
  * A {@link Tool} which only contributes a fixed name and version when appended to a rule key. This
@@ -41,18 +40,22 @@ import org.immutables.value.Value;
  * but we know that they produce identical output, in which case they should also generate identical
  * rule keys.
  */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractVersionedTool implements Tool, HasCustomInputsLogic {
+@BuckStyleValue
+public abstract class VersionedTool implements Tool, HasCustomInputsLogic {
+
+  @AddToRuleKey
+  public abstract String getName();
 
   /** The path to the tool. The contents or path to the tool do not contribute to the rule key. */
-  @Value.Parameter
   @ExcludeFromRuleKey(
       reason =
           "We only add the version and name to the rulekey, this depends on the creator of the versioned tool to do the right thing.",
       serialization = DefaultFieldSerialization.class,
       inputs = IgnoredFieldInputs.class)
-  protected abstract PathSourcePath getPath();
+  public abstract PathSourcePath getPath();
+
+  @AddToRuleKey
+  public abstract String getVersion();
 
   /** Additional flags that we pass to the tool, but which do *not* contribute to the rule key. */
   @ExcludeFromRuleKey(
@@ -60,15 +63,7 @@ abstract class AbstractVersionedTool implements Tool, HasCustomInputsLogic {
           "We only add the version and name to the rulekey, this depends on the creator of the versioned tool to do the right thing.",
       serialization = DefaultFieldSerialization.class,
       inputs = IgnoredFieldInputs.class)
-  protected abstract ImmutableList<String> getExtraArgs();
-
-  @Value.Parameter
-  @AddToRuleKey
-  protected abstract String getName();
-
-  @Value.Parameter
-  @AddToRuleKey
-  protected abstract String getVersion();
+  public abstract ImmutableList<String> getExtraArgs();
 
   @Override
   public ImmutableList<String> getCommandPrefix(SourcePathResolverAdapter resolver) {
@@ -84,5 +79,14 @@ abstract class AbstractVersionedTool implements Tool, HasCustomInputsLogic {
   public <E extends Exception> void computeInputs(ThrowingConsumer<SourcePath, E> consumer)
       throws E {
     consumer.accept(getPath());
+  }
+
+  public static VersionedTool of(String name, PathSourcePath path, String version) {
+    return of(name, path, version, ImmutableList.of());
+  }
+
+  public static VersionedTool of(
+      String name, PathSourcePath path, String version, ImmutableList<String> extraArgs) {
+    return ImmutableVersionedTool.of(name, path, version, extraArgs);
   }
 }

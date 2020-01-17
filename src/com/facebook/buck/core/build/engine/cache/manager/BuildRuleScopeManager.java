@@ -179,12 +179,7 @@ public class BuildRuleScopeManager {
     Optional<RuleKey> depFileKey =
         onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY);
     Optional<RuleKey> manifestKey = onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.MANIFEST_KEY);
-    return BuildRuleKeys.builder()
-        .setRuleKey(defaultKey)
-        .setInputRuleKey(inputKey)
-        .setDepFileRuleKey(depFileKey)
-        .setManifestRuleKey(manifestKey)
-        .build();
+    return BuildRuleKeys.of(defaultKey, inputKey, depFileKey, manifestKey);
   }
 
   private Optional<BuildRuleDiagnosticData> getBuildRuleDiagnosticData(

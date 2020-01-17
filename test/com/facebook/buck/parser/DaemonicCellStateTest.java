@@ -26,7 +26,6 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.model.AbstractRuleType;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.RuleType;
@@ -108,7 +107,7 @@ public class DaemonicCellStateTest {
   private UnconfiguredTargetNode rawTargetNode(String name) {
     return ImmutableUnconfiguredTargetNode.of(
         UnconfiguredBuildTargetParser.parse("//" + name + ":" + name),
-        RuleType.of("j_l", AbstractRuleType.Kind.BUILD),
+        RuleType.of("j_l", RuleType.Kind.BUILD),
         ImmutableMap.of(),
         ImmutableSet.of(),
         ImmutableSet.of());

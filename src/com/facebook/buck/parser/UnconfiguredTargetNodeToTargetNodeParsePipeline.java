@@ -21,9 +21,9 @@ import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.HumanReadableExceptions;
-import com.facebook.buck.core.model.AbstractRuleType;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
+import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -113,7 +113,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
   }
 
   private static boolean targetNodeIsConfiguration(TargetNode<?> targetNode) {
-    return targetNode.getRuleType().getKind() == AbstractRuleType.Kind.CONFIGURATION;
+    return targetNode.getRuleType().getKind() == RuleType.Kind.CONFIGURATION;
   }
 
   @SuppressWarnings("CheckReturnValue") // submit result is not used
@@ -290,7 +290,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
       Optional<TargetConfiguration> globalTargetConfiguration,
       UnconfiguredTargetNode unconfiguredTargetNode) {
     TargetConfiguration targetConfiguration;
-    if (unconfiguredTargetNode.getRuleType().getKind() == AbstractRuleType.Kind.CONFIGURATION) {
+    if (unconfiguredTargetNode.getRuleType().getKind() == RuleType.Kind.CONFIGURATION) {
       targetConfiguration = ConfigurationForConfigurationTargets.INSTANCE;
     } else {
       targetConfiguration =

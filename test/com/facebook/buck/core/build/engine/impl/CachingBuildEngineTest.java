@@ -3605,13 +3605,9 @@ public class CachingBuildEngineTest {
     @Test
     public void customWeights() throws Exception {
       BuildTarget target1 = BuildTargetFactory.newInstance("//:rule1");
-      ControlledRule rule1 =
-          new ControlledRule(
-              target1, filesystem, RuleScheduleInfo.builder().setJobsMultiplier(2).build());
+      ControlledRule rule1 = new ControlledRule(target1, filesystem, RuleScheduleInfo.of(2));
       BuildTarget target2 = BuildTargetFactory.newInstance("//:rule2");
-      ControlledRule rule2 =
-          new ControlledRule(
-              target2, filesystem, RuleScheduleInfo.builder().setJobsMultiplier(2).build());
+      ControlledRule rule2 = new ControlledRule(target2, filesystem, RuleScheduleInfo.of(2));
       ListeningMultiSemaphore semaphore =
           new ListeningMultiSemaphore(
               ResourceAmounts.of(3, 0, 0, 0), ResourceAllocationFairness.FAIR);

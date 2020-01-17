@@ -16,17 +16,15 @@
 
 package com.facebook.buck.core.model;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Preconditions;
 import org.immutables.value.Value;
 
-@Value.Immutable(copy = false, intern = true)
-@BuckStyleImmutable
-@JsonDeserialize
-public abstract class AbstractRuleType {
+@Value.Immutable(builder = false, copy = false, intern = true)
+@JsonDeserialize(as = ImmutableRuleType.class)
+public abstract class RuleType {
 
   /** The kind of a rule type. */
   public enum Kind {
@@ -71,5 +69,9 @@ public abstract class AbstractRuleType {
   @Override
   public String toString() {
     return getName();
+  }
+
+  public static RuleType of(String name, RuleType.Kind kind) {
+    return ImmutableRuleType.of(name, kind);
   }
 }

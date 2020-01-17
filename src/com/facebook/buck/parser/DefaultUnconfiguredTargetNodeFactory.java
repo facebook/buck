@@ -21,7 +21,6 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.AbstractRuleType;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableUnconfiguredTargetNode;
@@ -118,7 +117,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
     KnownRuleTypes knownRuleTypes = knownRuleTypesProvider.get(cell);
     RuleType ruleType = parseRuleTypeFromRawRule(knownRuleTypes, rawAttributes);
 
-    if (ruleType.getKind() == AbstractRuleType.Kind.CONFIGURATION) {
+    if (ruleType.getKind() == RuleType.Kind.CONFIGURATION) {
       assertRawTargetNodeAttributesNotConfigurable(target, rawAttributes);
     }
 

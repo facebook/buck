@@ -601,11 +601,8 @@ public class BuildCommandTest {
     ActionGraphAndBuilder actionGraphAndBuilder =
         createActionGraph(
             targetGraph, defaultPath, pathsByLabelsForTargets, useMultipleOutputsRule);
-    return ActionAndTargetGraphs.builder()
-        .setUnversionedTargetGraph(targetGraphCreationResult)
-        .setVersionedTargetGraph(targetGraphCreationResult)
-        .setActionGraphAndBuilder(actionGraphAndBuilder)
-        .build();
+    return ActionAndTargetGraphs.of(
+        targetGraphCreationResult, Optional.of(targetGraphCreationResult), actionGraphAndBuilder);
   }
 
   private BuildCommand.GraphsAndBuildTargets getGraphsAndBuildTargets(

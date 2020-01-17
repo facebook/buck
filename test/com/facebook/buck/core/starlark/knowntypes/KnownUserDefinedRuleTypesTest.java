@@ -22,7 +22,6 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.description.BaseDescription;
-import com.facebook.buck.core.model.AbstractRuleType;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.starlark.rule.SkylarkDescription;
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
@@ -97,7 +96,7 @@ public class KnownUserDefinedRuleTypesTest {
   public void returnsCorrectRuleType() throws LabelSyntaxException, EvalException {
     KnownUserDefinedRuleTypes knownRules = new KnownUserDefinedRuleTypes();
     SkylarkUserDefinedRule rule = FakeSkylarkUserDefinedRuleFactory.createSimpleRule();
-    RuleType expected = RuleType.of(rule.getName(), AbstractRuleType.Kind.BUILD);
+    RuleType expected = RuleType.of(rule.getName(), RuleType.Kind.BUILD);
 
     knownRules.addRule(rule);
 

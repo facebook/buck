@@ -123,10 +123,11 @@ public class MachineReadableLogJsonViewTest {
     BuildRuleEvent.Finished event =
         BuildRuleEvent.finished(
             started,
-            BuildRuleKeys.builder()
-                .setRuleKey(new RuleKey("aaaa"))
-                .setInputRuleKey(Optional.of(new RuleKey("bbbb")))
-                .build(),
+            BuildRuleKeys.of(
+                new RuleKey("aaaa"),
+                Optional.of(new RuleKey("bbbb")),
+                Optional.empty(),
+                Optional.empty()),
             BuildRuleStatus.SUCCESS,
             CacheResult.miss("my-secret-source", ArtifactCacheMode.dir),
             Optional.empty(),

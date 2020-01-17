@@ -419,11 +419,7 @@ public class BuildCommand extends AbstractCommand {
                 params, params.getTargetConfiguration(), actionGraph, justBuildTarget);
 
     ActionAndTargetGraphs actionAndTargetGraphs =
-        ActionAndTargetGraphs.builder()
-            .setUnversionedTargetGraph(unversionedTargetGraph)
-            .setVersionedTargetGraph(versionedTargetGraph)
-            .setActionGraphAndBuilder(actionGraph)
-            .build();
+        ActionAndTargetGraphs.of(unversionedTargetGraph, versionedTargetGraph, actionGraph);
 
     return ImmutableGraphsAndBuildTargets.of(actionAndTargetGraphs, buildTargetsWithOutputs);
   }

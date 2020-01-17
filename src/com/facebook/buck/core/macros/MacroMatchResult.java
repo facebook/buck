@@ -14,26 +14,20 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.core.rulekey;
+package com.facebook.buck.core.macros;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.log.views.JsonViews;
-import com.fasterxml.jackson.annotation.JsonView;
-import java.util.Optional;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
+import com.google.common.collect.ImmutableList;
 
-@Value.Immutable
-@BuckStyleImmutable
-interface AbstractBuildRuleKeys {
+@BuckStyleValueWithBuilder
+public interface MacroMatchResult {
+  String getMacroType();
 
-  @Value.Parameter
-  @JsonView(JsonViews.MachineReadableLog.class)
-  RuleKey getRuleKey();
+  ImmutableList<String> getMacroInput();
 
-  @JsonView(JsonViews.MachineReadableLog.class)
-  Optional<RuleKey> getInputRuleKey();
+  int getStartIndex();
 
-  Optional<RuleKey> getDepFileRuleKey();
+  int getEndIndex();
 
-  Optional<RuleKey> getManifestRuleKey();
+  boolean isEscaped();
 }

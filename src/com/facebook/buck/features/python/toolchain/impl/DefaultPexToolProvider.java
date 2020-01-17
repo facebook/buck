@@ -26,6 +26,7 @@ import com.facebook.buck.features.python.PythonBuckConfig;
 import com.facebook.buck.features.python.toolchain.PexToolProvider;
 import com.facebook.buck.features.python.toolchain.PythonInterpreter;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
+import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -84,11 +85,10 @@ public class DefaultPexToolProvider implements PexToolProvider {
         toolchainProvider.getByName(
             PythonInterpreter.DEFAULT_NAME, targetConfiguration, PythonInterpreter.class);
 
-    return VersionedTool.builder()
-        .setName("pex")
-        .setVersion(ruleKeyConfiguration.getCoreKey())
-        .setPath(pythonBuckConfig.getSourcePath(pythonInterpreter.getPythonInterpreterPath()))
-        .addExtraArgs(DEFAULT_PATH_TO_PEX.toString())
-        .build();
+    return VersionedTool.of(
+        "pex",
+        pythonBuckConfig.getSourcePath(pythonInterpreter.getPythonInterpreterPath()),
+        ruleKeyConfiguration.getCoreKey(),
+        ImmutableList.of(DEFAULT_PATH_TO_PEX.toString()));
   }
 }

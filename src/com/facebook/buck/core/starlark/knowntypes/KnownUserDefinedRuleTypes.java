@@ -18,7 +18,6 @@ package com.facebook.buck.core.starlark.knowntypes;
 
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.ConstructorArg;
-import com.facebook.buck.core.model.AbstractRuleType;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.starlark.rule.SkylarkDescription;
@@ -90,7 +89,7 @@ public class KnownUserDefinedRuleTypes implements KnownRuleTypes {
   @Override
   public RuleType getRuleType(String name) {
     SkylarkUserDefinedRule rule = Preconditions.checkNotNull(getRule(name));
-    return RuleType.of(rule.getName(), AbstractRuleType.Kind.BUILD);
+    return RuleType.of(rule.getName(), RuleType.Kind.BUILD);
   }
 
   @Override

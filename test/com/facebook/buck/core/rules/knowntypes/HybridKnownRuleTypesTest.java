@@ -19,7 +19,6 @@ package com.facebook.buck.core.rules.knowntypes;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.description.BaseDescription;
-import com.facebook.buck.core.model.AbstractRuleType;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.RuleType;
@@ -71,13 +70,13 @@ public class HybridKnownRuleTypesTest {
     KnownRuleTypes knownTypes = new HybridKnownRuleTypes(nativeRuleTypes, userDefinedRuleTypes);
 
     assertEquals(
-        RuleType.of("known_rule_test", AbstractRuleType.Kind.BUILD),
+        RuleType.of("known_rule_test", RuleType.Kind.BUILD),
         knownTypes.getRuleType("known_rule_test"));
     assertEquals(
-        RuleType.of("//foo:bar.bzl:baz_rule", AbstractRuleType.Kind.BUILD),
+        RuleType.of("//foo:bar.bzl:baz_rule", RuleType.Kind.BUILD),
         knownTypes.getRuleType("//foo:bar.bzl:baz_rule"));
     assertEquals(
-        RuleType.of("@repo//foo:bar.bzl:other_baz_rule", AbstractRuleType.Kind.BUILD),
+        RuleType.of("@repo//foo:bar.bzl:other_baz_rule", RuleType.Kind.BUILD),
         knownTypes.getRuleType("@repo//foo:bar.bzl:other_baz_rule"));
   }
 

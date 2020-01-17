@@ -16,17 +16,16 @@
 
 package com.facebook.buck.counters;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 public abstract class Counter {
 
   private final CounterInfo info;
 
   protected Counter(String category, String name, ImmutableMap<String, String> tags) {
-    this.info = CounterInfo.builder().setCategory(category).setName(name).setTags(tags).build();
+    this.info = ImmutableCounterInfo.of(category, name, tags);
   }
 
   /**
@@ -72,9 +71,8 @@ public abstract class Counter {
     return info.toString();
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  interface AbstractCounterInfo {
+  @BuckStyleValue
+  interface CounterInfo {
     String getCategory();
 
     String getName();

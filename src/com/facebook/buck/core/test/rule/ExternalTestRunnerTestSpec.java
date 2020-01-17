@@ -17,7 +17,7 @@
 package com.facebook.buck.core.test.rule;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.util.types.Pair;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
@@ -28,7 +28,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.Path;
-import org.immutables.value.Value;
 
 /**
  * A JSON-serializable structure that gets passed to external test runners.
@@ -36,45 +35,44 @@ import org.immutables.value.Value;
  * <p>NOTE: We're relying on the fact we're using POJOs here and that all the sub-types are
  * JSON-serializable already. Be careful that we don't break serialization when adding item here.
  */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractExternalTestRunnerTestSpec implements ExternalTestSpec {
+@BuckStyleValueWithBuilder
+public abstract class ExternalTestRunnerTestSpec implements ExternalTestSpec {
 
   /** @return the build target of this rule. */
-  protected abstract BuildTarget getTarget();
+  public abstract BuildTarget getTarget();
 
   /**
    * @return a test-specific type string which classifies the test class, so the external runner
    *     knows how to parse the output.
    */
-  protected abstract String getType();
+  public abstract String getType();
 
   /** @return the command the external test runner must invoke to run the test. */
-  protected abstract ImmutableList<String> getCommand();
+  public abstract ImmutableList<String> getCommand();
 
   /** @return the directory from which the external runner should invoke the command. */
-  protected abstract Path getCwd();
+  public abstract Path getCwd();
 
   /**
    * @return coverage threshold and list of source path to be passed the test command for test
    *     coverage.
    */
-  protected abstract ImmutableList<Pair<Float, ImmutableSet<Path>>> getNeededCoverage();
+  public abstract ImmutableList<Pair<Float, ImmutableSet<Path>>> getNeededCoverage();
 
   /**
    * @return a list of source path to be passed the test command for calculating additional test
    *     coverage.
    */
-  protected abstract ImmutableSet<Path> getAdditionalCoverageTargets();
+  public abstract ImmutableSet<Path> getAdditionalCoverageTargets();
 
   /** @return environment variables the external test runner should provide for the test command. */
-  protected abstract ImmutableMap<String, String> getEnv();
+  public abstract ImmutableMap<String, String> getEnv();
 
   /** @return test labels. */
-  protected abstract ImmutableList<String> getLabels();
+  public abstract ImmutableList<String> getLabels();
 
   /** @return test contacts. */
-  protected abstract ImmutableList<String> getContacts();
+  public abstract ImmutableList<String> getContacts();
 
   /**
    * @return the set of files and directories (may include symlinks or symlink-trees) which *must*
@@ -83,7 +81,7 @@ abstract class AbstractExternalTestRunnerTestSpec implements ExternalTestSpec {
    *     java_tests: runtime classpath, android_instrumentation_test: test_apk and apk_under_test
    *     paths, python_tests: location of python files if style=inplace
    */
-  protected abstract ImmutableSet<Path> getRequiredPaths();
+  public abstract ImmutableSet<Path> getRequiredPaths();
 
   @Override
   public void serialize(JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
@@ -121,4 +119,10 @@ abstract class AbstractExternalTestRunnerTestSpec implements ExternalTestSpec {
       throws IOException {
     serialize(jsonGenerator, serializerProvider);
   }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends ImmutableExternalTestRunnerTestSpec.Builder {}
 }

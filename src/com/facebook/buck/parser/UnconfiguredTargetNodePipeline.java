@@ -18,7 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.DependencyStack;
-import com.facebook.buck.core.model.AbstractRuleType;
+import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.impl.Package;
@@ -93,7 +93,7 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
   }
 
   private static boolean targetNodeIsConfiguration(UnconfiguredTargetNode targetNode) {
-    return targetNode.getRuleType().getKind() == AbstractRuleType.Kind.CONFIGURATION;
+    return targetNode.getRuleType().getKind() == RuleType.Kind.CONFIGURATION;
   }
 
   /** Get or load all raw target nodes from a build file */

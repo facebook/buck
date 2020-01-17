@@ -19,22 +19,20 @@ package com.facebook.buck.core.model.graph;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /**
  * Container class for {@link ActionGraphAndBuilder} and {@link TargetGraphCreationResult}. Also
  * contains helper methods to choose which {@link TargetGraph} to use ({@link
  * com.facebook.buck.versions.VersionedTargetGraph} vs un-versioned).
  */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractActionAndTargetGraphs {
+@BuckStyleValue
+public abstract class ActionAndTargetGraphs {
 
-  abstract TargetGraphCreationResult getUnversionedTargetGraph();
+  public abstract TargetGraphCreationResult getUnversionedTargetGraph();
 
-  abstract Optional<TargetGraphCreationResult> getVersionedTargetGraph();
+  public abstract Optional<TargetGraphCreationResult> getVersionedTargetGraph();
 
   public abstract ActionGraphAndBuilder getActionGraphAndBuilder();
 
@@ -50,5 +48,13 @@ abstract class AbstractActionAndTargetGraphs {
   /** Helper method to get the appropriate {@link TargetGraph}. */
   public TargetGraphCreationResult getTargetGraph() {
     return getTargetGraph(getUnversionedTargetGraph(), getVersionedTargetGraph());
+  }
+
+  public static ImmutableActionAndTargetGraphs of(
+      TargetGraphCreationResult unversionedTargetGraph,
+      Optional<? extends TargetGraphCreationResult> versionedTargetGraph,
+      ActionGraphAndBuilder actionGraphAndBuilder) {
+    return ImmutableActionAndTargetGraphs.of(
+        unversionedTargetGraph, versionedTargetGraph, actionGraphAndBuilder);
   }
 }
