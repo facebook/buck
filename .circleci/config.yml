@@ -164,6 +164,7 @@ jobs:
             cd ${BUCKROOT}
             export PATH=${ANDROIDSDK}/tools/bin:$PATH
             export ANDROID_SDK=${ANDROIDSDK}
+            export ANDROID_HOME=${ANDROIDSDK}
             set -eux
             ant travis
             ./scripts/travisci_test_java_file_format
