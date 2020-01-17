@@ -45,7 +45,7 @@ install_groovy: &install_groovy
   command: |
     curl -s get.sdkman.io | bash
     source "$HOME/.sdkman/bin/sdkman-init.sh"
-    sdk install groovy 2.5.0
+    sdk install groovy 2.4.18
     groovy -version
 
 install_ghc: &install_ghc
