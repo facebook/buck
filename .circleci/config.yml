@@ -38,11 +38,18 @@ install_python: &install_python
 install_groovy: &install_groovy
   name: Install Groovy
   command: |
-    #sudo apt-get update && sudo apt-get install groovy
     curl -s get.sdkman.io | bash
     source "$HOME/.sdkman/bin/sdkman-init.sh"
     sdk install groovy 2.5.0
     groovy -version
+
+install_ghc: &install_ghc
+  name: Install Ghc
+  command: |
+    sudo apt-get update
+    sudo apt-get install ghc
+    sudo apt-get install -y ghc-dynamic
+    sudo apt-get install -y ghc-haddock
 
 run_ant_build: &run_ant_build
   name: Run Ant Build
@@ -168,6 +175,42 @@ jobs:
             set -eux
             ant travis
             ./scripts/travisci_test_java_file_format
+
+  ci_integration:
+    environment:
+      BUCKROOT: "/home/circleci/buck"
+      ANDROIDSDK: "/home/circleci/android-sdk"
+      TERM: "dumb"
+      BUCK_NUM_THREADS: 3
+    working_directory: "/home/circleci/buck"
+    machine:
+      image: ubuntu-1604:201903-01
+    steps:
+      - checkout
+      - run:
+          <<: *install_openjdk8
+      - run:
+          <<: *install_androidsdk
+      - run:
+          <<: *install_ghc
+      - run:
+          <<: *install_golang
+      - run:
+          <<: *install_python
+      - run:
+          <<: *run_ant_build
+      - run:
+          <<: *run_buck_build
+      - run:
+          name: Run Tests
+          command: |
+            cd ${BUCKROOT}
+            export PATH=${ANDROIDSDK}/tools/bin:$PATH
+            export PATH="$(pyenv root)/shims:$PATH"
+            export ANDROID_SDK=${ANDROIDSDK}
+            export GROOVY_HOME=$HOME/.sdkman/candidates/groovy/current
+            set -eux
+            ./new_buck.pex test --num-threads=$BUCK_NUM_THREADS --all --filter '^(?!(com.facebook.buck.android|com.facebook.buck.jvm.java)).*[Ii]ntegration.*'
 
 workflows:
   version: 2
