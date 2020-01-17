@@ -19,6 +19,7 @@ package com.facebook.buck.io.filesystem;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.config.Config;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 import org.immutables.value.Value;
@@ -29,12 +30,20 @@ public abstract class BuckPaths {
   /**
    * Default value for {@link #shouldIncludeTargetConfigHash()} when it is not specified by user.
    */
-  public static final boolean DEFAULT_BUCK_OUT_INCLUDE_TARGET_COFIG_HASH = false;
+  public static final boolean DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH = false;
 
   public static BuckPaths createDefaultBuckPaths(
       CanonicalCellName cellName, Path rootPath, boolean buckOutIncludeTargetConfigHash) {
     Path buckOut = rootPath.getFileSystem().getPath(BuckConstant.getBuckOutputPath().toString());
     return BuckPaths.of(cellName, buckOut, buckOut, buckOutIncludeTargetConfigHash);
+  }
+
+  /** Is hashed buck-out enabled? Must be queried using root cell buckconfig. */
+  public static boolean getBuckOutIncludeTargetConfigHashFromRootCellConfig(Config config) {
+    return config.getBooleanValue(
+        "project",
+        "buck_out_include_target_config_hash",
+        BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH);
   }
 
   public abstract CanonicalCellName getCellName();

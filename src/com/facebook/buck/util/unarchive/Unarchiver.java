@@ -148,7 +148,7 @@ public abstract class Unarchiver {
     return extractArchive(
             archiveFile,
             projectFilesystemFactory.createProjectFilesystem(
-                CanonicalCellName.unsafeNotACell(), destination),
+                CanonicalCellName.unsafeNotACell(), destination, false),
             destination.getFileSystem().getPath(""),
             stripPrefix,
             entriesToExclude,

@@ -28,11 +28,18 @@ public class TestProjectFilesystems {
 
   public static DefaultProjectFilesystem createProjectFilesystem(Path root, Config config) {
     return new DefaultProjectFilesystemFactory()
-        .createProjectFilesystem(CanonicalCellName.rootCell(), root, config);
+        .createProjectFilesystem(
+            CanonicalCellName.rootCell(),
+            root,
+            config,
+            BuckPaths.getBuckOutIncludeTargetConfigHashFromRootCellConfig(config));
   }
 
   public static DefaultProjectFilesystem createProjectFilesystem(Path root) {
     return new DefaultProjectFilesystemFactory()
-        .createProjectFilesystem(CanonicalCellName.rootCell(), root);
+        .createProjectFilesystem(
+            CanonicalCellName.rootCell(),
+            root,
+            BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH);
   }
 }

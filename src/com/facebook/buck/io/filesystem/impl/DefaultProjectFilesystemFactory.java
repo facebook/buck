@@ -62,8 +62,11 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
       CanonicalCellName cellName,
       Path root,
       Config config,
-      Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo) {
-    BuckPaths buckPaths = getConfiguredBuckPaths(cellName, root, config, embeddedCellBuckOutInfo);
+      Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo,
+      boolean buckOutIncludeTargetConfigHash) {
+    BuckPaths buckPaths =
+        getConfiguredBuckPaths(
+            cellName, root, config, embeddedCellBuckOutInfo, buckOutIncludeTargetConfigHash);
     ProjectFilesystemDelegatePair delegatePair =
         ProjectFilesystemDelegateFactory.newInstance(root, config);
     return new DefaultProjectFilesystem(
@@ -77,13 +80,19 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
 
   @Override
   public DefaultProjectFilesystem createProjectFilesystem(
-      CanonicalCellName cellName, Path root, Config config) {
-    return createProjectFilesystem(cellName, root, config, Optional.empty());
+      CanonicalCellName cellName,
+      Path root,
+      Config config,
+      boolean buckOutIncludeTargetConfigHash) {
+    return createProjectFilesystem(
+        cellName, root, config, Optional.empty(), buckOutIncludeTargetConfigHash);
   }
 
   @Override
-  public DefaultProjectFilesystem createProjectFilesystem(CanonicalCellName cellName, Path root) {
-    return createProjectFilesystem(cellName, root, new Config());
+  public DefaultProjectFilesystem createProjectFilesystem(
+      CanonicalCellName cellName, Path root, boolean buckOutIncludeTargetCofigHash) {
+    final Config config = new Config();
+    return createProjectFilesystem(cellName, root, config, buckOutIncludeTargetCofigHash);
   }
 
   private static ImmutableSet<PathMatcher> extractIgnorePaths(
@@ -178,12 +187,8 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
       CanonicalCellName cellName,
       Path rootPath,
       Config config,
-      Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo) {
-    boolean buckOutIncludeTargetConfigHash =
-        config.getBooleanValue(
-            "project",
-            "buck_out_include_target_config_hash",
-            BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_COFIG_HASH);
+      Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo,
+      boolean buckOutIncludeTargetConfigHash) {
     BuckPaths buckPaths =
         BuckPaths.createDefaultBuckPaths(cellName, rootPath, buckOutIncludeTargetConfigHash);
     Optional<String> configuredProjectBuckOut = config.get("project", "buck_out");
@@ -221,11 +226,13 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
   }
 
   @Override
-  public DefaultProjectFilesystem createOrThrow(CanonicalCellName cellName, Path path) {
+  public DefaultProjectFilesystem createOrThrow(
+      CanonicalCellName cellName, Path path, boolean buckOutIncludeTargetCofigHash) {
     try {
       // toRealPath() is necessary to resolve symlinks, allowing us to later
       // check whether files are inside or outside of the project without issue.
-      return createProjectFilesystem(cellName, path.toRealPath().normalize());
+      return createProjectFilesystem(
+          cellName, path.toRealPath().normalize(), buckOutIncludeTargetCofigHash);
     } catch (IOException e) {
       throw new HumanReadableException(
           String.format(

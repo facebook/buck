@@ -33,6 +33,7 @@ import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.ToolchainProviderFactory;
+import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
@@ -145,7 +146,12 @@ public class LocalCellProviderFactory {
                 }
                 ProjectFilesystem cellFilesystem =
                     projectFilesystemFactory.createProjectFilesystem(
-                        canonicalCellName, normalizedCellPath, config, embeddedCellBuckOutInfo);
+                        canonicalCellName,
+                        normalizedCellPath,
+                        config,
+                        embeddedCellBuckOutInfo,
+                        BuckPaths.getBuckOutIncludeTargetConfigHashFromRootCellConfig(
+                            rootConfig.getConfig()));
 
                 BuckConfig buckConfig =
                     new BuckConfig(

@@ -140,7 +140,10 @@ public abstract class IsolatedBuildableBuilder {
     // Root filesystemCell doesn't require embedded buck-out info.
     ProjectFilesystem filesystem =
         projectFilesystemFactory.createProjectFilesystem(
-            CanonicalCellName.rootCell(), canonicalProjectRoot, config);
+            CanonicalCellName.rootCell(),
+            canonicalProjectRoot,
+            config,
+            BuckPaths.getBuckOutIncludeTargetConfigHashFromRootCellConfig(config));
 
     Architecture architecture = Architecture.detect();
     Platform platform = Platform.detect();

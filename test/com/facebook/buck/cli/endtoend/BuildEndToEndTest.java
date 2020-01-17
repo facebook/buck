@@ -27,6 +27,7 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.doctor.BuildLogHelper;
 import com.facebook.buck.doctor.config.BuildLogEntry;
+import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.testutil.PlatformUtils;
 import com.facebook.buck.testutil.ProcessResult;
@@ -286,7 +287,10 @@ public class BuildEndToEndTest {
     ImmutableList<BuildLogEntry> helper =
         new BuildLogHelper(
                 new DefaultProjectFilesystemFactory()
-                    .createProjectFilesystem(CanonicalCellName.rootCell(), workspace.getDestPath()))
+                    .createProjectFilesystem(
+                        CanonicalCellName.rootCell(),
+                        workspace.getDestPath(),
+                        BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH))
             .getBuildLogs();
 
     assertEquals(2, helper.size());

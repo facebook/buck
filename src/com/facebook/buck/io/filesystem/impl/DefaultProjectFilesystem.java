@@ -134,7 +134,7 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
             cellName,
             root,
             // This function is only used in tests, so it's OK to not query buckconfig here
-            BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_COFIG_HASH),
+            BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH),
         delegate,
         new ProjectFilesystemDelegatePair(delegate, delegate),
         winFSInstance);

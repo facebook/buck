@@ -178,7 +178,10 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
       }
 
       ProjectFilesystem projectFilesystem =
-          projectFilesystemFactory.createOrThrow(CanonicalCellName.unsafeNotACell(), root);
+          projectFilesystemFactory.createOrThrow(
+              CanonicalCellName.unsafeNotACell(),
+              root,
+              false /* doesn't matter here, since filesystem here is not even a cell */);
       // A cache which caches hashes of absolute paths which my be accessed by certain
       // rules (e.g. /usr/bin/gcc), and only serves to prevent rehashing the same file
       // multiple times in a single run.

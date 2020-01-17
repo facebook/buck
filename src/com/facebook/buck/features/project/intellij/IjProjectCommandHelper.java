@@ -21,6 +21,7 @@ import com.facebook.buck.cli.ProjectTestsMode;
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
@@ -39,6 +40,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.features.project.intellij.aggregation.AggregationMode;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
+import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
@@ -224,8 +226,13 @@ public class IjProjectCommandHelper {
     if (outputDir != null) {
       Path outputPath = Paths.get(outputDir).toAbsolutePath();
       Files.createDirectories(outputPath);
+      Cell rootCell = this.cell.getCell(CanonicalCellName.rootCell());
       return new DefaultProjectFilesystemFactory()
-          .createProjectFilesystem(cell.getCanonicalName(), outputPath);
+          .createProjectFilesystem(
+              this.cell.getCanonicalName(),
+              outputPath,
+              BuckPaths.getBuckOutIncludeTargetConfigHashFromRootCellConfig(
+                  rootCell.getBuckConfig().getConfig()));
     } else {
       return cell.getFilesystem();
     }
