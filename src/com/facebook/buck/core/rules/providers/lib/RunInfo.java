@@ -19,6 +19,7 @@ package com.facebook.buck.core.rules.providers.lib;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgs;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgsFactory;
 import com.facebook.buck.core.rules.providers.annotations.ImmutableInfo;
@@ -49,9 +50,11 @@ public abstract class RunInfo extends BuiltInProviderInfo<RunInfo> implements Co
       BuiltInProvider.of(ImmutableRunInfo.class);
 
   /** @return any additional environment variables that should be used when executing */
+  @AddToRuleKey
   public abstract ImmutableMap<String, String> env();
 
   /** @return the command line arguments to use when executing */
+  @AddToRuleKey
   public abstract CommandLineArgs args();
 
   /**

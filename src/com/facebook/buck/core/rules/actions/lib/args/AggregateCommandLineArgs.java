@@ -19,6 +19,7 @@ package com.facebook.buck.core.rules.actions.lib.args;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import java.util.function.Consumer;
@@ -30,8 +31,7 @@ import java.util.stream.Stream;
  * without copying them.
  */
 class AggregateCommandLineArgs implements CommandLineArgs {
-
-  private final ImmutableList<CommandLineArgs> args;
+  @AddToRuleKey private final ImmutableList<CommandLineArgs> args;
 
   AggregateCommandLineArgs(ImmutableList<CommandLineArgs> args) {
     this.args = args;

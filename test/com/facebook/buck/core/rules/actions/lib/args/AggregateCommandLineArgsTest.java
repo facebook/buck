@@ -41,7 +41,6 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.starlark.compatible.TestMutableEnv;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.google.common.collect.ImmutableList;
@@ -57,6 +56,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.function.Function;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -170,7 +170,13 @@ public class AggregateCommandLineArgsTest {
     hashes.put(filesystem.resolve("other_file"), HashCode.fromString("bbbb"));
 
     FakeFileHashCache hashCache = new FakeFileHashCache(hashes);
-    DefaultRuleKeyFactory ruleKeyFactory = new TestDefaultRuleKeyFactory(hashCache, ruleFinder);
+
+    Function<Object, HashCode> compute =
+        obj ->
+            new TestDefaultRuleKeyFactory(hashCache, ruleFinder)
+                .newBuilderForTesting(new FakeBuildRule(target))
+                .setReflectively("field", obj)
+                .build();
 
     BuildArtifactFactoryForTests buildArtifactFactory =
         new BuildArtifactFactoryForTests(target, filesystem);
@@ -185,23 +191,16 @@ public class AggregateCommandLineArgsTest {
         ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("some_bin")));
     Artifact path2 =
         ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("other_file")));
-    RunInfo envArgs1 =
-        createRunInfo(ImmutableSortedMap.of("FOO", "foo_val"), ImmutableList.of(path1));
+
     ListCommandLineArgs listArgs1 =
         new ListCommandLineArgs(
             ImmutableList.of(path1, 1, "foo", path2), CommandLineArgs.DEFAULT_FORMAT_STRING);
-    RunInfo envArgs2 =
-        createRunInfo(ImmutableSortedMap.of("FOO", "foo_val"), ImmutableList.of(path1));
     ListCommandLineArgs listArgs2 =
         new ListCommandLineArgs(
             ImmutableList.of(path1, 1, "foo", path2), CommandLineArgs.DEFAULT_FORMAT_STRING);
-    RunInfo envArgs3 =
-        createRunInfo(ImmutableSortedMap.of("BAR", "bar_val"), ImmutableList.of(path1));
     ListCommandLineArgs listArgs3 =
         new ListCommandLineArgs(
             ImmutableList.of(path1, 1, "foo", path2), CommandLineArgs.DEFAULT_FORMAT_STRING);
-    RunInfo envArgs4 =
-        createRunInfo(ImmutableSortedMap.of("FOO", "foo_val"), ImmutableList.of(path1));
     ListCommandLineArgs listArgs4 =
         new ListCommandLineArgs(
             ImmutableList.of(path1, 1, "foo", path2, path3.asOutputArtifact(Location.BUILTIN)),
@@ -215,52 +214,60 @@ public class AggregateCommandLineArgsTest {
             ImmutableList.of(path1, 1, "foo", path2, path5.asOutputArtifact(Location.BUILTIN)),
             CommandLineArgs.DEFAULT_FORMAT_STRING);
 
-    HashCode ruleKey1 =
-        ruleKeyFactory
-            .newBuilderForTesting(new FakeBuildRule(target))
-            .setReflectively(
-                "field", new AggregateCommandLineArgs(ImmutableList.of(envArgs1, listArgs1)))
-            .build();
-    HashCode ruleKey2 =
-        ruleKeyFactory
-            .newBuilderForTesting(new FakeBuildRule(target))
-            .setReflectively(
-                "field", new AggregateCommandLineArgs(ImmutableList.of(envArgs2, listArgs2)))
-            .build();
-    HashCode ruleKey3 =
-        ruleKeyFactory
-            .newBuilderForTesting(new FakeBuildRule(target))
-            .setReflectively(
-                "field", new AggregateCommandLineArgs(ImmutableList.of(envArgs3, listArgs3)))
-            .build();
+    RunInfo envArgs1 =
+        createRunInfo(ImmutableSortedMap.of("FOO", "foo_val"), ImmutableList.of(path1));
+    RunInfo envArgs2 =
+        createRunInfo(ImmutableSortedMap.of("FOO", "foo_val"), ImmutableList.of(path1));
+    RunInfo envArgs3 =
+        createRunInfo(ImmutableSortedMap.of("BAR", "bar_val"), ImmutableList.of(path1));
+    RunInfo envArgs4 =
+        createRunInfo(ImmutableSortedMap.of("FOO", "foo_val"), ImmutableList.of(path1));
+
+    assertEquals(compute.apply(envArgs1), compute.apply(envArgs2));
+    assertNotEquals(compute.apply(envArgs1), compute.apply(envArgs3));
+
+    assertEquals(compute.apply(listArgs1), compute.apply(listArgs2));
+    assertEquals(compute.apply(listArgs1), compute.apply(listArgs3));
+
+    assertEquals(
+        compute.apply(new AggregateCommandLineArgs(ImmutableList.of(envArgs1, listArgs1))),
+        compute.apply(new AggregateCommandLineArgs(ImmutableList.of(envArgs2, listArgs2))));
+
+    assertNotEquals(
+        compute.apply(new AggregateCommandLineArgs(ImmutableList.of(envArgs1, listArgs1))),
+        compute.apply(new AggregateCommandLineArgs(ImmutableList.of(envArgs3, listArgs1))));
+
+    assertEquals(
+        compute.apply(new AggregateCommandLineArgs(ImmutableList.of(envArgs1, listArgs1))),
+        compute.apply(new AggregateCommandLineArgs(ImmutableList.of(envArgs1, listArgs3))));
+
+    HashCode listKey1 = compute.apply(listArgs1);
+    HashCode envKey1 = compute.apply(envArgs1);
+    HashCode aggKey1 =
+        compute.apply(new AggregateCommandLineArgs(ImmutableList.of(envArgs1, listArgs1)));
 
     hashCache.set(filesystem.resolve("some_bin"), HashCode.fromString("cccc"));
-    HashCode ruleKey4 =
-        ruleKeyFactory
-            .newBuilderForTesting(new FakeBuildRule(target))
-            .setReflectively(
-                "field", new AggregateCommandLineArgs(ImmutableList.of(envArgs4, listArgs4)))
-            .build();
 
-    HashCode ruleKey5 =
-        ruleKeyFactory
-            .newBuilderForTesting(new FakeBuildRule(target))
-            .setReflectively(
-                "field", new AggregateCommandLineArgs(ImmutableList.of(envArgs4, listArgs5)))
-            .build();
+    assertNotEquals(listKey1, compute.apply(listArgs1));
+    assertNotEquals(envKey1, compute.apply(envArgs1));
+    assertNotEquals(
+        aggKey1,
+        compute.apply(new AggregateCommandLineArgs(ImmutableList.of(envArgs1, listArgs1))));
 
-    HashCode ruleKey6 =
-        ruleKeyFactory
-            .newBuilderForTesting(new FakeBuildRule(target))
-            .setReflectively(
-                "field", new AggregateCommandLineArgs(ImmutableList.of(envArgs4, listArgs6)))
-            .build();
+    assertNotEquals(compute.apply(listArgs1), compute.apply(listArgs4));
+    assertEquals(compute.apply(listArgs4), compute.apply(listArgs5));
 
-    assertEquals(ruleKey1, ruleKey2);
-    assertNotEquals(ruleKey1, ruleKey3);
-    assertNotEquals(ruleKey1, ruleKey4);
-    assertEquals(ruleKey4, ruleKey5);
-    assertNotEquals(ruleKey4, ruleKey6);
+    assertNotEquals(
+        compute.apply(new AggregateCommandLineArgs(ImmutableList.of(envArgs1, listArgs1))),
+        compute.apply(new AggregateCommandLineArgs(ImmutableList.of(envArgs4, listArgs4))));
+
+    assertEquals(
+        compute.apply(new AggregateCommandLineArgs(ImmutableList.of(envArgs4, listArgs4))),
+        compute.apply(new AggregateCommandLineArgs(ImmutableList.of(envArgs4, listArgs5))));
+
+    assertNotEquals(
+        compute.apply(new AggregateCommandLineArgs(ImmutableList.of(envArgs4, listArgs4))),
+        compute.apply(new AggregateCommandLineArgs(ImmutableList.of(envArgs4, listArgs6))));
   }
 
   @Test

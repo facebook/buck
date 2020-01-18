@@ -21,7 +21,6 @@ import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableSortedMap;
 import java.util.function.Consumer;
@@ -36,7 +35,6 @@ import java.util.stream.Stream;
  * objects more efficiently, and just construct a stream to interate over those internal
  * collections.
  */
-@BuckStyleImmutable
 public interface CommandLineArgs extends AddsToRuleKey, CommandLineArgsApi {
 
   String DEFAULT_FORMAT_STRING = "%s";
@@ -59,14 +57,12 @@ public interface CommandLineArgs extends AddsToRuleKey, CommandLineArgsApi {
   /**
    * @return Get a map of all environment variables that need to be added to execute this program.
    */
-  @AddToRuleKey
   ImmutableSortedMap<String, String> getEnvironmentVariables();
 
   /**
    * @return Get a stream of all raw argument objects that can be stringified with something like
    *     {@link CommandLineArgStringifier#asString(ArtifactFilesystem, boolean, Object)}
    */
-  @AddToRuleKey
   Stream<ArgAndFormatString> getArgsAndFormatStrings();
 
   /**
