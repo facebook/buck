@@ -260,22 +260,14 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
     };
   }
 
-  public static ProjectFilesystem createFilesystemWithTargetConfigHashInBuckPaths() {
+  public static ProjectFilesystem createFilesystemWithTargetConfigHashInBuckPaths(
+      boolean buckOutIncludeTargetConfigHash) {
     Path root = DEFAULT_ROOT;
     return new DefaultProjectFilesystem(
         root,
         ImmutableSet.of(),
-        BuckPaths.createDefaultBuckPaths(CanonicalCellName.rootCell(), root, true),
-        new DefaultProjectFilesystemDelegate(root),
-        DefaultProjectFilesystemFactory.getWindowsFSInstance());
-  }
-
-  public static ProjectFilesystem createFilesystemWithoutTargetConfigHashInBuckPaths() {
-    Path root = DEFAULT_ROOT;
-    return new DefaultProjectFilesystem(
-        root,
-        ImmutableSet.of(),
-        BuckPaths.createDefaultBuckPaths(CanonicalCellName.rootCell(), root, false),
+        BuckPaths.createDefaultBuckPaths(
+            CanonicalCellName.rootCell(), root, buckOutIncludeTargetConfigHash),
         new DefaultProjectFilesystemDelegate(root),
         DefaultProjectFilesystemFactory.getWindowsFSInstance());
   }

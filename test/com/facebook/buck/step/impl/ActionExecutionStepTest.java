@@ -220,8 +220,8 @@ public class ActionExecutionStepTest {
                 .setCellPathResolver(TestCellPathResolver.get(projectFilesystem))
                 .setBuildCellRootPath(baseCell)
                 .setProcessExecutor(new FakeProcessExecutor())
-                .setProjectFilesystemFactory(new DefaultProjectFilesystemFactory())
+                .setProjectFilesystemFactory(new FakeProjectFilesystemFactory())
                 .build()));
-    assertFalse(projectFilesystem.exists(expectedPath));
+    assertFalse("file must exist: " + expectedPath, projectFilesystem.exists(expectedPath));
   }
 }

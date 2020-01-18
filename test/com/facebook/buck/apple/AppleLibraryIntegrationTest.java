@@ -35,8 +35,10 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
+import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -770,8 +772,6 @@ public class AppleLibraryIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_library_is_hermetic", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target =
         BuildTargetFactory.newInstance(
@@ -788,7 +788,8 @@ public class AppleLibraryIntegrationTest {
 
     Path objectPath =
         BuildTargetPaths.getGenPath(
-                filesystem,
+                FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(
+                    BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH),
                 target.withFlavors(
                     InternalFlavor.of("compile-" + sanitize("TestClass.m.o")),
                     InternalFlavor.of("iphonesimulator-x86_64")),
@@ -798,7 +799,12 @@ public class AppleLibraryIntegrationTest {
         workspace.getPath(Paths.get("first").resolve(objectPath)),
         workspace.getPath(Paths.get("second").resolve(objectPath)));
     Path libraryPath =
-        BuildTargetPaths.getGenPath(filesystem, target, "%s").resolve("libTestLibrary.a");
+        BuildTargetPaths.getGenPath(
+                FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(
+                    BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH),
+                target,
+                "%s")
+            .resolve("libTestLibrary.a");
     MoreAsserts.assertContentsEqual(
         workspace.getPath(Paths.get("first").resolve(libraryPath)),
         workspace.getPath(Paths.get("second").resolve(libraryPath)));

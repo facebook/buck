@@ -88,7 +88,7 @@ public class BuildPathsTest {
   @Parameters(method = "getTargetsForTest")
   public void basePathFormatWithTargetConfigHash(BuildTarget target, ForwardRelativePath path) {
     ProjectFilesystem filesystem =
-        FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths();
+        FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(true);
     String hash = TargetConfigurationHasher.hash(target.getTargetConfiguration());
     assertEquals(
         BuildPaths.getBaseDir(filesystem, target), ForwardRelativePath.of(hash).resolve(path));
@@ -99,9 +99,9 @@ public class BuildPathsTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//my/folder:foo");
 
     ProjectFilesystem filesystemWithTargetConfigHashInBuckPaths =
-        FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths();
+        FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(true);
     ProjectFilesystem filesystemWithoutTargetConfigHashInBuckPaths =
-        FakeProjectFilesystem.createFilesystemWithoutTargetConfigHashInBuckPaths();
+        FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(false);
     Path hashedGenPath =
         BuildPaths.getGenDir(filesystemWithTargetConfigHashInBuckPaths, buildTarget)
             .resolve("a.out");
@@ -122,9 +122,9 @@ public class BuildPathsTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//my/folder:foo");
 
     ProjectFilesystem filesystemWithTargetConfigHashInBuckPaths =
-        FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths();
+        FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(true);
     ProjectFilesystem filesystemWithoutTargetConfigHashInBuckPaths =
-        FakeProjectFilesystem.createFilesystemWithoutTargetConfigHashInBuckPaths();
+        FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(false);
     Path hashedGenPath =
         BuildPaths.getGenDir(filesystemWithTargetConfigHashInBuckPaths, buildTarget)
             .resolve("a.out")

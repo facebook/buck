@@ -37,6 +37,8 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
+import com.facebook.buck.io.filesystem.BuckPaths;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -922,7 +924,8 @@ public class AppleBinaryIntegrationTest {
 
     Path outputPath =
         BuildTargetPaths.getGenPath(
-            workspace.getProjectFileSystem(),
+            FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(
+                BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH),
             target.withFlavors(
                 InternalFlavor.of("iphonesimulator-x86_64"),
                 InternalFlavor.of("compile-" + sanitize("TestClass.m.o"))),
@@ -930,7 +933,12 @@ public class AppleBinaryIntegrationTest {
     MoreAsserts.assertContentsEqual(
         workspace.getPath(Paths.get("first").resolve(outputPath)),
         workspace.getPath(Paths.get("second").resolve(outputPath)));
-    outputPath = BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s");
+    outputPath =
+        BuildTargetPaths.getGenPath(
+            FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(
+                BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH),
+            target,
+            "%s");
     MoreAsserts.assertContentsEqual(
         workspace.getPath(Paths.get("first").resolve(outputPath)),
         workspace.getPath(Paths.get("second").resolve(outputPath)));
@@ -960,7 +968,8 @@ public class AppleBinaryIntegrationTest {
 
     Path outputPath =
         BuildTargetPaths.getGenPath(
-            workspace.getProjectFileSystem(),
+            FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(
+                BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH),
             target.withFlavors(
                 InternalFlavor.of("iphonesimulator-x86_64"),
                 InternalFlavor.of("compile-" + sanitize("TestClass.m.o"))),
@@ -970,7 +979,8 @@ public class AppleBinaryIntegrationTest {
         workspace.getPath(Paths.get("second").resolve(outputPath)));
     outputPath =
         BuildTargetPaths.getGenPath(
-            workspace.getProjectFileSystem(),
+            FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(
+                BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH),
             target.withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors()),
             "%s");
     MoreAsserts.assertContentsEqual(
@@ -980,7 +990,8 @@ public class AppleBinaryIntegrationTest {
     if (debugFormat != AppleDebugFormat.DWARF) {
       Path strippedPath =
           BuildTargetPaths.getGenPath(
-              workspace.getProjectFileSystem(),
+              FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(
+                  BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH),
               target
                   .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors())
                   .withAppendedFlavors(
