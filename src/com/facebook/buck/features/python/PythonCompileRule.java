@@ -36,6 +36,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 import java.io.IOException;
 
@@ -128,6 +129,10 @@ public class PythonCompileRule extends ModernBuildRule<PythonCompileRule.Impl> {
                           .launchAndExecute(
                               ProcessExecutorParams.builder()
                                   .setDirectory(context.getBuildCellRootPath())
+                                  // On some platforms (e.g. linux), python hash code randomness can
+                                  // cause the bytecode to be non-deterministic, so pin via the
+                                  // `PYTHONHASHSEED` env var.
+                                  .setEnvironment(ImmutableMap.of("PYTHONHASHSEED", "7"))
                                   .setCommand(command)
                                   .build()));
                 }
