@@ -18,6 +18,7 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.ImmutableRuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -62,15 +63,17 @@ public class BuildTargetMacroTypeCoercerTest {
       ImmutableRuleBasedTargetConfiguration.of(
           ConfigurationBuildTargetFactoryForTests.newInstance("//:t"));
 
-  BuildTargetTypeCoercer buildTargetTypeCoercer =
-      new BuildTargetTypeCoercer(
-          new UnconfiguredBuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetViewFactory()));
+  TypeCoercer<BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer =
+      new BuildTargetWithOutputsTypeCoercer(
+          new BuildTargetTypeCoercer(
+              new UnconfiguredBuildTargetTypeCoercer(
+                  new ParsingUnconfiguredBuildTargetViewFactory())));
 
   @Test
   public void useHost() throws Exception {
     BuildTargetMacroTypeCoercer<MyBuildTargetMacro> coercer =
         new BuildTargetMacroTypeCoercer<>(
-            buildTargetTypeCoercer,
+            buildTargetWithOutputsTypeCoercer,
             MyBuildTargetMacro.class,
             BuildTargetMacroTypeCoercer.TargetOrHost.HOST,
             MyBuildTargetMacro::new);
@@ -89,7 +92,7 @@ public class BuildTargetMacroTypeCoercerTest {
   public void useTarget() throws Exception {
     BuildTargetMacroTypeCoercer<MyBuildTargetMacro> coercer =
         new BuildTargetMacroTypeCoercer<>(
-            buildTargetTypeCoercer,
+            buildTargetWithOutputsTypeCoercer,
             MyBuildTargetMacro.class,
             BuildTargetMacroTypeCoercer.TargetOrHost.TARGET,
             MyBuildTargetMacro::new);
