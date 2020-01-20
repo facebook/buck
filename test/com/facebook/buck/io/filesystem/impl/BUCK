@@ -20,6 +20,7 @@ java_library(
         "//src/com/facebook/buck/util/sha1:sha1",
         "//src/com/facebook/buck/util/string:string",
         "//test/com/facebook/buck/io/file:testutil",
+        "//test/com/facebook/buck/io/filesystem:testutil",
         "//third-party/java/guava:guava",
         "//third-party/java/jimfs:jimfs",
         "//third-party/java/jsr:jsr305",

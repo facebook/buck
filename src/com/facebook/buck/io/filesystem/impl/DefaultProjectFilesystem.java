@@ -126,15 +126,12 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
       CanonicalCellName cellName,
       Path root,
       ProjectFilesystemDelegate delegate,
-      @Nullable WindowsFS winFSInstance) {
+      @Nullable WindowsFS winFSInstance,
+      boolean buckOutIncludeTargetConfigHash) {
     this(
         root,
         ImmutableSet.of(),
-        BuckPaths.createDefaultBuckPaths(
-            cellName,
-            root,
-            // This function is only used in tests, so it's OK to not query buckconfig here
-            BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH),
+        BuckPaths.createDefaultBuckPaths(cellName, root, buckOutIncludeTargetConfigHash),
         delegate,
         new ProjectFilesystemDelegatePair(delegate, delegate),
         winFSInstance);

@@ -24,6 +24,8 @@ import java.nio.file.Path;
 
 public class TestProjectFilesystems {
 
+  public static final boolean BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST = true;
+
   private TestProjectFilesystems() {}
 
   public static DefaultProjectFilesystem createProjectFilesystem(Path root, Config config) {
@@ -32,14 +34,12 @@ public class TestProjectFilesystems {
             CanonicalCellName.rootCell(),
             root,
             config,
-            BuckPaths.getBuckOutIncludeTargetConfigHashFromRootCellConfig(config));
+            BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST);
   }
 
   public static DefaultProjectFilesystem createProjectFilesystem(Path root) {
     return new DefaultProjectFilesystemFactory()
         .createProjectFilesystem(
-            CanonicalCellName.rootCell(),
-            root,
-            BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH);
+            CanonicalCellName.rootCell(), root, BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST);
   }
 }

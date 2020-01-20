@@ -217,7 +217,8 @@ public class ServedCacheIntegrationTest {
             CanonicalCellName.rootCell(),
             tmpDir.getRoot(),
             new DefaultProjectFilesystemDelegate(tmpDir.getRoot()),
-            DefaultProjectFilesystemFactory.getWindowsFSInstance()) {
+            DefaultProjectFilesystemFactory.getWindowsFSInstance(),
+            TestProjectFilesystems.BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST) {
           private boolean throwingStreamServed = false;
 
           @Override
@@ -256,7 +257,8 @@ public class ServedCacheIntegrationTest {
             CanonicalCellName.rootCell(),
             tmpDir.getRoot(),
             new DefaultProjectFilesystemDelegate(tmpDir.getRoot()),
-            DefaultProjectFilesystemFactory.getWindowsFSInstance()) {
+            DefaultProjectFilesystemFactory.getWindowsFSInstance(),
+            TestProjectFilesystems.BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST) {
           private int throwingStreamServedCount = 0;
 
           @Override
@@ -290,7 +292,8 @@ public class ServedCacheIntegrationTest {
             CanonicalCellName.rootCell(),
             tmpDir.getRoot(),
             new DefaultProjectFilesystemDelegate(tmpDir.getRoot()),
-            DefaultProjectFilesystemFactory.getWindowsFSInstance()) {
+            DefaultProjectFilesystemFactory.getWindowsFSInstance(),
+            TestProjectFilesystems.BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST) {
           private int throwingStreamServedCount = 0;
 
           @Override

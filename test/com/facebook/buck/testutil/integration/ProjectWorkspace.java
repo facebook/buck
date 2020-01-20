@@ -179,7 +179,16 @@ public class ProjectWorkspace extends AbstractWorkspace {
     if (projectFilesystemAndConfig == null) {
       Config config =
           Configs.createDefaultConfig(
-              destPath, Configs.getRepoConfigurationFiles(destPath), RawConfig.of());
+              destPath,
+              Configs.getRepoConfigurationFiles(destPath),
+              RawConfig.of(
+                  ImmutableMap.of(
+                      "project",
+                      ImmutableMap.of(
+                          "buck_out_include_target_config_hash",
+                          Boolean.toString(
+                              TestProjectFilesystems
+                                  .BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST)))));
       projectFilesystemAndConfig =
           new ProjectFilesystemAndConfig(
               TestProjectFilesystems.createProjectFilesystem(destPath, config), config);
@@ -195,9 +204,17 @@ public class ProjectWorkspace extends AbstractWorkspace {
       addBuckConfigLocalOption("repositories", "buck", bucklibRoot.toString());
     }
 
-    // Enable the JUL build log.  This log is very verbose but rarely useful,
-    // so it's disabled by default.
-    addBuckConfigLocalOption("log", "jul_build_log", "true");
+    addBuckConfigLocalOptions(
+        ImmutableMap.of(
+            // Enable the JUL build log.  This log is very verbose but rarely useful,
+            // so it's disabled by default.
+            "log", ImmutableMap.of("jul_build_log", "true"),
+            // Enable hashed buck-out paths in test until it is turned on by default for everyone
+            "project",
+                ImmutableMap.of(
+                    "buck_out_include_target_config_hash",
+                    Boolean.toString(
+                        TestProjectFilesystems.BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST))));
 
     isSetUp = true;
     return this;
