@@ -65,6 +65,7 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -349,6 +350,7 @@ public class ProjectGenerator {
       ImmutableList<XcodeNativeTargetGenerator.Result> generationResults =
           generationResultsBuilder.build();
 
+      Set<TargetNode<?>> keys = new HashSet<>();
       for (XcodeNativeTargetGenerator.Result result : generationResults) {
         requiredBuildTargetsBuilder.addAll(result.requiredBuildTargets);
         xcconfigPathsBuilder.addAll(result.xcconfigPaths);
@@ -379,7 +381,12 @@ public class ProjectGenerator {
         targetWriteResult
             .getTarget()
             .ifPresent(
-                target -> targetNodeToGeneratedProjectTargetBuilder.put(result.targetNode, target));
+                target -> {
+                  if (!keys.contains(result.targetNode)) {
+                    targetNodeToGeneratedProjectTargetBuilder.put(result.targetNode, target);
+                    keys.add(result.targetNode);
+                  }
+                });
       }
 
       ImmutableMap<TargetNode<?>, PBXNativeTarget> targetNodeToGeneratedProjectTarget =
