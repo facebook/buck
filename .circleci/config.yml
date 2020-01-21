@@ -7,7 +7,7 @@ install_openjdk8: &install_openjdk8
     sudo update-java-alternatives -s java-1.8.0-openjdk-amd64
     java -version
 
-install_androidsdk: &install_androidsdk
+install_android_sdk: &install_android_sdk
   name: Install Android SDK
   command: |
     mkdir ${ANDROID_SDK}
@@ -91,7 +91,7 @@ jobs:
       - run:
           <<: *install_openjdk8
       - run:
-          <<: *install_androidsdk
+          <<: *install_android_sdk
       - run:
           <<: *install_golang
       - run:
@@ -101,7 +101,7 @@ jobs:
       - run:
           <<: *run_buck_build
       - run:
-          name: Run Tests
+          name: Run Build Tests
           command: |
             cd ${BUCKROOT}
             export PATH=${ANDROID_SDK}/tools/bin:$PATH
@@ -123,7 +123,7 @@ jobs:
       - run:
           <<: *install_openjdk8
       - run:
-          <<: *install_androidsdk
+          <<: *install_android_sdk
       - run:
           <<: *install_groovy
       - run:
@@ -135,7 +135,7 @@ jobs:
       - run:
           <<: *run_buck_build
       - run:
-          name: Run Tests
+          name: Run Unit Tests
           command: |
             cd ${BUCKROOT}
             export PATH=${ANDROID_SDK}/tools/bin:$PATH
@@ -158,7 +158,7 @@ jobs:
       - run:
           <<: *install_openjdk8
       - run:
-          <<: *install_androidsdk
+          <<: *install_android_sdk
       - run:
           <<: *install_golang
       - run:
@@ -168,7 +168,7 @@ jobs:
       - run:
           <<: *run_buck_build
       - run:
-          name: Run Tests
+          name: Run Ant Tests
           command: |
             cd ${BUCKROOT}
             export PATH=${ANDROID_SDK}/tools/bin:$PATH
@@ -191,7 +191,7 @@ jobs:
       - run:
           <<: *install_openjdk8
       - run:
-          <<: *install_androidsdk
+          <<: *install_android_sdk
       - run:
           <<: *install_ghc
       - run:
@@ -205,7 +205,7 @@ jobs:
       - run:
           <<: *run_buck_build
       - run:
-          name: Run Tests
+          name: Run Integration Tests
           command: |
             cd ${BUCKROOT}
             export PATH=${ANDROID_SDK}/tools/bin:$PATH
@@ -213,6 +213,44 @@ jobs:
             export GROOVY_HOME=$HOME/.sdkman/candidates/groovy/current
             set -eux
             ./new_buck.pex test --num-threads=$BUCK_NUM_THREADS --all --filter '^(?!(com.facebook.buck.android|com.facebook.buck.jvm.java)).*[Ii]ntegration.*'
+
+  ci_heavy_integration:
+    environment:
+      BUCKROOT: "/home/circleci/buck"
+      ANDROID_SDK: "/home/circleci/android-sdk"
+      TERM: "dumb"
+      BUCK_NUM_THREADS: 3
+    working_directory: "/home/circleci/buck"
+    machine:
+      image: ubuntu-1604:201903-01
+    steps:
+      - checkout
+      - run:
+          <<: *install_openjdk8
+      - run:
+          <<: *install_android_sdk
+      - run:
+          name: Install Android NDK
+          command: |
+            cd ${BUCKROOT}
+            export NDK_HOME="${HOME}/android-ndk-linux"
+            ./scripts/travisci_install_android_ndk.sh
+      - run:
+          <<: *install_golang
+      - run:
+          <<: *install_python
+      - run:
+          <<: *run_ant_build
+      - run:
+          <<: *run_buck_build
+      - run:
+          name: Run Heavy Integration Tests
+          command: |
+            export NDK_HOME="${HOME}/android-ndk-linux"
+            export ANDROID_HOME=${ANDROID_SDK}
+            set -eux
+            ./new_buck.pex build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/... //test/com/facebook/buck/jvm/java/...
+            ./new_buck.pex test --num-threads=1 //test/com/facebook/buck/android/... //test/com/facebook/buck/jvm/java/... --filter '.*[Ii]ntegration.*'
 
 workflows:
   version: 2
@@ -222,4 +260,5 @@ workflows:
       - ci_unit_groovy
       - ci_ant
       - ci_integration
+      - ci_heavy_integration
 
