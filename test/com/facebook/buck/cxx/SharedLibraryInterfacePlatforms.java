@@ -60,7 +60,6 @@ public class SharedLibraryInterfacePlatforms {
             new AndroidBuckConfig(buckConfig, Platform.detect()),
             filesystem,
             ndkDir,
-            UnconfiguredTargetConfiguration.INSTANCE,
             compiler,
             NdkCxxPlatforms.getDefaultCxxRuntimeForNdk(ndkVersion),
             NdkCxxRuntimeType.DYNAMIC,

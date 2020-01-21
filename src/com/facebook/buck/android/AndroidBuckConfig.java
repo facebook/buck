@@ -284,11 +284,12 @@ public class AndroidBuckConfig {
 
   /** Gets the ndk_toolchain target for the abi if it is specified in the config. */
   public Optional<BuildTarget> getNdkCxxToolchainTargetForAbi(
-      String cpuAbi, TargetConfiguration targetConfiguration) {
+      NdkTargetArchAbi cpuAbi, TargetConfiguration targetConfiguration) {
     ImmutableMap<String, String> platformMap =
         delegate.getMap("ndk", "toolchain_target_per_cpu_abi");
     platformMap.keySet().forEach(key -> Verify.verify(VALID_ABI_KEYS.contains(key)));
-    Optional<String> platformTarget = Optional.ofNullable(platformMap.get(cpuAbi));
+    Optional<String> platformTarget =
+        Optional.ofNullable(platformMap.get(cpuAbi.getBuckconfigValue()));
     return platformTarget.map(
         target -> delegate.getBuildTargetForFullyQualifiedTarget(target, targetConfiguration));
   }

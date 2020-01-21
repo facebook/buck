@@ -114,7 +114,6 @@ public class AndroidNdkHelper {
                 AndroidNdkHelper.DEFAULT_CONFIG,
                 filesystem,
                 ndkPath,
-                UnconfiguredTargetConfiguration.INSTANCE,
                 NdkCxxPlatformCompiler.of(compilerType, compilerVersion, gccVersion),
                 cxxRuntime,
                 NdkCxxRuntimeType.DYNAMIC,
