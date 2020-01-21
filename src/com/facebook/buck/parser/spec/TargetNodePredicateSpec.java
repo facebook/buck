@@ -21,6 +21,7 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetLanguageConstants;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
 import com.facebook.buck.core.parser.buildtargetpattern.ImmutableBuildTargetPattern;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -81,5 +82,19 @@ public abstract class TargetNodePredicateSpec implements TargetNodeSpec {
 
   public static TargetNodePredicateSpec of(BuildFileSpec buildFileSpec, boolean onlyTests) {
     return ImmutableTargetNodePredicateSpec.of(buildFileSpec, onlyTests);
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder builder =
+        new StringBuilder(getBuildFileSpec().getCellRelativeBaseName().toString());
+    if (getBuildFileSpec().isRecursive()) {
+      builder
+          .append(BuildTargetLanguageConstants.PATH_SYMBOL)
+          .append(BuildTargetLanguageConstants.RECURSIVE_SYMBOL);
+    } else {
+      builder.append(BuildTargetLanguageConstants.TARGET_SYMBOL);
+    }
+    return builder.toString();
   }
 }
