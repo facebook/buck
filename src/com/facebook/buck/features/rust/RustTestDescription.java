@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -138,7 +139,7 @@ public class RustTestDescription
                         allDeps.get(graphBuilder, rustPlatform.getCxxPlatform()),
                         args.getNamedDeps()));
 
-    Tool testExe = testExeBuild.getExecutableCommand();
+    Tool testExe = testExeBuild.getExecutableCommand(OutputLabel.defaultLabel());
 
     BuildRuleParams testParams =
         params.copyAppendingExtraDeps(BuildableSupport.getDepsCollection(testExe, graphBuilder));

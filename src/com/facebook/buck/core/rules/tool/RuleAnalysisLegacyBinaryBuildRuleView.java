@@ -17,6 +17,7 @@
 package com.facebook.buck.core.rules.tool;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.actions.Action;
@@ -66,7 +67,7 @@ public class RuleAnalysisLegacyBinaryBuildRuleView extends RuleAnalysisLegacyBui
   }
 
   @Override
-  public Tool getExecutableCommand() {
+  public Tool getExecutableCommand(OutputLabel outputLabel) {
     return RunInfoLegacyTool.of(runInfo);
   }
 }

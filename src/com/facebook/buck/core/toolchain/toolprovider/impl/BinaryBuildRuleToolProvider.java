@@ -18,6 +18,7 @@ package com.facebook.buck.core.toolchain.toolprovider.impl;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.rules.BuildRule;
@@ -55,7 +56,7 @@ public class BinaryBuildRuleToolProvider implements ToolProvider, RuleAnalysisLe
     if (!(rule.get() instanceof BinaryBuildRule)) {
       throw new HumanReadableException("%s: %s must be an executable rule", source, target);
     }
-    return ((BinaryBuildRule) rule.get()).getExecutableCommand();
+    return ((BinaryBuildRule) rule.get()).getExecutableCommand(OutputLabel.defaultLabel());
   }
 
   @Override

@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -103,7 +104,7 @@ class CxxBoostTest extends CxxTest implements HasRuntimeDeps {
   protected ImmutableList<String> getShellCommand(
       SourcePathResolverAdapter pathResolver, Path output) {
     return ImmutableList.<String>builder()
-        .addAll(getExecutableCommand().getCommandPrefix(pathResolver))
+        .addAll(getExecutableCommand(OutputLabel.defaultLabel()).getCommandPrefix(pathResolver))
         .add("--log_format=hrf")
         .add("--log_level=test_suite")
         .add("--report_format=xml")

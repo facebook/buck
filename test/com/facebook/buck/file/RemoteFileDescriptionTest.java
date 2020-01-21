@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.targetgraph.TestBuildRuleCreationContextFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -113,7 +114,8 @@ public class RemoteFileDescriptionTest {
     graphBuilder.addToIndex(buildRule);
 
     assertThat(buildRule, CoreMatchers.instanceOf(RemoteFileBinary.class));
-    Tool executableCommand = ((RemoteFileBinary) buildRule).getExecutableCommand();
+    Tool executableCommand =
+        ((RemoteFileBinary) buildRule).getExecutableCommand(OutputLabel.defaultLabel());
     assertThat(
         BuildableSupport.deriveInputs(executableCommand).collect(ImmutableList.toImmutableList()),
         Matchers.hasSize(1));

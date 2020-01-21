@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
@@ -146,7 +147,7 @@ public class CxxToolchainDescriptionTest {
     }
 
     @Override
-    public Tool getExecutableCommand() {
+    public Tool getExecutableCommand(OutputLabel outputLabel) {
       return tool;
     }
   }

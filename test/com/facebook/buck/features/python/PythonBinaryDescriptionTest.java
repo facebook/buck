@@ -26,6 +26,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -342,7 +343,7 @@ public class PythonBinaryDescriptionTest {
     PythonPackagedBinary binary =
         (PythonPackagedBinary) builder.setMainModule("main").build(graphBuilder);
     assertThat(
-        binary.getExecutableCommand().getCommandPrefix(pathResolver),
+        binary.getExecutableCommand(OutputLabel.defaultLabel()).getCommandPrefix(pathResolver),
         Matchers.contains(
             executor.toString(),
             pathResolver.getAbsolutePath(binary.getSourcePathToOutput()).toString()));
@@ -357,7 +358,7 @@ public class PythonBinaryDescriptionTest {
         (PythonPackagedBinary)
             PythonBinaryBuilder.create(target).setMainModule("main").build(graphBuilder);
     assertThat(
-        binary.getExecutableCommand().getCommandPrefix(pathResolver),
+        binary.getExecutableCommand(OutputLabel.defaultLabel()).getCommandPrefix(pathResolver),
         Matchers.contains(
             PythonTestUtils.PYTHON_PLATFORM.getEnvironment().getPythonPath().toString(),
             pathResolver.getAbsolutePath(binary.getSourcePathToOutput()).toString()));
@@ -848,7 +849,7 @@ public class PythonBinaryDescriptionTest {
           @Override
           public Optional<Tool> getPexExecutor(
               BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
-            return Optional.of(pyTool.getExecutableCommand());
+            return Optional.of(pyTool.getExecutableCommand(OutputLabel.defaultLabel()));
           }
         };
 

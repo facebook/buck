@@ -19,6 +19,7 @@ package com.facebook.buck.features.python;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -136,7 +137,8 @@ public class PythonTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .map(BuildRule::getBuildTarget)
         .concat(binary.getRuntimeDeps(buildRuleResolver))
         .concat(
-            BuildableSupport.getDeps(binary.getExecutableCommand(), buildRuleResolver)
+            BuildableSupport.getDeps(
+                    binary.getExecutableCommand(OutputLabel.defaultLabel()), buildRuleResolver)
                 .map(BuildRule::getBuildTarget));
   }
 

@@ -23,6 +23,7 @@ import com.facebook.buck.core.description.arg.HasDefaultPlatform;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -588,7 +589,7 @@ public class RustCompileUtils {
         buildTarget, projectFilesystem, params.copyAppendingExtraDeps(buildRule)) {
 
       @Override
-      public Tool getExecutableCommand() {
+      public Tool getExecutableCommand(OutputLabel outputLabel) {
         return executable;
       }
 

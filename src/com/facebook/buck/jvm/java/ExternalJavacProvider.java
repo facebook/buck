@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -88,7 +89,7 @@ public class ExternalJavacProvider implements JavacProvider {
       BuildRule rule = ruleFinder.getRule(buildTargetPath);
       return new ExternalJavac(
           rule instanceof BinaryBuildRule
-              ? ((BinaryBuildRule) rule)::getExecutableCommand
+              ? () -> ((BinaryBuildRule) rule).getExecutableCommand(OutputLabel.defaultLabel())
               : Suppliers.ofInstance(new NonHashingJavacTool(buildTargetPath)),
           buildTargetPath.getTarget().toString());
     } else {

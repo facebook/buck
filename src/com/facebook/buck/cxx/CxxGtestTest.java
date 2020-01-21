@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -121,7 +122,7 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
   protected ImmutableList<String> getShellCommand(
       SourcePathResolverAdapter pathResolver, Path output) {
     return ImmutableList.<String>builder()
-        .addAll(getExecutableCommand().getCommandPrefix(pathResolver))
+        .addAll(getExecutableCommand(OutputLabel.defaultLabel()).getCommandPrefix(pathResolver))
         .add("--gtest_color=no")
         .add("--gtest_output=xml:" + getProjectFilesystem().resolve(output))
         .build();
@@ -140,7 +141,8 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
     if (checkGTestTestList) {
       builder.add(
           new WriteTestListToFileStep(
-              getExecutableCommand().getCommandPrefix(buildContext.getSourcePathResolver()),
+              getExecutableCommand(OutputLabel.defaultLabel())
+                  .getCommandPrefix(buildContext.getSourcePathResolver()),
               buildContext.getBuildCellRootPath()));
     }
     return builder.build();

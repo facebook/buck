@@ -21,6 +21,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -92,7 +93,9 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
             buildTarget, args.getExe().get().getFullyQualifiedName());
       }
 
-      builder = new CommandTool.Builder(((BinaryBuildRule) rule).getExecutableCommand());
+      builder =
+          new CommandTool.Builder(
+              ((BinaryBuildRule) rule).getExecutableCommand(OutputLabel.defaultLabel()));
     } else {
       builder = new CommandTool.Builder();
     }

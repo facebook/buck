@@ -30,6 +30,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -303,7 +304,8 @@ public class GoTestDescription
                           ImmutableList.of(),
                           platform));
 
-      Tool testMainGenerator = testMainGeneratorRule.getExecutableCommand();
+      Tool testMainGenerator =
+          testMainGeneratorRule.getExecutableCommand(OutputLabel.defaultLabel());
 
       generatedTestMain =
           new GoTestMain(

@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -268,7 +269,7 @@ public class HalideLibraryDescription
         buildTarget,
         projectFilesystem,
         params.withExtraDeps(ImmutableSortedSet.of(halideCompiler)),
-        halideCompiler.getExecutableCommand(),
+        halideCompiler.getExecutableCommand(OutputLabel.defaultLabel()),
         halideBuckConfig.getHalideTargetForPlatform(platform),
         expandInvocationFlags(compilerInvocationFlags, platform),
         functionName);

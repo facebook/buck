@@ -17,6 +17,7 @@
 package com.facebook.buck.core.toolchain.toolprovider.impl;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -54,7 +55,7 @@ public class ToolProviders {
       public Tool resolve(BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
         BuildRule rule = resolver.getRule(target);
         Verify.verify(rule instanceof BinaryBuildRule);
-        return ((BinaryBuildRule) rule).getExecutableCommand();
+        return ((BinaryBuildRule) rule).getExecutableCommand(OutputLabel.defaultLabel());
       }
 
       @Override

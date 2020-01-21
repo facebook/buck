@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
@@ -108,7 +109,9 @@ public class JavaBinaryTest {
         basePath + pathResolver.getRelativePath(javaBinary.getSourcePathToOutput());
 
     List<String> expectedCommand = ImmutableList.of("java", "-jar", expectedClasspath);
-    assertEquals(expectedCommand, javaBinary.getExecutableCommand().getCommandPrefix(pathResolver));
+    assertEquals(
+        expectedCommand,
+        javaBinary.getExecutableCommand(OutputLabel.defaultLabel()).getCommandPrefix(pathResolver));
 
     assertFalse(
         "Library rules that are used exclusively by genrules should not be part of the classpath.",

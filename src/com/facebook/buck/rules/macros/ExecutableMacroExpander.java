@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.macros.MacroException;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -45,7 +46,8 @@ public class ExecutableMacroExpander<M extends AbstractExecutableTargetOrHostMac
               "%s used in executable macro does not correspond to a binary rule",
               rule.getBuildTarget()));
     }
-    return ((BinaryBuildRule) rule).getExecutableCommand();
+    // TODO(irenewchen): Propagate the output label instead of using the default label here
+    return ((BinaryBuildRule) rule).getExecutableCommand(OutputLabel.defaultLabel());
   }
 
   @Override

@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -84,7 +85,9 @@ public class CxxBinaryTest {
                 target,
                 false));
     ImmutableList<String> command =
-        binary.getExecutableCommand().getCommandPrefix(graphBuilder.getSourcePathResolver());
+        binary
+            .getExecutableCommand(OutputLabel.defaultLabel())
+            .getCommandPrefix(graphBuilder.getSourcePathResolver());
     assertTrue(Paths.get(command.get(0)).isAbsolute());
   }
 }

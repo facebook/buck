@@ -18,6 +18,7 @@ package com.facebook.buck.file;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -62,7 +63,7 @@ public class HttpFileBinaryTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     graphBuilder.addToIndex(binary);
 
-    Tool tool = binary.getExecutableCommand();
+    Tool tool = binary.getExecutableCommand(OutputLabel.defaultLabel());
 
     Path expectedPath =
         filesysten.resolve(

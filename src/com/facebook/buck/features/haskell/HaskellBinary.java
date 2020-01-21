@@ -17,6 +17,7 @@
 package com.facebook.buck.features.haskell;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.tool.BinaryWrapperRule;
@@ -46,7 +47,7 @@ public class HaskellBinary extends BinaryWrapperRule {
   }
 
   @Override
-  public Tool getExecutableCommand() {
+  public Tool getExecutableCommand(OutputLabel outputLabel) {
     return binary;
   }
 

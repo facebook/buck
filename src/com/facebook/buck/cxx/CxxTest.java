@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -126,7 +127,7 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Tool getExecutableCommand() {
+  public Tool getExecutableCommand(OutputLabel outputLabel) {
     return executable;
   }
 
@@ -285,7 +286,8 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
     return Stream.concat(
             additionalDeps.get(() -> additionalDepsSupplier.apply(buildRuleResolver)).stream(),
-            BuildableSupport.getDeps(getExecutableCommand(), buildRuleResolver))
+            BuildableSupport.getDeps(
+                getExecutableCommand(OutputLabel.defaultLabel()), buildRuleResolver))
         .map(BuildRule::getBuildTarget);
   }
 
@@ -299,7 +301,8 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .setTarget(getBuildTarget())
         .setType(cxxTestType.testSpecType)
         .addAllCommand(
-            getExecutableCommand().getCommandPrefix(buildContext.getSourcePathResolver()))
+            getExecutableCommand(OutputLabel.defaultLabel())
+                .getCommandPrefix(buildContext.getSourcePathResolver()))
         .addAllCommand(Arg.stringify(getArgs(), buildContext.getSourcePathResolver()))
         .putAllEnv(getEnv(buildContext.getSourcePathResolver()))
         .addAllLabels(getLabels())

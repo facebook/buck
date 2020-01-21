@@ -47,6 +47,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -1012,7 +1013,7 @@ public class AppleCxxPlatformsTest {
         new NoopBinaryBuildRule(
             buildTarget, new FakeProjectFilesystem(), TestBuildRuleParams.create()) {
           @Override
-          public Tool getExecutableCommand() {
+          public Tool getExecutableCommand(OutputLabel outputLabel) {
             return codesign;
           }
         };
