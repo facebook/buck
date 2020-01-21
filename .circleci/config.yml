@@ -17,7 +17,8 @@ install_android_sdk: &install_android_sdk
     export PATH=${ANDROID_SDK}/tools/bin:$PATH
     echo 'y' |sdkmanager --install tools
     echo 'y' |sdkmanager --install platform-tools
-    echo 'y' |sdkmanager --install "build-tools;23.0.2"
+    # Old version build-tools;23.0.2
+    echo 'y' |sdkmanager --install "build-tools;29.0.0"
     echo 'y' |sdkmanager --install "platforms;android-23"
 
     # Install 32 bit libraries
