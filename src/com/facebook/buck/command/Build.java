@@ -137,10 +137,6 @@ public class Build implements Closeable {
         rulesToBuild, resultFutures, eventBus, console, pathToBuildReport);
   }
 
-  public void terminateBuildWithFailure(Throwable failure) {
-    buildEngine.terminateBuildWithFailure(failure);
-  }
-
   /** Setup all the symlinks necessary for a build */
   private synchronized void setupBuildSymlinks() throws IOException {
     // Symlinks should only be created once, across all invocations of build, otherwise
@@ -430,7 +426,7 @@ public class Build implements Closeable {
     try {
       String jsonBuildReport = buildReport.generateJsonBuildReport();
       eventBus.post(BuildEvent.buildReport(jsonBuildReport));
-      Files.write(jsonBuildReport, pathToBuildReport.toFile(), Charsets.UTF_8);
+      Files.asCharSink(pathToBuildReport.toFile(), Charsets.UTF_8).write(jsonBuildReport);
     } catch (IOException writeException) {
       LOG.warn(writeException, "Failed to write the build report to %s", pathToBuildReport);
       eventBus.post(ThrowableConsoleEvent.create(e, "Failed writing report"));

@@ -1153,9 +1153,15 @@ class CachingBuildRuleBuilder {
   }
 
   private ListenableFuture<Optional<BuildResult>> handleDepsResults(List<BuildResult> depResults) {
+    Optional<BuildResult> failedResult = Optional.empty();
+    Optional<BuildResult> cancelledResult = Optional.empty();
     for (BuildResult depResult : depResults) {
       if (buildMode != BuildType.POPULATE_FROM_REMOTE_CACHE && !depResult.isSuccess()) {
-        return Futures.immediateFuture(Optional.of(canceled(depResult.getFailure())));
+        if (depResult.getStatus() == BuildRuleStatus.CANCELED) {
+          cancelledResult = Optional.of(canceled(depResult.getFailure()));
+        } else {
+          failedResult = Optional.of(failure(depResult.getFailure()));
+        }
       }
 
       if (depResult
@@ -1166,8 +1172,9 @@ class CachingBuildRuleBuilder {
         depsWithCacheMiss.add(depResult.getRule().getFullyQualifiedName());
       }
     }
-    depsAreAvailable = true;
-    return Futures.immediateFuture(Optional.empty());
+    Optional<BuildResult> result = failedResult.isPresent() ? failedResult : cancelledResult;
+    depsAreAvailable = !result.isPresent();
+    return Futures.immediateFuture(result);
   }
 
   private void recordFailureAndCleanUp(BuildRuleFailedException failure) {

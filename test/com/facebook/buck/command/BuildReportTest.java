@@ -34,7 +34,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.impl.PathReferenceRuleWithMultipleOutputs;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -224,7 +223,7 @@ public class BuildReportTest {
             "  \"success\" : false,",
             "  \"results\" : {",
             "    \"//fake:rule1\" : {",
-            "      \"success\" : true,",
+            "      \"success\" : \"SUCCESS\",",
             "      \"type\" : \"BUILT_LOCALLY\",",
             "      \"output\" : " + rule1TxtPath + ",",
             "      \"outputs\" : {",
@@ -232,17 +231,17 @@ public class BuildReportTest {
             "      }",
             "    },",
             "    \"//fake:rule2\" : {",
-            "      \"success\" : false",
+            "      \"success\" : \"FAIL\"",
             "    },",
             "    \"//fake:rule3\" : {",
-            "      \"success\" : true,",
+            "      \"success\" : \"SUCCESS\",",
             "      \"type\" : \"FETCHED_FROM_CACHE\"",
             "    },",
             "    \"//fake:rule4\" : {",
-            "      \"success\" : false",
+            "      \"success\" : \"UNKNOWN\"",
             "    },",
             "    \"//fake:rule5\" : {",
-            "      \"success\" : true,",
+            "      \"success\" : \"SUCCESS\",",
             "      \"type\" : \"BUILT_LOCALLY\",",
             "      \"output\" : \"default_output\",",
             "      \"outputs\" : {",
@@ -251,7 +250,7 @@ public class BuildReportTest {
             "      }",
             "    },",
             "    \"//fake:rule6\" : {",
-            "      \"success\" : true,",
+            "      \"success\" : \"SUCCESS\",",
             "      \"type\" : \"BUILT_LOCALLY\",",
             "      \"outputs\" : {",
             "        \"DEFAULT\" : [ \"default_output1\", \"default_output_2\" ],",

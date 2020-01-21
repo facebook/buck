@@ -1038,7 +1038,7 @@ public class CachingBuildEngineTest {
                 .getResult()
                 .get();
 
-        assertThat(result.getStatus(), equalTo(BuildRuleStatus.CANCELED));
+        assertThat(result.getStatus(), equalTo(BuildRuleStatus.FAIL));
         assertThat(result.getFailure(), instanceOf(BuildRuleFailedException.class));
         Throwable cause = result.getFailure().getCause();
         assertThat(cause, instanceOf(StepFailedException.class));
@@ -1099,7 +1099,7 @@ public class CachingBuildEngineTest {
                 .getResult()
                 .get();
 
-        assertThat(result.getStatus(), equalTo(BuildRuleStatus.CANCELED));
+        assertThat(result.getStatus(), equalTo(BuildRuleStatus.FAIL));
         assertThat(result.getFailure(), instanceOf(BuildRuleFailedException.class));
         Throwable cause = result.getFailure().getCause();
         assertThat(cause, instanceOf(StepFailedException.class));
@@ -1141,7 +1141,7 @@ public class CachingBuildEngineTest {
                 .getResult()
                 .get();
 
-        assertThat(result.getStatus(), equalTo(BuildRuleStatus.CANCELED));
+        assertThat(result.getStatus(), equalTo(BuildRuleStatus.FAIL));
       }
     }
 
@@ -1574,7 +1574,7 @@ public class CachingBuildEngineTest {
                 .build(buildContext, TestExecutionContext.newInstance(), rule)
                 .getResult()
                 .get();
-        assertThat(result.getStatus(), equalTo(BuildRuleStatus.CANCELED));
+        assertThat(result.getStatus(), equalTo(BuildRuleStatus.FAIL));
         assertThat(
             Objects.requireNonNull(cachingBuildEngine.getBuildRuleResult(dep1.getBuildTarget()))
                 .getStatus(),
@@ -1582,7 +1582,7 @@ public class CachingBuildEngineTest {
         assertThat(
             Objects.requireNonNull(cachingBuildEngine.getBuildRuleResult(dep2.getBuildTarget()))
                 .getStatus(),
-            equalTo(BuildRuleStatus.CANCELED));
+            equalTo(BuildRuleStatus.FAIL));
         assertThat(
             Objects.requireNonNull(cachingBuildEngine.getBuildRuleResult(dep3.getBuildTarget()))
                 .getStatus(),

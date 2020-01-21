@@ -186,7 +186,7 @@ public class BuildReport {
       Map<String, Object> value = new LinkedHashMap<>();
 
       boolean isSuccess = success.isPresent();
-      value.put("success", isSuccess);
+      value.put("success", result.map(r -> r.getStatus().toString()).orElse("UNKNOWN"));
       if (!isSuccess) {
         isOverallSuccess = false;
       }

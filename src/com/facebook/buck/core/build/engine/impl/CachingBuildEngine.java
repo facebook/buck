@@ -23,6 +23,7 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.engine.BuildEngine;
 import com.facebook.buck.core.build.engine.BuildEngineBuildContext;
 import com.facebook.buck.core.build.engine.BuildResult;
+import com.facebook.buck.core.build.engine.BuildRuleStatus;
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.build.engine.RuleDepsCache;
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfo;
@@ -391,13 +392,22 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         Futures.transformAsync(
             Futures.allAsList(runtimeDepResults),
             results -> {
+              Optional<BuildResult> cancelledResult = Optional.empty();
+
               for (BuildResult buildResult : results) {
                 if (!buildResult.isSuccess()) {
-                  return Futures.immediateFuture(
-                      BuildResult.canceled(rule, buildResult.getFailure()));
+                  if (buildResult.getStatus() == BuildRuleStatus.CANCELED) {
+                    cancelledResult =
+                        Optional.of(BuildResult.canceled(rule, buildResult.getFailure()));
+                  } else {
+                    return Futures.immediateFuture(
+                        BuildResult.failure(rule, buildResult.getFailure()));
+                  }
                 }
               }
-              return result;
+              return cancelledResult.isPresent()
+                  ? Futures.immediateFuture(cancelledResult.get())
+                  : result;
             },
             MoreExecutors.directExecutor());
     future.setFuture(chainedResult);

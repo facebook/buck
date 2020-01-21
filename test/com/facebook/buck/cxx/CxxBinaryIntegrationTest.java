@@ -1527,9 +1527,8 @@ public class CxxBinaryIntegrationTest {
         buildLog.getAllTargets());
     buildLog.assertTargetHadMatchingRuleKey(aggregatedDepsTarget);
     assertThat(
-        buildLog.getLogEntry(binaryTarget).getStatus(), Matchers.equalTo(BuildRuleStatus.CANCELED));
-    assertThat(
-        buildLog.getLogEntry(target).getStatus(), Matchers.equalTo(BuildRuleStatus.CANCELED));
+        buildLog.getLogEntry(binaryTarget).getStatus(), Matchers.equalTo(BuildRuleStatus.FAIL));
+    assertThat(buildLog.getLogEntry(target).getStatus(), Matchers.equalTo(BuildRuleStatus.FAIL));
   }
 
   @Test
