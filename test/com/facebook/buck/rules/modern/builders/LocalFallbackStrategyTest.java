@@ -39,6 +39,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.SettableFuture;
 import io.grpc.Status;
 import java.io.IOException;
 import java.util.List;
@@ -205,6 +206,23 @@ public class LocalFallbackStrategyTest {
     Assert.assertEquals(finishedEvent.getRemoteGrpcStatus(), Status.OK);
     Assert.assertEquals(finishedEvent.getExitCode(), OptionalInt.of(1));
     Assert.assertEquals(finishedEvent.getExecutedActionMetadata().get().getWorker(), mockWorker);
+  }
+
+  @Test
+  public void testCancellation() throws ExecutionException, InterruptedException {
+    Exception cause = new RuntimeException();
+    BuildResult cancelledResult = cancelledBuildResult(RULE_NAME, cause);
+    SettableFuture<Optional<BuildResult>> strategyResult = SettableFuture.create();
+    EasyMock.expect(strategyBuildResult.getBuildResult()).andReturn(strategyResult).anyTimes();
+    strategyBuildResult.cancel(cause);
+    EasyMock.expect(buildStrategyContext.createCancelledResult(cause)).andReturn(cancelledResult);
+    EasyMock.replay(strategyBuildResult, buildStrategyContext);
+    FallbackStrategyBuildResult fallbackStrategyBuildResult =
+        new FallbackStrategyBuildResult(
+            RULE_NAME, strategyBuildResult, buildStrategyContext, eventBus, true, false, true);
+    fallbackStrategyBuildResult.cancel(cause);
+    Assert.assertEquals(cancelledResult, fallbackStrategyBuildResult.getBuildResult().get().get());
+    EasyMock.verify(strategyBuildResult, buildStrategyContext);
   }
 
   @Test
@@ -425,6 +443,15 @@ public class LocalFallbackStrategyTest {
         .setStatus(BuildRuleStatus.SUCCESS)
         .setRule(buildRule(buildRuleName))
         .setSuccessOptional(BuildRuleSuccessType.BUILT_LOCALLY)
+        .setCacheResult(CacheResult.miss())
+        .build();
+  }
+
+  private static BuildResult cancelledBuildResult(String buildRuleName, Throwable cause) {
+    return BuildResult.builder()
+        .setStatus(BuildRuleStatus.CANCELED)
+        .setRule(buildRule(buildRuleName))
+        .setFailureOptional(cause)
         .setCacheResult(CacheResult.miss())
         .build();
   }
