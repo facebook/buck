@@ -433,6 +433,14 @@ public class WorkspaceAndProjectGenerator {
     ProjectGenerator.Result result =
         generator.createXcodeProject(xcodeProjectWriteOptions, listeningExecutorService);
 
+    result.sourcePathsToBuild.stream()
+        .filter(sourcePath -> focusedTargetMatcher.matches(sourcePath.getTarget()))
+        .forEach(
+            sourcePath -> {
+              Utils.addRequiredBuildTargetFromSourcePath(
+                  sourcePath, requiredBuildTargetsBuilder, projectGraph, graphBuilderForNode);
+            });
+
     ImmutableMap<BuildTarget, PBXTarget> buildTargetToGeneratedTargetMap =
         result.buildTargetsToGeneratedTargetMap;
 

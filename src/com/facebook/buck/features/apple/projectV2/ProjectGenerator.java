@@ -195,18 +195,21 @@ public class ProjectGenerator {
     public final ImmutableSet<BuildTarget> requiredBuildTargets;
     public final ImmutableSet<Path> xcconfigPaths;
     public final ImmutableList<Path> headerSymlinkTrees;
+    public final ImmutableList<BuildTargetSourcePath> sourcePathsToBuild;
 
     public Result(
         PBXProject generatedProject,
         ImmutableMap<BuildTarget, PBXTarget> buildTargetsToGeneratedTargetMap,
         ImmutableSet<BuildTarget> requiredBuildTargets,
         ImmutableSet<Path> xcconfigPaths,
-        ImmutableList<Path> headerSymlinkTrees) {
+        ImmutableList<Path> headerSymlinkTrees,
+        ImmutableList<BuildTargetSourcePath> sourcePathsToBuild) {
       this.generatedProject = generatedProject;
       this.buildTargetsToGeneratedTargetMap = buildTargetsToGeneratedTargetMap;
       this.requiredBuildTargets = requiredBuildTargets;
       this.xcconfigPaths = xcconfigPaths;
       this.headerSymlinkTrees = headerSymlinkTrees;
+      this.sourcePathsToBuild = sourcePathsToBuild;
     }
   }
 
@@ -351,6 +354,9 @@ public class ProjectGenerator {
           generationResultsBuilder.build();
 
       Set<TargetNode<?>> keys = new HashSet<>();
+      ImmutableList.Builder<BuildTargetSourcePath> buildTargetSourcePathsBuilder =
+          ImmutableList.builder();
+
       for (XcodeNativeTargetGenerator.Result result : generationResults) {
         requiredBuildTargetsBuilder.addAll(result.requiredBuildTargets);
         xcconfigPathsBuilder.addAll(result.xcconfigPaths);
@@ -360,10 +366,10 @@ public class ProjectGenerator {
           ImmutableList<SourcePath> sourcePathsToBuild =
               headerSearchPaths.createHeaderSearchPaths(
                   result.headerSearchPathAttributes.get(), headerSymlinkTreesBuilder);
-          for (SourcePath sourcePath : sourcePathsToBuild) {
-            Utils.addRequiredBuildTargetFromSourcePath(
-                sourcePath, requiredBuildTargetsBuilder, targetGraph, actionGraphBuilderForNode);
-          }
+          sourcePathsToBuild.stream()
+              .map(Utils::sourcePathTryIntoBuildTargetSourcePath)
+              .filter(Optional::isPresent)
+              .forEach(sourcePath -> buildTargetSourcePathsBuilder.add(sourcePath.get()));
         }
 
         XCodeNativeTargetAttributes nativeTargetAttributes = result.targetAttributes;
@@ -414,10 +420,13 @@ public class ProjectGenerator {
 
       ImmutableList<SourcePath> sourcePathsToBuild =
           headerSearchPaths.createMergedHeaderMap(targetsInRequiredProjects);
-      for (SourcePath sourcePath : sourcePathsToBuild) {
-        Utils.addRequiredBuildTargetFromSourcePath(
-            sourcePath, requiredBuildTargetsBuilder, targetGraph, actionGraphBuilderForNode);
-      }
+
+      buildTargetSourcePathsBuilder.addAll(
+          sourcePathsToBuild.stream()
+              .map(Utils::sourcePathTryIntoBuildTargetSourcePath)
+              .filter(Optional::isPresent)
+              .map(Optional::get)
+              .collect(Collectors.toList()));
 
       PBXProject project = xcodeProjectWriteOptions.project();
       for (String configName : targetConfigNamesBuilder.build()) {
@@ -454,7 +463,12 @@ public class ProjectGenerator {
           buildTargetToPbxTargetMap.build(),
           requiredBuildTargetsBuilder.build(),
           xcconfigPathsBuilder.build(),
-          headerSymlinkTreesBuilder.build());
+          headerSymlinkTreesBuilder.build(),
+          sourcePathsToBuild.stream()
+              .map(Utils::sourcePathTryIntoBuildTargetSourcePath)
+              .filter(Optional::isPresent)
+              .map(Optional::get)
+              .collect(ImmutableList.toImmutableList()));
     } catch (UncheckedExecutionException e) {
       // if any code throws an exception, they tend to get wrapped in LoadingCache's
       // UncheckedExecutionException. Unwrap it if its cause is HumanReadable.

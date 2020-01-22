@@ -525,13 +525,19 @@ public class XcodeNativeTargetGenerator {
   private void addRequiredBuildTargetsFromAttributes(
       XCodeNativeTargetAttributes nativeTargetAttributes,
       ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder) {
-    for (SourceWithFlags source : nativeTargetAttributes.sourcesWithFlags()) {
-      Utils.addRequiredBuildTargetFromSourcePath(
-          source.getSourcePath(),
-          requiredBuildTargetsBuilder,
-          targetGraph,
-          actionGraphBuilderForNode);
-    }
+    nativeTargetAttributes.sourcesWithFlags().stream()
+        .map(
+            sourceWithFlags ->
+                Utils.sourcePathTryIntoBuildTargetSourcePath(sourceWithFlags.getSourcePath()))
+        .filter(Optional::isPresent)
+        .forEach(
+            source -> {
+              Utils.addRequiredBuildTargetFromSourcePath(
+                  source.get(),
+                  requiredBuildTargetsBuilder,
+                  targetGraph,
+                  actionGraphBuilderForNode);
+            });
 
     Streams.concat(
             nativeTargetAttributes.privateHeaders().stream(),
@@ -539,10 +545,12 @@ public class XcodeNativeTargetGenerator {
             nativeTargetAttributes.extraXcodeSources().stream(),
             nativeTargetAttributes.extraXcodeFiles().stream(),
             nativeTargetAttributes.genruleFiles().stream())
+        .map(Utils::sourcePathTryIntoBuildTargetSourcePath)
+        .filter(Optional::isPresent)
         .forEach(
             sourcePath ->
                 Utils.addRequiredBuildTargetFromSourcePath(
-                    sourcePath,
+                    sourcePath.get(),
                     requiredBuildTargetsBuilder,
                     targetGraph,
                     actionGraphBuilderForNode));
@@ -551,26 +559,32 @@ public class XcodeNativeTargetGenerator {
         .forEach(
             arg -> {
               arg.getFiles().stream()
+                  .map(Utils::sourcePathTryIntoBuildTargetSourcePath)
+                  .filter(Optional::isPresent)
                   .forEach(
                       sourcePath ->
                           Utils.addRequiredBuildTargetFromSourcePath(
-                              sourcePath,
+                              sourcePath.get(),
                               requiredBuildTargetsBuilder,
                               targetGraph,
                               actionGraphBuilderForNode));
               arg.getDirs().stream()
+                  .map(Utils::sourcePathTryIntoBuildTargetSourcePath)
+                  .filter(Optional::isPresent)
                   .forEach(
                       sourcePath ->
                           Utils.addRequiredBuildTargetFromSourcePath(
-                              sourcePath,
+                              sourcePath.get(),
                               requiredBuildTargetsBuilder,
                               targetGraph,
                               actionGraphBuilderForNode));
               arg.getVariants().stream()
+                  .map(Utils::sourcePathTryIntoBuildTargetSourcePath)
+                  .filter(Optional::isPresent)
                   .forEach(
                       sourcePath ->
                           Utils.addRequiredBuildTargetFromSourcePath(
-                              sourcePath,
+                              sourcePath.get(),
                               requiredBuildTargetsBuilder,
                               targetGraph,
                               actionGraphBuilderForNode));
@@ -580,41 +594,52 @@ public class XcodeNativeTargetGenerator {
         .forEach(
             arg ->
                 arg.getDirs().stream()
+                    .map(Utils::sourcePathTryIntoBuildTargetSourcePath)
+                    .filter(Optional::isPresent)
                     .forEach(
                         sourcePath ->
                             Utils.addRequiredBuildTargetFromSourcePath(
-                                sourcePath,
+                                sourcePath.get(),
                                 requiredBuildTargetsBuilder,
                                 targetGraph,
                                 actionGraphBuilderForNode)));
 
     nativeTargetAttributes
         .infoPlist()
+        .map(Utils::sourcePathTryIntoBuildTargetSourcePath)
         .ifPresent(
-            sourcePath ->
-                Utils.addRequiredBuildTargetFromSourcePath(
-                    sourcePath,
-                    requiredBuildTargetsBuilder,
-                    targetGraph,
-                    actionGraphBuilderForNode));
+            buildTargetSourcePath ->
+                buildTargetSourcePath.ifPresent(
+                    sourcePath ->
+                        Utils.addRequiredBuildTargetFromSourcePath(
+                            sourcePath,
+                            requiredBuildTargetsBuilder,
+                            targetGraph,
+                            actionGraphBuilderForNode)));
     nativeTargetAttributes
         .prefixHeader()
+        .map(Utils::sourcePathTryIntoBuildTargetSourcePath)
         .ifPresent(
             sourcePath ->
-                Utils.addRequiredBuildTargetFromSourcePath(
-                    sourcePath,
-                    requiredBuildTargetsBuilder,
-                    targetGraph,
-                    actionGraphBuilderForNode));
+                sourcePath.ifPresent(
+                    buildTargetSourcePath ->
+                        Utils.addRequiredBuildTargetFromSourcePath(
+                            buildTargetSourcePath,
+                            requiredBuildTargetsBuilder,
+                            targetGraph,
+                            actionGraphBuilderForNode)));
     nativeTargetAttributes
         .bridgingHeader()
+        .map(Utils::sourcePathTryIntoBuildTargetSourcePath)
         .ifPresent(
             sourcePath ->
-                Utils.addRequiredBuildTargetFromSourcePath(
-                    sourcePath,
-                    requiredBuildTargetsBuilder,
-                    targetGraph,
-                    actionGraphBuilderForNode));
+                sourcePath.ifPresent(
+                    buildTargetSourcePath ->
+                        Utils.addRequiredBuildTargetFromSourcePath(
+                            buildTargetSourcePath,
+                            requiredBuildTargetsBuilder,
+                            targetGraph,
+                            actionGraphBuilderForNode)));
   }
 
   private static Path getHalideOutputPath(ProjectFilesystem filesystem, BuildTarget target) {
@@ -1266,12 +1291,13 @@ public class XcodeNativeTargetGenerator {
 
     ImmutableSortedMap<Path, SourcePath> publicCxxHeaders =
         headerSearchPathAttributes.publicCxxHeaders();
-    publicCxxHeaders
-        .values()
+    publicCxxHeaders.values().stream()
+        .map(Utils::sourcePathTryIntoBuildTargetSourcePath)
+        .filter(Optional::isPresent)
         .forEach(
             sourcePath ->
                 Utils.addRequiredBuildTargetFromSourcePath(
-                    sourcePath,
+                    sourcePath.get(),
                     requiredBuildTargetsBuilder,
                     targetGraph,
                     actionGraphBuilderForNode));
