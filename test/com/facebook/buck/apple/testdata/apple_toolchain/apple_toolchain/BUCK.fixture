@@ -11,7 +11,7 @@ apple_toolchain(
     name = "platform1",
     architecture = "arm64",
     platform_path = "Developer/iPhoneOS.platform",
-    sdk_path = "Developer/iPhoneOS.platform/iPhoneOS.sdk",
+    sdk_path = "//apple_toolchain/tools:gen-sdk",
     sdk_name = "iphoneos",
     version = "13.2",
     build_version = "17B102",

@@ -50,7 +50,15 @@ public class AppleToolchainIntegrationTest {
     workspace.setUp();
     Path output = workspace.buildAndReturnOutput("//:TestApp#iphoneos-arm64");
     assertEquals("signed by codesign\n", workspace.getFileContents(output.resolve("app_signed")));
-    Path rootPath = workspace.getProjectFileSystem().getRootPath();
+    Path sdkPath =
+        workspace
+            .getProjectFileSystem()
+            .getRootPath()
+            .resolve(
+                BuildTargetPaths.getGenPath(
+                    workspace.getProjectFileSystem(),
+                    BuildTargetFactory.newInstance("//apple_toolchain/tools:gen-sdk"),
+                    "%s"));
     assertEquals(
         String.format(
             "strip:%n"
@@ -64,12 +72,12 @@ public class AppleToolchainIntegrationTest {
                 + "object: compile output: source code 1%n"
                 + "object: compile output: source code 2%n"
                 + "ranlib applied.%n"
-                + "linker: fpath: %s/apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/Frameworks%n"
+                + "linker: fpath: %s/sdk/Frameworks%n"
                 + "linker: frameworks: Foundation,UIKit%n"
-                + "linker: lpath: %s/apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/lib%n"
+                + "linker: lpath: %s/sdk/lib%n"
                 + "linker: libs: objc%n",
-            rootPath,
-            rootPath),
+            sdkPath,
+            sdkPath),
         workspace.getFileContents(output.resolve("TestApp")));
   }
 
@@ -84,6 +92,12 @@ public class AppleToolchainIntegrationTest {
     Path output = workspace.buildAndReturnOutput("//:TestApp#iphoneos-arm64,iphoneos-armv7");
     assertEquals("signed by codesign\n", workspace.getFileContents(output.resolve("app_signed")));
     Path rootPath = workspace.getProjectFileSystem().getRootPath();
+    Path sdkPath =
+        rootPath.resolve(
+            BuildTargetPaths.getGenPath(
+                workspace.getProjectFileSystem(),
+                BuildTargetFactory.newInstance("//apple_toolchain/tools:gen-sdk"),
+                "%s"));
     assertEquals(
         String.format(
             "universal file:%n"
@@ -98,9 +112,9 @@ public class AppleToolchainIntegrationTest {
                 + "object: compile output: source code 1%n"
                 + "object: compile output: source code 2%n"
                 + "ranlib applied.%n"
-                + "linker: fpath: %s/apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/Frameworks%n"
+                + "linker: fpath: %s/sdk/Frameworks%n"
                 + "linker: frameworks: Foundation,UIKit%n"
-                + "linker: lpath: %s/apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/lib%n"
+                + "linker: lpath: %s/sdk/lib%n"
                 + "linker: libs: objc%n"
                 + "universal file:%n"
                 + "strip:%n"
@@ -118,8 +132,8 @@ public class AppleToolchainIntegrationTest {
                 + "linker: frameworks: Foundation,UIKit%n"
                 + "linker: lpath: %s/apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/lib%n"
                 + "linker: libs: objc%n",
-            rootPath,
-            rootPath,
+            sdkPath,
+            sdkPath,
             rootPath,
             rootPath),
         workspace.getFileContents(output.resolve("TestApp")));
