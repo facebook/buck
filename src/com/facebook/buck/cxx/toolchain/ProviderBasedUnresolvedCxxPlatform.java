@@ -26,7 +26,8 @@ import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 
 /** Used to provide a {@link CxxPlatform} that is specified as a cxx_toolchain build target. */
-public class ProviderBasedUnresolvedCxxPlatform implements UnresolvedCxxPlatform {
+public class ProviderBasedUnresolvedCxxPlatform
+    implements UnresolvedCxxPlatform, ProviderBackedCxxPlatform {
   private final UnconfiguredBuildTargetView unconfiguredBuildTarget;
   private final Flavor flavor;
 

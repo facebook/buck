@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.ProviderBackedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.swift.toolchain.UnresolvedSwiftPlatform;
@@ -45,56 +46,8 @@ public class ProviderBackedUnresolvedAppleCxxPlatform implements UnresolvedApple
   public ProviderBackedUnresolvedAppleCxxPlatform(BuildTarget toolchainSetTarget, Flavor flavor) {
     this.toolchainSetTarget = toolchainSetTarget;
     this.flavor = flavor;
-    this.cxxPlatformProvider =
-        new UnresolvedCxxPlatform() {
-          @Override
-          public CxxPlatform resolve(
-              BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
-            return ProviderBackedUnresolvedAppleCxxPlatform.this.resolve(resolver).getCxxPlatform();
-          }
-
-          @Override
-          public Flavor getFlavor() {
-            return flavor;
-          }
-
-          @Override
-          public UnresolvedCxxPlatform withFlavor(Flavor hostFlavor) {
-            throw new UnsupportedOperationException();
-          }
-
-          @Override
-          public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {
-            return ProviderBackedUnresolvedAppleCxxPlatform.this.getParseTimeDeps(
-                targetConfiguration);
-          }
-
-          @Override
-          public Iterable<? extends BuildTarget> getLinkerParseTimeDeps(
-              TargetConfiguration targetConfiguration) {
-            return getParseTimeDeps(targetConfiguration);
-          }
-        };
-    this.swiftPlatformProvider =
-        new UnresolvedSwiftPlatform() {
-          @Override
-          public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {
-            return ProviderBackedUnresolvedAppleCxxPlatform.this.getParseTimeDeps(
-                targetConfiguration);
-          }
-
-          @Override
-          public Optional<SwiftPlatform> resolve(BuildRuleResolver ruleResolver) {
-            return ProviderBackedUnresolvedAppleCxxPlatform.this
-                .resolve(ruleResolver)
-                .getSwiftPlatform();
-          }
-
-          @Override
-          public Flavor getFlavor() {
-            return flavor;
-          }
-        };
+    this.cxxPlatformProvider = new AppleUnresolvedCxxPlatform();
+    this.swiftPlatformProvider = new AppleUnresolvedSwiftPlatform();
   }
 
   @Override
@@ -122,5 +75,54 @@ public class ProviderBackedUnresolvedAppleCxxPlatform implements UnresolvedApple
   @Override
   public Flavor getFlavor() {
     return flavor;
+  }
+
+  private class AppleUnresolvedCxxPlatform
+      implements UnresolvedCxxPlatform, ProviderBackedCxxPlatform {
+
+    @Override
+    public CxxPlatform resolve(
+        BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
+      return ProviderBackedUnresolvedAppleCxxPlatform.this.resolve(resolver).getCxxPlatform();
+    }
+
+    @Override
+    public Flavor getFlavor() {
+      return flavor;
+    }
+
+    @Override
+    public UnresolvedCxxPlatform withFlavor(Flavor hostFlavor) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {
+      return ProviderBackedUnresolvedAppleCxxPlatform.this.getParseTimeDeps(targetConfiguration);
+    }
+
+    @Override
+    public Iterable<? extends BuildTarget> getLinkerParseTimeDeps(
+        TargetConfiguration targetConfiguration) {
+      return getParseTimeDeps(targetConfiguration);
+    }
+  }
+
+  private class AppleUnresolvedSwiftPlatform implements UnresolvedSwiftPlatform {
+
+    @Override
+    public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {
+      return ProviderBackedUnresolvedAppleCxxPlatform.this.getParseTimeDeps(targetConfiguration);
+    }
+
+    @Override
+    public Optional<SwiftPlatform> resolve(BuildRuleResolver ruleResolver) {
+      return ProviderBackedUnresolvedAppleCxxPlatform.this.resolve(ruleResolver).getSwiftPlatform();
+    }
+
+    @Override
+    public Flavor getFlavor() {
+      return flavor;
+    }
   }
 }

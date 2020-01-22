@@ -25,12 +25,14 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.ProviderBackedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 
 /** Used to provide a {@link NdkCxxPlatform} that is specified as a ndk_toolchain build target. */
-public class ProviderBackedUnresolvedNdkCxxPlatform implements UnresolvedNdkCxxPlatform {
+public class ProviderBackedUnresolvedNdkCxxPlatform
+    implements ProviderBackedCxxPlatform, UnresolvedNdkCxxPlatform {
   private final BuildTarget buildTarget;
   private final Flavor flavor;
   private final UnresolvedCxxPlatform cxxPlatformProvider;
@@ -38,36 +40,7 @@ public class ProviderBackedUnresolvedNdkCxxPlatform implements UnresolvedNdkCxxP
   public ProviderBackedUnresolvedNdkCxxPlatform(BuildTarget buildTarget, Flavor flavor) {
     this.buildTarget = buildTarget;
     this.flavor = flavor;
-    this.cxxPlatformProvider =
-        new UnresolvedCxxPlatform() {
-          @Override
-          public CxxPlatform resolve(
-              BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
-            return ProviderBackedUnresolvedNdkCxxPlatform.this.resolve(resolver).getCxxPlatform();
-          }
-
-          @Override
-          public Flavor getFlavor() {
-            return flavor;
-          }
-
-          @Override
-          public UnresolvedCxxPlatform withFlavor(Flavor hostFlavor) {
-            throw new UnsupportedOperationException();
-          }
-
-          @Override
-          public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {
-            return ProviderBackedUnresolvedNdkCxxPlatform.this.getParseTimeDeps(
-                targetConfiguration);
-          }
-
-          @Override
-          public Iterable<? extends BuildTarget> getLinkerParseTimeDeps(
-              TargetConfiguration targetConfiguration) {
-            return getParseTimeDeps(targetConfiguration);
-          }
-        };
+    this.cxxPlatformProvider = new NdkUnresolvedCxxPlatform();
   }
 
   @Override
@@ -86,5 +59,35 @@ public class ProviderBackedUnresolvedNdkCxxPlatform implements UnresolvedNdkCxxP
   @Override
   public UnresolvedCxxPlatform getCxxPlatform() {
     return cxxPlatformProvider;
+  }
+
+  private class NdkUnresolvedCxxPlatform implements UnresolvedCxxPlatform {
+
+    @Override
+    public CxxPlatform resolve(
+        BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
+      return ProviderBackedUnresolvedNdkCxxPlatform.this.resolve(resolver).getCxxPlatform();
+    }
+
+    @Override
+    public Flavor getFlavor() {
+      return flavor;
+    }
+
+    @Override
+    public UnresolvedCxxPlatform withFlavor(Flavor hostFlavor) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {
+      return ProviderBackedUnresolvedNdkCxxPlatform.this.getParseTimeDeps(targetConfiguration);
+    }
+
+    @Override
+    public Iterable<? extends BuildTarget> getLinkerParseTimeDeps(
+        TargetConfiguration targetConfiguration) {
+      return getParseTimeDeps(targetConfiguration);
+    }
   }
 }

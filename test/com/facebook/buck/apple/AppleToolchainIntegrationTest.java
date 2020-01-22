@@ -223,4 +223,46 @@ public class AppleToolchainIntegrationTest {
             anotherSwiftLibraryPath),
         workspace.getFileContents(output));
   }
+
+  @Test
+  public void testBuildWithCustomAppleToolchainAndConfig() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "apple_toolchain", tmp);
+    CxxToolchainHelper.addCxxToolchainToWorkspace(workspace);
+    workspace.addBuckConfigLocalOption(
+        "apple", "toolchain_set_target", "//apple_toolchain:toolchain");
+    workspace.addBuckConfigLocalOption("cxx#iphoneos-arm64", "cflags", "-unused-flag");
+    workspace.setUp();
+    Path output = workspace.buildAndReturnOutput("//:TestApp#iphoneos-arm64");
+    assertEquals("signed by codesign\n", workspace.getFileContents(output.resolve("app_signed")));
+    Path sdkPath =
+        workspace
+            .getProjectFileSystem()
+            .getRootPath()
+            .resolve(
+                BuildTargetPaths.getGenPath(
+                    workspace.getProjectFileSystem(),
+                    BuildTargetFactory.newInstance("//apple_toolchain/tools:gen-sdk"),
+                    "%s"));
+    assertEquals(
+        String.format(
+            "strip:%n"
+                + "linker: input:%n"
+                + BuildTargetPaths.getGenPath(
+                    workspace.getProjectFileSystem(),
+                    BuildTargetFactory.newInstance("//:TestLib#iphoneos-arm64,static"),
+                    "%s")
+                + "/libTestLib.static.secret%n"
+                + "archive:%n"
+                + "object: compile output: source code 1%n"
+                + "object: compile output: source code 2%n"
+                + "ranlib applied.%n"
+                + "linker: fpath: %s/sdk/Frameworks%n"
+                + "linker: frameworks: Foundation,UIKit%n"
+                + "linker: lpath: %s/sdk/lib%n"
+                + "linker: libs: objc%n",
+            sdkPath,
+            sdkPath),
+        workspace.getFileContents(output.resolve("TestApp")));
+  }
 }
