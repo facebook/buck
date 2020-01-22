@@ -509,7 +509,7 @@ public class ProjectGeneratorTest {
         BuildConfiguration.getXcconfigPath(
             frameworkBundleFileSystem, frameworkBundleTarget, "Debug");
     String xccConfigContents =
-        frameworkBundleFileSystem.readFileIfItExists(expectedXcConfigPath).get();
+        this.projectFilesystem.readFileIfItExists(expectedXcConfigPath).get();
     Xcconfig config = Xcconfig.fromString(xccConfigContents);
     assertTrue(config.containsKey("SWIFT_INCLUDE_PATHS"));
 

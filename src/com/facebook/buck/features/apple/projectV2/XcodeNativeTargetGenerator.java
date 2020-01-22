@@ -1097,7 +1097,6 @@ public class XcodeNativeTargetGenerator {
     ProductType productType = getProductType(buildTargetNode, targetGraph).get();
 
     BuildTarget buildTarget = buildTargetNode.getBuildTarget();
-    ProjectFilesystem buildTargetFilesystem = buildTargetNode.getFilesystem();
     boolean containsSwiftCode = projGenerationStateCache.targetContainsSwiftSourceCode(targetNode);
 
     xcodeNativeTargetAttributesBuilder.setTarget(Optional.of(buildTarget));
@@ -1547,7 +1546,7 @@ public class XcodeNativeTargetGenerator {
         extraSettingsBuilder.build(),
         defaultSettingsBuilder.build(),
         appendedConfig,
-        buildTargetFilesystem,
+        projectFilesystem,
         options.shouldGenerateReadOnlyFiles(),
         targetConfigNamesBuilder,
         xcconfigPathsBuilder);
