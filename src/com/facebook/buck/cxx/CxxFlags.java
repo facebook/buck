@@ -30,6 +30,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Iterables;
 import java.util.Collection;
 import java.util.Map;
+import java.util.function.Function;
 
 public class CxxFlags {
 
@@ -156,5 +157,33 @@ public class CxxFlags {
       }
       return flag;
     }
+  }
+
+  /** Expand flag macros in all CxxPlatform flags. */
+  public static CxxPlatform.Builder translateCxxPlatformFlags(
+      CxxPlatform.Builder cxxPlatformBuilder,
+      CxxPlatform cxxPlatform,
+      ImmutableMap<String, String> flagMacros) {
+    Function<String, String> translateFunction =
+        new CxxFlags.TranslateMacrosFunction(ImmutableSortedMap.copyOf(flagMacros));
+    Function<ImmutableList<String>, ImmutableList<String>> expandMacros =
+        flags -> flags.stream().map(translateFunction).collect(ImmutableList.toImmutableList());
+    cxxPlatformBuilder.setAsflags(expandMacros.apply(cxxPlatform.getAsflags()));
+    cxxPlatformBuilder.setAsppflags(expandMacros.apply(cxxPlatform.getAsppflags()));
+    cxxPlatformBuilder.setCflags(expandMacros.apply(cxxPlatform.getCflags()));
+    cxxPlatformBuilder.setCxxflags(expandMacros.apply(cxxPlatform.getCxxflags()));
+    cxxPlatformBuilder.setCppflags(expandMacros.apply(cxxPlatform.getCppflags()));
+    cxxPlatformBuilder.setCxxppflags(expandMacros.apply(cxxPlatform.getCxxppflags()));
+    cxxPlatformBuilder.setCudappflags(expandMacros.apply(cxxPlatform.getCudappflags()));
+    cxxPlatformBuilder.setCudaflags(expandMacros.apply(cxxPlatform.getCudaflags()));
+    cxxPlatformBuilder.setHipppflags(expandMacros.apply(cxxPlatform.getHipppflags()));
+    cxxPlatformBuilder.setHipflags(expandMacros.apply(cxxPlatform.getHipflags()));
+    cxxPlatformBuilder.setAsmppflags(expandMacros.apply(cxxPlatform.getAsmppflags()));
+    cxxPlatformBuilder.setAsmflags(expandMacros.apply(cxxPlatform.getAsmflags()));
+    cxxPlatformBuilder.setLdflags(expandMacros.apply(cxxPlatform.getLdflags()));
+    cxxPlatformBuilder.setStripFlags(expandMacros.apply(cxxPlatform.getStripFlags()));
+    cxxPlatformBuilder.setArflags(expandMacros.apply(cxxPlatform.getArflags()));
+    cxxPlatformBuilder.setRanlibflags(expandMacros.apply(cxxPlatform.getRanlibflags()));
+    return cxxPlatformBuilder;
   }
 }

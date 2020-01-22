@@ -24,6 +24,10 @@ apple_library(
         "srcs/src_a.c",
         "srcs/src_b.c",
     ],
+    compiler_flags = [
+        "-extra-compile-flag",
+        "$SDKROOT/testfile",
+    ],
     headers = [
         "srcs/header.h",
     ],

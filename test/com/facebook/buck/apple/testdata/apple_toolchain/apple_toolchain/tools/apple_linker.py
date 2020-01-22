@@ -13,6 +13,7 @@ parser.add_argument("-L", dest="lpath", action="append", default=[])
 parser.add_argument("-F", dest="fpath", action="append", default=[])
 parser.add_argument("-framework", dest="frameworks", action="append", default=[])
 parser.add_argument("-add_ast_path", dest="ast_paths", action="append", default=[])
+parser.add_argument("-test-flag", action=impl.StripQuotesAction)
 
 (options, args) = parser.parse_known_args()
 
@@ -28,6 +29,8 @@ for fpath in options.fpath:
     assert os.path.exists(fpath), fpath
 for ast_path in options.ast_paths:
     assert os.path.exists(ast_path), ast_path
+
+assert os.path.exists(options.test_flag), options.test_flag
 
 with open(options.output, "w") as output:
     for input in inputs:

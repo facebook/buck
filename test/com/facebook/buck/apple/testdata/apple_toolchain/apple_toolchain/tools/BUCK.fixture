@@ -6,6 +6,8 @@ def define_impl(name):
         visibility = ["PUBLIC"],
     )
 
+define_impl("apple_compiler")
+
 define_impl("apple_linker")
 
 define_impl("codesign")

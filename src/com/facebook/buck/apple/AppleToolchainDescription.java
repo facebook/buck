@@ -37,6 +37,7 @@ import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.toolchain.tool.impl.Tools;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ToolProviders;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.cxx.CxxFlags;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.PrefixMapDebugPathSanitizer;
@@ -180,8 +181,8 @@ public class AppleToolchainDescription
       Path sdkPath,
       Path platformPath,
       Optional<Path> developerPath) {
-    CxxPlatform.Builder cxxPlatformBuilder =
-        CxxPlatform.builder().from(cxxToolchainRule.getPlatformWithFlavor(flavor));
+    CxxPlatform currentCxxPlatform = cxxToolchainRule.getPlatformWithFlavor(flavor);
+    CxxPlatform.Builder cxxPlatformBuilder = CxxPlatform.builder().from(currentCxxPlatform);
 
     ImmutableBiMap.Builder<Path, String> sanitizerPathsBuilder = ImmutableBiMap.builder();
     sanitizerPathsBuilder.put(sdkPath, "APPLE_SDKROOT");
@@ -200,7 +201,11 @@ public class AppleToolchainDescription
         "CURRENT_ARCH",
         ApplePlatform.findArchitecture(flavor).orElseThrow(IllegalStateException::new));
     developerPath.ifPresent(path -> macrosBuilder.put("DEVELOPER_DIR", path.toString()));
-    cxxPlatformBuilder.setFlagMacros(macrosBuilder.build());
+    ImmutableMap<String, String> flagMacros = macrosBuilder.build();
+    cxxPlatformBuilder.setFlagMacros(flagMacros);
+
+    // Expand macros in cxx platform flags.
+    CxxFlags.translateCxxPlatformFlags(cxxPlatformBuilder, currentCxxPlatform, flagMacros);
 
     return cxxPlatformBuilder.build();
   }
