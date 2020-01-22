@@ -81,14 +81,17 @@ run_buck_build: &run_buck_build
 jobs:
   ci_build_openjdk8:
     environment:
+      # Use string constant for values, no environment variables 
       BUCKROOT: "/home/circleci/buck"
       ANDROID_SDK: "/home/circleci/android-sdk"
       TERM: "dumb"
       BUCK_NUM_THREADS: 3
     working_directory: "/home/circleci/buck"
     machine:
+      # linux VM
       image: ubuntu-1604:201903-01
     steps:
+      # Steps run sequentially in separate shells
       - checkout
       - run:
           <<: *install_openjdk8
@@ -415,6 +418,7 @@ jobs:
 workflows:
   version: 2
   all_jobs:
+    # jobs run in parallel
     jobs:
       - ci_build_openjdk8
       - ci_unit_groovy
