@@ -19,6 +19,7 @@ install_android_sdk: &install_android_sdk
     echo 'y' |sdkmanager --install platform-tools
     # Old version build-tools;23.0.2
     echo 'y' |sdkmanager --install "build-tools;29.0.0"
+    echo 'y' |sdkmanager --install "platforms;android-23"
     echo 'y' |sdkmanager --install "platforms;android-28"
 
     # Install 32 bit libraries
