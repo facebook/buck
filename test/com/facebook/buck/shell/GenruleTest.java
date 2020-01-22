@@ -600,7 +600,7 @@ public class GenruleTest {
           GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:test"))
               .setOut(name)
               .build(new TestActionGraphBuilder());
-      assertEquals(name, genrule.getOutputName());
+      assertEquals(name, genrule.getOutputName(OutputLabel.defaultLabel()));
     }
     {
       String name = "out/file.txt";
@@ -608,7 +608,15 @@ public class GenruleTest {
           GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:test"))
               .setOut(name)
               .build(new TestActionGraphBuilder());
-      assertEquals(name, genrule.getOutputName());
+      assertEquals(name, genrule.getOutputName(OutputLabel.defaultLabel()));
+    }
+    {
+      String name = "out/file.txt";
+      Genrule genrule =
+          GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:test"))
+              .setOuts(ImmutableMap.of("label", ImmutableSet.of(name)))
+              .build(new TestActionGraphBuilder());
+      assertEquals(name, genrule.getOutputName(OutputLabel.of("label")));
     }
   }
 

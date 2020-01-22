@@ -29,6 +29,7 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -216,7 +217,7 @@ public class ExportFileTest {
             .setOut("cake")
             .build(new TestActionGraphBuilder(), projectFilesystem);
 
-    assertEquals("cake", exportFile.getOutputName());
+    assertEquals("cake", exportFile.getOutputName(OutputLabel.defaultLabel()));
   }
 
   @Test

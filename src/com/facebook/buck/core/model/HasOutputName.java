@@ -21,12 +21,6 @@ package com.facebook.buck.core.model;
  * with logical "names" (e.g. Python modules).
  */
 public interface HasOutputName {
-  // TODO(irenewchen): This should be removed after all the plumbing for existing usages is done.
-  // Use getOutputName(OutputLabel) instead
-  default String getOutputName() {
-    return getOutputName(OutputLabel.defaultLabel());
-  }
-
   /**
    * Returns an output name for the build target associated with the given output label. Not
    * necessarily a path relative to any directory
