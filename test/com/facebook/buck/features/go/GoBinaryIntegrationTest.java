@@ -375,6 +375,26 @@ public class GoBinaryIntegrationTest {
   }
 
   @Test
+  public void cgoLibraryWithCxxPrebuiltDepBuiltWithWrappedCpp() throws IOException {
+    GoAssumptions.assumeGoVersionAtLeast("1.10.0");
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "cgo", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace
+            .runBuckCommand(
+                "run",
+                "-c",
+                "cxx.cpp=//cpp_wrapper:cpp_wrapper",
+                "-c",
+                "cxx.cpp_type=gcc",
+                "//src/prebuilt_cxx_lib/cli:cli")
+            .assertSuccess()
+            .getStdout(),
+        Matchers.containsString("called remote_function"));
+  }
+
+  @Test
   public void binaryWithPrebuilt() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_prebuilt", tmp);

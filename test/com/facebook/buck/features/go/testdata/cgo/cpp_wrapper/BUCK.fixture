@@ -1,0 +1,13 @@
+export_file(
+    name = "wrapper.py",
+)
+
+command_alias(
+    name = "cpp_wrapper",
+    exe = ":wrapper.py",
+    args = [
+        # wrapper requires --cc flag to be set to actual compiler tool
+        "--cc=gcc",
+    ],
+    visibility = ["PUBLIC"],
+)
