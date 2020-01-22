@@ -291,6 +291,120 @@ jobs:
             ./new_buck.pex build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
             ./new_buck.pex test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
 
+  ci_android_ndk_16:
+    environment:
+      BUCKROOT: "/home/circleci/buck"
+      ANDROID_SDK: "/home/circleci/android-sdk"
+      TERM: "dumb"
+      BUCK_NUM_THREADS: 3
+    working_directory: "/home/circleci/buck"
+    machine:
+      image: ubuntu-1604:201903-01
+    steps:
+      - checkout
+      - run:
+          <<: *install_openjdk8
+      - run:
+          <<: *install_android_sdk
+      - run:
+          name: Install Android NDK 16
+          command: |
+            cd ${BUCKROOT}
+            export NDK_HOME="${HOME}/android-ndk-linux"
+            ./scripts/travisci_unzip_android_ndk.sh android-ndk-r16b
+      - run:
+          <<: *install_golang
+      - run:
+          <<: *install_python
+      - run:
+          <<: *run_ant_build
+      - run:
+          <<: *run_buck_build
+      - run:
+          name: Run Android NDK 16 Tests
+          command: |
+            export NDK_HOME="${HOME}/android-ndk-linux"
+            export ANDROID_HOME=${ANDROID_SDK}
+            set -eux
+            ./new_buck.pex build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
+            ./new_buck.pex test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
+
+  ci_android_ndk_16:
+    environment:
+      BUCKROOT: "/home/circleci/buck"
+      ANDROID_SDK: "/home/circleci/android-sdk"
+      TERM: "dumb"
+      BUCK_NUM_THREADS: 3
+    working_directory: "/home/circleci/buck"
+    machine:
+      image: ubuntu-1604:201903-01
+    steps:
+      - checkout
+      - run:
+          <<: *install_openjdk8
+      - run:
+          <<: *install_android_sdk
+      - run:
+          name: Install Android NDK 17
+          command: |
+            cd ${BUCKROOT}
+            export NDK_HOME="${HOME}/android-ndk-linux"
+            ./scripts/travisci_unzip_android_ndk.sh android-ndk-r17b
+      - run:
+          <<: *install_golang
+      - run:
+          <<: *install_python
+      - run:
+          <<: *run_ant_build
+      - run:
+          <<: *run_buck_build
+      - run:
+          name: Run Android NDK 17 Tests
+          command: |
+            export NDK_HOME="${HOME}/android-ndk-linux"
+            export ANDROID_HOME=${ANDROID_SDK}
+            set -eux
+            ./new_buck.pex build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
+            ./new_buck.pex test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
+
+  ci_android_ndk_16:
+    environment:
+      BUCKROOT: "/home/circleci/buck"
+      ANDROID_SDK: "/home/circleci/android-sdk"
+      TERM: "dumb"
+      BUCK_NUM_THREADS: 3
+    working_directory: "/home/circleci/buck"
+    machine:
+      image: ubuntu-1604:201903-01
+    steps:
+      - checkout
+      - run:
+          <<: *install_openjdk8
+      - run:
+          <<: *install_android_sdk
+      - run:
+          name: Install Android NDK 18
+          command: |
+            cd ${BUCKROOT}
+            export NDK_HOME="${HOME}/android-ndk-linux"
+            ./scripts/travisci_unzip_android_ndk.sh android-ndk-r18b
+      - run:
+          <<: *install_golang
+      - run:
+          <<: *install_python
+      - run:
+          <<: *run_ant_build
+      - run:
+          <<: *run_buck_build
+      - run:
+          name: Run Android NDK 18 Tests
+          command: |
+            export NDK_HOME="${HOME}/android-ndk-linux"
+            export ANDROID_HOME=${ANDROID_SDK}
+            set -eux
+            ./new_buck.pex build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
+            ./new_buck.pex test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
+
 workflows:
   version: 2
   all_jobs:
@@ -301,4 +415,7 @@ workflows:
       - ci_integration
       - ci_heavy_integration
       - ci_android_ndk_15
+      - ci_android_ndk_16
+      - ci_android_ndk_17
+      - ci_android_ndk_18
 
