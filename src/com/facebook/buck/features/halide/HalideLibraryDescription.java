@@ -242,8 +242,7 @@ public class HalideLibraryDescription
       Optional<ImmutableList<String>> optionalFlags, CxxPlatform platform) {
     if (optionalFlags.isPresent()) {
       AddsToRuleKeyFunction<String, String> macroMapper =
-          new TranslateMacrosFunction(
-              ImmutableSortedMap.copyOf(platform.getFlagMacros()), platform);
+          new TranslateMacrosFunction(ImmutableSortedMap.copyOf(platform.getFlagMacros()));
       ImmutableList<String> flags = optionalFlags.get();
       ImmutableList.Builder<String> builder = ImmutableList.builder();
       for (String flag : flags) {

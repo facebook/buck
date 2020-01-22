@@ -16,11 +16,9 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.macros.StringWithMacros;
@@ -30,10 +28,8 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Optional;
 
 public class CxxFlags {
 
@@ -44,9 +40,7 @@ public class CxxFlags {
       PatternMatchedCollection<ImmutableList<String>> platformFlags,
       CxxPlatform platform) {
     return RichStream.from(getFlags(flags, platformFlags, platform))
-        .map(
-            new TranslateMacrosFunction(
-                ImmutableSortedMap.copyOf(platform.getFlagMacros()), platform))
+        .map(new TranslateMacrosFunction(ImmutableSortedMap.copyOf(platform.getFlagMacros())))
         .toImmutableList();
   }
 
@@ -55,7 +49,7 @@ public class CxxFlags {
       PatternMatchedCollection<ImmutableList<StringWithMacros>> platformFlags,
       CxxPlatform platform) {
     AddsToRuleKeyFunction<String, String> translateMacrosFn =
-        new TranslateMacrosFunction(ImmutableSortedMap.copyOf(platform.getFlagMacros()), platform);
+        new TranslateMacrosFunction(ImmutableSortedMap.copyOf(platform.getFlagMacros()));
     return RichStream.from(getFlags(flags, platformFlags, platform))
         .map(s -> s.mapStrings(translateMacrosFn))
         .toImmutableList();
@@ -102,8 +96,7 @@ public class CxxFlags {
           entry.getKey(),
           Iterables.transform(
               entry.getValue(),
-              (new TranslateMacrosFunction(
-                      ImmutableSortedMap.copyOf(platform.getFlagMacros()), platform))
+              (new TranslateMacrosFunction(ImmutableSortedMap.copyOf(platform.getFlagMacros())))
                   ::apply));
     }
 
@@ -128,8 +121,7 @@ public class CxxFlags {
     for (ImmutableMap.Entry<CxxSource.Type, ? extends Collection<StringWithMacros>> entry :
         languageFlags.entrySet()) {
       AddsToRuleKeyFunction<String, String> translateMacrosFn =
-          new TranslateMacrosFunction(
-              ImmutableSortedMap.copyOf(platform.getFlagMacros()), platform);
+          new TranslateMacrosFunction(ImmutableSortedMap.copyOf(platform.getFlagMacros()));
       langFlags.putAll(
           entry.getKey(),
           entry.getValue().stream().map(s -> s.mapStrings(translateMacrosFn))::iterator);
@@ -150,22 +142,8 @@ public class CxxFlags {
     @CustomFieldBehavior(DefaultFieldSerialization.class)
     private final ImmutableSortedMap<String, String> flagMacros;
 
-    @AddToRuleKey private final DebugPathSanitizer compilerDebugPathSanitizer;
-    @AddToRuleKey private final ImmutableSortedMap<String, String> santizedMap;
-
-    public TranslateMacrosFunction(
-        ImmutableSortedMap<String, String> flagMacros, CxxPlatform cxxPlatform) {
-      this(flagMacros, cxxPlatform.getCompilerDebugPathSanitizer());
-    }
-
-    public TranslateMacrosFunction(
-        ImmutableSortedMap<String, String> flagMacros, DebugPathSanitizer pathSanitizer) {
+    public TranslateMacrosFunction(ImmutableSortedMap<String, String> flagMacros) {
       this.flagMacros = flagMacros;
-      this.compilerDebugPathSanitizer = pathSanitizer;
-      this.santizedMap =
-          ImmutableSortedMap.copyOf(
-              Maps.transformValues(
-                  flagMacros, compilerDebugPathSanitizer.sanitizer(Optional.empty())::apply));
     }
 
     @Override

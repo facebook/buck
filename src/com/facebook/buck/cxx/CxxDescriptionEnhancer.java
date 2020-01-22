@@ -721,7 +721,7 @@ public class CxxDescriptionEnhancer {
       this.resolver = resolver;
       this.translateMacrosFn =
           new CxxFlags.TranslateMacrosFunction(
-              ImmutableSortedMap.copyOf(cxxPlatform.getFlagMacros()), cxxPlatform);
+              ImmutableSortedMap.copyOf(cxxPlatform.getFlagMacros()));
     }
 
     @Override
