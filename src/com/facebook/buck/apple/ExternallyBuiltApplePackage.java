@@ -23,7 +23,6 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.DefaultFieldInputs;
 import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rulekey.ThrowingSerialization;
-import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -32,32 +31,27 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.SourceSet;
+import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
-import com.facebook.buck.shell.LegacyGenrule;
+import com.facebook.buck.sandbox.SandboxProperties;
+import com.facebook.buck.shell.Genrule;
+import com.facebook.buck.shell.GenruleAndroidTools;
+import com.facebook.buck.shell.GenruleBuildable;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
 import org.immutables.value.Value;
 
 /** Rule for generating an apple package via external script. */
-public class ExternallyBuiltApplePackage extends LegacyGenrule {
-  @AddToRuleKey private String sdkVersion;
-  @AddToRuleKey private Optional<String> platformBuildVersion;
-
-  @ExcludeFromRuleKey(
-      reason =
-          "We add only the sdk version and platform build version to rulekeys and hope that it's correct.",
-      serialization = ThrowingSerialization.class,
-      inputs = DefaultFieldInputs.class)
-  private Path sdkPath;
+public class ExternallyBuiltApplePackage extends Genrule {
 
   public ExternallyBuiltApplePackage(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       SandboxExecutionStrategy sandboxExecutionStrategy,
       BuildRuleResolver resolver,
-      BuildRuleParams params,
       ApplePackageConfigAndPlatformInfo packageConfigAndPlatformInfo,
       SourcePath bundle,
       boolean cacheable,
@@ -67,29 +61,101 @@ public class ExternallyBuiltApplePackage extends LegacyGenrule {
         buildTarget,
         projectFilesystem,
         resolver,
-        params,
-        sandboxExecutionStrategy,
-        SourceSet.ofUnnamedSources(ImmutableSortedSet.of(bundle)),
-        Optional.of(packageConfigAndPlatformInfo.getExpandedArg()),
-        /* bash */ Optional.empty(),
-        /* cmdExe */ Optional.empty(),
-        /* type */ Optional.empty(),
-        buildTarget.getShortName() + "." + packageConfigAndPlatformInfo.getConfig().getExtension(),
-        false,
-        cacheable,
-        environmentExpansionSeparator,
-        androidTools);
-    this.sdkPath = packageConfigAndPlatformInfo.getSdkPath();
-    this.sdkVersion = packageConfigAndPlatformInfo.getSdkVersion();
-    this.platformBuildVersion = packageConfigAndPlatformInfo.getPlatformBuildVersion();
+        new Buildable(
+            buildTarget,
+            projectFilesystem,
+            sandboxExecutionStrategy,
+            SourceSet.ofUnnamedSources(ImmutableSortedSet.of(bundle)),
+            Optional.of(packageConfigAndPlatformInfo.getExpandedArg()),
+            /* bash */ Optional.empty(),
+            /* cmdExe */ Optional.empty(),
+            /* type */ Optional.empty(),
+            Optional.of(
+                buildTarget.getShortName()
+                    + "."
+                    + packageConfigAndPlatformInfo.getConfig().getExtension()),
+            Optional.empty(),
+            false,
+            cacheable,
+            environmentExpansionSeparator.orElse(" "),
+            Optional.empty(),
+            androidTools.map(tools -> GenruleAndroidTools.of(tools, buildTarget, resolver)),
+            false,
+            packageConfigAndPlatformInfo.getSdkVersion(),
+            packageConfigAndPlatformInfo.getPlatformBuildVersion(),
+            packageConfigAndPlatformInfo.getSdkPath()));
   }
 
-  @Override
-  protected void addEnvironmentVariables(
-      SourcePathResolverAdapter pathResolver,
-      ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
-    super.addEnvironmentVariables(pathResolver, environmentVariablesBuilder);
-    environmentVariablesBuilder.put("SDKROOT", sdkPath.toString());
+  private static class Buildable extends GenruleBuildable {
+    @AddToRuleKey private final String sdkVersion;
+    @AddToRuleKey private final Optional<String> platformBuildVersion;
+
+    @ExcludeFromRuleKey(
+        reason =
+            "We add only the sdk version and platform build version to rulekeys and hope that it's correct.",
+        serialization = ThrowingSerialization.class,
+        inputs = DefaultFieldInputs.class)
+    private final Path sdkPath;
+
+    public Buildable(
+        BuildTarget buildTarget,
+        ProjectFilesystem filesystem,
+        SandboxExecutionStrategy sandboxExecutionStrategy,
+        SourceSet srcs,
+        Optional<Arg> cmd,
+        Optional<Arg> bash,
+        Optional<Arg> cmdExe,
+        Optional<String> type,
+        Optional<String> out,
+        Optional<ImmutableMap<String, ImmutableSet<String>>> outs,
+        boolean enableSandboxingInGenrule,
+        boolean isCacheable,
+        String environmentExpansionSeparator,
+        Optional<SandboxProperties> sandboxProperties,
+        Optional<GenruleAndroidTools> androidTools,
+        boolean executeRemotely,
+        String sdkVersion,
+        Optional<String> platformBuildVersion,
+        Path sdkPath) {
+      super(
+          buildTarget,
+          filesystem,
+          sandboxExecutionStrategy,
+          srcs,
+          cmd,
+          bash,
+          cmdExe,
+          type,
+          out,
+          outs,
+          enableSandboxingInGenrule,
+          isCacheable,
+          environmentExpansionSeparator,
+          sandboxProperties,
+          androidTools,
+          executeRemotely);
+      this.sdkVersion = sdkVersion;
+      this.platformBuildVersion = platformBuildVersion;
+      this.sdkPath = sdkPath;
+    }
+
+    @Override
+    protected void addEnvironmentVariables(
+        SourcePathResolverAdapter pathResolver,
+        OutputPathResolver outputPathResolver,
+        ProjectFilesystem filesystem,
+        Path srcPath,
+        Path tmpPath,
+        ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
+      super.addEnvironmentVariables(
+          pathResolver,
+          outputPathResolver,
+          filesystem,
+          srcPath,
+          tmpPath,
+          environmentVariablesBuilder);
+      environmentVariablesBuilder.put("SDKROOT", sdkPath.toString());
+    }
   }
 
   /** Value type for tracking a package config and information about the platform. */
