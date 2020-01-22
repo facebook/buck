@@ -25,8 +25,16 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.impl.NoopBuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.cxx.CxxFlags;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
+import com.facebook.buck.cxx.toolchain.PrefixMapDebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.ProvidesCxxPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.collect.ImmutableBiMap;
+import com.google.common.collect.ImmutableMap;
+import java.io.File;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,6 +48,7 @@ public class NdkToolchainBuildRule extends NoopBuildRule implements ProvidesNdkC
   private final Optional<SourcePath> sharedRuntimePath;
   private final NdkCxxRuntime cxxRuntime;
   private final Tool objdump;
+  private final Optional<Path> ndkPath;
 
   private final Map<Flavor, NdkCxxPlatform> resolvedCache;
 
@@ -49,13 +58,15 @@ public class NdkToolchainBuildRule extends NoopBuildRule implements ProvidesNdkC
       ProvidesCxxPlatform cxxPlatformRule,
       Optional<SourcePath> sharedRuntimePath,
       NdkCxxRuntime cxxRuntime,
-      Tool objdump) {
+      Tool objdump,
+      Optional<Path> ndkPath) {
     super(buildTarget, projectFilesystem);
 
     this.cxxPlatformRule = cxxPlatformRule;
     this.sharedRuntimePath = sharedRuntimePath;
     this.cxxRuntime = cxxRuntime;
     this.objdump = objdump;
+    this.ndkPath = ndkPath;
     this.resolvedCache = new ConcurrentHashMap<>();
   }
 
@@ -65,10 +76,32 @@ public class NdkToolchainBuildRule extends NoopBuildRule implements ProvidesNdkC
         flavor,
         ignored ->
             NdkCxxPlatform.builder()
-                .setCxxPlatform(cxxPlatformRule.getPlatformWithFlavor(flavor))
+                .setCxxPlatform(getCxxPlatform(flavor))
                 .setCxxSharedRuntimePath(sharedRuntimePath)
                 .setCxxRuntime(cxxRuntime)
                 .setObjdump(objdump)
                 .build());
+  }
+
+  private CxxPlatform getCxxPlatform(Flavor flavor) {
+    if (!ndkPath.isPresent()) {
+      return cxxPlatformRule.getPlatformWithFlavor(flavor);
+    }
+    CxxPlatform currentCxxPlatform = cxxPlatformRule.getPlatformWithFlavor(flavor);
+    CxxPlatform.Builder cxxPlatformBuilder = CxxPlatform.builder().from(currentCxxPlatform);
+
+    DebugPathSanitizer compilerDebugPathSanitizer =
+        new PrefixMapDebugPathSanitizer(
+            DebugPathSanitizer.getPaddedDir(".", 250, File.separatorChar),
+            ImmutableBiMap.of(ndkPath.get(), "NDKROOT"));
+    cxxPlatformBuilder.setCompilerDebugPathSanitizer(compilerDebugPathSanitizer);
+
+    ImmutableMap<String, String> flagMacros = ImmutableMap.of("NDK_ROOT", ndkPath.get().toString());
+    cxxPlatformBuilder.setFlagMacros(flagMacros);
+
+    // Expand macros in cxx platform flags.
+    CxxFlags.translateCxxPlatformFlags(cxxPlatformBuilder, currentCxxPlatform, flagMacros);
+
+    return cxxPlatformBuilder.build();
   }
 }

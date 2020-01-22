@@ -3,3 +3,11 @@ export_file(
     src = "runtime.so",
     visibility = ["PUBLIC"],
 )
+
+genrule(
+    name = "gen_ndk",
+    cmd = "mkdir $OUT; echo test > $OUT/outfile",
+    cmd_exe = "mkdir $OUT & echo test> $OUT/outfile",
+    out = "ndk",
+    visibility = ["PUBLIC"],
+)
