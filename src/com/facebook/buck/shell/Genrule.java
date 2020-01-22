@@ -160,7 +160,7 @@ public class Genrule extends ModernBuildRule<GenruleBuildable>
       Optional<String> environmentExpansionSeparator,
       Optional<AndroidTools> androidTools,
       boolean executeRemotely) {
-    super(
+    this(
         buildTarget,
         projectFilesystem,
         buildRuleResolver,
@@ -186,6 +186,14 @@ public class Genrule extends ModernBuildRule<GenruleBuildable>
             androidTools.map(
                 tools -> GenruleAndroidTools.of(tools, buildTarget, buildRuleResolver)),
             executeRemotely));
+  }
+
+  protected Genrule(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleResolver buildRuleResolver,
+      GenruleBuildable buildable) {
+    super(buildTarget, projectFilesystem, buildRuleResolver, buildable);
   }
 
   /**

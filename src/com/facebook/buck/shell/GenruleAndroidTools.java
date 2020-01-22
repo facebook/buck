@@ -43,7 +43,7 @@ import java.util.Optional;
  * serializer can be derived.
  */
 @BuckStyleValue
-abstract class GenruleAndroidTools implements AddsToRuleKey {
+public abstract class GenruleAndroidTools implements AddsToRuleKey {
   public abstract Path getAndroidSdkLocation();
 
   public abstract Path getAndroidPathToDx();

@@ -19,11 +19,8 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
-import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -32,12 +29,16 @@ import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryClasspathProvider;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.SourceSet;
+import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
-import com.facebook.buck.shell.LegacyGenrule;
-import com.google.common.base.Preconditions;
+import com.facebook.buck.sandbox.SandboxProperties;
+import com.facebook.buck.shell.Genrule;
+import com.facebook.buck.shell.GenruleAndroidTools;
+import com.facebook.buck.shell.GenruleBuildable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -58,10 +59,9 @@ import java.util.stream.Stream;
  * )
  * </pre>
  */
-public class ApkGenrule extends LegacyGenrule
+public class ApkGenrule extends Genrule
     implements HasInstallableApk, HasRuntimeDeps, HasClasspathEntries {
 
-  @AddToRuleKey private final BuildTargetSourcePath apk;
   private final HasInstallableApk hasInstallableApk;
 
   ApkGenrule(
@@ -69,38 +69,39 @@ public class ApkGenrule extends LegacyGenrule
       ProjectFilesystem projectFilesystem,
       SandboxExecutionStrategy sandboxExecutionStrategy,
       BuildRuleResolver resolver,
-      BuildRuleParams params,
       SourceSet srcs,
       Optional<Arg> cmd,
       Optional<Arg> bash,
       Optional<Arg> cmdExe,
       Optional<String> type,
-      SourcePath apk,
       boolean isCacheable,
       Optional<String> environmentExpansionSeparator,
-      Optional<AndroidTools> androidTools) {
+      Optional<AndroidTools> androidTools,
+      HasInstallableApk installableApk) {
     super(
         buildTarget,
         projectFilesystem,
         resolver,
-        params,
-        sandboxExecutionStrategy,
-        srcs,
-        cmd,
-        bash,
-        cmdExe,
-        type,
-        /* out */ buildTarget.getShortNameAndFlavorPostfix() + ".apk",
-        false,
-        isCacheable,
-        environmentExpansionSeparator,
-        androidTools);
+        new Buildable(
+            buildTarget,
+            projectFilesystem,
+            sandboxExecutionStrategy,
+            srcs,
+            cmd,
+            bash,
+            cmdExe,
+            type,
+            /* out */ Optional.of(buildTarget.getShortNameAndFlavorPostfix() + ".apk"),
+            Optional.empty(),
+            false,
+            isCacheable,
+            environmentExpansionSeparator.orElse(" "),
+            Optional.empty(),
+            androidTools.map(tools -> GenruleAndroidTools.of(tools, buildTarget, resolver)),
+            false,
+            installableApk.getApkInfo().getApkPath()));
     // TODO(cjhopman): Disallow apk_genrule depending on an apk with exopackage enabled.
-    Preconditions.checkState(apk instanceof BuildTargetSourcePath);
-    this.apk = (BuildTargetSourcePath) apk;
-    BuildRule rule = resolver.getRule(this.apk);
-    Preconditions.checkState(rule instanceof HasInstallableApk);
-    this.hasInstallableApk = (HasInstallableApk) rule;
+    this.hasInstallableApk = installableApk;
   }
 
   public HasInstallableApk getInstallableApk() {
@@ -110,17 +111,6 @@ public class ApkGenrule extends LegacyGenrule
   @Override
   public ApkInfo getApkInfo() {
     return hasInstallableApk.getApkInfo().withApkPath(getSourcePathToOutput());
-  }
-
-  @Override
-  protected void addEnvironmentVariables(
-      SourcePathResolverAdapter pathResolver,
-      ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
-    super.addEnvironmentVariables(pathResolver, environmentVariablesBuilder);
-    // We have to use an absolute path, because genrules are run in a temp directory.
-    String apkAbsolutePath =
-        pathResolver.getAbsolutePath(hasInstallableApk.getApkInfo().getApkPath()).toString();
-    environmentVariablesBuilder.put("APK", apkAbsolutePath);
   }
 
   @Override
@@ -151,5 +141,67 @@ public class ApkGenrule extends LegacyGenrule
   public ImmutableSet<SourcePath> getOutputClasspaths() {
     // The apk has no exported deps or classpath contributions of its own
     return ImmutableSet.of();
+  }
+
+  private static class Buildable extends GenruleBuildable {
+    @AddToRuleKey private final SourcePath apkPath;
+
+    public Buildable(
+        BuildTarget buildTarget,
+        ProjectFilesystem filesystem,
+        SandboxExecutionStrategy sandboxExecutionStrategy,
+        SourceSet srcs,
+        Optional<Arg> cmd,
+        Optional<Arg> bash,
+        Optional<Arg> cmdExe,
+        Optional<String> type,
+        Optional<String> out,
+        Optional<ImmutableMap<String, ImmutableSet<String>>> outs,
+        boolean enableSandboxingInGenrule,
+        boolean isCacheable,
+        String environmentExpansionSeparator,
+        Optional<SandboxProperties> sandboxProperties,
+        Optional<GenruleAndroidTools> androidTools,
+        boolean executeRemotely,
+        SourcePath apkPath) {
+      super(
+          buildTarget,
+          filesystem,
+          sandboxExecutionStrategy,
+          srcs,
+          cmd,
+          bash,
+          cmdExe,
+          type,
+          out,
+          outs,
+          enableSandboxingInGenrule,
+          isCacheable,
+          environmentExpansionSeparator,
+          sandboxProperties,
+          androidTools,
+          executeRemotely);
+      this.apkPath = apkPath;
+    }
+
+    @Override
+    protected void addEnvironmentVariables(
+        SourcePathResolverAdapter pathResolver,
+        OutputPathResolver outputPathResolver,
+        ProjectFilesystem filesystem,
+        Path srcPath,
+        Path tmpPath,
+        ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
+      super.addEnvironmentVariables(
+          pathResolver,
+          outputPathResolver,
+          filesystem,
+          srcPath,
+          tmpPath,
+          environmentVariablesBuilder);
+      // We have to use an absolute path, because genrules are run in a temp directory.
+      String apkAbsolutePath = pathResolver.getAbsolutePath(apkPath).toString();
+      environmentVariablesBuilder.put("APK", apkAbsolutePath);
+    }
   }
 }

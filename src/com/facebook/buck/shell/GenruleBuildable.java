@@ -564,6 +564,11 @@ public class GenruleBuildable implements Buildable {
     return cmd;
   }
 
+  @VisibleForTesting
+  public SourceSet getSrcs() {
+    return srcs;
+  }
+
   private ProgramRunner createProgramRunner() {
     if (sandboxExecutionStrategy.isSandboxEnabled() && enableSandboxingInGenrule) {
       Preconditions.checkState(
