@@ -139,14 +139,15 @@ public class CommandLineArgsFactoryTest {
     Artifact artifact =
         artifactFactory.createDeclaredArtifact(Paths.get("out.txt"), Location.BUILTIN);
 
-    OutputArtifact artifactOutput = artifact.asOutputArtifact(Location.BUILTIN);
-    CommandLineArgs args = CommandLineArgsFactory.from(ImmutableList.of(artifactOutput));
+    CommandLineArgs args =
+        CommandLineArgsFactory.from(
+            ImmutableList.of(artifact.asSkylarkOutputArtifact(Location.BUILTIN)));
 
     ImmutableList.Builder<Artifact> inputs = ImmutableList.builder();
     ImmutableList.Builder<OutputArtifact> outputs = ImmutableList.builder();
     args.visitInputsAndOutputs(inputs::add, outputs::add);
 
     assertEquals(ImmutableList.of(), inputs.build());
-    assertEquals(ImmutableList.of(artifactOutput), outputs.build());
+    assertEquals(ImmutableList.of(artifact.asOutputArtifact()), outputs.build());
   }
 }

@@ -156,7 +156,7 @@ public class ArtifactFilesystemTest {
 
     DeclaredArtifact declaredArtifact =
         factory.createDeclaredArtifact(Paths.get("out.txt"), Location.BUILTIN);
-    OutputArtifact outputArtifact = declaredArtifact.asOutputArtifact(Location.BUILTIN);
+    OutputArtifact outputArtifact = declaredArtifact.asOutputArtifact();
     declaredArtifact.materialize(key);
 
     Path expectedPath = BuildPaths.getGenDir(filesystem, buildTarget);
@@ -179,7 +179,7 @@ public class ArtifactFilesystemTest {
 
     DeclaredArtifact declaredArtifact =
         factory.createDeclaredArtifact(Paths.get("out.txt"), Location.BUILTIN);
-    OutputArtifact outputArtifact = declaredArtifact.asOutputArtifact(Location.BUILTIN);
+    OutputArtifact outputArtifact = declaredArtifact.asOutputArtifact();
     BuildArtifact artifact = declaredArtifact.materialize(key);
 
     artifactFilesystem.writeContentsToPath("contents", artifact);

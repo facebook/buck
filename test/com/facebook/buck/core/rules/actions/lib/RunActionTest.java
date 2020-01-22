@@ -74,7 +74,7 @@ public class RunActionTest {
         new WriteAction(
             runner.getRegistry(),
             ImmutableSortedSet.of(),
-            ImmutableSortedSet.of(script.asOutputArtifact(Location.BUILTIN)),
+            ImmutableSortedSet.of(script.asOutputArtifact()),
             filesystem.readFileIfItExists(scriptPath).get(),
             true));
   }
@@ -219,17 +219,22 @@ public class RunActionTest {
         new WriteAction(
             runner.getRegistry(),
             ImmutableSortedSet.of(),
-            ImmutableSortedSet.of(otherInput.asOutputArtifact(Location.BUILTIN)),
+            ImmutableSortedSet.of(otherInput.asOutputArtifact()),
             "contents",
             false));
 
-    OutputArtifact outputArtifact = output.asOutputArtifact(Location.BUILTIN);
+    OutputArtifact outputArtifact = output.asOutputArtifact();
     RunAction action =
         new RunAction(
             runner.getRegistry(),
             "list",
             CommandLineArgsFactory.from(
-                ImmutableList.of(script, "--foo", "bar", otherInput, outputArtifact)),
+                ImmutableList.of(
+                    script,
+                    "--foo",
+                    "bar",
+                    otherInput,
+                    output.asSkylarkOutputArtifact(Location.BUILTIN))),
             ImmutableMap.of());
 
     assertEquals(ImmutableSortedSet.of(otherInput, script), action.getInputs());

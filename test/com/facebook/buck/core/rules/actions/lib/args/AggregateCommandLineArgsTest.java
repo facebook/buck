@@ -79,7 +79,8 @@ public class AggregateCommandLineArgsTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:some_rule");
     ActionRegistryForTests registry = new ActionRegistryForTests(target, filesystem);
     Artifact artifact3 = registry.declareArtifact(Paths.get("out.txt"), Location.BUILTIN);
-    OutputArtifact artifact3Output = artifact3.asOutputArtifact(Location.BUILTIN);
+    OutputArtifact artifact3Output =
+        (OutputArtifact) artifact3.asSkylarkOutputArtifact(Location.BUILTIN);
     Path artifact3Path = BuildPaths.getGenDir(filesystem, target).resolve("out.txt");
 
     CommandLineArgs args =
@@ -203,15 +204,15 @@ public class AggregateCommandLineArgsTest {
             ImmutableList.of(path1, 1, "foo", path2), CommandLineArgs.DEFAULT_FORMAT_STRING);
     ListCommandLineArgs listArgs4 =
         new ListCommandLineArgs(
-            ImmutableList.of(path1, 1, "foo", path2, path3.asOutputArtifact(Location.BUILTIN)),
+            ImmutableList.of(path1, 1, "foo", path2, path3.asOutputArtifact()),
             CommandLineArgs.DEFAULT_FORMAT_STRING);
     ListCommandLineArgs listArgs5 =
         new ListCommandLineArgs(
-            ImmutableList.of(path1, 1, "foo", path2, path4.asOutputArtifact(Location.BUILTIN)),
+            ImmutableList.of(path1, 1, "foo", path2, path4.asOutputArtifact()),
             CommandLineArgs.DEFAULT_FORMAT_STRING);
     ListCommandLineArgs listArgs6 =
         new ListCommandLineArgs(
-            ImmutableList.of(path1, 1, "foo", path2, path5.asOutputArtifact(Location.BUILTIN)),
+            ImmutableList.of(path1, 1, "foo", path2, path5.asOutputArtifact()),
             CommandLineArgs.DEFAULT_FORMAT_STRING);
 
     RunInfo envArgs1 =

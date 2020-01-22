@@ -75,7 +75,7 @@ public interface SkylarkArtifactApi extends SkylarkValue {
           "Get an instance of this artifact that signals it is intended to be used as an output. "
               + "This is normally only of use with `ctx.action.run()`, or `ctx.action.args()`",
       useLocation = true)
-  SkylarkOutputArtifactApi asOutputArtifact(Location location) throws EvalException;
+  SkylarkOutputArtifactApi asSkylarkOutputArtifact(Location location) throws EvalException;
 
   @Override
   default boolean isImmutable() {

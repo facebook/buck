@@ -23,8 +23,6 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
-import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.syntax.EvalException;
 import java.util.Objects;
 
 public class FakeAction extends AbstractAction {
@@ -43,14 +41,7 @@ public class FakeAction extends AbstractAction {
         actionRegistry,
         ImmutableSortedSet.copyOf(Sets.union(srcs, deps)),
         outputs.stream()
-            .map(
-                artifact -> {
-                  try {
-                    return artifact.asOutputArtifact(Location.BUILTIN);
-                  } catch (EvalException e) {
-                    throw new RuntimeException(e);
-                  }
-                })
+            .map(Artifact::asOutputArtifact)
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())),
         "fake-action");
     this.hasheableWrapper = new HashableWrapper(executeFunction);

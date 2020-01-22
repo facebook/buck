@@ -33,7 +33,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
-import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -98,8 +97,8 @@ public class CommandLineArgStringifierTest {
 
     Artifact artifact = registry.declareArtifact(Paths.get("foo", "bar.cpp"));
     Artifact shortArtifact = registry.declareArtifact(Paths.get("foo"));
-    OutputArtifact artifactOutput = artifact.asOutputArtifact(Location.BUILTIN);
-    OutputArtifact shortArtifactOutput = shortArtifact.asOutputArtifact(Location.BUILTIN);
+    OutputArtifact artifactOutput = artifact.asOutputArtifact();
+    OutputArtifact shortArtifactOutput = shortArtifact.asOutputArtifact();
 
     new WriteAction(
         registry, ImmutableSortedSet.of(), ImmutableSortedSet.of(artifactOutput), "out", false);

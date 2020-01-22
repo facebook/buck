@@ -70,8 +70,7 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
   @Override
   public Artifact copyFile(Artifact src, Object dest, Location location) throws EvalException {
     Artifact destArtifact = getArtifactFromArtifactOrString(location, dest);
-    new CopyAction(
-        registry, src, destArtifact.asOutputArtifact(Location.BUILTIN), CopySourceMode.FILE);
+    new CopyAction(registry, src, destArtifact.asOutputArtifact(), CopySourceMode.FILE);
     return destArtifact;
   }
 
@@ -81,7 +80,7 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
     Artifact destArtifact = getArtifactFromArtifactOrString(location, output);
     try {
       ImmutableSortedSet<OutputArtifact> outputs =
-          ImmutableSortedSet.of(destArtifact.asOutputArtifact(Location.BUILTIN));
+          ImmutableSortedSet.of(destArtifact.asOutputArtifact());
       if (content instanceof String) {
         new WriteAction(registry, ImmutableSortedSet.of(), outputs, (String) content, isExecutable);
       } else if (content instanceof CommandLineArgsBuilder) {

@@ -16,10 +16,12 @@
 
 package com.facebook.buck.core.artifact;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.starlark.rule.artifact.SkylarkOutputArtifactApi;
 import com.facebook.buck.io.file.MorePaths;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
@@ -225,11 +227,20 @@ class ArtifactImpl extends AbstractArtifact
   }
 
   @Override
-  public OutputArtifact asOutputArtifact(Location location) throws EvalException {
+  public SkylarkOutputArtifactApi asSkylarkOutputArtifact(Location location) throws EvalException {
     if (isBound()) {
       throw new EvalException(
           location,
           String.format("%s is already bound. It cannot be used as an output artifact", this));
+    }
+    return ImmutableOutputArtifact.of(this);
+  }
+
+  @Override
+  public OutputArtifact asOutputArtifact() {
+    if (isBound()) {
+      throw new HumanReadableException(
+          "%s is already bound. It cannot be used as an output artifact", this);
     }
     return ImmutableOutputArtifact.of(this);
   }

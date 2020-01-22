@@ -19,6 +19,7 @@ package com.facebook.buck.core.artifact;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.devtools.build.lib.events.Location;
@@ -53,13 +54,24 @@ public class SourceArtifactImplTest {
   }
 
   @Test
-  public void cannotBeUsedAsOutputArtifact() throws EvalException {
+  public void cannotBeUsedAsSkylarkOutputArtifact() throws EvalException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     SourceArtifactImpl artifact =
         ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("foo", "bar.cpp")));
 
     thrown.expect(EvalException.class);
-    artifact.asOutputArtifact(Location.BUILTIN);
+    artifact.asSkylarkOutputArtifact(Location.BUILTIN);
+  }
+
+  @Test
+  public void cannotBeUsedAsOutputArtifact() {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+
+    SourceArtifactImpl artifact =
+        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("foo", "bar.cpp")));
+
+    thrown.expect(HumanReadableException.class);
+    artifact.asOutputArtifact();
   }
 }

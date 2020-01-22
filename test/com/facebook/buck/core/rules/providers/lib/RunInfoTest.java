@@ -179,7 +179,8 @@ public class RunInfoTest {
       BuildTarget target = BuildTargetFactory.newInstance("//:some_rule");
       ActionRegistryForTests registry = new ActionRegistryForTests(target, filesystem);
       Artifact artifact2 = registry.declareArtifact(Paths.get("out.txt"), Location.BUILTIN);
-      OutputArtifact artifact2Output = artifact2.asOutputArtifact(Location.BUILTIN);
+      OutputArtifact artifact2Output =
+          (OutputArtifact) artifact2.asSkylarkOutputArtifact(Location.BUILTIN);
       Path artifact2Path = BuildPaths.getGenDir(filesystem, target).resolve("out.txt");
 
       Environment environment = getEnv(mut);

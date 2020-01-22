@@ -81,13 +81,14 @@ public class SkylarkRuleContextActionsTest {
     Artifact artifact2 = actions.declareFile("bar2.sh", testLocation);
 
     actions.run(
-        SkylarkList.createImmutable(ImmutableList.of(artifact1.asOutputArtifact(Location.BUILTIN))),
+        SkylarkList.createImmutable(
+            ImmutableList.of(artifact1.asSkylarkOutputArtifact(Location.BUILTIN))),
         Runtime.NONE,
         Runtime.NONE,
         Location.BUILTIN);
     actions.run(
         SkylarkList.createImmutable(
-            ImmutableList.of("echo", artifact2.asOutputArtifact(Location.BUILTIN))),
+            ImmutableList.of("echo", artifact2.asSkylarkOutputArtifact(Location.BUILTIN))),
         Runtime.NONE,
         Runtime.NONE,
         Location.BUILTIN);

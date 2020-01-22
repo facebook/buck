@@ -72,7 +72,8 @@ public class ListCommandLineArgsTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:some_rule");
     ActionRegistryForTests registry = new ActionRegistryForTests(target, filesystem);
     Artifact artifact3 = registry.declareArtifact(Paths.get("out.txt"), Location.BUILTIN);
-    OutputArtifact artifact3Output = artifact3.asOutputArtifact(Location.BUILTIN);
+    OutputArtifact artifact3Output =
+        (OutputArtifact) artifact3.asSkylarkOutputArtifact(Location.BUILTIN);
     Path artifact3Path = BuildPaths.getGenDir(filesystem, target).resolve("out.txt");
 
     CommandLineArgs args =
@@ -118,7 +119,7 @@ public class ListCommandLineArgsTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:some_rule");
     ActionRegistryForTests registry = new ActionRegistryForTests(target, filesystem);
     Artifact artifact3 = registry.declareArtifact(Paths.get("out.txt"), Location.BUILTIN);
-    OutputArtifact artifact3Output = artifact3.asOutputArtifact(Location.BUILTIN);
+    OutputArtifact artifact3Output = artifact3.asOutputArtifact();
     Path artifact3Path = BuildPaths.getGenDir(filesystem, target).resolve("out.txt");
 
     CommandLineArgs args =
@@ -182,7 +183,7 @@ public class ListCommandLineArgsTest {
     Artifact buildArtifact =
         new BuildArtifactFactoryForTests(target, filesystem)
             .createDeclaredArtifact(Paths.get("other_file_2"), Location.BUILTIN);
-    OutputArtifact path3 = buildArtifact.asOutputArtifact(Location.BUILTIN);
+    OutputArtifact path3 = buildArtifact.asOutputArtifact();
 
     ListCommandLineArgs listArgs1 =
         new ListCommandLineArgs(

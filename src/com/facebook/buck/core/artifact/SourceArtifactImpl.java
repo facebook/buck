@@ -16,8 +16,10 @@
 
 package com.facebook.buck.core.artifact;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.starlark.rule.artifact.SkylarkOutputArtifactApi;
 import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.facebook.buck.io.file.MorePaths;
 import com.google.devtools.build.lib.cmdline.Label;
@@ -93,8 +95,13 @@ public abstract class SourceArtifactImpl extends AbstractArtifact
   }
 
   @Override
-  public OutputArtifact asOutputArtifact(Location location) throws EvalException {
+  public SkylarkOutputArtifactApi asSkylarkOutputArtifact(Location location) throws EvalException {
     throw new EvalException(
         location, String.format("source file %s cannot be used as an output artifact", this));
+  }
+
+  @Override
+  public OutputArtifact asOutputArtifact() {
+    throw new HumanReadableException("source file %s cannot be used as an output artifact", this);
   }
 }
