@@ -143,4 +143,28 @@ public class SkylarkDescriptionTest {
     assertTrue(info.namedOutputs().isEmpty());
     assertEquals(expectedShortPath.toString(), artifact.getShortPath());
   }
+
+  @Test
+  public void hasCorrectName() throws LabelSyntaxException, EvalException {
+    SkylarkUserDefinedRule rule =
+        FakeSkylarkUserDefinedRuleFactory.createSimpleRuleFromCallable(
+            ctx -> {
+              try {
+                Artifact f = ctx.getActions().declareFile("baz.sh", Location.BUILTIN);
+                ctx.getActions().write(f, "content", false, Location.BUILTIN);
+              } catch (EvalException e) {
+                throw new RuntimeException(e);
+              }
+              return Runtime.NONE;
+            });
+
+    SkylarkDescriptionArg args = new SkylarkDescriptionArg(rule);
+    args.setPostCoercionValue("name", "a");
+    args.setPostCoercionValue("baz", "");
+    args.setPostCoercionValue("labels", ImmutableSortedSet.of());
+    args.setPostCoercionValue("licenses", ImmutableSortedSet.of());
+    args.build();
+
+    assertEquals("//foo:bar.bzl:some_rule", description.getRuleName(args));
+  }
 }

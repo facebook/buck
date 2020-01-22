@@ -5,6 +5,7 @@ java_test(
     ),
     deps = [
         "//src/com/facebook/buck/core/cell/impl:impl",
+        "//src/com/facebook/buck/core/description/impl:impl",
         "//src/com/facebook/buck/core/model/platform/impl:impl",
         "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/core/rules/analysis/impl:impl",

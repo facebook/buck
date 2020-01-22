@@ -138,6 +138,19 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
             targetNode));
   }
 
+  private static class FakeTargetNodeRuleDescription implements RuleDescription<FakeTargetNodeArg> {
+    @Override
+    public ProviderInfoCollection ruleImpl(
+        RuleAnalysisContext context, BuildTarget target, FakeTargetNodeArg args) {
+      return TestProviderInfoCollectionImpl.builder().build();
+    }
+
+    @Override
+    public Class<FakeTargetNodeArg> getConstructorArgType() {
+      return FakeTargetNodeArg.class;
+    }
+  };
+
   @Test
   public void transformDelegatesWhenNewDescription() throws ActionCreationException {
     BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
@@ -145,19 +158,7 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
     TargetNodeFactory nodeCopier = new TargetNodeFactory(new DefaultTypeCoercerFactory());
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
-    RuleDescription<?> description =
-        new RuleDescription<FakeTargetNodeArg>() {
-          @Override
-          public ProviderInfoCollection ruleImpl(
-              RuleAnalysisContext context, BuildTarget target, FakeTargetNodeArg args) {
-            return TestProviderInfoCollectionImpl.builder().build();
-          }
-
-          @Override
-          public Class<FakeTargetNodeArg> getConstructorArgType() {
-            return FakeTargetNodeArg.class;
-          }
-        };
+    FakeTargetNodeRuleDescription description = new FakeTargetNodeRuleDescription();
 
     TargetNode<? extends BuildRuleArg> targetNode =
         nodeCopier.createFromObject(
@@ -242,6 +243,7 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
             target, BuildPaths.getGenDir(fakeFilesystem, target).resolve(output)),
         rule.getSourcePathToOutput());
     assertEquals(ImmutableSet.of(), rule.getBuildDeps());
+    assertEquals(rule.getType(), "fake_target_node");
 
     assertThat(rule, Matchers.instanceOf(RuleAnalysisLegacyBuildRuleView.class));
   }

@@ -17,7 +17,7 @@
 package com.facebook.buck.core.starlark.rule;
 
 import com.facebook.buck.core.artifact.Artifact;
-import com.facebook.buck.core.description.RuleDescription;
+import com.facebook.buck.core.description.RuleDescriptionWithInstanceName;
 import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
@@ -59,7 +59,7 @@ import javax.annotation.Nullable;
  * Description for User Defined Rules. This Description runs user-supplied implementation functions
  * in order to generate {@link com.facebook.buck.core.rules.actions.Action}s.
  */
-public class SkylarkDescription implements RuleDescription<SkylarkDescriptionArg> {
+public class SkylarkDescription implements RuleDescriptionWithInstanceName<SkylarkDescriptionArg> {
 
   @Override
   public boolean producesCacheableSubgraph() {
@@ -105,6 +105,11 @@ public class SkylarkDescription implements RuleDescription<SkylarkDescriptionArg
     } catch (LabelSyntaxException e) {
       throw new RuleAnalysisException(e, "Could not convert BuildTarget to Label");
     }
+  }
+
+  @Override
+  public String getRuleName(SkylarkDescriptionArg args) {
+    return args.getRule().getName();
   }
 
   private ProviderInfoCollection getProviderInfos(

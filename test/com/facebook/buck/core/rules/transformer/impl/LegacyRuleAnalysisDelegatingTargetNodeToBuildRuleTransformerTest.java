@@ -26,6 +26,7 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.description.RuleDescription;
+import com.facebook.buck.core.description.RuleDescriptionWithInstanceName;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
@@ -45,6 +46,7 @@ import com.facebook.buck.core.rules.actions.DefaultActionRegistry;
 import com.facebook.buck.core.rules.actions.FakeAction;
 import com.facebook.buck.core.rules.actions.FakeActionAnalysisRegistry;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
+import com.facebook.buck.core.rules.analysis.RuleAnalysisException;
 import com.facebook.buck.core.rules.analysis.computation.RuleAnalysisGraph;
 import com.facebook.buck.core.rules.analysis.impl.FakeRuleAnalysisGraph;
 import com.facebook.buck.core.rules.analysis.impl.ImmutableFakeRuleAnalysisResultImpl;
@@ -72,12 +74,49 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
 public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
 
   private final ProjectFilesystem fakeFilesystem = new FakeProjectFilesystem();
+
+  private class FakeRuleRuleDescription<T extends BuildRuleArg> implements RuleDescription<T> {
+    private final RuleDescription<T> delegate;
+
+    private FakeRuleRuleDescription(RuleDescription<T> delegate) {
+      this.delegate = delegate;
+    }
+
+    @Override
+    public ProviderInfoCollection ruleImpl(RuleAnalysisContext context, BuildTarget target, T args)
+        throws ActionCreationException, RuleAnalysisException {
+      return delegate.ruleImpl(context, target, args);
+    }
+
+    @Override
+    public Class<T> getConstructorArgType() {
+      return delegate.getConstructorArgType();
+    }
+  }
+
+  private class FakeFancyRuleDescription<T extends BuildRuleArg> extends FakeRuleRuleDescription<T>
+      implements RuleDescriptionWithInstanceName<T> {
+
+    private final Function<T, String> nameDelegate;
+
+    private FakeFancyRuleDescription(
+        RuleDescription<T> delegate, Function<T, String> nameDelegate) {
+      super(delegate);
+      this.nameDelegate = nameDelegate;
+    }
+
+    @Override
+    public String getRuleName(T args) {
+      return nameDelegate.apply(args);
+    }
+  }
 
   @Test
   public void transformDelegatesWhenOldDescription() {
@@ -135,18 +174,19 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
     RuleDescription<?> description =
-        new RuleDescription<FakeTargetNodeArg>() {
-          @Override
-          public ProviderInfoCollection ruleImpl(
-              RuleAnalysisContext context, BuildTarget target, FakeTargetNodeArg args) {
-            return TestProviderInfoCollectionImpl.builder().build();
-          }
+        new FakeRuleRuleDescription(
+            new RuleDescription<FakeTargetNodeArg>() {
+              @Override
+              public ProviderInfoCollection ruleImpl(
+                  RuleAnalysisContext context, BuildTarget target, FakeTargetNodeArg args) {
+                return TestProviderInfoCollectionImpl.builder().build();
+              }
 
-          @Override
-          public Class<FakeTargetNodeArg> getConstructorArgType() {
-            return FakeTargetNodeArg.class;
-          }
-        };
+              @Override
+              public Class<FakeTargetNodeArg> getConstructorArgType() {
+                return FakeTargetNodeArg.class;
+              }
+            });
 
     TargetNode<? extends BuildRuleArg> targetNode =
         nodeCopier.createFromObject(
@@ -243,18 +283,19 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
     RuleDescription<?> description =
-        new RuleDescription<FakeTargetNodeArg>() {
-          @Override
-          public ProviderInfoCollection ruleImpl(
-              RuleAnalysisContext context, BuildTarget target, FakeTargetNodeArg args) {
-            return TestProviderInfoCollectionImpl.builder().build();
-          }
+        new FakeRuleRuleDescription(
+            new RuleDescription<FakeTargetNodeArg>() {
+              @Override
+              public ProviderInfoCollection ruleImpl(
+                  RuleAnalysisContext context, BuildTarget target, FakeTargetNodeArg args) {
+                return TestProviderInfoCollectionImpl.builder().build();
+              }
 
-          @Override
-          public Class<FakeTargetNodeArg> getConstructorArgType() {
-            return FakeTargetNodeArg.class;
-          }
-        };
+              @Override
+              public Class<FakeTargetNodeArg> getConstructorArgType() {
+                return FakeTargetNodeArg.class;
+              }
+            });
 
     TargetNode<? extends BuildRuleArg> targetNode =
         nodeCopier.createFromObject(
@@ -309,9 +350,110 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
             actionGraphBuilder,
             targetNode);
 
+    assertEquals("fake_rule", rule.getType());
     assertTrue(ruleAnalysisCalled.get());
     assertSame(target, rule.getBuildTarget());
     assertNull(rule.getSourcePathToOutput());
     assertEquals(ImmutableSortedSet.of(), rule.getBuildDeps());
+  }
+
+  @Test
+  public void returnsCorrectType() {
+    BuildTarget fakeRuleTarget = BuildTargetFactory.newInstance("//my:foo");
+    BuildTarget fakeUdrRuleTarget = BuildTargetFactory.newInstance("//my:bar");
+
+    TargetNodeFactory nodeCopier = new TargetNodeFactory(new DefaultTypeCoercerFactory());
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+
+    RuleDescription<FakeTargetNodeArg> delegate =
+        new RuleDescription<FakeTargetNodeArg>() {
+          @Override
+          public ProviderInfoCollection ruleImpl(
+              RuleAnalysisContext context, BuildTarget target, FakeTargetNodeArg args) {
+            return TestProviderInfoCollectionImpl.builder().build();
+          }
+
+          @Override
+          public Class<FakeTargetNodeArg> getConstructorArgType() {
+            return FakeTargetNodeArg.class;
+          }
+        };
+
+    RuleDescription<?> fakeRuleDescription = new FakeRuleRuleDescription<>(delegate);
+    RuleDescription<?> fakeUdrDescription =
+        new FakeFancyRuleDescription<>(delegate, (args) -> "fake_udr_rule_" + args.getName());
+
+    TargetNode<? extends BuildRuleArg> fakeRuleTargetNode =
+        nodeCopier.createFromObject(
+            fakeRuleDescription,
+            FakeTargetNodeArg.builder().setName("foo").build(),
+            projectFilesystem,
+            fakeRuleTarget,
+            DependencyStack.root(),
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(),
+            TestCellPathResolver.create(Paths.get("")));
+    TargetNode<? extends BuildRuleArg> fakeUdrTargetNode =
+        nodeCopier.createFromObject(
+            fakeUdrDescription,
+            FakeTargetNodeArg.builder().setName("bar").build(),
+            projectFilesystem,
+            fakeUdrRuleTarget,
+            DependencyStack.root(),
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(),
+            TestCellPathResolver.create(Paths.get("")));
+
+    ToolchainProvider toolchainProvider = new ToolchainProviderBuilder().build();
+    ActionGraphBuilder actionGraphBuilder = new TestActionGraphBuilder();
+    TargetGraph targetGraph = TargetGraph.EMPTY;
+
+    RuleAnalysisGraph ruleAnalysisComputation =
+        new FakeRuleAnalysisGraph(
+            ruleAnalysisKey ->
+                ImmutableFakeRuleAnalysisResultImpl.of(
+                    ruleAnalysisKey.getBuildTarget(),
+                    TestProviderInfoCollectionImpl.builder().build(),
+                    ImmutableMap.of()));
+
+    TargetNodeToBuildRuleTransformer delegate2 =
+        new TargetNodeToBuildRuleTransformer() {
+          @Override
+          public <T extends BuildRuleArg> BuildRule transform(
+              ToolchainProvider tool,
+              TargetGraph targetGraph,
+              ConfigurationRuleRegistry configurationRuleRegistry,
+              ActionGraphBuilder graphBuilder,
+              TargetNode<T> node,
+              ProviderInfoCollection providerInfoCollection) {
+            fail();
+            return null;
+          }
+        };
+
+    LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer transformer =
+        new LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer(
+            ruleAnalysisComputation, delegate2);
+    BuildRule fakeRule =
+        transformer.transform(
+            toolchainProvider,
+            targetGraph,
+            ConfigurationRuleRegistryFactory.createRegistry(targetGraph),
+            actionGraphBuilder,
+            fakeRuleTargetNode);
+    BuildRule fakeUdrRule =
+        transformer.transform(
+            toolchainProvider,
+            targetGraph,
+            ConfigurationRuleRegistryFactory.createRegistry(targetGraph),
+            actionGraphBuilder,
+            fakeUdrTargetNode);
+
+    assertEquals("fake_rule", fakeRule.getType());
+    assertEquals("fake_udr_rule_bar", fakeUdrRule.getType());
   }
 }
