@@ -18,8 +18,8 @@ install_android_sdk: &install_android_sdk
     echo 'y' |sdkmanager --install tools
     echo 'y' |sdkmanager --install platform-tools
     # Old version build-tools;23.0.2
-    echo 'y' |sdkmanager --install "build-tools;29.0.0"
-    echo 'y' |sdkmanager --install "platforms;android-23"
+    echo 'y' |sdkmanager --install "build-tools;28.0.3"
+    echo 'y' |sdkmanager --install "platforms;android-28"
 
     # Install 32 bit libraries
     # https://stackoverflow.com/questions/36911709/cannot-run-program-aapt
@@ -32,6 +32,7 @@ install_golang: &install_golang
     cd ~
     wget https://storage.googleapis.com/golang/go1.10.1.linux-amd64.tar.gz
     sudo tar -xzf go1.10.1.linux-amd64.tar.gz -C /usr/local
+    rm go1.10.1.linux-amd64.tar.gz
     go version
 
 install_python: &install_python
