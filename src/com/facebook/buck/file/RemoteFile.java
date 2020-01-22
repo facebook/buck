@@ -19,6 +19,8 @@ package com.facebook.buck.file;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -125,7 +127,9 @@ public class RemoteFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     // we already have a hash that represents the content in those exploded files!
     // Just pass that hash along so that RuleKeyBuilder can use it.
     return ExplicitBuildTargetSourcePath.of(
-        getBuildTarget(), output, Optional.of(sha1.getHashCode()));
+        ImmutableBuildTargetWithOutputs.of(getBuildTarget(), OutputLabel.defaultLabel()),
+        output,
+        Optional.of(sha1.getHashCode()));
   }
 
   /** Defines how the remote file should be treated when downloaded. */

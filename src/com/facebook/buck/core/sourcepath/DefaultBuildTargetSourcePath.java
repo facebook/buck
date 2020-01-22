@@ -54,12 +54,8 @@ public abstract class DefaultBuildTargetSourcePath implements BuildTargetSourceP
     return ImmutableDefaultBuildTargetSourcePath.of(targetWithOutputs, precomputedHash);
   }
 
-  public abstract BuildTargetWithOutputs getTargetWithOutputs();
-
   @Override
-  public BuildTarget getTarget() {
-    return getTargetWithOutputs().getBuildTarget();
-  }
+  public abstract BuildTargetWithOutputs getTargetWithOutputs();
 
   @Override
   public abstract Optional<HashCode> getPrecomputedHash();
