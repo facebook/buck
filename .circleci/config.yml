@@ -329,7 +329,7 @@ jobs:
             ./new_buck.pex build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
             ./new_buck.pex test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
 
-  ci_android_ndk_16:
+  ci_android_ndk_17:
     environment:
       BUCKROOT: "/home/circleci/buck"
       ANDROID_SDK: "/home/circleci/android-sdk"
@@ -367,7 +367,7 @@ jobs:
             ./new_buck.pex build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
             ./new_buck.pex test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
 
-  ci_android_ndk_16:
+  ci_android_ndk_18:
     environment:
       BUCKROOT: "/home/circleci/buck"
       ANDROID_SDK: "/home/circleci/android-sdk"
