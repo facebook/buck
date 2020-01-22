@@ -18,11 +18,13 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.HasOutputName;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.file.MorePaths;
@@ -100,7 +102,9 @@ public abstract class ResourcesParameters implements AddsToRuleKey {
                       .getCellRelativeBasePath()
                       .getPath()
                       .toPath(filesystem.getFileSystem())
-                      .resolve(((HasOutputName) underlyingRule.get()).getOutputName()));
+                      .resolve(
+                          ((HasOutputName) underlyingRule.get())
+                              .getOutputName(getOutputLabel(rawResource))));
         } else {
           Path genOutputParent =
               BuildTargetPaths.getGenPath(filesystem, underlyingTarget, "%s").getParent();
@@ -128,5 +132,11 @@ public abstract class ResourcesParameters implements AddsToRuleKey {
       builder.put(resource, rawResource);
     }
     return builder.build();
+  }
+
+  private static OutputLabel getOutputLabel(SourcePath sourcePath) {
+    return sourcePath instanceof BuildTargetSourcePath
+        ? ((BuildTargetSourcePath) sourcePath).getTargetWithOutputs().getOutputLabel()
+        : OutputLabel.defaultLabel();
   }
 }
