@@ -73,7 +73,6 @@ public class JarGenruleDescription extends AbstractGenruleDescription<JarGenrule
         projectFilesystem,
         sandboxExecutionStrategy,
         graphBuilder,
-        params,
         args.getSrcs(),
         cmd,
         bash,
