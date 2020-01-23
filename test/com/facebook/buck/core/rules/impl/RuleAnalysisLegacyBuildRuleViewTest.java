@@ -27,6 +27,7 @@ import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.model.targetgraph.FakeTargetNodeBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -208,5 +209,68 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
     step.execute(TestExecutionContext.newInstance());
 
     assertTrue(functionCalled.get());
+  }
+
+  @Test
+  public void canGetSourcePathsForMultipleDefaultOutputs() throws ActionCreationException {
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//my:foo");
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    ActionGraphBuilder actionGraphBuilder = new TestActionGraphBuilder();
+    FakeActionAnalysisRegistry actionAnalysisRegistry = new FakeActionAnalysisRegistry();
+
+    Path defaultOutput = Paths.get("default");
+    Path defaultOutput2 = Paths.get("default2");
+    Path packagePath = BuildPaths.getGenDir(filesystem, buildTarget);
+
+    ActionRegistry actionRegistry =
+        new DefaultActionRegistry(buildTarget, actionAnalysisRegistry, filesystem);
+    Artifact defaultArtifact = actionRegistry.declareArtifact(defaultOutput);
+    Artifact defaultArtifact2 = actionRegistry.declareArtifact(defaultOutput2);
+
+    new FakeAction(
+        actionRegistry,
+        ImmutableSortedSet.of(),
+        ImmutableSortedSet.of(),
+        ImmutableSortedSet.of(defaultArtifact, defaultArtifact2),
+        (srcs, ins, outs, ctx) ->
+            ActionExecutionResult.success(Optional.empty(), Optional.empty(), ImmutableList.of()));
+
+    ProviderInfoCollection providerInfoCollection =
+        TestProviderInfoCollectionImpl.builder()
+            .put(new FakeInfo(new FakeBuiltInProvider("foo")))
+            .build(
+                new ImmutableDefaultInfo(
+                    SkylarkDict.empty(), ImmutableSet.of(defaultArtifact, defaultArtifact2)));
+
+    Map<ID, ActionAnalysisData> actionAnalysisDataMap =
+        actionAnalysisRegistry.getRegistered().entrySet().stream()
+            .collect(
+                ImmutableMap.toImmutableMap(
+                    entry -> entry.getKey().getID(), entry -> entry.getValue()));
+    RuleAnalysisResult ruleAnalysisResult =
+        ImmutableFakeRuleAnalysisResultImpl.of(
+            buildTarget, providerInfoCollection, actionAnalysisDataMap);
+
+    ActionWrapperData actionWrapperData =
+        (ActionWrapperData)
+            actionAnalysisDataMap.get(
+                Objects.requireNonNull(defaultArtifact.asBound().asBuildArtifact())
+                    .getActionDataKey()
+                    .getID());
+
+    RuleAnalysisLegacyBuildRuleView buildRule =
+        new RuleAnalysisLegacyBuildRuleView(
+            "my_type",
+            ruleAnalysisResult.getBuildTarget(),
+            Optional.of(actionWrapperData.getAction()),
+            actionGraphBuilder,
+            projectFilesystem,
+            providerInfoCollection);
+
+    assertThat(
+        buildRule.getSourcePathToOutput(OutputLabel.defaultLabel()),
+        Matchers.contains(
+            ExplicitBuildTargetSourcePath.of(buildTarget, packagePath.resolve("default")),
+            ExplicitBuildTargetSourcePath.of(buildTarget, packagePath.resolve("default2"))));
   }
 }

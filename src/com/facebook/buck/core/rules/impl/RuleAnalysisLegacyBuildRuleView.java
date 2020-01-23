@@ -22,12 +22,15 @@ import com.facebook.buck.core.artifact.BoundArtifact;
 import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
+import com.facebook.buck.core.rules.attr.HasMultipleOutputs;
 import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -36,14 +39,16 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.impl.ActionExecutionStep;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.SortedSet;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
+import org.apache.commons.lang.NotImplementedException;
 
 /**
  * This represents the {@link RuleAnalysisResult} in the modern action framework as a legacy {@link
@@ -53,7 +58,7 @@ import javax.annotation.Nullable;
  * {@link com.facebook.buck.rules.modern.ModernBuildRule}
  */
 public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule
-    implements SupportsInputBasedRuleKey {
+    implements SupportsInputBasedRuleKey, HasMultipleOutputs {
 
   private final String type;
   @AddToRuleKey private final Optional<Action> action;
@@ -131,12 +136,28 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule
   @Nullable
   @Override
   public SourcePath getSourcePathToOutput() {
-    Set<Artifact> artifacts = providerInfoCollection.getDefaultInfo().defaultOutputs();
-    if (artifacts.isEmpty()) {
+    ImmutableSortedSet<SourcePath> output = getSourcePathToOutput(OutputLabel.defaultLabel());
+    if (output.isEmpty()) {
       return null;
     }
-    // TODO: support multiple outputs
-    return Iterables.getOnlyElement(artifacts).asBound().getSourcePath();
+    return Iterables.getOnlyElement(output);
+  }
+
+  @Override
+  public ImmutableSortedSet<SourcePath> getSourcePathToOutput(OutputLabel outputLabel) {
+    if (outputLabel.isDefault()) {
+      return providerInfoCollection.getDefaultInfo().defaultOutputs().stream()
+          .map(artifact -> artifact.asBound().getSourcePath())
+          .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+    }
+    // TODO(irenewchen): Implement this
+    throw new HumanReadableException("Named outputs are not supported yet with RAG");
+  }
+
+  @Override
+  public ImmutableMap<OutputLabel, ImmutableSortedSet<SourcePath>> getSourcePathsByOutputsLabels() {
+    // TODO(irenewchen): Implement this
+    throw new NotImplementedException();
   }
 
   @Override
