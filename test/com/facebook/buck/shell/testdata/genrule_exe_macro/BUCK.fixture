@@ -1,0 +1,43 @@
+cxx_binary(
+    name = "bar",
+    srcs = [
+        "bar.cpp",
+    ],
+)
+
+genrule(
+    name = "exe_macro",
+    out = "example_out.txt",
+    cmd = "$(exe :bar) > $OUT",
+)
+
+genrule(
+    name = "extra_layer_for_test",
+    outs = {
+        "bar": [
+            "baz",
+        ],
+    },
+    cmd = "cp $(location :bar) $OUT/baz",
+    executable = True,
+)
+
+genrule(
+    name = "exe_macro_outs",
+    outs = {
+        "output": [
+            "example_out.txt",
+        ],
+    },
+    cmd = "$(exe :extra_layer_for_test[bar]) > $OUT/example_out.txt",
+)
+
+genrule(
+    name = "exe_macro_with_invalid_outputs",
+    outs = {
+        "output": [
+            "example_out.txt",
+        ],
+    },
+    cmd = "$(exe :extra_layer_for_test) > $OUT/example_out.txt",
+)

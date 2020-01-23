@@ -39,20 +39,19 @@ public class ExecutableMacroExpander<M extends AbstractExecutableTargetOrHostMac
     return macroClass;
   }
 
-  protected Tool getTool(BuildRule rule) throws MacroException {
+  private Tool getTool(BuildRule rule, OutputLabel outputLabel) throws MacroException {
     if (!(rule instanceof BinaryBuildRule)) {
       throw new MacroException(
           String.format(
               "%s used in executable macro does not correspond to a binary rule",
               rule.getBuildTarget()));
     }
-    // TODO(irenewchen): Propagate the output label instead of using the default label here
-    return ((BinaryBuildRule) rule).getExecutableCommand(OutputLabel.defaultLabel());
+    return ((BinaryBuildRule) rule).getExecutableCommand(outputLabel);
   }
 
   @Override
-  protected Arg expand(SourcePathResolverAdapter resolver, M ignored, BuildRule rule)
+  protected Arg expand(SourcePathResolverAdapter resolver, M macro, BuildRule rule)
       throws MacroException {
-    return ToolArg.of(getTool(rule));
+    return ToolArg.of(getTool(rule, macro.getTargetWithOutputs().getOutputLabel()));
   }
 }

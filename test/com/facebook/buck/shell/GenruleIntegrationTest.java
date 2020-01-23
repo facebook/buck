@@ -27,6 +27,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.testutil.ProcessResult;
@@ -366,6 +367,36 @@ public class GenruleIntegrationTest {
         processExecutor.launchAndExecute(
             ProcessExecutorParams.builder().addCommand(executable.toString()).build());
     assertEquals(0, processResult.getExitCode());
+  }
+
+  @Test
+  public void genruleExeMacro() throws Exception {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_exe_macro", temporaryFolder);
+    workspace.setUp();
+
+    Path result =
+        workspace.buildAndReturnOutput(targetWithLabelIfNonEmptySuffix("//:exe_macro", "output"));
+    assertTrue(result.endsWith("example_out.txt"));
+    assertEquals("hello\n", workspace.getFileContents(result));
+  }
+
+  @Test
+  public void exeMacroThrowsForNamedOutputsIfNotOneOutput() throws Exception {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_exe_macro", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckBuild("//:exe_macro_with_invalid_outputs").assertFailure();
+    assertTrue(
+        result
+            .getStderr()
+            .contains("Unexpectedly found 0 outputs for //:extra_layer_for_test[DEFAULT]"));
   }
 
   @Test
