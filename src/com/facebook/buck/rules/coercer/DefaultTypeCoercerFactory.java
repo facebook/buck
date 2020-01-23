@@ -210,8 +210,8 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                     BuildTargetMacroTypeCoercer.TargetOrHost.TARGET,
                     ExecutableTargetMacro::of),
                 new EnvMacroTypeCoercer(),
-                new LocationMacroTypeCoercer(buildTargetTypeCoercer),
-                new LocationPlatformMacroTypeCoercer(buildTargetTypeCoercer),
+                new LocationMacroTypeCoercer(buildTargetWithOutputsTypeCoercer),
+                new LocationPlatformMacroTypeCoercer(buildTargetWithOutputsTypeCoercer),
                 new BuildTargetMacroTypeCoercer<>(
                     buildTargetWithOutputsTypeCoercer,
                     MavenCoordinatesMacro.class,

@@ -21,7 +21,6 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableSet;
 import java.util.Objects;
-import java.util.Optional;
 import javax.annotation.Nullable;
 
 /** Macro that resolves to the output location of a build rule. */
@@ -38,18 +37,13 @@ public abstract class LocationPlatformMacro extends BaseLocationMacro {
 
   @Override
   protected LocationPlatformMacro withTargetWithOutputs(BuildTargetWithOutputs target) {
-    return of(target, getSupplementaryOutputIdentifier(), getFlavors());
+    return of(target, getFlavors());
   }
 
   public static LocationPlatformMacro of(
-      BuildTargetWithOutputs target,
-      Optional<String> supplementaryOutputIdentifier,
-      Iterable<? extends Flavor> flavors) {
-    return ImmutableLocationPlatformMacro.of(target, supplementaryOutputIdentifier, flavors);
+      BuildTargetWithOutputs target, Iterable<? extends Flavor> flavors) {
+    return ImmutableLocationPlatformMacro.of(target, flavors);
   }
-
-  @Override
-  abstract Optional<String> getSupplementaryOutputIdentifier();
 
   abstract ImmutableSet<Flavor> getFlavors();
 

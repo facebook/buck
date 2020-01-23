@@ -36,7 +36,6 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -68,7 +67,6 @@ public class LocationPlatformMacroExpanderTest {
                 LocationPlatformMacro.of(
                     ImmutableBuildTargetWithOutputs.of(
                         node.getBuildTarget(), OutputLabel.defaultLabel()),
-                    Optional.empty(),
                     ImmutableSet.of(CxxDescriptionEnhancer.SHARED_FLAVOR))),
             pathResolver);
     assertThat(

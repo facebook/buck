@@ -32,7 +32,6 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.macros.LocationPlatformMacro;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,18 +43,20 @@ public class LocationPlatformMacroTypeCoercerTest {
   private static final ForwardRelativePath BASE_PATH = ForwardRelativePath.of("");
 
   private UnconfiguredBuildTargetTypeCoercer unconfiguredBuildTargetFactory;
+  private LocationPlatformMacroTypeCoercer coercer;
 
   @Before
   public void setUp() {
     unconfiguredBuildTargetFactory =
         new UnconfiguredBuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetViewFactory());
+    coercer =
+        new LocationPlatformMacroTypeCoercer(
+            new BuildTargetWithOutputsTypeCoercer(
+                new BuildTargetTypeCoercer(unconfiguredBuildTargetFactory)));
   }
 
   @Test
   public void target() throws CoerceFailedException {
-    LocationPlatformMacroTypeCoercer coercer =
-        new LocationPlatformMacroTypeCoercer(
-            new BuildTargetTypeCoercer(unconfiguredBuildTargetFactory));
     assertThat(
         coercer.coerce(
             CELL_PATH_RESOLVER,
@@ -68,7 +69,6 @@ public class LocationPlatformMacroTypeCoercerTest {
             LocationPlatformMacro.of(
                 ImmutableBuildTargetWithOutputs.of(
                     BuildTargetFactory.newInstance("//:test"), OutputLabel.defaultLabel()),
-                Optional.empty(),
                 ImmutableSet.of())));
     assertThat(
         coercer.coerce(
@@ -81,16 +81,12 @@ public class LocationPlatformMacroTypeCoercerTest {
         Matchers.equalTo(
             LocationPlatformMacro.of(
                 ImmutableBuildTargetWithOutputs.of(
-                    BuildTargetFactory.newInstance("//:test"), OutputLabel.defaultLabel()),
-                Optional.of("foo"),
+                    BuildTargetFactory.newInstance("//:test"), OutputLabel.of("foo")),
                 ImmutableSet.of())));
   }
 
   @Test
   public void targetWithFlavors() throws CoerceFailedException {
-    LocationPlatformMacroTypeCoercer coercer =
-        new LocationPlatformMacroTypeCoercer(
-            new BuildTargetTypeCoercer(unconfiguredBuildTargetFactory));
     assertThat(
         coercer.coerce(
             CELL_PATH_RESOLVER,
@@ -103,15 +99,11 @@ public class LocationPlatformMacroTypeCoercerTest {
             LocationPlatformMacro.of(
                 ImmutableBuildTargetWithOutputs.of(
                     BuildTargetFactory.newInstance("//:test"), OutputLabel.defaultLabel()),
-                Optional.empty(),
                 ImmutableSet.of(InternalFlavor.of("flavor1"), InternalFlavor.of("flavor2")))));
   }
 
   @Test(expected = CoerceFailedException.class)
   public void invalidTarget() throws CoerceFailedException {
-    LocationPlatformMacroTypeCoercer coercer =
-        new LocationPlatformMacroTypeCoercer(
-            new BuildTargetTypeCoercer(unconfiguredBuildTargetFactory));
     coercer.coerce(
         CELL_PATH_RESOLVER,
         FILESYSTEM,
@@ -123,9 +115,6 @@ public class LocationPlatformMacroTypeCoercerTest {
 
   @Test(expected = CoerceFailedException.class)
   public void tooFewArgs() throws CoerceFailedException {
-    LocationPlatformMacroTypeCoercer coercer =
-        new LocationPlatformMacroTypeCoercer(
-            new BuildTargetTypeCoercer(unconfiguredBuildTargetFactory));
     coercer.coerce(
         CELL_PATH_RESOLVER,
         FILESYSTEM,

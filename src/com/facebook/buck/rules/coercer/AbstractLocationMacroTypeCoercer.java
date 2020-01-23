@@ -17,36 +17,34 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.BaseLocationMacro;
-import com.facebook.buck.rules.macros.LocationMacro;
-import com.facebook.buck.util.types.Pair;
-import java.util.Optional;
 
 /** Base class for expanding {@link BaseLocationMacro}s to strings. */
 abstract class AbstractLocationMacroTypeCoercer<T extends BaseLocationMacro>
     implements MacroTypeCoercer<T> {
 
-  private final TypeCoercer<BuildTarget> buildTargetTypeCoercer;
+  private final TypeCoercer<BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer;
 
-  public AbstractLocationMacroTypeCoercer(TypeCoercer<BuildTarget> buildTargetTypeCoercer) {
-    this.buildTargetTypeCoercer = buildTargetTypeCoercer;
+  public AbstractLocationMacroTypeCoercer(
+      TypeCoercer<BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer) {
+    this.buildTargetWithOutputsTypeCoercer = buildTargetWithOutputsTypeCoercer;
   }
 
   @Override
   public boolean hasElementClass(Class<?>[] types) {
-    return buildTargetTypeCoercer.hasElementClass(types);
+    return buildTargetWithOutputsTypeCoercer.hasElementClass(types);
   }
 
   @Override
   public void traverse(CellPathResolver cellRoots, T macro, TypeCoercer.Traversal traversal) {
-    buildTargetTypeCoercer.traverse(cellRoots, macro.getTarget(), traversal);
+    buildTargetWithOutputsTypeCoercer.traverse(cellRoots, macro.getTargetWithOutputs(), traversal);
   }
 
-  protected Pair<BuildTarget, Optional<String>> coerceTarget(
+  protected BuildTargetWithOutputs coerceTarget(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
@@ -54,15 +52,12 @@ abstract class AbstractLocationMacroTypeCoercer<T extends BaseLocationMacro>
       TargetConfiguration hostConfiguration,
       String arg)
       throws CoerceFailedException {
-    LocationMacro.SplitResult parts = LocationMacro.splitSupplementaryOutputPart(arg);
-    BuildTarget target =
-        buildTargetTypeCoercer.coerce(
-            cellRoots,
-            filesystem,
-            pathRelativeToProjectRoot,
-            targetConfiguration,
-            hostConfiguration,
-            parts.target);
-    return new Pair<>(target, parts.supplementaryOutput);
+    return buildTargetWithOutputsTypeCoercer.coerce(
+        cellRoots,
+        filesystem,
+        pathRelativeToProjectRoot,
+        targetConfiguration,
+        hostConfiguration,
+        arg);
   }
 }
