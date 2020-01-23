@@ -33,6 +33,7 @@ import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
 import com.facebook.buck.core.rules.attr.HasMultipleOutputs;
 import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
+import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -50,7 +51,6 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
-import org.apache.commons.lang.NotImplementedException;
 
 /**
  * This represents the {@link RuleAnalysisResult} in the modern action framework as a legacy {@link
@@ -162,8 +162,19 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule
 
   @Override
   public ImmutableMap<OutputLabel, ImmutableSortedSet<SourcePath>> getSourcePathsByOutputsLabels() {
-    // TODO(irenewchen): Implement this
-    throw new NotImplementedException();
+    DefaultInfo defaultInfo = providerInfoCollection.getDefaultInfo();
+    ImmutableMap.Builder<OutputLabel, ImmutableSortedSet<SourcePath>> builder =
+        ImmutableMap.builderWithExpectedSize(defaultInfo.namedOutputs().size() + 1);
+    defaultInfo
+        .namedOutputs()
+        .entrySet()
+        .forEach(
+            namedOutputs ->
+                builder.put(
+                    OutputLabel.of(namedOutputs.getKey()),
+                    convertToSourcePaths(namedOutputs.getValue())));
+    builder.put(OutputLabel.defaultLabel(), convertToSourcePaths(defaultInfo.defaultOutputs()));
+    return builder.build();
   }
 
   @Override

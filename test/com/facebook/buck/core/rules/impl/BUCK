@@ -15,6 +15,7 @@ java_test(
         "//src/com/facebook/buck/step/fs:fs",
         "//src/com/facebook/buck/util/cache/impl:impl",
         "//src/com/facebook/buck/util/hashing:hashing",
+        "//test/com/facebook/buck/core/artifact:testutil",
         "//test/com/facebook/buck/core/build/buildable/context:testutil",
         "//test/com/facebook/buck/core/build/context:testutil",
         "//test/com/facebook/buck/core/model:testutil",

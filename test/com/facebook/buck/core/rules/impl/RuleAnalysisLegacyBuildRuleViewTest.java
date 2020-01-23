@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.artifact.BuildArtifactFactoryForTests;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
@@ -35,6 +36,7 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
 import com.facebook.buck.core.rules.actions.ActionExecutionResult;
 import com.facebook.buck.core.rules.actions.ActionRegistry;
@@ -42,12 +44,10 @@ import com.facebook.buck.core.rules.actions.ActionWrapperData;
 import com.facebook.buck.core.rules.actions.DefaultActionRegistry;
 import com.facebook.buck.core.rules.actions.FakeAction;
 import com.facebook.buck.core.rules.actions.FakeActionAnalysisRegistry;
-import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData.ID;
 import com.facebook.buck.core.rules.analysis.impl.FakeBuiltInProvider;
 import com.facebook.buck.core.rules.analysis.impl.FakeInfo;
-import com.facebook.buck.core.rules.analysis.impl.ImmutableFakeRuleAnalysisResultImpl;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.collect.impl.TestProviderInfoCollectionImpl;
@@ -55,6 +55,7 @@ import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
@@ -67,6 +68,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.packages.BazelLibrary;
 import com.google.devtools.build.lib.syntax.Environment;
@@ -177,7 +179,7 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
             projectFilesystem,
             actionGraphBuilder,
             artifact,
-            actionAnalysisRegistry,
+            Optional.of(actionAnalysisRegistry),
             providerInfoCollection);
 
     assertSame(buildTarget, buildRule.getBuildTarget());
@@ -248,7 +250,7 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
             new FakeProjectFilesystem(),
             new TestActionGraphBuilder(),
             defaultArtifact,
-            actionAnalysisRegistry,
+            Optional.of(actionAnalysisRegistry),
             providerInfoCollection);
 
     assertThat(
@@ -295,10 +297,50 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
             new FakeProjectFilesystem(),
             new TestActionGraphBuilder(),
             defaultArtifact,
-            actionAnalysisRegistry,
+            Optional.of(actionAnalysisRegistry),
             providerInfoCollection);
 
     buildRule.getSourcePathToOutput(OutputLabel.of("nonexistent"));
+  }
+
+  @Test
+  public void canGetSourcePathsByOutputLabels() throws EvalException {
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//my:foo");
+
+    BuildArtifactFactoryForTests artifactFactory =
+        new BuildArtifactFactoryForTests(buildTarget, filesystem);
+    Artifact setOneArtifactOne =
+        artifactFactory.createBuildArtifact(Paths.get("foo.set1.output1"), Location.BUILTIN);
+    Artifact setTwoArtifactOne =
+        artifactFactory.createBuildArtifact(Paths.get("foo.set2.output1"), Location.BUILTIN);
+    Artifact setTwoArtifactTwo =
+        artifactFactory.createBuildArtifact(Paths.get("foo.set2.output2"), Location.BUILTIN);
+    Artifact defaultArtifact =
+        artifactFactory.createBuildArtifact(Paths.get("default"), Location.BUILTIN);
+    Artifact defaultArtifact2 =
+        artifactFactory.createBuildArtifact(Paths.get("default2"), Location.BUILTIN);
+    ImmutableSet<Artifact> setOne = ImmutableSet.of(setOneArtifactOne);
+    ImmutableSet<Artifact> setTwo = ImmutableSet.of(setTwoArtifactOne, setTwoArtifactTwo);
+    ImmutableSet<Artifact> defaultSet = ImmutableSet.of(defaultArtifact, defaultArtifact2);
+
+    ProviderInfoCollection providerInfoCollection =
+        createProviderInfoCollection(
+            ImmutableMap.of("setOne", setOne, "setTwo", setTwo), defaultSet);
+
+    RuleAnalysisLegacyBuildRuleView buildRule =
+        createRuleAnalysisLegacyBuildRuleView(
+            buildTarget,
+            new FakeProjectFilesystem(),
+            new TestActionGraphBuilder(),
+            defaultArtifact,
+            Optional.empty(),
+            providerInfoCollection);
+
+    ImmutableMap<OutputLabel, ImmutableSortedSet<SourcePath>> actual =
+        buildRule.getSourcePathsByOutputsLabels();
+    assertEquals(convertToSourcePaths(defaultSet), actual.get(OutputLabel.defaultLabel()));
+    assertEquals(convertToSourcePaths(setOne), actual.get(OutputLabel.of("setOne")));
+    assertEquals(convertToSourcePaths(setTwo), actual.get(OutputLabel.of("setTwo")));
   }
 
   private static FakeAction createFakeAction(
@@ -346,31 +388,39 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder actionGraphBuilder,
       Artifact artifactForActionWrapperData,
-      FakeActionAnalysisRegistry actionAnalysisRegistry,
+      Optional<FakeActionAnalysisRegistry> actionAnalysisRegistry,
       ProviderInfoCollection providerInfoCollection) {
-    Map<ID, ActionAnalysisData> actionAnalysisDataMap =
-        actionAnalysisRegistry.getRegistered().entrySet().stream()
-            .collect(
-                ImmutableMap.toImmutableMap(
-                    entry -> entry.getKey().getID(), entry -> entry.getValue()));
 
-    RuleAnalysisResult ruleAnalysisResult =
-        ImmutableFakeRuleAnalysisResultImpl.of(
-            buildTarget, providerInfoCollection, actionAnalysisDataMap);
-
-    ActionWrapperData actionWrapperData =
-        (ActionWrapperData)
-            actionAnalysisDataMap.get(
-                Objects.requireNonNull(artifactForActionWrapperData.asBound().asBuildArtifact())
-                    .getActionDataKey()
-                    .getID());
+    Optional<Action> action =
+        actionAnalysisRegistry.map(
+            registry -> {
+              Map<ID, ActionAnalysisData> actionAnalysisDataMap =
+                  registry.getRegistered().entrySet().stream()
+                      .collect(
+                          ImmutableMap.toImmutableMap(
+                              entry -> entry.getKey().getID(), entry -> entry.getValue()));
+              ActionWrapperData actionWrapperData =
+                  (ActionWrapperData)
+                      actionAnalysisDataMap.get(
+                          Objects.requireNonNull(
+                                  artifactForActionWrapperData.asBound().asBuildArtifact())
+                              .getActionDataKey()
+                              .getID());
+              return actionWrapperData.getAction();
+            });
 
     return new RuleAnalysisLegacyBuildRuleView(
         "my_type",
-        ruleAnalysisResult.getBuildTarget(),
-        Optional.of(actionWrapperData.getAction()),
+        buildTarget,
+        action,
         actionGraphBuilder,
         projectFilesystem,
         providerInfoCollection);
+  }
+
+  private static ImmutableSortedSet<SourcePath> convertToSourcePaths(Set<Artifact> artifacts) {
+    return artifacts.stream()
+        .map(artifact -> artifact.asBound().getSourcePath())
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 }
