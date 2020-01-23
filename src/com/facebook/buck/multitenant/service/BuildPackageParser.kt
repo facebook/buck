@@ -23,6 +23,7 @@ import java.nio.file.Path
 import java.util.concurrent.TimeUnit
 import java.util.logging.Level
 import java.util.logging.Logger
+import kotlin.math.max
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -87,13 +88,14 @@ class BuckShellBuildPackageParser(
             try {
                 val packagesString =
                     if (packagePaths.isEmpty()) "//..." else {
+                        val remainingPackagesSize = max(0, packagePaths.size - NUMBER_OF_PACKAGES_TO_PRINT)
                         packagePaths.asSequence()
                             .take(NUMBER_OF_PACKAGES_TO_PRINT)
                             .map { "//$it:" }
                             .joinToString { it } +
-                            " and ${packagePaths.size - NUMBER_OF_PACKAGES_TO_PRINT} more..."
+                            if (remainingPackagesSize > 0) " and $remainingPackagesSize more..." else ""
                     }
-                LOG.info("Starting parsing packages: $packagesString")
+                LOG.info("Parsing packages: $packagesString")
                 execBuck(patternsFilePath, outputFilePath)
 
                 return outputFilePath.toFile().inputStream().buffered().use {
