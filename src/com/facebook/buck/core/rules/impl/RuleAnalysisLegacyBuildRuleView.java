@@ -43,8 +43,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
+import com.google.devtools.build.lib.syntax.SkylarkDict;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -146,12 +148,16 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule
   @Override
   public ImmutableSortedSet<SourcePath> getSourcePathToOutput(OutputLabel outputLabel) {
     if (outputLabel.isDefault()) {
-      return providerInfoCollection.getDefaultInfo().defaultOutputs().stream()
-          .map(artifact -> artifact.asBound().getSourcePath())
-          .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+      return convertToSourcePaths(providerInfoCollection.getDefaultInfo().defaultOutputs());
     }
-    // TODO(irenewchen): Implement this
-    throw new HumanReadableException("Named outputs are not supported yet with RAG");
+    SkylarkDict<String, Set<Artifact>> namedOutputs =
+        providerInfoCollection.getDefaultInfo().namedOutputs();
+    Set<Artifact> artifacts = namedOutputs.get(OutputLabel.internals().getLabel(outputLabel));
+    if (artifacts != null) {
+      return convertToSourcePaths(artifacts);
+    }
+    throw new HumanReadableException(
+        "Cannot find output label [%s] for target %s", outputLabel, getBuildTarget());
   }
 
   @Override
@@ -174,5 +180,11 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule
   /** @return the {@link ProviderInfoCollection} returned from rule analysis */
   public ProviderInfoCollection getProviderInfos() {
     return providerInfoCollection;
+  }
+
+  private static ImmutableSortedSet<SourcePath> convertToSourcePaths(Set<Artifact> artifacts) {
+    return artifacts.stream()
+        .map(artifact -> artifact.asBound().getSourcePath())
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 }
