@@ -65,7 +65,6 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -310,13 +309,13 @@ public class ProjectGenerator {
         List<XcodeNativeTargetGenerator.Result> flavoredTargetResults =
             Futures.allAsList(
                     projectTargets.stream()
-                        .filter(
-                            buildTarget ->
-                                buildTarget != workspaceTarget && buildTarget.isFlavored())
+                        .filter(BuildTarget::isFlavored)
+                        .map(targetGraph::get)
+                        .filter(targetNode -> !targetNode.equals(workspaceTargetNode))
                         .map(
                             target ->
                                 listeningExecutorService.submit(
-                                    () -> targetGenerator.generateTarget(targetGraph.get(target))))
+                                    () -> targetGenerator.generateTarget(target)))
                         .collect(Collectors.toList()))
                 .get();
 
@@ -325,13 +324,13 @@ public class ProjectGenerator {
         List<XcodeNativeTargetGenerator.Result> unflavoredTargetResults =
             Futures.allAsList(
                     projectTargets.stream()
-                        .filter(
-                            buildTarget ->
-                                buildTarget != workspaceTarget && !buildTarget.isFlavored())
+                        .filter(buildTarget -> !buildTarget.isFlavored())
+                        .map(targetGraph::get)
+                        .filter(targetNode -> !targetNode.equals(workspaceTargetNode))
                         .map(
                             target ->
                                 listeningExecutorService.submit(
-                                    () -> targetGenerator.generateTarget(targetGraph.get(target))))
+                                    () -> targetGenerator.generateTarget(target)))
                         .collect(Collectors.toList()))
                 .get();
 
@@ -353,7 +352,6 @@ public class ProjectGenerator {
       ImmutableList<XcodeNativeTargetGenerator.Result> generationResults =
           generationResultsBuilder.build();
 
-      Set<TargetNode<?>> keys = new HashSet<>();
       ImmutableList.Builder<BuildTargetSourcePath> buildTargetSourcePathsBuilder =
           ImmutableList.builder();
 
@@ -388,10 +386,7 @@ public class ProjectGenerator {
             .getTarget()
             .ifPresent(
                 target -> {
-                  if (!keys.contains(result.targetNode)) {
-                    targetNodeToGeneratedProjectTargetBuilder.put(result.targetNode, target);
-                    keys.add(result.targetNode);
-                  }
+                  targetNodeToGeneratedProjectTargetBuilder.put(result.targetNode, target);
                 });
       }
 
