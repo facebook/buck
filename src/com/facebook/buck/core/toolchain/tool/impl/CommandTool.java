@@ -27,6 +27,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -76,12 +78,10 @@ public class CommandTool implements Tool {
 
   @Override
   public ImmutableSortedMap<String, String> getEnvironment(SourcePathResolverAdapter resolver) {
-    ImmutableSortedMap.Builder<String, String> env = ImmutableSortedMap.naturalOrder();
-    if (baseTool.isPresent()) {
-      env.putAll(baseTool.get().getEnvironment(resolver));
-    }
+    Map<String, String> env = new HashMap<>();
+    baseTool.ifPresent(tool -> env.putAll(tool.getEnvironment(resolver)));
     env.putAll(Arg.stringify(environment, resolver));
-    return env.build();
+    return ImmutableSortedMap.copyOf(env);
   }
 
   // Builder for a `CommandTool`.

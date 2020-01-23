@@ -123,6 +123,28 @@ public class RunCommandIntegrationTest {
   }
 
   @Test
+  public void testRunCommandAliasWithEnvironmentVariableSet() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "run-command", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("run", "//cmd:alias_echo_var");
+    result.assertSuccess("buck run should succeed");
+    assertThat(result.getStdout(), containsString("VAR is 'YES'"));
+  }
+
+  @Test
+  public void testRunCommandAliasWithEnvironmentVariableSetOverridden() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "run-command", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("run", "//cmd:alias_echo_var_override");
+    result.assertSuccess("buck run should succeed");
+    assertThat(result.getStdout(), containsString("VAR is 'NO'"));
+  }
+
+  @Test
   public void testRunCommandFailure() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
