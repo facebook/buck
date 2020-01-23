@@ -22,6 +22,8 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
@@ -136,7 +138,9 @@ public class ClasspathAbiMacroExpanderTest {
     BuildRule rule = graphBuilder.requireRule(ruleNode.getBuildTarget());
 
     BuildTarget forTarget = BuildTargetFactory.newInstance("//:rule");
-    ClasspathAbiMacro classpathAbiMacro = ClasspathAbiMacro.of(rule.getBuildTarget());
+    ClasspathAbiMacro classpathAbiMacro =
+        ClasspathAbiMacro.of(
+            ImmutableBuildTargetWithOutputs.of(rule.getBuildTarget(), OutputLabel.defaultLabel()));
     Arg ruleKeyAppendables = expander.expandFrom(forTarget, graphBuilder, classpathAbiMacro);
 
     ImmutableList<String> deps =

@@ -27,6 +27,8 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.ThrowingTargetConfigurationTransformer;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -147,7 +149,12 @@ public class GenruleDescriptionTest {
     TargetNode<?> genruleNode =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setOut("out")
-            .setCmd(StringWithMacrosUtils.format("%s", ClasspathMacro.of(depNode.getBuildTarget())))
+            .setCmd(
+                StringWithMacrosUtils.format(
+                    "%s",
+                    ClasspathMacro.of(
+                        ImmutableBuildTargetWithOutputs.of(
+                            depNode.getBuildTarget(), OutputLabel.defaultLabel()))))
             .build();
 
     TargetGraph targetGraph =

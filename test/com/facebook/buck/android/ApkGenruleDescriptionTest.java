@@ -20,6 +20,8 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.targetgraph.FakeTargetNodeBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
@@ -58,7 +60,12 @@ public class ApkGenruleDescriptionTest {
     TargetNode<?> genruleNode =
         ApkGenruleBuilder.create(BuildTargetFactory.newInstance("//:rule"))
             .setOut("out")
-            .setCmd(StringWithMacrosUtils.format("%s", ClasspathMacro.of(depNode.getBuildTarget())))
+            .setCmd(
+                StringWithMacrosUtils.format(
+                    "%s",
+                    ClasspathMacro.of(
+                        ImmutableBuildTargetWithOutputs.of(
+                            depNode.getBuildTarget(), OutputLabel.defaultLabel()))))
             .setApk(installableApkTarget)
             .build();
 

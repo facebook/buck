@@ -17,6 +17,9 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
+import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import java.util.Optional;
 
@@ -30,17 +33,19 @@ public abstract class LocationMacro extends BaseLocationMacro {
   }
 
   @Override
-  protected LocationMacro withTarget(BuildTarget target) {
+  protected LocationMacro withTargetWithOutputs(BuildTargetWithOutputs target) {
     return ImmutableLocationMacro.of(target, getSupplementaryOutputIdentifier());
   }
 
-  /** Shorthand for constructing a LocationMacro referring to the main output. */
+  /** Shorthand for constructing a LocationMacro referring to the main default output. */
   public static LocationMacro of(BuildTarget buildTarget) {
-    return of(buildTarget, Optional.empty());
+    return of(
+        ImmutableBuildTargetWithOutputs.of(buildTarget, OutputLabel.defaultLabel()),
+        Optional.empty());
   }
 
   public static LocationMacro of(
-      BuildTarget target, Optional<String> supplementaryOutputIdentifier) {
+      BuildTargetWithOutputs target, Optional<String> supplementaryOutputIdentifier) {
     return ImmutableLocationMacro.of(target, supplementaryOutputIdentifier);
   }
 }

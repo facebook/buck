@@ -18,6 +18,8 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -59,6 +61,9 @@ class LocationMacroTypeCoercer extends AbstractLocationMacroTypeCoercer<Location
             targetConfiguration,
             hostConfiguration,
             args.get(0));
-    return LocationMacro.of(target.getFirst(), target.getSecond());
+    // TODO(irenewchen): Parse and propagate the output label
+    return LocationMacro.of(
+        ImmutableBuildTargetWithOutputs.of(target.getFirst(), OutputLabel.defaultLabel()),
+        target.getSecond());
   }
 }

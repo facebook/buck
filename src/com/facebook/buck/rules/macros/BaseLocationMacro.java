@@ -17,7 +17,7 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -32,14 +32,14 @@ public abstract class BaseLocationMacro extends BuildTargetMacro {
       Pattern.compile("^(?<target>.+?)(?:\\[(?<output>[A-Za-z0-9_./-]+)\\])?$");
 
   @Override
-  public abstract BuildTarget getTarget();
+  public abstract BuildTargetWithOutputs getTargetWithOutputs();
 
   @Value.Parameter(order = 2)
   abstract Optional<String> getSupplementaryOutputIdentifier();
 
   @Override
   public int hashCode() {
-    return Objects.hash(getTarget().getFullyQualifiedName(), getSupplementaryOutputIdentifier());
+    return Objects.hash(getTargetWithOutputs(), getSupplementaryOutputIdentifier());
   }
 
   @Override
@@ -52,9 +52,7 @@ public abstract class BaseLocationMacro extends BuildTargetMacro {
     }
     BaseLocationMacro anotherLocationMacro = (BaseLocationMacro) another;
 
-    return getTarget()
-            .getFullyQualifiedName()
-            .equals(anotherLocationMacro.getTarget().getFullyQualifiedName())
+    return super.equals(another)
         && getSupplementaryOutputIdentifier()
             .equals(anotherLocationMacro.getSupplementaryOutputIdentifier());
   }

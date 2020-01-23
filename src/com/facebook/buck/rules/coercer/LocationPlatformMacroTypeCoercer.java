@@ -18,7 +18,9 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -62,8 +64,9 @@ class LocationPlatformMacroTypeCoercer
             targetConfiguration,
             hostConfiguration,
             args.get(0));
+    // TODO(irenewchen): Coerce the output label and propagate it
     return LocationPlatformMacro.of(
-        target.getFirst(),
+        ImmutableBuildTargetWithOutputs.of(target.getFirst(), OutputLabel.defaultLabel()),
         target.getSecond(),
         args.subList(1, args.size()).stream()
             .map(InternalFlavor::of)

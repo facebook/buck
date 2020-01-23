@@ -18,6 +18,7 @@ package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -47,6 +48,10 @@ public class LocationPlatformMacroExpander
             .withAppendedFlavors(input.getFlavors())
             .withAppendedFlavors(cxxPlatform.getFlavor());
     graphBuilder.requireRule(target);
-    return super.resolve(graphBuilder, input.withTarget(target));
+    return super.resolve(
+        graphBuilder,
+        input.withTargetWithOutputs(
+            ImmutableBuildTargetWithOutputs.of(
+                target, input.getTargetWithOutputs().getOutputLabel())));
   }
 }

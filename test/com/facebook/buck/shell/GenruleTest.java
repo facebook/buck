@@ -33,6 +33,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -372,7 +373,11 @@ public class GenruleTest {
     return GenruleBuilder.newGenruleBuilder(
             BuildTargetFactory.newInstance("//:genrule_with_worker"))
         .setCmd(
-            StringWithMacrosUtils.format("%s abc", WorkerMacro.of(workerToolRule.getBuildTarget())))
+            StringWithMacrosUtils.format(
+                "%s abc",
+                WorkerMacro.of(
+                    ImmutableBuildTargetWithOutputs.of(
+                        workerToolRule.getBuildTarget(), OutputLabel.defaultLabel()))))
         .setOut("output.txt");
   }
 
@@ -459,7 +464,10 @@ public class GenruleTest {
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule_with_worker"))
             .setCmd(
                 StringWithMacrosUtils.format(
-                    "%s abs", WorkerMacro.of(workerToolRule.getBuildTarget())))
+                    "%s abs",
+                    WorkerMacro.of(
+                        ImmutableBuildTargetWithOutputs.of(
+                            workerToolRule.getBuildTarget(), OutputLabel.defaultLabel()))))
             .setOut("output.txt")
             .build(graphBuilder);
 
@@ -733,7 +741,10 @@ public class GenruleTest {
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setCmd(
                 StringWithMacrosUtils.format(
-                    "run %s", ExecutableMacro.of(BuildTargetFactory.newInstance("//:dep"))))
+                    "run %s",
+                    ExecutableMacro.of(
+                        ImmutableBuildTargetWithOutputs.of(
+                            BuildTargetFactory.newInstance("//:dep"), OutputLabel.defaultLabel()))))
             .setOut("output");
 
     // Create an initial input-based rule key
@@ -813,7 +824,10 @@ public class GenruleTest {
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setCmd(
                 StringWithMacrosUtils.format(
-                    "run %s", ClasspathMacro.of(BuildTargetFactory.newInstance("//:dep"))))
+                    "run %s",
+                    ClasspathMacro.of(
+                        ImmutableBuildTargetWithOutputs.of(
+                            BuildTargetFactory.newInstance("//:dep"), OutputLabel.defaultLabel()))))
             .setOut("output");
 
     // Create an initial input-based rule key

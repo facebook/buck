@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 @BuckStyleValue
@@ -28,11 +28,11 @@ public abstract class MavenCoordinatesMacro extends BuildTargetMacro {
   }
 
   @Override
-  protected MavenCoordinatesMacro withTarget(BuildTarget target) {
+  protected MavenCoordinatesMacro withTargetWithOutputs(BuildTargetWithOutputs target) {
     return of(target);
   }
 
-  public static MavenCoordinatesMacro of(BuildTarget buildTarget) {
+  public static MavenCoordinatesMacro of(BuildTargetWithOutputs buildTarget) {
     return ImmutableMavenCoordinatesMacro.of(buildTarget);
   }
 }

@@ -21,7 +21,9 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -64,7 +66,10 @@ public class LocationPlatformMacroTypeCoercerTest {
             ImmutableList.of("//:test")),
         Matchers.equalTo(
             LocationPlatformMacro.of(
-                BuildTargetFactory.newInstance("//:test"), Optional.empty(), ImmutableSet.of())));
+                ImmutableBuildTargetWithOutputs.of(
+                    BuildTargetFactory.newInstance("//:test"), OutputLabel.defaultLabel()),
+                Optional.empty(),
+                ImmutableSet.of())));
     assertThat(
         coercer.coerce(
             CELL_PATH_RESOLVER,
@@ -75,7 +80,10 @@ public class LocationPlatformMacroTypeCoercerTest {
             ImmutableList.of("//:test[foo]")),
         Matchers.equalTo(
             LocationPlatformMacro.of(
-                BuildTargetFactory.newInstance("//:test"), Optional.of("foo"), ImmutableSet.of())));
+                ImmutableBuildTargetWithOutputs.of(
+                    BuildTargetFactory.newInstance("//:test"), OutputLabel.defaultLabel()),
+                Optional.of("foo"),
+                ImmutableSet.of())));
   }
 
   @Test
@@ -93,7 +101,8 @@ public class LocationPlatformMacroTypeCoercerTest {
             ImmutableList.of("//:test", "flavor1", "flavor2")),
         Matchers.equalTo(
             LocationPlatformMacro.of(
-                BuildTargetFactory.newInstance("//:test"),
+                ImmutableBuildTargetWithOutputs.of(
+                    BuildTargetFactory.newInstance("//:test"), OutputLabel.defaultLabel()),
                 Optional.empty(),
                 ImmutableSet.of(InternalFlavor.of("flavor1"), InternalFlavor.of("flavor2")))));
   }

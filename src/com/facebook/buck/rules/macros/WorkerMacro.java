@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /** Type for the `$(worker ...)` macro. */
@@ -24,7 +24,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 public abstract class WorkerMacro extends BuildTargetMacro {
 
   @Override
-  protected WorkerMacro withTarget(BuildTarget target) {
+  protected WorkerMacro withTargetWithOutputs(BuildTargetWithOutputs target) {
     return ImmutableWorkerMacro.of(target);
   }
 
@@ -33,7 +33,7 @@ public abstract class WorkerMacro extends BuildTargetMacro {
     return WorkerMacro.class;
   }
 
-  public static WorkerMacro of(BuildTarget buildTarget) {
+  public static WorkerMacro of(BuildTargetWithOutputs buildTarget) {
     return ImmutableWorkerMacro.of(buildTarget);
   }
 }

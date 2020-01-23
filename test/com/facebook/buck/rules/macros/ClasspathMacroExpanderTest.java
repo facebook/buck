@@ -22,6 +22,8 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -112,7 +114,10 @@ public class ClasspathMacroExpanderTest {
             .build(graphBuilder);
 
     expander.expand(
-        graphBuilder.getSourcePathResolver(), ClasspathMacro.of(rule.getBuildTarget()), rule);
+        graphBuilder.getSourcePathResolver(),
+        ClasspathMacro.of(
+            ImmutableBuildTargetWithOutputs.of(rule.getBuildTarget(), OutputLabel.defaultLabel())),
+        rule);
   }
 
   @Test
@@ -133,7 +138,12 @@ public class ClasspathMacroExpanderTest {
 
     BuildTarget forTarget = BuildTargetFactory.newInstance("//:rule");
     Arg ruleKeyAppendables =
-        expander.expandFrom(forTarget, graphBuilder, ClasspathMacro.of(rule.getBuildTarget()));
+        expander.expandFrom(
+            forTarget,
+            graphBuilder,
+            ClasspathMacro.of(
+                ImmutableBuildTargetWithOutputs.of(
+                    rule.getBuildTarget(), OutputLabel.defaultLabel())));
 
     ImmutableList<BuildRule> deps =
         BuildableSupport.deriveDeps(ruleKeyAppendables, graphBuilder)
@@ -148,7 +158,12 @@ public class ClasspathMacroExpanderTest {
     SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     String classpath =
         Arg.stringify(
-            expander.expand(pathResolver, ClasspathMacro.of(rule.getBuildTarget()), rule),
+            expander.expand(
+                pathResolver,
+                ClasspathMacro.of(
+                    ImmutableBuildTargetWithOutputs.of(
+                        rule.getBuildTarget(), OutputLabel.defaultLabel())),
+                rule),
             pathResolver);
     assertEquals(expectedClasspath, classpath);
   }

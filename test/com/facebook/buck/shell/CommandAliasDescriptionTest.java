@@ -29,6 +29,7 @@ import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -502,8 +503,13 @@ public class CommandAliasDescriptionTest {
   public void supportsEnvWithExeMacro() {
     ImmutableMap<String, StringWithMacros> env =
         ImmutableSortedMap.of(
-            "apples", StringWithMacrosUtils.format("some"),
-            "pears", StringWithMacrosUtils.format("%s", ExecutableMacro.of(macroTarget)));
+            "apples",
+            StringWithMacrosUtils.format("some"),
+            "pears",
+            StringWithMacrosUtils.format(
+                "%s",
+                ExecutableMacro.of(
+                    ImmutableBuildTargetWithOutputs.of(macroTarget, OutputLabel.defaultLabel()))));
 
     CommandAliasBuilder.BuildResult result =
         builder()

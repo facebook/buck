@@ -20,7 +20,6 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
-import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -41,14 +40,13 @@ public final class BuildTargetMacroTypeCoercer<M extends BuildTargetMacro>
   private final TypeCoercer<BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer;
   private final Class<M> mClass;
   private final TargetOrHost targetOrHost;
-  // TODO(irenewchen): factory's type should be Function<BuildTargetWithOutputs, M>
-  private final Function<BuildTarget, M> factory;
+  private final Function<BuildTargetWithOutputs, M> factory;
 
   public BuildTargetMacroTypeCoercer(
       TypeCoercer<BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer,
       Class<M> mClass,
       TargetOrHost targetOrHost,
-      Function<BuildTarget, M> factory) {
+      Function<BuildTargetWithOutputs, M> factory) {
     this.buildTargetWithOutputsTypeCoercer = buildTargetWithOutputsTypeCoercer;
     this.mClass = mClass;
     this.targetOrHost = targetOrHost;
@@ -65,7 +63,8 @@ public final class BuildTargetMacroTypeCoercer<M extends BuildTargetMacro>
     // TODO(irenewchen): Add output label to BuildTargetMacro and pass it on here
     buildTargetWithOutputsTypeCoercer.traverse(
         cellRoots,
-        ImmutableBuildTargetWithOutputs.of(macro.getTarget(), OutputLabel.defaultLabel()),
+        ImmutableBuildTargetWithOutputs.of(
+            macro.getTarget(), macro.getTargetWithOutputs().getOutputLabel()),
         traversal);
   }
 
@@ -87,16 +86,14 @@ public final class BuildTargetMacroTypeCoercer<M extends BuildTargetMacro>
       throw new CoerceFailedException(
           String.format("expected exactly one argument (found %d)", args.size()));
     }
-    BuildTarget target =
-        buildTargetWithOutputsTypeCoercer
-            .coerce(
-                cellRoots,
-                filesystem,
-                pathRelativeToProjectRoot,
-                targetOrHost == TargetOrHost.TARGET ? targetConfiguration : hostConfiguration,
-                hostConfiguration,
-                args.get(0))
-            .getBuildTarget();
+    BuildTargetWithOutputs target =
+        buildTargetWithOutputsTypeCoercer.coerce(
+            cellRoots,
+            filesystem,
+            pathRelativeToProjectRoot,
+            targetOrHost == TargetOrHost.TARGET ? targetConfiguration : hostConfiguration,
+            hostConfiguration,
+            args.get(0));
     return factory.apply(target);
   }
 }

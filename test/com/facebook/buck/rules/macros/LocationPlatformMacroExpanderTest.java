@@ -19,6 +19,8 @@ package com.facebook.buck.rules.macros;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -64,7 +66,8 @@ public class LocationPlatformMacroExpanderTest {
                 node.getBuildTarget(),
                 graphBuilder,
                 LocationPlatformMacro.of(
-                    node.getBuildTarget(),
+                    ImmutableBuildTargetWithOutputs.of(
+                        node.getBuildTarget(), OutputLabel.defaultLabel()),
                     Optional.empty(),
                     ImmutableSet.of(CxxDescriptionEnhancer.SHARED_FLAVOR))),
             pathResolver);

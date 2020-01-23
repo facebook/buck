@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /** Like {@code exe} macro but does not switch to host platform */
@@ -29,11 +29,11 @@ public abstract class ExecutableTargetMacro extends AbstractExecutableTargetOrHo
   }
 
   @Override
-  protected ExecutableTargetMacro withTarget(BuildTarget target) {
+  protected ExecutableTargetMacro withTargetWithOutputs(BuildTargetWithOutputs target) {
     return of(target);
   }
 
-  public static ExecutableTargetMacro of(BuildTarget buildTarget) {
+  public static ExecutableTargetMacro of(BuildTargetWithOutputs buildTarget) {
     return ImmutableExecutableTargetMacro.of(buildTarget);
   }
 }

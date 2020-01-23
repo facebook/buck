@@ -21,6 +21,8 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -60,7 +62,10 @@ public class LocationMacroTypeCoercerTest {
             UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableList.of("//:test")),
         Matchers.equalTo(
-            LocationMacro.of(BuildTargetFactory.newInstance("//:test"), Optional.empty())));
+            LocationMacro.of(
+                ImmutableBuildTargetWithOutputs.of(
+                    BuildTargetFactory.newInstance("//:test"), OutputLabel.defaultLabel()),
+                Optional.empty())));
 
     assertThat(
         coercer.coerce(
@@ -71,7 +76,10 @@ public class LocationMacroTypeCoercerTest {
             UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableList.of("//:test[foo]")),
         Matchers.equalTo(
-            LocationMacro.of(BuildTargetFactory.newInstance("//:test"), Optional.of("foo"))));
+            LocationMacro.of(
+                ImmutableBuildTargetWithOutputs.of(
+                    BuildTargetFactory.newInstance("//:test"), OutputLabel.defaultLabel()),
+                Optional.of("foo"))));
   }
 
   @Test(expected = CoerceFailedException.class)

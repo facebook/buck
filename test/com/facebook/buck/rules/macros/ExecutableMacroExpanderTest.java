@@ -24,6 +24,7 @@ import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -174,7 +175,8 @@ public class ExecutableMacroExpanderTest {
 
     // Verify that the correct cmd was created.
     ExecutableMacroExpander expander = new ExecutableMacroExpander(ExecutableMacro.class);
-    ExecutableMacro executableMacro = ExecutableMacro.of(target);
+    ExecutableMacro executableMacro =
+        ExecutableMacro.of(ImmutableBuildTargetWithOutputs.of(target, OutputLabel.defaultLabel()));
     assertEquals(ToolArg.of(tool), expander.expandFrom(target, graphBuilder, executableMacro));
     Arg expanded = expander.expandFrom(target, graphBuilder, executableMacro);
     assertThat(expanded, Matchers.instanceOf(ToolArg.class));
@@ -188,8 +190,13 @@ public class ExecutableMacroExpanderTest {
     Tool tool = new CommandTool.Builder().addArg("command").build();
     graphBuilder.addToIndex(new NoopBinaryBuildRule(target, filesystem, params, tool));
     ExecutableMacroExpander expander = new ExecutableMacroExpander(ExecutableMacro.class);
+
     assertThat(
-        expander.expandFrom(target, graphBuilder, ExecutableMacro.of(target)),
+        expander.expandFrom(
+            target,
+            graphBuilder,
+            ExecutableMacro.of(
+                ImmutableBuildTargetWithOutputs.of(target, OutputLabel.defaultLabel()))),
         Matchers.equalTo(ToolArg.of(tool)));
   }
 
