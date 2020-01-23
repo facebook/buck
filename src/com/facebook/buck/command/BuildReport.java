@@ -247,20 +247,20 @@ public class BuildReport {
   @Nullable
   private ImmutableMap<OutputLabel, ImmutableSet<Path>> getMultipleOutputPaths(BuildRule rule) {
     if (rule instanceof HasMultipleOutputs) {
+      HasMultipleOutputs multipleOutputsRule = (HasMultipleOutputs) rule;
       ProjectFilesystem projectFilesystem = rule.getProjectFilesystem();
-      ImmutableSet<Map.Entry<OutputLabel, ImmutableSortedSet<SourcePath>>> labelsToSourcePaths =
-          ((HasMultipleOutputs) rule).getSourcePathsByOutputsLabels().entrySet();
+      ImmutableSet<OutputLabel> outputLabels = multipleOutputsRule.getOutputLabels();
       ImmutableMap.Builder<OutputLabel, ImmutableSet<Path>> allPathsBuilder =
-          ImmutableMap.builderWithExpectedSize(labelsToSourcePaths.size());
-      for (Map.Entry<OutputLabel, ImmutableSortedSet<SourcePath>> labelToSourcePaths :
-          labelsToSourcePaths) {
-        ImmutableSortedSet<SourcePath> sourcePaths = labelToSourcePaths.getValue();
+          ImmutableMap.builderWithExpectedSize(outputLabels.size());
+      for (OutputLabel outputLabel : outputLabels) {
+        ImmutableSortedSet<SourcePath> sourcePaths =
+            multipleOutputsRule.getSourcePathToOutput(outputLabel);
         ImmutableSet.Builder<Path> pathBuilderForLabel =
             ImmutableSet.builderWithExpectedSize(sourcePaths.size());
         for (SourcePath sourcePath : sourcePaths) {
           pathBuilderForLabel.add(relativizeSourcePathToProjectRoot(projectFilesystem, sourcePath));
         }
-        allPathsBuilder.put(labelToSourcePaths.getKey(), pathBuilderForLabel.build());
+        allPathsBuilder.put(outputLabel, pathBuilderForLabel.build());
       }
       return allPathsBuilder.build();
     }

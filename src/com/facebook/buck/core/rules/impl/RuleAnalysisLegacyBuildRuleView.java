@@ -40,7 +40,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.impl.ActionExecutionStep;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
@@ -67,6 +67,7 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule
   private Supplier<SortedSet<BuildRule>> buildDepsSupplier;
   private BuildRuleResolver ruleResolver;
   private final ProviderInfoCollection providerInfoCollection;
+  private final Supplier<ImmutableSet<OutputLabel>> outputLabels;
 
   /**
    * @param type the type of this {@link BuildRule}
@@ -89,6 +90,7 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule
     this.ruleResolver = ruleResolver;
     this.providerInfoCollection = providerInfoCollection;
     this.buildDepsSupplier = MoreSuppliers.memoize(this::getBuildDepsSupplier);
+    this.outputLabels = MoreSuppliers.memoize(this::getOutputLabelsSupplier);
   }
 
   @Override
@@ -161,19 +163,19 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule
   }
 
   @Override
-  public ImmutableMap<OutputLabel, ImmutableSortedSet<SourcePath>> getSourcePathsByOutputsLabels() {
+  public ImmutableSet<OutputLabel> getOutputLabels() {
+    return outputLabels.get();
+  }
+
+  private ImmutableSet<OutputLabel> getOutputLabelsSupplier() {
     DefaultInfo defaultInfo = providerInfoCollection.getDefaultInfo();
-    ImmutableMap.Builder<OutputLabel, ImmutableSortedSet<SourcePath>> builder =
-        ImmutableMap.builderWithExpectedSize(defaultInfo.namedOutputs().size() + 1);
+    ImmutableSet.Builder<OutputLabel> builder =
+        ImmutableSet.builderWithExpectedSize(defaultInfo.namedOutputs().size() + 1);
     defaultInfo
         .namedOutputs()
-        .entrySet()
-        .forEach(
-            namedOutputs ->
-                builder.put(
-                    OutputLabel.of(namedOutputs.getKey()),
-                    convertToSourcePaths(namedOutputs.getValue())));
-    builder.put(OutputLabel.defaultLabel(), convertToSourcePaths(defaultInfo.defaultOutputs()));
+        .keySet()
+        .forEach(outputLabel -> builder.add(OutputLabel.of(outputLabel)));
+    builder.add(OutputLabel.defaultLabel());
     return builder.build();
   }
 

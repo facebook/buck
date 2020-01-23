@@ -55,6 +55,7 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.worker.WorkerJobParams;
 import com.facebook.buck.worker.WorkerProcessIdentity;
 import com.facebook.buck.worker.WorkerProcessParams;
@@ -77,6 +78,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -157,6 +159,8 @@ public class GenruleBuildable implements Buildable {
    */
   @AddToRuleKey
   protected final Optional<ImmutableMap<OutputLabel, ImmutableSet<OutputPath>>> outputPaths;
+
+  @AddToRuleKey private final Supplier<ImmutableSet<OutputLabel>> outputLabelsSupplier;
 
   /**
    * Whether or not this genrule can be cached. This is not used within this class, but is required
@@ -246,6 +250,7 @@ public class GenruleBuildable implements Buildable {
               builder.put(OutputLabel.defaultLabel(), DEFAULT_OUTS);
               return builder.build();
             });
+    this.outputLabelsSupplier = MoreSuppliers.memoize(this::getOutputLabelsSupplier);
     this.enableSandboxingInGenrule = enableSandboxingInGenrule;
     this.isCacheable = isCacheable;
     this.environmentExpansionSeparator = environmentExpansionSeparator;
@@ -330,16 +335,19 @@ public class GenruleBuildable implements Buildable {
             });
   }
 
-  /** Returns a map of output labels to its associated {@link OutputPath} instances. */
-  public ImmutableMap<OutputLabel, ImmutableSet<OutputPath>> getOutputMap() {
+  /** Returns a set of output labels associated with this buildable. */
+  public ImmutableSet<OutputLabel> getOutputLabels() {
+    return outputLabelsSupplier.get();
+  }
+
+  private ImmutableSet<OutputLabel> getOutputLabelsSupplier() {
     if (!outputPaths.isPresent()) {
-      return ImmutableMap.of(OutputLabel.defaultLabel(), ImmutableSet.of(outputPath.get()));
+      return ImmutableSet.of(OutputLabel.defaultLabel());
     }
-    ImmutableMap<OutputLabel, ImmutableSet<OutputPath>> paths = outputPaths.get();
-    return ImmutableMap.<OutputLabel, ImmutableSet<OutputPath>>builderWithExpectedSize(
-            paths.size() + 1)
-        .putAll(paths)
-        .put(OutputLabel.defaultLabel(), DEFAULT_OUTPUTS)
+    ImmutableSet<OutputLabel> outputLabels = outputPaths.get().keySet();
+    return ImmutableSet.<OutputLabel>builderWithExpectedSize(outputLabels.size() + 1)
+        .addAll(outputLabels)
+        .add(OutputLabel.defaultLabel())
         .build();
   }
 

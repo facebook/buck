@@ -92,7 +92,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -1048,10 +1047,7 @@ public class GenruleTest {
   }
 
   @Test
-  public void canGetSourcePathsByOutputLabel() {
-    ProjectFilesystem fakeFileSystem = new FakeProjectFilesystem();
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(graphBuilder);
+  public void canGetOutputLabelsForMultipleOutputs() {
     BuildTarget target = BuildTargetFactory.newInstance("//:test_genrule");
     Genrule genrule =
         GenruleBuilder.newGenruleBuilder(target)
@@ -1062,51 +1058,26 @@ public class GenruleTest {
                     ImmutableSet.of("output1a", "output1b"),
                     "label2",
                     ImmutableSet.of("output2a")))
-            .build(graphBuilder, new FakeProjectFilesystem());
+            .build(new TestActionGraphBuilder(), new FakeProjectFilesystem());
 
-    ImmutableMap<OutputLabel, ImmutableSet<Path>> actual =
-        genrule.getSourcePathsByOutputsLabels().entrySet().stream()
-            .collect(
-                ImmutableMap.toImmutableMap(
-                    Map.Entry::getKey,
-                    e -> convertSourcePathsToPaths(sourcePathResolver, e.getValue())));
-
-    assertThat(actual.entrySet(), Matchers.hasSize(3));
+    ImmutableSet<OutputLabel> actual = genrule.getOutputLabels();
     assertThat(
-        actual.get(OutputLabel.of("label1")),
+        actual,
         Matchers.containsInAnyOrder(
-            getExpectedPath(fakeFileSystem, target, "output1a"),
-            getExpectedPath(fakeFileSystem, target, "output1b")));
-    assertThat(
-        actual.get(OutputLabel.of("label2")),
-        Matchers.containsInAnyOrder(getExpectedPath(fakeFileSystem, target, "output2a")));
-    assertThat(actual.get(OutputLabel.defaultLabel()), Matchers.empty());
+            OutputLabel.of("label1"), OutputLabel.of("label2"), OutputLabel.defaultLabel()));
   }
 
   @Test
-  public void canGetOutPathDefaultLabel() {
-    ProjectFilesystem fakeFileSystem = new FakeProjectFilesystem();
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(graphBuilder);
+  public void canGetOutputLabelForSingleOutput() {
     BuildTarget target = BuildTargetFactory.newInstance("//:test_genrule");
     Genrule genrule =
         GenruleBuilder.newGenruleBuilder(target)
             .setCmd("echo hello >> $OUT")
             .setOut("expected")
-            .build(graphBuilder, new FakeProjectFilesystem());
+            .build(new TestActionGraphBuilder(), new FakeProjectFilesystem());
 
-    ImmutableMap<OutputLabel, ImmutableSet<Path>> actual =
-        genrule.getSourcePathsByOutputsLabels().entrySet().stream()
-            .collect(
-                ImmutableMap.toImmutableMap(
-                    Map.Entry::getKey,
-                    e -> convertSourcePathsToPaths(sourcePathResolver, e.getValue())));
-
-    assertThat(actual.entrySet(), Matchers.hasSize(1));
-    assertThat(
-        actual.get(OutputLabel.defaultLabel()),
-        Matchers.contains(
-            BuildTargetPaths.getGenPath(fakeFileSystem, target, "%s").resolve("expected")));
+    ImmutableSet<OutputLabel> actual = genrule.getOutputLabels();
+    assertThat(actual, Matchers.containsInAnyOrder(OutputLabel.defaultLabel()));
   }
 
   private Path getExpectedPath(ProjectFilesystem filesystem, BuildTarget target, String path) {

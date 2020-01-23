@@ -22,7 +22,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.artifact.Artifact;
-import com.facebook.buck.core.artifact.BuildArtifactFactoryForTests;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
@@ -55,7 +54,6 @@ import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
@@ -68,7 +66,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Ordering;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.packages.BazelLibrary;
 import com.google.devtools.build.lib.syntax.Environment;
@@ -178,8 +175,7 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
             buildTarget,
             projectFilesystem,
             actionGraphBuilder,
-            artifact,
-            Optional.of(actionAnalysisRegistry),
+            Optional.of(new ActionCreationInput(actionAnalysisRegistry, artifact)),
             providerInfoCollection);
 
     assertSame(buildTarget, buildRule.getBuildTarget());
@@ -249,8 +245,7 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
             buildTarget,
             new FakeProjectFilesystem(),
             new TestActionGraphBuilder(),
-            defaultArtifact,
-            Optional.of(actionAnalysisRegistry),
+            Optional.of(new ActionCreationInput(actionAnalysisRegistry, defaultArtifact)),
             providerInfoCollection);
 
     assertThat(
@@ -296,51 +291,34 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
             buildTarget,
             new FakeProjectFilesystem(),
             new TestActionGraphBuilder(),
-            defaultArtifact,
-            Optional.of(actionAnalysisRegistry),
+            Optional.of(new ActionCreationInput(actionAnalysisRegistry, defaultArtifact)),
             providerInfoCollection);
 
     buildRule.getSourcePathToOutput(OutputLabel.of("nonexistent"));
   }
 
   @Test
-  public void canGetSourcePathsByOutputLabels() throws EvalException {
+  public void canGetOutputLabels() throws EvalException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//my:foo");
-
-    BuildArtifactFactoryForTests artifactFactory =
-        new BuildArtifactFactoryForTests(buildTarget, filesystem);
-    Artifact setOneArtifactOne =
-        artifactFactory.createBuildArtifact(Paths.get("foo.set1.output1"), Location.BUILTIN);
-    Artifact setTwoArtifactOne =
-        artifactFactory.createBuildArtifact(Paths.get("foo.set2.output1"), Location.BUILTIN);
-    Artifact setTwoArtifactTwo =
-        artifactFactory.createBuildArtifact(Paths.get("foo.set2.output2"), Location.BUILTIN);
-    Artifact defaultArtifact =
-        artifactFactory.createBuildArtifact(Paths.get("default"), Location.BUILTIN);
-    Artifact defaultArtifact2 =
-        artifactFactory.createBuildArtifact(Paths.get("default2"), Location.BUILTIN);
-    ImmutableSet<Artifact> setOne = ImmutableSet.of(setOneArtifactOne);
-    ImmutableSet<Artifact> setTwo = ImmutableSet.of(setTwoArtifactOne, setTwoArtifactTwo);
-    ImmutableSet<Artifact> defaultSet = ImmutableSet.of(defaultArtifact, defaultArtifact2);
 
     ProviderInfoCollection providerInfoCollection =
         createProviderInfoCollection(
-            ImmutableMap.of("setOne", setOne, "setTwo", setTwo), defaultSet);
+            ImmutableMap.of("setOne", ImmutableSet.of(), "setTwo", ImmutableSet.of()),
+            ImmutableSet.of());
 
     RuleAnalysisLegacyBuildRuleView buildRule =
         createRuleAnalysisLegacyBuildRuleView(
             buildTarget,
             new FakeProjectFilesystem(),
             new TestActionGraphBuilder(),
-            defaultArtifact,
             Optional.empty(),
             providerInfoCollection);
 
-    ImmutableMap<OutputLabel, ImmutableSortedSet<SourcePath>> actual =
-        buildRule.getSourcePathsByOutputsLabels();
-    assertEquals(convertToSourcePaths(defaultSet), actual.get(OutputLabel.defaultLabel()));
-    assertEquals(convertToSourcePaths(setOne), actual.get(OutputLabel.of("setOne")));
-    assertEquals(convertToSourcePaths(setTwo), actual.get(OutputLabel.of("setTwo")));
+    ImmutableSet<OutputLabel> actual = buildRule.getOutputLabels();
+    assertThat(
+        actual,
+        Matchers.containsInAnyOrder(
+            OutputLabel.of("setOne"), OutputLabel.of("setTwo"), OutputLabel.defaultLabel()));
   }
 
   private static FakeAction createFakeAction(
@@ -383,27 +361,36 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
         .build(new ImmutableDefaultInfo(dict, defaultOutputs));
   }
 
+  /**
+   * Returns a {@link RuleAnalysisLegacyBuildRuleView} for test.
+   *
+   * @param buildTarget the target associated with the build rule
+   * @param projectFilesystem the project filesystem associated with the build rule
+   * @param actionGraphBuilder builder to use for constructing the action graph
+   * @param actionCreationInput inputs needed to create an action associated with the {@code
+   *     RuleAnalysisLegacyBuildRuleView} under test. If not present, no action is constructed for
+   *     this {@code RuleAnalysisLegacyBuildRuleView}
+   * @param providerInfoCollection providers associated with this build rule
+   */
   private static RuleAnalysisLegacyBuildRuleView createRuleAnalysisLegacyBuildRuleView(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder actionGraphBuilder,
-      Artifact artifactForActionWrapperData,
-      Optional<FakeActionAnalysisRegistry> actionAnalysisRegistry,
+      Optional<ActionCreationInput> actionCreationInput,
       ProviderInfoCollection providerInfoCollection) {
 
     Optional<Action> action =
-        actionAnalysisRegistry.map(
-            registry -> {
+        actionCreationInput.map(
+            input -> {
               Map<ID, ActionAnalysisData> actionAnalysisDataMap =
-                  registry.getRegistered().entrySet().stream()
+                  input.registry.getRegistered().entrySet().stream()
                       .collect(
                           ImmutableMap.toImmutableMap(
                               entry -> entry.getKey().getID(), entry -> entry.getValue()));
               ActionWrapperData actionWrapperData =
                   (ActionWrapperData)
                       actionAnalysisDataMap.get(
-                          Objects.requireNonNull(
-                                  artifactForActionWrapperData.asBound().asBuildArtifact())
+                          Objects.requireNonNull(input.artifact.asBound().asBuildArtifact())
                               .getActionDataKey()
                               .getID());
               return actionWrapperData.getAction();
@@ -418,9 +405,14 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
         providerInfoCollection);
   }
 
-  private static ImmutableSortedSet<SourcePath> convertToSourcePaths(Set<Artifact> artifacts) {
-    return artifacts.stream()
-        .map(artifact -> artifact.asBound().getSourcePath())
-        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+  /** Helper for holding inputs required to create {@link Action} instances for tests. */
+  private static class ActionCreationInput {
+    private final FakeActionAnalysisRegistry registry;
+    private final Artifact artifact;
+
+    private ActionCreationInput(FakeActionAnalysisRegistry registry, Artifact artifact) {
+      this.registry = registry;
+      this.artifact = artifact;
+    }
   }
 }

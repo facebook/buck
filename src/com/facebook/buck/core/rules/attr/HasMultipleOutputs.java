@@ -19,7 +19,7 @@ package com.facebook.buck.core.rules.attr;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import javax.annotation.Nullable;
@@ -37,8 +37,8 @@ public interface HasMultipleOutputs extends BuildRule {
   @Nullable
   ImmutableSortedSet<SourcePath> getSourcePathToOutput(OutputLabel outputLabel);
 
-  /** Returns a map of {@link SourcePath} instances keyed by associated output labels. */
-  ImmutableMap<OutputLabel, ImmutableSortedSet<SourcePath>> getSourcePathsByOutputsLabels();
+  /** returns a set of {@link OutputLabel} instances associated with this build rule. */
+  ImmutableSet<OutputLabel> getOutputLabels();
 
   @Nullable
   @Override

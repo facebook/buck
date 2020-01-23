@@ -85,7 +85,7 @@ public class PathReferenceRuleWithMultipleOutputs extends PathReferenceRule
   }
 
   @Override
-  public ImmutableMap<OutputLabel, ImmutableSortedSet<SourcePath>> getSourcePathsByOutputsLabels() {
-    return outputLabelsToSourcePaths;
+  public ImmutableSet<OutputLabel> getOutputLabels() {
+    return outputLabelsToSourcePaths.keySet();
   }
 }

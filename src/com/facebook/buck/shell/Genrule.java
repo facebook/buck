@@ -44,7 +44,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -216,9 +215,8 @@ public class Genrule extends ModernBuildRule<GenruleBuildable>
   }
 
   @Override
-  public ImmutableMap<OutputLabel, ImmutableSortedSet<SourcePath>> getSourcePathsByOutputsLabels() {
-    return getBuildable().getOutputMap().entrySet().stream()
-        .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, e -> getSourcePaths(e.getValue())));
+  public ImmutableSet<OutputLabel> getOutputLabels() {
+    return getBuildable().getOutputLabels();
   }
 
   @Override
