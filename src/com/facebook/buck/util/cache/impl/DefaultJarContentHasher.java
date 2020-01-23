@@ -28,6 +28,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.jar.Attributes;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
 class DefaultJarContentHasher implements JarContentHasher {
@@ -48,7 +51,19 @@ class DefaultJarContentHasher implements JarContentHasher {
 
   @Override
   public ImmutableMap<Path, HashCodeAndFileType> getContentHashes() throws IOException {
-    Manifest manifest = filesystem.getJarManifest(jarRelativePath);
+    Manifest manifest = null;
+    try (JarInputStream inputStream =
+        new JarInputStream(filesystem.newFileInputStream(jarRelativePath))) {
+      JarEntry entry = inputStream.getNextJarEntry();
+      while (entry != null) {
+        if (JarFile.MANIFEST_NAME.equalsIgnoreCase(entry.getName())) {
+          manifest = new Manifest();
+          manifest.read(inputStream);
+          break;
+        }
+        entry = inputStream.getNextJarEntry();
+      }
+    }
     if (manifest == null) {
       throw new UnsupportedOperationException(
           "Cache does not know how to return hash codes for archive members except "

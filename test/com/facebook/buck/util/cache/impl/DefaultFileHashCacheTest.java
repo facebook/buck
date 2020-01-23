@@ -253,7 +253,7 @@ public class DefaultFileHashCacheTest {
     cache.getForArchiveMember(abiJarPath, memberPath);
   }
 
-  @Test(expected = NoSuchFileException.class)
+  @Test(expected = UnsupportedOperationException.class)
   public void whenJarMemberWithEmptyManifestIsQueriedThenThrow() throws IOException {
     Assume.assumeFalse(fileHashCacheMode == FileHashCacheMode.PARALLEL_COMPARISON);
     Assume.assumeFalse(fileHashCacheMode == FileHashCacheMode.LIMITED_PREFIX_TREE_PARALLEL);
