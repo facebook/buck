@@ -32,6 +32,7 @@ import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ImmutableComposedKey;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.RuleType;
@@ -492,6 +493,11 @@ public class TargetsCommand extends AbstractCommand {
           params.getConsole().getAnsi(),
           params.getBuckEventBus());
     }
+    if (isShowOutputs && shouldUseJsonFormat()) {
+      // TODO(irenewchen): Support printing JSON results with output labels
+      throw new HumanReadableException(
+          "JSON printing not supported yet with multiple outputs. Use --show-outputs without --json");
+    }
     Optional<ImmutableSet<Class<? extends BaseDescription<?>>>> descriptionClasses =
         getDescriptionClassFromParams(params);
     if (!descriptionClasses.isPresent()) {
@@ -534,9 +540,10 @@ public class TargetsCommand extends AbstractCommand {
         useVersioning
             ? toVersionedTargetGraph(params, targetGraphAndBuildTargetsForShowRules)
             : targetGraphAndBuildTargetsForShowRules;
-    ImmutableSortedMap<BuildTarget, TargetResult> showRulesResult =
+    ImmutableSortedMap<BuildTargetWithOutputs, TargetResult> showRulesResult =
         computeShowRules(
             params,
+            targetNodeSpecs,
             executor,
             new Pair<>(
                 targetGraphAndBuildTargetsForShowRules.getTargetGraph(),
@@ -545,9 +552,26 @@ public class TargetsCommand extends AbstractCommand {
                     .getAll(targetGraphAndBuildTargetsForShowRules.getBuildTargets())));
 
     if (shouldUseJsonFormat()) {
+      // TODO(irenewchen): Support printing JSON results with output labels
+      ImmutableMap<BuildTarget, TargetResult> noOutputLabelsShowRulesResult =
+          showRulesResult.entrySet().stream()
+              .collect(
+                  ImmutableMap.toImmutableMap(
+                      e -> {
+                        // Non-default output labels shouldn't be able to appear here, but add
+                        // another assertion just in case
+                        Preconditions.checkState(
+                            e.getKey().getOutputLabel().isDefault(),
+                            "JSON printing not supported yet with named outputs. Use --show-outputs without --json");
+                        return e.getKey().getBuildTarget();
+                      },
+                      Map.Entry::getValue));
       Iterable<TargetNode<?>> matchingNodes =
-          targetGraphAndBuildTargetsForShowRules.getTargetGraph().getAll(showRulesResult.keySet());
-      printJsonForTargets(params, executor, matchingNodes, showRulesResult, outputAttributes.get());
+          targetGraphAndBuildTargetsForShowRules
+              .getTargetGraph()
+              .getAll(noOutputLabelsShowRulesResult.keySet());
+      printJsonForTargets(
+          params, executor, matchingNodes, noOutputLabelsShowRulesResult, outputAttributes.get());
     } else {
       printShowRules(showRulesResult, params);
     }
@@ -801,18 +825,27 @@ public class TargetsCommand extends AbstractCommand {
   }
 
   private void printShowRules(
-      ImmutableSortedMap<BuildTarget, TargetResult> showRulesResult, CommandRunnerParams params) {
-    for (Entry<BuildTarget, TargetResult> entry : showRulesResult.entrySet()) {
+      ImmutableSortedMap<BuildTargetWithOutputs, TargetResult> showRulesResult,
+      CommandRunnerParams params) {
+    for (Entry<BuildTargetWithOutputs, TargetResult> entry : showRulesResult.entrySet()) {
       ImmutableList.Builder<String> builder = ImmutableList.builder();
-      builder.add(entry.getKey().getFullyQualifiedName());
+      builder.add(entry.getKey().toString());
       TargetResult targetResult = entry.getValue();
       targetResult.getRuleKey().ifPresent(builder::add);
       if (isShowCellPath) {
         Path cellPath =
-            params.getCell().getNewCellPathResolver().getCellPath(entry.getKey().getCell());
+            params
+                .getCell()
+                .getNewCellPathResolver()
+                .getCellPath(entry.getKey().getBuildTarget().getCell());
         builder.add(cellPath.toString());
       }
-      targetResult.getOutputPath().ifPresent(builder::add);
+      @Nullable
+      String outputPathForLabel =
+          targetResult.getOutputPathsByLabels().get(entry.getKey().getOutputLabel());
+      if (outputPathForLabel != null) {
+        builder.add(outputPathForLabel);
+      }
       targetResult.getGeneratedSourcePath().ifPresent(builder::add);
       targetResult.getTargetHash().ifPresent(builder::add);
       params.getConsole().getStdOut().println(Joiner.on(' ').join(builder.build()));
@@ -1069,8 +1102,9 @@ public class TargetsCommand extends AbstractCommand {
    *
    * @return An immutable map consisting of result of show options for to each target rule
    */
-  private ImmutableSortedMap<BuildTarget, TargetResult> computeShowRules(
+  private ImmutableSortedMap<BuildTargetWithOutputs, TargetResult> computeShowRules(
       CommandRunnerParams params,
+      ImmutableList<TargetNodeSpec> targetNodeSpecs,
       ListeningExecutorService executor,
       Pair<TargetGraph, Iterable<TargetNode<?>>> targetGraphAndTargetNodes)
       throws IOException, InterruptedException, BuildFileParseException, CycleException {
@@ -1178,17 +1212,28 @@ public class TargetsCommand extends AbstractCommand {
         }
       }
 
+      ImmutableSet<BuildTargetWithOutputs> buildTargetsWithOutputs =
+          matchBuildTargetsWithLabelsFromSpecs(
+              targetNodeSpecs, ImmutableSet.copyOf(targetResultBuilders.map.keySet()));
       TargetGraph targetGraph = targetGraphAndTargetNodes.getFirst();
       graphBuilder.ifPresent(
           actionGraphBuilder ->
-              processBuildRules(targetResultBuilders.map, targetGraph, actionGraphBuilder, params));
+              processBuildRules(
+                  targetResultBuilders.map,
+                  targetGraph,
+                  buildTargetsWithOutputs,
+                  actionGraphBuilder,
+                  params));
 
-      ImmutableSortedMap.Builder<BuildTarget, TargetResult> builder =
+      ImmutableSortedMap.Builder<BuildTargetWithOutputs, TargetResult> builder =
           ImmutableSortedMap.naturalOrder();
-      for (Map.Entry<BuildTarget, ImmutableTargetResult.Builder> entry :
-          targetResultBuilders.map.entrySet()) {
-        builder.put(entry.getKey(), entry.getValue().build());
-      }
+      buildTargetsWithOutputs.forEach(
+          targetWithOutputs ->
+              builder.put(
+                  targetWithOutputs,
+                  Objects.requireNonNull(
+                          targetResultBuilders.map.get(targetWithOutputs.getBuildTarget()))
+                      .build()));
       return builder.build();
     }
   }
@@ -1196,38 +1241,47 @@ public class TargetsCommand extends AbstractCommand {
   private void processBuildRules(
       Map<BuildTarget, ImmutableTargetResult.Builder> buildTargetToTargetBuilderMap,
       TargetGraph targetGraph,
+      ImmutableSet<BuildTargetWithOutputs> buildTargetsWithOutputs,
       ActionGraphBuilder graphBuilder,
       CommandRunnerParams params) {
-    buildTargetToTargetBuilderMap.forEach(
-        (target, builder) -> {
-          if (!targetGraph.get(target).getRuleType().isBuildRule()) {
-            return;
-          }
-          BuildRule rule = graphBuilder.requireRule(target);
-          builder.setRuleType(rule.getType());
-          if (isShowOutput || isShowOutputs || isShowFullOutput) {
-            SourcePathResolverAdapter sourcePathResolverAdapter =
-                graphBuilder.getSourcePathResolver();
-            PathUtils.getUserFacingOutputPath(
-                    sourcePathResolverAdapter,
-                    rule,
-                    params.getBuckConfig().getView(BuildBuckConfig.class).getBuckOutCompatLink(),
-                    // TODO(irenewchen): Targets command isn't supported with output labels (yet)
-                    OutputLabel.defaultLabel(),
-                    false)
-                .map(path -> pathToString(path, params))
-                .ifPresent(builder::setOutputPath);
-            // If the output dir is requested, also calculate the generated src dir
-            if (rule instanceof JavaLibrary) {
-              ((JavaLibrary) rule)
-                  .getGeneratedAnnotationSourcePath()
-                  .map(sourcePathResolverAdapter::getRelativePath)
-                  .map(rule.getProjectFilesystem()::resolve)
-                  .map(path -> pathToString(path, params))
-                  .ifPresent(builder::setGeneratedSourcePath);
-            }
-          }
-        });
+    for (BuildTargetWithOutputs targetWithOutputs : buildTargetsWithOutputs) {
+      BuildTarget target = targetWithOutputs.getBuildTarget();
+      if (!targetGraph.get(target).getRuleType().isBuildRule()) {
+        continue;
+      }
+      ImmutableTargetResult.Builder builder =
+          Objects.requireNonNull(buildTargetToTargetBuilderMap.get(target));
+      BuildRule rule = graphBuilder.requireRule(target);
+      builder.setRuleType(rule.getType());
+      if (isShowOutput || isShowOutputs || isShowFullOutput) {
+        SourcePathResolverAdapter sourcePathResolverAdapter = graphBuilder.getSourcePathResolver();
+        PathUtils.getUserFacingOutputPath(
+                sourcePathResolverAdapter,
+                rule,
+                params.getBuckConfig().getView(BuildBuckConfig.class).getBuckOutCompatLink(),
+                targetWithOutputs.getOutputLabel(),
+                isShowOutputs)
+            .map(path -> pathToString(path, params))
+            .ifPresent(
+                path -> {
+                  // Need to call both #setOutputPath and #putOutputPathsByLabels because JSON uses
+                  // the former while default output path printing to console uses the latter
+                  if (targetWithOutputs.getOutputLabel().isDefault()) {
+                    builder.setOutputPath(path);
+                  }
+                  builder.putOutputPathsByLabels(targetWithOutputs.getOutputLabel(), path);
+                });
+        // If the output dir is requested, also calculate the generated src dir
+        if (rule instanceof JavaLibrary) {
+          ((JavaLibrary) rule)
+              .getGeneratedAnnotationSourcePath()
+              .map(sourcePathResolverAdapter::getRelativePath)
+              .map(rule.getProjectFilesystem()::resolve)
+              .map(path -> pathToString(path, params))
+              .ifPresent(builder::setGeneratedSourcePath);
+        }
+      }
+    }
   }
 
   private String pathToString(Path path, CommandRunnerParams params) {
@@ -1523,6 +1577,8 @@ public class TargetsCommand extends AbstractCommand {
 
     public abstract Optional<String> getOutputPath();
 
+    public abstract ImmutableMap<OutputLabel, String> getOutputPathsByLabels();
+
     public abstract Optional<String> getGeneratedSourcePath();
 
     public abstract Optional<String> getRuleKey();
@@ -1532,6 +1588,8 @@ public class TargetsCommand extends AbstractCommand {
     public abstract Optional<String> getRuleType();
   }
 
+  // TODO(irenewchen): Support multiple outputs in JSON printing for targets command. Need to add
+  // another enum here. Can't directly use #getOutputPathsByLabels() because it's not a String
   private enum TargetResultFieldName {
     OUTPUT_PATH("buck.outputPath", TargetResult::getOutputPath),
     GEN_SRC_PATH("buck.generatedSourcePath", TargetResult::getGeneratedSourcePath),

@@ -23,6 +23,7 @@ import com.facebook.buck.core.cell.CellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -357,9 +358,9 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
    * OutputLabel} instances to the matching {@link BuildTarget} instances. Applies the default label
    * if a given build target cannot find a matching spec.
    */
-  protected ImmutableSet<ImmutableBuildTargetWithOutputs> matchBuildTargetsWithLabelsFromSpecs(
+  protected ImmutableSet<BuildTargetWithOutputs> matchBuildTargetsWithLabelsFromSpecs(
       ImmutableList<TargetNodeSpec> specs, ImmutableSet<BuildTarget> buildTargets) {
-    ImmutableSet.Builder<ImmutableBuildTargetWithOutputs> builder =
+    ImmutableSet.Builder<BuildTargetWithOutputs> builder =
         ImmutableSet.builderWithExpectedSize(buildTargets.size());
     for (BuildTarget target : buildTargets) {
       boolean mappedTarget = false;

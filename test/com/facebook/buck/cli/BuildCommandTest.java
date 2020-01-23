@@ -32,6 +32,7 @@ import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwar
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
@@ -145,7 +146,7 @@ public class BuildCommandTest {
           }
         };
 
-    ImmutableSet<ImmutableBuildTargetWithOutputs> result =
+    ImmutableSet<BuildTargetWithOutputs> result =
         buildCommand
             .createGraphsAndTargets(
                 params, MoreExecutors.newDirectExecutorService(), specs -> specs, Optional.empty())
@@ -178,7 +179,7 @@ public class BuildCommandTest {
           }
         };
 
-    ImmutableSet<ImmutableBuildTargetWithOutputs> result =
+    ImmutableSet<BuildTargetWithOutputs> result =
         buildCommand
             .createGraphsAndTargets(
                 params,
@@ -217,7 +218,7 @@ public class BuildCommandTest {
           }
         };
 
-    ImmutableSet<ImmutableBuildTargetWithOutputs> result =
+    ImmutableSet<BuildTargetWithOutputs> result =
         buildCommand
             .createGraphsAndTargets(
                 params,
@@ -257,7 +258,7 @@ public class BuildCommandTest {
           }
         };
 
-    ImmutableSet<ImmutableBuildTargetWithOutputs> result =
+    ImmutableSet<BuildTargetWithOutputs> result =
         buildCommand
             .createGraphsAndTargets(
                 params,

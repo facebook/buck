@@ -27,6 +27,7 @@ import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -411,7 +412,7 @@ public class BuildCommand extends AbstractCommand {
     ActionGraphAndBuilder actionGraph =
         createActionGraphAndResolver(params, targetGraphForLocalBuild, ruleKeyLogger);
 
-    ImmutableSet<ImmutableBuildTargetWithOutputs> buildTargetsWithOutputs =
+    ImmutableSet<BuildTargetWithOutputs> buildTargetsWithOutputs =
         justBuildTarget == null
             ? matchBuildTargetsWithLabelsFromSpecs(
                 specs, targetGraphForLocalBuild.getBuildTargets())
@@ -424,7 +425,7 @@ public class BuildCommand extends AbstractCommand {
     return ImmutableGraphsAndBuildTargets.of(actionAndTargetGraphs, buildTargetsWithOutputs);
   }
 
-  private ImmutableSet<ImmutableBuildTargetWithOutputs> getBuildTargetsWithOutputsForJustBuild(
+  private ImmutableSet<BuildTargetWithOutputs> getBuildTargetsWithOutputsForJustBuild(
       CommandRunnerParams params,
       Optional<TargetConfiguration> targetConfiguration,
       ActionGraphAndBuilder actionGraphAndBuilder,
@@ -606,7 +607,7 @@ public class BuildCommand extends AbstractCommand {
         graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder().getActionGraphBuilder();
     SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
 
-    for (ImmutableBuildTargetWithOutputs buildTargetWithOutputs :
+    for (BuildTargetWithOutputs buildTargetWithOutputs :
         graphsAndBuildTargets.getBuildTargetWithOutputs()) {
       BuildRule rule = graphBuilder.requireRule(buildTargetWithOutputs.getBuildTarget());
       linkRuleToHashedBuckOut(
@@ -708,7 +709,7 @@ public class BuildCommand extends AbstractCommand {
         graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder().getActionGraphBuilder();
     SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
 
-    for (ImmutableBuildTargetWithOutputs targetWithOutputs :
+    for (BuildTargetWithOutputs targetWithOutputs :
         graphsAndBuildTargets.getBuildTargetWithOutputs()) {
       BuildRule rule = graphBuilder.requireRule(targetWithOutputs.getBuildTarget());
       // If it's an apple bundle, we'd like to also link the dSYM file over here.
@@ -753,7 +754,7 @@ public class BuildCommand extends AbstractCommand {
                   ruleKeyCacheScope.getCache(),
                   Optional.empty()));
     }
-    for (ImmutableBuildTargetWithOutputs targetWithOutputs :
+    for (BuildTargetWithOutputs targetWithOutputs :
         graphsAndBuildTargets.getBuildTargetWithOutputs()) {
       BuildRule rule = graphBuilder.requireRule(targetWithOutputs.getBuildTarget());
       Optional<Path> outputPath =
@@ -948,7 +949,7 @@ public class BuildCommand extends AbstractCommand {
   interface GraphsAndBuildTargets {
     ActionAndTargetGraphs getGraphs();
 
-    ImmutableSet<ImmutableBuildTargetWithOutputs> getBuildTargetWithOutputs();
+    ImmutableSet<BuildTargetWithOutputs> getBuildTargetWithOutputs();
 
     @Value.Lazy
     default ImmutableSet<BuildTarget> getBuildTargets() {
