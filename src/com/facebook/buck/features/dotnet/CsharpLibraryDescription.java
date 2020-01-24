@@ -34,7 +34,7 @@ import com.facebook.buck.core.rules.providers.collect.impl.ProviderInfoCollectio
 import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
@@ -116,8 +116,7 @@ public class CsharpLibraryDescription
         .build(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of(output)));
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractCsharpLibraryDescriptionArg extends BuildRuleArg, HasSrcs {
     FrameworkVersion getFrameworkVer();
 

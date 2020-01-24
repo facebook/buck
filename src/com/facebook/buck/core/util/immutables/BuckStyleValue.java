@@ -24,7 +24,7 @@ import java.lang.annotation.Target;
 import org.immutables.value.Value;
 
 /**
- * Value-style objects conforming to {@link BuckStyleImmutable} naming style.
+ * Value-style objects conforming to {@link RuleArg} naming style.
  *
  * <p>Value-style objects have all attributes as "of" constructor parameters, do not have builders,
  * "with" methods, "copy" methods.

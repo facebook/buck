@@ -41,7 +41,7 @@ import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.windowsfs.WindowsFS;
@@ -68,7 +68,6 @@ import java.util.regex.Pattern;
 import org.apache.thrift.TException;
 import org.hamcrest.Matchers;
 import org.hamcrest.junit.MatcherAssert;
-import org.immutables.value.Value;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -516,8 +515,7 @@ public class BuildCommandIntegrationTest {
         Matchers.containsString(String.format(expectedWhenNotExists, "subdir4:target")));
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractThrowInConstructorArg implements BuildRuleArg {}
 
   private static class ThrowInConstructor

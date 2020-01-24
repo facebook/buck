@@ -21,9 +21,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.google.common.collect.ImmutableSet;
-import org.immutables.value.Value;
 
 /**
  * A description for {@code constraint_setting}.
@@ -65,7 +64,6 @@ public class ConstraintSettingDescription
     return ImmutableSet.of();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractConstraintSettingArg extends ConfigurationRuleArg {}
 }

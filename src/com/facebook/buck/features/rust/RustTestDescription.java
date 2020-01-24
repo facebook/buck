@@ -33,7 +33,7 @@ import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.tool.BinaryWrapperRule;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.features.rust.RustBinaryDescription.Type;
@@ -179,8 +179,7 @@ public class RustTestDescription
         RustToolchain.DEFAULT_NAME, toolchainTargetConfiguration, RustToolchain.class);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractRustTestDescriptionArg extends RustCommonArgs, HasVersionUniverse {
     ImmutableSet<String> getContacts();
 

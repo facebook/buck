@@ -23,7 +23,7 @@ import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.google.common.collect.ImmutableSortedSet;
 import org.immutables.value.Value;
 
@@ -55,8 +55,7 @@ public class AndroidManifestDescription
         args.getSkeleton());
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractAndroidManifestDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     SourcePath getSkeleton();
 

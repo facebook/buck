@@ -16,17 +16,15 @@
 
 package com.facebook.buck.immutables;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import java.util.List;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /**
  * Interface from which a concrete immutable implementation {@link Type} will be generated, along
  * with an {@link Type.Builder}.
  */
-@Value.Immutable
-@BuckStyleImmutable
+@RuleArg
 interface AbstractType {
   String getName();
 

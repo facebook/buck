@@ -37,7 +37,7 @@ import com.facebook.buck.core.rules.impl.MappedSymlinkTree;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
@@ -373,8 +373,7 @@ public class HaskellBinaryDescription
     }
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractHaskellBinaryDescriptionArg extends BuildRuleArg, HasDepsQuery {
 
     @Value.Default

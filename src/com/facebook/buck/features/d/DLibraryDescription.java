@@ -29,7 +29,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.Archive;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
@@ -41,7 +41,6 @@ import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 public class DLibraryDescription
     implements DescriptionWithTargetGraph<DLibraryDescriptionArg>,
@@ -162,8 +161,7 @@ public class DLibraryDescription
             .getParseTimeDeps(buildTarget.getTargetConfiguration()));
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractDLibraryDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     SourceSortedSet getSrcs();
 

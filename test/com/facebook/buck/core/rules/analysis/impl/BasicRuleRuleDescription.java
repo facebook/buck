@@ -31,7 +31,7 @@ import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.collect.impl.ProviderInfoCollectionImpl;
 import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
 import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -52,7 +52,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 public class BasicRuleRuleDescription implements RuleDescription<BasicRuleDescriptionArg> {
 
@@ -142,8 +141,7 @@ public class BasicRuleRuleDescription implements RuleDescription<BasicRuleDescri
     return BasicRuleDescriptionArg.class;
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractBasicRuleDescriptionArg extends BuildRuleArg, HasDeclaredDeps, HasSrcs {
     int getVal();
 

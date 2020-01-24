@@ -42,7 +42,7 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.Omnibus;
 import com.facebook.buck.cxx.OmnibusRoots;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
@@ -860,8 +860,7 @@ public class LuaBinaryDescription
     }
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractLuaBinaryDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     String getMainModule();
 

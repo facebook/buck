@@ -32,7 +32,7 @@ import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
 import com.facebook.buck.core.rules.providers.lib.ImmutableRunInfo;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.file.downloader.Downloader;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
@@ -40,7 +40,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /**
  * A description for downloading a single HttpFile (versus the combo logic contained in {@link
@@ -128,8 +127,7 @@ public class HttpFileDescription
   }
 
   /** Args required for http_rule */
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractHttpFileDescriptionArg extends HttpCommonDescriptionArg {
     Optional<Boolean> getExecutable();
   }

@@ -22,9 +22,8 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.google.common.collect.ImmutableMap;
-import org.immutables.value.Value;
 
 public class VersionedAliasDescription
     implements DescriptionWithTargetGraph<VersionedAliasDescriptionArg> {
@@ -44,8 +43,7 @@ public class VersionedAliasDescription
         String.format("%s: `versioned_alias()` rules cannot produce build rules", buildTarget));
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractVersionedAliasDescriptionArg extends BuildRuleArg {
     ImmutableMap<Version, BuildTarget> getVersions();
   }

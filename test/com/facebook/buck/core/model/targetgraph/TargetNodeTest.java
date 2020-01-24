@@ -43,7 +43,7 @@ import com.facebook.buck.core.select.impl.ThrowingSelectableConfigurationContext
 import com.facebook.buck.core.select.impl.ThrowingSelectorListResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
@@ -180,8 +180,7 @@ public class TargetNodeTest {
     assertEquals(ImmutableSet.of(configurationBuildTarget), targetNode.getConfigurationDeps());
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractExampleDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     @Value.NaturalOrder
     ImmutableSortedSet<SourcePath> getSourcePaths();

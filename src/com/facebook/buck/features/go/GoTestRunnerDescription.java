@@ -23,8 +23,7 @@ import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.RuleArg;
 
 /**
  * A rule for specifying go test runners. This rule effectively does nothing expect propagate the
@@ -48,8 +47,7 @@ public class GoTestRunnerDescription
         buildTarget, context.getProjectFilesystem(), args.getTestRunnerGenerator());
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractGoTestRunnerDescriptionArg extends BuildRuleArg {
     SourcePath getTestRunnerGenerator();
   }

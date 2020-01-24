@@ -27,11 +27,10 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.impl.Tools;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.toolchain.ProvidesCxxPlatform;
 import com.google.common.base.Verify;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /**
  * Defines an ndk_toolchain rule that allows a {@link NdkCxxPlatform} to be configured as a build
@@ -76,8 +75,7 @@ public class NdkToolchainDescription
   }
 
   /** An ndk_toolchain is mostly just a cxx_toolchain and a few other fields. */
-  @Value.Immutable
-  @BuckStyleImmutable
+  @RuleArg
   interface AbstractNdkToolchainDescriptionArg extends BuildRuleArg {
 
     /** Target for the cxx toolchain part of the ndk toolchain. */

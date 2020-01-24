@@ -36,7 +36,7 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
@@ -47,7 +47,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import org.hamcrest.Matchers;
-import org.immutables.value.Value;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -258,7 +257,6 @@ public class JvmLibraryArgInterpreterTest {
         defaults, BuildTargetFactory.newInstance("//not:real"), graphBuilder, arg);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractExampleJvmLibraryArg extends JvmLibraryArg {}
 }

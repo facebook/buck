@@ -34,8 +34,8 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
@@ -352,8 +352,7 @@ public class HaskellGhciDescription
     ImmutableMap<BuildTarget, NativeLinkable> getExcludedTransitiveDeps();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractHaskellGhciDescriptionArg extends BuildRuleArg, HasDepsQuery {
     @Value.Default
     default SourceSortedSet getSrcs() {

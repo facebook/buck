@@ -22,10 +22,10 @@ import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.rulekey.CustomFieldBehaviorTag;
 import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rulekey.MissingExcludeReporter;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.FieldInfo;
@@ -269,7 +269,7 @@ public class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
   private static boolean isImmutableBase(Class<?> clazz) {
     // Value.Immutable only has CLASS retention, so we need to detect this based on our own
     // annotations.
-    return clazz.getAnnotation(BuckStyleImmutable.class) != null
+    return clazz.getAnnotation(RuleArg.class) != null
         || clazz.getAnnotation(BuckStylePrehashedValue.class) != null
         || clazz.getAnnotation(BuckStyleValueWithBuilder.class) != null
         || clazz.getAnnotation(BuckStyleValue.class) != null;

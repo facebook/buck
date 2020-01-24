@@ -27,7 +27,7 @@ import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.rules.platform.ConstraintValueRule;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -97,8 +97,7 @@ public class ConfigSettingDescription
     return ConfigurationBuildTargets.convert(arg.getConstraintValues());
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractConfigSettingArg extends ConfigurationRuleArg {
     @Value.NaturalOrder
     @Hint(isConfigurable = false)

@@ -30,9 +30,8 @@ import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.toolchain.RuleAnalysisLegacyToolchain;
 import com.facebook.buck.core.toolchain.Toolchain;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.google.common.collect.ImmutableCollection;
-import org.immutables.value.Value;
 
 /**
  * Description that wraps legacy toolchains by name. e.g. to allow access to .NET toolchains without
@@ -101,8 +100,7 @@ public class LegacyToolchainRuleDescription
   }
 
   /** Args for legacy_toolchain() */
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractLegacyToolchainDescriptionArg extends BuildRuleArg {
     /** The name of the legacy toolchain, from {@link Toolchain#getName()} */
     String getToolchainName();

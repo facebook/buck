@@ -32,7 +32,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
@@ -222,8 +222,7 @@ public class CgoLibraryDescription
                         buildTarget.getTargetConfiguration(), platform.getCxxPlatform())));
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractCgoLibraryDescriptionArg extends CxxBinaryDescription.CommonArg {
     ImmutableList<String> getCgoCompilerFlags();
 

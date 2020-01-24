@@ -28,7 +28,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.Optionals;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -47,7 +47,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 public class ScalaLibraryDescription
     implements DescriptionWithTargetGraph<ScalaLibraryDescriptionArg>,
@@ -189,7 +188,6 @@ public class ScalaLibraryDescription
     ImmutableList<String> getExtraArguments();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractScalaLibraryDescriptionArg extends CoreArg {}
 }

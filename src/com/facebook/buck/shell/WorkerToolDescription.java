@@ -30,7 +30,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.ProxyArg;
 import com.facebook.buck.rules.macros.ClasspathMacroExpander;
@@ -178,8 +178,7 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
     }
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractWorkerToolDescriptionArg extends BuildRuleArg {
     ImmutableMap<String, StringWithMacros> getEnv();
 

@@ -39,7 +39,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -311,8 +311,7 @@ public class AndroidInstrumentationApkDescription
         toolchainProvider, buildTarget, targetGraphOnlyDepsBuilder);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractAndroidInstrumentationApkDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     Optional<SourcePath> getManifest();
 

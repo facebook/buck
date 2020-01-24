@@ -28,11 +28,10 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 public class ExportFileDescription
     implements DescriptionWithTargetGraph<ExportFileDescriptionArg>,
@@ -142,8 +141,7 @@ public class ExportFileDescription
     COPY,
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractExportFileDescriptionArg extends BuildRuleArg {
     Optional<SourcePath> getSrc();
 

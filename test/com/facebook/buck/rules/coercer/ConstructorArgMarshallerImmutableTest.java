@@ -59,7 +59,7 @@ import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.ImmutableDefaultSelectableConfigurationContext;
@@ -735,28 +735,24 @@ public class ConstructorArgMarshallerImmutableTest {
     assertEquals(execConfiguration, compiler.getTarget().getTargetConfiguration());
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractDtoWithString implements BuildRuleArg {
     abstract String getString();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractDtoWithBoolean implements BuildRuleArg {
     abstract boolean getBooleanOne();
 
     abstract boolean isBooleanTwo();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractDtoWithListOfStrings implements BuildRuleArg {
     abstract List<String> getList();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractDtoWithFakeDeps implements BuildRuleArg {
     @Hint(isDep = false)
     abstract Set<BuildTarget> getDeps();
@@ -765,8 +761,7 @@ public class ConstructorArgMarshallerImmutableTest {
     abstract Set<BuildTarget> getProvidedDeps();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractDtoWithCollections implements BuildRuleArg {
     abstract Set<String> getSet();
 
@@ -787,80 +782,68 @@ public class ConstructorArgMarshallerImmutableTest {
     abstract ImmutableMap<String, String> getImmutableMap();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractDtoWithOptionalSetOfStrings implements BuildRuleArg {
     abstract Optional<Set<String>> getStrings();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractDtoWithSetOfStrings implements BuildRuleArg {
     abstract Set<String> getStrings();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractDtoWithPath implements BuildRuleArg {
     abstract Path getPath();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractEmptyImmutableDto implements BuildRuleArg {}
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractDtoWithBuildTargets implements BuildRuleArg {
     abstract BuildTarget getTarget();
 
     abstract BuildTarget getLocal();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractDtoWithLong implements BuildRuleArg {
     abstract long getNumber();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractDtoWithSourcePaths implements BuildRuleArg {
     abstract SourcePath getFilePath();
 
     abstract SourcePath getTargetPath();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractDtoWithImmutableSortedSet implements BuildRuleArg {
     abstract ImmutableSortedSet<BuildTarget> getStuff();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractDtoWithDeclaredDeps implements BuildRuleArg {
     abstract ImmutableSet<BuildTarget> getDeps();
 
     abstract ImmutableSet<SourcePath> getPaths();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractDtoWithSetOfPaths implements BuildRuleArg {
     abstract Set<Path> getPaths();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractDtoWithDepsAndNotDeps implements BuildRuleArg {
     abstract Set<BuildTarget> getDeps();
 
     abstract Set<BuildTarget> getNotDeps();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractDtoWithBuildTargetList implements BuildRuleArg {
     abstract BuildTarget getSingle();
 
@@ -869,8 +852,7 @@ public class ConstructorArgMarshallerImmutableTest {
     abstract List<BuildTarget> getTargets();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractDtoWithVariousTypes implements BuildRuleArg {
     abstract String getRequired();
 
@@ -893,8 +875,7 @@ public class ConstructorArgMarshallerImmutableTest {
     abstract Optional<Path> getNotAPath();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractDtoWithOptionalValues implements BuildRuleArg {
     abstract Optional<String> getNoString();
 
@@ -905,8 +886,7 @@ public class ConstructorArgMarshallerImmutableTest {
     abstract Optional<SourcePath> getDefaultSourcePath();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractDtoWithDefaultValues implements BuildRuleArg {
     @Value.Default
     public String getSomething() {
@@ -929,14 +909,12 @@ public class ConstructorArgMarshallerImmutableTest {
     }
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractDtoWithSetOfSourcePaths implements BuildRuleArg {
     abstract ImmutableSortedSet<SourcePath> getSrcs();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractDtoWithCheck implements BuildRuleArg {
     abstract String getString();
 
@@ -946,8 +924,7 @@ public class ConstructorArgMarshallerImmutableTest {
     }
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractDtoWithDerivedAndOrdinaryMethods implements BuildRuleArg {
     abstract String getString();
 
@@ -968,19 +945,16 @@ public class ConstructorArgMarshallerImmutableTest {
     }
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractInheritsFromHasDefaultMethod extends HasDefaultMethod {}
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractDtoWithSplit implements BuildRuleArg {
     @Hint(splitConfiguration = true)
     abstract ImmutableSortedSet<BuildTarget> getDeps();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractDtoWithExec implements BuildRuleArg {
     @Hint(execConfiguration = true)
     abstract SourcePath getCompiler();

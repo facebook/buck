@@ -65,11 +65,11 @@
     <exclude name="PrematureDeclaration" />
   </rule>
 
-  <rule name="BuckStyleImmutableMustBePackagePrivate"
-        message="@BuckStyleImmutable value types must be package-private"
+  <rule name="RuleArgMustBePackagePrivate"
+        message="@RuleArg value types must be package-private"
         class="net.sourceforge.pmd.lang.rule.XPathRule"
         language="java">
-    <description>Value types decorated with @BuckStyleImmutable must be package-private (i.e., not public or private).
+    <description>Value types decorated with @RuleArg must be package-private (i.e., not public or private).
 
 The build will automatically generate a public subclass or implementation of your value type. All clients should use that API, so the parent value type should limit its visibility as much as possible.</description>
     <priority>1</priority>
@@ -78,9 +78,8 @@ The build will automatically generate a public subclass or implementation of you
         <value>
           <![CDATA[
             //ClassOrInterfaceDeclaration[@PackagePrivate='false']
-              [preceding-sibling::Annotation/MarkerAnnotation/Name/@Image='Value.Immutable']
               [ancestor::*/Annotation/MarkerAnnotation/Name
-                [@Image='BuckStyleImmutable' or @Image='BuckStyleTuple']]
+                [@Image='RuleArg']]
           ]]>
         </value>
       </property>
@@ -88,22 +87,19 @@ The build will automatically generate a public subclass or implementation of you
     <example>
       <![CDATA[
 // OK
-@Value.Immutable
-@BuckStyleImmutable
+@RuleArg
 interface AbstractFoo {
 
 }
 
 // Bad: uses public visibility
-@Value.Immutable
-@BuckStyleImmutable
+@RuleArg
 public class AbstractBar {
 
 }
 
 // Bad: uses public visibility
-@Value.Immutable
-@BuckStyleImmutable
+@RuleArg
 public interface AbstractBaz {
 
 }
@@ -202,11 +198,56 @@ abstract class Bad4 {
       ]]>
     </example>
   </rule>
-  <rule name="BuckStyleImmutableNameMustStartWithAbstract"
-        message="Name of @BuckStyleImmutable value types must start with Abstract"
+  <rule name="RuleArgsMustNotHaveDefaultsOverridden"
+    message="
+Value types decorated with @RuleArg must not specify @Value.Immutable"
+    class="net.sourceforge.pmd.lang.rule.XPathRule"
+    language="java">
+    <description> Using @RuleArg does not require the use of @Value.Immutable, nor allow defaults
+      to be overriden via @Value.Immutable(xxx).</description>
+    <priority>1</priority>
+    <properties>
+      <property name="xpath">
+        <value>
+          <![CDATA[
+//Annotation[
+following-sibling::ClassOrInterfaceDeclaration[
+  preceding-sibling::Annotation//Name/@Image='RuleArg'
+]
+]/*[
+Name/@Image='Value.Immutable'
+]
+      ]]>
+        </value>
+      </property>
+    </properties>
+    <example>
+        <![CDATA[
+// OK: No @Value.Immutable
+@RuleArg
+abstract class AbstractOk {
+}
+
+// Bad: No @Value.Immutable allowed
+@Value.Immutable
+@RuleArg
+abstract class AbstractNotOk1 {
+}
+
+// Bad: overriding defaults are not allowed
+@Value.Immutable(prehash = true, builder = false, copy = false)
+@RuleArg
+abstract class AbstractNotOk2 {
+}
+
+  ]]>
+    </example>
+  </rule>
+  <rule name="RuleArgNameMustStartWithAbstract"
+        message="Name of @RuleArg value types must start with Abstract"
         class="net.sourceforge.pmd.lang.rule.XPathRule"
         language="java">
-    <description>Value types decorated with @BuckStyleImmutable must have a name starting with 'Abstract'
+    <description>Value types decorated with @RuleArg must have a name starting with 'Abstract'
 
 The build will automatically generate a subclass or implementation of your value type without 'Abstract' in the name.</description>
     <priority>1</priority>
@@ -215,9 +256,8 @@ The build will automatically generate a subclass or implementation of your value
         <value>
           <![CDATA[
             //ClassOrInterfaceDeclaration[not(starts-with(@Image,'Abstract'))]
-              [preceding-sibling::Annotation/MarkerAnnotation/Name/@Image='Value.Immutable']
               [ancestor::*/Annotation/MarkerAnnotation/Name
-                [@Image='BuckStyleImmutable' or @Image='BuckStyleTuple']]
+                [@Image='RuleArg']]
           ]]>
         </value>
       </property>
@@ -225,15 +265,13 @@ The build will automatically generate a subclass or implementation of your value
     <example>
       <![CDATA[
 // OK
-@Value.Immutable
-@BuckStyleImmutable
+@RuleArg
 interface AbstractFoo {
 
 }
 
 // Bad: name does not start with Abstract
-@Value.Immutable
-@BuckStyleImmutable
+@RuleArg
 interface Bar {
 
 }

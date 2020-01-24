@@ -34,7 +34,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.Optionals;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxConstructorArg;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
@@ -84,7 +84,6 @@ import com.google.common.collect.Multimaps;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.stream.Stream;
-import org.immutables.value.Value;
 
 public class CxxPythonExtensionDescription
     implements DescriptionWithTargetGraph<CxxPythonExtensionDescriptionArg>,
@@ -594,8 +593,7 @@ public class CxxPythonExtensionDescription
         .getUnresolvedCxxPlatforms();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractCxxPythonExtensionDescriptionArg extends CxxConstructorArg {
     Optional<String> getBaseModule();
 

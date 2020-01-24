@@ -25,10 +25,9 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
-import org.immutables.value.Value;
 
 /**
  * Defines an apple_toolchain_set rule that allows to list all available apple_toolchain targets
@@ -67,8 +66,7 @@ public class AppleToolchainSetDescription
   }
 
   /** An apple_toolchain_set is a list of available apple_toolchain targets. */
-  @Value.Immutable
-  @BuckStyleImmutable
+  @RuleArg
   interface AbstractAppleToolchainSetDescriptionArg extends BuildRuleArg {
     /** List of available toolchains in apple_toolchain targets. */
     ImmutableList<BuildTarget> getAppleToolchains();

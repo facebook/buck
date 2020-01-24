@@ -23,7 +23,10 @@ import java.lang.annotation.Target;
 import org.immutables.value.Value;
 
 /**
- * Style for code-generated Immutables.org immutable value types which:
+ * Immutable generator for data transfer objects. These are objects that are, or belong on rule
+ * args. These types can be coerced by the parser from python/starlark into java objects.
+ *
+ * <p>This style:
  *
  * <ol>
  *   <li>Does not add the Immutable prefix on generated classes
@@ -32,19 +35,17 @@ import org.immutables.value.Value;
  *   <li>Supports setFoo() setters in the parent interface or abstract class
  *   <li>Ensures the generated class is public (even if the parent interface or abstract class is
  *       package private)
- *   <li>Disable generating with* methods by default, as they cause excessive codegen. Enable it on
- *       a case by case basis by setting {@code copy = true} explicitly.
+ *   <li>Disable generating with* methods by default, as they cause excessive codegen.
  * </ol>
  */
 @Value.Style(
-  typeImmutable = "*",
-  typeAbstract = "Abstract*",
-  get = {"is*", "get*"},
-  init = "set*",
-  visibility = Value.Style.ImplementationVisibility.PUBLIC,
-  forceJacksonPropertyNames = false,
-  defaults = @Value.Immutable(copy = false)
-)
+    typeImmutable = "*",
+    typeAbstract = "Abstract*",
+    get = {"is*", "get*"},
+    init = "set*",
+    visibility = Value.Style.ImplementationVisibility.PUBLIC,
+    forceJacksonPropertyNames = false,
+    defaults = @Value.Immutable(copy = false))
 @Target({ElementType.TYPE, ElementType.PACKAGE, ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface BuckStyleImmutable {}
+public @interface RuleArg {}

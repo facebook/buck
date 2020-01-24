@@ -27,7 +27,7 @@ import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.collect.impl.TestProviderInfoCollectionImpl;
 import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -37,7 +37,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Paths;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 public class FakeRuleRuleDescription implements RuleDescription<FakeRuleDescriptionArg> {
 
@@ -78,7 +77,6 @@ public class FakeRuleRuleDescription implements RuleDescription<FakeRuleDescript
     return FakeRuleDescriptionArg.class;
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractFakeRuleDescriptionArg implements BuildRuleArg {}
 }

@@ -38,7 +38,7 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.Archive;
 import com.facebook.buck.cxx.CxxBinary;
 import com.facebook.buck.cxx.CxxBinaryDescription;
@@ -377,8 +377,7 @@ public class HalideLibraryDescription
     return ((HalideLibraryDescriptionArg) args).getDeps();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractHalideLibraryDescriptionArg extends CxxBinaryDescription.CommonArg {
     @Value.NaturalOrder
     ImmutableSortedSet<BuildTarget> getCompilerDeps();

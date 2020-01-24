@@ -37,7 +37,7 @@ import com.facebook.buck.core.test.rule.HasTestRunner;
 import com.facebook.buck.core.test.rule.TestRunnerSpec;
 import com.facebook.buck.core.test.rule.coercer.TestRunnerSpecCoercer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
@@ -313,8 +313,7 @@ public class JavaTestDescription
     Optional<Flavor> getDefaultCxxPlatform();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractJavaTestDescriptionArg extends CoreArg, HasTestRunner {}
 
   public static class CxxLibraryEnhancement {

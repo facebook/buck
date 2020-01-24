@@ -17,7 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.description.arg.DataTransferObject;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.util.Types;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
@@ -133,8 +133,8 @@ class CoercedTypeCache {
 
   private ImmutableMap<String, ParamInfo> paramTypes(Class<?> coercableType) {
     if (Types.getSupertypes(coercableType).stream()
-        .noneMatch(c -> c.getAnnotation(BuckStyleImmutable.class) != null)) {
-      // Sniff for @BuckStyleImmutable not @Value.Immutable because the
+        .noneMatch(c -> c.getAnnotation(RuleArg.class) != null)) {
+      // Sniff for @BuckStyleImmutable not @RuleArg because the
       // latter isn't retained at runtime.
       throw new IllegalArgumentException(
           String.format(

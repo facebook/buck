@@ -22,13 +22,11 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.RuleArg;
 
 class KnownRuleTestDescription implements DescriptionWithTargetGraph<KnownRuleTestDescriptionArg> {
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractKnownRuleTestDescriptionArg extends BuildRuleArg {}
 
   private final String value;

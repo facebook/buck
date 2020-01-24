@@ -34,7 +34,7 @@ import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
@@ -45,7 +45,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import org.immutables.value.Value;
 import org.junit.Test;
 
 public class TargetNodeVisibilityTest {
@@ -234,8 +233,7 @@ public class TargetNodeVisibilityTest {
       return new FakeBuildRule(buildTarget, context.getProjectFilesystem(), params);
     }
 
-    @BuckStyleImmutable
-    @Value.Immutable
+    @RuleArg
     interface AbstractFakeRuleDescriptionArg extends BuildRuleArg {}
   }
 

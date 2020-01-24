@@ -37,8 +37,8 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
@@ -284,8 +284,7 @@ public class DefaultClassInfoTest {
     DefaultClassInfoFactory.forInstance(LazyImmutable.builder().setPath(path).build());
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
+  @RuleArg
   interface AbstractLazyImmutable extends AddsToRuleKey {
     SourcePath getPath();
 
@@ -306,8 +305,7 @@ public class DefaultClassInfoTest {
     assertEquals("path:excluded\n" + "lazyPath:excluded", visitor.getValue());
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
+  @RuleArg
   interface AbstractExcludedLazyImmutable extends AddsToRuleKey {
     SourcePath getPath();
 
@@ -328,8 +326,7 @@ public class DefaultClassInfoTest {
         "path:excluded\n" + "lazyPath:SourcePath(/project/root/some.path)", visitor.getValue());
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
+  @RuleArg
   interface AbstractDerivedImmutable extends AddsToRuleKey {
     SourcePath getPath();
 

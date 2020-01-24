@@ -49,7 +49,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxHeaders;
@@ -110,7 +110,6 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
-import org.immutables.value.Value;
 
 public class AppleLibraryDescription
     implements DescriptionWithTargetGraph<AppleLibraryDescriptionArg>,
@@ -1015,8 +1014,7 @@ public class AppleLibraryDescription
     }
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractAppleLibraryDescriptionArg
       extends AppleNativeTargetDescriptionArg, HasContacts {
     Optional<SourcePath> getInfoPlist();

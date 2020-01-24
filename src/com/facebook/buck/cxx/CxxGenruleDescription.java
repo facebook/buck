@@ -40,7 +40,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
@@ -108,7 +108,6 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import org.immutables.value.Value;
 
 public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenruleDescriptionArg>
     implements Flavored,
@@ -332,8 +331,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
         .getUnresolvedCxxPlatforms();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractCxxGenruleDescriptionArg extends AbstractGenruleDescription.CommonArg {
     String getOut();
   }

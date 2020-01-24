@@ -22,13 +22,12 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.description.arg.DataTransferObject;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.immutables.value.Value;
 import org.junit.Test;
 
 public class ImmutableTypeCoercerTest {
@@ -65,16 +64,14 @@ public class ImmutableTypeCoercerTest {
             .collect(Collectors.toSet()));
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractDtoAttributeWithCollections implements DataTransferObject {
     abstract Set<BuildTarget> getDeps();
 
     abstract Set<BuildTarget> getNotDeps();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractDtoWithImmutableAttribute implements DataTransferObject {
     abstract DtoAttributeWithCollections getDto();
 

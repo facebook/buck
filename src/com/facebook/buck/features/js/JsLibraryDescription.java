@@ -38,7 +38,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.query.Query;
@@ -64,7 +64,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
-import org.immutables.value.Value;
 
 public class JsLibraryDescription
     implements DescriptionWithTargetGraph<JsLibraryDescriptionArg>,
@@ -168,8 +167,7 @@ public class JsLibraryDescription
     }
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractJsLibraryDescriptionArg
       extends BuildRuleArg, HasDepsQuery, HasExtraJson, HasTests {
     ImmutableSet<Either<SourcePath, Pair<SourcePath, String>>> getSrcs();

@@ -28,11 +28,10 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.toolchain.tool.impl.Tools;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /** Defines an swift_toolchain rule which provides values to fill {@link SwiftPlatform}. */
 public class SwiftToolchainDescription
@@ -88,8 +87,7 @@ public class SwiftToolchainDescription
    * swift_toolchain defines swiftc and swift-stdlib-tool with their flags to construct
    * SwiftPlatform.
    */
-  @Value.Immutable
-  @BuckStyleImmutable
+  @RuleArg
   interface AbstractSwiftToolchainDescriptionArg extends BuildRuleArg {
 
     /** Swift compiler binary. */

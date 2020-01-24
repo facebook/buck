@@ -25,11 +25,10 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.TestConsole;
 import java.util.Optional;
-import org.immutables.value.Value;
 import org.junit.Test;
 
 public class AuditRuleTypeCommandTest {
@@ -49,8 +48,7 @@ public class AuditRuleTypeCommandTest {
       return null;
     }
 
-    @BuckStyleImmutable
-    @Value.Immutable
+    @RuleArg
     interface AbstractBuildRuleDescriptionArg extends BuildRuleArg {
       Optional<String> getOptionalString();
     }

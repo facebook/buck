@@ -32,7 +32,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.Optionals;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxConstructorArg;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxFlags;
@@ -83,7 +83,6 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
-import org.immutables.value.Value;
 
 public class CxxLuaExtensionDescription
     implements DescriptionWithTargetGraph<CxxLuaExtensionDescriptionArg>,
@@ -412,8 +411,7 @@ public class CxxLuaExtensionDescription
         LuaPlatformsProvider.class);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractCxxLuaExtensionDescriptionArg extends CxxConstructorArg {
     Optional<String> getBaseModule();
   }

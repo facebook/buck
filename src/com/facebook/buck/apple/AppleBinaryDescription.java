@@ -44,7 +44,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxBinaryDescriptionArg;
 import com.facebook.buck.cxx.CxxBinaryFactory;
@@ -83,7 +83,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
-import org.immutables.value.Value;
 
 public class AppleBinaryDescription
     implements DescriptionWithTargetGraph<AppleBinaryDescriptionArg>,
@@ -740,8 +739,7 @@ public class AppleBinaryDescription
         CxxPlatformsProvider.class);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractAppleBinaryDescriptionArg
       extends AppleNativeTargetDescriptionArg, HasContacts, HasEntitlementsFile {
     Optional<SourcePath> getInfoPlist();

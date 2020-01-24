@@ -32,7 +32,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.common.BuildRules;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
@@ -41,7 +41,6 @@ import com.google.common.collect.ImmutableCollection.Builder;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
-import org.immutables.value.Value;
 
 public class AndroidInstrumentationTestDescription
     implements DescriptionWithTargetGraph<AndroidInstrumentationTestDescriptionArg>,
@@ -133,8 +132,7 @@ public class AndroidInstrumentationTestDescription
         .addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractAndroidInstrumentationTestDescriptionArg
       extends BuildRuleArg, HasContacts, HasTestTimeout {
     BuildTarget getApk();

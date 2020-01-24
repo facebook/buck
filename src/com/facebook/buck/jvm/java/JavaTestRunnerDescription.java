@@ -27,12 +27,11 @@ import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableCollection.Builder;
-import org.immutables.value.Value;
 
 /**
  * Responsible for creating the new java test runner rules, which is effectively a java_binary that
@@ -115,8 +114,7 @@ public class JavaTestRunnerDescription
         targetGraphOnlyDepsBuilder, constructorArg, buildTarget.getTargetConfiguration());
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractJavaTestRunnerDescriptionArg extends JavaLibraryDescription.CoreArg {
     String getMainClass();
   }

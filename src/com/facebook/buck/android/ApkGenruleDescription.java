@@ -23,7 +23,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
@@ -83,8 +83,7 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
         installableApk);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractApkGenruleDescriptionArg extends AbstractGenruleDescription.CommonArg {
     Optional<String> getOut();
 

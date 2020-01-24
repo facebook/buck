@@ -36,7 +36,7 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.toolchain.tool.impl.Tools;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ToolProviders;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxFlags;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
@@ -52,7 +52,6 @@ import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /** Defines an apple_toolchain rule which provides {@link AppleCxxPlatform}. */
 public class AppleToolchainDescription
@@ -214,8 +213,7 @@ public class AppleToolchainDescription
    * apple_toolchain defines tools, cxx and swift toolchains and other properties to define
    * AppleCxxPlatform.
    */
-  @Value.Immutable
-  @BuckStyleImmutable
+  @RuleArg
   interface AbstractAppleToolchainDescriptionArg extends BuildRuleArg {
     /** Name of SDK which should be used. */
     String getSdkName();

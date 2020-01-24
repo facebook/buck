@@ -44,7 +44,7 @@ import com.facebook.buck.core.test.rule.HasTestRunner;
 import com.facebook.buck.core.test.rule.coercer.TestRunnerSpecCoercer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.Optionals;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
@@ -85,7 +85,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.function.Function;
-import org.immutables.value.Value;
 
 public class PythonTestDescription
     implements DescriptionWithTargetGraph<PythonTestDescriptionArg>,
@@ -510,8 +509,7 @@ public class PythonTestDescription
     return true;
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractPythonTestDescriptionArg
       extends HasContacts,
           HasTestRunner,

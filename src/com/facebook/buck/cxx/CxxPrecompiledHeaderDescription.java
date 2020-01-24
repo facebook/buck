@@ -24,9 +24,8 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.versions.VersionPropagator;
-import org.immutables.value.Value;
 
 public class CxxPrecompiledHeaderDescription
     implements DescriptionWithTargetGraph<CxxPrecompiledHeaderDescriptionArg>,
@@ -57,8 +56,7 @@ public class CxxPrecompiledHeaderDescription
     return true;
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractCxxPrecompiledHeaderDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     SourcePath getSrc();
   }

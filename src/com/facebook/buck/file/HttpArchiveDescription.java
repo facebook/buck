@@ -33,7 +33,7 @@ import com.facebook.buck.core.rules.providers.collect.impl.ProviderInfoCollectio
 import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.file.downloader.Downloader;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.unarchive.ArchiveFormat;
@@ -45,7 +45,6 @@ import com.google.devtools.build.lib.syntax.SkylarkDict;
 import java.net.URI;
 import java.nio.file.Paths;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /**
  * A description for downloading an archive over http and extracting it (versus the combo logic
@@ -167,8 +166,7 @@ public class HttpArchiveDescription
   }
 
   /** Arguments for an http_archive rule */
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractHttpArchiveDescriptionArg extends HttpCommonDescriptionArg {
 
     Optional<String> getStripPrefix();

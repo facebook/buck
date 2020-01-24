@@ -23,8 +23,7 @@ import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.RuleArg;
 
 public class KeystoreDescription implements DescriptionWithTargetGraph<KeystoreDescriptionArg> {
 
@@ -43,8 +42,7 @@ public class KeystoreDescription implements DescriptionWithTargetGraph<KeystoreD
         buildTarget, context.getProjectFilesystem(), params, args.getStore(), args.getProperties());
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractKeystoreDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     SourcePath getStore();
 

@@ -34,7 +34,7 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.rules.impl.NoopBuildRule;
 import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
@@ -59,7 +59,6 @@ import java.util.Optional;
 import java.util.SortedSet;
 import javax.annotation.Nullable;
 import org.hamcrest.Matchers;
-import org.immutables.value.Value;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -513,8 +512,7 @@ public class BuildCommandErrorsIntegrationTest {
     }
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractMockArg extends BuildRuleArg {}
 
   private class MockDescription implements DescriptionWithTargetGraph<MockArg> {

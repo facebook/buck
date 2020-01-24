@@ -32,7 +32,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
@@ -188,8 +188,7 @@ public class JsBundleGenruleDescription
     return Optional.of(JsBundleDescription.FLAVOR_DOMAINS);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractJsBundleGenruleDescriptionArg
       extends AbstractGenruleDescription.CommonArg, HasBundleName {
     BuildTarget getJsBundle();

@@ -37,7 +37,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionType;
@@ -63,7 +63,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
-import org.immutables.value.Value;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -115,8 +114,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
   private ProjectWorkspace workspace;
   private ProjectFilesystem filesystem;
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractTouchOutputDescriptionArg extends HasDeclaredDeps, BuildRuleArg {
     String getOut();
   }
@@ -142,8 +140,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
     }
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractCheckSerializationArg extends BuildRuleArg {}
 
   private static class CheckSerializationDescription
@@ -194,8 +191,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
     }
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractLargeDynamicsArg extends HasDeclaredDeps, BuildRuleArg {
     Optional<BuildTarget> getFirstRef();
 
@@ -233,8 +229,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
     }
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
+  @RuleArg
   interface AbstractFailingRuleArg extends BuildRuleArg {
     boolean getStepFailure();
   }
@@ -394,8 +389,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
     result.assertSuccess();
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
+  @RuleArg
   interface AbstractDuplicateOutputsArg extends BuildRuleArg {
     boolean getOutputsAreDirectories();
   }

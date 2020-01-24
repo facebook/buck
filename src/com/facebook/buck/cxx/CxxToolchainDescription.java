@@ -27,7 +27,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ToolProviders;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.cxx.toolchain.ArchiverProvider;
@@ -249,8 +249,7 @@ public class CxxToolchainDescription
    * are not yet exposed/implemented, and others have been slightly renamed or exposed slightly
    * differently to be more restricted or more descriptive or more maintainable.
    */
-  @Value.Immutable
-  @BuckStyleImmutable
+  @RuleArg
   interface AbstractCxxToolchainDescriptionArg extends BuildRuleArg {
     /** When building or creating a project, create symlinks for the public headers if it's true. */
     @Value.Default

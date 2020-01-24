@@ -51,7 +51,7 @@ import com.facebook.buck.core.rules.platform.RuleBasedConstraintResolver;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.select.impl.ThrowingSelectableConfigurationContext;
 import com.facebook.buck.core.select.impl.ThrowingSelectorListResolver;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
@@ -62,7 +62,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Map;
-import org.immutables.value.Value;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -398,7 +397,6 @@ public class TargetCompatibilityCheckerTest {
     }
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractTestDescriptionArg extends BuildRuleArg {}
 }
