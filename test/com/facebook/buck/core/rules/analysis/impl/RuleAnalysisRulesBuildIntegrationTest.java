@@ -115,6 +115,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
      *      val: 4
      *      srcs :{}
      *      dep: {}
+     *      outputs: [ <hash>/baz__/output ]
      *    },
      *    {
      *      target: foo
@@ -126,16 +127,20 @@ public class RuleAnalysisRulesBuildIntegrationTest {
      *          val: 4
      *          srcs :{}
      *          dep: {}
+     *          outputs: [ <hash>/baz__/output ]
      *        }
      *      }
+     *      outputs: [ <hash>/foo__/output ]
      *    },
      *    {
      *      target: faz
      *      val: 0
      *      srcs :{}
      *      dep: {}
+     *      outputs: [ <hash>/faz__/output ]
      *    },
      *  }
+     *  outputs: [ <hash>/bar__/output ]
      * }
      * </pre>
      */
@@ -145,14 +150,31 @@ public class RuleAnalysisRulesBuildIntegrationTest {
             1,
             ImmutableList.of(),
             ImmutableList.of(
-                new RuleOutput("baz", 4, ImmutableList.of(), ImmutableList.of()),
+                new RuleOutput(
+                    "baz",
+                    4,
+                    ImmutableList.of(),
+                    ImmutableList.of(),
+                    ImmutableList.of(Paths.get("baz__", "output"))),
                 new RuleOutput(
                     "foo",
                     2,
                     ImmutableList.of(),
                     ImmutableList.of(
-                        new RuleOutput("baz", 4, ImmutableList.of(), ImmutableList.of()))),
-                new RuleOutput("faz", 0, ImmutableList.of(), ImmutableList.of())));
+                        new RuleOutput(
+                            "baz",
+                            4,
+                            ImmutableList.of(),
+                            ImmutableList.of(),
+                            ImmutableList.of(Paths.get("baz__", "output")))),
+                    ImmutableList.of(Paths.get("foo__", "output"))),
+                new RuleOutput(
+                    "faz",
+                    0,
+                    ImmutableList.of(),
+                    ImmutableList.of(),
+                    ImmutableList.of(Paths.get("dir", "faz__", "output")))),
+            ImmutableList.of(Paths.get("bar__", "output")));
 
     JsonParser parser = ObjectMappers.createParser(resultPath);
     Map<String, Object> data = parser.readValueAs(Map.class);
@@ -199,6 +221,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
      *      val: 4
      *      srcs: {}
      *      dep: {}
+     *      outputs: [ <hash>/baz__/output ]
      *    },
      *    {
      *      target: foo
@@ -210,16 +233,20 @@ public class RuleAnalysisRulesBuildIntegrationTest {
      *          val: 4
      *          srcs: {}
      *          dep: {}
+     *          outputs: [ <hash>/baz__/output ]
      *        }
      *      }
+     *      outputs: [ <hash>/foo__/output ]
      *    },
      *    {
      *      target: faz
      *      val: 10
      *      srcs: {}
      *      dep: {}
+     *      outputs: [ <hash>/faz__/output ]
      *    },
      *  }
+     *  outputs: [ <hash>/bar__/output ]
      * }
      * </pre>
      */
@@ -229,14 +256,31 @@ public class RuleAnalysisRulesBuildIntegrationTest {
             1,
             ImmutableList.of(),
             ImmutableList.of(
-                new RuleOutput("baz", 4, ImmutableList.of(), ImmutableList.of()),
+                new RuleOutput(
+                    "baz",
+                    4,
+                    ImmutableList.of(),
+                    ImmutableList.of(),
+                    ImmutableList.of(Paths.get("baz__", "output"))),
                 new RuleOutput(
                     "foo",
                     2,
                     ImmutableList.of(),
                     ImmutableList.of(
-                        new RuleOutput("baz", 4, ImmutableList.of(), ImmutableList.of()))),
-                new RuleOutput("faz", 10, ImmutableList.of(), ImmutableList.of())));
+                        new RuleOutput(
+                            "baz",
+                            4,
+                            ImmutableList.of(),
+                            ImmutableList.of(),
+                            ImmutableList.of(Paths.get("baz__", "output")))),
+                    ImmutableList.of(Paths.get("foo__", "output"))),
+                new RuleOutput(
+                    "faz",
+                    10,
+                    ImmutableList.of(),
+                    ImmutableList.of(),
+                    ImmutableList.of(Paths.get("dir/faz__", "output")))),
+            ImmutableList.of(Paths.get("bar__", "output")));
 
     parser = ObjectMappers.createParser(resultPath);
     data = parser.readValueAs(Map.class);
@@ -279,6 +323,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
      *      val: 4
      *      srcs :{}
      *      dep: {}
+     *      outputs: [ <hash>/baz__/output ]
      *    },
      *    {
      *      target: foo
@@ -290,8 +335,10 @@ public class RuleAnalysisRulesBuildIntegrationTest {
      *          val: 4
      *          srcs :{}
      *          dep: {}
+     *          outputs: [ <hash>/baz__/output ]
      *        }
      *      }
+     *      outputs: [ <hash>/foo__/output ]
      *    },
      *    {
      *      target: faz
@@ -299,6 +346,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
      *      srcs :{}
      *      dep: {}
      *    },
+     *    outputs: [ <hash>/bar__/output ]
      *  }
      * }
      * </pre>
@@ -309,14 +357,31 @@ public class RuleAnalysisRulesBuildIntegrationTest {
             1,
             ImmutableList.of(),
             ImmutableList.of(
-                new RuleOutput("baz", 4, ImmutableList.of(), ImmutableList.of()),
+                new RuleOutput(
+                    "baz",
+                    4,
+                    ImmutableList.of(),
+                    ImmutableList.of(),
+                    ImmutableList.of(Paths.get("baz__", "output"))),
                 new RuleOutput(
                     "foo",
                     2,
                     ImmutableList.of(),
                     ImmutableList.of(
-                        new RuleOutput("baz", 4, ImmutableList.of(), ImmutableList.of()))),
-                new RuleOutput("faz", 0, ImmutableList.of(), ImmutableList.of())));
+                        new RuleOutput(
+                            "baz",
+                            4,
+                            ImmutableList.of(),
+                            ImmutableList.of(),
+                            ImmutableList.of(Paths.get("baz__", "output")))),
+                    ImmutableList.of(Paths.get("foo__", "output"))),
+                new RuleOutput(
+                    "faz",
+                    0,
+                    ImmutableList.of(),
+                    ImmutableList.of(),
+                    ImmutableList.of(Paths.get("output")))),
+            ImmutableList.of(Paths.get("bar__", "output")));
 
     JsonParser parser = ObjectMappers.createParser(resultPath);
     Map<String, Object> data = parser.readValueAs(Map.class);
@@ -365,9 +430,16 @@ public class RuleAnalysisRulesBuildIntegrationTest {
      * val: 1
      * srcs: { foo }
      * deps: {}
+     * outputs: [ <hash>/bar__/output ]
      * }
      */
-    RuleOutput output = new RuleOutput("bar", 1, ImmutableList.of(fooArtifact), ImmutableList.of());
+    RuleOutput output =
+        new RuleOutput(
+            "bar",
+            1,
+            ImmutableList.of(fooArtifact),
+            ImmutableList.of(),
+            ImmutableList.of(Paths.get("bar__", "output")));
 
     JsonParser parser = ObjectMappers.createParser(resultPath);
     Map<String, Object> data = parser.readValueAs(Map.class);
@@ -416,9 +488,16 @@ public class RuleAnalysisRulesBuildIntegrationTest {
      * val: 1
      * srcs: { foo_out }
      * deps: {}
+     * outputs: [ <hash>/bar__/output ]
      * }
      */
-    output = new RuleOutput("bar", 1, ImmutableList.of(fooArtifact2), ImmutableList.of());
+    output =
+        new RuleOutput(
+            "bar",
+            1,
+            ImmutableList.of(fooArtifact2),
+            ImmutableList.of(),
+            ImmutableList.of(Paths.get("bar__", "output")));
 
     parser = ObjectMappers.createParser(resultPath);
     data = parser.readValueAs(Map.class);
@@ -668,12 +747,15 @@ public class RuleAnalysisRulesBuildIntegrationTest {
     final int val;
     final List<Path> srcs;
     final List<RuleOutput> deps;
+    final List<Path> outputs;
 
-    private RuleOutput(String target, int val, List<Path> srcs, List<RuleOutput> deps) {
+    private RuleOutput(
+        String target, int val, List<Path> srcs, List<RuleOutput> deps, List<Path> outputs) {
       this.target = target;
       this.val = val;
       this.srcs = srcs;
       this.deps = deps;
+      this.outputs = outputs;
     }
   }
 
@@ -691,12 +773,23 @@ public class RuleAnalysisRulesBuildIntegrationTest {
                     Collections2.transform(
                         ruleOutput.deps,
                         d -> (Matcher<? super Object>) (Matcher<?>) ruleOutputToMatchers(d)));
+    Matcher<Object> outputs =
+        (Matcher<Object>)
+            (Matcher<? extends Object>)
+                Matchers.containsInAnyOrder(
+                    Collections2.transform(
+                        ruleOutput.outputs,
+                        o ->
+                            (Matcher<? super Object>)
+                                (Matcher<?>) Matchers.endsWith(o.toString())));
 
     Matcher<Map<? extends String, ? extends Object>> depMatcher =
         Matchers.hasEntry(Matchers.is("dep"), deps);
+    Matcher<Map<? extends String, ? extends Object>> outputsMatcher =
+        Matchers.hasEntry(Matchers.is("outputs"), outputs);
 
     Matcher<? extends Map<? extends String, ? extends Object>> matcher =
-        Matchers.allOf(targetMatcher, valMatcher, depMatcher);
+        Matchers.allOf(targetMatcher, valMatcher, depMatcher, outputsMatcher);
     return (Matcher<Map<String, Object>>) matcher;
   }
 }
