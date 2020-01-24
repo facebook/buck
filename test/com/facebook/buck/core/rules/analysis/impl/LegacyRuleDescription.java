@@ -104,6 +104,8 @@ public class LegacyRuleDescription
             SortedSet<BuildRule> depRules = getBuildDeps();
             List<Object> deps = new ArrayList<>();
             data.put("dep", deps);
+            Path output = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
+            data.put("outputs", ImmutableList.of(output));
 
             ImmutableList<Path> toRead =
                 depRules.stream()
