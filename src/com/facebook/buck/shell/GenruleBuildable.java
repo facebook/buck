@@ -687,7 +687,8 @@ public class GenruleBuildable implements Buildable {
    * @param tmpPath Path to the genrule temporary directory
    * @param environmentVariablesBuilder Environment map builder
    */
-  protected void addEnvironmentVariables(
+  @VisibleForTesting
+  public void addEnvironmentVariables(
       SourcePathResolverAdapter pathResolver,
       OutputPathResolver outputPathResolver,
       ProjectFilesystem filesystem,

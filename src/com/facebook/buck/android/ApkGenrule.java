@@ -185,7 +185,7 @@ public class ApkGenrule extends Genrule
     }
 
     @Override
-    protected void addEnvironmentVariables(
+    public void addEnvironmentVariables(
         SourcePathResolverAdapter pathResolver,
         OutputPathResolver outputPathResolver,
         ProjectFilesystem filesystem,

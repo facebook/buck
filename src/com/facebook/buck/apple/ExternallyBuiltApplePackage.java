@@ -140,7 +140,7 @@ public class ExternallyBuiltApplePackage extends Genrule {
     }
 
     @Override
-    protected void addEnvironmentVariables(
+    public void addEnvironmentVariables(
         SourcePathResolverAdapter pathResolver,
         OutputPathResolver outputPathResolver,
         ProjectFilesystem filesystem,

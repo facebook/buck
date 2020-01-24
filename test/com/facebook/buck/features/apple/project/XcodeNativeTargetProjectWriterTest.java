@@ -464,7 +464,7 @@ public class XcodeNativeTargetProjectWriterTest {
     PBXShellScriptBuildPhase phase =
         getSingletonPhaseByType(result.target, PBXShellScriptBuildPhase.class);
     String shellScript = phase.getShellScript();
-    Path genPath = BuildTargetPaths.getGenPath(scenario.filesystem, depBuildTarget, "%s");
+    Path genPath = BuildTargetPaths.getGenPath(scenario.filesystem, depBuildTarget, "%s__");
     Path jsGenPath = genPath.resolve("js").toAbsolutePath();
     Path resGenPath = genPath.resolve("res").toAbsolutePath();
     assertEquals(
@@ -500,11 +500,11 @@ public class XcodeNativeTargetProjectWriterTest {
         getSingletonPhaseByType(result.target, PBXShellScriptBuildPhase.class);
     String shellScript = phase.getShellScript();
     Path depGenPath =
-        BuildTargetPaths.getGenPath(scenario.filesystem, depBuildTarget, "%s")
+        BuildTargetPaths.getGenPath(scenario.filesystem, depBuildTarget, "%s__")
             .resolve("js")
             .toAbsolutePath();
     Path bundleGenPath =
-        BuildTargetPaths.getGenPath(scenario.filesystem, bundleBuildTarget, "%s")
+        BuildTargetPaths.getGenPath(scenario.filesystem, bundleBuildTarget, "%s__")
             .resolve("res")
             .toAbsolutePath();
     assertEquals(
