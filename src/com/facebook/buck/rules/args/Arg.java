@@ -20,6 +20,7 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
@@ -44,6 +45,23 @@ public interface Arg extends AddsToRuleKey {
    * running, as it may do things like resolving source paths.
    */
   void appendToCommandLine(Consumer<String> consumer, SourcePathResolverAdapter pathResolver);
+
+  /**
+   * Resolve this argument to single string, fail if this arg corresponds to none or more than one
+   * argument.
+   */
+  default String singleCommandLineArg(SourcePathResolverAdapter pathResolverAdapter) {
+    String[] args = new String[1];
+    appendToCommandLine(
+        arg -> {
+          Preconditions.checkState(
+              args[0] == null, "arg must resolve to exactly one argument: %s", this);
+          args[0] = arg;
+        },
+        pathResolverAdapter);
+    Preconditions.checkState(args[0] != null, "arg must resolve to exactly one argument: %s", this);
+    return args[0];
+  }
 
   /** @return a {@link String} representation suitable to use for debugging. */
   @Override
