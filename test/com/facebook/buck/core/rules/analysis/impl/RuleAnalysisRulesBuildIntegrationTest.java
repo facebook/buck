@@ -395,7 +395,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
             + "    name = \"foo\",\n"
             + "    val = 2,\n"
             + "    visibility = [\"PUBLIC\"],\n"
-            + "    outname = \"foo_out\""
+            + "    default_outs = [ \"foo_out\" ],"
             + ")",
         "dir/BUCK");
 

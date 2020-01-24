@@ -21,25 +21,33 @@ import com.facebook.buck.core.description.RuleDescription;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasSrcs;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
 import com.facebook.buck.core.rules.actions.ActionExecutionContext;
 import com.facebook.buck.core.rules.actions.ActionExecutionResult;
+import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.core.rules.actions.FakeAction;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.collect.impl.ProviderInfoCollectionImpl;
 import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
 import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
+import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.CharStreams;
 import com.google.devtools.build.lib.events.Location;
+import com.google.devtools.build.lib.packages.BazelLibrary;
+import com.google.devtools.build.lib.syntax.Environment;
+import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -52,6 +60,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 public class BasicRuleRuleDescription implements RuleDescription<BasicRuleDescriptionArg> {
 
@@ -59,11 +68,17 @@ public class BasicRuleRuleDescription implements RuleDescription<BasicRuleDescri
   public ProviderInfoCollection ruleImpl(
       RuleAnalysisContext context, BuildTarget target, BasicRuleDescriptionArg args)
       throws ActionCreationException {
+    ActionRegistry actionRegistry = context.actionRegistry();
 
-    Artifact artifact =
-        context
-            .actionRegistry()
-            .declareArtifact(Paths.get(args.getOutname().orElse("output")), Location.BUILTIN);
+    ImmutableSortedSet.Builder<Artifact> allArtifactsBuilder = ImmutableSortedSet.naturalOrder();
+
+    ImmutableSet<Artifact> defaultOutputs =
+        getDefaultOutputs(actionRegistry, args.getDefaultOuts());
+    allArtifactsBuilder.addAll(defaultOutputs);
+
+    SkylarkDict<String, Set<Artifact>> namedOutputs =
+        getNamedOutputs(context.actionRegistry(), args);
+    namedOutputs.values().forEach(artifacts -> allArtifactsBuilder.addAll(artifacts));
 
     FakeAction.FakeActionExecuteLambda actionExecution =
         new FakeAction.FakeActionExecuteLambda() {
@@ -86,32 +101,36 @@ public class BasicRuleRuleDescription implements RuleDescription<BasicRuleDescri
               ImmutableSortedSet<Artifact> inputs,
               ImmutableSortedSet<Artifact> outputs,
               ActionExecutionContext ctx) {
-            Artifact output = Iterables.getOnlyElement(outputs);
-            try (OutputStream outputStream = ctx.getArtifactFilesystem().getOutputStream(output)) {
+            Map<String, Object> data = new HashMap<>();
+            data.put("target", target.getShortName());
+            data.put("val", args.getVal());
 
-              Map<String, Object> data = new HashMap<>();
-              data.put("target", target.getShortName());
-              data.put("val", args.getVal());
+            data.put("srcs", Iterables.transform(srcs, src -> src.asBound().getShortPath()));
 
-              data.put("srcs", Iterables.transform(srcs, src -> src.asBound().getShortPath()));
+            List<Object> deps = new ArrayList<>();
+            data.put("dep", deps);
+            data.put("outputs", Iterables.transform(outputs, out -> out.asBound().getShortPath()));
 
-              List<Object> deps = new ArrayList<>();
-              data.put("dep", deps);
-
-              for (Artifact inArtifact : inputs) {
-                try (Reader reader =
-                    new InputStreamReader(ctx.getArtifactFilesystem().getInputStream(inArtifact))) {
-                  deps.add(
-                      ObjectMappers.createParser(CharStreams.toString(reader))
-                          .readValueAs(Map.class));
-                }
+            for (Artifact inArtifact : inputs) {
+              try (Reader reader =
+                  new InputStreamReader(ctx.getArtifactFilesystem().getInputStream(inArtifact))) {
+                deps.add(
+                    ObjectMappers.createParser(CharStreams.toString(reader))
+                        .readValueAs(Map.class));
+              } catch (IOException e) {
+                return ActionExecutionResult.failure(
+                    Optional.empty(), Optional.empty(), ImmutableList.of(), Optional.of(e));
               }
-              outputStream.write(
-                  ObjectMappers.WRITER.writeValueAsString(data).getBytes(Charsets.UTF_8));
-
-            } catch (IOException e) {
-              return ActionExecutionResult.failure(
-                  Optional.empty(), Optional.empty(), ImmutableList.of(), Optional.of(e));
+            }
+            for (Artifact output : outputs) {
+              try (OutputStream outputStream =
+                  ctx.getArtifactFilesystem().getOutputStream(output)) {
+                outputStream.write(
+                    ObjectMappers.WRITER.writeValueAsString(data).getBytes(Charsets.UTF_8));
+              } catch (IOException e) {
+                return ActionExecutionResult.failure(
+                    Optional.empty(), Optional.empty(), ImmutableList.of(), Optional.of(e));
+              }
             }
             return ActionExecutionResult.success(
                 Optional.empty(), Optional.empty(), ImmutableList.of());
@@ -130,10 +149,10 @@ public class BasicRuleRuleDescription implements RuleDescription<BasicRuleDescri
         context.actionRegistry(),
         context.resolveSrcs(args.getSrcs()),
         inputsBuilder.build(),
-        ImmutableSortedSet.of(artifact),
+        allArtifactsBuilder.build(),
         actionExecution);
     return ProviderInfoCollectionImpl.builder()
-        .build(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableSet.of(artifact)));
+        .build(new ImmutableDefaultInfo(namedOutputs, defaultOutputs));
   }
 
   @Override
@@ -141,10 +160,53 @@ public class BasicRuleRuleDescription implements RuleDescription<BasicRuleDescri
     return BasicRuleDescriptionArg.class;
   }
 
+  private ImmutableSet<Artifact> getDefaultOutputs(
+      ActionRegistry actionRegistry, Optional<ImmutableSet<String>> defaultOuts) {
+    return declareArtifacts(
+        actionRegistry, defaultOuts.isPresent() ? defaultOuts.get() : ImmutableSet.of("output"));
+  }
+
+  private SkylarkDict<String, Set<Artifact>> getNamedOutputs(
+      ActionRegistry actionRegistry, BasicRuleDescriptionArg args) {
+    if (!args.getNamedOuts().isPresent()) {
+      return SkylarkDict.empty();
+    }
+    ImmutableMap<String, ImmutableSet<String>> namedOuts = args.getNamedOuts().get();
+    Mutability mutability = Mutability.create("test");
+    Environment env =
+        Environment.builder(mutability)
+            .setGlobals(BazelLibrary.GLOBALS)
+            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
+            .build();
+    SkylarkDict<String, Set<Artifact>> dict = SkylarkDict.of(env);
+
+    for (Map.Entry<String, ImmutableSet<String>> labelsToNamedOutnames : namedOuts.entrySet()) {
+      try {
+        dict.put(
+            labelsToNamedOutnames.getKey(),
+            declareArtifacts(actionRegistry, labelsToNamedOutnames.getValue()),
+            Location.BUILTIN,
+            mutability);
+      } catch (EvalException e) {
+        throw new HumanReadableException("Invalid name %s", labelsToNamedOutnames.getKey());
+      }
+    }
+    return dict;
+  }
+
+  private ImmutableSet<Artifact> declareArtifacts(
+      ActionRegistry actionRegistry, ImmutableSet<String> outNames) {
+    return outNames.stream()
+        .map(out -> actionRegistry.declareArtifact(Paths.get(out), Location.BUILTIN))
+        .collect(ImmutableSet.toImmutableSet());
+  }
+
   @RuleArg
   interface AbstractBasicRuleDescriptionArg extends BuildRuleArg, HasDeclaredDeps, HasSrcs {
     int getVal();
 
-    Optional<String> getOutname();
+    Optional<ImmutableSet<String>> getDefaultOuts();
+
+    Optional<ImmutableMap<String, ImmutableSet<String>>> getNamedOuts();
   }
 }
