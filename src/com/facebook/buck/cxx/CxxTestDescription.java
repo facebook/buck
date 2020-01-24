@@ -48,6 +48,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.test.config.TestBuckConfig;
 import com.facebook.buck.versions.Version;
@@ -418,7 +419,7 @@ public class CxxTestDescription
   }
 
   @BuckStyleImmutable
-  @Value.Immutable(copy = true)
+  @Value.Immutable
   interface AbstractCxxTestDescriptionArg
       extends CxxBinaryDescription.CommonArg, HasContacts, HasTestTimeout {
     Optional<CxxTestType> getFramework();
@@ -435,5 +436,13 @@ public class CxxTestDescription
     ImmutableSortedSet<Path> getResources();
 
     ImmutableSet<SourcePath> getAdditionalCoverageTargets();
+
+    @Override
+    default CxxTestDescriptionArg withDepsQuery(Query query) {
+      if (getDepsQuery().equals(Optional.of(query))) {
+        return (CxxTestDescriptionArg) this;
+      }
+      return CxxTestDescriptionArg.builder().from(this).setDepsQuery(query).build();
+    }
   }
 }

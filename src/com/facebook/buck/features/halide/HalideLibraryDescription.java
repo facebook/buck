@@ -61,6 +61,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.query.Query;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -377,7 +378,7 @@ public class HalideLibraryDescription
   }
 
   @BuckStyleImmutable
-  @Value.Immutable(copy = true)
+  @Value.Immutable
   interface AbstractHalideLibraryDescriptionArg extends CxxBinaryDescription.CommonArg {
     @Value.NaturalOrder
     ImmutableSortedSet<BuildTarget> getCompilerDeps();
@@ -390,5 +391,13 @@ public class HalideLibraryDescription
     ImmutableList<String> getCompilerInvocationFlags();
 
     Optional<String> getFunctionName();
+
+    @Override
+    default HalideLibraryDescriptionArg withDepsQuery(Query query) {
+      if (getDepsQuery().equals(Optional.of(query))) {
+        return (HalideLibraryDescriptionArg) this;
+      }
+      return HalideLibraryDescriptionArg.builder().from(this).setDepsQuery(query).build();
+    }
   }
 }

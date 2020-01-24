@@ -53,6 +53,7 @@ import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.step.fs.XzStep;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -281,7 +282,7 @@ public class AndroidBinaryDescription
   }
 
   @BuckStyleImmutable
-  @Value.Immutable(copy = true)
+  @Value.Immutable
   abstract static class AbstractAndroidBinaryDescriptionArg
       implements BuildRuleArg,
           HasDeclaredDeps,
@@ -364,5 +365,16 @@ public class AndroidBinaryDescription
     @Override
     @Value.NaturalOrder
     public abstract ImmutableSortedSet<BuildTarget> getDeps();
+
+    @Override
+    public AndroidBinaryDescriptionArg withApplicationModuleBlacklist(List<Query> queries) {
+      if (getApplicationModuleBlacklist().equals(Optional.of(queries))) {
+        return (AndroidBinaryDescriptionArg) this;
+      }
+      return AndroidBinaryDescriptionArg.builder()
+          .from(this)
+          .setApplicationModuleBlacklist(queries)
+          .build();
+    }
   }
 }

@@ -50,6 +50,7 @@ import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.step.fs.XzStep;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -269,7 +270,7 @@ public class AndroidBundleDescription
   }
 
   @BuckStyleImmutable
-  @Value.Immutable(copy = true)
+  @Value.Immutable
   abstract static class AbstractAndroidBundleDescriptionArg
       implements BuildRuleArg,
           HasDeclaredDeps,
@@ -354,6 +355,17 @@ public class AndroidBundleDescription
     @Value.Default
     public AaptMode getAaptMode() {
       return AaptMode.AAPT2;
+    }
+
+    @Override
+    public AndroidBundleDescriptionArg withApplicationModuleBlacklist(List<Query> queries) {
+      if (getApplicationModuleBlacklist().equals(Optional.of(queries))) {
+        return (AndroidBundleDescriptionArg) this;
+      }
+      return AndroidBundleDescriptionArg.builder()
+          .from(this)
+          .setApplicationModuleBlacklist(queries)
+          .build();
     }
   }
 }

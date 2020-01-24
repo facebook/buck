@@ -481,7 +481,7 @@ public class RobolectricTestDescription
   }
 
   @BuckStyleImmutable
-  @Value.Immutable(copy = true)
+  @Value.Immutable
   interface AbstractRobolectricTestDescriptionArg
       extends JavaTestDescription.CoreArg, AndroidKotlinCoreArg, HasTestRunner {
 
@@ -504,6 +504,20 @@ public class RobolectricTestDescription
     @Value.Default
     default boolean isUseBinaryResources() {
       return false;
+    }
+
+    default RobolectricTestDescriptionArg withDeps(Iterable<BuildTarget> deps) {
+      if (getDeps().equals(deps)) {
+        return (RobolectricTestDescriptionArg) this;
+      }
+      return RobolectricTestDescriptionArg.builder().from(this).setDeps(deps).build();
+    }
+
+    default RobolectricTestDescriptionArg withSrcs(Iterable<SourcePath> srcs) {
+      if (getSrcs().equals(srcs)) {
+        return (RobolectricTestDescriptionArg) this;
+      }
+      return RobolectricTestDescriptionArg.builder().from(this).setSrcs(srcs).build();
     }
 
   }

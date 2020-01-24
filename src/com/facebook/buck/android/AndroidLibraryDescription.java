@@ -47,6 +47,7 @@ import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.util.MoreFunctions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
@@ -234,6 +235,22 @@ public class AndroidLibraryDescription
   }
 
   @BuckStyleImmutable
-  @Value.Immutable(copy = true)
-  interface AbstractAndroidLibraryDescriptionArg extends CoreArg {}
+  @Value.Immutable
+  interface AbstractAndroidLibraryDescriptionArg extends CoreArg {
+    @Override
+    default AndroidLibraryDescriptionArg withDepsQuery(Query query) {
+      if (getDepsQuery().equals(Optional.of(query))) {
+        return (AndroidLibraryDescriptionArg) this;
+      }
+      return AndroidLibraryDescriptionArg.builder().from(this).setDepsQuery(query).build();
+    }
+
+    @Override
+    default AndroidLibraryDescriptionArg withProvidedDepsQuery(Query query) {
+      if (getProvidedDepsQuery().equals(Optional.of(query))) {
+        return (AndroidLibraryDescriptionArg) this;
+      }
+      return AndroidLibraryDescriptionArg.builder().from(this).setProvidedDepsQuery(query).build();
+    }
+  }
 }

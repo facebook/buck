@@ -52,6 +52,7 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.stream.RichStream;
@@ -373,7 +374,7 @@ public class HaskellBinaryDescription
   }
 
   @BuckStyleImmutable
-  @Value.Immutable(copy = true)
+  @Value.Immutable
   interface AbstractHaskellBinaryDescriptionArg extends BuildRuleArg, HasDepsQuery {
 
     @Value.Default
@@ -414,6 +415,14 @@ public class HaskellBinaryDescription
     @Value.Default
     default PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getGhciPlatformPreloadDeps() {
       return PatternMatchedCollection.of();
+    }
+
+    @Override
+    default HaskellBinaryDescriptionArg withDepsQuery(Query query) {
+      if (getDepsQuery().equals(Optional.of(query))) {
+        return (HaskellBinaryDescriptionArg) this;
+      }
+      return HaskellBinaryDescriptionArg.builder().from(this).setDepsQuery(query).build();
     }
   }
 }

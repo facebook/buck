@@ -32,6 +32,7 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableCollection;
@@ -149,13 +150,21 @@ public class HaskellHaddockDescription
   }
 
   @BuckStyleImmutable
-  @Value.Immutable(copy = true)
+  @Value.Immutable
   interface AbstractHaskellHaddockDescriptionArg extends BuildRuleArg, HasDepsQuery {
     Optional<Flavor> getPlatform();
 
     @Value.Default
     default ImmutableList<String> getHaddockFlags() {
       return ImmutableList.of();
+    }
+
+    @Override
+    default HaskellHaddockDescriptionArg withDepsQuery(Query query) {
+      if (getDepsQuery().equals(Optional.of(query))) {
+        return (HaskellHaddockDescriptionArg) this;
+      }
+      return HaskellHaddockDescriptionArg.builder().from(this).setDepsQuery(query).build();
     }
   }
 }

@@ -169,7 +169,7 @@ public class JsLibraryDescription
   }
 
   @BuckStyleImmutable
-  @Value.Immutable(copy = true)
+  @Value.Immutable
   interface AbstractJsLibraryDescriptionArg
       extends BuildRuleArg, HasDepsQuery, HasExtraJson, HasTests {
     ImmutableSet<Either<SourcePath, Pair<SourcePath, String>>> getSrcs();
@@ -178,6 +178,14 @@ public class JsLibraryDescription
 
     @Hint(isDep = false, isInput = false)
     Optional<String> getBasePath();
+
+    @Override
+    default JsLibraryDescriptionArg withDepsQuery(Query query) {
+      if (getDepsQuery().equals(Optional.of(query))) {
+        return (JsLibraryDescriptionArg) this;
+      }
+      return JsLibraryDescriptionArg.builder().from(this).setDepsQuery(query).build();
+    }
   }
 
   private static class LibraryFilesBuilder {

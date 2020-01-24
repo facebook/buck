@@ -43,6 +43,7 @@ import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
+import com.facebook.buck.rules.query.Query;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableCollection.Builder;
 import com.google.common.collect.ImmutableList;
@@ -290,7 +291,7 @@ public class AndroidAarDescription
   }
 
   @BuckStyleImmutable
-  @Value.Immutable(copy = true)
+  @Value.Immutable
   interface AbstractAndroidAarDescriptionArg extends AndroidLibraryDescription.CoreArg {
     SourcePath getManifestSkeleton();
 
@@ -307,6 +308,22 @@ public class AndroidAarDescription
     @Value.Default
     default boolean isEnableRelinker() {
       return false;
+    }
+
+    @Override
+    default AndroidAarDescriptionArg withDepsQuery(Query query) {
+      if (getDepsQuery().equals(Optional.of(query))) {
+        return (AndroidAarDescriptionArg) this;
+      }
+      return AndroidAarDescriptionArg.builder().from(this).setDepsQuery(query).build();
+    }
+
+    @Override
+    default AndroidAarDescriptionArg withProvidedDepsQuery(Query query) {
+      if (getProvidedDepsQuery().equals(Optional.of(query))) {
+        return (AndroidAarDescriptionArg) this;
+      }
+      return AndroidAarDescriptionArg.builder().from(this).setProvidedDepsQuery(query).build();
     }
   }
 }
