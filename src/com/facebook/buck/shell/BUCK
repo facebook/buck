@@ -8,6 +8,7 @@ java_library_with_plugins(
     name = "rules",
     srcs = [
         "AbstractGenruleDescription.java",
+        "BaseGenrule.java",
         "CommandAlias.java",
         "CommandAliasDescription.java",
         "ExportFile.java",

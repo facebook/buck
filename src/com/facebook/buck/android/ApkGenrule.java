@@ -32,7 +32,7 @@ import com.facebook.buck.rules.coercer.SourceSet;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.sandbox.SandboxProperties;
-import com.facebook.buck.shell.Genrule;
+import com.facebook.buck.shell.BaseGenrule;
 import com.facebook.buck.shell.GenruleAndroidTools;
 import com.facebook.buck.shell.GenruleBuildable;
 import com.google.common.collect.ImmutableList;
@@ -59,7 +59,7 @@ import java.util.stream.Stream;
  * )
  * </pre>
  */
-public class ApkGenrule extends Genrule
+public final class ApkGenrule extends BaseGenrule<ApkGenrule.Buildable>
     implements HasInstallableApk, HasRuntimeDeps, HasClasspathEntries {
 
   private final HasInstallableApk hasInstallableApk;
@@ -143,7 +143,7 @@ public class ApkGenrule extends Genrule
     return ImmutableSet.of();
   }
 
-  private static class Buildable extends GenruleBuildable {
+  static class Buildable extends GenruleBuildable {
     @AddToRuleKey private final SourcePath apkPath;
 
     public Buildable(
