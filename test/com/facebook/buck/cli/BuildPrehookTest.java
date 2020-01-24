@@ -36,7 +36,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -85,11 +84,7 @@ public class BuildPrehookTest {
   @Test
   public void presubmitHookPostsAWarningOnStderr() throws Exception {
     String warningMessage = "some_warning";
-    FakeListeningProcessState stderrState =
-        FakeListeningProcessState.builder()
-            .setStderr(StandardCharsets.UTF_8.encode(warningMessage))
-            .setType(FakeListeningProcessState.Type.STDERR)
-            .build();
+    FakeListeningProcessState stderrState = FakeListeningProcessState.ofStderr(warningMessage);
     FakeListeningProcessState exitState = FakeListeningProcessState.ofExit(0);
     processStates = Arrays.asList(stderrState, exitState);
 

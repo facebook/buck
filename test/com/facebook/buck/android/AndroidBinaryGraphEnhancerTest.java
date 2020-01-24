@@ -62,7 +62,7 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -143,7 +143,7 @@ public class AndroidBinaryGraphEnhancerTest {
             Suppliers.ofInstance(originalDeps), ImmutableSortedSet::of, ImmutableSortedSet.of());
     AndroidBinaryGraphEnhancer graphEnhancer =
         createGraphEnhancer(
-            TestGraphEnhancerArgs.builder()
+            ImmutableTestGraphEnhancerArgs.builder()
                 .setTarget(apkTarget)
                 .setBuildRuleParams(originalParams)
                 .setGraphBuilder(graphBuilder)
@@ -274,7 +274,7 @@ public class AndroidBinaryGraphEnhancerTest {
             Suppliers.ofInstance(originalDeps), ImmutableSortedSet::of, ImmutableSortedSet.of());
     AndroidBinaryGraphEnhancer graphEnhancer =
         createGraphEnhancer(
-            TestGraphEnhancerArgs.builder()
+            ImmutableTestGraphEnhancerArgs.builder()
                 .setTarget(apkTarget)
                 .setBuildRuleParams(originalParams)
                 .setGraphBuilder(graphBuilder)
@@ -421,7 +421,7 @@ public class AndroidBinaryGraphEnhancerTest {
             Suppliers.ofInstance(originalDeps), ImmutableSortedSet::of, ImmutableSortedSet.of());
     AndroidBinaryGraphEnhancer graphEnhancer =
         createGraphEnhancer(
-            TestGraphEnhancerArgs.builder()
+            ImmutableTestGraphEnhancerArgs.builder()
                 .setTarget(apkTarget)
                 .setBuildRuleParams(originalParams)
                 .setGraphBuilder(graphBuilder)
@@ -546,7 +546,7 @@ public class AndroidBinaryGraphEnhancerTest {
 
     AndroidBinaryGraphEnhancer graphEnhancer =
         createGraphEnhancer(
-            TestGraphEnhancerArgs.builder()
+            ImmutableTestGraphEnhancerArgs.builder()
                 .setTarget(apkTarget)
                 .setBuildRuleParams(originalParams)
                 .setGraphBuilder(graphBuilder)
@@ -683,7 +683,7 @@ public class AndroidBinaryGraphEnhancerTest {
 
     AndroidBinaryGraphEnhancer graphEnhancer =
         createGraphEnhancer(
-            TestGraphEnhancerArgs.builder()
+            ImmutableTestGraphEnhancerArgs.builder()
                 .setTarget(apkTarget)
                 .setBuildRuleParams(originalParams)
                 .setGraphBuilder(graphBuilder)
@@ -806,7 +806,7 @@ public class AndroidBinaryGraphEnhancerTest {
     // set it up.
     AndroidBinaryGraphEnhancer graphEnhancer =
         createGraphEnhancer(
-            TestGraphEnhancerArgs.builder()
+            ImmutableTestGraphEnhancerArgs.builder()
                 .setTarget(apkTarget)
                 .setBuildRuleParams(originalParams)
                 .setGraphBuilder(graphBuilder)
@@ -880,7 +880,7 @@ public class AndroidBinaryGraphEnhancerTest {
         TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.of(resource));
     AndroidBinaryGraphEnhancer graphEnhancer =
         createGraphEnhancer(
-            TestGraphEnhancerArgs.builder()
+            ImmutableTestGraphEnhancerArgs.builder()
                 .setTarget(target)
                 .setBuildRuleParams(originalParams)
                 .setGraphBuilder(graphBuilder)
@@ -901,7 +901,7 @@ public class AndroidBinaryGraphEnhancerTest {
     BuildRuleParams originalParams = TestBuildRuleParams.create();
     AndroidBinaryGraphEnhancer graphEnhancer =
         createGraphEnhancer(
-            TestGraphEnhancerArgs.builder()
+            ImmutableTestGraphEnhancerArgs.builder()
                 .setTarget(target)
                 .setBuildRuleParams(originalParams)
                 .setGraphBuilder(graphBuilder)
@@ -950,7 +950,7 @@ public class AndroidBinaryGraphEnhancerTest {
         TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.of(resource));
     AndroidBinaryGraphEnhancer graphEnhancer =
         createGraphEnhancer(
-            TestGraphEnhancerArgs.builder()
+            ImmutableTestGraphEnhancerArgs.builder()
                 .setTarget(target)
                 .setBuildRuleParams(originalParams)
                 .setGraphBuilder(graphBuilder)
@@ -964,9 +964,8 @@ public class AndroidBinaryGraphEnhancerTest {
         resourcesDep);
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractTestGraphEnhancerArgs {
+  @BuckStyleValueWithBuilder
+  abstract static class TestGraphEnhancerArgs {
     abstract BuildTarget getTarget();
 
     abstract BuildRuleParams getBuildRuleParams();

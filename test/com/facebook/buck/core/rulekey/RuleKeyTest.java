@@ -46,7 +46,6 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
@@ -827,26 +826,31 @@ public class RuleKeyTest {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     RuleKey first =
         createBuilder(ruleFinder)
-            .setReflectively("value", TestRuleKeyImmutableWithDefaults.builder().build())
+            .setReflectively("value", TestRuleKeyImmutableWithDefaults.of())
             .build(RuleKey::new);
 
     RuleKey second =
         createBuilder(ruleFinder)
-            .setReflectively(
-                "value",
-                TestRuleKeyImmutableWithDefaults.builder().setRuleKeyValue("other").build())
+            .setReflectively("value", TestRuleKeyImmutableWithDefaults.of("other"))
             .build(RuleKey::new);
 
     assertNotEquals(first, second);
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractTestRuleKeyImmutableWithDefaults implements AddsToRuleKey {
+  @BuckStyleValue
+  abstract static class TestRuleKeyImmutableWithDefaults implements AddsToRuleKey {
     @AddToRuleKey
     @Value.Default
     String getRuleKeyValue() {
       return "default";
+    }
+
+    static TestRuleKeyImmutableWithDefaults of() {
+      return of("default");
+    }
+
+    static TestRuleKeyImmutableWithDefaults of(String ruleKeyValue) {
+      return ImmutableTestRuleKeyImmutableWithDefaults.of(ruleKeyValue);
     }
   }
 

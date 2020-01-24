@@ -16,16 +16,14 @@
 
 package com.facebook.buck.util;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.OptionalInt;
-import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractFakeListeningProcessState {
+@BuckStyleValueWithBuilder
+public abstract class FakeListeningProcessState {
   public enum Type {
     EXPECT_STDIN,
     EXPECT_STDIN_CLOSED,
@@ -36,33 +34,49 @@ abstract class AbstractFakeListeningProcessState {
   }
 
   public static FakeListeningProcessState ofExpectedStdin(String expectedStdin) {
-    return FakeListeningProcessState.builder()
+    return ImmutableFakeListeningProcessState.builder()
         .setType(Type.EXPECT_STDIN)
         .setExpectedStdin(StandardCharsets.UTF_8.encode(expectedStdin))
         .build();
   }
 
   public static FakeListeningProcessState ofExpectStdinClosed() {
-    return FakeListeningProcessState.builder().setType(Type.EXPECT_STDIN_CLOSED).build();
+    return ImmutableFakeListeningProcessState.builder().setType(Type.EXPECT_STDIN_CLOSED).build();
   }
 
   public static FakeListeningProcessState ofStdout(String stdout) {
-    return FakeListeningProcessState.builder()
+    return ImmutableFakeListeningProcessState.builder()
         .setType(Type.STDOUT)
         .setStdout(StandardCharsets.UTF_8.encode(stdout))
         .build();
   }
 
+  public static FakeListeningProcessState ofStderr(String stderr) {
+    return ImmutableFakeListeningProcessState.builder()
+        .setType(Type.STDERR)
+        .setStderr(StandardCharsets.UTF_8.encode(stderr))
+        .build();
+  }
+
   public static FakeListeningProcessState ofStdoutBytes(ByteBuffer stdout) {
-    return FakeListeningProcessState.builder().setType(Type.STDOUT).setStdout(stdout).build();
+    return ImmutableFakeListeningProcessState.builder()
+        .setType(Type.STDOUT)
+        .setStdout(stdout)
+        .build();
   }
 
   public static FakeListeningProcessState ofWaitNanos(long waitNanos) {
-    return FakeListeningProcessState.builder().setType(Type.WAIT).setWaitNanos(waitNanos).build();
+    return ImmutableFakeListeningProcessState.builder()
+        .setType(Type.WAIT)
+        .setWaitNanos(waitNanos)
+        .build();
   }
 
   public static FakeListeningProcessState ofExit(int exitCode) {
-    return FakeListeningProcessState.builder().setType(Type.EXIT).setExitCode(exitCode).build();
+    return ImmutableFakeListeningProcessState.builder()
+        .setType(Type.EXIT)
+        .setExitCode(exitCode)
+        .build();
   }
 
   public abstract Type getType();

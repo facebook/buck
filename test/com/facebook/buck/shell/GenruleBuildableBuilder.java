@@ -18,7 +18,7 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.SourceSet;
@@ -37,9 +37,8 @@ import org.immutables.value.Value;
  * Utility builder class for building instances of GenruleBuildable. Not particularly useful outside
  * of tests, so it's here instead of in src.
  */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractGenruleBuildableBuilder {
+@BuckStyleValueWithBuilder
+abstract class GenruleBuildableBuilder {
   public abstract BuildTarget getBuildTarget();
 
   public abstract ProjectFilesystem getFilesystem();
