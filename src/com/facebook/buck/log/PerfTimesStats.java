@@ -106,6 +106,13 @@ public abstract class PerfTimesStats {
     return 0L;
   }
 
+  /** @return time it takes to generate an IDE project, in milliseconds. */
+  @JsonView(JsonViews.MachineReadableLog.class)
+  @Value.Default
+  public Long getProjectTimeMs() {
+    return 0L;
+  }
+
   public static Builder builder() {
     return new Builder();
   }

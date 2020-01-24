@@ -187,7 +187,8 @@ public class MachineReadableLogJsonViewTest {
             + "\"totalRulekeyTimeMs\":42,"
             + "\"fetchTimeMs\":0,"
             + "\"buildTimeMs\":23,"
-            + "\"installTimeMs\":42}}",
+            + "\"installTimeMs\":42,"
+            + "\"projectTimeMs\":0}}",
         message);
   }
 
