@@ -18,7 +18,6 @@ java_library_with_plugins(
         "GenruleBinary.java",
         "GenruleBuildable.java",
         "GenruleDescription.java",
-        "LegacyGenrule.java",
         "ShBinary.java",
         "ShBinaryDescription.java",
         "ShTest.java",
