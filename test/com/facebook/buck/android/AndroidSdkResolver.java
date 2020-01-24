@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.toolchain.AdbToolchain;
 import com.facebook.buck.android.toolchain.AndroidBuildToolsLocation;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
@@ -48,6 +49,8 @@ final class AndroidSdkResolver {
     sdkLocation = TestAndroidSdkLocationFactory.create(fileSystem);
     toolsResolver = new AndroidBuildToolsResolver(AndroidNdkHelper.DEFAULT_CONFIG, sdkLocation);
     buildToolsLocation = AndroidBuildToolsLocation.of(toolsResolver.getBuildToolsPath());
+    AdbToolchain adbToolchain =
+        AdbToolchain.of(sdkLocation.getSdkRootPath().resolve("platform-tools/adb"));
     platformTarget =
         AndroidPlatformTargetProducer.getDefaultPlatformTarget(
             fileSystem,
@@ -55,7 +58,7 @@ final class AndroidSdkResolver {
             sdkLocation,
             Optional.empty(),
             Optional.empty(),
-            Optional.empty());
+            adbToolchain);
   }
 
   /** Gets a resolver for the given workspace, if the sdk is available. */

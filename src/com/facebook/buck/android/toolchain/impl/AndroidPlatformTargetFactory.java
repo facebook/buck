@@ -17,6 +17,7 @@
 package com.facebook.buck.android.toolchain.impl;
 
 import com.facebook.buck.android.AndroidBuckConfig;
+import com.facebook.buck.android.toolchain.AdbToolchain;
 import com.facebook.buck.android.toolchain.AndroidBuildToolsLocation;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
@@ -69,7 +70,8 @@ public class AndroidPlatformTargetFactory implements ToolchainFactory<AndroidPla
                   AndroidSdkLocation.class),
               androidBuckConfig.getAaptOverride(),
               aapt2Override,
-              androidBuckConfig.getAdbOverride()));
+              toolchainProvider.getByName(
+                  AdbToolchain.DEFAULT_NAME, toolchainTargetConfiguration, AdbToolchain.class)));
     } catch (HumanReadableException e) {
       throw ToolchainInstantiationException.wrap(e);
     }

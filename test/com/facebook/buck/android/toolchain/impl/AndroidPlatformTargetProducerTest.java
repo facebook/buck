@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.android.toolchain.AdbToolchain;
 import com.facebook.buck.android.toolchain.AndroidBuildToolsLocation;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
@@ -62,6 +63,7 @@ public class AndroidPlatformTargetProducerTest {
 
     AndroidBuildToolsLocation buildToolsLocation =
         AndroidBuildToolsLocation.of(androidSdkDir.resolve("platform-tools"));
+    AdbToolchain adbToolchain = AdbToolchain.of(androidSdkDir.resolve("platform-tools/adb"));
     AndroidPlatformTarget androidPlatformTarget =
         AndroidPlatformTargetProducer.createFromDefaultDirectoryStructure(
             filesystem,
@@ -72,7 +74,7 @@ public class AndroidPlatformTargetProducerTest {
             additionalJarPaths,
             /* aaptOverride */ Optional.empty(),
             /* aapt2Override */ Optional.empty(),
-            /* adbOverride */ Optional.empty());
+            adbToolchain);
     assertEquals(name, androidPlatformTarget.getPlatformName());
     assertEquals(
         ImmutableList.of(
@@ -126,6 +128,9 @@ public class AndroidPlatformTargetProducerTest {
     addOnsLibsDir3.mkdirs();
     Files.touch(new File(addOnsLibsDir3, "ignored.jar"));
 
+    AdbToolchain adbToolchain =
+        AdbToolchain.of(new File(androidSdkDir, "platform-tools/adb").toPath());
+
     AndroidPlatformTarget androidPlatformTarget =
         AndroidPlatformTargetProducer.getTargetForId(
             filesystem,
@@ -134,7 +139,7 @@ public class AndroidPlatformTargetProducerTest {
             AndroidSdkLocation.of(androidSdkDir.toPath()),
             /* aaptOverride */ Optional.empty(),
             /* aapt2Override */ Optional.empty(),
-            /* adbOverride */ Optional.empty());
+            adbToolchain);
 
     // Verify that addOnsLibsDir2 was picked up since addOnsLibsDir1 is empty.
     assertTrue(
@@ -163,6 +168,8 @@ public class AndroidPlatformTargetProducerTest {
     Files.touch(new File(addOnsLibsDir, "effects.jar"));
     Files.touch(new File(addOnsLibsDir, "maps.jar"));
     Files.touch(new File(addOnsLibsDir, "usb.jar"));
+    AdbToolchain adbToolchain =
+        AdbToolchain.of(new File(androidSdkDir, "platform-tools/adb").toPath());
 
     String platformId = "Google Inc.:Google APIs:23";
     AndroidPlatformTarget androidPlatformTarget =
@@ -173,7 +180,7 @@ public class AndroidPlatformTargetProducerTest {
             AndroidSdkLocation.of(androidSdkDir.toPath()),
             /* aaptOverride */ Optional.empty(),
             /* aapt2Override */ Optional.empty(),
-            /* adbOverride */ Optional.empty());
+            adbToolchain);
 
     assertEquals(platformId, androidPlatformTarget.getPlatformName());
     assertEquals(
@@ -194,6 +201,8 @@ public class AndroidPlatformTargetProducerTest {
   public void testThrowsExceptionWhenAddOnsDirectoryIsMissing() throws IOException {
     File androidSdkDir = tempDir.newFolder();
     String platformId = "Google Inc.:Google APIs:17";
+    AdbToolchain adbToolchain =
+        AdbToolchain.of(new File(androidSdkDir, "platform-tools/adb").toPath());
     try {
       AndroidPlatformTargetProducer.getTargetForId(
           filesystem,
@@ -202,7 +211,7 @@ public class AndroidPlatformTargetProducerTest {
           AndroidSdkLocation.of(androidSdkDir.toPath()),
           /* aaptOverride */ Optional.empty(),
           /* aapt2Override */ Optional.empty(),
-          /* adbOverride */ Optional.empty());
+          adbToolchain);
       fail("Should have thrown HumanReadableException");
     } catch (HumanReadableException e) {
       assertEquals(
@@ -230,6 +239,8 @@ public class AndroidPlatformTargetProducerTest {
     Files.touch(new File(addOnsLibsDir, "effects.jar"));
     Files.touch(new File(addOnsLibsDir, "maps.jar"));
     Files.touch(new File(addOnsLibsDir, "usb.jar"));
+    AdbToolchain adbToolchain =
+        AdbToolchain.of(new File(androidSdkDir, "platform-tools/adb").toPath());
 
     // This one should include the Google jars
     AndroidPlatformTarget androidPlatformTarget1 =
@@ -240,7 +251,7 @@ public class AndroidPlatformTargetProducerTest {
             AndroidSdkLocation.of(androidSdkDir.toPath()),
             /* aaptOverride */ Optional.empty(),
             /* aapt2Override */ Optional.empty(),
-            /* adbOverride */ Optional.empty());
+            adbToolchain);
     assertEquals(
         ImmutableList.of(
             pathToAndroidSdkDir.resolve("platforms/android-17/android.jar"),
@@ -258,7 +269,7 @@ public class AndroidPlatformTargetProducerTest {
             AndroidSdkLocation.of(androidSdkDir.toPath()),
             /* aaptOverride */ Optional.empty(),
             /* aapt2Override */ Optional.empty(),
-            /* adbOverride */ Optional.empty());
+            adbToolchain);
     assertEquals(
         ImmutableList.of(pathToAndroidSdkDir.resolve("platforms/android-17/android.jar")),
         androidPlatformTarget2.getBootclasspathEntries());
@@ -275,6 +286,8 @@ public class AndroidPlatformTargetProducerTest {
     File addOnsLibsDir = new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs");
     addOnsLibsDir.mkdirs();
     Files.touch(new File(addOnsLibsDir, "effects.jar"));
+    AdbToolchain adbToolchain =
+        AdbToolchain.of(new File(androidSdkDir, "platform-tools/adb").toPath());
 
     String platformId = "Google Inc.:Google APIs:17";
     AndroidPlatformTarget androidPlatformTarget =
@@ -285,7 +298,7 @@ public class AndroidPlatformTargetProducerTest {
             AndroidSdkLocation.of(androidSdkDir.toPath()),
             /* aaptOverride */ Optional.empty(),
             /* aapt2Override */ Optional.empty(),
-            /* adbOverride */ Optional.empty());
+            adbToolchain);
 
     assertEquals(platformId, androidPlatformTarget.getPlatformName());
     String binaryExtension = Platform.detect() == Platform.WINDOWS ? ".exe" : "";
@@ -304,7 +317,7 @@ public class AndroidPlatformTargetProducerTest {
             AndroidSdkLocation.of(androidSdkDir.toPath()),
             /* aaptOverride */ Optional.empty(),
             /* aapt2Override */ Optional.empty(),
-            /* adbOverride */ Optional.empty());
+            adbToolchain);
     assertEquals(platformId, androidPlatformTarget.getPlatformName());
     assertEquals(
         pathToAndroidSdkDir.resolve("tools/zipalign" + binaryExtension),

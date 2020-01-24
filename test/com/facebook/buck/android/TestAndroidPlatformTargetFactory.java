@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.toolchain.AdbToolchain;
 import com.facebook.buck.android.toolchain.AndroidBuildToolsLocation;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
@@ -34,6 +35,7 @@ public class TestAndroidPlatformTargetFactory {
         AndroidSdkLocation.of(MorePathsForTests.rootRelativePath("AndroidSDK")),
         Optional.empty(),
         Optional.empty(),
-        Optional.empty());
+        AdbToolchain.of(
+            MorePathsForTests.rootRelativePath("AndroidSDK").resolve("platform-tools/adb")));
   }
 }

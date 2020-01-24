@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android.toolchain.impl;
 
+import com.facebook.buck.android.toolchain.AdbToolchain;
 import com.facebook.buck.android.toolchain.AndroidBuildToolsLocation;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
@@ -57,7 +58,7 @@ public class AndroidPlatformTargetProducer {
       AndroidSdkLocation androidSdkLocation,
       Optional<Supplier<Tool>> aaptOverride,
       Optional<ToolProvider> aapt2Override,
-      Optional<Path> adbOverride) {
+      AdbToolchain adbToolchain) {
 
     Matcher platformMatcher = PLATFORM_TARGET_PATTERN.matcher(platformId);
     if (platformMatcher.matches()) {
@@ -75,7 +76,7 @@ public class AndroidPlatformTargetProducer {
           apiLevel,
           aaptOverride,
           aapt2Override,
-          adbOverride);
+          adbToolchain);
     } else {
       String messagePrefix =
           String.format("The Android SDK for '%s' could not be found. ", platformId);
@@ -91,7 +92,7 @@ public class AndroidPlatformTargetProducer {
       AndroidSdkLocation androidSdkLocation,
       Optional<Supplier<Tool>> aaptOverride,
       Optional<ToolProvider> aapt2Override,
-      Optional<Path> adbOverride) {
+      AdbToolchain platformToolsLocation) {
     return getTargetForId(
         filesystem,
         AndroidPlatformTarget.DEFAULT_ANDROID_PLATFORM_TARGET,
@@ -99,7 +100,7 @@ public class AndroidPlatformTargetProducer {
         androidSdkLocation,
         aaptOverride,
         aapt2Override,
-        adbOverride);
+        platformToolsLocation);
   }
 
   private interface Factory {
@@ -110,7 +111,7 @@ public class AndroidPlatformTargetProducer {
         String apiLevel,
         Optional<Supplier<Tool>> aaptOverride,
         Optional<ToolProvider> aapt2Override,
-        Optional<Path> adbOverride);
+        AdbToolchain adbToolchain);
   }
 
   /**
@@ -128,7 +129,7 @@ public class AndroidPlatformTargetProducer {
       Set<Path> additionalJarPaths,
       Optional<Supplier<Tool>> aaptOverride,
       Optional<ToolProvider> aapt2Override,
-      Optional<Path> adbOverride) {
+      AdbToolchain adbToolchain) {
     Path androidSdkDir = androidSdkLocation.getSdkRootPath();
     if (!androidSdkDir.isAbsolute()) {
       throw new HumanReadableException(
@@ -207,8 +208,7 @@ public class AndroidPlatformTargetProducer {
                             .resolve(androidBuildToolsLocation.getAapt2Path())
                             .toAbsolutePath()),
                     version))),
-        adbOverride.orElse(
-            androidSdkDir.resolve("platform-tools/adb" + binaryExtension).toAbsolutePath()),
+        adbToolchain.getAdbPath(),
         androidSdkDir.resolve(buildToolsBinDir).resolve("aidl" + binaryExtension).toAbsolutePath(),
         zipAlignExecutable,
         buildToolsDir
@@ -233,7 +233,7 @@ public class AndroidPlatformTargetProducer {
         String apiLevel,
         Optional<Supplier<Tool>> aaptOverride,
         Optional<ToolProvider> aapt2Override,
-        Optional<Path> adbOverride) {
+        AdbToolchain adbToolchain) {
       // TODO(natthu): Use Paths instead of Strings everywhere in this file.
       Path androidSdkDir = androidSdkLocation.getSdkRootPath();
       File addonsParentDir = androidSdkDir.resolve("add-ons").toFile();
@@ -283,7 +283,7 @@ public class AndroidPlatformTargetProducer {
                 additionalJarPaths.build(),
                 aaptOverride,
                 aapt2Override,
-                adbOverride);
+                adbToolchain);
           }
         }
       }
@@ -307,7 +307,7 @@ public class AndroidPlatformTargetProducer {
         String apiLevel,
         Optional<Supplier<Tool>> aaptOverride,
         Optional<ToolProvider> aapt2Override,
-        Optional<Path> adbOverride) {
+        AdbToolchain adbToolchain) {
       return createFromDefaultDirectoryStructure(
           filesystem,
           "android-" + apiLevel,
@@ -317,7 +317,7 @@ public class AndroidPlatformTargetProducer {
           /* additionalJarPaths */ ImmutableSet.of(),
           aaptOverride,
           aapt2Override,
-          adbOverride);
+          adbToolchain);
     }
   }
 
