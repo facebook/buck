@@ -78,7 +78,7 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
       CxxToolFlags preprocessorFlags,
       CxxToolFlags compilerFlags,
       SourcePath input,
-      AbstractCxxSource.Type inputType,
+      CxxSource.Type inputType,
       Optional<PreInclude> preInclude,
       String outputName,
       PreprocessorDelegate preprocessorDelegate,

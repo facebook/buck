@@ -25,7 +25,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.PathShortener;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
@@ -38,18 +38,15 @@ import java.util.Optional;
 import java.util.function.Function;
 import org.immutables.value.Value;
 
-@Value.Immutable(copy = true)
-@BuckStyleImmutable
-abstract class AbstractPreprocessorFlags implements AddsToRuleKey {
+@BuckStyleValueWithBuilder
+public abstract class PreprocessorFlags implements AddsToRuleKey {
 
   /** File set via {@code -include}. This might be a prefix header or a precompiled header. */
   @AddToRuleKey
-  @Value.Parameter
   public abstract Optional<SourcePath> getPrefixHeader();
 
   /** Other flags included as is. */
   @AddToRuleKey
-  @Value.Parameter
   @Value.Default
   public CxxToolFlags getOtherFlags() {
     return CxxToolFlags.of();
@@ -57,12 +54,10 @@ abstract class AbstractPreprocessorFlags implements AddsToRuleKey {
 
   /** Directories set via {@code -I}. */
   @AddToRuleKey
-  @Value.Parameter
   public abstract ImmutableList<CxxHeaders> getIncludes();
 
   /** Directories set via {@code -F}. */
   @AddToRuleKey
-  @Value.Parameter
   public abstract ImmutableList<FrameworkPath> getFrameworkPaths();
 
   @CustomFieldBehavior(DefaultFieldSerialization.class)
@@ -140,4 +135,44 @@ abstract class AbstractPreprocessorFlags implements AddsToRuleKey {
         getNonIncludePathFlags(resolver, precompiledHeader, preprocessor),
         getIncludePathFlags(resolver, pathShortener, frameworkPathTransformer, preprocessor));
   }
+
+  public static PreprocessorFlags of(
+      Optional<SourcePath> prefixHeader,
+      CxxToolFlags otherFlags,
+      ImmutableList<CxxHeaders> includes,
+      ImmutableList<FrameworkPath> frameworkPaths) {
+    return builder()
+        .setPrefixHeader(prefixHeader)
+        .setOtherFlags(otherFlags)
+        .setIncludes(includes)
+        .setFrameworkPaths(frameworkPaths)
+        .build();
+  }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public PreprocessorFlags withFrameworkPaths(ImmutableList<FrameworkPath> frameworkPaths) {
+    if (getFrameworkPaths().equals(frameworkPaths)) {
+      return this;
+    }
+    return builder().from(this).setFrameworkPaths(frameworkPaths).build();
+  }
+
+  public PreprocessorFlags withOtherFlags(CxxToolFlags otherFlags) {
+    if (getOtherFlags().equals(otherFlags)) {
+      return this;
+    }
+    return builder().from(this).setOtherFlags(otherFlags).build();
+  }
+
+  public PreprocessorFlags withPrefixHeader(Optional<SourcePath> prefixHeader) {
+    if (getPrefixHeader().equals(prefixHeader)) {
+      return this;
+    }
+    return builder().from(this).setPrefixHeader(prefixHeader).build();
+  }
+
+  public static class Builder extends ImmutablePreprocessorFlags.Builder {}
 }

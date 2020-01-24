@@ -400,9 +400,10 @@ public class CxxPreprocessAndCompileTest {
     PreprocessorFlags defaultFlags = PreprocessorFlags.builder().build();
     PreprocessorFlags alteredFlags =
         defaultFlags.withFrameworkPaths(
-            FrameworkPath.ofSourcePath(
-                FakeSourcePath.of(
-                    PathNormalizer.toWindowsPathIfNeeded(Paths.get("/root/different")))));
+            ImmutableList.of(
+                FrameworkPath.ofSourcePath(
+                    FakeSourcePath.of(
+                        PathNormalizer.toWindowsPathIfNeeded(Paths.get("/root/different"))))));
     assertNotEquals(testData.generate(defaultFlags), testData.generate(alteredFlags));
   }
 

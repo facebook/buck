@@ -56,9 +56,9 @@ public class OcamlToolchainFactoryTest {
     UnresolvedCxxPlatform cxxPlatform =
         new StaticUnresolvedCxxPlatform(
             CxxPlatformUtils.DEFAULT_PLATFORM
-                .withAsflags("-asflag")
-                .withCppflags("-cppflag")
-                .withCflags("-cflag"));
+                .withAsflags(ImmutableList.of("-asflag"))
+                .withCppflags(ImmutableList.of("-cppflag"))
+                .withCflags(ImmutableList.of("-cflag")));
     ToolchainProvider toolchainProvider =
         new ToolchainProviderBuilder()
             .withToolchain(

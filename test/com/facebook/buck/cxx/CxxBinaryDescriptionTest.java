@@ -72,6 +72,7 @@ import com.facebook.buck.versions.VersionUniverseVersionSelector;
 import com.facebook.buck.versions.VersionedAliasBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -152,15 +153,18 @@ public class CxxBinaryDescriptionTest {
     assertThat(binRule.getLinkRule(), Matchers.instanceOf(CxxLink.class));
     CxxLink rule = (CxxLink) binRule.getLinkRule();
     CxxSourceRuleFactory cxxSourceRuleFactory =
-        CxxSourceRuleFactory.builder()
-            .setBaseBuildTarget(target)
-            .setProjectFilesystem(projectFilesystem)
-            .setActionGraphBuilder(graphBuilder)
-            .setPathResolver(graphBuilder.getSourcePathResolver())
-            .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
-            .setCxxPlatform(cxxPlatform)
-            .setPicType(PicType.PDC)
-            .build();
+        CxxSourceRuleFactory.of(
+            projectFilesystem,
+            target,
+            graphBuilder,
+            graphBuilder.getSourcePathResolver(),
+            CxxPlatformUtils.DEFAULT_CONFIG,
+            cxxPlatform,
+            ImmutableList.of(),
+            ImmutableMultimap.of(),
+            Optional.empty(),
+            Optional.empty(),
+            PicType.PDC);
 
     // Check that link rule has the expected deps: the object files for our sources and the
     // archive from the dependency.

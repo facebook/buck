@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx.toolchain.nativelink;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.collect.ImmutableList;
@@ -30,22 +30,24 @@ import org.immutables.value.Value;
  * a top-level native linkable rule (e.g. C++ binary) can use this to contribute components to the
  * final link.
  */
-@Value.Immutable(copy = true, singleton = true)
-@BuckStyleImmutable
-abstract class AbstractNativeLinkableInput {
+@BuckStyleValueWithBuilder
+public abstract class NativeLinkableInput {
+
+  private static final NativeLinkableInput INSTANCE =
+      ImmutableNativeLinkableInput.builder().build();
 
   // Arguments to pass to the linker.  In the future it'd be nice to make this more aware of
   // the differences between archives, objects, flags, etc.
   @Value.Parameter
-  public abstract List<Arg> getArgs();
+  public abstract ImmutableList<Arg> getArgs();
 
   // Frameworks that are used by the linkable to link with.
   @Value.Parameter
-  public abstract Set<FrameworkPath> getFrameworks();
+  public abstract ImmutableSet<FrameworkPath> getFrameworks();
 
   // Libraries to link.
   @Value.Parameter
-  public abstract Set<FrameworkPath> getLibraries();
+  public abstract ImmutableSet<FrameworkPath> getLibraries();
 
   /** Combine, in order, several {@link NativeLinkableInput} objects into a single one. */
   public static NativeLinkableInput concat(Iterable<NativeLinkableInput> items) {
@@ -60,5 +62,37 @@ abstract class AbstractNativeLinkableInput {
     }
 
     return NativeLinkableInput.of(args.build(), frameworks.build(), libraries.build());
+  }
+
+  public NativeLinkableInput withArgs(List<Arg> args) {
+    if (getArgs().equals(args)) {
+      return this;
+    }
+    return builder().from(this).setArgs(args).build();
+  }
+
+  public static NativeLinkableInput of() {
+    return INSTANCE;
+  }
+
+  public static NativeLinkableInput of(
+      List<Arg> args, Set<FrameworkPath> frameworks, Set<FrameworkPath> libraries) {
+
+    return builder().setArgs(args).setFrameworks(frameworks).setLibraries(libraries).build();
+  }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends ImmutableNativeLinkableInput.Builder {
+    @Override
+    public NativeLinkableInput build() {
+      NativeLinkableInput instance = super.build();
+      if (instance.equals(INSTANCE)) {
+        return INSTANCE;
+      }
+      return instance;
+    }
   }
 }

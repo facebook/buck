@@ -278,8 +278,9 @@ public class SwiftLibraryDescription
               RichStream.from(inputs.getIncludes())
                   .filter(
                       headers -> headers.getIncludeType() != CxxPreprocessables.IncludeType.SYSTEM)
-                  .toImmutableSet(),
-              inputs.getFrameworks());
+                  .distinct()
+                  .toImmutableList(),
+              ImmutableList.copyOf(inputs.getFrameworks()));
       Preprocessor preprocessor =
           cxxPlatform.getCpp().resolve(graphBuilder, buildTarget.getTargetConfiguration());
 

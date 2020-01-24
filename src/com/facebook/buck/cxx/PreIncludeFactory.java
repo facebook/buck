@@ -22,12 +22,11 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /**
  * Generate instances of {@link PreInclude} based on the input parameters, generally coming from a
@@ -36,28 +35,21 @@ import org.immutables.value.Value;
  * @see CxxPrefixHeader
  * @see CxxPrecompiledHeaderTemplate
  */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractPreIncludeFactory {
+@BuckStyleValue
+abstract class PreIncludeFactory {
 
-  @Value.Parameter
   protected abstract ProjectFilesystem getProjectFilesystem();
 
-  @Value.Parameter
   protected abstract BuildTarget getBaseBuildTarget();
 
-  @Value.Parameter
   protected abstract ActionGraphBuilder getActionGraphBuilder();
 
-  @Value.Parameter
   protected abstract SourcePathResolverAdapter getPathResolver();
 
   /** NOTE: {@code prefix_header} is incompatible with {@code precompiled_header}. */
-  @Value.Parameter
   protected abstract Optional<SourcePath> getPrefixHeader();
 
   /** NOTE: {@code precompiled_header} is incompatible with {@code prefix_header}. */
-  @Value.Parameter
   protected abstract Optional<SourcePath> getPrecompiledHeader();
 
   /**

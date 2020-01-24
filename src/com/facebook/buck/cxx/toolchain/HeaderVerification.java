@@ -20,7 +20,7 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.regex.Pattern;
@@ -31,29 +31,25 @@ import org.immutables.value.Value;
  * Defines how to handle headers that get included during the build but aren't explicitly tracked in
  * any build files.
  */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractHeaderVerification implements AddsToRuleKey {
+@BuckStyleValue
+public abstract class HeaderVerification implements AddsToRuleKey {
 
-  @Value.Parameter
   @AddToRuleKey
   public abstract Mode getMode();
 
   /** @return a list of regexes which match headers which should be exempt from verification. */
-  @Value.Parameter
   @Value.NaturalOrder
   @AddToRuleKey
-  protected abstract ImmutableSortedSet<String> getWhitelist();
+  public abstract ImmutableSortedSet<String> getWhitelist();
 
   /**
    * @return a list of regexes which match headers from the platform SDK. The path for the platforms
    *     might depend on the disk layout. Therefore, we don't want that one to be included in the
    *     rule keys.
    */
-  @Value.Parameter
   @Value.NaturalOrder
   @CustomFieldBehavior(DefaultFieldSerialization.class)
-  protected abstract ImmutableSortedSet<String> getPlatformWhitelist();
+  public abstract ImmutableSortedSet<String> getPlatformWhitelist();
 
   @Value.Derived
   @CustomFieldBehavior(DefaultFieldSerialization.class)
@@ -64,7 +60,14 @@ abstract class AbstractHeaderVerification implements AddsToRuleKey {
   }
 
   public static HeaderVerification of(Mode mode) {
-    return HeaderVerification.builder().setMode(mode).build();
+    return of(mode, ImmutableSortedSet.of(), ImmutableSortedSet.of());
+  }
+
+  public static HeaderVerification of(
+      HeaderVerification.Mode mode,
+      ImmutableSortedSet<String> whitelist,
+      ImmutableSortedSet<String> platformWhitelist) {
+    return ImmutableHeaderVerification.of(mode, whitelist, platformWhitelist);
   }
 
   /** @return whether the given header has been whitelisted. */
@@ -78,7 +81,13 @@ abstract class AbstractHeaderVerification implements AddsToRuleKey {
   }
 
   public HeaderVerification withPlatformWhitelist(Iterable<String> elements) {
-    return HeaderVerification.builder().from(this).addAllPlatformWhitelist(elements).build();
+    return of(
+        getMode(),
+        getWhitelist(),
+        ImmutableSortedSet.<String>naturalOrder()
+            .addAll(getPlatformWhitelist())
+            .addAll(elements)
+            .build());
   }
 
   public enum Mode {

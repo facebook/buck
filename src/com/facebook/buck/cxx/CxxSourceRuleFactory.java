@@ -29,7 +29,6 @@ import com.facebook.buck.core.rules.impl.DependencyAggregation;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
@@ -76,50 +75,38 @@ import javax.annotation.Nullable;
 import javax.annotation.concurrent.NotThreadSafe;
 import org.immutables.value.Value;
 
-@Value.Immutable
-@BuckStyleImmutable
+@BuckStyleValue
 @NotThreadSafe
-abstract class AbstractCxxSourceRuleFactory {
+public abstract class CxxSourceRuleFactory {
 
-  private static final Logger LOG = Logger.get(AbstractCxxSourceRuleFactory.class);
+  private static final Logger LOG = Logger.get(CxxSourceRuleFactory.class);
   private static final String COMPILE_FLAVOR_PREFIX = "compile-";
   private static final String OPTIMIZE_FLAVOR_PREFIX = "optimize-";
   private static final Flavor AGGREGATED_PREPROCESS_DEPS_FLAVOR =
       InternalFlavor.of("preprocessor-deps");
 
-  @Value.Parameter
   protected abstract ProjectFilesystem getProjectFilesystem();
 
-  @Value.Parameter
   protected abstract BuildTarget getBaseBuildTarget();
 
-  @Value.Parameter
   protected abstract ActionGraphBuilder getActionGraphBuilder();
 
-  @Value.Parameter
   protected abstract SourcePathResolverAdapter getPathResolver();
 
-  @Value.Parameter
   protected abstract CxxBuckConfig getCxxBuckConfig();
 
-  @Value.Parameter
   protected abstract CxxPlatform getCxxPlatform();
 
-  @Value.Parameter
   protected abstract ImmutableList<CxxPreprocessorInput> getCxxPreprocessorInput();
 
-  @Value.Parameter
   protected abstract ImmutableMultimap<CxxSource.Type, Arg> getCompilerFlags();
 
   /** NOTE: {@code prefix_header} is incompatible with {@code precompiled_header}. */
-  @Value.Parameter
   protected abstract Optional<SourcePath> getPrefixHeader();
 
   /** NOTE: {@code precompiled_header} is incompatible with {@code prefix_header}. */
-  @Value.Parameter
   protected abstract Optional<SourcePath> getPrecompiledHeader();
 
-  @Value.Parameter
   protected abstract PicType getPicType();
 
   @Value.Check
@@ -146,11 +133,11 @@ abstract class AbstractCxxSourceRuleFactory {
    * prefix_header} or {@code precompiled_header}, whichever is applicable, or empty if neither is
    * used.
    *
-   * @see AbstractPreIncludeFactory
+   * @see PreIncludeFactory
    */
   @Value.Lazy
   protected Optional<PreInclude> getPreInclude() {
-    return PreIncludeFactory.of(
+    return ImmutablePreIncludeFactory.of(
             getProjectFilesystem(),
             getBaseBuildTarget(),
             getActionGraphBuilder(),
@@ -216,7 +203,7 @@ abstract class AbstractCxxSourceRuleFactory {
                             getPreInclude().map(PreInclude::getHeaderSourcePath),
                             computePreprocessorFlags(key.getSourceType(), key.getSourceFlags()),
                             getIncludes(),
-                            getFrameworks()),
+                            ImmutableList.copyOf(getFrameworks())),
                         CxxDescriptionEnhancer.frameworkPathToSearchPath(
                             getCxxPlatform(), getPathResolver()),
                         /* leadingIncludePaths */ Optional.empty(),
@@ -476,7 +463,7 @@ abstract class AbstractCxxSourceRuleFactory {
 
   private CxxToolFlags computeCompilerFlags(
       CxxSource.Type type, ImmutableList<String> sourceFlags) {
-    AbstractCxxSource.Type outputType = CxxSourceTypes.getPreprocessorOutputType(type);
+    CxxSource.Type outputType = CxxSourceTypes.getPreprocessorOutputType(type);
     return CxxToolFlags.explicitBuilder()
         // If we're using pic, add in the appropriate flag.
         .addAllPlatformFlags(
@@ -775,6 +762,32 @@ abstract class AbstractCxxSourceRuleFactory {
         .collect(
             ImmutableMap.toImmutableMap(
                 Function.identity(), CxxPreprocessAndCompile::getSourcePathToOutput));
+  }
+
+  public static CxxSourceRuleFactory of(
+      ProjectFilesystem projectFilesystem,
+      BuildTarget baseBuildTarget,
+      ActionGraphBuilder actionGraphBuilder,
+      SourcePathResolverAdapter pathResolver,
+      CxxBuckConfig cxxBuckConfig,
+      CxxPlatform cxxPlatform,
+      ImmutableList<CxxPreprocessorInput> cxxPreprocessorInput,
+      ImmutableMultimap<CxxSource.Type, Arg> compilerFlags,
+      Optional<SourcePath> prefixHeader,
+      Optional<SourcePath> precompiledHeader,
+      PicType picType) {
+    return ImmutableCxxSourceRuleFactory.of(
+        projectFilesystem,
+        baseBuildTarget,
+        actionGraphBuilder,
+        pathResolver,
+        cxxBuckConfig,
+        cxxPlatform,
+        cxxPreprocessorInput,
+        compilerFlags,
+        prefixHeader,
+        precompiledHeader,
+        picType);
   }
 
   private DebugPathSanitizer getSanitizer() {

@@ -18,12 +18,11 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import org.immutables.value.Value;
 
 /**
  * Tracks flags passed to the preprocessor or compiler.
@@ -34,6 +33,7 @@ import org.immutables.value.Value;
  *
  * <p>Users should use the API in this class instead of the concrete implementations.
  */
+@BuckStyleValueWithBuilder
 public abstract class CxxToolFlags implements AddsToRuleKey {
   /** Flags that precede flags from {@code #getRuleFlags()}. */
   public abstract ImmutableList<Arg> getPlatformFlags();
@@ -53,12 +53,15 @@ public abstract class CxxToolFlags implements AddsToRuleKey {
 
   /** Returns the empty lists of flags. */
   public static CxxToolFlags of() {
-    return ExplicitCxxToolFlags.of();
+    return ExplicitCxxToolFlags.builder().build();
   }
 
   /** Directly construct an instance from the given members. */
   public static CxxToolFlags copyOf(Iterable<Arg> platformFlags, Iterable<Arg> ruleFlags) {
-    return ExplicitCxxToolFlags.of(platformFlags, ruleFlags);
+    return ExplicitCxxToolFlags.builder()
+        .setPlatformFlags(platformFlags)
+        .setRuleFlags(ruleFlags)
+        .build();
   }
 
   /** Concatenate multiple flags in a pairwise manner. */
@@ -70,32 +73,6 @@ public abstract class CxxToolFlags implements AddsToRuleKey {
       ruleFlags = ruleFlags.addAll(part.getRuleFlags());
     }
     return ImmutableIterableCxxToolFlags.of(platformFlags.build(), ruleFlags.build());
-  }
-}
-
-interface CxxToolFlagsBuilder {
-  CxxToolFlags build();
-}
-
-/** {@code CxxToolFlags} implementation where the flags are stored explicitly as lists. */
-@Value.Immutable(singleton = true, copy = false)
-@BuckStyleImmutable
-abstract class AbstractExplicitCxxToolFlags extends CxxToolFlags {
-  public abstract static class Builder implements CxxToolFlagsBuilder {}
-
-  @Override
-  @AddToRuleKey
-  @Value.Parameter
-  public abstract ImmutableList<Arg> getPlatformFlags();
-
-  @Override
-  @AddToRuleKey
-  @Value.Parameter
-  public abstract ImmutableList<Arg> getRuleFlags();
-
-  public static void addCxxToolFlags(ExplicitCxxToolFlags.Builder builder, CxxToolFlags flags) {
-    builder.addAllPlatformFlags(flags.getPlatformFlags());
-    builder.addAllRuleFlags(flags.getRuleFlags());
   }
 }
 

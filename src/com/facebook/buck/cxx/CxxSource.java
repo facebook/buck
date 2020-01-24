@@ -17,25 +17,23 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.util.List;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /**
  * Describes a source file written in the C programming language or a derivative (C++, Objective-C,
  * Objective-C++, etc.) and the various paths it uses from input to output.
  */
-@Value.Immutable(copy = true)
-@BuckStyleImmutable
+@BuckStyleValue
 // PMD is disabled for the line below. We have a check that Abstract immutable types are
 // package-private. The Immutables generator is super-helpeful and makes references to the abstract
 // version of Immutables if they're referenced from other immutables, not just the generated
 // immutable type. So if any Immutables are defined in other packages which have a getter which
 // returns a CxxSource, internally an AbstractCxxSource is referenced in the generated code, which
 // doesn't have visibility to access this type, causing a compile error.
-public abstract class AbstractCxxSource { // NOPMD
+public abstract class CxxSource { // NOPMD
 
   public enum Type {
     C("c", "cpp-output", Optional.of("c-header"), "c"),
@@ -148,12 +146,13 @@ public abstract class AbstractCxxSource { // NOPMD
     }
   }
 
-  @Value.Parameter
   public abstract Type getType();
 
-  @Value.Parameter
   public abstract SourcePath getPath();
 
-  @Value.Parameter
-  public abstract List<String> getFlags();
+  public abstract ImmutableList<String> getFlags();
+
+  public static CxxSource of(CxxSource.Type type, SourcePath path, ImmutableList<String> flags) {
+    return ImmutableCxxSource.of(type, path, flags);
+  }
 }

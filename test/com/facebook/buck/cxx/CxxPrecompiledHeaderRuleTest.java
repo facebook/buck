@@ -164,39 +164,98 @@ public class CxxPrecompiledHeaderRuleTest {
         pathResolver.getAbsolutePath(headerSourcePath));
   }
 
-  public CxxSource.Builder newCxxSourceBuilder() {
-    return CxxSource.builder().setType(CxxSource.Type.C);
+  public CxxSource newCxxSource(SourcePath path, ImmutableList<String> flags) {
+    return CxxSource.of(CxxSource.Type.C, path, flags);
   }
 
   public CxxSource newSource(String filename) {
-    return newCxxSourceBuilder().setPath(FakeSourcePath.of(filename)).build();
+    return newCxxSource(FakeSourcePath.of(filename), ImmutableList.of());
   }
 
   public CxxSource newSource() {
     return newSource("foo.cpp");
   }
 
-  public CxxSourceRuleFactory.Builder newFactoryBuilder(
-      BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
-    return CxxSourceRuleFactory.builder()
-        .setBaseBuildTarget(buildTarget)
-        .setProjectFilesystem(projectFilesystem)
-        .setActionGraphBuilder(graphBuilder)
-        .setPathResolver(graphBuilder.getSourcePathResolver())
-        .setCxxPlatform(platformSupportingPch)
-        .setPicType(PicType.PIC)
-        .setCxxBuckConfig(CXX_CONFIG_PCH_ENABLED);
+  public CxxSourceRuleFactory newFactoryWithPrecompiledHeader(
+      BuildTarget buildTarget, ProjectFilesystem projectFilesystem, SourcePath precompiledHeader) {
+    return newFactory(
+        buildTarget,
+        projectFilesystem,
+        precompiledHeader,
+        platformSupportingPch,
+        CXX_CONFIG_PCH_ENABLED);
   }
 
-  public CxxSourceRuleFactory.Builder newFactoryBuilder(
-      BuildTarget buildTarget, ProjectFilesystem projectFilesystem, String flag) {
-    return newFactoryBuilder(buildTarget, projectFilesystem)
-        .setCxxPreprocessorInput(
-            ImmutableList.of(
-                CxxPreprocessorInput.builder()
-                    .setPreprocessorFlags(
-                        ImmutableMultimap.of(CxxSource.Type.C, StringArg.of(flag)))
-                    .build()));
+  public CxxSourceRuleFactory newFactory(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      String flag,
+      SourcePath precompiledHeader,
+      CxxPlatform platform) {
+    return CxxSourceRuleFactory.of(
+        projectFilesystem,
+        buildTarget,
+        graphBuilder,
+        graphBuilder.getSourcePathResolver(),
+        CXX_CONFIG_PCH_ENABLED,
+        platform,
+        ImmutableList.of(
+            CxxPreprocessorInput.builder()
+                .setPreprocessorFlags(ImmutableMultimap.of(CxxSource.Type.C, StringArg.of(flag)))
+                .build()),
+        ImmutableMultimap.of(),
+        Optional.empty(),
+        Optional.of(precompiledHeader),
+        PicType.PIC);
+  }
+
+  public CxxSourceRuleFactory newFactory(
+      BuildTarget target,
+      ProjectFilesystem projectFilesystem,
+      SourcePath precompiledHeader,
+      CxxPlatform platform,
+      CxxBuckConfig cxxConfig) {
+    return CxxSourceRuleFactory.of(
+        projectFilesystem,
+        target,
+        graphBuilder,
+        graphBuilder.getSourcePathResolver(),
+        cxxConfig,
+        platform,
+        ImmutableList.of(),
+        ImmutableMultimap.of(),
+        Optional.empty(),
+        Optional.of(precompiledHeader),
+        PicType.PIC);
+  }
+
+  public CxxSourceRuleFactory newFactory(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      String flag,
+      SourcePath precompiledHeader) {
+
+    return newFactory(
+        buildTarget, projectFilesystem, flag, precompiledHeader, platformSupportingPch);
+  }
+
+  public CxxSourceRuleFactory newFactory(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      ImmutableList<CxxPreprocessorInput> preprocessorInputs) {
+
+    return CxxSourceRuleFactory.of(
+        projectFilesystem,
+        buildTarget,
+        graphBuilder,
+        graphBuilder.getSourcePathResolver(),
+        CXX_CONFIG_PCH_ENABLED,
+        platformSupportingPch,
+        preprocessorInputs,
+        ImmutableMultimap.of(),
+        Optional.empty(),
+        Optional.empty(),
+        PicType.PIC);
   }
 
   private CxxPrecompiledHeaderTemplate newPCH(BuildTarget pchTarget) {
@@ -262,9 +321,11 @@ public class CxxPrecompiledHeaderRuleTest {
 
     BuildTarget lib1Target = newTarget("//test:lib1");
     CxxSourceRuleFactory factory1 =
-        newFactoryBuilder(lib1Target, new FakeProjectFilesystem(), "-frtti")
-            .setPrecompiledHeader(DefaultBuildTargetSourcePath.of(pchTarget))
-            .build();
+        newFactory(
+            lib1Target,
+            new FakeProjectFilesystem(),
+            "-frtti",
+            DefaultBuildTargetSourcePath.of(pchTarget));
     CxxPreprocessAndCompile lib1 =
         factory1.requirePreprocessAndCompileBuildRule("lib1.cpp", newSource("lib1.cpp"));
     graphBuilder.addToIndex(lib1);
@@ -272,9 +333,11 @@ public class CxxPrecompiledHeaderRuleTest {
 
     BuildTarget lib2Target = newTarget("//test:lib2");
     CxxSourceRuleFactory factory2 =
-        newFactoryBuilder(lib2Target, new FakeProjectFilesystem(), "-frtti")
-            .setPrecompiledHeader(DefaultBuildTargetSourcePath.of(pchTarget))
-            .build();
+        newFactory(
+            lib2Target,
+            new FakeProjectFilesystem(),
+            "-frtti",
+            DefaultBuildTargetSourcePath.of(pchTarget));
     CxxPreprocessAndCompile lib2 =
         factory2.requirePreprocessAndCompileBuildRule("lib2.cpp", newSource("lib2.cpp"));
     graphBuilder.addToIndex(lib2);
@@ -282,9 +345,11 @@ public class CxxPrecompiledHeaderRuleTest {
 
     BuildTarget lib3Target = newTarget("//test:lib3");
     CxxSourceRuleFactory factory3 =
-        newFactoryBuilder(lib3Target, new FakeProjectFilesystem(), "-fno-rtti")
-            .setPrecompiledHeader(DefaultBuildTargetSourcePath.of(pchTarget))
-            .build();
+        newFactory(
+            lib3Target,
+            new FakeProjectFilesystem(),
+            "-fno-rtti",
+            DefaultBuildTargetSourcePath.of(pchTarget));
     CxxPreprocessAndCompile lib3 =
         factory3.requirePreprocessAndCompileBuildRule("lib3.cpp", newSource("lib3.cpp"));
     graphBuilder.addToIndex(lib3);
@@ -322,16 +387,15 @@ public class CxxPrecompiledHeaderRuleTest {
 
     BuildTarget libTarget = newTarget("//test:lib");
     CxxSourceRuleFactory factory1 =
-        newFactoryBuilder(libTarget, new FakeProjectFilesystem(), "-flag-for-factory")
-            .setPrecompiledHeader(DefaultBuildTargetSourcePath.of(pchTarget))
-            .build();
+        newFactory(
+            libTarget,
+            new FakeProjectFilesystem(),
+            "-flag-for-factory",
+            DefaultBuildTargetSourcePath.of(pchTarget));
     CxxPreprocessAndCompile lib =
         factory1.requirePreprocessAndCompileBuildRule(
             "lib.cpp",
-            newCxxSourceBuilder()
-                .setPath(FakeSourcePath.of("lib.cpp"))
-                .setFlags(ImmutableList.of("-flag-for-source"))
-                .build());
+            newCxxSource(FakeSourcePath.of("lib.cpp"), ImmutableList.of("-flag-for-source")));
     graphBuilder.addToIndex(lib);
     ImmutableList<String> libCmd = lib.makeMainStep(context, false).getCommand();
     assertTrue(seek(libCmd, "-flag-for-source").size() > 0);
@@ -400,14 +464,11 @@ public class CxxPrecompiledHeaderRuleTest {
     BuildTarget binTarget = BuildTargetFactory.newInstance("//test:bin");
 
     CxxPreprocessAndCompile binBuildRule =
-        newFactoryBuilder(binTarget, filesystem)
-            .setPrecompiledHeader(DefaultBuildTargetSourcePath.of(pchTarget))
-            .build()
+        newFactoryWithPrecompiledHeader(
+                binTarget, filesystem, DefaultBuildTargetSourcePath.of(pchTarget))
             .requirePreprocessAndCompileBuildRule(
                 FakeSourcePath.of(filesystem, "test/lib.cpp").toString(),
-                newCxxSourceBuilder()
-                    .setPath(FakeSourcePath.of(filesystem, "test/bin.cpp"))
-                    .build());
+                newCxxSource(FakeSourcePath.of(filesystem, "test/bin.cpp"), ImmutableList.of()));
     graphBuilder.addToIndex(binBuildRule);
 
     CxxPrecompiledHeader foundPCH = null;
@@ -492,11 +553,12 @@ public class CxxPrecompiledHeaderRuleTest {
         newPCH(pchTarget, FakeSourcePath.of("header.h"), ImmutableSortedSet.of());
     graphBuilder.addToIndex(pch);
     CxxPreprocessAndCompile compileLibRule =
-        newFactoryBuilder(newTarget("//test:lib"), new FakeProjectFilesystem())
-            .setPrecompiledHeader(DefaultBuildTargetSourcePath.of(pchTarget))
-            .setCxxPlatform(platformNotSupportingPch)
-            .setCxxBuckConfig(cxxConfigPchDisabled)
-            .build()
+        newFactory(
+                newTarget("//test:lib"),
+                new FakeProjectFilesystem(),
+                DefaultBuildTargetSourcePath.of(pchTarget),
+                platformNotSupportingPch,
+                cxxConfigPchDisabled)
             .requirePreprocessAndCompileBuildRule("lib.cpp", newSource("lib.cpp"));
 
     graphBuilder.addToIndex(compileLibRule);
@@ -520,9 +582,7 @@ public class CxxPrecompiledHeaderRuleTest {
 
     BuildTarget lib1Target = newTarget("//some/other/dir:lib1");
     CxxSourceRuleFactory lib1Factory =
-        newFactoryBuilder(lib1Target, new FakeProjectFilesystem())
-            .addCxxPreprocessorInput(cxxPreprocessorInput)
-            .build();
+        newFactory(lib1Target, new FakeProjectFilesystem(), ImmutableList.of(cxxPreprocessorInput));
     CxxPreprocessAndCompile lib1 =
         lib1Factory.requirePreprocessAndCompileBuildRule("lib1.cpp", newSource("lib1.cpp"));
     graphBuilder.addToIndex(lib1);
@@ -536,9 +596,8 @@ public class CxxPrecompiledHeaderRuleTest {
 
     BuildTarget lib2Target = newTarget("//test:lib2");
     CxxSourceRuleFactory lib2Factory =
-        newFactoryBuilder(lib2Target, new FakeProjectFilesystem())
-            .setPrecompiledHeader(DefaultBuildTargetSourcePath.of(pchTarget))
-            .build();
+        newFactoryWithPrecompiledHeader(
+            lib2Target, new FakeProjectFilesystem(), DefaultBuildTargetSourcePath.of(pchTarget));
     CxxPreprocessAndCompile lib2 =
         lib2Factory.requirePreprocessAndCompileBuildRule("lib2.cpp", newSource("lib2.cpp"));
     graphBuilder.addToIndex(lib2);
@@ -721,15 +780,16 @@ public class CxxPrecompiledHeaderRuleTest {
 
     BuildTarget libTarget = newTarget("//test:lib");
     CxxSourceRuleFactory factory1 =
-        newFactoryBuilder(libTarget, new FakeProjectFilesystem(), "-flag-for-factory")
-            .setPrecompiledHeader(DefaultBuildTargetSourcePath.of(pchTarget))
-            .setCxxPlatform(
-                CxxPlatformUtils.DEFAULT_PLATFORM.withConflictingHeaderBasenameWhitelist(
-                    conflictingHeaderBasenameWhitelist))
-            .build();
+        newFactory(
+            libTarget,
+            new FakeProjectFilesystem(),
+            "-flag-for-factory",
+            DefaultBuildTargetSourcePath.of(pchTarget),
+            CxxPlatformUtils.DEFAULT_PLATFORM.withConflictingHeaderBasenameWhitelist(
+                conflictingHeaderBasenameWhitelist));
     CxxPreprocessAndCompile lib =
         factory1.requirePreprocessAndCompileBuildRule(
-            "lib.cpp", newCxxSourceBuilder().setPath(FakeSourcePath.of("lib.cpp")).build());
+            "lib.cpp", newCxxSource(FakeSourcePath.of("lib.cpp"), ImmutableList.of()));
     graphBuilder.addToIndex(lib);
 
     CxxPrecompiledHeader pchInstance = null;

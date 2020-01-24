@@ -900,7 +900,7 @@ class NativeLibraryMergeEnhancer {
         argsBuilder.addAll(linkable.getExportedPostLinkerFlags(graphBuilder));
       }
 
-      return NativeLinkableInput.of(argsBuilder.build(), ImmutableList.of(), ImmutableList.of());
+      return NativeLinkableInput.of(argsBuilder.build(), ImmutableSet.of(), ImmutableSet.of());
     }
 
     @Override
@@ -937,9 +937,11 @@ class NativeLibraryMergeEnhancer {
                   Linker.LinkableDepType.STATIC_PIC, graphBuilder, targetConfiguration);
           builder.add(
               staticPic.withArgs(
-                  FluentIterable.from(staticPic.getArgs())
-                      .transformAndConcat(
-                          arg -> linker.linkWhole(arg, graphBuilder.getSourcePathResolver()))));
+                  ImmutableList.copyOf(
+                      FluentIterable.from(staticPic.getArgs())
+                          .transformAndConcat(
+                              arg ->
+                                  linker.linkWhole(arg, graphBuilder.getSourcePathResolver())))));
         }
       }
       return NativeLinkableInput.concat(builder.build());

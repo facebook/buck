@@ -46,6 +46,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 /** Fake implementation of {@link CxxLibraryGroup} for testing. */
 public final class FakeCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
@@ -107,16 +108,14 @@ public final class FakeCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return CxxPreprocessorInput.builder()
         .addIncludes(
-            CxxSymlinkTreeHeaders.builder()
-                .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
-                .setNameToPathMap(
-                    ImmutableSortedMap.of(
-                        Paths.get("header.h"), DefaultBuildTargetSourcePath.of(publicHeaderTarget)))
-                .setRoot(DefaultBuildTargetSourcePath.of(publicHeaderSymlinkTreeTarget))
-                .setIncludeRoot(
-                    Either.ofRight(DefaultBuildTargetSourcePath.of(publicHeaderSymlinkTreeTarget)))
-                .setSymlinkTreeClass(HeaderSymlinkTree.class.getName())
-                .build())
+            ImmutableCxxSymlinkTreeHeaders.of(
+                CxxPreprocessables.IncludeType.LOCAL,
+                DefaultBuildTargetSourcePath.of(publicHeaderSymlinkTreeTarget),
+                Either.ofRight(DefaultBuildTargetSourcePath.of(publicHeaderSymlinkTreeTarget)),
+                Optional.empty(),
+                ImmutableSortedMap.of(
+                    Paths.get("header.h"), DefaultBuildTargetSourcePath.of(publicHeaderTarget)),
+                HeaderSymlinkTree.class.getName()))
         .build();
   }
 
@@ -125,17 +124,14 @@ public final class FakeCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return CxxPreprocessorInput.builder()
         .addIncludes(
-            CxxSymlinkTreeHeaders.builder()
-                .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
-                .setRoot(DefaultBuildTargetSourcePath.of(privateHeaderSymlinkTreeTarget))
-                .setIncludeRoot(
-                    Either.ofRight(DefaultBuildTargetSourcePath.of(privateHeaderSymlinkTreeTarget)))
-                .setNameToPathMap(
-                    ImmutableSortedMap.of(
-                        Paths.get("header.h"),
-                        DefaultBuildTargetSourcePath.of(privateHeaderTarget)))
-                .setSymlinkTreeClass(HeaderSymlinkTree.class.getName())
-                .build())
+            ImmutableCxxSymlinkTreeHeaders.of(
+                CxxPreprocessables.IncludeType.LOCAL,
+                DefaultBuildTargetSourcePath.of(privateHeaderSymlinkTreeTarget),
+                Either.ofRight(DefaultBuildTargetSourcePath.of(privateHeaderSymlinkTreeTarget)),
+                Optional.empty(),
+                ImmutableSortedMap.of(
+                    Paths.get("header.h"), DefaultBuildTargetSourcePath.of(privateHeaderTarget)),
+                HeaderSymlinkTree.class.getName()))
         .build();
   }
 

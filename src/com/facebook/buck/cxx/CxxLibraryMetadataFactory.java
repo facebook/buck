@@ -139,7 +139,7 @@ public class CxxLibraryMetadataFactory {
 
             for (String privateInclude : args.getIncludeDirectories()) {
               cxxPreprocessorInputBuilder.addIncludes(
-                  CxxIncludes.of(
+                  ImmutableCxxIncludes.of(
                       IncludeType.LOCAL,
                       PathSourcePath.of(
                           projectFilesystem,
@@ -188,7 +188,7 @@ public class CxxLibraryMetadataFactory {
 
             for (String publicInclude : args.getPublicIncludeDirectories()) {
               cxxPreprocessorInputBuilder.addIncludes(
-                  CxxIncludes.of(
+                  ImmutableCxxIncludes.of(
                       IncludeType.LOCAL,
                       PathSourcePath.of(
                           projectFilesystem,
@@ -202,7 +202,7 @@ public class CxxLibraryMetadataFactory {
 
             for (String publicSystemInclude : args.getPublicSystemIncludeDirectories()) {
               cxxPreprocessorInputBuilder.addIncludes(
-                  CxxIncludes.of(
+                  ImmutableCxxIncludes.of(
                       IncludeType.SYSTEM,
                       PathSourcePath.of(
                           projectFilesystem,

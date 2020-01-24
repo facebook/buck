@@ -29,7 +29,8 @@ import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.graph.TopologicalSort;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -424,7 +425,7 @@ public class Omnibus {
     }
 
     CxxLink rootRule = graphBuilder.addToIndex(rootLinkRule);
-    return OmnibusRoot.of(rootRule.getSourcePathToOutput());
+    return ImmutableOmnibusRoot.of(rootRule.getSourcePathToOutput());
   }
 
   private static OmnibusRoot createRoot(
@@ -610,7 +611,7 @@ public class Omnibus {
                 argsBuilder.build(),
                 cellPathResolver));
 
-    return OmnibusLibrary.of(omnibusSoname, omnibusRule.getSourcePathToOutput());
+    return ImmutableOmnibusLibrary.of(omnibusSoname, omnibusRule.getSourcePathToOutput());
   }
 
   /**
@@ -637,7 +638,7 @@ public class Omnibus {
       Iterable<? extends NativeLinkTarget> nativeLinkTargetRoots,
       Iterable<? extends NativeLinkable> nativeLinkableRoots) {
 
-    OmnibusLibraries.Builder libs = OmnibusLibraries.builder();
+    ImmutableOmnibusLibraries.Builder libs = ImmutableOmnibusLibraries.builder();
 
     OmnibusSpec spec = buildSpec(nativeLinkTargetRoots, nativeLinkableRoots, graphBuilder);
 
@@ -734,7 +735,7 @@ public class Omnibus {
           || nativeLinkable.getPreferredLinkage() != NativeLinkableGroup.Linkage.STATIC) {
         for (Map.Entry<String, SourcePath> ent :
             nativeLinkable.getSharedLibraries(graphBuilder).entrySet()) {
-          libs.addLibraries(OmnibusLibrary.of(ent.getKey(), ent.getValue()));
+          libs.addLibraries(ImmutableOmnibusLibrary.of(ent.getKey(), ent.getValue()));
         }
       }
     }
@@ -787,33 +788,25 @@ public class Omnibus {
     }
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  interface AbstractOmnibusRoot {
+  @BuckStyleValue
+  public interface OmnibusRoot {
 
-    @Value.Parameter
     SourcePath getPath();
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  interface AbstractOmnibusLibrary {
+  @BuckStyleValue
+  public interface OmnibusLibrary {
 
-    @Value.Parameter
     String getSoname();
 
-    @Value.Parameter
     SourcePath getPath();
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractOmnibusLibraries {
+  @BuckStyleValueWithBuilder
+  public abstract static class OmnibusLibraries {
 
-    @Value.Parameter
     public abstract ImmutableMap<BuildTarget, OmnibusRoot> getRoots();
 
-    @Value.Parameter
     public abstract ImmutableList<OmnibusLibrary> getLibraries();
   }
 }

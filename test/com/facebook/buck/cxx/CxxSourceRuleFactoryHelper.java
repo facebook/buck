@@ -25,7 +25,10 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMultimap;
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class CxxSourceRuleFactoryHelper {
 
@@ -39,15 +42,18 @@ public class CxxSourceRuleFactoryHelper {
   public static CxxSourceRuleFactory of(
       Path cellRoot, BuildTarget target, CxxPlatform cxxPlatform, CxxBuckConfig cxxBuckConfig) {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    return CxxSourceRuleFactory.builder()
-        .setProjectFilesystem(new FakeProjectFilesystem(CanonicalCellName.rootCell(), cellRoot))
-        .setBaseBuildTarget(target)
-        .setActionGraphBuilder(graphBuilder)
-        .setPathResolver(graphBuilder.getSourcePathResolver())
-        .setCxxBuckConfig(cxxBuckConfig)
-        .setCxxPlatform(cxxPlatform)
-        .setPicType(PicType.PDC)
-        .build();
+    return CxxSourceRuleFactory.of(
+        new FakeProjectFilesystem(CanonicalCellName.rootCell(), cellRoot),
+        target,
+        graphBuilder,
+        graphBuilder.getSourcePathResolver(),
+        cxxBuckConfig,
+        cxxPlatform,
+        ImmutableList.of(),
+        ImmutableMultimap.of(),
+        Optional.empty(),
+        Optional.empty(),
+        PicType.PDC);
   }
 
   public static CxxSourceRuleFactory of(
@@ -62,14 +68,17 @@ public class CxxSourceRuleFactoryHelper {
       CxxBuckConfig cxxBuckConfig,
       PicType picType) {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    return CxxSourceRuleFactory.builder()
-        .setBaseBuildTarget(target)
-        .setProjectFilesystem(new FakeProjectFilesystem(CanonicalCellName.rootCell(), cellRoot))
-        .setActionGraphBuilder(graphBuilder)
-        .setPathResolver(graphBuilder.getSourcePathResolver())
-        .setCxxBuckConfig(cxxBuckConfig)
-        .setCxxPlatform(cxxPlatform)
-        .setPicType(picType)
-        .build();
+    return CxxSourceRuleFactory.of(
+        new FakeProjectFilesystem(CanonicalCellName.rootCell(), cellRoot),
+        target,
+        graphBuilder,
+        graphBuilder.getSourcePathResolver(),
+        cxxBuckConfig,
+        cxxPlatform,
+        ImmutableList.of(),
+        ImmutableMultimap.of(),
+        Optional.empty(),
+        Optional.empty(),
+        picType);
   }
 }

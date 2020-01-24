@@ -33,7 +33,7 @@ import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.BinaryBuildRuleToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.cxx.toolchain.ArchiverProvider;
 import com.facebook.buck.cxx.toolchain.ArchiverProvider.LegacyArchiverType;
@@ -318,34 +318,32 @@ public class CxxBuckConfig {
     Optional<Type> type = delegate.getEnum(cxxSection, toolType.key + "_type", Type.class);
     if (target.isPresent()) {
       return Optional.of(
-          CxxToolProviderParams.builder()
-              .setSource(source)
-              .setBuildTarget(target.get())
-              .setType(type)
-              .setPreferDependencyTree(getUseDetailedUntrackedHeaderMessages())
-              .setToolType(toolType)
-              .build());
+          ImmutableCxxToolProviderParams.of(
+              source,
+              target,
+              Optional.empty(),
+              type,
+              toolType,
+              Optional.of(getUseDetailedUntrackedHeaderMessages())));
     } else {
       return Optional.of(
-          CxxToolProviderParams.builder()
-              .setSource(source)
-              .setPath(
-                  delegate.getPathSourcePath(delegate.getRequiredPath(cxxSection, toolType.key)))
-              .setType(type)
-              .setPreferDependencyTree(getUseDetailedUntrackedHeaderMessages())
-              .setToolType(toolType)
-              .build());
+          ImmutableCxxToolProviderParams.of(
+              source,
+              Optional.empty(),
+              Optional.of(
+                  delegate.getPathSourcePath(delegate.getRequiredPath(cxxSection, toolType.key))),
+              type,
+              toolType,
+              Optional.of(getUseDetailedUntrackedHeaderMessages())));
     }
   }
 
   private Optional<PreprocessorProvider> getPreprocessorProvider(ToolType toolType) {
-    return getCxxToolProviderParams(toolType)
-        .map(AbstractCxxToolProviderParams::getPreprocessorProvider);
+    return getCxxToolProviderParams(toolType).map(CxxToolProviderParams::getPreprocessorProvider);
   }
 
   private Optional<CompilerProvider> getCompilerProvider(ToolType toolType) {
-    return getCxxToolProviderParams(toolType)
-        .map(AbstractCxxToolProviderParams::getCompilerProvider);
+    return getCxxToolProviderParams(toolType).map(CxxToolProviderParams::getCompilerProvider);
   }
 
   public Optional<CompilerProvider> getAs() {
@@ -420,13 +418,13 @@ public class CxxBuckConfig {
   }
 
   public HeaderVerification getHeaderVerificationOrIgnore() {
-    return HeaderVerification.builder()
-        .setMode(
-            delegate
-                .getEnum(cxxSection, UNTRACKED_HEADERS, HeaderVerification.Mode.class)
-                .orElse(HeaderVerification.Mode.IGNORE))
-        .addAllWhitelist(delegate.getListWithoutComments(cxxSection, UNTRACKED_HEADERS_WHITELIST))
-        .build();
+    return HeaderVerification.of(
+        delegate
+            .getEnum(cxxSection, UNTRACKED_HEADERS, HeaderVerification.Mode.class)
+            .orElse(HeaderVerification.Mode.IGNORE),
+        ImmutableSortedSet.copyOf(
+            delegate.getListWithoutComments(cxxSection, UNTRACKED_HEADERS_WHITELIST)),
+        ImmutableSortedSet.of());
   }
 
   public Optional<Boolean> getLinkGroupsEnabledSetting() {
@@ -647,9 +645,8 @@ public class CxxBuckConfig {
     return Optional.of(new ProviderBasedUnresolvedCxxPlatform(toolchainTarget.get(), flavor));
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractCxxToolProviderParams {
+  @BuckStyleValue
+  abstract static class CxxToolProviderParams {
 
     public abstract String getSource();
 

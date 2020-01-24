@@ -16,16 +16,12 @@
 
 package com.facebook.buck.cxx.toolchain.objectfile;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractMachoHeader {
+@BuckStyleValue
+abstract class MachoHeader {
 
-  @Value.Parameter
   abstract int getCommandsCount();
 
-  @Value.Parameter
   abstract boolean getIs64Bit();
 }

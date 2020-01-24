@@ -20,33 +20,31 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.common.BuildableSupport;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /** The components that get contributed to a top-level run of the C++ preprocessor. */
-@Value.Immutable(singleton = true)
-@BuckStyleImmutable
-abstract class AbstractCxxPreprocessorInput {
+@BuckStyleValueWithBuilder
+public abstract class CxxPreprocessorInput {
 
-  @Value.Parameter
+  private static final CxxPreprocessorInput INSTANCE =
+      ImmutableCxxPreprocessorInput.builder().build();
+
   public abstract Multimap<CxxSource.Type, Arg> getPreprocessorFlags();
 
-  @Value.Parameter
   public abstract ImmutableList<CxxHeaders> getIncludes();
 
   // Framework paths.
-  @Value.Parameter
+
   public abstract ImmutableSet<FrameworkPath> getFrameworks();
 
   // The build rules which produce headers found in the includes below.
-  @Value.Parameter
+
   protected abstract ImmutableSet<BuildTarget> getRules();
 
   public Iterable<BuildRule> getDeps(BuildRuleResolver ruleResolver) {
@@ -74,19 +72,35 @@ abstract class AbstractCxxPreprocessorInput {
   }
 
   public static CxxPreprocessorInput concat(Iterable<CxxPreprocessorInput> inputs) {
-    ImmutableMultimap.Builder<CxxSource.Type, Arg> preprocessorFlags = ImmutableMultimap.builder();
-    ImmutableList.Builder<CxxHeaders> headers = ImmutableList.builder();
-    ImmutableSet.Builder<FrameworkPath> frameworks = ImmutableSet.builder();
-    ImmutableSet.Builder<BuildTarget> rules = ImmutableSet.builder();
+    CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
 
     for (CxxPreprocessorInput input : inputs) {
-      preprocessorFlags.putAll(input.getPreprocessorFlags());
-      headers.addAll(input.getIncludes());
-      frameworks.addAll(input.getFrameworks());
-      rules.addAll(input.getRules());
+      builder.putAllPreprocessorFlags(input.getPreprocessorFlags());
+      builder.addAllIncludes(input.getIncludes());
+      builder.addAllFrameworks(input.getFrameworks());
+      builder.addAllRules(input.getRules());
     }
 
-    return CxxPreprocessorInput.of(
-        preprocessorFlags.build(), headers.build(), frameworks.build(), rules.build());
+    return builder.build();
+  }
+
+  public static CxxPreprocessorInput of() {
+    return INSTANCE;
+  }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends ImmutableCxxPreprocessorInput.Builder {
+
+    @Override
+    public CxxPreprocessorInput build() {
+      CxxPreprocessorInput cxxPreprocessorInput = super.build();
+      if (cxxPreprocessorInput.equals(INSTANCE)) {
+        return INSTANCE;
+      }
+      return cxxPreprocessorInput;
+    }
   }
 }

@@ -16,31 +16,24 @@
 
 package com.facebook.buck.cxx.toolchain.objectfile;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /**
  * Represents the LC_SYMTAB command. For reference, see "struct symtab_command" at
  * https://opensource.apple.com/source/xnu/xnu-1699.32.7/EXTERNAL_HEADERS/mach-o/loader.h
  */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractMachoSymTabCommand {
-  @Value.Parameter
-  abstract int getCommand();
+@BuckStyleValue
+public abstract class MachoSymTabCommand {
 
-  @Value.Parameter
-  abstract int getCommandSize();
+  public abstract int getCommand();
 
-  @Value.Parameter
-  abstract int getSymbolTableOffset();
+  public abstract int getCommandSize();
 
-  @Value.Parameter
-  abstract int getNumberOfSymbolTableEntries();
+  public abstract int getSymbolTableOffset();
 
-  @Value.Parameter
-  abstract int getStringTableOffset();
+  public abstract int getNumberOfSymbolTableEntries();
 
-  @Value.Parameter
-  abstract int getStringTableSize();
+  public abstract int getStringTableOffset();
+
+  public abstract int getStringTableSize();
 }

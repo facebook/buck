@@ -23,7 +23,7 @@ import com.facebook.buck.core.rulekey.IgnoredFieldInputs;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.cxx.HeaderPathNormalizer.Builder;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
@@ -32,17 +32,15 @@ import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
 /** To support private_include_directories and public_include_directories */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractCxxIncludes extends CxxHeaders {
+@BuckStyleValue
+abstract class CxxIncludes extends CxxHeaders {
   @Override
-  @Value.Parameter
   @AddToRuleKey
   public abstract CxxPreprocessables.IncludeType getIncludeType();
 
   // TODO(cjhopman): The connection between this path and the corresponding headers and how the
   // rulekey is correctly handled shouldn't be so implicit, they should be next to each other.
-  @Value.Parameter
+
   @ExcludeFromRuleKey(
       reason =
           "This includeDir is used for constructing an include arg that likely points into the repo. The corresponding headers are added to rulekeys separately.",

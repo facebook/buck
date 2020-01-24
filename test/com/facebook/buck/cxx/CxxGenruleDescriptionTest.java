@@ -150,7 +150,9 @@ public class CxxGenruleDescriptionTest {
   @Test
   public void cppflagsNoArgs() {
     CxxPlatform cxxPlatform =
-        CxxPlatformUtils.DEFAULT_PLATFORM.withCppflags("-cppflag").withCxxppflags("-cxxppflag");
+        CxxPlatformUtils.DEFAULT_PLATFORM
+            .withCppflags(ImmutableList.of("-cppflag"))
+            .withCxxppflags(ImmutableList.of("-cxxppflag"));
     CxxGenruleBuilder builder =
         new CxxGenruleBuilder(
                 BuildTargetFactory.newInstance("//:rule#" + cxxPlatform.getFlavor()),
@@ -180,9 +182,9 @@ public class CxxGenruleDescriptionTest {
   public void cflagsNoArgs() {
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.DEFAULT_PLATFORM
-            .withAsflags("-asflag")
-            .withCflags("-cflag")
-            .withCxxflags("-cxxflag");
+            .withAsflags(ImmutableList.of("-asflag"))
+            .withCflags(ImmutableList.of("-cflag"))
+            .withCxxflags(ImmutableList.of("-cxxflag"));
     CxxGenruleBuilder builder =
         new CxxGenruleBuilder(
                 BuildTargetFactory.newInstance("//:rule#" + cxxPlatform.getFlavor()),

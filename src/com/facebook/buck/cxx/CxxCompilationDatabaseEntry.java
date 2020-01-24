@@ -16,11 +16,10 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.collect.ImmutableList;
-import org.immutables.value.Value;
 
 /*
  * The compilation database specification (https://clang.llvm.org/docs/JSONCompilationDatabase.html)
@@ -28,18 +27,14 @@ import org.immutables.value.Value;
  * exactly the same information but in a different format. Hence, for the sake
  * of producing smaller compilation databases, only arguments is used.
  */
-@BuckStyleImmutable
-@Value.Immutable
-@JsonSerialize(as = CxxCompilationDatabaseEntry.class)
-@JsonDeserialize(as = CxxCompilationDatabaseEntry.class)
-abstract class AbstractCxxCompilationDatabaseEntry {
+@BuckStyleValue
+@JsonSerialize(as = ImmutableCxxCompilationDatabaseEntry.class)
+@JsonDeserialize(as = ImmutableCxxCompilationDatabaseEntry.class)
+public abstract class CxxCompilationDatabaseEntry {
 
-  @Value.Parameter
   public abstract String getDirectory();
 
-  @Value.Parameter
   public abstract String getFile();
 
-  @Value.Parameter
   public abstract ImmutableList<String> getArguments();
 }

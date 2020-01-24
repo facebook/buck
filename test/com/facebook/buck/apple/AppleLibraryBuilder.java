@@ -21,7 +21,7 @@ import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
-import com.facebook.buck.cxx.AbstractCxxSource;
+import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -78,7 +78,7 @@ public class AppleLibraryBuilder
   }
 
   public AppleLibraryBuilder setLangCompilerFlags(
-      ImmutableMap<AbstractCxxSource.Type, ImmutableList<String>> langPreprocessorFlags) {
+      ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags) {
     getArgForPopulating()
         .setLangCompilerFlags(
             Maps.transformValues(
@@ -97,7 +97,7 @@ public class AppleLibraryBuilder
   }
 
   public AppleLibraryBuilder setLangPreprocessorFlags(
-      ImmutableMap<AbstractCxxSource.Type, ImmutableList<String>> langPreprocessorFlags) {
+      ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags) {
     getArgForPopulating()
         .setLangPreprocessorFlags(
             Maps.transformValues(

@@ -55,7 +55,7 @@ public class MachoSymTabCommandReader {
           int stroff = ObjectFileScrubbers.getLittleEndianInt(machoFileBuffer);
           int strsize = ObjectFileScrubbers.getLittleEndianInt(machoFileBuffer);
           return Optional.of(
-              MachoSymTabCommand.of(command, commandSize, symoff, nsyms, stroff, strsize));
+              ImmutableMachoSymTabCommand.of(command, commandSize, symoff, nsyms, stroff, strsize));
         }
 
         // Skip over command body

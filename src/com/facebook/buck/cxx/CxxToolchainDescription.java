@@ -204,11 +204,11 @@ public class CxxToolchainDescription
     cxxPlatform.setHeaderVerification(
         HeaderVerification.of(
             HeaderVerification.Mode.ERROR,
-            ImmutableList.of(),
+            ImmutableSortedSet.of(),
             // Ideally we don't allow any whitelisting (the user-configured platform can implement
             // its own filtering of the produced depfiles), but currently we are relaxing this
             // restriction.
-            args.getHeadersWhitelist()));
+            ImmutableSortedSet.copyOf(args.getHeadersWhitelist())));
 
     SharedLibraryInterfaceParams.Type sharedLibraryInterfaceType =
         args.getSharedLibraryInterfaceType();

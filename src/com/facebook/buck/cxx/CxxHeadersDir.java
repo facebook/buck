@@ -18,22 +18,18 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /** Wraps a header directory to add to the preprocessors search path. */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractCxxHeadersDir extends CxxHeaders {
+@BuckStyleValue
+public abstract class CxxHeadersDir extends CxxHeaders {
   // TODO(cjhopman): This should probably be adding more to its rulekey.
   @Override
-  @Value.Parameter
   @AddToRuleKey
   public abstract CxxPreprocessables.IncludeType getIncludeType();
 
   @Override
-  @Value.Parameter
   @AddToRuleKey
   public abstract SourcePath getRoot();
 
@@ -45,5 +41,9 @@ abstract class AbstractCxxHeadersDir extends CxxHeaders {
   @Override
   public void addToHeaderPathNormalizer(HeaderPathNormalizer.Builder builder) {
     builder.addHeaderDir(getRoot());
+  }
+
+  public static CxxHeadersDir of(CxxPreprocessables.IncludeType includeType, SourcePath root) {
+    return ImmutableCxxHeadersDir.of(includeType, root);
   }
 }

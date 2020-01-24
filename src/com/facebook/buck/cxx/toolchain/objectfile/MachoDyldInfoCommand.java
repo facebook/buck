@@ -16,51 +16,37 @@
 
 package com.facebook.buck.cxx.toolchain.objectfile;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /**
  * Represents the LC_DYLD_INFO/LC_DYLD_INFO_ONLY command. For reference, see "struct
  * dyld_info_command" at
  * https://opensource.apple.com/source/xnu/xnu-1699.32.7/EXTERNAL_HEADERS/mach-o/loader.h
  */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractMachoDyldInfoCommand {
+@BuckStyleValue
+public abstract class MachoDyldInfoCommand {
 
-  @Value.Parameter
-  abstract int getCommand();
+  public abstract int getCommand();
 
-  @Value.Parameter
-  abstract int getCommandSize();
+  public abstract int getCommandSize();
 
-  @Value.Parameter
-  abstract int getRebaseInfoOffset();
+  public abstract int getRebaseInfoOffset();
 
-  @Value.Parameter
-  abstract int getRebaseInfoSize();
+  public abstract int getRebaseInfoSize();
 
-  @Value.Parameter
-  abstract int getBindInfoOffset();
+  public abstract int getBindInfoOffset();
 
-  @Value.Parameter
-  abstract int getBindInfoSize();
+  public abstract int getBindInfoSize();
 
-  @Value.Parameter
-  abstract int getWeakBindInfoOffset();
+  public abstract int getWeakBindInfoOffset();
 
-  @Value.Parameter
-  abstract int getWeakBindInfoSize();
+  public abstract int getWeakBindInfoSize();
 
-  @Value.Parameter
-  abstract int getLazyBindInfoOffset();
+  public abstract int getLazyBindInfoOffset();
 
-  @Value.Parameter
-  abstract int getLazyBindInfoSize();
+  public abstract int getLazyBindInfoSize();
 
-  @Value.Parameter
-  abstract int getExportInfoOffset();
+  public abstract int getExportInfoOffset();
 
-  @Value.Parameter
-  abstract int getExportInfoSize();
+  public abstract int getExportInfoSize();
 }

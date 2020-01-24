@@ -41,8 +41,8 @@ import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.cxx.AbstractCxxSource.Type;
 import com.facebook.buck.cxx.CxxBinaryDescription.CommonArg;
+import com.facebook.buck.cxx.CxxSource.Type;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
@@ -526,7 +526,7 @@ public class CxxDescriptionEnhancer {
 
     for (String privateInclude : includeDirectories) {
       builder.addIncludes(
-          CxxIncludes.of(
+          ImmutableCxxIncludes.of(
               CxxPreprocessables.IncludeType.LOCAL,
               PathSourcePath.of(
                   projectFilesystem,

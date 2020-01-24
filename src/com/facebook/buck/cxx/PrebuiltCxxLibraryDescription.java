@@ -133,7 +133,7 @@ public class PrebuiltCxxLibraryDescription
 
   private PrebuiltCxxLibraryPaths getPaths(
       BuildTarget target, AbstractPrebuiltCxxLibraryDescriptionArg args) {
-    return NewPrebuiltCxxLibraryPaths.builder()
+    return ImmutableNewPrebuiltCxxLibraryPaths.builder()
         .setTarget(target)
         .setHeaderDirs(args.getHeaderDirs())
         .setPlatformHeaderDirs(args.getPlatformHeaderDirs())

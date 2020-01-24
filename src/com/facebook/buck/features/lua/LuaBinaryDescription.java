@@ -44,9 +44,6 @@ import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.Omnibus;
-import com.facebook.buck.cxx.OmnibusLibraries;
-import com.facebook.buck.cxx.OmnibusLibrary;
-import com.facebook.buck.cxx.OmnibusRoot;
 import com.facebook.buck.cxx.OmnibusRoots;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -396,7 +393,7 @@ public class LuaBinaryDescription
 
       // Build the omnibus libraries.
       OmnibusRoots roots = omnibusRoots.build();
-      OmnibusLibraries libraries =
+      Omnibus.OmnibusLibraries libraries =
           Omnibus.getSharedLibraries(
               buildTarget,
               projectFilesystem,
@@ -410,7 +407,7 @@ public class LuaBinaryDescription
               roots.getExcludedRoots().values());
 
       // Add all the roots from the omnibus link.  If it's an extension, add it as a module.
-      for (Map.Entry<BuildTarget, OmnibusRoot> root : libraries.getRoots().entrySet()) {
+      for (Map.Entry<BuildTarget, Omnibus.OmnibusRoot> root : libraries.getRoots().entrySet()) {
 
         // If it's a Lua extension add it as a module.
         CxxLuaExtension luaExtension = luaExtensions.get(root.getKey());
@@ -451,7 +448,7 @@ public class LuaBinaryDescription
       }
 
       // Add all remaining libraries as native libraries.
-      for (OmnibusLibrary library : libraries.getLibraries()) {
+      for (Omnibus.OmnibusLibrary library : libraries.getLibraries()) {
         builder.putNativeLibraries(library.getSoname(), library.getPath());
       }
 

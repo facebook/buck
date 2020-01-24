@@ -17,15 +17,16 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableSet;
-import org.immutables.value.Value;
 
 /** Metadata query for collecting framework dependencies to include in a bundle. */
-@Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractFrameworkDependencies {
+@BuckStyleValue
+public abstract class FrameworkDependencies {
 
-  @Value.Parameter
-  abstract ImmutableSet<SourcePath> getSourcePaths();
+  public abstract ImmutableSet<SourcePath> getSourcePaths();
+
+  public static FrameworkDependencies of(ImmutableSet<SourcePath> sourcePaths) {
+    return ImmutableFrameworkDependencies.of(sourcePaths);
+  }
 }

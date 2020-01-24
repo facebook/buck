@@ -24,9 +24,8 @@ import com.facebook.buck.core.rules.modern.annotations.CustomClassBehavior;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.facebook.buck.cxx.CxxPreprocessables.IncludeType;
-import com.facebook.buck.cxx.CxxSymlinkTreeHeaders.Builder;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.rules.keys.RuleKeyAppendable;
 import com.facebook.buck.rules.modern.CustomClassSerialization;
@@ -51,10 +50,9 @@ import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
 /** Encapsulates headers modeled using a {@link HeaderSymlinkTree}. */
-@Value.Immutable(prehash = true)
-@BuckStyleImmutable
-@CustomClassBehavior(AbstractCxxSymlinkTreeHeaders.SerializationBehavior.class)
-abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders implements RuleKeyAppendable {
+@BuckStylePrehashedValue
+@CustomClassBehavior(CxxSymlinkTreeHeaders.SerializationBehavior.class)
+public abstract class CxxSymlinkTreeHeaders extends CxxHeaders implements RuleKeyAppendable {
 
   @SuppressWarnings("immutables")
   private final AtomicReference<Optional<ImmutableList<BuildRule>>> computedDeps =
@@ -89,7 +87,7 @@ abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders implements RuleK
 
   @Value.Auxiliary
   @CustomFieldBehavior(NameToPathMapInputsBehavior.class)
-  abstract ImmutableSortedMap<Path, SourcePath> getNameToPathMap();
+  public abstract ImmutableSortedMap<Path, SourcePath> getNameToPathMap();
 
   @Override
   public void addToHeaderPathNormalizer(HeaderPathNormalizer.Builder builder) {
@@ -142,19 +140,34 @@ abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders implements RuleK
   /** @return a {@link CxxHeaders} constructed from the given {@link HeaderSymlinkTree}. */
   public static CxxSymlinkTreeHeaders from(
       HeaderSymlinkTree symlinkTree, CxxPreprocessables.IncludeType includeType) {
-    CxxSymlinkTreeHeaders.Builder builder = CxxSymlinkTreeHeaders.builder();
-    builder.setIncludeType(includeType);
-    builder.setRoot(symlinkTree.getRootSourcePath());
-    builder.setNameToPathMap(symlinkTree.getLinks());
-    builder.setSymlinkTreeClass(symlinkTree.getClass().getName());
 
+    Either<PathSourcePath, SourcePath> includeRoot;
+    Optional<SourcePath> headerMap;
     if (includeType == CxxPreprocessables.IncludeType.LOCAL) {
-      builder.setIncludeRoot(Either.ofLeft(symlinkTree.getIncludeSourcePath()));
-      symlinkTree.getHeaderMapSourcePath().ifPresent(builder::setHeaderMap);
+      includeRoot = Either.ofLeft(symlinkTree.getIncludeSourcePath());
+      headerMap = symlinkTree.getHeaderMapSourcePath();
     } else {
-      builder.setIncludeRoot(Either.ofRight(symlinkTree.getRootSourcePath()));
+      includeRoot = Either.ofRight(symlinkTree.getRootSourcePath());
+      headerMap = Optional.empty();
     }
-    return builder.build();
+    return of(
+        includeType,
+        symlinkTree.getRootSourcePath(),
+        includeRoot,
+        headerMap,
+        symlinkTree.getLinks(),
+        symlinkTree.getClass().getName());
+  }
+
+  public static CxxSymlinkTreeHeaders of(
+      CxxPreprocessables.IncludeType includeType,
+      SourcePath root,
+      Either<PathSourcePath, SourcePath> includeRoot,
+      Optional<? extends SourcePath> headerMap,
+      ImmutableSortedMap<Path, SourcePath> nameToPathMap,
+      String symlinkTreeClass) {
+    return ImmutableCxxSymlinkTreeHeaders.of(
+        includeType, root, includeRoot, headerMap, nameToPathMap, symlinkTreeClass);
   }
 
   /** Custom serialization. */
@@ -188,22 +201,21 @@ abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders implements RuleK
     @Override
     public <E extends Exception> CxxSymlinkTreeHeaders deserialize(ValueCreator<E> deserializer)
         throws E {
-      Builder builder = CxxSymlinkTreeHeaders.builder();
-      builder.setIncludeType(INCLUDE_TYPE_TYPE_INFO.createNotNull(deserializer));
-      builder.setHeaderMap(HEADER_MAP_TYPE_INFO.createNotNull(deserializer));
-      builder.setRoot(deserializer.createSourcePath());
-      builder.setIncludeRoot(INCLUDE_ROOT_TYPE_INFO.createNotNull(deserializer));
       int nameToPathMapSize = deserializer.createInteger();
-      builder.setSymlinkTreeClass(deserializer.createString());
-
       ImmutableSortedMap.Builder<Path, SourcePath> nameToPathMapBuilder =
           ImmutableSortedMap.naturalOrder();
       for (int i = 0; i < nameToPathMapSize; i++) {
         nameToPathMapBuilder.put(
             Paths.get(deserializer.createString()), deserializer.createSourcePath());
       }
-      builder.setNameToPathMap(nameToPathMapBuilder.build());
-      return builder.build();
+
+      return ImmutableCxxSymlinkTreeHeaders.of(
+          INCLUDE_TYPE_TYPE_INFO.createNotNull(deserializer),
+          deserializer.createSourcePath(),
+          INCLUDE_ROOT_TYPE_INFO.createNotNull(deserializer),
+          HEADER_MAP_TYPE_INFO.createNotNull(deserializer),
+          nameToPathMapBuilder.build(),
+          deserializer.createString());
     }
   }
 

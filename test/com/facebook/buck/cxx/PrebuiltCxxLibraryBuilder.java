@@ -203,8 +203,7 @@ public class PrebuiltCxxLibraryBuilder
   }
 
   public PrebuiltCxxLibraryBuilder setExportedLangPlatformPreprocessorFlags(
-      ImmutableMap<
-              AbstractCxxSource.Type, PatternMatchedCollection<ImmutableList<StringWithMacros>>>
+      ImmutableMap<CxxSource.Type, PatternMatchedCollection<ImmutableList<StringWithMacros>>>
           exportedLangPlatformPreprocessorFlags) {
     getArgForPopulating()
         .setExportedLangPlatformPreprocessorFlags(exportedLangPlatformPreprocessorFlags);
