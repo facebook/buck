@@ -20,7 +20,6 @@ import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.artifact.BuildArtifactFactoryForTests;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildPaths;
@@ -41,7 +40,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.events.Location;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -411,16 +409,6 @@ public class RuleAnalysisRulesBuildIntegrationTest {
 
     Path resultPath = workspace.buildAndReturnOutput("//:bar");
 
-    BuildArtifactFactoryForTests artifactFactory =
-        new BuildArtifactFactoryForTests(
-            BuildTargetFactory.newInstance("//:foo"), workspace.getProjectFileSystem());
-
-    Path fooArtifact =
-        artifactFactory
-            .createBuildArtifact(Paths.get("output"), Location.BUILTIN)
-            .getSourcePath()
-            .getResolvedPath();
-
     /**
      * we should get something like
      *
@@ -428,7 +416,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
      * {
      * target: bar
      * val: 1
-     * srcs: { foo }
+     * srcs: { <hash>/dir/foo__/output }
      * deps: {}
      * outputs: [ <hash>/bar__/output ]
      * }
@@ -437,7 +425,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
         new RuleOutput(
             "bar",
             1,
-            ImmutableList.of(fooArtifact),
+            ImmutableList.of(Paths.get("foo__", "output")),
             ImmutableList.of(),
             ImmutableList.of(Paths.get("bar__", "output")));
 
@@ -473,12 +461,6 @@ public class RuleAnalysisRulesBuildIntegrationTest {
 
     resultPath = workspace.buildAndReturnOutput("//:bar");
 
-    Path fooArtifact2 =
-        artifactFactory
-            .createBuildArtifact(Paths.get("foo_out"), Location.BUILTIN)
-            .getSourcePath()
-            .getResolvedPath();
-
     /**
      * we should get something like
      *
@@ -486,7 +468,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
      * {
      * target: bar
      * val: 1
-     * srcs: { foo_out }
+     * srcs: { <hash>/dir/foo__/foo_out }
      * deps: {}
      * outputs: [ <hash>/bar__/output ]
      * }
@@ -495,7 +477,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
         new RuleOutput(
             "bar",
             1,
-            ImmutableList.of(fooArtifact2),
+            ImmutableList.of(Paths.get("foo__", "foo_out")),
             ImmutableList.of(),
             ImmutableList.of(Paths.get("bar__", "output")));
 
@@ -732,8 +714,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
   }
 
   @Test
-  public void ruleAnalysisRulesReturningTestInfoWithoutRunInfoAreErrors()
-      throws IOException, InterruptedException {
+  public void ruleAnalysisRulesReturningTestInfoWithoutRunInfoAreErrors() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "testable_rules", tmp);
     workspace.setUp();
@@ -766,6 +747,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
     Matcher<Map<? extends String, ? extends Object>> valMatcher =
         Matchers.hasEntry("val", ruleOutput.val);
 
+    Matcher<Object> srcs = createEndOfPathMatcher(ruleOutput.srcs);
     Matcher<Object> deps =
         (Matcher<Object>)
             (Matcher<? extends Object>)
@@ -773,23 +755,27 @@ public class RuleAnalysisRulesBuildIntegrationTest {
                     Collections2.transform(
                         ruleOutput.deps,
                         d -> (Matcher<? super Object>) (Matcher<?>) ruleOutputToMatchers(d)));
-    Matcher<Object> outputs =
-        (Matcher<Object>)
-            (Matcher<? extends Object>)
-                Matchers.containsInAnyOrder(
-                    Collections2.transform(
-                        ruleOutput.outputs,
-                        o ->
-                            (Matcher<? super Object>)
-                                (Matcher<?>) Matchers.endsWith(o.toString())));
+    Matcher<Object> outputs = createEndOfPathMatcher(ruleOutput.outputs);
 
+    Matcher<Map<? extends String, ? extends Object>> srcsMatcher =
+        Matchers.hasEntry(Matchers.is("srcs"), srcs);
     Matcher<Map<? extends String, ? extends Object>> depMatcher =
         Matchers.hasEntry(Matchers.is("dep"), deps);
     Matcher<Map<? extends String, ? extends Object>> outputsMatcher =
         Matchers.hasEntry(Matchers.is("outputs"), outputs);
 
     Matcher<? extends Map<? extends String, ? extends Object>> matcher =
-        Matchers.allOf(targetMatcher, valMatcher, depMatcher, outputsMatcher);
+        Matchers.allOf(targetMatcher, valMatcher, srcsMatcher, depMatcher, outputsMatcher);
     return (Matcher<Map<String, Object>>) matcher;
+  }
+
+  private static Matcher<Object> createEndOfPathMatcher(List<Path> toMatch) {
+    return (Matcher<Object>)
+        (Matcher<? extends Object>)
+            Matchers.containsInAnyOrder(
+                Collections2.transform(
+                    toMatch,
+                    path ->
+                        (Matcher<? super Object>) (Matcher<?>) Matchers.endsWith(path.toString())));
   }
 }

@@ -101,6 +101,11 @@ public class LegacyRuleDescription
             data.put("target", buildTarget.getShortName());
             data.put("val", args.getVal());
 
+            // AbstractLegacyRuleDescriptionArg doesn't implement HasSrcs, but we still write an
+            // empty list into the JSON for consistency in tests
+            List<Path> srcs = new ArrayList<>();
+            data.put("srcs", srcs);
+
             SortedSet<BuildRule> depRules = getBuildDeps();
             List<Object> deps = new ArrayList<>();
             data.put("dep", deps);
