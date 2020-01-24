@@ -102,7 +102,7 @@ public class ZipStepTest {
     }
   }
 
-  @Test
+  @Test(timeout = 600000)
   public void handlesLargeFiles() throws Exception {
     Path parent = tmp.newFolder("zipstep");
     Path out = parent.resolve("output.zip");

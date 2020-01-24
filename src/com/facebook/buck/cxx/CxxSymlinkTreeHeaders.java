@@ -201,7 +201,14 @@ public abstract class CxxSymlinkTreeHeaders extends CxxHeaders implements RuleKe
     @Override
     public <E extends Exception> CxxSymlinkTreeHeaders deserialize(ValueCreator<E> deserializer)
         throws E {
+      IncludeType includeType = INCLUDE_TYPE_TYPE_INFO.createNotNull(deserializer);
+      Optional<SourcePath> headerMapType = HEADER_MAP_TYPE_INFO.createNotNull(deserializer);
+      SourcePath root = deserializer.createSourcePath();
+      Either<PathSourcePath, SourcePath> includeRootType =
+          INCLUDE_ROOT_TYPE_INFO.createNotNull(deserializer);
       int nameToPathMapSize = deserializer.createInteger();
+      String symlinkTreeClass = deserializer.createString();
+
       ImmutableSortedMap.Builder<Path, SourcePath> nameToPathMapBuilder =
           ImmutableSortedMap.naturalOrder();
       for (int i = 0; i < nameToPathMapSize; i++) {
@@ -210,12 +217,12 @@ public abstract class CxxSymlinkTreeHeaders extends CxxHeaders implements RuleKe
       }
 
       return ImmutableCxxSymlinkTreeHeaders.of(
-          INCLUDE_TYPE_TYPE_INFO.createNotNull(deserializer),
-          deserializer.createSourcePath(),
-          INCLUDE_ROOT_TYPE_INFO.createNotNull(deserializer),
-          HEADER_MAP_TYPE_INFO.createNotNull(deserializer),
+          includeType,
+          root,
+          includeRootType,
+          headerMapType,
           nameToPathMapBuilder.build(),
-          deserializer.createString());
+          symlinkTreeClass);
     }
   }
 

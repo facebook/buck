@@ -1,0 +1,432 @@
+version: 2
+
+install_openjdk8: &install_openjdk8
+  name: Install OpenJDK8
+  command: |
+    sudo apt-get update && sudo apt-get install openjdk-8-jdk
+    sudo update-java-alternatives -s java-1.8.0-openjdk-amd64
+    java -version
+
+install_android_sdk: &install_android_sdk
+  name: Install Android SDK
+  command: |
+    mkdir ${ANDROID_SDK}
+    cd ${ANDROID_SDK}
+    wget https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip
+    unzip sdk-tools-linux-4333796.zip
+    export PATH=${ANDROID_SDK}/tools/bin:$PATH
+    echo 'y' |sdkmanager --install tools
+    echo 'y' |sdkmanager --install platform-tools
+    # Old version build-tools;23.0.2
+    echo 'y' |sdkmanager --install "build-tools;28.0.0"
+    echo 'y' |sdkmanager --install "platforms;android-23"
+
+    # Install 32 bit libraries
+    # https://stackoverflow.com/questions/36911709/cannot-run-program-aapt
+    # Needed to run Android build-tools
+    sudo apt-get install gcc-multilib lib32z1 lib32stdc++6
+
+install_golang: &install_golang
+  name: Install GoLang 1.10.1
+  command: |
+    cd ~
+    wget https://storage.googleapis.com/golang/go1.10.1.linux-amd64.tar.gz
+    sudo tar -xzf go1.10.1.linux-amd64.tar.gz -C /usr/local
+    rm go1.10.1.linux-amd64.tar.gz
+    go version
+
+install_python: &install_python
+  name: Install Python 3.6.2
+  command: |
+    pyenv install -s 3.6.2
+    pyenv global 3.6.2 system
+    python --version
+
+install_groovy: &install_groovy
+  name: Install Groovy
+  command: |
+    curl -s get.sdkman.io | bash
+    source "$HOME/.sdkman/bin/sdkman-init.sh"
+    sdk install groovy 2.4.18
+    groovy -version
+
+install_ghc: &install_ghc
+  name: Install Ghc
+  command: |
+    sudo apt-get update
+    sudo apt-get install ghc
+    sudo apt-get install -y ghc-dynamic
+    sudo apt-get install -y ghc-haddock
+
+run_ant_build: &run_ant_build
+  name: Run Ant Build
+  command: |
+    cd ${BUCKROOT}
+    set -eux
+    export TERM=dumb
+    export ANT_OPTS='-Xmx1000m'
+    ant
+
+run_buck_build: &run_buck_build
+  name: Run Buck Build
+  command: |
+    cd ${BUCKROOT}
+    echo '-Xmx1024m' > .buckjavaargs.local
+    export PATH=${ANDROID_SDK}/tools/bin:$PATH
+    export PATH="$(pyenv root)/shims:$PATH"
+    set -eux
+    export TERM=dumb
+    ./bin/buck build buck --out ./new_buck.pex || { cat buck-out/log/buck-0.log; exit 1; }
+
+jobs:
+  ci_build_openjdk8:
+    environment:
+      # Use string constant for values, no environment variables 
+      BUCKROOT: "/home/circleci/buck"
+      ANDROID_SDK: "/home/circleci/android-sdk"
+      TERM: "dumb"
+      BUCK_NUM_THREADS: 3
+    working_directory: "/home/circleci/buck"
+    machine:
+      # linux VM
+      image: ubuntu-1604:201903-01
+    steps:
+      # Steps run sequentially in separate shells
+      - checkout
+      - run:
+          <<: *install_openjdk8
+      - run:
+          <<: *install_android_sdk
+      - run:
+          <<: *install_golang
+      - run:
+          <<: *install_python
+      - run:
+          <<: *run_ant_build
+      - run:
+          <<: *run_buck_build
+      - run:
+          name: Run Build Tests
+          command: |
+            cd ${BUCKROOT}
+            export PATH=${ANDROID_SDK}/tools/bin:$PATH
+            export PATH="$(pyenv root)/shims:$PATH"
+            set -eux
+            ./new_buck.pex build --num-threads=${BUCK_NUM_THREADS} src/... test/...
+
+  ci_unit_groovy:
+    environment:
+      BUCKROOT: "/home/circleci/buck"
+      ANDROID_SDK: "/home/circleci/android-sdk"
+      TERM: "dumb"
+      BUCK_NUM_THREADS: 3
+    working_directory: "/home/circleci/buck"
+    machine:
+      image: ubuntu-1604:201903-01
+    steps:
+      - checkout
+      - run:
+          <<: *install_openjdk8
+      - run:
+          <<: *install_android_sdk
+      - run:
+          <<: *install_groovy
+      - run:
+          <<: *install_golang
+      - run:
+          <<: *install_python
+      - run:
+          <<: *run_ant_build
+      - run:
+          <<: *run_buck_build
+      - run:
+          name: Run Unit Tests
+          command: |
+            cd ${BUCKROOT}
+            export PATH=${ANDROID_SDK}/tools/bin:$PATH
+            export PATH="$(pyenv root)/shims:$PATH"
+            export GROOVY_HOME=$HOME/.sdkman/candidates/groovy/current
+            set -eux
+            ./new_buck.pex test --num-threads=${BUCK_NUM_THREADS} --all --test-selectors '!.*[Ii]ntegration.*'
+
+  ci_ant:
+    environment:
+      BUCKROOT: "/home/circleci/buck"
+      ANDROID_SDK: "/home/circleci/android-sdk"
+      TERM: "dumb"
+      BUCK_NUM_THREADS: 3
+    working_directory: "/home/circleci/buck"
+    machine:
+      image: ubuntu-1604:201903-01
+    steps:
+      - checkout
+      - run:
+          <<: *install_openjdk8
+      - run:
+          <<: *install_android_sdk
+      - run:
+          <<: *install_golang
+      - run:
+          <<: *install_python
+      - run:
+          <<: *run_ant_build
+      - run:
+          <<: *run_buck_build
+      - run:
+          name: Run Ant Tests
+          command: |
+            cd ${BUCKROOT}
+            export PATH=${ANDROID_SDK}/tools/bin:$PATH
+            export ANDROID_HOME=${ANDROID_SDK}
+            set -eux
+            ant travis
+            ./scripts/travisci_test_java_file_format
+
+  ci_integration:
+    environment:
+      BUCKROOT: "/home/circleci/buck"
+      ANDROID_SDK: "/home/circleci/android-sdk"
+      TERM: "dumb"
+      BUCK_NUM_THREADS: 3
+    working_directory: "/home/circleci/buck"
+    machine:
+      image: ubuntu-1604:201903-01
+    steps:
+      - checkout
+      - run:
+          <<: *install_openjdk8
+      - run:
+          <<: *install_android_sdk
+      - run:
+          <<: *install_ghc
+      - run:
+          <<: *install_golang
+      - run:
+          <<: *install_python
+      - run:
+          <<: *install_groovy
+      - run:
+          <<: *run_ant_build
+      - run:
+          <<: *run_buck_build
+      - run:
+          name: Run Integration Tests
+          command: |
+            cd ${BUCKROOT}
+            export PATH=${ANDROID_SDK}/tools/bin:$PATH
+            export PATH="$(pyenv root)/shims:$PATH"
+            export GROOVY_HOME=$HOME/.sdkman/candidates/groovy/current
+            set -eux
+            ./new_buck.pex test --num-threads=$BUCK_NUM_THREADS --all --filter '^(?!(com.facebook.buck.android|com.facebook.buck.jvm.java)).*[Ii]ntegration.*'
+
+  ci_heavy_integration:
+    environment:
+      BUCKROOT: "/home/circleci/buck"
+      ANDROID_SDK: "/home/circleci/android-sdk"
+      TERM: "dumb"
+      BUCK_NUM_THREADS: 3
+    working_directory: "/home/circleci/buck"
+    machine:
+      image: ubuntu-1604:201903-01
+    steps:
+      - checkout
+      - run:
+          <<: *install_openjdk8
+      - run:
+          <<: *install_android_sdk
+      - run:
+          name: Install Android NDK
+          command: |
+            cd ${BUCKROOT}
+            export NDK_HOME="${HOME}/android-ndk-linux"
+            ./scripts/travisci_install_android_ndk.sh
+      - run:
+          <<: *install_golang
+      - run:
+          <<: *install_python
+      - run:
+          <<: *run_ant_build
+      - run:
+          <<: *run_buck_build
+      - run:
+          name: Run Heavy Integration Tests
+          command: |
+            export NDK_HOME="${HOME}/android-ndk-linux"
+            export ANDROID_HOME=${ANDROID_SDK}
+            set -eux
+            ./new_buck.pex build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/... //test/com/facebook/buck/jvm/java/...
+            ./new_buck.pex test --num-threads=1 //test/com/facebook/buck/android/... //test/com/facebook/buck/jvm/java/... --filter '.*[Ii]ntegration.*'
+
+  ci_android_ndk_15:
+    environment:
+      BUCKROOT: "/home/circleci/buck"
+      ANDROID_SDK: "/home/circleci/android-sdk"
+      TERM: "dumb"
+      BUCK_NUM_THREADS: 3
+    working_directory: "/home/circleci/buck"
+    machine:
+      image: ubuntu-1604:201903-01
+    steps:
+      - checkout
+      - run:
+          <<: *install_openjdk8
+      - run:
+          <<: *install_android_sdk
+      - run:
+          name: Install Android NDK 15
+          command: |
+            cd ${BUCKROOT}
+            export NDK_HOME="${HOME}/android-ndk-linux"
+            ./scripts/travisci_unzip_android_ndk.sh android-ndk-r15c
+      - run:
+          <<: *install_golang
+      - run:
+          <<: *install_python
+      - run:
+          <<: *run_ant_build
+      - run:
+          <<: *run_buck_build
+      - run:
+          name: Run Android NDK 15 Tests
+          command: |
+            export NDK_HOME="${HOME}/android-ndk-linux"
+            export ANDROID_HOME=${ANDROID_SDK}
+            set -eux
+            ./new_buck.pex build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
+            ./new_buck.pex test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
+
+  ci_android_ndk_16:
+    environment:
+      BUCKROOT: "/home/circleci/buck"
+      ANDROID_SDK: "/home/circleci/android-sdk"
+      TERM: "dumb"
+      BUCK_NUM_THREADS: 3
+    working_directory: "/home/circleci/buck"
+    machine:
+      image: ubuntu-1604:201903-01
+    steps:
+      - checkout
+      - run:
+          <<: *install_openjdk8
+      - run:
+          <<: *install_android_sdk
+      - run:
+          name: Install Android NDK 16
+          command: |
+            cd ${BUCKROOT}
+            export NDK_HOME="${HOME}/android-ndk-linux"
+            ./scripts/travisci_unzip_android_ndk.sh android-ndk-r16b
+      - run:
+          <<: *install_golang
+      - run:
+          <<: *install_python
+      - run:
+          <<: *run_ant_build
+      - run:
+          <<: *run_buck_build
+      - run:
+          name: Run Android NDK 16 Tests
+          command: |
+            export NDK_HOME="${HOME}/android-ndk-linux"
+            export ANDROID_HOME=${ANDROID_SDK}
+            set -eux
+            ./new_buck.pex build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
+            ./new_buck.pex test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
+
+  ci_android_ndk_17:
+    environment:
+      BUCKROOT: "/home/circleci/buck"
+      ANDROID_SDK: "/home/circleci/android-sdk"
+      TERM: "dumb"
+      BUCK_NUM_THREADS: 3
+    working_directory: "/home/circleci/buck"
+    machine:
+      image: ubuntu-1604:201903-01
+    steps:
+      - checkout
+      - run:
+          <<: *install_openjdk8
+      - run:
+          <<: *install_android_sdk
+      - run:
+          name: Install Android NDK 17
+          command: |
+            cd ${BUCKROOT}
+            export NDK_HOME="${HOME}/android-ndk-linux"
+            ./scripts/travisci_unzip_android_ndk.sh android-ndk-r17b
+      - run:
+          <<: *install_golang
+      - run:
+          <<: *install_python
+      - run:
+          <<: *run_ant_build
+      - run:
+          <<: *run_buck_build
+      - run:
+          name: Need android-27 and android-28 to run the tests, install them. 
+          command: |
+            export PATH=${ANDROID_SDK}/tools/bin:$PATH
+            echo 'y' |sdkmanager --install "platforms;android-27"
+            echo 'y' |sdkmanager --install "platforms;android-28"
+      - run:
+          name: Run Android NDK 17 Tests
+          command: |
+            export NDK_HOME="${HOME}/android-ndk-linux"
+            export ANDROID_HOME=${ANDROID_SDK}
+            set -eux
+            ./new_buck.pex build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
+            ./new_buck.pex test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
+
+  ci_android_ndk_18:
+    environment:
+      BUCKROOT: "/home/circleci/buck"
+      ANDROID_SDK: "/home/circleci/android-sdk"
+      TERM: "dumb"
+      BUCK_NUM_THREADS: 3
+    working_directory: "/home/circleci/buck"
+    machine:
+      image: ubuntu-1604:201903-01
+    steps:
+      - checkout
+      - run:
+          <<: *install_openjdk8
+      - run:
+          <<: *install_android_sdk
+      - run:
+          name: Install Android NDK 18
+          command: |
+            cd ${BUCKROOT}
+            export NDK_HOME="${HOME}/android-ndk-linux"
+            ./scripts/travisci_unzip_android_ndk.sh android-ndk-r18b
+      - run:
+          <<: *install_golang
+      - run:
+          <<: *install_python
+      - run:
+          <<: *run_ant_build
+      - run:
+          <<: *run_buck_build
+      - run:
+          name: Run Android NDK 18 Tests
+          command: |
+            export NDK_HOME="${HOME}/android-ndk-linux"
+            export ANDROID_HOME=${ANDROID_SDK}
+            set -eux
+            ./new_buck.pex build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
+            ./new_buck.pex test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
+
+workflows:
+  version: 2
+  all_jobs:
+    # jobs run in parallel
+    jobs:
+      - ci_build_openjdk8
+      - ci_unit_groovy
+      - ci_ant
+      - ci_integration
+      - ci_heavy_integration
+      - ci_android_ndk_15
+      - ci_android_ndk_16
+      - ci_android_ndk_17
+      - ci_android_ndk_18
+
