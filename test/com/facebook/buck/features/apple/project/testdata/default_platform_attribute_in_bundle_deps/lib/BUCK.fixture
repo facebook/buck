@@ -1,0 +1,25 @@
+EMPTY_CONFIGS = {
+    "Debug": {},
+    "Release": {},
+}
+
+apple_library(
+    name = "lib",
+    srcs = ["lib.m"],
+    configs = EMPTY_CONFIGS,
+    exported_headers = ["lib.h"],
+    frameworks = [],
+    link_style = "static",
+    preferred_linkage = "shared",
+    visibility = ["PUBLIC"],
+    deps = [],
+)
+
+apple_bundle(
+    name = "framework",
+    binary = ":lib#shared",
+    default_platform = "iphonesimulator-x86_64",
+    extension = "framework",
+    info_plist = "Info.plist",
+    visibility = ["PUBLIC"],
+)

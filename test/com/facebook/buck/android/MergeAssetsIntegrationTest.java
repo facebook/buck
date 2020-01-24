@@ -20,6 +20,8 @@ import static org.junit.Assert.assertFalse;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.io.filesystem.BuckPaths;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -49,7 +51,8 @@ public class MergeAssetsIntegrationTest {
         workspace.getFileContents(
             "home/"
                 + BuildTargetPaths.getGenPath(
-                    workspace.getProjectFileSystem(),
+                    FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(
+                        BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH),
                     BuildTargetFactory.newInstance("//:list_outputs"),
                     "%s")
                 + "/list_of_outputs.txt");
@@ -72,7 +75,8 @@ public class MergeAssetsIntegrationTest {
         workspace.getFileContents(
             "home/"
                 + BuildTargetPaths.getGenPath(
-                    workspace.getProjectFileSystem(),
+                    FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(
+                        BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH),
                     BuildTargetFactory.newInstance("//:list_outputs"),
                     "%s")
                 + "/list_of_outputs.txt");

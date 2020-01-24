@@ -23,6 +23,7 @@ import java.nio.file.Path
 import java.util.concurrent.TimeUnit
 import java.util.logging.Level
 import java.util.logging.Logger
+import kotlin.math.max
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -45,6 +46,7 @@ interface BuildPackageParser {
 }
 
 private val LOG = Logger.getLogger(BuckShellBuildPackageParser::class.java.canonicalName)
+private const val NUMBER_OF_PACKAGES_TO_PRINT = 3
 
 /**
  * Parses packages by invoking Buck from command line
@@ -58,9 +60,10 @@ private val LOG = Logger.getLogger(BuckShellBuildPackageParser::class.java.canon
 class BuckShellBuildPackageParser(
     private val root: Path,
     private val daemon: Boolean = true,
-    private val timeout: Long = 45,
+    private val timeout: Long = 90,
     private val timeUnit: TimeUnit = TimeUnit.MINUTES
-) : BuildPackageParser {
+) :
+    BuildPackageParser {
     override fun parsePackages(packagePaths: List<ForwardRelativePath>): List<BuildPackage> {
         return if (packagePaths.isEmpty()) listOf() else parse(packagePaths)
     }
@@ -81,8 +84,18 @@ class BuckShellBuildPackageParser(
                 }
             }
 
-            val outputFilePath = Files.createTempFile("bucktargets", "json")
+            val outputFilePath = Files.createTempFile("buck_targets", "json")
             try {
+                val packagesString =
+                    if (packagePaths.isEmpty()) "//..." else {
+                        val remainingPackagesSize = max(0, packagePaths.size - NUMBER_OF_PACKAGES_TO_PRINT)
+                        packagePaths.asSequence()
+                            .take(NUMBER_OF_PACKAGES_TO_PRINT)
+                            .map { "//$it:" }
+                            .joinToString { it } +
+                            if (remainingPackagesSize > 0) " and $remainingPackagesSize more..." else ""
+                    }
+                LOG.info("Parsing packages: $packagesString")
                 execBuck(patternsFilePath, outputFilePath)
 
                 return outputFilePath.toFile().inputStream().buffered().use {
@@ -96,22 +109,21 @@ class BuckShellBuildPackageParser(
         }
     }
 
-    private val readErrorStreamCoroutineExceptionHandler = CoroutineExceptionHandler { _, exception ->
-        // Process.destroy() can be invoked for a still running process (Ex. process.waitFor(timeout, timeUnit) returned false).
-        // If process is killed then `readLine` could throw IOException("Stream closed") that is handled here
-        if (exception is IOException && exception.message == "Stream closed") {
-            LOG.log(Level.FINE, "Error stream closed")
-        } else {
-            LOG.log(Level.SEVERE, "CoroutineException:", exception)
+    private val readErrorStreamCoroutineExceptionHandler =
+        CoroutineExceptionHandler { _, exception ->
+            // Process.destroy() can be invoked for a still running process (Ex. process.waitFor(timeout, timeUnit) returned false).
+            // If process is killed then `readLine` could throw IOException("Stream closed") that is handled here
+            if (exception is IOException && exception.message == "Stream closed") {
+                LOG.log(Level.FINE, "Error stream closed")
+            } else {
+                LOG.log(Level.SEVERE, "CoroutineException:", exception)
+            }
         }
-    }
 
     private fun execBuck(patternsFile: Path, outputFile: Path) {
         val builder = ProcessBuilder("buck", "targets", "--show-parse-state", "-c",
-            "log.log_upload_mode=never", "@$patternsFile")
-            .redirectOutput(outputFile.toFile())
-            .redirectError(ProcessBuilder.Redirect.PIPE)
-            .directory(root.toFile())
+            "log.log_upload_mode=never", "@$patternsFile").redirectOutput(outputFile.toFile())
+            .redirectError(ProcessBuilder.Redirect.PIPE).directory(root.toFile())
         val environment = builder.environment()
         environment.putIfAbsent("BUCK_EXTRA_JAVA_ARGS", "-Xmx24G")
         if (!daemon) {
@@ -119,9 +131,10 @@ class BuckShellBuildPackageParser(
         }
         val process = builder.start()
 
-        val readErrorOutputJob = GlobalScope.launch(Dispatchers.IO + readErrorStreamCoroutineExceptionHandler) {
-            process.errorStream.bufferedReader().forEachLine { LOG.log(Level.INFO, it) }
-        }
+        val readErrorOutputJob =
+            GlobalScope.launch(Dispatchers.IO + readErrorStreamCoroutineExceptionHandler) {
+                process.errorStream.bufferedReader().forEachLine { LOG.log(Level.FINE, it) }
+            }
 
         try {
             val hasExited = process.waitFor(timeout, timeUnit)

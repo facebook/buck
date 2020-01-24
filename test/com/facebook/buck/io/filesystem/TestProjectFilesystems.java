@@ -24,15 +24,22 @@ import java.nio.file.Path;
 
 public class TestProjectFilesystems {
 
+  public static final boolean BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST = true;
+
   private TestProjectFilesystems() {}
 
   public static DefaultProjectFilesystem createProjectFilesystem(Path root, Config config) {
     return new DefaultProjectFilesystemFactory()
-        .createProjectFilesystem(CanonicalCellName.rootCell(), root, config);
+        .createProjectFilesystem(
+            CanonicalCellName.rootCell(),
+            root,
+            config,
+            BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST);
   }
 
   public static DefaultProjectFilesystem createProjectFilesystem(Path root) {
     return new DefaultProjectFilesystemFactory()
-        .createProjectFilesystem(CanonicalCellName.rootCell(), root);
+        .createProjectFilesystem(
+            CanonicalCellName.rootCell(), root, BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST);
   }
 }

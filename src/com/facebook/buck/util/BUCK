@@ -14,7 +14,7 @@ java_library(
 )
 
 IO_SRCS = [
-    "AbstractDirectoryCleanerArgs.java",
+    "DirectoryCleanerArgs.java",
     "AnsiEnvironmentChecking.java",
     "DefaultFilteredDirectoryCopier.java",
     "DirectoryCleaner.java",
@@ -49,8 +49,8 @@ java_immutables_library(
 )
 
 PROCESS_EXECUTOR_SRCS = [
-    "AbstractProcessExecutorParams.java",
-    "AbstractProcessResourceConsumption.java",
+    "ProcessExecutorParams.java",
+    "ProcessResourceConsumption.java",
     "Ansi.java",
     "BgProcessKiller.java",
     "CapturingPrintStream.java",
@@ -98,13 +98,6 @@ java_immutables_library(
         ["*.java"],
         exclude = CONSTANT_SRCS + IO_SRCS + PROCESS_EXECUTOR_SRCS,
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/core/util:util",
-        "//src/com/facebook/buck/util/function:function",
-        "//src/com/facebook/buck/util/types:types",
-        "//third-party/java/guava:guava",
-        "//third-party/java/jackson:jackson-databind",
-    ],
     tests = [
         "//test/com/facebook/buck/util:util",
     ],
@@ -121,5 +114,12 @@ java_immutables_library(
         "//third-party/java/guava:guava",
         "//third-party/java/infer-annotations:infer-annotations",
         "//third-party/java/jackson:jackson-annotations",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/util:util",
+        "//src/com/facebook/buck/util/function:function",
+        "//src/com/facebook/buck/util/types:types",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jackson:jackson-databind",
     ],
 )

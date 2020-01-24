@@ -41,7 +41,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.Optionals;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -50,6 +50,7 @@ import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.step.fs.XzStep;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -268,8 +269,7 @@ public class AndroidBundleDescription
     }
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable(copy = true)
+  @RuleArg
   abstract static class AbstractAndroidBundleDescriptionArg
       implements BuildRuleArg,
           HasDeclaredDeps,
@@ -354,6 +354,17 @@ public class AndroidBundleDescription
     @Value.Default
     public AaptMode getAaptMode() {
       return AaptMode.AAPT2;
+    }
+
+    @Override
+    public AndroidBundleDescriptionArg withApplicationModuleBlacklist(List<Query> queries) {
+      if (getApplicationModuleBlacklist().equals(Optional.of(queries))) {
+        return (AndroidBundleDescriptionArg) this;
+      }
+      return AndroidBundleDescriptionArg.builder()
+          .from(this)
+          .setApplicationModuleBlacklist(queries)
+          .build();
     }
   }
 }

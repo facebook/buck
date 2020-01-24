@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -142,11 +143,10 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
                   context.getBuildCellRootPath(), getProjectFilesystem(), stagingRoot)));
 
       commands.add(
-          SymlinkFileStep.builder()
-              .setFilesystem(getProjectFilesystem())
-              .setExistingFile(context.getSourcePathResolver().getAbsolutePath(metaInfDirectory))
-              .setDesiredLink(stagingTarget)
-              .build());
+          SymlinkFileStep.of(
+              getProjectFilesystem(),
+              context.getSourcePathResolver().getAbsolutePath(metaInfDirectory),
+              stagingTarget));
 
       includePaths =
           ImmutableSortedSet.<Path>naturalOrder()
@@ -218,7 +218,7 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Tool getExecutableCommand() {
+  public Tool getExecutableCommand(OutputLabel outputLabel) {
     Preconditions.checkState(
         mainClass != null,
         "Must specify a main class for %s in order to to run it.",

@@ -183,13 +183,12 @@ public class PerfManifestCommand extends AbstractPerfCommand<Context> {
                   ImmutableSet.copyOf(
                       ((SupportsDependencyFileRuleKey) rule)
                           .getInputsAfterBuildingLocally(
-                              BuildContext.builder()
-                                  .setShouldDeleteTemporaries(false)
-                                  .setBuildCellRootPath(params.getCell().getRoot())
-                                  .setEventBus(params.getBuckEventBus())
-                                  .setJavaPackageFinder(params.getJavaPackageFinder())
-                                  .setSourcePathResolver(graphBuilder.getSourcePathResolver())
-                                  .build(),
+                              BuildContext.of(
+                                  graphBuilder.getSourcePathResolver(),
+                                  params.getCell().getRoot(),
+                                  params.getJavaPackageFinder(),
+                                  params.getBuckEventBus(),
+                                  false),
                               params.getCell().getCellPathResolver())));
             } catch (Exception e) {
               throw new BuckUncheckedExecutionException(

@@ -32,7 +32,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -42,7 +42,6 @@ import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 public class DTestDescription
     implements DescriptionWithTargetGraph<DTestDescriptionArg>,
@@ -106,10 +105,7 @@ public class DTestDescription
             ImmutableList.of("-unittest"),
             args.getSrcs(),
             args.getLinkerFlags(),
-            DIncludes.builder()
-                .setLinkTree(sourceTree.getSourcePathToOutput())
-                .addAllSources(args.getSrcs().getPaths())
-                .build());
+            ImmutableDIncludes.of(sourceTree.getSourcePathToOutput(), args.getSrcs().getPaths()));
     graphBuilder.addToIndex(binaryRule);
 
     return new DTest(
@@ -141,8 +137,7 @@ public class DTestDescription
             .getParseTimeDeps(buildTarget.getTargetConfiguration()));
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractDTestDescriptionArg
       extends BuildRuleArg, HasContacts, HasDeclaredDeps, HasTestTimeout {
     SourceSortedSet getSrcs();

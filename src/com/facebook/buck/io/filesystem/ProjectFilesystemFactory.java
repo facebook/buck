@@ -26,11 +26,15 @@ public interface ProjectFilesystemFactory {
       CanonicalCellName cellName,
       Path root,
       Config config,
-      Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo);
+      Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo,
+      boolean buckOutIncludeTargetConfigHash);
 
-  ProjectFilesystem createProjectFilesystem(CanonicalCellName cellName, Path root, Config config);
+  ProjectFilesystem createProjectFilesystem(
+      CanonicalCellName cellName, Path root, Config config, boolean buckOutIncludeTargetConfigHash);
 
-  ProjectFilesystem createProjectFilesystem(CanonicalCellName cellName, Path root);
+  ProjectFilesystem createProjectFilesystem(
+      CanonicalCellName cellName, Path root, boolean buckOutIncludeTargetCofigHash);
 
-  ProjectFilesystem createOrThrow(CanonicalCellName cellName, Path path);
+  ProjectFilesystem createOrThrow(
+      CanonicalCellName cellName, Path path, boolean buckOutIncludeTargetCofigHash);
 }

@@ -20,7 +20,6 @@ import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.PathMatcher;
@@ -38,6 +37,7 @@ import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.parser.events.ParseBuckProfilerReportEvent;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.implicit.PackageImplicitIncludesFinder;
+import com.facebook.buck.parser.options.ImplicitNativeRulesState;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.parser.syntax.ImmutableListWithSelects;
 import com.facebook.buck.parser.syntax.ImmutableSelectorValue;
@@ -208,7 +208,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   /** Initialize the parser, starting buck.py. */
   private void init() throws IOException {
     try (SimplePerfEvent.Scope scope =
-        SimplePerfEvent.scope(buckEventBus, PerfEventId.of("ParserInit"))) {
+        SimplePerfEvent.scope(buckEventBus, SimplePerfEvent.PerfEventId.of("ParserInit"))) {
 
       ImmutableMap.Builder<String, String> pythonEnvironmentBuilder =
           ImmutableMap.builderWithExpectedSize(environment.size());
@@ -361,7 +361,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
     argBuilder.add("--ignore_paths", ignorePathsJson.get().toString());
 
     // Disable native rules if requested
-    if (options.getDisableImplicitNativeRules()) {
+    if (options.getImplicitNativeRulesState() == ImplicitNativeRulesState.DISABLED) {
       argBuilder.add("--disable_implicit_native_rules");
     }
 

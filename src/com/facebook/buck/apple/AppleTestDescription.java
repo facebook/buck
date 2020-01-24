@@ -59,8 +59,8 @@ import com.facebook.buck.core.test.rule.HasTestRunner;
 import com.facebook.buck.core.test.rule.coercer.TestRunnerSpecCoercer;
 import com.facebook.buck.core.test.rule.impl.ExternalTestRunner;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
@@ -203,7 +203,6 @@ public class AppleTestDescription
           appleLibraryDescription.createSwiftBuildRule(
               buildTarget,
               projectFilesystem,
-              params,
               graphBuilder,
               context.getCellPathResolver(),
               args,
@@ -390,13 +389,11 @@ public class AppleTestDescription
       ExternalTestRunner runner = (ExternalTestRunner) runnerRule;
 
       StringWithMacrosConverter macrosConverter =
-          StringWithMacrosConverter.builder()
-              .setBuildTarget(buildTarget)
-              .setCellPathResolver(context.getCellPathResolver())
-              .setActionGraphBuilder(graphBuilder)
-              .setExpanders(
-                  ImmutableList.of(new LocationMacroExpander(), new AbsoluteOutputMacroExpander()))
-              .build();
+          StringWithMacrosConverter.of(
+              buildTarget,
+              context.getCellPathResolver(),
+              graphBuilder,
+              ImmutableList.of(new LocationMacroExpander(), new AbsoluteOutputMacroExpander()));
 
       return new AppleTestX(
           runner.getBinary(),
@@ -924,8 +921,7 @@ public class AppleTestDescription
     ImmutableSet<BuildTarget> getBlacklist();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractAppleTestDescriptionArg
       extends AppleNativeTargetDescriptionArg,
           HasAppleBundleFields,

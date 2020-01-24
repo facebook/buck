@@ -17,17 +17,19 @@
 package com.facebook.buck.core.rules.actions;
 
 import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import java.util.Objects;
 
 public class FakeAction extends AbstractAction {
 
-  private final HashableWrapper hasheableWrapper;
-  private final ImmutableSortedSet<Artifact> srcs;
-  private final ImmutableSortedSet<Artifact> deps;
+  @AddToRuleKey private final HashableWrapper hasheableWrapper;
+  @AddToRuleKey private final ImmutableSortedSet<Artifact> srcs;
+  @AddToRuleKey private final ImmutableSortedSet<Artifact> deps;
 
   public FakeAction(
       ActionRegistry actionRegistry,
@@ -35,20 +37,27 @@ public class FakeAction extends AbstractAction {
       ImmutableSortedSet<Artifact> deps,
       ImmutableSortedSet<Artifact> outputs,
       FakeActionExecuteLambda executeFunction) {
-    super(actionRegistry, ImmutableSortedSet.copyOf(Sets.union(srcs, deps)), outputs);
+    super(
+        actionRegistry,
+        ImmutableSortedSet.copyOf(Sets.union(srcs, deps)),
+        outputs.stream()
+            .map(Artifact::asOutputArtifact)
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())),
+        "fake-action");
     this.hasheableWrapper = new HashableWrapper(executeFunction);
     this.srcs = srcs;
     this.deps = deps;
   }
 
   @Override
-  public String getShortName() {
-    return "fake-action";
-  }
-
-  @Override
   public ActionExecutionResult execute(ActionExecutionContext executionContext) {
-    return hasheableWrapper.executeFunction.apply(srcs, deps, outputs, executionContext);
+    return hasheableWrapper.executeFunction.apply(
+        srcs,
+        deps,
+        outputs.stream()
+            .map(OutputArtifact::getArtifact)
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())),
+        executionContext);
   }
 
   @Override

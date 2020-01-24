@@ -17,9 +17,12 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.android.toolchain.AndroidTools;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -27,8 +30,10 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.SourceSet;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import java.util.Optional;
 
 /** Same as a Genrule, but marked as a binary. */
@@ -44,7 +49,7 @@ public class GenruleBinary extends Genrule implements BinaryBuildRule {
       Optional<Arg> cmdExe,
       Optional<String> type,
       Optional<String> out,
-      Optional<ImmutableMap<String, ImmutableList<String>>> outs,
+      Optional<ImmutableMap<String, ImmutableSet<String>>> outs,
       boolean isCacheable,
       Optional<String> environmentExpansionSeparator,
       Optional<AndroidTools> androidTools,
@@ -69,7 +74,15 @@ public class GenruleBinary extends Genrule implements BinaryBuildRule {
   }
 
   @Override
-  public Tool getExecutableCommand() {
-    return new CommandTool.Builder().addArg(SourcePathArg.of(getSourcePathToOutput())).build();
+  public Tool getExecutableCommand(OutputLabel outputLabel) {
+    ImmutableSortedSet<SourcePath> outputs = getSourcePathToOutput(outputLabel);
+    if (outputs.size() != 1) {
+      throw new HumanReadableException(
+          "Unexpectedly found %d outputs for %s[%s]",
+          outputs.size(), getBuildTarget().getFullyQualifiedName(), outputLabel);
+    }
+    return new CommandTool.Builder()
+        .addArg(SourcePathArg.of(Iterables.getOnlyElement(outputs)))
+        .build();
   }
 }

@@ -103,7 +103,7 @@ public class AppleTestAggregatedDependencies extends AbstractBuildRuleWithDeclar
           BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), "argsfile.tmp");
       String output =
           staticLibDeps.stream()
-              .map(t -> context.getSourcePathResolver().getRelativePath(t).toString())
+              .map(t -> context.getSourcePathResolver().getAbsolutePath(t).toString())
               .collect(Collectors.joining("\n"));
       stepsBuilder.add(new WriteFileStep(getProjectFilesystem(), output, argsFile, false));
       stepsBuilder.add(

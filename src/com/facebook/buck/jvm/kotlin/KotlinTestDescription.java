@@ -26,7 +26,7 @@ import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
@@ -53,7 +53,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.util.Optional;
 import java.util.function.Function;
-import org.immutables.value.Value;
 
 /** Description for kotlin_test. */
 public class KotlinTestDescription
@@ -133,12 +132,11 @@ public class KotlinTestDescription
         graphBuilder.addToIndex(defaultJavaLibraryRules.buildLibrary());
 
     StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(buildTarget)
-            .setCellPathResolver(context.getCellPathResolver())
-            .setActionGraphBuilder(graphBuilder)
-            .setExpanders(JavaTestDescription.MACRO_EXPANDERS)
-            .build();
+        StringWithMacrosConverter.of(
+            buildTarget,
+            context.getCellPathResolver(),
+            graphBuilder,
+            JavaTestDescription.MACRO_EXPANDERS);
     return new JavaTest(
         buildTarget,
         projectFilesystem,
@@ -185,8 +183,7 @@ public class KotlinTestDescription
         .addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractKotlinTestDescriptionArg
       extends KotlinLibraryDescription.CoreArg, JavaTestDescription.CoreArg {}
 }

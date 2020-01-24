@@ -24,6 +24,7 @@ import com.facebook.buck.core.graph.transformation.model.ClassBasedComputationId
 import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Streams;
@@ -49,7 +50,7 @@ import org.immutables.value.Value;
  */
 public class ChildrenSumMultiplier implements GraphComputation<LongMultNode, LongMultNode> {
 
-  @Value.Immutable(builder = false, copy = false, prehash = true)
+  @BuckStylePrehashedValue
   public abstract static class LongMultNode implements ComputeKey<LongMultNode>, ComputeResult {
     public static ComputationIdentifier<LongMultNode> IDENTIFIER =
         ClassBasedComputationIdentifier.of(LongMultNode.class, LongMultNode.class);

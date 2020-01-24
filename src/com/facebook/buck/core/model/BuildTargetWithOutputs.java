@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.model;
 
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 
 /**
  * Wrapper for a build target and its output label.
@@ -33,13 +33,11 @@ import org.immutables.value.Value;
  * <p>See also {@link UnconfiguredBuildTargetWithOutputs} for outputs with unconfigured build
  * targets.
  */
-@Value.Immutable(prehash = true, builder = false)
+@BuckStylePrehashedValue
 public abstract class BuildTargetWithOutputs implements Comparable<BuildTargetWithOutputs> {
-  @Value.Parameter
   /** Returns the associated {@link BuildTarget}. */
   public abstract BuildTarget getBuildTarget();
 
-  @Value.Parameter
   /** Returns the output label associated with the build target, if any. */
   public abstract OutputLabel getOutputLabel();
 

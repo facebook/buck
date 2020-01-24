@@ -30,7 +30,7 @@ import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.ImmutableCellRelativePath;
+import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -492,11 +492,11 @@ public class TestCommand extends BuildCommand {
                       parsingContext,
                       ImmutableList.of(
                           ImmutableTargetNodePredicateSpec.of(
-                                  BuildFileSpec.fromRecursivePath(
-                                      new ImmutableCellRelativePath(
-                                          params.getCell().getCanonicalName(),
-                                          ForwardRelativePath.of(""))))
-                              .withOnlyTests(true)),
+                              BuildFileSpec.fromRecursivePath(
+                                  CellRelativePath.of(
+                                      params.getCell().getCanonicalName(),
+                                      ForwardRelativePath.of(""))),
+                              true)),
                       params.getTargetConfiguration());
           targetGraphCreationResult = targetGraphCreationResult.withBuildTargets(ImmutableSet.of());
 
@@ -672,18 +672,15 @@ public class TestCommand extends BuildCommand {
             testRules = filterTestRules(params.getBuckConfig(), explicitBuildTargets, testRules);
           }
           BuildContext buildContext =
-              BuildContext.builder()
-                  .setSourcePathResolver(
-                      actionGraphAndBuilder.getActionGraphBuilder().getSourcePathResolver())
-                  .setBuildCellRootPath(params.getCell().getRoot())
-                  .setJavaPackageFinder(params.getJavaPackageFinder())
-                  .setEventBus(params.getBuckEventBus())
-                  .setShouldDeleteTemporaries(
-                      params
-                          .getBuckConfig()
-                          .getView(BuildBuckConfig.class)
-                          .getShouldDeleteTemporaries())
-                  .build();
+              BuildContext.of(
+                  actionGraphAndBuilder.getActionGraphBuilder().getSourcePathResolver(),
+                  params.getCell().getRoot(),
+                  params.getJavaPackageFinder(),
+                  params.getBuckEventBus(),
+                  params
+                      .getBuckConfig()
+                      .getView(BuildBuckConfig.class)
+                      .getShouldDeleteTemporaries());
 
           // Once all of the rules are built, then run the tests.
           Optional<ImmutableList<String>> externalTestRunner =

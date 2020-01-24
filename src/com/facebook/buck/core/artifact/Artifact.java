@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.artifact;
 
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.starlark.rule.artifact.SkylarkArtifactApi;
 
 /**
@@ -24,7 +25,7 @@ import com.facebook.buck.core.starlark.rule.artifact.SkylarkArtifactApi;
  *
  * <p>This is the interface exposed to users.
  */
-public interface Artifact extends SkylarkArtifactApi, Comparable<Artifact> {
+public interface Artifact extends SkylarkArtifactApi, Comparable<Artifact>, AddsToRuleKey {
 
   /** TODO: we should make the below package protected. */
 
@@ -36,4 +37,7 @@ public interface Artifact extends SkylarkArtifactApi, Comparable<Artifact> {
 
   /** @return a view of this artifact as a {@link DeclaredArtifact} */
   DeclaredArtifact asDeclared();
+
+  /** @return get this artifact as an {@link OutputArtifact}. Throws if cannot be converted */
+  OutputArtifact asOutputArtifact();
 }

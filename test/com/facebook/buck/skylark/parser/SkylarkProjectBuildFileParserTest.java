@@ -30,6 +30,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
@@ -42,7 +43,9 @@ import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.implicit.ImplicitInclude;
+import com.facebook.buck.parser.options.ImplicitNativeRulesState;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
+import com.facebook.buck.parser.options.UserDefinedRulesState;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.skylark.function.SkylarkBuildModule;
 import com.facebook.buck.skylark.io.GlobSpec;
@@ -225,11 +228,7 @@ public class SkylarkProjectBuildFileParserTest {
             buildFile,
             ImmutableList.of(
                 GlobSpecWithResult.of(
-                    GlobSpec.builder()
-                        .setInclude(Collections.singletonList("f*"))
-                        .setExclude(Collections.EMPTY_LIST)
-                        .setExcludeDirectories(false)
-                        .build(),
+                    GlobSpec.of(Collections.singletonList("f*"), Collections.EMPTY_LIST, false),
                     ImmutableSet.of("file2", "file1"))));
 
     assertTrue(result);
@@ -253,11 +252,7 @@ public class SkylarkProjectBuildFileParserTest {
             buildFile,
             ImmutableList.of(
                 GlobSpecWithResult.of(
-                    GlobSpec.builder()
-                        .setInclude(Collections.singletonList("f*"))
-                        .setExclude(Collections.EMPTY_LIST)
-                        .setExcludeDirectories(false)
-                        .build(),
+                    GlobSpec.of(Collections.singletonList("f*"), Collections.EMPTY_LIST, false),
                     ImmutableSet.of("file3", "file1"))));
 
     assertFalse(result);
@@ -281,11 +276,7 @@ public class SkylarkProjectBuildFileParserTest {
             buildFile,
             ImmutableList.of(
                 GlobSpecWithResult.of(
-                    GlobSpec.builder()
-                        .setInclude(Collections.singletonList("f*"))
-                        .setExclude(Collections.EMPTY_LIST)
-                        .setExcludeDirectories(false)
-                        .build(),
+                    GlobSpec.of(Collections.singletonList("f*"), Collections.EMPTY_LIST, false),
                     ImmutableSet.of("file1"))));
 
     assertFalse(result);
@@ -308,11 +299,7 @@ public class SkylarkProjectBuildFileParserTest {
             buildFile,
             ImmutableList.of(
                 GlobSpecWithResult.of(
-                    GlobSpec.builder()
-                        .setInclude(Collections.singletonList("f*"))
-                        .setExclude(Collections.EMPTY_LIST)
-                        .setExcludeDirectories(false)
-                        .build(),
+                    GlobSpec.of(Collections.singletonList("f*"), Collections.EMPTY_LIST, false),
                     ImmutableSet.of("file1", "file2"))));
 
     assertFalse(result);
@@ -334,11 +321,7 @@ public class SkylarkProjectBuildFileParserTest {
             buildFile,
             ImmutableList.of(
                 GlobSpecWithResult.of(
-                    GlobSpec.builder()
-                        .setInclude(Collections.singletonList("f*"))
-                        .setExclude(Collections.EMPTY_LIST)
-                        .setExcludeDirectories(false)
-                        .build(),
+                    GlobSpec.of(Collections.singletonList("f*"), Collections.EMPTY_LIST, false),
                     ImmutableSet.of())));
 
     assertTrue(result);
@@ -393,11 +376,7 @@ public class SkylarkProjectBuildFileParserTest {
         equalTo(
             ImmutableList.of(
                 GlobSpecWithResult.of(
-                    GlobSpec.builder()
-                        .setInclude(ImmutableList.of("f*"))
-                        .setExclude(ImmutableList.of())
-                        .setExcludeDirectories(true)
-                        .build(),
+                    GlobSpec.of(ImmutableList.of("f*"), ImmutableList.of(), true),
                     ImmutableSet.of("file1", "file2")))));
   }
 
@@ -736,6 +715,43 @@ public class SkylarkProjectBuildFileParserTest {
   }
 
   @Test
+  public void canUsePerLanguageProvidersInExtensionFiles()
+      throws IOException, InterruptedException {
+    Path directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory);
+    Path buildFile = directory.resolve("BUCK");
+    Path extensionFile = directory.resolve("build_rules.bzl");
+    Files.write(
+        buildFile,
+        Arrays.asList(
+            "load('//src/test:build_rules.bzl', 'get_name')",
+            "prebuilt_jar(name=get_name('foo'), binary_jar='')"));
+    Files.write(
+        extensionFile,
+        Arrays.asList(
+            "def get_name(x):",
+            "    if \"DotnetLibraryProviderInfo\" not in str(DotnetLibraryProviderInfo):",
+            "        fail(\"Name was not as expected\")",
+            "    return x + \"_custom\""));
+
+    ProjectBuildFileParserOptions options =
+        getDefaultParserOptions().setUserDefinedRulesState(UserDefinedRulesState.ENABLED).build();
+    knownRuleTypesProvider.getNativeRuleTypes(cell).getDescriptions();
+    System.err.println(
+        String.format(
+            "Got %s descriptions\n%s providers\n%s from PM\n",
+            knownRuleTypesProvider.getNativeRuleTypes(cell).getDescriptions(),
+            knownRuleTypesProvider.getNativeRuleTypes(cell).getPerFeatureProviders(),
+            BuckPluginManagerFactory.createPluginManager()
+                .getExtensions(DescriptionProvider.class)));
+    parser = createParserWithOptions(parser.eventHandler, options);
+    SkylarkProjectBuildFileParserTestUtils.getSingleRule(parser, buildFile);
+    Map<String, Object> rule = getSingleRule(buildFile);
+
+    assertThat(rule.get("name"), equalTo("foo_custom"));
+  }
+
+  @Test
   public void testImportFunction() throws Exception {
     Path directory = projectFilesystem.resolve("src").resolve("test");
     Files.createDirectories(directory);
@@ -1004,6 +1020,8 @@ public class SkylarkProjectBuildFileParserTest {
             .setIgnorePaths(ImmutableSet.of())
             .setBuildFileName("BUCK")
             .setDescriptions(knownRuleTypesProvider.getNativeRuleTypes(cell).getDescriptions())
+            .setPerFeatureProviders(
+                knownRuleTypesProvider.getNativeRuleTypes(cell).getPerFeatureProviders())
             .setBuildFileImportWhitelist(ImmutableList.of())
             .setPythonInterpreter("skylark")
             .setCellRoots(ImmutableMap.of("tp2", anotherCell))
@@ -1013,15 +1031,15 @@ public class SkylarkProjectBuildFileParserTest {
             options,
             BuckEventBusForTests.newInstance(),
             skylarkFilesystem,
-            BuckGlobals.builder()
-                .setSkylarkFunctionModule(SkylarkBuildModule.BUILD_MODULE)
-                .setDisableImplicitNativeRules(options.getDisableImplicitNativeRules())
-                .setDescriptions(options.getDescriptions())
-                .setRuleFunctionFactory(new RuleFunctionFactory(new DefaultTypeCoercerFactory()))
-                .setEnableUserDefinedRules(options.getEnableUserDefinedRules())
-                .setLabelCache(LabelCache.newLabelCache())
-                .setKnownUserDefinedRuleTypes(knownRuleTypesProvider.getUserDefinedRuleTypes(cell))
-                .build(),
+            BuckGlobals.of(
+                SkylarkBuildModule.BUILD_MODULE,
+                options.getDescriptions(),
+                options.getUserDefinedRulesState(),
+                options.getImplicitNativeRulesState(),
+                new RuleFunctionFactory(new DefaultTypeCoercerFactory()),
+                LabelCache.newLabelCache(),
+                knownRuleTypesProvider.getUserDefinedRuleTypes(cell),
+                options.getPerFeatureProviders()),
             new PrintingEventHandler(EnumSet.allOf(EventKind.class)),
             NativeGlobber::create);
 
@@ -1122,7 +1140,9 @@ public class SkylarkProjectBuildFileParserTest {
         buildFile, Collections.singletonList("prebuilt_jar(name='foo', binary_jar='guava.jar')"));
 
     ProjectBuildFileParserOptions options =
-        getDefaultParserOptions().setDisableImplicitNativeRules(true).build();
+        getDefaultParserOptions()
+            .setImplicitNativeRulesState(ImplicitNativeRulesState.of(false))
+            .build();
 
     parser = createParserWithOptions(eventCollector, options);
     thrown.expect(BuildFileParseException.class);
@@ -1156,7 +1176,9 @@ public class SkylarkProjectBuildFileParserTest {
         Arrays.asList("def make_jar(*args, **kwargs):", "    prebuilt_jar(*args, **kwargs)"));
 
     ProjectBuildFileParserOptions options =
-        getDefaultParserOptions().setDisableImplicitNativeRules(true).build();
+        getDefaultParserOptions()
+            .setImplicitNativeRulesState(ImplicitNativeRulesState.of(false))
+            .build();
 
     parser = createParserWithOptions(eventCollector, options);
     thrown.expect(BuildFileParseException.class);
@@ -1191,7 +1213,9 @@ public class SkylarkProjectBuildFileParserTest {
             "def make_jar(*args, **kwargs):", "    native.prebuilt_jar(*args, **kwargs)"));
 
     ProjectBuildFileParserOptions options =
-        getDefaultParserOptions().setDisableImplicitNativeRules(true).build();
+        getDefaultParserOptions()
+            .setImplicitNativeRulesState(ImplicitNativeRulesState.of(false))
+            .build();
 
     parser = createParserWithOptions(new PrintingEventHandler(EventKind.ALL_EVENTS), options);
 
@@ -1210,7 +1234,9 @@ public class SkylarkProjectBuildFileParserTest {
         buildFile, Collections.singletonList("prebuilt_jar(name='foo', binary_jar='guava.jar')"));
 
     ProjectBuildFileParserOptions options =
-        getDefaultParserOptions().setDisableImplicitNativeRules(false).build();
+        getDefaultParserOptions()
+            .setImplicitNativeRulesState(ImplicitNativeRulesState.of(true))
+            .build();
 
     parser = createParserWithOptions(new PrintingEventHandler(EventKind.ALL_EVENTS), options);
 
@@ -1237,7 +1263,9 @@ public class SkylarkProjectBuildFileParserTest {
         Arrays.asList("def make_jar(*args, **kwargs):", "    prebuilt_jar(*args, **kwargs)"));
 
     ProjectBuildFileParserOptions options =
-        getDefaultParserOptions().setDisableImplicitNativeRules(false).build();
+        getDefaultParserOptions()
+            .setImplicitNativeRulesState(ImplicitNativeRulesState.of(true))
+            .build();
 
     parser = createParserWithOptions(eventCollector, options);
     thrown.expect(BuildFileParseException.class);

@@ -27,6 +27,7 @@ import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.BuckInitializationDurationEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.InstallEvent;
+import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.log.PerfTimesStats;
 import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.parser.ParseEvent;
@@ -93,6 +94,12 @@ public class PerfTimesEventListener implements BuckEventListener {
   @Subscribe
   public synchronized void actionGraphFinished(ActionGraphEvent.Finished finished) {
     perfTimesStatsBuilder.setActionGraphTimeMs(getTimeDifferenceSinceLastEventToEvent(finished));
+    eventBus.post(PerfTimesEvent.update(perfTimesStatsBuilder.build()));
+  }
+
+  @Subscribe
+  public void projectGenerationFinished(ProjectGenerationEvent.Finished finished) {
+    perfTimesStatsBuilder.setProjectTimeMs(getTimeDifferenceSinceLastEventToEvent(finished));
     eventBus.post(PerfTimesEvent.update(perfTimesStatsBuilder.build()));
   }
 

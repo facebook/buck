@@ -1,0 +1,29 @@
+load("//:defs.bzl", "testable_rule_test", "without_run_test")
+
+testable_rule_test(
+    name = "testable_sh_success",
+    script = "testable.sh",
+    exit = 0,
+)
+
+testable_rule_test(
+    name = "testable_sh_failure",
+    script = "testable.sh",
+    exit = 100,
+)
+
+testable_rule_test(
+    name = "testable_bat_success",
+    script = "testable.bat",
+    exit = 0,
+)
+
+testable_rule_test(
+    name = "testable_bat_failure",
+    script = "testable.bat",
+    exit = 100,
+)
+
+without_run_test(
+    name = "without_run",
+)

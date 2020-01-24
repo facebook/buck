@@ -47,18 +47,21 @@ public class PrebuiltPythonLibrary extends AbstractBuildRuleWithDeclaredAndExtra
   @AddToRuleKey private final SourcePath binarySrc;
   private final Path extractedOutput;
   private final boolean excludeDepsFromOmnibus;
+  private final boolean compile;
 
   public PrebuiltPythonLibrary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePath binarySrc,
-      boolean excludeDepsFromOmnibus) {
+      boolean excludeDepsFromOmnibus,
+      boolean compile) {
     super(buildTarget, projectFilesystem, params);
     this.binarySrc = binarySrc;
     this.extractedOutput =
         BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "__%s__extracted");
     this.excludeDepsFromOmnibus = excludeDepsFromOmnibus;
+    this.compile = compile;
   }
 
   @Override
@@ -94,6 +97,9 @@ public class PrebuiltPythonLibrary extends AbstractBuildRuleWithDeclaredAndExtra
   @Override
   public Optional<PythonComponents> getPythonBytecode(
       PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    if (!compile) {
+      return Optional.empty();
+    }
     return getPythonSources()
         .map(
             sources -> {

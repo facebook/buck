@@ -45,7 +45,8 @@ public class HaskellPlatformsFactory {
     CxxPlatform cxxPlatform = LegacyToolchainProvider.getLegacyTotallyUnsafe(unresolvedCxxPlatform);
 
     return HaskellPlatform.builder()
-        .setHaskellVersion(HaskellVersion.of(haskellBuckConfig.getCompilerMajorVersion(section)))
+        .setHaskellVersion(
+            ImmutableHaskellVersion.of(haskellBuckConfig.getCompilerMajorVersion(section)))
         .setCompiler(getCompiler(section))
         .setCompilerFlags(haskellBuckConfig.getCompilerFlags(section).orElse(ImmutableList.of()))
         .setLinker(getLinker(section))
@@ -92,13 +93,12 @@ public class HaskellPlatformsFactory {
       Optional<ToolProvider> toolProviderFromConfig, String source, String systemName) {
     return toolProviderFromConfig.orElseGet(
         () ->
-            SystemToolProvider.builder()
-                .setExecutableFinder(executableFinder)
-                .setSourcePathConverter(buckConfig::getPathSourcePath)
-                .setName(Paths.get(systemName))
-                .setEnvironment(buckConfig.getEnvironment())
-                .setSource(source)
-                .build());
+            SystemToolProvider.of(
+                executableFinder,
+                buckConfig::getPathSourcePath,
+                Paths.get(systemName),
+                buckConfig.getEnvironment(),
+                Optional.of(source)));
   }
 
   private ToolProvider getCompiler(String section) {

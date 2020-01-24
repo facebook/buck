@@ -48,7 +48,6 @@ import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.remoteexecution.util.OutputsMaterializer.FilesystemFileMaterializer;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.step.AbstractExecutionStep;
-import com.facebook.buck.step.ImmutableStepExecutionResult;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.StepFailedException;
@@ -555,7 +554,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
             }
           },
           strategyContext.getExecutionContext(),
-          ImmutableStepExecutionResult.builder().setExitCode(exitCode).setStderr(stderr).build(),
+          StepExecutionResult.builder().setExitCode(exitCode).setStderr(stderr).build(),
           result.getActionMetadata());
     }
 

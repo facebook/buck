@@ -69,7 +69,7 @@ public class AndroidBinaryFilesInfoTest {
             Optional.empty(),
             ImmutableMap.of());
     AndroidGraphEnhancementResult enhancementResult =
-        AndroidGraphEnhancementResult.builder()
+        ImmutableAndroidGraphEnhancementResult.builder()
             .setDexMergeRule(preDexMerge)
             .setPackageableCollection(collection)
             .setPrimaryResourcesApkPath(FakeSourcePath.of("primary_resources.apk"))

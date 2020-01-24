@@ -22,7 +22,7 @@ import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.util.zip.collect.OnDuplicateEntry;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableList;
@@ -64,8 +64,7 @@ public class ZipFileDescription
     return true;
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractZipFileDescriptionArg extends BuildRuleArg {
     @Value.Default
     default String getOut() {

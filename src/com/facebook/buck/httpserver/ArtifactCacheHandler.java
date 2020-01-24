@@ -20,7 +20,6 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.ArtifactInfo;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheBinaryProtocol;
-import com.facebook.buck.artifact_cache.StoreResponseReadResult;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.file.BorrowablePath;
@@ -140,7 +139,7 @@ public class ArtifactCacheHandler extends AbstractHandler {
           projectFilesystem.createTempFile(
               projectFilesystem.getBuckPaths().getScratchDir(), "incoming_upload", ".tmp");
 
-      StoreResponseReadResult storeRequest;
+      HttpArtifactCacheBinaryProtocol.StoreResponseReadResult storeRequest;
       try (DataInputStream requestInputData = new DataInputStream(baseRequest.getInputStream());
           OutputStream tempFileOutputStream = projectFilesystem.newFileOutputStream(temp)) {
         storeRequest =

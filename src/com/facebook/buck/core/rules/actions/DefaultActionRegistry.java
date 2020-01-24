@@ -25,6 +25,8 @@ import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataRegistry;
 import com.facebook.buck.core.rules.analysis.action.ImmutableActionAnalysisDataKey;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
 import com.google.devtools.build.lib.events.Location;
 import java.nio.file.Path;
 
@@ -32,6 +34,8 @@ import java.nio.file.Path;
 public class DefaultActionRegistry extends BuildArtifactFactory implements ActionRegistry {
 
   private final ActionAnalysisDataRegistry actionRegistry;
+
+  private final Multiset<String> registeredShortNameIDs;
 
   /**
    * @param buildTarget the {@link BuildTarget} for which all of the {@link Action}s created are for
@@ -45,6 +49,7 @@ public class DefaultActionRegistry extends BuildArtifactFactory implements Actio
       ProjectFilesystem filesystem) {
     super(buildTarget, filesystem);
     this.actionRegistry = actionRegistry;
+    this.registeredShortNameIDs = HashMultiset.create();
   }
 
   @Override
@@ -60,21 +65,31 @@ public class DefaultActionRegistry extends BuildArtifactFactory implements Actio
   }
 
   @Override
-  public void registerActionAnalysisDataForAction(Action action) throws ActionCreationException {
+  public String registerActionAnalysisDataForAction(Action action) throws ActionCreationException {
 
     // require all inputs to be bound for now. We could change this.
     for (Artifact input : action.getInputs()) {
       if (!input.isBound()) {
         throw new ActionCreationException(
-            action, "Input Artifact %s should be bound to an Action, but is actually not", input);
+            action,
+            target,
+            "Input Artifact %s should be bound to an Action, but is actually not",
+            input);
       }
     }
 
-    ActionAnalysisDataKey key = ImmutableActionAnalysisDataKey.of(target, new ID() {});
-    action.getOutputs().forEach(artifact -> bindtoBuildArtifact(key, artifact));
+    String normalizedShortName = action.getShortName().toLowerCase().replaceAll("\\s", "_");
+
+    int uniqueCounter = registeredShortNameIDs.add(normalizedShortName, 1);
+    String uniqueID = normalizedShortName.concat(String.format("-%s", uniqueCounter));
+
+    ActionAnalysisDataKey key = ImmutableActionAnalysisDataKey.of(target, new ID(uniqueID));
+    action.getOutputs().forEach(artifact -> bindtoBuildArtifact(key, artifact.getArtifact()));
 
     ActionWrapperData actionAnalysisData = ImmutableActionWrapperDataImpl.of(key, action);
     actionRegistry.registerAction(actionAnalysisData);
+
+    return uniqueID;
   }
 
   @Override

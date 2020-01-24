@@ -41,9 +41,9 @@ import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.file.MorePaths;
-import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import com.facebook.buck.testutil.ProcessResult;
@@ -68,7 +68,6 @@ import java.util.regex.Pattern;
 import org.apache.thrift.TException;
 import org.hamcrest.Matchers;
 import org.hamcrest.junit.MatcherAssert;
-import org.immutables.value.Value;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -162,33 +161,9 @@ public class BuildCommandIntegrationTest {
     workspace.setUp();
 
     ProcessResult result =
-        workspace
-            .runBuckBuild("--show-outputs", "//:bar_with_multiple_outputs")
-            .assertExitCode(ExitCode.BUILD_ERROR);
-    assertThat(
-        result.getStderr(),
-        Matchers.containsString(
-            "Genrule target //:bar_with_multiple_outputs doesn't support multiple default outputs yet. Use named outputs"));
-  }
-
-  @Test
-  public void showOutputsForSingleDefaultOutput() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
-    workspace.setUp();
-    Path expectedPath =
-        getExpectedOutputPathRelativeToProjectRoot(
-            "//:bar_with_multiple_outputs_but_really_only_has_one_heehee", "bar");
-
-    ProcessResult result =
-        workspace
-            .runBuckBuild(
-                "--show-outputs", "//:bar_with_multiple_outputs_but_really_only_has_one_heehee")
-            .assertSuccess();
-    assertThat(
-        result.getStdout(),
-        Matchers.containsString(
-            String.format(
-                "//:bar_with_multiple_outputs_but_really_only_has_one_heehee %s", expectedPath)));
+        workspace.runBuckBuild("--show-outputs", "//:bar_with_multiple_outputs").assertSuccess();
+    assertThat(result.getStdout(), Matchers.containsString("//:bar_with_multiple_outputs"));
+    assertThat(result.getStdout(), Matchers.not(Matchers.containsString("buck-out")));
   }
 
   @Test
@@ -212,7 +187,7 @@ public class BuildCommandIntegrationTest {
     ProcessResult runBuckResult =
         workspace.runBuckBuild("--show-json-output", "//:foo", "//:bar", "//:ex ample");
     runBuckResult.assertSuccess();
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     assertThat(
         runBuckResult.getStdout(),
         Matchers.containsString(
@@ -540,8 +515,7 @@ public class BuildCommandIntegrationTest {
         Matchers.containsString(String.format(expectedWhenNotExists, "subdir4:target")));
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractThrowInConstructorArg implements BuildRuleArg {}
 
   private static class ThrowInConstructor
@@ -573,7 +547,9 @@ public class BuildCommandIntegrationTest {
             knownConfigurationDescriptions) ->
             cell ->
                 KnownNativeRuleTypes.of(
-                    ImmutableList.of(new ThrowInConstructor()), knownConfigurationDescriptions));
+                    ImmutableList.of(new ThrowInConstructor()),
+                    knownConfigurationDescriptions,
+                    ImmutableList.of()));
     ProcessResult result = workspace.runBuckBuild(":qq");
     result.assertFailure();
     MatcherAssert.assertThat(result.getStderr(), Matchers.containsString("test test test"));
@@ -649,7 +625,7 @@ public class BuildCommandIntegrationTest {
         workspace.resolve(
             BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s")
                 .resolveSibling("binary.jar"));
-    Path hardlink = BuildPaths.removeHashFrom(expected, target);
+    Path hardlink = BuildPaths.removeHashFrom(expected, target).get();
 
     assertTrue("File not found " + expected.toString(), Files.exists(expected));
     assertTrue("File not found " + hardlink.toString(), Files.exists(hardlink));
@@ -670,7 +646,7 @@ public class BuildCommandIntegrationTest {
         workspace.resolve(
             BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s")
                 .resolveSibling("binary.jar"));
-    Path symlink = BuildPaths.removeHashFrom(expected, target);
+    Path symlink = BuildPaths.removeHashFrom(expected, target).get();
 
     assertTrue("File not found " + expected.toString(), Files.exists(expected));
     assertTrue("File not found " + symlink.toString(), Files.exists(symlink));
@@ -687,10 +663,11 @@ public class BuildCommandIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:binary");
     Path hardlink =
         BuildPaths.removeHashFrom(
-            workspace.resolve(
-                BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s")
-                    .resolveSibling("binary.jar")),
-            target);
+                workspace.resolve(
+                    BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s")
+                        .resolveSibling("binary.jar")),
+                target)
+            .get();
 
     workspace.runBuckBuild("--show-output", "//:binary").assertSuccess();
     assertTrue(Files.exists(hardlink));
@@ -709,12 +686,30 @@ public class BuildCommandIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:dir");
     Path symlink =
         BuildPaths.removeHashFrom(
-            workspace.resolve(
-                BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s")
-                    .resolve("output")),
-            target);
+                workspace.resolve(
+                    BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s")
+                        .resolve("output")),
+                target)
+            .get();
 
     workspace.runBuckBuild("--show-output", "//:dir").assertSuccess();
     assertTrue(Files.isSymbolicLink(symlink));
+  }
+
+  @Test
+  public void usesHashedBuckConfigOptionForRuleCaching() throws IOException {
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "buck_out_config_target_hash", tmp);
+    workspace.setUp();
+
+    String fullyQualifiedName = "//:binary";
+
+    workspace.runBuckBuild("--show-output", fullyQualifiedName).assertSuccess();
+
+    workspace.addBuckConfigLocalOption("project", "buck_out_include_target_config_hash", "false");
+
+    assertThat(
+        workspace.runBuckBuild("--show-output", fullyQualifiedName).assertSuccess().getStderr(),
+        Matchers.containsString("100.0% CACHE MISS"));
   }
 }

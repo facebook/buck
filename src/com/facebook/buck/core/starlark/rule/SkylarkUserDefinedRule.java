@@ -52,6 +52,8 @@ import javax.annotation.Nullable;
  */
 public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExportable {
 
+  private static final String TEST_RULE_SUFFIX = "_test";
+
   private boolean isExported = false;
   @Nullable private String name = null;
   @Nullable private Label label = null;
@@ -59,6 +61,8 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
   private final BaseFunction implementation;
   private final ImmutableMap<String, Attribute<?>> attrs;
   private final Set<String> hiddenImplicitAttributes;
+  private final boolean shouldInferRunInfo;
+  private final boolean shouldBeTestRule;
   private final ImmutableMap<String, ParamInfo> params;
 
   private SkylarkUserDefinedRule(
@@ -66,7 +70,9 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
       Location location,
       BaseFunction implementation,
       ImmutableMap<String, Attribute<?>> attrs,
-      Set<String> hiddenImplicitAttributes) {
+      Set<String> hiddenImplicitAttributes,
+      boolean shouldInferRunInfo,
+      boolean shouldBeTestRule) {
     /**
      * The name is incomplete until {@link #export(Label, String)} is called, so we know what is on
      * the left side of the assignment operator to create a function name
@@ -75,6 +81,8 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
     this.implementation = implementation;
     this.attrs = attrs;
     this.hiddenImplicitAttributes = hiddenImplicitAttributes;
+    this.shouldInferRunInfo = shouldInferRunInfo;
+    this.shouldBeTestRule = shouldBeTestRule;
     this.params =
         getAttrs().entrySet().stream()
             .collect(
@@ -142,7 +150,9 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
       BaseFunction implementation,
       ImmutableMap<String, Attribute<?>> implicitAttributes,
       Set<String> hiddenImplicitAttributes,
-      Map<String, AttributeHolder> attrs)
+      Map<String, AttributeHolder> attrs,
+      boolean inferRunInfo,
+      boolean test)
       throws EvalException {
 
     validateImplementation(location, implementation);
@@ -153,7 +163,13 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
     FunctionSignature.WithValues<Object, SkylarkType> signature =
         createSignature(validatedAttrs, location);
     return new SkylarkUserDefinedRule(
-        signature, location, implementation, validatedAttrs, hiddenImplicitAttributes);
+        signature,
+        location,
+        implementation,
+        validatedAttrs,
+        hiddenImplicitAttributes,
+        inferRunInfo,
+        test);
   }
 
   private static void validateImplementation(Location location, BaseFunction implementation)
@@ -277,13 +293,37 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
         "Tried to get exported name before function has been assigned to a variable and exported");
   }
 
+  /** Whether RunInfo should be inferred for this rule */
+  public boolean shouldInferRunInfo() {
+    return shouldInferRunInfo;
+  }
+
+  /** Whether this rule is expected to be a test rule or not */
+  public boolean shouldBeTestRule() {
+    return shouldBeTestRule;
+  }
+
   @Override
   public boolean isExported() {
     return isExported;
   }
 
   @Override
-  public void export(Label extensionLabel, String exportedName) {
+  public void export(Label extensionLabel, String exportedName) throws EvalException {
+    if (exportedName.endsWith(TEST_RULE_SUFFIX) && !shouldBeTestRule()) {
+      throw new EvalException(
+          location,
+          String.format(
+              "Only rules with `test = True` may end with `%s`. Got %s",
+              TEST_RULE_SUFFIX, exportedName));
+    }
+    if (!exportedName.endsWith(TEST_RULE_SUFFIX) && shouldBeTestRule()) {
+      throw new EvalException(
+          location,
+          String.format(
+              "Rules with `test = True` must end with `%s`. Got %s",
+              TEST_RULE_SUFFIX, exportedName));
+    }
     this.name = UserDefinedRuleNames.getIdentifier(extensionLabel, exportedName);
     this.label = extensionLabel;
     this.exportedName = exportedName;

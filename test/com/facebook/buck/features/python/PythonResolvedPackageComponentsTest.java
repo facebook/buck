@@ -57,7 +57,7 @@ public class PythonResolvedPackageComponentsTest {
     Files.createDirectories(foo2.getParent());
     Files.write(foo2, "something else".getBytes(Charsets.UTF_8));
     PythonResolvedPackageComponents components =
-        PythonResolvedPackageComponents.builder()
+        ImmutablePythonResolvedPackageComponents.builder()
             .putModules(
                 BuildTargetFactory.newInstance("//:target1"),
                 new PythonMappedComponents.Resolved(ImmutableMap.of(Paths.get("foo"), foo1)))
@@ -71,7 +71,7 @@ public class PythonResolvedPackageComponentsTest {
   @Test
   public void testDuplicateIdenticalSourcesInComponentsIsOk() throws IOException {
     PythonResolvedPackageComponents components =
-        PythonResolvedPackageComponents.builder()
+        ImmutablePythonResolvedPackageComponents.builder()
             .putModules(
                 BuildTargetFactory.newInstance("//:target1"),
                 new PythonMappedComponents.Resolved(
@@ -92,7 +92,7 @@ public class PythonResolvedPackageComponentsTest {
     BuildTarget target1 = BuildTargetFactory.newInstance("//:target1");
     BuildTarget target2 = BuildTargetFactory.newInstance("//:target2");
     PythonResolvedPackageComponents components =
-        PythonResolvedPackageComponents.builder()
+        ImmutablePythonResolvedPackageComponents.builder()
             .putModules(
                 target1,
                 new PythonMappedComponents.Resolved(

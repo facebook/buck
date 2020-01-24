@@ -27,6 +27,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.io.file.MorePosixFilePermissions;
 import com.facebook.buck.io.file.MostFiles;
+import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
@@ -672,10 +673,16 @@ public class DefaultProjectFilesystemTest {
     assertThat(
         "Two ProjectFilesystems with same glob in ignore should be equal",
         projectFilesystemFactory.createProjectFilesystem(
-            CanonicalCellName.rootCell(), rootPath, config),
+            CanonicalCellName.rootCell(),
+            rootPath,
+            config,
+            BuckPaths.getBuckOutIncludeTargetConfigHashFromRootCellConfig(config)),
         equalTo(
             projectFilesystemFactory.createProjectFilesystem(
-                CanonicalCellName.rootCell(), rootPath, config)));
+                CanonicalCellName.rootCell(),
+                rootPath,
+                config,
+                BuckPaths.getBuckOutIncludeTargetConfigHashFromRootCellConfig(config))));
   }
 
   @Test
@@ -685,7 +692,10 @@ public class DefaultProjectFilesystemTest {
     Files.createDirectories(root);
     ProjectFilesystem projectFilesystem =
         new DefaultProjectFilesystemFactory()
-            .createProjectFilesystem(CanonicalCellName.rootCell(), root);
+            .createProjectFilesystem(
+                CanonicalCellName.rootCell(),
+                root,
+                BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH);
     assertEquals(vfs, projectFilesystem.getPath("bar").getFileSystem());
     assertEquals(vfs.getPath("bar"), projectFilesystem.getPath("bar"));
   }

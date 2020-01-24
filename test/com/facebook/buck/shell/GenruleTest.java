@@ -33,6 +33,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -91,7 +92,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -372,7 +372,11 @@ public class GenruleTest {
     return GenruleBuilder.newGenruleBuilder(
             BuildTargetFactory.newInstance("//:genrule_with_worker"))
         .setCmd(
-            StringWithMacrosUtils.format("%s abc", WorkerMacro.of(workerToolRule.getBuildTarget())))
+            StringWithMacrosUtils.format(
+                "%s abc",
+                WorkerMacro.of(
+                    ImmutableBuildTargetWithOutputs.of(
+                        workerToolRule.getBuildTarget(), OutputLabel.defaultLabel()))))
         .setOut("output.txt");
   }
 
@@ -459,7 +463,10 @@ public class GenruleTest {
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule_with_worker"))
             .setCmd(
                 StringWithMacrosUtils.format(
-                    "%s abs", WorkerMacro.of(workerToolRule.getBuildTarget())))
+                    "%s abs",
+                    WorkerMacro.of(
+                        ImmutableBuildTargetWithOutputs.of(
+                            workerToolRule.getBuildTarget(), OutputLabel.defaultLabel()))))
             .setOut("output.txt")
             .build(graphBuilder);
 
@@ -600,7 +607,7 @@ public class GenruleTest {
           GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:test"))
               .setOut(name)
               .build(new TestActionGraphBuilder());
-      assertEquals(name, genrule.getOutputName());
+      assertEquals(name, genrule.getOutputName(OutputLabel.defaultLabel()));
     }
     {
       String name = "out/file.txt";
@@ -608,7 +615,15 @@ public class GenruleTest {
           GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:test"))
               .setOut(name)
               .build(new TestActionGraphBuilder());
-      assertEquals(name, genrule.getOutputName());
+      assertEquals(name, genrule.getOutputName(OutputLabel.defaultLabel()));
+    }
+    {
+      String name = "out/file.txt";
+      Genrule genrule =
+          GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:test"))
+              .setOuts(ImmutableMap.of("label", ImmutableSet.of(name)))
+              .build(new TestActionGraphBuilder());
+      assertEquals(name, genrule.getOutputName(OutputLabel.of("label")));
     }
   }
 
@@ -725,7 +740,10 @@ public class GenruleTest {
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setCmd(
                 StringWithMacrosUtils.format(
-                    "run %s", ExecutableMacro.of(BuildTargetFactory.newInstance("//:dep"))))
+                    "run %s",
+                    ExecutableMacro.of(
+                        ImmutableBuildTargetWithOutputs.of(
+                            BuildTargetFactory.newInstance("//:dep"), OutputLabel.defaultLabel()))))
             .setOut("output");
 
     // Create an initial input-based rule key
@@ -805,7 +823,10 @@ public class GenruleTest {
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setCmd(
                 StringWithMacrosUtils.format(
-                    "run %s", ClasspathMacro.of(BuildTargetFactory.newInstance("//:dep"))))
+                    "run %s",
+                    ClasspathMacro.of(
+                        ImmutableBuildTargetWithOutputs.of(
+                            BuildTargetFactory.newInstance("//:dep"), OutputLabel.defaultLabel()))))
             .setOut("output");
 
     // Create an initial input-based rule key
@@ -982,11 +1003,7 @@ public class GenruleTest {
   }
 
   @Test
-  public void throwsIfDefaultOutputGroupNotSingleElement() {
-    expectedThrownException.expect(HumanReadableException.class);
-    expectedThrownException.expectMessage(
-        "Genrule target //:test_genrule doesn't support multiple default outputs yet. Use named outputs.");
-
+  public void defaultOutputGroupIsEmpty() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     Genrule genrule =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:test_genrule"))
@@ -994,31 +1011,12 @@ public class GenruleTest {
             .setOuts(
                 ImmutableMap.of(
                     "label1",
-                    ImmutableList.of("output1a", "output1b"),
+                    ImmutableSet.of("output1a", "output1b"),
                     "label2",
-                    ImmutableList.of("output2a")))
+                    ImmutableSet.of("output2a")))
             .build(graphBuilder, new FakeProjectFilesystem());
 
-    genrule.getSourcePathToOutput(OutputLabel.defaultLabel());
-  }
-
-  @Test
-  public void doesNotThrowIfDefaultOutputGroupIsSingleElement() {
-    ProjectFilesystem fakeFileSystem = new FakeProjectFilesystem();
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(graphBuilder);
-    BuildTarget target = BuildTargetFactory.newInstance("//:test_genrule");
-    Genrule genrule =
-        GenruleBuilder.newGenruleBuilder(target)
-            .setCmd("echo hello >> $OUT")
-            .setOuts(ImmutableMap.of("label2", ImmutableList.of("output2a")))
-            .build(graphBuilder, new FakeProjectFilesystem());
-
-    ImmutableSet<Path> actual =
-        convertSourcePathsToPaths(
-            sourcePathResolver, genrule.getSourcePathToOutput(OutputLabel.defaultLabel()));
-    assertThat(
-        actual, Matchers.containsInAnyOrder(getExpectedPath(fakeFileSystem, target, "output2a")));
+    assertThat(genrule.getSourcePathToOutput(OutputLabel.defaultLabel()), Matchers.empty());
   }
 
   @Test
@@ -1033,9 +1031,9 @@ public class GenruleTest {
             .setOuts(
                 ImmutableMap.of(
                     "label1",
-                    ImmutableList.of("output1a", "output1b"),
+                    ImmutableSet.of("output1a", "output1b"),
                     "label2",
-                    ImmutableList.of("output2a")))
+                    ImmutableSet.of("output2a")))
             .build(graphBuilder, new FakeProjectFilesystem());
 
     ImmutableSet<Path> actual =
@@ -1049,10 +1047,7 @@ public class GenruleTest {
   }
 
   @Test
-  public void canGetSourcePathsByOutputLabel() {
-    ProjectFilesystem fakeFileSystem = new FakeProjectFilesystem();
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(graphBuilder);
+  public void canGetOutputLabelsForMultipleOutputs() {
     BuildTarget target = BuildTargetFactory.newInstance("//:test_genrule");
     Genrule genrule =
         GenruleBuilder.newGenruleBuilder(target)
@@ -1060,59 +1055,29 @@ public class GenruleTest {
             .setOuts(
                 ImmutableMap.of(
                     "label1",
-                    ImmutableList.of("output1a", "output1b"),
+                    ImmutableSet.of("output1a", "output1b"),
                     "label2",
-                    ImmutableList.of("output2a")))
-            .build(graphBuilder, new FakeProjectFilesystem());
+                    ImmutableSet.of("output2a")))
+            .build(new TestActionGraphBuilder(), new FakeProjectFilesystem());
 
-    ImmutableMap<OutputLabel, ImmutableSet<Path>> actual =
-        genrule.getSourcePathsByOutputsLabels().entrySet().stream()
-            .collect(
-                ImmutableMap.toImmutableMap(
-                    Map.Entry::getKey,
-                    e -> convertSourcePathsToPaths(sourcePathResolver, e.getValue())));
-
-    assertThat(actual.entrySet(), Matchers.hasSize(3));
+    ImmutableSet<OutputLabel> actual = genrule.getOutputLabels();
     assertThat(
-        actual.get(OutputLabel.of("label1")),
+        actual,
         Matchers.containsInAnyOrder(
-            getExpectedPath(fakeFileSystem, target, "output1a"),
-            getExpectedPath(fakeFileSystem, target, "output1b")));
-    assertThat(
-        actual.get(OutputLabel.of("label2")),
-        Matchers.containsInAnyOrder(getExpectedPath(fakeFileSystem, target, "output2a")));
-    assertThat(
-        actual.get(OutputLabel.defaultLabel()),
-        Matchers.containsInAnyOrder(
-            getExpectedPath(fakeFileSystem, target, "output1a"),
-            getExpectedPath(fakeFileSystem, target, "output1b"),
-            getExpectedPath(fakeFileSystem, target, "output2a")));
+            OutputLabel.of("label1"), OutputLabel.of("label2"), OutputLabel.defaultLabel()));
   }
 
   @Test
-  public void canGetOutPathDefaultLabel() {
-    ProjectFilesystem fakeFileSystem = new FakeProjectFilesystem();
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(graphBuilder);
+  public void canGetOutputLabelForSingleOutput() {
     BuildTarget target = BuildTargetFactory.newInstance("//:test_genrule");
     Genrule genrule =
         GenruleBuilder.newGenruleBuilder(target)
             .setCmd("echo hello >> $OUT")
             .setOut("expected")
-            .build(graphBuilder, new FakeProjectFilesystem());
+            .build(new TestActionGraphBuilder(), new FakeProjectFilesystem());
 
-    ImmutableMap<OutputLabel, ImmutableSet<Path>> actual =
-        genrule.getSourcePathsByOutputsLabels().entrySet().stream()
-            .collect(
-                ImmutableMap.toImmutableMap(
-                    Map.Entry::getKey,
-                    e -> convertSourcePathsToPaths(sourcePathResolver, e.getValue())));
-
-    assertThat(actual.entrySet(), Matchers.hasSize(1));
-    assertThat(
-        actual.get(OutputLabel.defaultLabel()),
-        Matchers.contains(
-            BuildTargetPaths.getGenPath(fakeFileSystem, target, "%s").resolve("expected")));
+    ImmutableSet<OutputLabel> actual = genrule.getOutputLabels();
+    assertThat(actual, Matchers.containsInAnyOrder(OutputLabel.defaultLabel()));
   }
 
   private Path getExpectedPath(ProjectFilesystem filesystem, BuildTarget target, String path) {

@@ -35,10 +35,10 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
-import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.StartActivityEvent;
 import com.facebook.buck.event.UninstallEvent;
@@ -77,6 +77,7 @@ import javax.annotation.Nullable;
 
 /** Helper for executing commands over ADB, especially for multiple devices. */
 public class AdbHelper implements AndroidDevicesHelper {
+  private static final Logger log = Logger.get(AdbHelper.class);
   private static final long ADB_CONNECT_TIMEOUT_MS = 5000;
   private static final long ADB_CONNECT_TIME_STEP_MS = ADB_CONNECT_TIMEOUT_MS / 10;
 
@@ -176,7 +177,7 @@ public class AdbHelper implements AndroidDevicesHelper {
                     try (SimplePerfEvent.Scope ignored =
                         SimplePerfEvent.scope(
                             getBuckEventBus(),
-                            PerfEventId.of("adbCall " + description),
+                            SimplePerfEvent.PerfEventId.of("adbCall " + description),
                             "device_serial",
                             device.getSerialNumber())) {
                       return func.apply(device);
@@ -372,7 +373,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   }
 
   public static String tryToExtractPackageNameFromManifest(
-      SourcePathResolverAdapter pathResolver, ApkInfo apkInfo) {
+      SourcePathResolverAdapter pathResolver, HasInstallableApk.ApkInfo apkInfo) {
     Path pathToManifest = pathResolver.getAbsolutePath(apkInfo.getManifestPath());
     return tryToExtractPackageNameFromManifest(pathToManifest);
   }
@@ -498,8 +499,9 @@ public class AdbHelper implements AndroidDevicesHelper {
       // ADB was already initialized, we're fine, so just ignore.
     }
 
-    AndroidDebugBridge adb =
-        AndroidDebugBridge.createBridge(androidPlatformTarget.getAdbExecutable().toString(), false);
+    String adbExecutable = androidPlatformTarget.getAdbExecutable().toString();
+    log.debug("Using %s to create AndroidDebugBridge", adbExecutable);
+    AndroidDebugBridge adb = AndroidDebugBridge.createBridge(adbExecutable, false);
     if (adb == null) {
       context
           .getConsole()

@@ -6,12 +6,6 @@ java_library(
         ["*.java"],
         exclude = ["*Test.java"],
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/parser:parser",
-        "//src/com/facebook/buck/parser/options:options",
-        "//src/com/facebook/buck/skylark/function:function",
-        "//src/com/facebook/buck/skylark/parser:parser",
-    ],
     visibility = [
         "PUBLIC",
     ],
@@ -23,12 +17,19 @@ java_library(
         "//test/com/facebook/buck/core/rules/knowntypes:testutil",
         "//test/com/facebook/buck/event:testutil",
     ],
+    exported_deps = [
+        "//src/com/facebook/buck/parser:parser",
+        "//src/com/facebook/buck/parser/options:options",
+        "//src/com/facebook/buck/skylark/function:function",
+        "//src/com/facebook/buck/skylark/parser:parser",
+    ],
 )
 
 standard_java_test(
     name = "parser",
     deps = [
         ":testutil",
+        "//src/com/facebook/buck/features/dotnet:dotnet",
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/io/filesystem/skylark:skylark",
         "//src/com/facebook/buck/jvm/java/rules:rules",

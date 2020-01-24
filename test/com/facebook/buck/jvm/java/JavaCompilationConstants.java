@@ -50,12 +50,10 @@ public class JavaCompilationConstants {
 
   public static final Javac DEFAULT_JAVAC = new JdkProvidedInMemoryJavac();
   public static final JavaToolchain DEFAULT_JAVA_TOOLCHAIN =
-      JavaToolchain.builder()
-          .setJavacProvider(
-              DEFAULT_JAVA_CONFIG
-                  .getJavacSpec(UnconfiguredTargetConfiguration.INSTANCE)
-                  .getJavacProvider())
-          .build();
+      JavaToolchain.of(
+          DEFAULT_JAVA_CONFIG
+              .getJavacSpec(UnconfiguredTargetConfiguration.INSTANCE)
+              .getJavacProvider());
 
   private JavaCompilationConstants() {
     // Thou shalt not instantiate utility classes.

@@ -66,7 +66,8 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
                       String toolchainName = p.getFirst();
                       TargetConfiguration toolchainTargetConfiguration = p.getSecond();
                       if (!toolchainFactories.containsKey(toolchainName)) {
-                        throw new IllegalStateException("Unknown toolchain: " + toolchainName);
+                        throw new ToolchainInstantiationException(
+                            "Unknown toolchain: " + toolchainName);
                       }
                       return createToolchain(
                           toolchainFactories.get(toolchainName), toolchainTargetConfiguration);

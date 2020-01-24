@@ -19,6 +19,7 @@ package com.facebook.buck.features.python;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -192,7 +193,7 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
   }
 
   @Override
-  public Tool getExecutableCommand() {
+  public Tool getExecutableCommand(OutputLabel outputLabel) {
     CommandTool.Builder builder = new CommandTool.Builder(python);
     getPythonPlatform().getInplaceBinaryInterpreterFlags().forEach(builder::addArg);
     getComponents().forEachInput(builder::addInput);

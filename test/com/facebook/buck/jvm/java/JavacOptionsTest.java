@@ -34,7 +34,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.sourcepath.resolver.impl.AbstractSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.jvm.java.AbstractJavacPluginProperties.Type;
+import com.facebook.buck.jvm.java.JavacPluginProperties.Type;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;

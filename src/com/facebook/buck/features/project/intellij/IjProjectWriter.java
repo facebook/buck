@@ -368,11 +368,10 @@ public class IjProjectWriter {
     remainingModuleFilepaths.forEach(
         modulePath ->
             finalModulesBuilder.add(
-                ModuleIndexEntry.builder()
-                    .setFilePath(projectPaths.getProjectRelativePath(modulePath))
-                    .setFileUrl(getUrl(projectPaths.getProjectQualifiedPath(modulePath)))
-                    .setGroup(projectConfig.getModuleGroupName())
-                    .build()));
+                ModuleIndexEntry.of(
+                    getUrl(projectPaths.getProjectQualifiedPath(modulePath)),
+                    projectPaths.getProjectRelativePath(modulePath),
+                    projectConfig.getModuleGroupName())));
 
     // Write out the merged set to disk
     writeModulesIndex(finalModulesBuilder.build());

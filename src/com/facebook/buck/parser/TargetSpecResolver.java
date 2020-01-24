@@ -38,7 +38,6 @@ import com.facebook.buck.core.parser.BuildTargetPatternToBuildPackagePathComputa
 import com.facebook.buck.core.parser.ImmutableBuildTargetPatternToBuildPackagePathKey;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
 import com.facebook.buck.parser.config.ParserConfig;
@@ -216,7 +215,7 @@ public class TargetSpecResolver implements AutoCloseable {
       Cell cell = rootCell.getCellProvider().getCellByCanonicalCellName(cellName);
       try (SimplePerfEvent.Scope perfEventScope =
           SimplePerfEvent.scope(
-              eventBus, PerfEventId.of("FindBuildFiles"), "targetNodeSpec", spec)) {
+              eventBus, SimplePerfEvent.PerfEventId.of("FindBuildFiles"), "targetNodeSpec", spec)) {
 
         BuildFileSpec buildFileSpec = spec.getBuildFileSpec();
         ProjectFilesystemView projectFilesystemView = cell.getFilesystemViewForSourceFiles();

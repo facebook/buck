@@ -34,7 +34,8 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
@@ -49,6 +50,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.versions.VersionRoot;
@@ -103,7 +105,7 @@ public class HaskellGhciDescription
     LOG.verbose("%s: omnibus roots: %s", baseTarget, omnibusRoots);
     LOG.verbose("%s: excluded roots: %s", baseTarget, excludedRoots);
 
-    HaskellGhciOmnibusSpec.Builder builder = HaskellGhciOmnibusSpec.builder();
+    ImmutableHaskellGhciOmnibusSpec.Builder builder = ImmutableHaskellGhciOmnibusSpec.builder();
 
     // Calculate excluded roots/deps, and add them to the link.
     ImmutableList<? extends NativeLinkable> transitiveExcludedLinkables =
@@ -334,9 +336,8 @@ public class HaskellGhciDescription
   }
 
   /** Composition of {@link NativeLinkableGroup}s in the omnibus link. */
-  @Value.Immutable
-  @BuckStyleImmutable
-  interface AbstractHaskellGhciOmnibusSpec {
+  @BuckStyleValueWithBuilder
+  interface HaskellGhciOmnibusSpec {
 
     // All native nodes which are to be statically linked into the giant combined shared library.
     ImmutableSet<NativeLinkable> getBody();
@@ -351,8 +352,7 @@ public class HaskellGhciDescription
     ImmutableMap<BuildTarget, NativeLinkable> getExcludedTransitiveDeps();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable(copy = true)
+  @RuleArg
   interface AbstractHaskellGhciDescriptionArg extends BuildRuleArg, HasDepsQuery {
     @Value.Default
     default SourceSortedSet getSrcs() {
@@ -392,6 +392,14 @@ public class HaskellGhciDescription
     @Value.Default
     default PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getPlatformPreloadDeps() {
       return PatternMatchedCollection.of();
+    }
+
+    @Override
+    default HaskellGhciDescriptionArg withDepsQuery(Query query) {
+      if (getDepsQuery().equals(Optional.of(query))) {
+        return (HaskellGhciDescriptionArg) this;
+      }
+      return HaskellGhciDescriptionArg.builder().from(this).setDepsQuery(query).build();
     }
   }
 }

@@ -263,7 +263,7 @@ public class DirArtifactCache implements ArtifactCache {
     ruleKeys.forEach(this::deleteSync);
 
     ImmutableList<String> cacheNames = ImmutableList.of(DirArtifactCache.class.getSimpleName());
-    return Futures.immediateFuture(CacheDeleteResult.builder().setCacheNames(cacheNames).build());
+    return Futures.immediateFuture(CacheDeleteResult.of(cacheNames));
   }
 
   private Path getPathToTempFolder() {

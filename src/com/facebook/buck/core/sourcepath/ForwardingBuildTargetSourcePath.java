@@ -17,6 +17,9 @@
 package com.facebook.buck.core.sourcepath;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
+import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ComparisonChain;
@@ -33,19 +36,38 @@ public abstract class ForwardingBuildTargetSourcePath implements BuildTargetSour
    *
    * @param target The value for the {@code target} attribute
    * @param delegate The value for the {@code delegate} attribute
-   * @return An immutable ForwardingBuildTargetSourcePath instance
+   * @return An immutable ForwardingBuildTargetSourcePath instance pointing to the given target's
+   *     default outputs
    */
   public static ForwardingBuildTargetSourcePath of(BuildTarget target, SourcePath delegate) {
+    return of(
+        ImmutableBuildTargetWithOutputs.of(target, OutputLabel.defaultLabel()),
+        delegate,
+        Optional.empty());
+  }
+
+  /**
+   * Construct a new immutable {@code ForwardingBuildTargetSourcePath} instance.
+   *
+   * @param target The {@link BuildTargetWithOutputs} associated with this {@link SourcePath}
+   * @param delegate The value for the {@code delegate} attribute
+   * @return An immutable ForwardingBuildTargetSourcePath instance pointing to outputs associated
+   *     with the given {@code targetWithOutputs}
+   */
+  public static ForwardingBuildTargetSourcePath of(
+      BuildTargetWithOutputs target, SourcePath delegate) {
     return of(target, delegate, Optional.empty());
   }
 
   public static ForwardingBuildTargetSourcePath of(
-      BuildTarget target, SourcePath delegate, Optional<? extends HashCode> precomputedHash) {
+      BuildTargetWithOutputs target,
+      SourcePath delegate,
+      Optional<? extends HashCode> precomputedHash) {
     return ImmutableForwardingBuildTargetSourcePath.of(target, delegate, precomputedHash);
   }
 
   @Override
-  public abstract BuildTarget getTarget();
+  public abstract BuildTargetWithOutputs getTargetWithOutputs();
 
   public abstract SourcePath getDelegate();
 
@@ -54,7 +76,7 @@ public abstract class ForwardingBuildTargetSourcePath implements BuildTargetSour
 
   @Override
   public int hashCode() {
-    return Objects.hash(getTarget(), getDelegate());
+    return Objects.hash(getTargetWithOutputs(), getDelegate());
   }
 
   @Override
@@ -68,7 +90,8 @@ public abstract class ForwardingBuildTargetSourcePath implements BuildTargetSour
     }
 
     ForwardingBuildTargetSourcePath that = (ForwardingBuildTargetSourcePath) other;
-    return getTarget().equals(that.getTarget()) && getDelegate().equals(that.getDelegate());
+    return getTargetWithOutputs().equals(that.getTargetWithOutputs())
+        && getDelegate().equals(that.getDelegate());
   }
 
   @Override
@@ -77,7 +100,7 @@ public abstract class ForwardingBuildTargetSourcePath implements BuildTargetSour
   }
 
   private String toString(Object delegateRepresentation) {
-    return String.valueOf(new Pair<>(getTarget(), delegateRepresentation));
+    return String.valueOf(new Pair<>(getTargetWithOutputs(), delegateRepresentation));
   }
 
   @Override
@@ -94,7 +117,7 @@ public abstract class ForwardingBuildTargetSourcePath implements BuildTargetSour
     ForwardingBuildTargetSourcePath that = (ForwardingBuildTargetSourcePath) other;
 
     return ComparisonChain.start()
-        .compare(getTarget(), that.getTarget())
+        .compare(getTargetWithOutputs(), that.getTargetWithOutputs())
         .compare(getDelegate(), that.getDelegate())
         .result();
   }

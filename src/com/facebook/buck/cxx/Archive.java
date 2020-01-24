@@ -205,7 +205,7 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
     SourcePath archive = getSourcePathToOutput();
     return getBuildable().contents == ArchiveContents.NORMAL
         ? SourcePathArg.of(archive)
-        : ThinArchiveArg.of(archive, getBuildable().inputs);
+        : ImmutableThinArchiveArg.of(archive, getBuildable().inputs);
   }
 
   @Override

@@ -26,9 +26,9 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.actions.Action;
+import com.facebook.buck.core.rules.actions.ActionExecutionResult;
 import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
 import com.facebook.buck.core.rules.actions.FakeAction;
-import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.impl.RuleAnalysisLegacyBuildRuleView;
 import com.facebook.buck.core.rules.providers.collect.impl.LegacyProviderInfoCollectionImpl;
@@ -140,7 +140,7 @@ public class ContentAgnosticRuleKeyFactoryTest {
             ImmutableSortedSet.of(ImmutableSourceArtifactImpl.of(sourcePath)),
             ImmutableSortedSet.of(artifact),
             (ignored, ignored1, ignored2, ignored3) ->
-                ImmutableActionExecutionSuccess.of(
+                ActionExecutionResult.success(
                     Optional.empty(), Optional.empty(), ImmutableList.of()));
     BuildRule rule =
         new RuleAnalysisLegacyBuildRuleView(

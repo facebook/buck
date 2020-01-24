@@ -87,17 +87,8 @@ import org.pf4j.PluginManager;
 public class CommandRunnerParamsForTesting {
 
   public static final BuildEnvironmentDescription BUILD_ENVIRONMENT_DESCRIPTION =
-      BuildEnvironmentDescription.builder()
-          .setUser("test")
-          .setHostname("test")
-          .setOs("test")
-          .setAvailableCores(1)
-          .setSystemMemory(1024L)
-          .setBuckDirty(Optional.of(false))
-          .setBuckCommit("test")
-          .setJavaVersion("test")
-          .setJsonProtocolVersion(1)
-          .build();
+      BuildEnvironmentDescription.of(
+          "test", "test", "test", 1, 1024L, Optional.of(false), "test", "test", 1);
 
   /** Utility class: do not instantiate. */
   private CommandRunnerParamsForTesting() {}
@@ -174,7 +165,7 @@ public class CommandRunnerParamsForTesting {
             new TargetConfigurationSerializerForTests(cell.getCellPathResolver()),
             FakeClock.doNotCare());
 
-    return CommandRunnerParams.of(
+    return ImmutableCommandRunnerParams.of(
         console,
         new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)),
         cell,

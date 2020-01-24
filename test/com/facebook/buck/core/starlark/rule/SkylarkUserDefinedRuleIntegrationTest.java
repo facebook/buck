@@ -26,8 +26,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystem;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -127,8 +125,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "implementation_writes_files", tmp);
 
     workspace.setUp();
-    DefaultProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     Path exePath =
         BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//foo:exe"))
@@ -142,22 +139,58 @@ public class SkylarkUserDefinedRuleIntegrationTest {
         BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//foo:with_spaces"))
             .resolve("bar")
             .resolve("with spaces.txt");
+    Path exeStringPath =
+        BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//foo:exe_string_output"))
+            .resolve("bar")
+            .resolve("exe.sh");
+    Path textStringPath =
+        BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//foo:text_string_output"))
+            .resolve("bar")
+            .resolve("text.txt");
+    Path withSpacesStringPath =
+        BuildPaths.getGenDir(
+                filesystem, BuildTargetFactory.newInstance("//foo:with_spaces_string_output"))
+            .resolve("bar")
+            .resolve("with spaces.txt");
 
     assertFalse(filesystem.exists(exePath));
     assertFalse(filesystem.exists(textPath));
+    assertFalse(filesystem.exists(withSpacesPath));
+    assertFalse(filesystem.exists(exeStringPath));
+    assertFalse(filesystem.exists(textStringPath));
+    assertFalse(filesystem.exists(withSpacesStringPath));
 
-    workspace.runBuckBuild("//foo:exe", "//foo:text", "//foo:with_spaces").assertSuccess();
+    workspace
+        .runBuckBuild(
+            "//foo:exe",
+            "//foo:text",
+            "//foo:with_spaces",
+            "//foo:exe_string_output",
+            "//foo:text_string_output",
+            "//foo:with_spaces_string_output")
+        .assertSuccess();
 
     assertEquals("exe content", filesystem.readFileIfItExists(filesystem.resolve(exePath)).get());
     assertEquals("text content", filesystem.readFileIfItExists(filesystem.resolve(textPath)).get());
     assertEquals(
         "with spaces content",
         filesystem.readFileIfItExists(filesystem.resolve(withSpacesPath)).get());
+    assertEquals(
+        "exe content", filesystem.readFileIfItExists(filesystem.resolve(exeStringPath)).get());
+    assertEquals(
+        "text content", filesystem.readFileIfItExists(filesystem.resolve(textStringPath)).get());
+    assertEquals(
+        "with spaces content",
+        filesystem.readFileIfItExists(filesystem.resolve(withSpacesStringPath)).get());
+
     // Executable works a bit differently on windows
     if (!Platform.isWindows()) {
       assertTrue(filesystem.isExecutable(exePath));
       assertFalse(filesystem.isExecutable(textPath));
       assertFalse(filesystem.isExecutable(withSpacesPath));
+      assertTrue(filesystem.isExecutable(exeStringPath));
+      assertFalse(filesystem.isExecutable(textStringPath));
+      assertFalse(filesystem.isExecutable(withSpacesStringPath));
     }
   }
 
@@ -336,8 +369,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "implementation_gets_artifacts_from_source_list", tmp);
-    DefaultProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     workspace.setUp();
 
@@ -356,8 +388,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "implementation_gets_artifacts_from_source", tmp);
 
-    DefaultProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     workspace.setUp();
 
@@ -376,8 +407,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "implementation_gets_dep_from_dep", tmp);
 
-    DefaultProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     workspace.setUp();
 
@@ -395,8 +425,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "implementation_gets_deps_from_dep_list", tmp);
-    DefaultProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     workspace.setUp();
 
@@ -415,9 +444,44 @@ public class SkylarkUserDefinedRuleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "args", tmp);
 
     workspace.setUp();
+    assertEquals(
+        ImmutableList.of("1", "--foo", "bar", "1", "2", "3", "4", "5", "6", "7", "8", "9"),
+        workspace.getProjectFileSystem().readLines(workspace.buildAndReturnOutput("//:add")));
+    assertEquals(
+        ImmutableList.of("1", "2", "--foo", "bar", "1", "2", "3", "4", "5", "6", "7", "8", "9"),
+        workspace.getProjectFileSystem().readLines(workspace.buildAndReturnOutput("//:add_all")));
+    assertEquals(
+        ImmutableList.of("2", "--foo"),
+        workspace.getProjectFileSystem().readLines(workspace.buildAndReturnOutput("//:init")));
+    assertEquals(
+        ImmutableList.of("1", "2", "3"),
+        workspace
+            .getProjectFileSystem()
+            .readLines(workspace.buildAndReturnOutput("//:init_cliargs")));
+    assertEquals(
+        ImmutableList.of("1", "2", "3", "2", "--foo", "bar"),
+        workspace.getProjectFileSystem().readLines(workspace.buildAndReturnOutput("//:init_list")));
+    assertEquals(
+        ImmutableList.of("1", "--prefix=--foo", "--prefix=bar"),
+        workspace
+            .getProjectFileSystem()
+            .readLines(workspace.buildAndReturnOutput("//:add_format")));
+    assertEquals(
+        ImmutableList.of("1", "--prefix=2", "--prefix=--foo", "--prefix=bar"),
+        workspace
+            .getProjectFileSystem()
+            .readLines(workspace.buildAndReturnOutput("//:add_all_format")));
+    assertEquals(
+        ImmutableList.of("--prefix=2", "--prefix=--foo", "--prefix=bar"),
+        workspace
+            .getProjectFileSystem()
+            .readLines(workspace.buildAndReturnOutput("//:init_list_format")));
+    assertEquals(
+        ImmutableList.of("--prefix=2", "--other=--foo"),
+        workspace
+            .getProjectFileSystem()
+            .readLines(workspace.buildAndReturnOutput("//:init_format")));
 
-    workspace.runBuckBuild("//:add").assertSuccess();
-    workspace.runBuckBuild("//:add_all").assertSuccess();
     assertThat(
         workspace.runBuckBuild("//:add_failure").assertFailure().getStderr(),
         Matchers.containsString("expected value of type"));
@@ -430,6 +494,40 @@ public class SkylarkUserDefinedRuleIntegrationTest {
     assertThat(
         workspace.runBuckBuild("//:add_all_args_failure").assertFailure().getStderr(),
         Matchers.containsString("Invalid command line argument type"));
+    assertThat(
+        workspace.runBuckBuild("//:init_failure").assertFailure().getStderr(),
+        Matchers.containsString("Invalid command line argument type"));
+    assertThat(
+        workspace.runBuckBuild("//:init_list_failure").assertFailure().getStderr(),
+        Matchers.containsString("Invalid command line argument type"));
+    assertThat(
+        workspace.runBuckBuild("//:unbound_add_failure").assertFailure().getStderr(),
+        Matchers.containsString("was not used as the output to an action"));
+    assertThat(
+        workspace.runBuckBuild("//:unbound_add_all_failure").assertFailure().getStderr(),
+        Matchers.containsString("was not used as the output to an action"));
+    assertThat(
+        workspace.runBuckBuild("//:unbound_init_failure").assertFailure().getStderr(),
+        Matchers.containsString("was not used as the output to an action"));
+    assertThat(
+        workspace.runBuckBuild("//:unbound_init_list_failure").assertFailure().getStderr(),
+        Matchers.containsString("was not used as the output to an action"));
+
+    assertThat(
+        workspace.runBuckBuild("//:add_empty_format").assertFailure().getStderr(),
+        Matchers.containsString("must be a format string with one or more occurrences"));
+
+    assertThat(
+        workspace.runBuckBuild("//:add_all_empty_format").assertFailure().getStderr(),
+        Matchers.containsString("must be a format string with one or more occurrences"));
+
+    assertThat(
+        workspace.runBuckBuild("//:init_empty_format").assertFailure().getStderr(),
+        Matchers.containsString("must be a format string with one or more occurrences"));
+
+    assertThat(
+        workspace.runBuckBuild("//:init_list_empty_format").assertFailure().getStderr(),
+        Matchers.containsString("must be a format string with one or more occurrences"));
   }
 
   private static ImmutableList<String> splitStderr(ProcessResult result) {
@@ -444,7 +542,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "implementation_runs_actions", tmp);
 
     workspace.setUp();
-    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     ProcessResult zeroResult = workspace.runBuckBuild("//foo:returning_zero").assertSuccess();
     ProcessResult oneResult = workspace.runBuckBuild("//foo:returning_one").assertFailure();
@@ -502,20 +600,16 @@ public class SkylarkUserDefinedRuleIntegrationTest {
     workspace.setUp();
 
     assertThat(
-        workspace.runBuckBuild("//foo:invalid_outputs").assertFailure().getStderr().trim(),
-        Matchers.containsString("expected type 'Artifact' for 'outputs'"));
-
-    assertThat(
-        workspace.runBuckBuild("//foo:invalid_inputs").assertFailure().getStderr(),
-        Matchers.containsString("expected type 'Artifact' for 'inputs'"));
-
-    assertThat(
         workspace.runBuckBuild("//foo:invalid_arguments").assertFailure().getStderr(),
         Matchers.containsString("Invalid command line argument"));
 
     assertThat(
         workspace.runBuckBuild("//foo:invalid_env").assertFailure().getStderr(),
         Matchers.containsString("expected type"));
+
+    assertThat(
+        workspace.runBuckBuild("//foo:invalid_zeroargs").assertFailure().getStderr(),
+        Matchers.containsString("At least one argument"));
   }
 
   @Test
@@ -545,7 +639,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "user_defined_providers", tmp);
     workspace.setUp();
 
-    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     Path expectedLeafPath =
         BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//foo:leaf"))
@@ -564,7 +658,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "compatible_with", tmp);
     workspace.setUp();
 
-    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     ProcessResult result = workspace.runBuckBuild("//:file");
     result.assertFailure();
@@ -594,8 +688,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "implementation_gets_artifacts_from_output", tmp);
 
-    DefaultProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     Path outputPath =
         BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//:with_contents"))
             .resolve("some_out.txt");
@@ -633,8 +726,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "implementation_gets_artifacts_from_output_list", tmp);
 
-    DefaultProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     Path outputPath =
         BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//:with_contents"))
             .resolve("some_out.txt");
@@ -664,5 +756,184 @@ public class SkylarkUserDefinedRuleIntegrationTest {
     assertThat(
         workspace.runBuckBuild("//:empty_path").assertFailure().getStderr(),
         Matchers.containsString("Path '' in target '//:empty_path' was empty"));
+  }
+
+  @Test
+  public void copyFileCopiesFile() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "implementation_copies_files", tmp);
+
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
+    Path outputPath1 =
+        BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//:write_string"))
+            .resolve("out.txt");
+    Path outputPath2 =
+        BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//:copy_string"))
+            .resolve("out_string.txt");
+    Path outputPath3 =
+        BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//:copy_artifact"))
+            .resolve("out_artifact.txt");
+    String expected = "some contents";
+
+    workspace.setUp();
+
+    workspace.runBuckBuild("//:copy_artifact").assertSuccess();
+    assertEquals(expected, filesystem.readFileIfItExists(outputPath1).get().trim());
+    assertEquals(expected, filesystem.readFileIfItExists(outputPath2).get().trim());
+    assertEquals(expected, filesystem.readFileIfItExists(outputPath3).get().trim());
+  }
+
+  @Test
+  public void runsIfRunInfoReturned() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "implementation_handles_executable", tmp);
+    workspace.setUp();
+
+    ImmutableList<String> expectedWithRun =
+        ImmutableList.of(
+            "Message on stdout", "arg[rulearg1]", "arg[arg1]", "arg[arg2]", "CUSTOM_ENV: CUSTOM");
+    ImmutableList<String> expectedWithoutRun =
+        ImmutableList.of("Message on stdout", "arg[arg1]", "arg[arg2]", "CUSTOM_ENV: ");
+
+    ImmutableList<String> actualReturnedDefaultAndRun =
+        ImmutableList.copyOf(
+            workspace
+                .runBuckCommand("run", "//:with_default_and_run_info", "--", "arg1", "arg2")
+                .assertSuccess()
+                .getStdout()
+                .split("\\r?\\n"));
+
+    ImmutableList<String> actualReturnedDefault =
+        ImmutableList.copyOf(
+            workspace
+                .runBuckCommand("run", "//:with_default_info", "--", "arg1", "arg2")
+                .assertSuccess()
+                .getStdout()
+                .split("\\r?\\n"));
+
+    ImmutableList<String> actualReturnedRun =
+        ImmutableList.copyOf(
+            workspace
+                .runBuckCommand("run", "//:with_run_info", "--", "arg1", "arg2")
+                .assertSuccess()
+                .getStdout()
+                .split("\\r?\\n"));
+
+    ImmutableList<String> actualReturnedNeither =
+        ImmutableList.copyOf(
+            workspace
+                .runBuckCommand(
+                    "run", "//:with_implicit_default_and_run_info", "--", "arg1", "arg2")
+                .assertSuccess()
+                .getStdout()
+                .split("\\r?\\n"));
+
+    assertEquals(expectedWithRun, actualReturnedDefaultAndRun);
+    assertEquals(expectedWithoutRun, actualReturnedDefault);
+    assertEquals(expectedWithRun, actualReturnedRun);
+    assertEquals(expectedWithoutRun, actualReturnedNeither);
+  }
+
+  @Test
+  public void failsIfRunInfoReturnedOnInferringRule() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "implementation_handles_executable", tmp);
+    workspace.setUp();
+
+    String runOutput =
+        workspace
+            .runBuckCommand("build", "//:with_inferring_and_explicit_run_info")
+            .assertFailure()
+            .getStderr();
+
+    assertThat(
+        runOutput,
+        Matchers.containsString("specified `infer_run_info`, however a `RunInfo` object was"));
+  }
+
+  @Test
+  public void failsIfRunInfoNotProvidedButZeroOrMoreThanOneArtifactsReturnedInDefaultInfo()
+      throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "implementation_handles_executable", tmp);
+    workspace.setUp();
+
+    String zeroOutputsOut =
+        workspace
+            .runBuckCommand("build", "//:with_zero_outputs_implicit_run")
+            .assertFailure()
+            .getStderr();
+    String twoOutputsOut =
+        workspace
+            .runBuckCommand("build", "//:with_two_outputs_implicit_run")
+            .assertFailure()
+            .getStderr();
+
+    assertThat(
+        zeroOutputsOut,
+        Matchers.containsString(
+            "This provider can only be inferred if the rule returns a single default"));
+    assertThat(
+        twoOutputsOut,
+        Matchers.containsString(
+            "This provider can only be inferred if the rule returns a single default"));
+  }
+
+  @Test
+  public void testsIfTestAndRunInfoReturned() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "implementation_handles_test", tmp);
+    workspace.setUp();
+
+    workspace
+        .runBuckCommand("test", "//:implicit_default_implicit_run_implicit_test_info")
+        .assertSuccess();
+    workspace.runBuckCommand("test", "//:implicit_default_implicit_run_test_info").assertSuccess();
+    workspace.runBuckCommand("test", "//:implicit_default_run_implicit_test_info").assertSuccess();
+    workspace.runBuckCommand("test", "//:implicit_default_run_test_info").assertSuccess();
+    workspace.runBuckCommand("test", "//:default_implicit_run_implicit_test_info").assertSuccess();
+    workspace.runBuckCommand("test", "//:default_implicit_run_test_info").assertSuccess();
+    workspace.runBuckCommand("test", "//:default_run_implicit_test_info").assertSuccess();
+    workspace.runBuckCommand("test", "//:default_run_test_info").assertSuccess();
+    workspace.runBuckCommand("test", "//:failing_test").assertTestFailure();
+  }
+
+  @Test
+  public void failsIfTestInfoReturnedOnNonTestRule() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "implementation_handles_test", tmp);
+    workspace.setUp();
+
+    String stderr =
+        workspace.runBuckCommand("test", "//:nontest_with_test").assertFailure().getStderr();
+
+    assertThat(stderr, Matchers.containsString("Please mark it as a test rule "));
+  }
+
+  @Test
+  public void failsIfTestInfoReturnedButNoRunInfo() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "implementation_handles_test", tmp);
+    workspace.setUp();
+
+    String stderr =
+        workspace.runBuckCommand("test", "//:test_without_run_info").assertFailure().getStderr();
+
+    assertThat(
+        stderr,
+        Matchers.containsString(
+            "Either set `infer_run_info` to True to make Buck infer a RunInfo"));
+  }
+
+  @Test
+  public void testRulesCanBeRun() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "implementation_handles_test", tmp);
+    workspace.setUp();
+
+    workspace.runBuckCommand("run", "//:default_run_test_info").assertSuccess();
   }
 }

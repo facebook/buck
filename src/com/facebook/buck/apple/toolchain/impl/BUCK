@@ -3,9 +3,6 @@ load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
 java_library_with_plugins(
     name = "impl",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//src/com/facebook/buck/apple/toolchain:toolchain",
-    ],
     visibility = [
         "PUBLIC",
     ],
@@ -31,5 +28,8 @@ java_library_with_plugins(
         "//third-party/java/dd-plist:dd-plist",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/apple/toolchain:toolchain",
     ],
 )

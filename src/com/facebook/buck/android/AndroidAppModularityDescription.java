@@ -26,7 +26,8 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
+import com.facebook.buck.rules.query.Query;
 import com.google.common.collect.ImmutableSet;
 import java.util.List;
 import java.util.Map;
@@ -77,8 +78,7 @@ public class AndroidAppModularityDescription
         apkModuleGraph);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable(copy = true)
+  @RuleArg
   interface AbstractAndroidAppModularityDescriptionArg
       extends BuildRuleArg, HasDeclaredDeps, HasApplicationModuleBlacklist {
     Map<String, List<BuildTarget>> getApplicationModuleConfigs();
@@ -96,6 +96,17 @@ public class AndroidAppModularityDescription
     @Value.Default
     default boolean getShouldIncludeLibraries() {
       return false;
+    }
+
+    @Override
+    default AndroidAppModularityDescriptionArg withApplicationModuleBlacklist(List<Query> queries) {
+      if (getApplicationModuleBlacklist().equals(Optional.of(queries))) {
+        return (AndroidAppModularityDescriptionArg) this;
+      }
+      return AndroidAppModularityDescriptionArg.builder()
+          .from(this)
+          .setApplicationModuleBlacklist(queries)
+          .build();
     }
   }
 }

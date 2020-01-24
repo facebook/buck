@@ -277,4 +277,16 @@ public class BuckSkylarkTypesTest {
     String someString = "foo";
     assertSame(someString, BuckSkylarkTypes.skylarkValueFromNullable(someString));
   }
+
+  @Test
+  public void optionalFromNoneOrType() throws EvalException {
+    String foo = "foo";
+    assertSame(foo, BuckSkylarkTypes.validateNoneOrType(Location.BUILTIN, String.class, foo));
+    assertSame(
+        Runtime.NONE,
+        BuckSkylarkTypes.validateNoneOrType(Location.BUILTIN, String.class, Runtime.NONE));
+    thrown.expect(EvalException.class);
+    thrown.expectMessage("Invalid type provided");
+    BuckSkylarkTypes.validateNoneOrType(Location.BUILTIN, String.class, 1);
+  }
 }

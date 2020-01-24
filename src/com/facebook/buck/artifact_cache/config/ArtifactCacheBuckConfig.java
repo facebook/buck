@@ -302,11 +302,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
               }
             });
 
-    return ArtifactCacheEntries.builder()
-        .setDirCacheEntries(dirCacheEntries)
-        .setHttpCacheEntries(httpCacheEntries)
-        .setSQLiteCacheEntries(sqliteCacheEntries)
-        .build();
+    return ImmutableArtifactCacheEntries.of(httpCacheEntries, dirCacheEntries, sqliteCacheEntries);
   }
 
   private ImmutableSet<HttpCacheEntry> getHttpCacheEntries() {
@@ -511,16 +507,11 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
     Optional<Long> maxSizeBytes =
         buckConfig.getValue(section, DIR_MAX_SIZE_FIELD).map(SizeUnit::parseBytes);
 
-    return DirCacheEntry.builder()
-        .setName(cacheName)
-        .setCacheDir(pathToCacheDir)
-        .setCacheReadMode(readMode)
-        .setMaxSizeBytes(maxSizeBytes)
-        .build();
+    return DirCacheEntry.of(cacheName, pathToCacheDir, maxSizeBytes, readMode);
   }
 
   private HttpCacheEntry obtainHttpEntry() {
-    HttpCacheEntry.Builder builder = HttpCacheEntry.builder();
+    ImmutableHttpCacheEntry.Builder builder = ImmutableHttpCacheEntry.builder();
     builder.setUrl(
         buckConfig.getUrl(CACHE_SECTION_NAME, HTTP_URL_FIELD_NAME).orElse(DEFAULT_HTTP_URL));
     long defaultTimeoutValue =
@@ -572,13 +563,8 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
     Optional<Long> maxInlinedSizeBytes =
         buckConfig.getValue(section, SQLITE_MAX_INLINED_SIZE_FIELD).map(SizeUnit::parseBytes);
 
-    return SQLiteCacheEntry.builder()
-        .setName(cacheName)
-        .setCacheDir(pathToCacheDir)
-        .setCacheReadMode(readMode)
-        .setMaxSizeBytes(maxSizeBytes)
-        .setMaxInlinedSizeBytes(maxInlinedSizeBytes)
-        .build();
+    return ImmutableSQLiteCacheEntry.of(
+        Optional.of(cacheName), pathToCacheDir, maxSizeBytes, maxInlinedSizeBytes, readMode);
   }
 
   public ImmutableSet<String> getBlacklistedWifiSsids() {

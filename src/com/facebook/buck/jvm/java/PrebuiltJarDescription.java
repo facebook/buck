@@ -31,7 +31,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
@@ -166,8 +166,7 @@ public class PrebuiltJarDescription
     return true;
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractPrebuiltJarDescriptionArg
       extends BuildRuleArg, HasDeclaredDeps, MaybeRequiredForSourceOnlyAbiArg {
     SourcePath getBinaryJar();

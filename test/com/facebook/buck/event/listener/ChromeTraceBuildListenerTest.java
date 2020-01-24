@@ -49,7 +49,6 @@ import com.facebook.buck.event.CompilerPluginDurationEvent;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.LeafEvents;
-import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.chrome_trace.ChromeTraceBuckConfig;
 import com.facebook.buck.event.chrome_trace.ChromeTraceEvent;
@@ -127,19 +126,18 @@ public class ChromeTraceBuildListenerTest {
   @Before
   public void setUp() {
     invocationInfo =
-        InvocationInfo.builder()
-            .setTimestampMillis(CURRENT_TIME_MILLIS)
-            .setBuckLogDir(tmpDir.getRoot().toPath().resolve("buck-out/log"))
-            .setBuildId(BUILD_ID)
-            .setSubCommand("no_sub_command")
-            .setIsDaemon(false)
-            .setSuperConsoleEnabled(false)
-            .setUnexpandedCommandArgs(ImmutableList.of("@mode/arglist", "--foo", "--bar"))
-            .setCommandArgs(ImmutableList.of("--config", "configvalue", "--foo", "--bar"))
-            .setIsRemoteExecution(false)
-            .setRepository("repository")
-            .setWatchmanVersion("3.1.0")
-            .build();
+        InvocationInfo.of(
+            BUILD_ID,
+            false,
+            false,
+            "no_sub_command",
+            ImmutableList.of("--config", "configvalue", "--foo", "--bar"),
+            ImmutableList.of("@mode/arglist", "--foo", "--bar"),
+            tmpDir.getRoot().toPath().resolve("buck-out/log"),
+            false,
+            "repository",
+            "3.1.0",
+            CURRENT_TIME_MILLIS);
     durationTracker = new BuildRuleDurationTracker();
     eventBus = new DefaultBuckEventBus(FAKE_CLOCK, BUILD_ID);
     managerScope = TestBackgroundTaskManager.of().getNewScope(invocationInfo.getBuildId());
@@ -555,9 +553,11 @@ public class ChromeTraceBuildListenerTest {
 
     try (SimplePerfEvent.Scope scope1 =
         SimplePerfEvent.scope(
-            eventBus, PerfEventId.of("planning"), ImmutableMap.of("nefarious", true))) {
+            eventBus,
+            SimplePerfEvent.PerfEventId.of("planning"),
+            ImmutableMap.of("nefarious", true))) {
       try (SimplePerfEvent.Scope scope2 =
-          SimplePerfEvent.scope(eventBus, PerfEventId.of("scheming"))) {
+          SimplePerfEvent.scope(eventBus, SimplePerfEvent.PerfEventId.of("scheming"))) {
         scope2.appendFinishedInfo("success", false);
       }
       scope1.appendFinishedInfo(

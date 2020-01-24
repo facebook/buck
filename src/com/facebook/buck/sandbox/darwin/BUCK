@@ -1,9 +1,6 @@
 java_library(
     name = "darwin",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//src/com/facebook/buck/sandbox:sandbox",
-    ],
     tests = [
         "//test/com/facebook/buck/sandbox/darwin:darwin",
     ],
@@ -15,5 +12,8 @@ java_library(
         "//src/com/facebook/buck/util:util",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/sandbox:sandbox",
     ],
 )

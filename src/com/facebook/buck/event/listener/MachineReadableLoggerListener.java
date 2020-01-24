@@ -33,7 +33,7 @@ import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.build.event.BuildRuleExecutionEvent;
 import com.facebook.buck.core.model.BuildId;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEventListener;
@@ -79,7 +79,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nullable;
-import org.immutables.value.Value;
 
 public class MachineReadableLoggerListener implements BuckEventListener {
 
@@ -393,7 +392,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
         });
 
     MachineReadableLoggerListenerCloseArgs args =
-        MachineReadableLoggerListenerCloseArgs.of(
+        ImmutableMachineReadableLoggerListenerCloseArgs.of(
             executor,
             info.getLogDirectoryPath().resolve(BuckConstant.BUCK_MACHINE_LOG_FILE_NAME),
             chromeTraceConfig.getLogUploadMode().shouldUploadLogs(exitCode)
@@ -446,25 +445,18 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   }
 
   /** Arguments to {@link MachineReadableLoggerListenerCloseAction}. */
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractMachineReadableLoggerListenerCloseArgs {
-    @Value.Parameter
+  @BuckStyleValue
+  abstract static class MachineReadableLoggerListenerCloseArgs {
     public abstract ExecutorService getExecutor();
 
-    @Value.Parameter
     public abstract Path getMachineReadableLogFilePath();
 
-    @Value.Parameter
     public abstract Optional<URI> getTraceUploadURI();
 
-    @Value.Parameter
     public abstract Path getLogDirectoryPath();
 
-    @Value.Parameter
     public abstract Path getLogFilePath();
 
-    @Value.Parameter
     public abstract BuildId getBuildId();
   }
 }

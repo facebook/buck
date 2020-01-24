@@ -146,7 +146,7 @@ public class RuleKeyLoggerListenerTest {
   private HttpArtifactCacheEvent.Finished createArtifactCacheEvent(CacheResultType type) {
     return ArtifactCacheTestUtils.newFetchFinishedEvent(
         ArtifactCacheTestUtils.newFetchStartedEvent(null, new RuleKey("abababab42")),
-        CacheResult.builder().setType(type).setCacheSource("random source").build());
+        CacheResult.of(type, "random source"));
   }
 
   private RuleKeyLoggerListener newInstance(

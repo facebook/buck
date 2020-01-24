@@ -26,7 +26,7 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.description.arg.DataTransferObject;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.util.ErrorLogger;
 import com.google.common.collect.ImmutableList;
@@ -39,7 +39,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
-import org.immutables.value.Value;
 import org.junit.Test;
 
 public class BuilderParamInfoTest {
@@ -125,14 +124,12 @@ public class BuilderParamInfoTest {
 
   class BadFieldType {}
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractDtoWithBadField implements DataTransferObject {
     abstract BadFieldType getBadFieldType();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractDtoWithOptionals implements DataTransferObject {
     abstract Optional<String> getOptional();
 
@@ -155,8 +152,7 @@ public class BuilderParamInfoTest {
     abstract ImmutableMap<String, String> getImmutableMap();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractDtoWithOptionalsFromInterface extends DataTransferObject {
     Optional<String> getOptional();
 
@@ -179,8 +175,7 @@ public class BuilderParamInfoTest {
     ImmutableMap<String, String> getImmutableMap();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractDtoWithOneParameter implements DataTransferObject {
     abstract String getSomeString();
   }

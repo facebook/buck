@@ -109,11 +109,7 @@ public class BuildFileManifestCacheTest {
     Iterable<GlobSpecWithResult> globManifest =
         ImmutableList.of(
             GlobSpecWithResult.of(
-                GlobSpec.builder()
-                    .setInclude(ImmutableList.of("*.java"))
-                    .setExclude(ImmutableList.of("*.cpp"))
-                    .setExcludeDirectories(false)
-                    .build(),
+                GlobSpec.of(ImmutableList.of("*.java"), ImmutableList.of("*.cpp"), false),
                 ImmutableSet.of("1.java", "2.java")));
 
     manifestCell1Root =

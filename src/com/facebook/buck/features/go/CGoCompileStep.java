@@ -74,7 +74,7 @@ public class CGoCompileStep extends ShellStep {
         .putAll(environment)
         // cgo silently calls C preprocessor, so we need to set CC env in order
         // to use toolchain provided via cxxPlatform (not the system one)
-        .put("CC", cppCommandPrefix.get(0))
+        .put("CC", String.join(" ", cppCommandPrefix))
         .put("GOOS", platform.getGoOs().getEnvVarValue())
         .put("GOARCH", platform.getGoArch().getEnvVarValue())
         .put("GOARM", platform.getGoArch().getEnvVarValueForArm())

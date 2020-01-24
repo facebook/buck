@@ -39,8 +39,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.io.file.MorePaths;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.json.HasJsonField;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
@@ -114,12 +112,9 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
 
   private ProjectWorkspace workspace;
 
-  private ProjectFilesystem filesystem;
-
   @Before
   public void setUp() {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
-    filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
   }
 
   @Test
@@ -153,7 +148,8 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:no_srcs");
     ProcessResult buildResult = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     buildResult.assertSuccess("Successful build should exit with 0.");
-    Path outputPath = CompilerOutputPaths.of(target, filesystem).getOutputJarPath().get();
+    Path outputPath =
+        CompilerOutputPaths.of(target, workspace.getProjectFileSystem()).getOutputJarPath().get();
     Path outputFile = workspace.getPath(outputPath);
     assertTrue(Files.exists(outputFile));
     // TODO(mbolin): When we produce byte-for-byte identical JAR files across builds, do:
@@ -167,7 +163,8 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     workspace.verify();
 
     // Verify the build cache.
-    Path buildCache = workspace.getPath(filesystem.getBuckPaths().getCacheDir());
+    Path buildCache =
+        workspace.getPath(workspace.getProjectFileSystem().getBuckPaths().getCacheDir());
     assertTrue(Files.isDirectory(buildCache));
 
     ArtifactCache dirCache =
@@ -306,7 +303,9 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     Path outputFile =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem, target, "lib__%s__output/" + target.getShortName() + ".jar"));
+                workspace.getProjectFileSystem(),
+                target,
+                "lib__%s__output/" + target.getShortName() + ".jar"));
     assertTrue(Files.exists(outputFile));
 
     ImmutableSet.Builder<String> jarContents = ImmutableSet.builder();
@@ -337,11 +336,15 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
 
     Path utilOutputPath =
         BuildTargetPaths.getGenPath(
-            filesystem, utilTarget, "lib__%s__output/" + utilTarget.getShortName() + ".jar");
+            workspace.getProjectFileSystem(),
+            utilTarget,
+            "lib__%s__output/" + utilTarget.getShortName() + ".jar");
     long utilJarSize = Files.size(workspace.getPath(utilOutputPath));
     Path bizOutputPath =
         BuildTargetPaths.getGenPath(
-            filesystem, bizTarget, "lib__%s__output/" + bizTarget.getShortName() + ".jar");
+            workspace.getProjectFileSystem(),
+            bizTarget,
+            "lib__%s__output/" + bizTarget.getShortName() + ".jar");
     FileTime bizJarLastModified = Files.getLastModifiedTime(workspace.getPath(bizOutputPath));
 
     // TODO(mbolin): Run uber-biz.jar and verify it prints "Hello World!\n".
@@ -744,7 +747,8 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     buildResult.assertSuccess("Successful build should exit with 0.");
 
     Path bizClassUsageFilePath =
-        BuildTargetPaths.getGenPath(filesystem, bizTarget, "lib__%s__output/used-classes.json");
+        BuildTargetPaths.getGenPath(
+            workspace.getProjectFileSystem(), bizTarget, "lib__%s__output/used-classes.json");
 
     List<String> lines = Files.readAllLines(workspace.getPath(bizClassUsageFilePath), UTF_8);
 
@@ -756,13 +760,17 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
       utilJarPath =
           MorePaths.pathWithPlatformSeparators(
               BuildTargetPaths.getGenPath(
-                  filesystem, utilTarget, "%s/" + utilTarget.getShortName() + "-abi.jar"));
+                  workspace.getProjectFileSystem(),
+                  utilTarget,
+                  "%s/" + utilTarget.getShortName() + "-abi.jar"));
     } else {
       BuildTarget utilTarget = BuildTargetFactory.newInstance("//:util");
       utilJarPath =
           MorePaths.pathWithPlatformSeparators(
               BuildTargetPaths.getGenPath(
-                  filesystem, utilTarget, "lib__%s__output/" + utilTarget.getShortName() + ".jar"));
+                  workspace.getProjectFileSystem(),
+                  utilTarget,
+                  "lib__%s__output/" + utilTarget.getShortName() + ".jar"));
     }
     String utilClassPath = MorePaths.pathWithPlatformSeparators("com/example/Util.class");
 
@@ -818,7 +826,8 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     buildResult.assertSuccess("Successful build should exit with 0.");
 
     Path bizClassUsageFilePath =
-        BuildTargetPaths.getGenPath(filesystem, bizTarget, "lib__%s__output/used-classes.json");
+        BuildTargetPaths.getGenPath(
+            workspace.getProjectFileSystem(), bizTarget, "lib__%s__output/used-classes.json");
 
     String usedClasses = getContents(workspace.getPath(bizClassUsageFilePath));
 
@@ -829,7 +838,9 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
           MorePaths.pathWithPlatformSeparators(
               "/away_cell/"
                   + BuildTargetPaths.getGenPath(
-                          filesystem, utilTarget, "%s/" + utilTarget.getShortName() + "-abi.jar")
+                          workspace.getProjectFileSystem(),
+                          utilTarget,
+                          "%s/" + utilTarget.getShortName() + "-abi.jar")
                       .toString());
     } else {
       BuildTarget utilTarget = BuildTargetFactory.newInstance("//util:util");
@@ -837,7 +848,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
           "/away_cell/"
               + MorePaths.pathWithPlatformSeparators(
                   BuildTargetPaths.getGenPath(
-                          filesystem,
+                          workspace.getProjectFileSystem(),
                           utilTarget,
                           "lib__%s__output/" + utilTarget.getShortName() + ".jar")
                       .toString());
@@ -884,8 +895,8 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
 
     for (Path filename :
         new Path[] {
-          BuildTargetPaths.getGenPath(filesystem, binaryTarget, "%s.jar"),
-          BuildTargetPaths.getGenPath(filesystem, binary2Target, "%s.jar")
+          BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), binaryTarget, "%s.jar"),
+          BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), binary2Target, "%s.jar")
         }) {
       Path file = workspace.getPath(filename);
       try (ZipArchive zipArchive = new ZipArchive(file, /* for writing? */ false)) {
@@ -938,7 +949,9 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
 
     result.assertSuccess();
 
-    Path classesDir = workspace.getPath(CompilerOutputPaths.of(target, filesystem).getClassesDir());
+    Path classesDir =
+        workspace.getPath(
+            CompilerOutputPaths.of(target, workspace.getProjectFileSystem()).getClassesDir());
 
     assertTrue(Files.exists(classesDir));
     assertTrue(Files.isDirectory(classesDir));
@@ -960,7 +973,9 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     ProcessResult result = workspace.runBuckBuild(target.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path classesDir = workspace.getPath(CompilerOutputPaths.of(target, filesystem).getClassesDir());
+    Path classesDir =
+        workspace.getPath(
+            CompilerOutputPaths.of(target, workspace.getProjectFileSystem()).getClassesDir());
 
     assertThat(Files.exists(classesDir), is(Boolean.TRUE));
     assertThat(
@@ -968,7 +983,9 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
         ImmutableList.copyOf(classesDir.toFile().listFiles()),
         hasSize(0));
 
-    Path jarPath = workspace.getPath(CompilerOutputPaths.getOutputJarPath(target, filesystem));
+    Path jarPath =
+        workspace.getPath(
+            CompilerOutputPaths.getOutputJarPath(target, workspace.getProjectFileSystem()));
     assertTrue(Files.exists(jarPath));
     ZipInputStream zip = new ZipInputStream(new FileInputStream(jarPath.toFile()));
     assertThat(zip.getNextEntry().getName(), is("META-INF/"));
@@ -992,7 +1009,9 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     workspace.getBuildLog().assertTargetBuiltLocally(javacTarget);
     workspace.getBuildLog().assertTargetBuiltLocally(libTarget);
 
-    Path classesDir = workspace.getPath(CompilerOutputPaths.of(target, filesystem).getClassesDir());
+    Path classesDir =
+        workspace.getPath(
+            CompilerOutputPaths.of(target, workspace.getProjectFileSystem()).getClassesDir());
 
     assertThat("Classes directory should exist.", Files.exists(classesDir), is(Boolean.TRUE));
     ArrayList<String> classFiles = new ArrayList<>();
@@ -1004,7 +1023,9 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     assertThat(classFiles, hasItem("JavacMain.class"));
     assertThat(classFiles, hasItem("Extra.class"));
 
-    Path jarPath = workspace.getPath(CompilerOutputPaths.getOutputJarPath(target, filesystem));
+    Path jarPath =
+        workspace.getPath(
+            CompilerOutputPaths.getOutputJarPath(target, workspace.getProjectFileSystem()));
     assertTrue(Files.exists(jarPath));
 
     // Check that normal and member classes were removed as expected.
@@ -1037,7 +1058,9 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     workspace.getBuildLog().assertTargetBuiltLocally(javacTarget);
     workspace.getBuildLog().assertTargetBuiltLocally(libTarget);
 
-    Path classesDir = workspace.getPath(CompilerOutputPaths.of(target, filesystem).getClassesDir());
+    Path classesDir =
+        workspace.getPath(
+            CompilerOutputPaths.of(target, workspace.getProjectFileSystem()).getClassesDir());
 
     assertThat("Classes directory should exist.", Files.exists(classesDir), is(Boolean.TRUE));
     ArrayList<String> classFiles = new ArrayList<>();
@@ -1049,7 +1072,9 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     assertThat(classFiles, hasItem("JavacMain.class"));
     assertThat(classFiles, hasItem("Extra.class"));
 
-    Path jarPath = workspace.getPath(CompilerOutputPaths.getOutputJarPath(target, filesystem));
+    Path jarPath =
+        workspace.getPath(
+            CompilerOutputPaths.getOutputJarPath(target, workspace.getProjectFileSystem()));
     assertTrue(Files.exists(jarPath));
 
     // Check that normal and member classes were removed as expected.
@@ -1074,7 +1099,9 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     ProcessResult result = workspace.runBuckBuild(target.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path classesDir = workspace.getPath(CompilerOutputPaths.of(target, filesystem).getClassesDir());
+    Path classesDir =
+        workspace.getPath(
+            CompilerOutputPaths.of(target, workspace.getProjectFileSystem()).getClassesDir());
 
     assertThat("Classes directory should exist.", Files.exists(classesDir), is(Boolean.TRUE));
     assertThat(
@@ -1084,7 +1111,9 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
             .collect(Collectors.toList()),
         hasSize(0));
 
-    Path jarPath = workspace.getPath(CompilerOutputPaths.getOutputJarPath(target, filesystem));
+    Path jarPath =
+        workspace.getPath(
+            CompilerOutputPaths.getOutputJarPath(target, workspace.getProjectFileSystem()));
     assertTrue(Files.exists(jarPath));
 
     // Check that normal and member classes were removed as expected.
@@ -1106,10 +1135,14 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     ProcessResult result = workspace.runBuckBuild(target.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path classesDir = workspace.getPath(CompilerOutputPaths.of(target, filesystem).getClassesDir());
+    Path classesDir =
+        workspace.getPath(
+            CompilerOutputPaths.of(target, workspace.getProjectFileSystem()).getClassesDir());
 
     assertThat("Classes directory should exist.", Files.exists(classesDir), is(Boolean.TRUE));
-    Path jarPath = workspace.getPath(CompilerOutputPaths.getOutputJarPath(target, filesystem));
+    Path jarPath =
+        workspace.getPath(
+            CompilerOutputPaths.getOutputJarPath(target, workspace.getProjectFileSystem()));
     assertTrue("Jar should exist.", Files.exists(jarPath));
 
     // Check that normal and member classes were removed as expected.
@@ -1132,7 +1165,9 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
 
     result.assertSuccess();
 
-    Path classesDir = workspace.getPath(CompilerOutputPaths.of(target, filesystem).getClassesDir());
+    Path classesDir =
+        workspace.getPath(
+            CompilerOutputPaths.of(target, workspace.getProjectFileSystem()).getClassesDir());
 
     assertThat(Files.exists(classesDir), is(Boolean.TRUE));
     assertThat(
@@ -1141,7 +1176,8 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
         hasSize(0));
 
     Path sourcesDir =
-        workspace.getPath(CompilerOutputPaths.of(target, filesystem).getAnnotationPath());
+        workspace.getPath(
+            CompilerOutputPaths.of(target, workspace.getProjectFileSystem()).getAnnotationPath());
 
     assertThat(Files.exists(sourcesDir), is(Boolean.TRUE));
     assertThat(
@@ -1149,7 +1185,9 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
         ImmutableList.copyOf(sourcesDir.toFile().listFiles()),
         hasSize(2));
 
-    Path jarPath = workspace.getPath(CompilerOutputPaths.getOutputJarPath(target, filesystem));
+    Path jarPath =
+        workspace.getPath(
+            CompilerOutputPaths.getOutputJarPath(target, workspace.getProjectFileSystem()));
     assertTrue(Files.exists(jarPath));
 
     ZipInspector zipInspector = new ZipInspector(jarPath);

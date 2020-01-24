@@ -30,6 +30,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.impl.TestActionExecutionRunner;
 import com.facebook.buck.testutil.TemporaryPaths;
+import com.google.devtools.build.lib.syntax.EvalException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -52,7 +53,7 @@ public class CopyActionTest {
   }
 
   @Test
-  public void copiesContentsToFile() throws ActionCreationException, IOException {
+  public void copiesContentsToFile() throws ActionCreationException, IOException, EvalException {
 
     PathSourcePath inputPath = PathSourcePath.of(projectFilesystem, Paths.get("input"));
     projectFilesystem.writeContentsToPath("contents", inputPath.getRelativePath());
@@ -61,7 +62,9 @@ public class CopyActionTest {
     Artifact output = runner.declareArtifact(Paths.get("out"));
 
     TestActionExecutionRunner.ExecutionDetails<CopyAction> result =
-        runner.runAction(new CopyAction(runner.getRegistry(), input, output, CopySourceMode.FILE));
+        runner.runAction(
+            new CopyAction(
+                runner.getRegistry(), input, output.asOutputArtifact(), CopySourceMode.FILE));
 
     Path outputPath =
         Objects.requireNonNull(output.asBound().asBuildArtifact())
@@ -80,7 +83,8 @@ public class CopyActionTest {
 
     TestActionExecutionRunner.ExecutionDetails<CopyAction> result2 =
         runner.runAction(
-            new CopyAction(runner.getRegistry(), output, output2, CopySourceMode.FILE));
+            new CopyAction(
+                runner.getRegistry(), output, output2.asOutputArtifact(), CopySourceMode.FILE));
 
     Path outputPath2 =
         Objects.requireNonNull(output2.asBound().asBuildArtifact())

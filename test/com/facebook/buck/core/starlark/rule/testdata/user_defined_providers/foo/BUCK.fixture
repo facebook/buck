@@ -1,4 +1,4 @@
-load("//:defs.bzl", "root_rule", "non_root_rule", "content_info", "does_not_require_provider", "requires_provider")
+load("//:defs.bzl", "content_info", "does_not_require_provider", "non_root_rule", "requires_provider", "root_rule")
 
 root_rule(
     name = "root",

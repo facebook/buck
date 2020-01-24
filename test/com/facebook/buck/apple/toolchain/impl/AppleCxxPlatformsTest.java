@@ -47,6 +47,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -90,6 +91,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
@@ -841,15 +843,18 @@ public class AppleCxxPlatformsTest {
     ImmutableMap.Builder<Flavor, RuleKey> ruleKeys = ImmutableMap.builder();
     for (Map.Entry<Flavor, AppleCxxPlatform> entry : cxxPlatforms.entrySet()) {
       CxxSourceRuleFactory cxxSourceRuleFactory =
-          CxxSourceRuleFactory.builder()
-              .setProjectFilesystem(projectFilesystem)
-              .setBaseBuildTarget(target)
-              .setActionGraphBuilder(graphBuilder)
-              .setPathResolver(graphBuilder.getSourcePathResolver())
-              .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
-              .setCxxPlatform(entry.getValue().getCxxPlatform())
-              .setPicType(PicType.PIC)
-              .build();
+          CxxSourceRuleFactory.of(
+              projectFilesystem,
+              target,
+              graphBuilder,
+              graphBuilder.getSourcePathResolver(),
+              CxxPlatformUtils.DEFAULT_CONFIG,
+              entry.getValue().getCxxPlatform(),
+              ImmutableList.of(),
+              ImmutableMultimap.of(),
+              Optional.empty(),
+              Optional.empty(),
+              PicType.PIC);
       CxxPreprocessAndCompile rule;
       switch (operation) {
         case PREPROCESS_AND_COMPILE:
@@ -1012,7 +1017,7 @@ public class AppleCxxPlatformsTest {
         new NoopBinaryBuildRule(
             buildTarget, new FakeProjectFilesystem(), TestBuildRuleParams.create()) {
           @Override
-          public Tool getExecutableCommand() {
+          public Tool getExecutableCommand(OutputLabel outputLabel) {
             return codesign;
           }
         };
@@ -1156,13 +1161,7 @@ public class AppleCxxPlatformsTest {
     assertThat(swiftc, instanceOf(VersionedTool.class));
     assertThat(
         swiftPlatform.getSwiftTarget(),
-        equalTo(
-            SwiftTargetTriple.builder()
-                .setArchitecture("i386")
-                .setVendor("apple")
-                .setPlatformName("ios")
-                .setTargetSdkVersion("7.0")
-                .build()));
+        equalTo(SwiftTargetTriple.of("i386", "apple", "ios", "7.0")));
   }
 
   @Test

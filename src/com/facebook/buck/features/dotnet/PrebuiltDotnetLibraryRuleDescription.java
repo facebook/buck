@@ -48,7 +48,8 @@ public class PrebuiltDotnetLibraryRuleDescription
     Artifact assembly = context.resolveSrc(args.getAssembly());
     Artifact output = context.actionRegistry().declareArtifact(Paths.get(assembly.getBasename()));
 
-    new CopyAction(context.actionRegistry(), assembly, output, CopySourceMode.FILE);
+    new CopyAction(
+        context.actionRegistry(), assembly, output.asOutputArtifact(), CopySourceMode.FILE);
 
     return ProviderInfoCollectionImpl.builder()
         .put(new ImmutableDotnetLibraryProviderInfo(output))

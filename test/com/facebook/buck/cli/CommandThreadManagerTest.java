@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.ResourceAllocationFairness;
+import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.ResourceAmountsEstimator;
 import java.util.concurrent.TimeUnit;
 import org.junit.Rule;
@@ -42,7 +43,11 @@ public class CommandThreadManagerTest {
             ResourceAllocationFairness.FAIR,
             /* managedThreadCount */ 1,
             ResourceAmountsEstimator.DEFAULT_AMOUNTS,
-            ResourceAmountsEstimator.DEFAULT_MAXIMUM_AMOUNTS.withCpu(1));
+            ResourceAmounts.of(
+                1,
+                ResourceAmountsEstimator.DEFAULT_MAXIMUM_AMOUNTS.getMemory(),
+                ResourceAmountsEstimator.DEFAULT_MAXIMUM_AMOUNTS.getDiskIO(),
+                ResourceAmountsEstimator.DEFAULT_MAXIMUM_AMOUNTS.getNetworkIO()));
 
     try (CommandThreadManager pool =
         new CommandThreadManager("Test", concurrencyLimit, 250, TimeUnit.MILLISECONDS)) {

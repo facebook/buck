@@ -1,0 +1,47 @@
+load("//:defs.bzl", "executable_rule_wrapper", "inferring_error_rule")
+
+executable_rule_wrapper(
+    name = "with_default_and_run_info",
+    run_info = True,
+    default_info = True,
+    infer_run_info = False,
+)
+
+executable_rule_wrapper(
+    name = "with_default_info",
+    run_info = False,
+    default_info = True,
+    infer_run_info = True,
+)
+
+executable_rule_wrapper(
+    name = "with_run_info",
+    run_info = True,
+    default_info = False,
+    infer_run_info = False,
+)
+
+executable_rule_wrapper(
+    name = "with_implicit_default_and_run_info",
+    run_info = False,
+    default_info = False,
+    infer_run_info = True,
+)
+
+inferring_error_rule(
+    name = "with_zero_outputs_implicit_run",
+    run_info = False,
+    num_outputs = 0,
+)
+
+inferring_error_rule(
+    name = "with_two_outputs_implicit_run",
+    run_info = False,
+    num_outputs = 2,
+)
+
+inferring_error_rule(
+    name = "with_inferring_and_explicit_run_info",
+    run_info = True,
+    num_outputs = 1,
+)

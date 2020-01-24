@@ -16,9 +16,12 @@
 
 package com.facebook.buck.core.artifact;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.starlark.rule.artifact.SkylarkOutputArtifactApi;
 import com.facebook.buck.io.file.MorePaths;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
@@ -27,6 +30,7 @@ import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
+import com.google.devtools.build.lib.syntax.EvalException;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -46,7 +50,7 @@ class ArtifactImpl extends AbstractArtifact
   private static final Path PARENT_PATH = Paths.get("..");
 
   private @Nullable ActionAnalysisDataKey actionAnalysisDataKey = null;
-  private @Nullable ExplicitBuildTargetSourcePath sourcePath;
+  @AddToRuleKey private @Nullable ExplicitBuildTargetSourcePath sourcePath;
 
   private final BuildTarget target;
   private final Path genDir;
@@ -114,7 +118,8 @@ class ArtifactImpl extends AbstractArtifact
   }
 
   /** @return the output path relative to the {@link #getPackagePath()} */
-  Path getOutputPath() {
+  @Override
+  public Path getOutputPath() {
     return outputPath;
   }
 
@@ -222,31 +227,65 @@ class ArtifactImpl extends AbstractArtifact
   }
 
   @Override
+  public SkylarkOutputArtifactApi asSkylarkOutputArtifact(Location location) throws EvalException {
+    if (isBound()) {
+      throw new EvalException(
+          location,
+          String.format("%s is already bound. It cannot be used as an output artifact", this));
+    }
+    return ImmutableOutputArtifact.of(this);
+  }
+
+  @Override
+  public OutputArtifact asOutputArtifact() {
+    if (isBound()) {
+      throw new HumanReadableException(
+          "%s is already bound. It cannot be used as an output artifact", this);
+    }
+    return ImmutableOutputArtifact.of(this);
+  }
+
+  @Override
   public boolean isSource() {
     return false;
   }
 
   @Override
   public void repr(SkylarkPrinter printer) {
-    printer.append("<generated file '");
-    printer.append(getShortPath());
+    repr(printer, this, false);
+  }
+
+  static void repr(SkylarkPrinter printer, Artifact artifact, boolean isOutputArtifact) {
+    printer.append("<generated ");
+    if (isOutputArtifact) {
+      printer.append("output");
+    }
+    printer.append("file '");
+    printer.append(artifact.getShortPath());
     printer.append("'>");
   }
 
   @Override
   public String toString() {
+    return toString(this, false);
+  }
+
+  static String toString(ArtifactImpl artifact, boolean isOutputArtifact) {
     StringBuilder builder = new StringBuilder("Artifact<");
-    builder.append(getShortPath()).append(", ");
-    if (isBound()) {
-      builder.append("bound to ").append(actionAnalysisDataKey);
+    builder.append(artifact.getShortPath()).append(", ");
+    if (isOutputArtifact) {
+      builder.append("as output, ");
+    }
+    if (artifact.isBound()) {
+      builder.append("bound to ").append(artifact.actionAnalysisDataKey);
     } else {
       builder.append("declared");
     }
-    if (location != Location.BUILTIN) {
-      if (isBound()) {
+    if (artifact.location != Location.BUILTIN) {
+      if (artifact.isBound()) {
         builder.append(", declared");
       }
-      builder.append(" at ").append(location.print());
+      builder.append(" at ").append(artifact.location.print());
     }
     return builder.append(">").toString();
   }

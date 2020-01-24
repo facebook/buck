@@ -36,8 +36,8 @@ java_immutables_library(
     name = "worker_process",
     srcs = [
         "WorkerJobResult.java",
-        "WorkerProcessCommand.java",
         "WorkerProcess.java",
+        "WorkerProcessCommand.java",
         "WorkerProcessPool.java",
         "WorkerProcessProtocol.java",
         "WorkerProcessProtocolZero.java",

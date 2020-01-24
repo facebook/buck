@@ -19,6 +19,7 @@ package com.facebook.buck.core.rules.tool;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -54,7 +55,8 @@ public abstract class BinaryWrapperRule extends AbstractBuildRuleWithDeclaredAnd
   public final Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
     return Stream.concat(
             getDeclaredDeps().stream(),
-            BuildableSupport.getDeps(getExecutableCommand(), buildRuleResolver))
+            BuildableSupport.getDeps(
+                getExecutableCommand(OutputLabel.defaultLabel()), buildRuleResolver))
         .map(BuildRule::getBuildTarget);
   }
 }

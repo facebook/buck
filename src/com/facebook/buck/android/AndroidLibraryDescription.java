@@ -31,7 +31,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.infer.InferConfig;
 import com.facebook.buck.infer.InferNullsafe;
 import com.facebook.buck.infer.UnresolvedInferPlatform;
@@ -47,6 +47,7 @@ import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.util.MoreFunctions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
@@ -233,7 +234,23 @@ public class AndroidLibraryDescription
     Optional<String> getFinalRName();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable(copy = true)
-  interface AbstractAndroidLibraryDescriptionArg extends CoreArg {}
+  @RuleArg
+  interface AbstractAndroidLibraryDescriptionArg extends CoreArg {
+
+    @Override
+    default AndroidLibraryDescriptionArg withDepsQuery(Query query) {
+      if (getDepsQuery().equals(Optional.of(query))) {
+        return (AndroidLibraryDescriptionArg) this;
+      }
+      return AndroidLibraryDescriptionArg.builder().from(this).setDepsQuery(query).build();
+    }
+
+    @Override
+    default AndroidLibraryDescriptionArg withProvidedDepsQuery(Query query) {
+      if (getProvidedDepsQuery().equals(Optional.of(query))) {
+        return (AndroidLibraryDescriptionArg) this;
+      }
+      return AndroidLibraryDescriptionArg.builder().from(this).setProvidedDepsQuery(query).build();
+    }
+  }
 }

@@ -3,16 +3,6 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 java_immutables_library(
     name = "parser",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//src/com/facebook/buck/core/model/platform:platform",
-        "//src/com/facebook/buck/core/model/tc/factory:factory",
-        "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
-        "//src/com/facebook/buck/core/rules/configsetting:configsetting",
-        "//src/com/facebook/buck/parser/api:api",
-        "//src/com/facebook/buck/parser/config:config",
-        "//src/com/facebook/buck/parser/implicit:implicit",
-        "//src/com/facebook/buck/parser/spec:spec",
-    ],
     tests = [
         "//test/com/facebook/buck/parser:integration",
         "//test/com/facebook/buck/parser:parser",
@@ -90,5 +80,15 @@ java_immutables_library(
         "//third-party/java/concurrent-locks:concurrent-locks",
         "//third-party/java/jackson:jackson-annotations",
         "//third-party/java/jackson:jackson-databind",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/model/platform:platform",
+        "//src/com/facebook/buck/core/model/tc/factory:factory",
+        "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
+        "//src/com/facebook/buck/core/rules/configsetting:configsetting",
+        "//src/com/facebook/buck/parser/api:api",
+        "//src/com/facebook/buck/parser/config:config",
+        "//src/com/facebook/buck/parser/implicit:implicit",
+        "//src/com/facebook/buck/parser/spec:spec",
     ],
 )

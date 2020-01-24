@@ -130,7 +130,8 @@ public class AsyncBackgroundTaskManagerTest {
             .setActionArgs(new TestArgs(Optional.empty(), blocker, null, null))
             .setAction(new TestAction())
             .setName("timeoutTask")
-            .setTimeout(Optional.of(Timeout.of(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)))
+            .setTimeout(
+                Optional.of(BackgroundTask.Timeout.of(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)))
             .build();
     manager.notify(Notification.COMMAND_START);
     Future<Unit> future = schedule(task);
@@ -342,7 +343,8 @@ public class AsyncBackgroundTaskManagerTest {
             .setActionArgs(new TestArgs(Optional.empty(), firstBlocker, waiter, null))
             .setAction(new TestAction())
             .setName("timeoutTask")
-            .setTimeout(Optional.of(Timeout.of(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)))
+            .setTimeout(
+                Optional.of(BackgroundTask.Timeout.of(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)))
             .build();
     BackgroundTask<TestArgs> secondTask =
         ImmutableBackgroundTask.<TestArgs>builder()

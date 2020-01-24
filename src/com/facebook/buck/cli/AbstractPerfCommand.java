@@ -247,29 +247,49 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
                           CanonicalCellName cellName,
                           Path root,
                           Config config,
-                          Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo) {
+                          Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo,
+                          boolean buckOutIncludeTargetConfigHash) {
                         return createHashFakingFilesystem(
                             new DefaultProjectFilesystemFactory()
                                 .createProjectFilesystem(
-                                    cellName, root, config, embeddedCellBuckOutInfo));
+                                    cellName,
+                                    root,
+                                    config,
+                                    embeddedCellBuckOutInfo,
+                                    buckOutIncludeTargetConfigHash));
                       }
 
                       @Override
                       public ProjectFilesystem createProjectFilesystem(
-                          CanonicalCellName cellName, Path root, Config config) {
-                        return createProjectFilesystem(cellName, root, config, Optional.empty());
+                          CanonicalCellName cellName,
+                          Path root,
+                          Config config,
+                          boolean buckOutIncludeTargetConfigHash) {
+                        return createProjectFilesystem(
+                            cellName,
+                            root,
+                            config,
+                            Optional.empty(),
+                            buckOutIncludeTargetConfigHash);
                       }
 
                       @Override
                       public ProjectFilesystem createProjectFilesystem(
-                          CanonicalCellName cellName, Path root) {
-                        return createProjectFilesystem(cellName, root, new Config());
+                          CanonicalCellName cellName,
+                          Path root,
+                          boolean buckOutIncludeTargetCofigHash) {
+                        final Config config = new Config();
+                        return createProjectFilesystem(
+                            cellName, root, config, buckOutIncludeTargetCofigHash);
                       }
 
                       @Override
                       public ProjectFilesystem createOrThrow(
-                          CanonicalCellName cellName, Path path) {
-                        return createProjectFilesystem(cellName, path);
+                          CanonicalCellName cellName,
+                          Path path,
+                          boolean buckOutIncludeTargetCofigHash) {
+                        return createProjectFilesystem(
+                            cellName, path, buckOutIncludeTargetCofigHash);
                       }
                     },
                     cacheMode))

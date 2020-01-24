@@ -70,7 +70,7 @@ public class BuildConfiguration {
       TargetNode<?> targetNode,
       BuildTarget buildTarget,
       CxxPlatform cxxPlatform,
-      XCodeNativeTargetAttributes.Builder nativeTargetAttributes,
+      ImmutableXCodeNativeTargetAttributes.Builder nativeTargetAttributes,
       ImmutableMap<String, String> overrideBuildSettings,
       ImmutableMap<String, String> buckXcodeBuildSettings,
       ImmutableMap<String, String> appendBuildSettings,
@@ -99,7 +99,15 @@ public class BuildConfiguration {
               buckXcodeBuildSettings,
               appendBuildSettings);
 
-      Path xcconfigPath = getXcconfigPath(projectFilesystem, buildTarget, config.getKey());
+      ProjectFilesystem buildTargetFileSystem = targetNode.getFilesystem();
+      // Get the Xcconfig path relative to the target's file system; this makes sure that each
+      // buck-out gen path is appropriate depending on the cell.
+      Path buildTargetXcconfigPath =
+          getXcconfigPath(buildTargetFileSystem, buildTarget, config.getKey());
+      // Now we relativize the path based around the project file system in order for relative paths
+      // in Xcode to resolve properly (since they are relative to the project).
+      Path xcconfigPath =
+          projectFilesystem.relativize(buildTargetFileSystem.resolve(buildTargetXcconfigPath));
 
       writeBuildConfiguration(projectFilesystem, xcconfigPath, mergedSettings, writeReadOnlyFile);
 

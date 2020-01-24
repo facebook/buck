@@ -127,21 +127,19 @@ public class ProjectCommand extends AbstractCommand implements PluginBasedComman
       ProjectSubCommand subCommand = subcommands.get(projectIde);
 
       ProjectGeneratorParameters projectGeneratorParameters =
-          ProjectGeneratorParameters.builder()
-              .setArgsParser(
-                  arguments ->
-                      parseArgumentsAsTargetNodeSpecs(
-                          params.getCell(),
-                          params.getClientWorkingDir(),
-                          arguments,
-                          params.getBuckConfig()))
-              .setCommandRunnerParams(params)
-              .setDryRun(dryRun)
-              .setEnableParserProfiling(getEnableParserProfiling())
-              .setWithoutDependenciesTests(withoutDependenciesTests)
-              .setWithoutTests(withoutTests)
-              .setWithTests(withTests)
-              .build();
+          ImmutableProjectGeneratorParameters.of(
+              params,
+              dryRun,
+              withTests,
+              withoutTests,
+              withoutDependenciesTests,
+              getEnableParserProfiling(),
+              arguments ->
+                  parseArgumentsAsTargetNodeSpecs(
+                      params.getCell(),
+                      params.getClientWorkingDir(),
+                      arguments,
+                      params.getBuckConfig()));
 
       params.getBuckEventBus().post(ProjectGenerationEvent.started());
       ExitCode result;

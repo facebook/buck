@@ -95,7 +95,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
         CxxToolFlags.of(),
         CxxToolFlags.of(),
         FakeSourcePath.of("src.c"),
-        AbstractCxxSource.Type.C,
+        CxxSource.Type.C,
         Optional.empty(),
         "src.o",
         preprocessorDelegate,

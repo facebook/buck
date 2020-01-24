@@ -21,7 +21,6 @@ import com.facebook.buck.core.description.RuleDescription;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
-import com.facebook.buck.core.model.AbstractRuleType;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rules.BuildRule;
@@ -66,7 +65,7 @@ public class RuleTypeFactoryTest {
   @Test
   public void buildRule() {
     RuleType ruleType = RuleTypeFactory.create(SampleBuildDescription.class);
-    Assert.assertEquals(RuleType.of("sample_build", AbstractRuleType.Kind.BUILD), ruleType);
+    Assert.assertEquals(RuleType.of("sample_build", RuleType.Kind.BUILD), ruleType);
   }
 
   private static class SampleConfigurationDescription
@@ -94,14 +93,13 @@ public class RuleTypeFactoryTest {
   @Test
   public void ruleAnalysisRule() {
     RuleType ruleType = RuleTypeFactory.create(BasicRuleRuleDescription.class);
-    Assert.assertEquals(RuleType.of("basic_rule", AbstractRuleType.Kind.BUILD), ruleType);
+    Assert.assertEquals(RuleType.of("basic_rule", RuleType.Kind.BUILD), ruleType);
   }
 
   @Test
   public void configurationRule() {
     RuleType ruleType = RuleTypeFactory.create(SampleConfigurationDescription.class);
-    Assert.assertEquals(
-        RuleType.of("sample_configuration", AbstractRuleType.Kind.CONFIGURATION), ruleType);
+    Assert.assertEquals(RuleType.of("sample_configuration", RuleType.Kind.CONFIGURATION), ruleType);
   }
 
   private static class UnknownRuleTypeDescription implements BaseDescription<ConstructorArg> {

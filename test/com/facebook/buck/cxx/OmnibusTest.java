@@ -463,11 +463,21 @@ public class OmnibusTest {
         Arg.stringify(
             getCxxLinkRule(graphBuilder, libs.get(root.getBuildTarget().toString())).getArgs(),
             pathResolver),
-        Matchers.not(Matchers.hasItem(flag)));
+        Matchers.hasItem(flag));
     assertThat(
         Arg.stringify(
             getCxxLinkRule(graphBuilder, libs.get("libomnibus.so")).getArgs(), pathResolver),
         Matchers.hasItem(flag));
+  }
+
+  @Test
+  public void duplicatedDepInExportedDeps() throws NoSuchBuildTargetException {
+    NativeLinkable a = new OmnibusNode("//:a");
+    NativeLinkable b = new OmnibusNode("//:b", ImmutableList.of(a), ImmutableList.of(a));
+    NativeLinkTarget root = new OmnibusRootNode("//:root", ImmutableList.of(b));
+
+    // Verify that building the spec doesn't crash when handling a duplicated dep.
+    Omnibus.buildSpec(ImmutableList.of(root), ImmutableList.of(), new TestActionGraphBuilder());
   }
 
   private CxxLink getCxxLinkRule(SourcePathRuleFinder ruleFinder, SourcePath path) {
@@ -483,12 +493,12 @@ public class OmnibusTest {
     }
   }
 
-  private ImmutableMap<String, SourcePath> toSonameMap(OmnibusLibraries libraries) {
+  private ImmutableMap<String, SourcePath> toSonameMap(Omnibus.OmnibusLibraries libraries) {
     ImmutableMap.Builder<String, SourcePath> map = ImmutableMap.builder();
-    for (Map.Entry<BuildTarget, OmnibusRoot> root : libraries.getRoots().entrySet()) {
+    for (Map.Entry<BuildTarget, Omnibus.OmnibusRoot> root : libraries.getRoots().entrySet()) {
       map.put(root.getKey().toString(), root.getValue().getPath());
     }
-    for (OmnibusLibrary library : libraries.getLibraries()) {
+    for (Omnibus.OmnibusLibrary library : libraries.getLibraries()) {
       map.put(library.getSoname(), library.getPath());
     }
     return map.build();

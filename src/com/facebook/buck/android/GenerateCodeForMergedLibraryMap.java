@@ -21,6 +21,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -197,7 +198,7 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
           Joiner.on(" ")
               .join(
                   ((BinaryBuildRule) GenerateCodeForMergedLibraryMap.this.codeGenerator)
-                      .getExecutableCommand()
+                      .getExecutableCommand(OutputLabel.defaultLabel())
                       .getCommandPrefix(pathResolver));
       return ImmutableList.<String>builder()
           .addAll(Splitter.on(' ').split(executableCommand))

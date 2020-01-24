@@ -99,34 +99,39 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   }
 
   @Override
-  public VersionControlSupplier<InputStream> diffBetweenRevisions(
+  public Optional<VersionControlSupplier<InputStream>> diffBetweenRevisions(
       String baseRevision, String tipRevision) throws VersionControlCommandFailedException {
     validateRevisionId(baseRevision);
     validateRevisionId(tipRevision);
 
-    return () -> {
-      try {
-        File diffFile = File.createTempFile("diff", ".tmp");
-        executeCommand(
-            ImmutableList.of(
-                HG_CMD_TEMPLATE,
-                "export",
-                "-o",
-                diffFile.toString(),
-                "--rev",
-                baseRevision + "::" + tipRevision + " - " + baseRevision));
-        return new BufferedInputStream(new FileInputStream(diffFile)) {
-          @Override
-          public void close() throws IOException {
-            super.close();
-            diffFile.delete();
+    if (baseRevision.equals(tipRevision)) {
+      return Optional.empty();
+    }
+
+    return Optional.of(
+        () -> {
+          try {
+            File diffFile = File.createTempFile("diff", ".tmp");
+            executeCommand(
+                ImmutableList.of(
+                    HG_CMD_TEMPLATE,
+                    "export",
+                    "-o",
+                    diffFile.toString(),
+                    "--rev",
+                    baseRevision + "::" + tipRevision + " - " + baseRevision));
+            return new BufferedInputStream(new FileInputStream(diffFile)) {
+              @Override
+              public void close() throws IOException {
+                super.close();
+                diffFile.delete();
+              }
+            };
+          } catch (IOException e) {
+            LOG.debug(e.getMessage());
+            throw new VersionControlCommandFailedException(e.getMessage());
           }
-        };
-      } catch (IOException e) {
-        LOG.debug(e.getMessage());
-        throw new VersionControlCommandFailedException(e.getMessage());
-      }
-    };
+        });
   }
 
   @Override

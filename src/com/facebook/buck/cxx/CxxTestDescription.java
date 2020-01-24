@@ -36,7 +36,7 @@ import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
@@ -48,6 +48,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.test.config.TestBuckConfig;
 import com.facebook.buck.versions.Version;
@@ -231,12 +232,8 @@ public class CxxTestDescription
                     cxxLinkAndCompileRules.executable, graphBuilder));
 
     StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(buildTarget)
-            .setCellPathResolver(cellRoots)
-            .setActionGraphBuilder(graphBuilder)
-            .addExpanders(new LocationMacroExpander())
-            .build();
+        StringWithMacrosConverter.of(
+            buildTarget, cellRoots, graphBuilder, ImmutableList.of(new LocationMacroExpander()));
 
     // Supplier which expands macros in the passed in test environment.
     ImmutableMap<String, Arg> testEnv =
@@ -421,8 +418,7 @@ public class CxxTestDescription
         CxxPlatformsProvider.class);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable(copy = true)
+  @RuleArg
   interface AbstractCxxTestDescriptionArg
       extends CxxBinaryDescription.CommonArg, HasContacts, HasTestTimeout {
     Optional<CxxTestType> getFramework();
@@ -439,5 +435,13 @@ public class CxxTestDescription
     ImmutableSortedSet<Path> getResources();
 
     ImmutableSet<SourcePath> getAdditionalCoverageTargets();
+
+    @Override
+    default CxxTestDescriptionArg withDepsQuery(Query query) {
+      if (getDepsQuery().equals(Optional.of(query))) {
+        return (CxxTestDescriptionArg) this;
+      }
+      return CxxTestDescriptionArg.builder().from(this).setDepsQuery(query).build();
+    }
   }
 }

@@ -239,11 +239,8 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                 .flatMap(ImmutableList::stream)
                 .collect(ImmutableList.toImmutableList())) {
           steps.add(
-              SymlinkFileStep.builder()
-                  .setFilesystem(getProjectFilesystem())
-                  .setExistingFile(header)
-                  .setDesiredLink(asmIncludeDir.resolve(header.getFileName()))
-                  .build());
+              SymlinkFileStep.of(
+                  getProjectFilesystem(), header, asmIncludeDir.resolve(header.getFileName())));
         }
       }
 

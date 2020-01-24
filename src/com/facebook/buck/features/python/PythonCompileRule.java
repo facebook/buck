@@ -23,7 +23,6 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.features.python.toolchain.PythonEnvironment;
-import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
@@ -37,6 +36,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 import java.io.IOException;
 
@@ -104,7 +104,7 @@ public class PythonCompileRule extends ModernBuildRule<PythonCompileRule.Impl> {
       return ImmutableList.<Step>builder()
           .addAll(
               MakeCleanDirectoryStep.of(
-                  BuildCellRelativePath.of(outputPathResolver.resolvePath(OUTPUT))))
+                  buildCellPathFactory.from(outputPathResolver.resolvePath(OUTPUT))))
           .add(
               new AbstractExecutionStep("py-compile") {
                 @Override
@@ -129,6 +129,10 @@ public class PythonCompileRule extends ModernBuildRule<PythonCompileRule.Impl> {
                           .launchAndExecute(
                               ProcessExecutorParams.builder()
                                   .setDirectory(context.getBuildCellRootPath())
+                                  // On some platforms (e.g. linux), python hash code randomness can
+                                  // cause the bytecode to be non-deterministic, so pin via the
+                                  // `PYTHONHASHSEED` env var.
+                                  .setEnvironment(ImmutableMap.of("PYTHONHASHSEED", "7"))
                                   .setCommand(command)
                                   .build()));
                 }

@@ -24,7 +24,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.rules.args.Arg;
@@ -33,7 +33,6 @@ import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.google.common.collect.ImmutableCollection.Builder;
 import java.util.Optional;
 import java.util.function.Function;
-import org.immutables.value.Value;
 
 /**
  * Based on {@link com.facebook.buck.shell.GenruleDescription} except specialized to produce a jar.
@@ -73,7 +72,6 @@ public class JarGenruleDescription extends AbstractGenruleDescription<JarGenrule
         projectFilesystem,
         sandboxExecutionStrategy,
         graphBuilder,
-        params,
         args.getSrcs(),
         cmd,
         bash,
@@ -100,7 +98,6 @@ public class JarGenruleDescription extends AbstractGenruleDescription<JarGenrule
   }
 
   /** jar_genrule constructor arg. */
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractJarGenruleDescriptionArg extends AbstractGenruleDescription.CommonArg {}
 }

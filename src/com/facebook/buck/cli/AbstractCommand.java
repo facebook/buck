@@ -23,6 +23,9 @@ import com.facebook.buck.core.cell.CellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
+import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
@@ -36,6 +39,7 @@ import com.facebook.buck.log.LogConfigSetup;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.spec.BuildTargetMatcherTargetNodeParser;
+import com.facebook.buck.parser.spec.BuildTargetSpec;
 import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
 import com.facebook.buck.rules.keys.EventPostingRuleKeyCacheScope;
@@ -346,6 +350,46 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
       specs.addAll(parser.parse(owningCell, arg));
     }
     return specs.build();
+  }
+
+  /**
+   * Returns a set of {@link ImmutableBuildTargetWithOutputs} instances by matching the given {@link
+   * BuildTarget} instances with the given {@link TargetNodeSpec} instances, and applying any {@link
+   * OutputLabel} instances to the matching {@link BuildTarget} instances. Applies the default label
+   * if a given build target cannot find a matching spec.
+   */
+  protected ImmutableSet<BuildTargetWithOutputs> matchBuildTargetsWithLabelsFromSpecs(
+      ImmutableList<TargetNodeSpec> specs, ImmutableSet<BuildTarget> buildTargets) {
+    ImmutableSet.Builder<BuildTargetWithOutputs> builder =
+        ImmutableSet.builderWithExpectedSize(buildTargets.size());
+    for (BuildTarget target : buildTargets) {
+      boolean mappedTarget = false;
+
+      // Need to look through all the specs even after finding a match because there may be multiple
+      // matches
+      for (TargetNodeSpec spec : specs) {
+        if (!(spec instanceof BuildTargetSpec)) {
+          continue;
+        }
+        BuildTargetSpec buildTargetSpec = (BuildTargetSpec) spec;
+        if (buildTargetSpec
+            .getUnconfiguredBuildTargetView()
+            .equals(target.getUnconfiguredBuildTargetView())) {
+          builder.add(
+              ImmutableBuildTargetWithOutputs.of(
+                  target,
+                  buildTargetSpec.getUnconfiguredBuildTargetViewWithOutputs().getOutputLabel()));
+          mappedTarget = true;
+        }
+      }
+
+      // A target may not map to an output label if the build command wasn't invoked with a build
+      // pattern that specifies a specific target
+      if (!mappedTarget) {
+        builder.add(ImmutableBuildTargetWithOutputs.of(target, OutputLabel.defaultLabel()));
+      }
+    }
+    return builder.build();
   }
 
   protected ExecutionContext getExecutionContext() {

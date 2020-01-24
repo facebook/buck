@@ -15,4 +15,4 @@ some_rule = rule(
 )
 
 def macro(name, attr1):
-    some_rule(name=name, attr1=attr1)
+    some_rule(name = name, attr1 = attr1)

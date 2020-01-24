@@ -45,7 +45,8 @@ public class KnownRuleTypesProviderTest {
   class TestFactory implements KnownNativeRuleTypesFactory {
     @Override
     public KnownNativeRuleTypes create(Cell cell) {
-      return KnownNativeRuleTypes.of(ImmutableList.of(fakeDescription), ImmutableList.of());
+      return KnownNativeRuleTypes.of(
+          ImmutableList.of(fakeDescription), ImmutableList.of(), ImmutableList.of());
     }
   }
 
@@ -56,7 +57,7 @@ public class KnownRuleTypesProviderTest {
                 ImmutableMap.of(
                     "parser",
                     ImmutableMap.of(
-                        "enable_user_defined_rules", enableUserDefinedRules ? "true" : "false")))
+                        "user_defined_rules", enableUserDefinedRules ? "enabled" : "disabled")))
             .build();
     return new TestCellBuilder().setBuckConfig(config).build();
   }

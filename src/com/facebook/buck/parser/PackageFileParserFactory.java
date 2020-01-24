@@ -94,22 +94,22 @@ public class PackageFileParserFactory implements FileParserFactory<PackageFileMa
             .setRawConfig(
                 cell.getBuckConfig().getView(ConfigIgnoredByDaemon.class).getRawConfigForParser())
             .setBuildFileImportWhitelist(parserConfig.getBuildFileImportWhitelist())
-            .setDisableImplicitNativeRules(parserConfig.getDisableImplicitNativeRules())
-            .setEnableUserDefinedRules(parserConfig.getEnableUserDefinedRules())
+            .setImplicitNativeRulesState(parserConfig.getImplicitNativeRulesState())
+            .setUserDefinedRulesState(parserConfig.getUserDefinedRulesState())
             .setWarnAboutDeprecatedSyntax(parserConfig.isWarnAboutDeprecatedSyntax())
             .setPackageImplicitIncludes(parserConfig.getPackageImplicitIncludes())
             .build();
 
     BuckGlobals buckGlobals =
-        BuckGlobals.builder()
-            .setSkylarkFunctionModule(SkylarkPackageModule.PACKAGE_MODULE)
-            .setDisableImplicitNativeRules(buildFileParserOptions.getDisableImplicitNativeRules())
-            .setEnableUserDefinedRules(buildFileParserOptions.getEnableUserDefinedRules())
-            .setDescriptions(ImmutableSet.of())
-            .setRuleFunctionFactory(new RuleFunctionFactory(typeCoercerFactory))
-            .setLabelCache(LabelCache.newLabelCache())
-            .setKnownUserDefinedRuleTypes(knownRuleTypesProvider.getUserDefinedRuleTypes(cell))
-            .build();
+        BuckGlobals.of(
+            SkylarkPackageModule.PACKAGE_MODULE,
+            ImmutableSet.of(),
+            buildFileParserOptions.getUserDefinedRulesState(),
+            buildFileParserOptions.getImplicitNativeRulesState(),
+            new RuleFunctionFactory(typeCoercerFactory),
+            LabelCache.newLabelCache(),
+            knownRuleTypesProvider.getUserDefinedRuleTypes(cell),
+            buildFileParserOptions.getPerFeatureProviders());
 
     HumanReadableExceptionAugmentor augmentor;
     try {

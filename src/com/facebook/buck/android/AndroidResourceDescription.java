@@ -40,7 +40,7 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.stream.RichStream;
@@ -361,8 +361,7 @@ public class AndroidResourceDescription
         toolchainProvider, buildTarget, targetGraphOnlyDepsBuilder);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractAndroidResourceDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     Optional<Either<SourcePath, ImmutableSortedMap<String, SourcePath>>> getRes();
 

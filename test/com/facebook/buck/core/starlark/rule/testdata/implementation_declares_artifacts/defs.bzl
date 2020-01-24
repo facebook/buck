@@ -7,7 +7,7 @@ def _impl(ctx):
     if not short_path.endswith(expected):
         fail("Expected short_path {} endswith {} for declared file".format(short_path, expected))
 
-    ctx.actions.write(output=f, content="", is_executable=False)
+    ctx.actions.write(output = f, content = "", is_executable = False)
 
 my_rule = rule(
     attrs = {"filename": attr.string()},

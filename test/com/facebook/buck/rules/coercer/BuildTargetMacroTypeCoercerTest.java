@@ -17,9 +17,11 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.TestCellPathResolver;
-import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.ImmutableRuleBasedTargetConfiguration;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -33,9 +35,9 @@ import org.junit.Test;
 public class BuildTargetMacroTypeCoercerTest {
 
   private static class MyBuildTargetMacro extends BuildTargetMacro {
-    private final BuildTarget buildTarget;
+    private final BuildTargetWithOutputs buildTarget;
 
-    private MyBuildTargetMacro(BuildTarget buildTarget) {
+    private MyBuildTargetMacro(BuildTargetWithOutputs buildTarget) {
       this.buildTarget = buildTarget;
     }
 
@@ -45,12 +47,12 @@ public class BuildTargetMacroTypeCoercerTest {
     }
 
     @Override
-    public BuildTargetMacro withTarget(BuildTarget target) {
+    public BuildTargetMacro withTargetWithOutputs(BuildTargetWithOutputs target) {
       throw new AssertionError();
     }
 
     @Override
-    public BuildTarget getTarget() {
+    public BuildTargetWithOutputs getTargetWithOutputs() {
       return buildTarget;
     }
   }
@@ -62,15 +64,17 @@ public class BuildTargetMacroTypeCoercerTest {
       ImmutableRuleBasedTargetConfiguration.of(
           ConfigurationBuildTargetFactoryForTests.newInstance("//:t"));
 
-  BuildTargetTypeCoercer buildTargetTypeCoercer =
-      new BuildTargetTypeCoercer(
-          new UnconfiguredBuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetViewFactory()));
+  TypeCoercer<BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer =
+      new BuildTargetWithOutputsTypeCoercer(
+          new BuildTargetTypeCoercer(
+              new UnconfiguredBuildTargetTypeCoercer(
+                  new ParsingUnconfiguredBuildTargetViewFactory())));
 
   @Test
   public void useHost() throws Exception {
     BuildTargetMacroTypeCoercer<MyBuildTargetMacro> coercer =
         new BuildTargetMacroTypeCoercer<>(
-            buildTargetTypeCoercer,
+            buildTargetWithOutputsTypeCoercer,
             MyBuildTargetMacro.class,
             BuildTargetMacroTypeCoercer.TargetOrHost.HOST,
             MyBuildTargetMacro::new);
@@ -82,14 +86,23 @@ public class BuildTargetMacroTypeCoercerTest {
             targetConfiguration,
             hostConfiguration,
             ImmutableList.of("//:rrr"));
-    Assert.assertEquals(hostConfiguration, macro.buildTarget.getTargetConfiguration());
+    Assert.assertEquals(
+        hostConfiguration, macro.buildTarget.getBuildTarget().getTargetConfiguration());
+    Assert.assertEquals(
+        BuildTargetFactory.newInstance("//:rrr").getFullyQualifiedName(),
+        macro.buildTarget.getBuildTarget().getFullyQualifiedName());
+    Assert.assertEquals(OutputLabel.defaultLabel(), macro.buildTarget.getOutputLabel());
+    Assert.assertEquals(
+        BuildTargetFactory.newInstance("//:rrr").getFullyQualifiedName(),
+        macro.buildTarget.getBuildTarget().getFullyQualifiedName());
+    Assert.assertEquals(OutputLabel.defaultLabel(), macro.buildTarget.getOutputLabel());
   }
 
   @Test
   public void useTarget() throws Exception {
     BuildTargetMacroTypeCoercer<MyBuildTargetMacro> coercer =
         new BuildTargetMacroTypeCoercer<>(
-            buildTargetTypeCoercer,
+            buildTargetWithOutputsTypeCoercer,
             MyBuildTargetMacro.class,
             BuildTargetMacroTypeCoercer.TargetOrHost.TARGET,
             MyBuildTargetMacro::new);
@@ -101,6 +114,29 @@ public class BuildTargetMacroTypeCoercerTest {
             targetConfiguration,
             hostConfiguration,
             ImmutableList.of("//:rrr"));
-    Assert.assertEquals(targetConfiguration, macro.buildTarget.getTargetConfiguration());
+    Assert.assertEquals(
+        targetConfiguration, macro.buildTarget.getBuildTarget().getTargetConfiguration());
+  }
+
+  @Test
+  public void coercesOutputLabel() throws Exception {
+    BuildTargetMacroTypeCoercer<MyBuildTargetMacro> coercer =
+        new BuildTargetMacroTypeCoercer<>(
+            buildTargetWithOutputsTypeCoercer,
+            MyBuildTargetMacro.class,
+            BuildTargetMacroTypeCoercer.TargetOrHost.HOST,
+            MyBuildTargetMacro::new);
+    MyBuildTargetMacro macro =
+        coercer.coerce(
+            TestCellPathResolver.get(new FakeProjectFilesystem()),
+            new FakeProjectFilesystem(),
+            ForwardRelativePath.of(""),
+            targetConfiguration,
+            hostConfiguration,
+            ImmutableList.of("//:rrr[label]"));
+    Assert.assertEquals(
+        BuildTargetFactory.newInstance("//:rrr").getFullyQualifiedName(),
+        macro.buildTarget.getBuildTarget().getFullyQualifiedName());
+    Assert.assertEquals(OutputLabel.of("label"), macro.buildTarget.getOutputLabel());
   }
 }

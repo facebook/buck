@@ -26,9 +26,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.cxx.CxxGenruleDescription;
 import com.facebook.buck.cxx.Omnibus;
-import com.facebook.buck.cxx.OmnibusLibraries;
-import com.facebook.buck.cxx.OmnibusLibrary;
-import com.facebook.buck.cxx.OmnibusRoot;
 import com.facebook.buck.cxx.OmnibusRoots;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -63,7 +60,6 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -307,7 +303,7 @@ public class PythonUtil {
         if (node instanceof CxxPythonExtension) {
           CxxPythonExtension extension = (CxxPythonExtension) node;
           NativeLinkTarget target =
-              extension.getNativeLinkTarget(pythonPlatform, cxxPlatform, graphBuilder);
+              extension.getNativeLinkTarget(pythonPlatform, cxxPlatform, graphBuilder, false);
           extensions.put(target.getBuildTarget(), extension);
           omnibusRoots.addIncludedRoot(target);
           List<BuildRule> cxxpydeps = new ArrayList<>();
@@ -353,7 +349,7 @@ public class PythonUtil {
           NativeLinkable linkable =
               ((NativeLinkableGroup) node).getNativeLinkable(cxxPlatform, graphBuilder);
           nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);
-          omnibusRoots.addPotentialRoot(linkable);
+          omnibusRoots.addPotentialRoot(linkable, false);
         }
         return deps;
       }
@@ -363,7 +359,7 @@ public class PythonUtil {
     // excluded native linkable roots.
     if (nativeLinkStrategy == NativeLinkStrategy.MERGED) {
       OmnibusRoots roots = omnibusRoots.build();
-      OmnibusLibraries libraries =
+      Omnibus.OmnibusLibraries libraries =
           Omnibus.getSharedLibraries(
               buildTarget,
               projectFilesystem,
@@ -378,7 +374,7 @@ public class PythonUtil {
 
       // Add all the roots from the omnibus link.  If it's an extension, add it as a module.
       // Otherwise, add it as a native library.
-      for (Map.Entry<BuildTarget, OmnibusRoot> root : libraries.getRoots().entrySet()) {
+      for (Map.Entry<BuildTarget, Omnibus.OmnibusRoot> root : libraries.getRoots().entrySet()) {
         CxxPythonExtension extension = extensions.get(root.getKey());
         if (extension != null) {
           allComponents.putModules(
@@ -408,15 +404,13 @@ public class PythonUtil {
 
       // Add all remaining libraries as native libraries.
       if (!libraries.getLibraries().isEmpty()) {
-        allComponents.putNativeLibraries(
-            buildTarget,
-            PythonMappedComponents.of(
-                libraries.getLibraries().stream()
-                    .collect(
-                        ImmutableSortedMap.toImmutableSortedMap(
-                            Ordering.natural(),
-                            l -> Paths.get(l.getSoname()),
-                            OmnibusLibrary::getPath))));
+        libraries.getLibraries().stream()
+            .forEach(
+                lib ->
+                    allComponents.putNativeLibraries(
+                        buildTarget,
+                        PythonMappedComponents.of(
+                            ImmutableSortedMap.of(Paths.get(lib.getSoname()), lib.getPath()))));
       }
     } else {
 
@@ -440,7 +434,7 @@ public class PythonUtil {
             Maps.uniqueIndex(
                 entry
                     .getValue()
-                    .getNativeLinkTarget(pythonPlatform, cxxPlatform, graphBuilder)
+                    .getNativeLinkTarget(pythonPlatform, cxxPlatform, graphBuilder, false)
                     .getNativeLinkTargetDeps(graphBuilder),
                 NativeLinkable::getBuildTarget));
       }

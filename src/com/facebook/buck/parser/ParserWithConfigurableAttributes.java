@@ -257,19 +257,18 @@ class ParserWithConfigurableAttributes extends AbstractParser {
   private Stream<TargetNode<?>> filterIncompatibleTargetNodes(
       PerBuildState state, Stream<TargetNode<?>> targetNodes) {
     return targetNodes.filter(
-        targetNode -> {
-          return TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
-              state.getConfigurationRuleRegistry(),
-              targetNode.getConstructorArg(),
-              state
-                  .getConfigurationRuleRegistry()
-                  .getTargetPlatformResolver()
-                  .getTargetPlatform(
-                      targetNode.getBuildTarget().getTargetConfiguration(),
-                      DependencyStack.top(targetNode.getBuildTarget())),
-              DependencyStack.top(targetNode.getBuildTarget()),
-              state.getParsingContext().getCell().getBuckConfig());
-        });
+        targetNode ->
+            TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
+                state.getConfigurationRuleRegistry(),
+                targetNode.getConstructorArg(),
+                state
+                    .getConfigurationRuleRegistry()
+                    .getTargetPlatformResolver()
+                    .getTargetPlatform(
+                        targetNode.getBuildTarget().getTargetConfiguration(),
+                        DependencyStack.top(targetNode.getBuildTarget())),
+                DependencyStack.top(targetNode.getBuildTarget()),
+                state.getParsingContext().getCell().getBuckConfig()));
   }
 
   @Override

@@ -21,7 +21,7 @@ import com.facebook.buck.core.rulekey.BuildRuleKeys;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.RuleKeyDiagnosticsMode;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -50,7 +50,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.concurrent.GuardedBy;
-import org.immutables.value.Value;
 
 public class RuleKeyDiagnosticsListener implements BuckEventListener {
   private static final Logger LOG = Logger.get(RuleKeyDiagnosticsListener.class);
@@ -243,7 +242,7 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
 
     Path logDir = info.getLogDirectoryPath();
     RuleKeyDiagnosticsListenerCloseArgs args =
-        RuleKeyDiagnosticsListenerCloseArgs.of(
+        ImmutableRuleKeyDiagnosticsListenerCloseArgs.of(
             outputExecutor,
             buildReportFileUploader,
             logDir.resolve(BuckConstant.RULE_KEY_DIAG_GRAPH_FILE_NAME),
@@ -292,19 +291,14 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
   }
 
   /** Arguments to {@link RuleKeyDiagnosticsListenerCloseAction}. */
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractRuleKeyDiagnosticsListenerCloseArgs {
-    @Value.Parameter
+  @BuckStyleValue
+  abstract static class RuleKeyDiagnosticsListenerCloseArgs {
     public abstract ExecutorService getOutputExecutor();
 
-    @Value.Parameter
     public abstract Optional<BuildReportFileUploader> getBuildReportFileUploader();
 
-    @Value.Parameter
     public abstract Path getRuleDiagGraphFilePath();
 
-    @Value.Parameter
     public abstract Path getRuleDiagKeyFilePath();
   }
 

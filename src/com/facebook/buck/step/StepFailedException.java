@@ -21,7 +21,9 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.ExceptionWithContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.WrapsException;
+import com.facebook.buck.util.json.CustomOptionalProtoSerializer;
 import com.facebook.buck.util.string.MoreStrings;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -33,6 +35,8 @@ public class StepFailedException extends Exception implements WrapsException, Ex
   private final Step step;
   private final String description;
   private final OptionalInt exitCode;
+
+  @JsonSerialize(using = CustomOptionalProtoSerializer.class)
   private Optional<ExecutedActionMetadata> executedActionMetadata;
 
   /** Callers should use {@link #createForFailingStepWithExitCode} unless in a unit test. */

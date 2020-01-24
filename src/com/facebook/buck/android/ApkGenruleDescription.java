@@ -23,16 +23,12 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.shell.AbstractGenruleDescription;
-import com.facebook.buck.util.MoreSuppliers;
-import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
-import java.util.SortedSet;
-import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenruleDescriptionArg> {
@@ -66,37 +62,28 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
           buildTarget, args.getApk().getFullyQualifiedName());
     }
 
-    Supplier<? extends SortedSet<BuildRule>> originalExtraDeps = params.getExtraDeps();
-
+    HasInstallableApk installableApk = (HasInstallableApk) apk;
     return new ApkGenrule(
         buildTarget,
         projectFilesystem,
         sandboxExecutionStrategy,
         graphBuilder,
-        params.withExtraDeps(
-            MoreSuppliers.memoize(
-                () ->
-                    ImmutableSortedSet.<BuildRule>naturalOrder()
-                        .addAll(originalExtraDeps.get())
-                        .add(apk)
-                        .build())),
         args.getSrcs(),
         cmd,
         bash,
         cmdExe,
         args.getType(),
-        apk.getSourcePathToOutput(),
         args.getIsCacheable(),
         args.getEnvironmentExpansionSeparator(),
         args.isNeedAndroidTools()
             ? Optional.of(
                 AndroidTools.getAndroidTools(
                     toolchainProvider, buildTarget.getTargetConfiguration()))
-            : Optional.empty());
+            : Optional.empty(),
+        installableApk);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractApkGenruleDescriptionArg extends AbstractGenruleDescription.CommonArg {
     Optional<String> getOut();
 

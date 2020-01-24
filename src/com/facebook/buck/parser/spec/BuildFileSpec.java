@@ -18,19 +18,17 @@ package com.facebook.buck.parser.spec;
 
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /** A specification used by the parser, via {@link TargetNodeSpec}, to match build files. */
-@Value.Immutable(builder = false)
+@BuckStyleValue
 public abstract class BuildFileSpec {
 
   // Base path where to find either a single build file or to recursively for many build files.
-  @Value.Parameter
   public abstract CellRelativePath getCellRelativeBaseName();
 
   // If present, this indicates that the above path should be recursively searched for build files,
   // and that the paths enumerated here should be ignored.
-  @Value.Parameter
   public abstract boolean isRecursive();
 
   /**

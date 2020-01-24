@@ -21,7 +21,6 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
-import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.external.events.BuckEventExternalInterface;
 import com.google.common.collect.FluentIterable;
@@ -224,7 +223,7 @@ public class BuckEventOrdererTest {
     return configureTestEventAtTime(
         (AbstractBuckEvent)
             SimplePerfEvent.started(
-                PerfEventId.of("BuckEventOrdererTest"),
+                SimplePerfEvent.PerfEventId.of("BuckEventOrdererTest"),
                 ImmutableMap.of(
                     "seqNo", seqNo++,
                     "time", timeInMs,

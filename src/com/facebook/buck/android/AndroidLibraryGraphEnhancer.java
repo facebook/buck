@@ -31,9 +31,9 @@ import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.util.DependencyMode;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.util.Collections;
 import java.util.Optional;
 import java.util.SortedSet;
 
@@ -124,8 +124,7 @@ public class AndroidLibraryGraphEnhancer {
         graphBuilder.computeIfAbsent(
             dummyRDotJavaBuildTarget,
             ignored -> {
-              JavacOptions filteredOptions =
-                  javacOptions.withExtraArguments(Collections.emptyList());
+              JavacOptions filteredOptions = javacOptions.withExtraArguments(ImmutableList.of());
 
               JavacToJarStepFactory compileToJarStepFactory =
                   new JavacToJarStepFactory(javac, filteredOptions, ExtraClasspathProvider.EMPTY);

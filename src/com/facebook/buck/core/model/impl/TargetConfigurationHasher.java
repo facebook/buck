@@ -49,7 +49,7 @@ public class TargetConfigurationHasher {
     return mCache.computeIfAbsent(
         key,
         k -> {
-          Hasher hasher = Hashing.murmur3_128().newHasher();
+          Hasher hasher = Hashing.murmur3_32().newHasher();
           hasher.putBytes(k.getBytes());
           return hasher.hash().toString();
         });

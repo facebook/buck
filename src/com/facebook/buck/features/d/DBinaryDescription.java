@@ -33,7 +33,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -43,7 +43,6 @@ import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import org.immutables.value.Value;
 
 public class DBinaryDescription
     implements DescriptionWithTargetGraph<DBinaryDescriptionArg>,
@@ -102,10 +101,7 @@ public class DBinaryDescription
             /* compilerFlags */ ImmutableList.of(),
             args.getSrcs(),
             args.getLinkerFlags(),
-            DIncludes.builder()
-                .setLinkTree(sourceTree.getSourcePathToOutput())
-                .addAllSources(args.getSrcs().getPaths())
-                .build());
+            ImmutableDIncludes.of(sourceTree.getSourcePathToOutput(), args.getSrcs().getPaths()));
     graphBuilder.addToIndex(nativeLinkable);
 
     // Create a Tool for the executable.
@@ -135,8 +131,7 @@ public class DBinaryDescription
             .getParseTimeDeps(buildTarget.getTargetConfiguration()));
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractDBinaryDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     SourceSortedSet getSrcs();
 

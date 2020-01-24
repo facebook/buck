@@ -24,15 +24,16 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.BuildArtifact;
 import com.facebook.buck.core.artifact.BuildArtifactFactoryForTests;
+import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
+import com.facebook.buck.core.rules.actions.ActionExecutionResult;
 import com.facebook.buck.core.rules.actions.ActionWrapperData;
 import com.facebook.buck.core.rules.actions.FakeAction;
-import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData.ID;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
@@ -50,6 +51,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 import java.nio.file.Paths;
@@ -111,7 +113,7 @@ public class RuleAnalysisContextImplTest {
 
     ActionAnalysisData actionAnalysisData1 =
         new ActionAnalysisData() {
-          private final ActionAnalysisDataKey key = getNewKey(buildTarget, new ID() {});
+          private final ActionAnalysisDataKey key = getNewKey(buildTarget, new ID("a"));
 
           @Override
           public ActionAnalysisDataKey getKey() {
@@ -127,7 +129,7 @@ public class RuleAnalysisContextImplTest {
 
     ActionAnalysisData actionAnalysisData2 =
         new ActionAnalysisData() {
-          private final ActionAnalysisDataKey key = getNewKey(buildTarget, new ID() {});
+          private final ActionAnalysisDataKey key = getNewKey(buildTarget, new ID("a"));
 
           @Override
           public ActionAnalysisDataKey getKey() {
@@ -156,7 +158,7 @@ public class RuleAnalysisContextImplTest {
 
     ActionAnalysisDataKey key =
         new ActionAnalysisDataKey() {
-          private final ID id = new ID() {};
+          private final ID id = new ID("a");
 
           @Override
           public BuildTarget getBuildTarget() {
@@ -203,8 +205,7 @@ public class RuleAnalysisContextImplTest {
         ImmutableSortedSet.of(context.actionRegistry().declareArtifact(Paths.get("output")));
     FakeAction.FakeActionExecuteLambda actionFunction =
         (srcs, inputs1, outputs1, ctx) ->
-            ImmutableActionExecutionSuccess.of(
-                Optional.empty(), Optional.empty(), ImmutableList.of());
+            ActionExecutionResult.success(Optional.empty(), Optional.empty(), ImmutableList.of());
 
     new FakeAction(
         context.actionRegistry(), ImmutableSortedSet.of(), inputs, outputs, actionFunction);
@@ -222,7 +223,11 @@ public class RuleAnalysisContextImplTest {
     ActionWrapperData actionWrapperData = (ActionWrapperData) actionAnalysisData;
     assertSame(target, actionWrapperData.getAction().getOwner());
     assertSame(inputs, actionWrapperData.getAction().getInputs());
-    assertEquals(outputs, actionWrapperData.getAction().getOutputs());
+    assertEquals(
+        outputs,
+        actionWrapperData.getAction().getOutputs().stream()
+            .map(OutputArtifact::getArtifact)
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
 
     assertSame(actionFunction, ((FakeAction) actionWrapperData.getAction()).getExecuteFunction());
   }

@@ -94,7 +94,7 @@ public class GenruleBuildableTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:example");
     Path srcPath = filesystem.getBuckPaths().getGenDir().resolve("example__srcs");
     GenruleBuildable buildable =
-        GenruleBuildableBuilder.builder()
+        ImmutableGenruleBuildableBuilder.builder()
             .setBuildTarget(target)
             .setFilesystem(filesystem)
             .addSrcs(PathSourcePath.of(filesystem, filesystem.getPath("in-dir.txt")))
@@ -135,10 +135,10 @@ public class GenruleBuildableTest {
     SourcePath path2 = PathSourcePath.of(filesystem, filesystem.getPath("dir", "path 2.txt"));
 
     GenruleBuildable buildable =
-        GenruleBuildableBuilder.builder()
+        ImmutableGenruleBuildableBuilder.builder()
             .setBuildTarget(target)
             .setFilesystem(filesystem)
-            .setSrcs(ImmutableList.of(path1, path2))
+            .setSrcs(ImmutableSet.of(path1, path2))
             .setCmd("echo \"Hello, world\" >> $OUT")
             .setOut(Optional.of("output.txt"))
             .build()
@@ -168,10 +168,10 @@ public class GenruleBuildableTest {
     SourcePath path2 = PathSourcePath.of(filesystem, filesystem.getPath("dir name", "path 2.txt"));
 
     GenruleBuildable buildable =
-        GenruleBuildableBuilder.builder()
+        ImmutableGenruleBuildableBuilder.builder()
             .setBuildTarget(target)
             .setFilesystem(filesystem)
-            .setSrcs(ImmutableList.of(path1, path2))
+            .setSrcs(ImmutableSet.of(path1, path2))
             .setCmd("echo \"Hello, world\" >> $OUT")
             .setOut(Optional.of("output.txt"))
             .setEnvironmentExpansionSeparator("//")
@@ -229,7 +229,7 @@ public class GenruleBuildableTest {
             target,
             graphBuilder);
     GenruleBuildable buildable =
-        GenruleBuildableBuilder.builder()
+        ImmutableGenruleBuildableBuilder.builder()
             .setBuildTarget(target)
             .setFilesystem(filesystem)
             .setAndroidTools(androidTools)
@@ -266,7 +266,7 @@ public class GenruleBuildableTest {
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
 
     GenruleBuildable buildable =
-        GenruleBuildableBuilder.builder()
+        ImmutableGenruleBuildableBuilder.builder()
             .setBuildTarget(target)
             .setFilesystem(filesystem)
             .setBash("echo somthing > $OUT")
@@ -297,7 +297,7 @@ public class GenruleBuildableTest {
     humanReadableExceptionRule.expectMessage(
         "The 'out' or 'outs' parameter of genrule //example:genrule is '', which is not a valid file name.");
     BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
-    GenruleBuildableBuilder.builder()
+    ImmutableGenruleBuildableBuilder.builder()
         .setBuildTarget(target)
         .setFilesystem(filesystem)
         .setOut(Optional.of(""))
@@ -316,7 +316,7 @@ public class GenruleBuildableTest {
           "The 'out' or 'outs' parameter of genrule //example:genrule is '/opt/src/buck/opt/stuff', which is not a valid file name.");
     }
     BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
-    GenruleBuildableBuilder.builder()
+    ImmutableGenruleBuildableBuilder.builder()
         .setBuildTarget(target)
         .setFilesystem(filesystem)
         .setOut(
@@ -336,7 +336,7 @@ public class GenruleBuildableTest {
     BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
 
     GenruleBuildable buildable =
-        GenruleBuildableBuilder.builder()
+        ImmutableGenruleBuildableBuilder.builder()
             .setBuildTarget(target)
             .setFilesystem(filesystem)
             .setBash("echo something > $OUT")
@@ -373,7 +373,7 @@ public class GenruleBuildableTest {
     BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
 
     GenruleBuildable buildable =
-        GenruleBuildableBuilder.builder()
+        ImmutableGenruleBuildableBuilder.builder()
             .setBuildTarget(target)
             .setFilesystem(filesystem)
             .setBash("echo something > $OUT")
@@ -407,13 +407,13 @@ public class GenruleBuildableTest {
 
   @Test
   public void outputPathShouldBeNormalized() {
-    ImmutableList<String> unnormalizedPaths =
-        ImmutableList.<String>builder().add("foo/./bar/./.").add(".").add("./foo").build();
+    ImmutableSet<String> unnormalizedPaths =
+        ImmutableSet.<String>builder().add("foo/./bar/./.").add(".").add("./foo").build();
 
     for (String out : unnormalizedPaths) {
       BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
       GenruleBuildable buildable =
-          GenruleBuildableBuilder.builder()
+          ImmutableGenruleBuildableBuilder.builder()
               .setBuildTarget(target)
               .setFilesystem(filesystem)
               .setBash("echo something > $OUT")
@@ -430,25 +430,19 @@ public class GenruleBuildableTest {
   }
 
   @Test
-  public void canGetSingleDefaultOutput() {
+  public void defaultOutsIsEmpty() {
     BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
-    ProjectFilesystem fakeProjectFileSystem = new FakeProjectFilesystem();
-    OutputPathResolver outputPathResolver =
-        new DefaultOutputPathResolver(fakeProjectFileSystem, target);
 
     GenruleBuildable buildable =
-        GenruleBuildableBuilder.builder()
+        ImmutableGenruleBuildableBuilder.builder()
             .setBuildTarget(target)
             .setFilesystem(new FakeProjectFilesystem())
             .setBash("echo something > $OUT")
-            .setOuts(Optional.of(ImmutableMap.of("label1", ImmutableList.of("output1a"))))
+            .setOuts(Optional.of(ImmutableMap.of("label1", ImmutableSet.of("output1a"))))
             .build()
             .toBuildable();
 
-    Path outputPath =
-        outputPathResolver.resolvePath(
-            Iterables.getOnlyElement(buildable.getOutputs(OutputLabel.defaultLabel())));
-    assertEquals(outputPathResolver.getRootPath().resolve("output1a"), outputPath);
+    assertThat(buildable.getOutputs(OutputLabel.defaultLabel()), Matchers.empty());
   }
 
   @Test
@@ -460,7 +454,7 @@ public class GenruleBuildableTest {
     Path rootPath = outputPathResolver.getRootPath();
 
     GenruleBuildable buildable =
-        GenruleBuildableBuilder.builder()
+        ImmutableGenruleBuildableBuilder.builder()
             .setBuildTarget(target)
             .setFilesystem(fakeProjectFileSystem)
             .setBash("echo something")
@@ -468,9 +462,9 @@ public class GenruleBuildableTest {
                 Optional.of(
                     ImmutableMap.of(
                         "label1",
-                        ImmutableList.of("output1a", "output1b"),
+                        ImmutableSet.of("output1a", "output1b"),
                         "label2",
-                        ImmutableList.of("output2a"))))
+                        ImmutableSet.of("output2a"))))
             .build()
             .toBuildable();
 
@@ -491,7 +485,7 @@ public class GenruleBuildableTest {
     Path rootPath = outputPathResolver.getRootPath();
 
     GenruleBuildable buildable =
-        GenruleBuildableBuilder.builder()
+        ImmutableGenruleBuildableBuilder.builder()
             .setBuildTarget(target)
             .setFilesystem(fakeProjectFileSystem)
             .setBash("echo something")
@@ -499,9 +493,9 @@ public class GenruleBuildableTest {
                 Optional.of(
                     ImmutableMap.of(
                         "label1",
-                        ImmutableList.of("output1a", "output1b"),
+                        ImmutableSet.of("output1a", "output1b"),
                         "label2",
-                        ImmutableList.of("output2a"))))
+                        ImmutableSet.of("output2a"))))
             .build()
             .toBuildable();
 
@@ -516,49 +510,13 @@ public class GenruleBuildableTest {
   }
 
   @Test
-  public void defaultGroupReturnsAllNamedOutputs() {
-    BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
-    ProjectFilesystem fakeProjectFileSystem = new FakeProjectFilesystem();
-    OutputPathResolver outputPathResolver =
-        new DefaultOutputPathResolver(fakeProjectFileSystem, target);
-    Path rootPath = outputPathResolver.getRootPath();
-
-    GenruleBuildable buildable =
-        GenruleBuildableBuilder.builder()
-            .setBuildTarget(target)
-            .setFilesystem(fakeProjectFileSystem)
-            .setBash("echo something")
-            .setOuts(
-                Optional.of(
-                    ImmutableMap.of(
-                        "label1",
-                        ImmutableList.of("output1a", "output1b"),
-                        "label2",
-                        ImmutableList.of("output2a"))))
-            .build()
-            .toBuildable();
-
-    ImmutableSet<Path> actual =
-        buildable.getOutputs(OutputLabel.defaultLabel()).stream()
-            .map(p -> outputPathResolver.resolvePath(p))
-            .collect(ImmutableSet.toImmutableSet());
-
-    assertThat(
-        actual,
-        Matchers.containsInAnyOrder(
-            rootPath.resolve("output1a"),
-            rootPath.resolve("output1b"),
-            rootPath.resolve("output2a")));
-  }
-
-  @Test
   public void throwsIfGetNonExistentLabel() {
     expectedThrownException.expect(HumanReadableException.class);
     expectedThrownException.expectMessage(
         "Cannot find output label [nonexistent] for target //example:genrule");
 
     GenruleBuildable buildable =
-        GenruleBuildableBuilder.builder()
+        ImmutableGenruleBuildableBuilder.builder()
             .setBuildTarget(BuildTargetFactory.newInstance("//example:genrule"))
             .setFilesystem(new FakeProjectFilesystem())
             .setBash("echo something")
@@ -566,9 +524,9 @@ public class GenruleBuildableTest {
                 Optional.of(
                     ImmutableMap.of(
                         "label1",
-                        ImmutableList.of("output1a", "output1b"),
+                        ImmutableSet.of("output1a", "output1b"),
                         "label2",
-                        ImmutableList.of("output2a"))))
+                        ImmutableSet.of("output2a"))))
             .build()
             .toBuildable();
 
@@ -582,7 +540,7 @@ public class GenruleBuildableTest {
         "Unexpected output label [harro] for target //example:genrule. Use 'outs' instead of 'out' to use output labels");
 
     GenruleBuildable buildable =
-        GenruleBuildableBuilder.builder()
+        ImmutableGenruleBuildableBuilder.builder()
             .setBuildTarget(BuildTargetFactory.newInstance("//example:genrule"))
             .setFilesystem(new FakeProjectFilesystem())
             .setBash("echo something")
@@ -600,7 +558,7 @@ public class GenruleBuildableTest {
         new DefaultOutputPathResolver(new FakeProjectFilesystem(), target);
 
     GenruleBuildable buildable =
-        GenruleBuildableBuilder.builder()
+        ImmutableGenruleBuildableBuilder.builder()
             .setBuildTarget(target)
             .setFilesystem(new FakeProjectFilesystem())
             .setBash("echo something")
@@ -634,11 +592,11 @@ public class GenruleBuildableTest {
 
     ImmutableMap.Builder<String, String> envVarsBuilder = ImmutableMap.builder();
     GenruleBuildable buildable =
-        GenruleBuildableBuilder.builder()
+        ImmutableGenruleBuildableBuilder.builder()
             .setBuildTarget(target)
             .setFilesystem(fakeProjectFileSystem)
             .setBash("echo something")
-            .setOuts(Optional.of(ImmutableMap.of("named", ImmutableList.of("output.txt"))))
+            .setOuts(Optional.of(ImmutableMap.of("named", ImmutableSet.of("output.txt"))))
             .build()
             .toBuildable();
 
@@ -664,7 +622,7 @@ public class GenruleBuildableTest {
 
     ImmutableMap.Builder<String, String> envVarsBuilder = ImmutableMap.builder();
     GenruleBuildable buildable =
-        GenruleBuildableBuilder.builder()
+        ImmutableGenruleBuildableBuilder.builder()
             .setBuildTarget(target)
             .setFilesystem(fakeProjectFileSystem)
             .setBash("echo something")
@@ -690,7 +648,7 @@ public class GenruleBuildableTest {
     BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
     ProjectFilesystem fakeProjectFileSystem = new FakeProjectFilesystem();
     GenruleBuildable buildable =
-        GenruleBuildableBuilder.builder()
+        ImmutableGenruleBuildableBuilder.builder()
             .setBuildTarget(target)
             .setFilesystem(fakeProjectFileSystem)
             .setBash("echo something")
@@ -707,7 +665,7 @@ public class GenruleBuildableTest {
     BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
     ProjectFilesystem fakeProjectFileSystem = new FakeProjectFilesystem();
     GenruleBuildable buildable =
-        GenruleBuildableBuilder.builder()
+        ImmutableGenruleBuildableBuilder.builder()
             .setBuildTarget(target)
             .setFilesystem(fakeProjectFileSystem)
             .setBash("echo something")
@@ -741,11 +699,11 @@ public class GenruleBuildableTest {
             outputPathResolver.resolvePath(new OutputPath("output.txt"))));
 
     GenruleBuildable buildable =
-        GenruleBuildableBuilder.builder()
+        ImmutableGenruleBuildableBuilder.builder()
             .setBuildTarget(target)
             .setFilesystem(fakeProjectFileSystem)
             .setCmd("echo something")
-            .setOuts(Optional.of(ImmutableMap.of("named", ImmutableList.of("output.txt"))))
+            .setOuts(Optional.of(ImmutableMap.of("named", ImmutableSet.of("output.txt"))))
             .build()
             .toBuildable();
     AbstractGenruleStep step =
@@ -790,7 +748,7 @@ public class GenruleBuildableTest {
                         .resolve("output.txt")))));
 
     GenruleBuildable buildable =
-        GenruleBuildableBuilder.builder()
+        ImmutableGenruleBuildableBuilder.builder()
             .setBuildTarget(target)
             .setFilesystem(fakeProjectFileSystem)
             .setCmd("echo something")
@@ -812,5 +770,110 @@ public class GenruleBuildableTest {
             });
 
     step.execute(TestExecutionContext.newInstance());
+  }
+
+  @Test
+  public void outputNameIsOutForOutWithDefaultLabel() {
+    BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
+
+    GenruleBuildable buildable =
+        ImmutableGenruleBuildableBuilder.builder()
+            .setBuildTarget(target)
+            .setFilesystem(new FakeProjectFilesystem())
+            .setCmd("echo something")
+            .setOut(Optional.of("output.txt"))
+            .build()
+            .toBuildable();
+
+    assertEquals("output.txt", buildable.getOutputName(OutputLabel.defaultLabel()));
+  }
+
+  @Test
+  public void throwsIfGetOutputNameWithInvalidLabel() {
+    expectedThrownException.expect(HumanReadableException.class);
+    expectedThrownException.expectMessage(
+        "Output label [nonexistent] not found for target //example:genrule");
+
+    BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
+
+    GenruleBuildable buildable =
+        ImmutableGenruleBuildableBuilder.builder()
+            .setBuildTarget(target)
+            .setFilesystem(new FakeProjectFilesystem())
+            .setCmd("echo something")
+            .setOuts(Optional.of(ImmutableMap.of("label", ImmutableSet.of("output1"))))
+            .build()
+            .toBuildable();
+
+    buildable.getOutputName(OutputLabel.of("nonexistent"));
+  }
+
+  @Test
+  public void throwsIfGetOutputNameForOutWithNonDefaultLabel() {
+    expectedThrownException.expect(IllegalArgumentException.class);
+    expectedThrownException.expectMessage(
+        "Unexpectedly received non-default label [nonexistent] for target //example:genrule");
+
+    BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
+
+    GenruleBuildable buildable =
+        ImmutableGenruleBuildableBuilder.builder()
+            .setBuildTarget(target)
+            .setFilesystem(new FakeProjectFilesystem())
+            .setCmd("echo something")
+            .setOut(Optional.of("output.txt"))
+            .build()
+            .toBuildable();
+
+    buildable.getOutputName(OutputLabel.of("nonexistent"));
+  }
+
+  @Test
+  public void canGetDifferentOutputNamesForOuts() {
+    BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
+
+    GenruleBuildable buildable =
+        ImmutableGenruleBuildableBuilder.builder()
+            .setBuildTarget(target)
+            .setFilesystem(new FakeProjectFilesystem())
+            .setCmd("echo something")
+            .setOuts(
+                Optional.of(
+                    ImmutableMap.of(
+                        "label1",
+                        ImmutableSet.of("output1a"),
+                        "label2",
+                        ImmutableSet.of("output2a"))))
+            .build()
+            .toBuildable();
+
+    assertEquals("output1a", buildable.getOutputName(OutputLabel.of("label1")));
+    assertEquals("output2a", buildable.getOutputName(OutputLabel.of("label2")));
+  }
+
+  @Test
+  public void throwsIfGetOutputNameForDefaultOutputs() {
+    expectedThrownException.expect(HumanReadableException.class);
+    expectedThrownException.expectMessage(
+        "Default outputs not supported for genrule //example:genrule (that uses `outs`). Use named outputs");
+
+    BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
+
+    GenruleBuildable buildable =
+        ImmutableGenruleBuildableBuilder.builder()
+            .setBuildTarget(target)
+            .setFilesystem(new FakeProjectFilesystem())
+            .setCmd("echo something")
+            .setOuts(
+                Optional.of(
+                    ImmutableMap.of(
+                        "label1",
+                        ImmutableSet.of("output1a"),
+                        "label2",
+                        ImmutableSet.of("output2a"))))
+            .build()
+            .toBuildable();
+
+    buildable.getOutputName(OutputLabel.defaultLabel());
   }
 }

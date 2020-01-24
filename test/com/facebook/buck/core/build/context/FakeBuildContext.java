@@ -39,13 +39,12 @@ public class FakeBuildContext {
       withSourcePathResolver(createMock(SourcePathResolverAdapter.class));
 
   public static BuildContext withSourcePathResolver(SourcePathResolverAdapter pathResolver) {
-    return BuildContext.builder()
-        .setSourcePathResolver(pathResolver)
-        .setJavaPackageFinder(new FakeJavaPackageFinder())
-        .setEventBus(BuckEventBusForTests.newInstance())
-        .setBuildCellRootPath(new FakeProjectFilesystem().getRootPath())
-        .setShouldDeleteTemporaries(false)
-        .build();
+    return BuildContext.of(
+        pathResolver,
+        new FakeProjectFilesystem().getRootPath(),
+        new FakeJavaPackageFinder(),
+        BuckEventBusForTests.newInstance(),
+        false);
   }
 
   /**
@@ -54,23 +53,21 @@ public class FakeBuildContext {
    */
   public static BuildContext withSourcePathResolver(
       SourcePathResolverAdapter pathResolver, ProjectFilesystem filesystem) {
-    return BuildContext.builder()
-        .setSourcePathResolver(pathResolver)
-        .setJavaPackageFinder(new FakeJavaPackageFinder())
-        .setEventBus(BuckEventBusForTests.newInstance())
-        .setBuildCellRootPath(filesystem.getRootPath())
-        .setShouldDeleteTemporaries(false)
-        .build();
+    return BuildContext.of(
+        pathResolver,
+        filesystem.getRootPath(),
+        new FakeJavaPackageFinder(),
+        BuckEventBusForTests.newInstance(),
+        false);
   }
 
   public static BuildContext create(
       SourcePathResolverAdapter pathResolver, BuckEventBus buckEventBus) {
-    return BuildContext.builder()
-        .setSourcePathResolver(pathResolver)
-        .setJavaPackageFinder(new FakeJavaPackageFinder())
-        .setEventBus(buckEventBus)
-        .setBuildCellRootPath(new FakeProjectFilesystem().getRootPath())
-        .setShouldDeleteTemporaries(false)
-        .build();
+    return BuildContext.of(
+        pathResolver,
+        new FakeProjectFilesystem().getRootPath(),
+        new FakeJavaPackageFinder(),
+        buckEventBus,
+        false);
   }
 }

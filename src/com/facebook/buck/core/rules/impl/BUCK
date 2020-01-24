@@ -5,11 +5,6 @@ java_immutables_library(
     srcs = glob(
         ["*.java"],
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/core/description:description",
-        "//src/com/facebook/buck/core/rules:rules",
-        "//src/com/facebook/buck/core/rules/attr:attr",
-    ],
     visibility = [
         "PUBLIC",
     ],
@@ -21,5 +16,10 @@ java_immutables_library(
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/stream:stream",
         "//third-party/java/guava:guava",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/description:description",
+        "//src/com/facebook/buck/core/rules:rules",
+        "//src/com/facebook/buck/core/rules/attr:attr",
     ],
 )

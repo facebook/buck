@@ -23,6 +23,7 @@ import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.devtools.build.lib.cmdline.Label;
@@ -51,12 +52,18 @@ public class SkylarkRuleFunctions implements SkylarkRuleFunctionsApi {
   public static final ImmutableMap<String, Attribute<?>> IMPLICIT_ATTRIBUTES =
       SkylarkRuleFunctionImplicitAttributes.compute();
 
+  public static final ImmutableMap<String, Attribute<?>> IMPLICIT_TEST_ATTRIBUTES =
+      SkylarkRuleFunctionImplicitAttributes.computeTest();
+
+  private static final ImmutableSet<String> USER_VISIBLE_IMPLICIT_ATTRIBUTES =
+      ImmutableSet.of("name", "licenses", "labels");
   /**
    * The hidden attributes from IMPLICIT_ATTRIBUTES that are hidden from user's for user defined
    * rules
    */
   public static final Set<String> HIDDEN_IMPLICIT_ATTRIBUTES =
-      Sets.filter(IMPLICIT_ATTRIBUTES.keySet(), attr -> !attr.equals("name"));
+      Sets.filter(
+          IMPLICIT_ATTRIBUTES.keySet(), attr -> !USER_VISIBLE_IMPLICIT_ATTRIBUTES.contains(attr));
 
   public SkylarkRuleFunctions(LoadingCache<String, Label> labelCache) {
     this.labelCache = labelCache;
@@ -88,6 +95,8 @@ public class SkylarkRuleFunctions implements SkylarkRuleFunctionsApi {
   public SkylarkUserDefinedRule rule(
       BaseFunction implementation,
       SkylarkDict<String, AttributeHolder> attrs,
+      boolean inferRunInfo,
+      boolean test,
       Location loc,
       FuncallExpression ast,
       Environment env)
@@ -98,7 +107,13 @@ public class SkylarkRuleFunctions implements SkylarkRuleFunctionsApi {
         attrs.getContents(String.class, AttributeHolder.class, "attrs keyword of rule()");
 
     return SkylarkUserDefinedRule.of(
-        loc, implementation, IMPLICIT_ATTRIBUTES, HIDDEN_IMPLICIT_ATTRIBUTES, checkedAttributes);
+        loc,
+        implementation,
+        test ? IMPLICIT_TEST_ATTRIBUTES : IMPLICIT_ATTRIBUTES,
+        HIDDEN_IMPLICIT_ATTRIBUTES,
+        checkedAttributes,
+        inferRunInfo,
+        test);
   }
 
   @Override

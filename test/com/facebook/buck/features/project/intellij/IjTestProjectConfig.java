@@ -27,7 +27,7 @@ public class IjTestProjectConfig {
     return createBuilder(FakeBuckConfig.builder().build()).build();
   }
 
-  public static IjProjectConfig.Builder createBuilder(BuckConfig buckConfig) {
+  static IjProjectConfig.Builder createBuilder(BuckConfig buckConfig) {
     String projectRoot = "";
     return IjProjectBuckConfig.createBuilder(buckConfig)
         .setAggregationMode(AggregationMode.AUTO)

@@ -34,7 +34,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.impl.PathReferenceRuleWithMultipleOutputs;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -46,10 +45,8 @@ import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -63,7 +60,7 @@ import org.junit.rules.ExpectedException;
 public class BuildReportTest {
   @Rule public final ExpectedException exception = ExpectedException.none();
 
-  private BuildExecutionResult buildExecutionResult;
+  private Build.BuildExecutionResult buildExecutionResult;
   private SourcePathResolverAdapter resolver;
   private Cell rootCell;
   private ActionGraphBuilder graphBuilder;
@@ -127,10 +124,7 @@ public class BuildReportTest {
         rule6, Optional.of(BuildResult.success(rule1, BUILT_LOCALLY, CacheResult.miss())));
 
     buildExecutionResult =
-        BuildExecutionResult.builder()
-            .setResults(ruleToResult)
-            .setFailures(ImmutableSet.of(rule2Failure))
-            .build();
+        ImmutableBuildExecutionResult.of(ruleToResult, ImmutableSet.of(rule2Failure));
   }
 
   @Test
@@ -229,7 +223,7 @@ public class BuildReportTest {
             "  \"success\" : false,",
             "  \"results\" : {",
             "    \"//fake:rule1\" : {",
-            "      \"success\" : true,",
+            "      \"success\" : \"SUCCESS\",",
             "      \"type\" : \"BUILT_LOCALLY\",",
             "      \"output\" : " + rule1TxtPath + ",",
             "      \"outputs\" : {",
@@ -237,17 +231,17 @@ public class BuildReportTest {
             "      }",
             "    },",
             "    \"//fake:rule2\" : {",
-            "      \"success\" : false",
+            "      \"success\" : \"FAIL\"",
             "    },",
             "    \"//fake:rule3\" : {",
-            "      \"success\" : true,",
+            "      \"success\" : \"SUCCESS\",",
             "      \"type\" : \"FETCHED_FROM_CACHE\"",
             "    },",
             "    \"//fake:rule4\" : {",
-            "      \"success\" : false",
+            "      \"success\" : \"UNKNOWN\"",
             "    },",
             "    \"//fake:rule5\" : {",
-            "      \"success\" : true,",
+            "      \"success\" : \"SUCCESS\",",
             "      \"type\" : \"BUILT_LOCALLY\",",
             "      \"output\" : \"default_output\",",
             "      \"outputs\" : {",
@@ -256,7 +250,7 @@ public class BuildReportTest {
             "      }",
             "    },",
             "    \"//fake:rule6\" : {",
-            "      \"success\" : true,",
+            "      \"success\" : \"SUCCESS\",",
             "      \"type\" : \"BUILT_LOCALLY\",",
             "      \"outputs\" : {",
             "        \"DEFAULT\" : [ \"default_output1\", \"default_output_2\" ],",
@@ -272,39 +266,5 @@ public class BuildReportTest {
     String observedReport =
         new BuildReport(buildExecutionResult, resolver, rootCell).generateJsonBuildReport();
     assertEquals(expectedReport, observedReport);
-  }
-
-  @Test
-  public void testGenerateJsonBuildReportWithNonExistentDefaultOutput() throws IOException {
-    exception.expect(IllegalStateException.class);
-    exception.expectMessage(
-        "Default output group must exist in path_reference_rule_with_multiple_outputs rule //fake:rule7");
-
-    BuildRule rule7 =
-        new PathReferenceRuleWithMultipleOutputs(
-            BuildTargetFactory.newInstance("//fake:rule7"),
-            new FakeProjectFilesystem(),
-            Paths.get("unused"),
-            ImmutableMap.of(
-                OutputLabel.of("named_1"), ImmutableSet.of(Paths.get("named_output_1")))) {
-          @Override
-          public ImmutableMap<OutputLabel, ImmutableSortedSet<SourcePath>>
-              getSourcePathsByOutputsLabels() {
-            Map<OutputLabel, ImmutableSortedSet<SourcePath>> toRemoveDefaultOutput =
-                new HashMap<>(super.getSourcePathsByOutputsLabels());
-            toRemoveDefaultOutput.remove(OutputLabel.defaultLabel());
-            return ImmutableMap.copyOf(toRemoveDefaultOutput);
-          }
-        };
-    graphBuilder.addToIndex(rule7);
-    ruleToResult.put(
-        rule7, Optional.of(BuildResult.success(rule7, BUILT_LOCALLY, CacheResult.miss())));
-    BuildExecutionResult buildResult =
-        BuildExecutionResult.builder()
-            .setResults(ruleToResult)
-            .setFailures(ImmutableSet.of())
-            .build();
-
-    new BuildReport(buildResult, resolver, rootCell).generateJsonBuildReport();
   }
 }

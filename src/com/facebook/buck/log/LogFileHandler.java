@@ -116,7 +116,7 @@ public class LogFileHandler extends Handler {
                     try (DirectoryStream<Path> directoryStream =
                         Files.newDirectoryStream(rootPath)) {
                       for (Path path : directoryStream) {
-                        if (AbstractInvocationInfo.isLogDirectory(path)) {
+                        if (InvocationInfo.isLogDirectory(path)) {
                           dirPaths.add(path);
                         }
                       }

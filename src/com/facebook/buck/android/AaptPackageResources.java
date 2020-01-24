@@ -278,12 +278,10 @@ public class AaptPackageResources extends AbstractBuildRule {
 
   public AaptOutputInfo getAaptOutputInfo() {
     BuildTarget target = getBuildTarget();
-    return AaptOutputInfo.builder()
-        .setPathToRDotTxt(ExplicitBuildTargetSourcePath.of(target, getPathToRDotTxtFile()))
-        .setPrimaryResourcesApkPath(ExplicitBuildTargetSourcePath.of(target, getResourceApkPath()))
-        .setAndroidManifestXml(ExplicitBuildTargetSourcePath.of(target, getAndroidManifestXml()))
-        .setAaptGeneratedProguardConfigFile(
-            ExplicitBuildTargetSourcePath.of(target, getPathToGeneratedProguardConfigFile()))
-        .build();
+    return ImmutableAaptOutputInfo.of(
+        ExplicitBuildTargetSourcePath.of(target, getPathToRDotTxtFile()),
+        ExplicitBuildTargetSourcePath.of(target, getResourceApkPath()),
+        ExplicitBuildTargetSourcePath.of(target, getAndroidManifestXml()),
+        ExplicitBuildTargetSourcePath.of(target, getPathToGeneratedProguardConfigFile()));
   }
 }

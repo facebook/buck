@@ -31,17 +31,12 @@ public class SingletonArtifactCacheFactory implements ArtifactCacheFactory {
   }
 
   @Override
-  public ArtifactCache newInstance(boolean distributedBuildModeEnabled) {
+  public ArtifactCache remoteOnlyInstance() {
     return artifactCache;
   }
 
   @Override
-  public ArtifactCache remoteOnlyInstance(boolean distributedBuildModeEnabled) {
-    return artifactCache;
-  }
-
-  @Override
-  public ArtifactCache localOnlyInstance(boolean distributedBuildModeEnabled) {
+  public ArtifactCache localOnlyInstance() {
     return artifactCache;
   }
 

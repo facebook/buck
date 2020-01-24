@@ -89,7 +89,8 @@ public class DefaultSourcePathResolver extends AbstractSourcePathResolver {
       BuildRule rule = ruleFinder.getRule((BuildTargetSourcePath) sourcePath);
       if (rule instanceof HasOutputName) {
         HasOutputName hasOutputName = (HasOutputName) rule;
-        return hasOutputName.getOutputName();
+        return hasOutputName.getOutputName(
+            ((BuildTargetSourcePath) sourcePath).getTargetWithOutputs().getOutputLabel());
       }
       if (sourcePath instanceof ForwardingBuildTargetSourcePath) {
         ForwardingBuildTargetSourcePath castPath = (ForwardingBuildTargetSourcePath) sourcePath;

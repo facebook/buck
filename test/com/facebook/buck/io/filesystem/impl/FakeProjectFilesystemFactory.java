@@ -31,23 +31,29 @@ public class FakeProjectFilesystemFactory implements ProjectFilesystemFactory {
       CanonicalCellName cellName,
       Path root,
       Config config,
-      Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo) {
+      Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo,
+      boolean buckOutIncludeTargetConfigHash) {
     return new FakeProjectFilesystem(CanonicalCellName.rootCell(), root);
   }
 
   @Override
   public ProjectFilesystem createProjectFilesystem(
-      CanonicalCellName cellName, Path root, Config config) {
+      CanonicalCellName cellName,
+      Path root,
+      Config config,
+      boolean buckOutIncludeTargetConfigHash) {
     return new FakeProjectFilesystem(CanonicalCellName.rootCell(), root);
   }
 
   @Override
-  public ProjectFilesystem createProjectFilesystem(CanonicalCellName cellName, Path root) {
+  public ProjectFilesystem createProjectFilesystem(
+      CanonicalCellName cellName, Path root, boolean buckOutIncludeTargetCofigHash) {
     return new FakeProjectFilesystem(CanonicalCellName.rootCell(), root);
   }
 
   @Override
-  public ProjectFilesystem createOrThrow(CanonicalCellName cellName, Path path) {
+  public ProjectFilesystem createOrThrow(
+      CanonicalCellName cellName, Path path, boolean buckOutIncludeTargetCofigHash) {
     return new FakeProjectFilesystem(CanonicalCellName.rootCell(), path);
   }
 }

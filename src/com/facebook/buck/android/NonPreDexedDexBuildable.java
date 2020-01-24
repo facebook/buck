@@ -34,7 +34,7 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.AccumulateClassNamesStep;
@@ -80,7 +80,6 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
-import org.immutables.value.Value;
 
 class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> additionalJarsForProguardAndDesugar;
@@ -122,9 +121,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
   private final ListeningExecutorService dxExecutorService;
   private final Supplier<ImmutableSortedSet<BuildRule>> buildDepsSupplier;
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  interface AbstractNonPredexedDexBuildableArgs {
+  @BuckStyleValueWithBuilder
+  interface NonPredexedDexBuildableArgs {
     Optional<SourcePath> getProguardJarOverride();
 
     String getProguardMaxHeapSize();

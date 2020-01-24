@@ -163,11 +163,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     ImmutableMap<String, SourcePath> solibs = nativeLinkable.getSharedLibraries(graphBuilder);
     for (Map.Entry<String, SourcePath> entry : solibs.entrySet()) {
       AndroidLinkableMetadata metadata =
-          AndroidLinkableMetadata.builder()
-              .setSoName(entry.getKey())
-              .setTargetCpuType(targetCpuType)
-              .setApkModule(apkModule)
-              .build();
+          ImmutableAndroidLinkableMetadata.of(entry.getKey(), targetCpuType, apkModule);
       consumer.accept(metadata, entry.getValue());
     }
   }
@@ -336,10 +332,10 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       }
     }
 
-    ImmutableMap<StripLinkable, StrippedObjectDescription> strippedLibsMap =
+    ImmutableMap<StripLinkable, CopyNativeLibraries.StrippedObjectDescription> strippedLibsMap =
         generateStripRules(nativePlatforms, nativeLinkableLibs);
-    ImmutableMap<StripLinkable, StrippedObjectDescription> strippedLibsAssetsMap =
-        generateStripRules(nativePlatforms, nativeLinkableLibsAssets);
+    ImmutableMap<StripLinkable, CopyNativeLibraries.StrippedObjectDescription>
+        strippedLibsAssetsMap = generateStripRules(nativePlatforms, nativeLinkableLibsAssets);
 
     ImmutableSortedSet<SourcePath> unstrippedLibraries =
         RichStream.from(nativeLinkableLibs.values())
@@ -349,15 +345,17 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     Optional<CopyNativeLibraries> nativeLibrariesForPrimaryApk = Optional.empty();
 
     for (APKModule module : apkModules) {
-      ImmutableMap<StripLinkable, StrippedObjectDescription> filteredStrippedLibsMap =
-          ImmutableMap.copyOf(
-              FluentIterable.from(strippedLibsMap.entrySet())
-                  .filter(entry -> module.equals(entry.getValue().getApkModule())));
+      ImmutableMap<StripLinkable, CopyNativeLibraries.StrippedObjectDescription>
+          filteredStrippedLibsMap =
+              ImmutableMap.copyOf(
+                  FluentIterable.from(strippedLibsMap.entrySet())
+                      .filter(entry -> module.equals(entry.getValue().getApkModule())));
 
-      ImmutableMap<StripLinkable, StrippedObjectDescription> filteredStrippedLibsAssetsMap =
-          ImmutableMap.copyOf(
-              FluentIterable.from(strippedLibsAssetsMap.entrySet())
-                  .filter(entry -> module.equals(entry.getValue().getApkModule())));
+      ImmutableMap<StripLinkable, CopyNativeLibraries.StrippedObjectDescription>
+          filteredStrippedLibsAssetsMap =
+              ImmutableMap.copyOf(
+                  FluentIterable.from(strippedLibsAssetsMap.entrySet())
+                      .filter(entry -> module.equals(entry.getValue().getApkModule())));
 
       ImmutableCollection<SourcePath> nativeLibsDirectories =
           packageableCollection.getNativeLibsDirectories().get(module);
@@ -454,19 +452,18 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
                 return;
               }
               AndroidLinkableMetadata runtimeLinkableMetadata =
-                  AndroidLinkableMetadata.builder()
-                      .setTargetCpuType(targetCpuType)
-                      .setSoName(cxxRuntime.getSoname())
-                      .setApkModule(apkModuleGraph.getRootAPKModule())
-                      .build();
+                  ImmutableAndroidLinkableMetadata.of(
+                      cxxRuntime.getSoname(), targetCpuType, apkModuleGraph.getRootAPKModule());
               nativeLinkableLibsBuilder.put(runtimeLinkableMetadata, cxxSharedRuntimePath.get());
             });
   }
 
   private CopyNativeLibraries createCopyNativeLibraries(
       APKModule module,
-      ImmutableMap<StripLinkable, StrippedObjectDescription> filteredStrippedLibsMap,
-      ImmutableMap<StripLinkable, StrippedObjectDescription> filteredStrippedLibsAssetsMap,
+      ImmutableMap<StripLinkable, CopyNativeLibraries.StrippedObjectDescription>
+          filteredStrippedLibsMap,
+      ImmutableMap<StripLinkable, CopyNativeLibraries.StrippedObjectDescription>
+          filteredStrippedLibsAssetsMap,
       ImmutableCollection<SourcePath> nativeLibsDirectories,
       ImmutableCollection<SourcePath> nativeLibAssetsDirectories,
       String suffix) {
@@ -497,10 +494,12 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     return cpuFilters;
   }
 
-  private ImmutableMap<StripLinkable, StrippedObjectDescription> generateStripRules(
-      ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
-      ImmutableMap<AndroidLinkableMetadata, SourcePath> libs) {
-    ImmutableMap.Builder<StripLinkable, StrippedObjectDescription> result = ImmutableMap.builder();
+  private ImmutableMap<StripLinkable, CopyNativeLibraries.StrippedObjectDescription>
+      generateStripRules(
+          ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
+          ImmutableMap<AndroidLinkableMetadata, SourcePath> libs) {
+    ImmutableMap.Builder<StripLinkable, CopyNativeLibraries.StrippedObjectDescription> result =
+        ImmutableMap.builder();
     for (Map.Entry<AndroidLinkableMetadata, SourcePath> entry : libs.entrySet()) {
       SourcePath sourcePath = entry.getValue();
       TargetCpuType targetCpuType = entry.getKey().getTargetCpuType();
@@ -534,12 +533,11 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
               sharedLibrarySoName);
       result.put(
           stripLinkable,
-          StrippedObjectDescription.builder()
-              .setSourcePath(stripLinkable.getSourcePathToOutput())
-              .setStrippedObjectName(sharedLibrarySoName)
-              .setTargetCpuType(targetCpuType)
-              .setApkModule(apkModule)
-              .build());
+          ImmutableStrippedObjectDescription.of(
+              stripLinkable.getSourcePathToOutput(),
+              sharedLibrarySoName,
+              targetCpuType,
+              apkModule));
     }
     return result.build();
   }

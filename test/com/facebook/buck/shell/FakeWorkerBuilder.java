@@ -29,7 +29,7 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.FakeWorkerBuilder.FakeWorkerToolRule;
 import com.google.common.collect.ImmutableList;
@@ -37,7 +37,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import org.immutables.value.Value;
 
 public class FakeWorkerBuilder
     extends AbstractNodeBuilder<
@@ -132,8 +131,7 @@ public class FakeWorkerBuilder
       return new FakeWorkerToolRule(buildTarget, context.getProjectFilesystem(), params);
     }
 
-    @BuckStyleImmutable
-    @Value.Immutable
+    @RuleArg
     interface AbstractFakeWorkerDescriptionArg extends BuildRuleArg {}
   }
 }

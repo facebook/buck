@@ -31,12 +31,11 @@ public class ConfigRuleKeyConfigurationFactory {
       BuckConfig buckConfig, BuckModuleManager moduleManager) {
     long inputKeySizeLimit =
         buckConfig.getView(BuildBuckConfig.class).getBuildInputRuleKeyFileSizeLimit();
-    return RuleKeyConfiguration.builder()
-        .setSeed(buckConfig.getView(BuildBuckConfig.class).getKeySeed())
-        .setCoreKey(getCoreKey(buckConfig))
-        .setBuildInputRuleKeyFileSizeLimit(inputKeySizeLimit)
-        .setBuckModuleHashStrategy(createBuckModuleHashStrategy(buckConfig, moduleManager))
-        .build();
+    return RuleKeyConfiguration.of(
+        buckConfig.getView(BuildBuckConfig.class).getKeySeed(),
+        getCoreKey(buckConfig),
+        inputKeySizeLimit,
+        createBuckModuleHashStrategy(buckConfig, moduleManager));
   }
 
   private static String getCoreKey(BuckConfig buckConfig) {

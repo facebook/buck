@@ -18,7 +18,7 @@ package com.facebook.buck.cli;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.startsWith;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.CacheDeleteResult;
@@ -57,8 +57,7 @@ public class CacheDeleteCommandTest {
     List<RuleKey> ruleKeys =
         Arrays.stream(ruleKeyHashes).map(RuleKey::new).collect(Collectors.toList());
 
-    CacheDeleteResult cacheDeleteResult =
-        CacheDeleteResult.builder().setCacheNames(ImmutableList.of("test")).build();
+    CacheDeleteResult cacheDeleteResult = CacheDeleteResult.of(ImmutableList.of("test"));
     ArtifactCache cache =
         new FakeArtifactCache(ruleKeys, Futures.immediateFuture(cacheDeleteResult));
 

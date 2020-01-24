@@ -3,6 +3,18 @@ java_library(
     srcs = glob(
         ["*.java"],
     ),
+    tests = [
+        "//test/com/facebook/buck/support/state:state",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/cli/...",
+        "//test/...",
+    ],
+    deps = [
+        "//src/com/facebook/buck/util/stream:stream",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
     exported_deps = [
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
         "//src/com/facebook/buck/artifact_cache:impl",
@@ -31,17 +43,5 @@ java_library(
         "//src/com/facebook/buck/util/timing:timing",
         "//src/com/facebook/buck/versions:versions",
         "//src/com/facebook/buck/worker:worker_process",
-    ],
-    tests = [
-        "//test/com/facebook/buck/support/state:state",
-    ],
-    visibility = [
-        "//src/com/facebook/buck/cli/...",
-        "//test/...",
-    ],
-    deps = [
-        "//src/com/facebook/buck/util/stream:stream",
-        "//third-party/java/guava:guava",
-        "//third-party/java/jsr:jsr305",
     ],
 )

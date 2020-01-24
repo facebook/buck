@@ -16,7 +16,7 @@
 
 package com.facebook.buck.event;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.base.Joiner;
@@ -368,20 +368,22 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
     BuckEvent createFinishedEvent(String k1, Object v1, String k2, Object v2);
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
+  @BuckStyleValue
   /**
    * This is an identifier for the various performance event names in use in the system. Should be
    * CamelCase (first letter capitalized).
    */
-  abstract static class AbstractPerfEventId {
+  public abstract static class PerfEventId {
     @JsonValue
-    @Value.Parameter
     public abstract String getValue();
 
     @Value.Check
     protected void nameIsNotEmpty() {
       Preconditions.checkArgument(!getValue().isEmpty());
+    }
+
+    public static PerfEventId of(String value) {
+      return ImmutablePerfEventId.of(value);
     }
   }
 

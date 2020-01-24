@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -52,7 +51,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
     AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
     AssumeAndroidPlatform.get(workspace).assumeAapt2WithOutputTextSymbolsIsAvailable();
     setWorkspaceCompilationMode(workspace);
-    filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    filesystem = workspace.getProjectFileSystem();
   }
 
   @Test
@@ -290,7 +289,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
                 filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
     ZipInspector zipInspector = new ZipInspector(apkPath);
     String module = "small_with_no_resource_deps";
-    zipInspector.assertFileExists("assets/" + module + "/" + module + "-1.dex.jar");
+    zipInspector.assertFileExists("assets/" + module + "/" + module + "-1_1.dex.jar");
     zipInspector.assertFileExists("assets/secondary-program-dex-jars/secondary-1_1.dex.jar");
     zipInspector.assertFileExists("assets/secondary-program-dex-jars/secondary-2_1.dex.jar");
   }

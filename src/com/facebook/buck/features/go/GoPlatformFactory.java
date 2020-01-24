@@ -85,7 +85,7 @@ abstract class GoPlatformFactory {
                 .map(InternalFlavor::of)
                 .map(getCxxPlatforms()::getValue)
                 .orElse(getDefaultCxxPlatform()));
-    return GoPlatform.builder()
+    return ImmutableGoPlatform.builder()
         .setFlavor(flavor)
         .setGoOs(getOs(section))
         .setGoArch(getArch(section))

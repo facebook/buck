@@ -47,6 +47,7 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -82,7 +83,8 @@ import javax.annotation.Nullable;
  * cannot write a meaningful "dummy .dex" if there are no class files to pass to {@code dx}.
  */
 public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJavaLibrary.Impl>
-    implements InitializableFromDisk<DexProducedFromJavaLibrary.BuildOutput> {
+    implements InitializableFromDisk<DexProducedFromJavaLibrary.BuildOutput>,
+        TrimUberRDotJava.UsesResources {
 
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
@@ -189,6 +191,7 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
 
       @Nullable DxStep dx;
 
+      Path pathToDex = outputPathResolver.resolvePath(outputDex);
       if (hasClassesToDx) {
         Path pathToOutputFile = sourcePathResolverAdapter.getAbsolutePath(javaLibrarySourcePath);
         EstimateDexWeightStep estimate = new EstimateDexWeightStep(filesystem, pathToOutputFile);
@@ -206,7 +209,6 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
         if (!desugarEnabled) {
           options.add(Option.NO_DESUGAR);
         }
-        Path pathToDex = outputPathResolver.resolvePath(outputDex);
         dx =
             new DxStep(
                 filesystem,
@@ -229,6 +231,8 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
       } else {
         dx = null;
         weightEstimate = Suppliers.ofInstance(0);
+        // Create an empty file so the dex output can be used in input rulekeys
+        steps.add(new TouchStep(filesystem, pathToDex));
       }
 
       // Run a step to record artifacts and metadata. The values recorded depend upon whether dx was
@@ -417,7 +421,8 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
     return buildOutputInitializer.getBuildOutput().weightEstimate;
   }
 
-  ImmutableList<String> getReferencedResources() {
+  @Override
+  public ImmutableList<String> getReferencedResources() {
     return buildOutputInitializer.getBuildOutput().referencedResources;
   }
 

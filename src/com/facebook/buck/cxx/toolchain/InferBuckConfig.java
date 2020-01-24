@@ -103,7 +103,7 @@ public class InferBuckConfig implements AddsToRuleKey {
               }
               String versionString = versionOutput.orElse("").trim();
               Preconditions.checkState(!Strings.isNullOrEmpty(versionString));
-              return VersionedTool.of(delegate.getPathSourcePath(topLevel), "infer", versionString);
+              return VersionedTool.of("infer", delegate.getPathSourcePath(topLevel), versionString);
             });
   }
 

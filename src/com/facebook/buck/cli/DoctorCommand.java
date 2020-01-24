@@ -19,7 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.doctor.BuildLogHelper;
 import com.facebook.buck.doctor.DefaultDefectReporter;
 import com.facebook.buck.doctor.DefaultExtraInfoCollector;
-import com.facebook.buck.doctor.DefectSubmitResult;
+import com.facebook.buck.doctor.DefectReporter;
 import com.facebook.buck.doctor.DoctorInteractiveReport;
 import com.facebook.buck.doctor.DoctorReportHelper;
 import com.facebook.buck.doctor.UserInput;
@@ -66,7 +66,7 @@ public class DoctorCommand extends AbstractCommand {
     }
     Optional<String> issueDescription = helper.promptForIssue();
 
-    Optional<DefectSubmitResult> reportResult =
+    Optional<DefectReporter.DefectSubmitResult> reportResult =
         generateReport(params, userInput, entry.get(), issueDescription);
     if (!reportResult.isPresent()) {
       params.getConsole().printErrorText("Failed to generate report to send.");
@@ -82,7 +82,7 @@ public class DoctorCommand extends AbstractCommand {
     return ExitCode.SUCCESS;
   }
 
-  private Optional<DefectSubmitResult> generateReport(
+  private Optional<DefectReporter.DefectSubmitResult> generateReport(
       CommandRunnerParams params,
       UserInput userInput,
       BuildLogEntry entry,

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.model;
 
-import org.immutables.value.Value;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 
 /**
  * Wrapper for an unconfigured build target and its output label.
@@ -32,14 +32,13 @@ import org.immutables.value.Value;
  *
  * <p>See also {@link BuildTargetWithOutputs} for outputs with configured build targets.
  */
-@Value.Immutable(prehash = true, builder = false)
+@BuckStylePrehashedValue
 public abstract class UnconfiguredBuildTargetWithOutputs
     implements Comparable<UnconfiguredBuildTargetWithOutputs> {
-  @Value.Parameter
+
   /** Returns the associated {@link UnconfiguredBuildTargetView}. */
   public abstract UnconfiguredBuildTargetView getBuildTarget();
 
-  @Value.Parameter
   /** Returns the output label associated with the build target, if any. */
   public abstract OutputLabel getOutputLabel();
 
@@ -67,5 +66,10 @@ public abstract class UnconfiguredBuildTargetWithOutputs
     return getOutputLabel().isDefault()
         ? getBuildTarget().getFullyQualifiedName()
         : String.format("%s[%s]", getBuildTarget(), getOutputLabel());
+  }
+
+  public static UnconfiguredBuildTargetWithOutputs of(
+      UnconfiguredBuildTargetView buildTarget, OutputLabel outputLabel) {
+    return ImmutableUnconfiguredBuildTargetWithOutputs.of(buildTarget, outputLabel);
   }
 }

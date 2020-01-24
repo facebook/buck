@@ -2,8 +2,8 @@ android_platform(
     name = "android-x86_64-arm",
     base_platform = ":android-os",
     native_platforms = {
-        "x86_64": ":android-x86_64",
         "arm": ":android-arm",
+        "x86_64": ":android-x86_64",
     },
     visibility = [
         "PUBLIC",
@@ -14,8 +14,8 @@ android_platform(
     name = "android-x86_32-armv7",
     base_platform = ":android-os",
     native_platforms = {
-        "x86": ":android-x86_32",
         "armv7": ":android-armv7",
+        "x86": ":android-x86_32",
     },
     visibility = [
         "PUBLIC",
@@ -26,9 +26,9 @@ android_platform(
     name = "android-x86_64-arm-armv7",
     base_platform = ":android-os",
     native_platforms = {
-        "x86_64": ":android-x86_64",
         "arm": ":android-arm",
         "armv7": ":android-armv7",
+        "x86_64": ":android-x86_64",
     },
     visibility = [
         "PUBLIC",

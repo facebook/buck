@@ -65,7 +65,8 @@ public class NetworkStatsTrackerTest {
     finishedBuilder
         .getFetchBuilder()
         .setFetchResult(
-            CacheResult.hit("dontcare", ArtifactCacheMode.http).withArtifactSizeBytes(100))
+            CacheResult.hit("dontcare", ArtifactCacheMode.http)
+                .withArtifactSizeBytes(Optional.of(100L)))
         .setArtifactSizeBytes(100);
     eventBus.post(finishedBuilder.build());
 
@@ -82,7 +83,8 @@ public class NetworkStatsTrackerTest {
     finishedBuilder
         .getFetchBuilder()
         .setFetchResult(
-            CacheResult.hit("dontcare", ArtifactCacheMode.http).withArtifactSizeBytes(200))
+            CacheResult.hit("dontcare", ArtifactCacheMode.http)
+                .withArtifactSizeBytes(Optional.of(200L)))
         .setArtifactSizeBytes(200);
     eventBus.post(finishedBuilder.build());
 
@@ -250,14 +252,8 @@ public class NetworkStatsTrackerTest {
     assertTrue(uploadsFinished.get());
   }
 
-  private RemoteArtifactUploadStats uploadStats(
+  private NetworkStatsTracker.RemoteArtifactUploadStats uploadStats(
       int failed, int scheduled, int started, int uploaded, long totalBytes) {
-    return RemoteArtifactUploadStats.builder()
-        .setFailed(failed)
-        .setScheduled(scheduled)
-        .setStarted(started)
-        .setUploaded(uploaded)
-        .setTotalBytes(totalBytes)
-        .build();
+    return ImmutableRemoteArtifactUploadStats.of(started, failed, uploaded, scheduled, totalBytes);
   }
 }

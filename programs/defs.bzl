@@ -20,7 +20,7 @@ def get_release_version():
 
 def get_release_timestamp():
     """ Gets the release version from the command line or "" """
-    return native.read_config("buck", "release_timestamp" ,"")
+    return native.read_config("buck", "release_timestamp", "")
 
 def get_gen_buck_info_command(gen_buck_info_target):
     """
@@ -37,8 +37,8 @@ def get_gen_buck_info_command(gen_buck_info_target):
     java_version = native.read_config("java", "target_level")
     if version and timestamp:
         return (
-            '$(exe {target}) --release-version {version} ' +
+            "$(exe {target}) --release-version {version} " +
             '--release-timestamp {timestamp} --java-version {java_version} > "$OUT"'
-        ).format(target=gen_buck_info_target, version=version, timestamp=timestamp, java_version=java_version)
+        ).format(target = gen_buck_info_target, version = version, timestamp = timestamp, java_version = java_version)
     else:
-        return "$(exe {target}) --java-version {java_version} > $OUT".format(target=gen_buck_info_target, java_version=java_version)
+        return "$(exe {target}) --java-version {java_version} > $OUT".format(target = gen_buck_info_target, java_version = java_version)

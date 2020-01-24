@@ -3,12 +3,6 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 java_immutables_library(
     name = "cli",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//src/com/facebook/buck/core/model/actiongraph/computation:computation",
-        "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
-        "//src/com/facebook/buck/support/cli/args:args",
-        "//third-party/java/pf4j:pf4j",
-    ],
     provided_deps = [
         # Event API is loaded by the bootstrapper at runtime; don't need to depend on it strongly
         "//src/com/facebook/buck/event/api:api",
@@ -83,6 +77,7 @@ java_immutables_library(
         "//src/com/facebook/buck/core/test/event:event",
         "//src/com/facebook/buck/core/test/rule:rule",
         "//src/com/facebook/buck/core/toolchain/impl:impl",
+        "//src/com/facebook/buck/core/toolchain/rule:rule",
         "//src/com/facebook/buck/core/util/graph:graph",
         "//src/com/facebook/buck/core/util/immutables:immutables",
         "//src/com/facebook/buck/core/util/log:log",
@@ -237,6 +232,12 @@ java_immutables_library(
         "//third-party/java/stringtemplate:stringtemplate",
         "//third-party/java/thrift:libthrift",
     ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/model/actiongraph/computation:computation",
+        "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
+        "//src/com/facebook/buck/support/cli/args:args",
+        "//third-party/java/pf4j:pf4j",
+    ],
 )
 
 java_binary(
@@ -266,6 +267,7 @@ java_binary(
         "//src/com/facebook/buck/core/rules/configsetting:configsetting",
         "//src/com/facebook/buck/core/rules/impl:impl",
         "//src/com/facebook/buck/core/rules/platform:platform",
+        "//src/com/facebook/buck/core/toolchain/rule:rule",
         "//src/com/facebook/buck/core/util/graph:graph",
         "//src/com/facebook/buck/core/util/immutables:immutables",
         "//src/com/facebook/buck/counters:counters",

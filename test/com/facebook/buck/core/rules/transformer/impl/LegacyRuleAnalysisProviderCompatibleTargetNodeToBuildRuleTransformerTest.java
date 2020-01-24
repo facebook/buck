@@ -38,11 +38,11 @@ import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
+import com.facebook.buck.core.rules.actions.ActionExecutionResult;
 import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.core.rules.actions.DefaultActionRegistry;
 import com.facebook.buck.core.rules.actions.FakeAction;
 import com.facebook.buck.core.rules.actions.FakeActionAnalysisRegistry;
-import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.analysis.computation.RuleAnalysisGraph;
 import com.facebook.buck.core.rules.analysis.impl.FakeBuiltInProvider;
@@ -56,6 +56,7 @@ import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.impl.RuleAnalysisLegacyBuildRuleView;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.collect.impl.TestProviderInfoCollectionImpl;
+import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -68,6 +69,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.devtools.build.lib.syntax.SkylarkDict;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -136,6 +138,19 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
             targetNode));
   }
 
+  private static class FakeTargetNodeRuleDescription implements RuleDescription<FakeTargetNodeArg> {
+    @Override
+    public ProviderInfoCollection ruleImpl(
+        RuleAnalysisContext context, BuildTarget target, FakeTargetNodeArg args) {
+      return TestProviderInfoCollectionImpl.builder().build();
+    }
+
+    @Override
+    public Class<FakeTargetNodeArg> getConstructorArgType() {
+      return FakeTargetNodeArg.class;
+    }
+  };
+
   @Test
   public void transformDelegatesWhenNewDescription() throws ActionCreationException {
     BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
@@ -143,19 +158,7 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
     TargetNodeFactory nodeCopier = new TargetNodeFactory(new DefaultTypeCoercerFactory());
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
-    RuleDescription<?> description =
-        new RuleDescription<FakeTargetNodeArg>() {
-          @Override
-          public ProviderInfoCollection ruleImpl(
-              RuleAnalysisContext context, BuildTarget target, FakeTargetNodeArg args) {
-            return TestProviderInfoCollectionImpl.builder().build();
-          }
-
-          @Override
-          public Class<FakeTargetNodeArg> getConstructorArgType() {
-            return FakeTargetNodeArg.class;
-          }
-        };
+    FakeTargetNodeRuleDescription description = new FakeTargetNodeRuleDescription();
 
     TargetNode<? extends BuildRuleArg> targetNode =
         nodeCopier.createFromObject(
@@ -188,8 +191,7 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
         ImmutableSortedSet.of(),
         ImmutableSortedSet.of(artifact),
         (srcs, ins, outs, ctx) ->
-            ImmutableActionExecutionSuccess.of(
-                Optional.empty(), Optional.empty(), ImmutableList.of()));
+            ActionExecutionResult.success(Optional.empty(), Optional.empty(), ImmutableList.of()));
 
     AtomicBoolean ruleAnalysisCalled = new AtomicBoolean();
     RuleAnalysisGraph ruleAnalysisComputation =
@@ -199,7 +201,9 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
               assertSame(target, ruleAnalysisKey.getBuildTarget());
               return ImmutableFakeRuleAnalysisResultImpl.of(
                   target,
-                  TestProviderInfoCollectionImpl.builder().build(),
+                  TestProviderInfoCollectionImpl.builder()
+                      .build(
+                          new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableSet.of(artifact))),
                   fakeActionAnalysisRegistry.getRegistered().entrySet().stream()
                       .collect(
                           ImmutableMap.toImmutableMap(
@@ -239,6 +243,7 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
             target, BuildPaths.getGenDir(fakeFilesystem, target).resolve(output)),
         rule.getSourcePathToOutput());
     assertEquals(ImmutableSet.of(), rule.getBuildDeps());
+    assertEquals(rule.getType(), "fake_target_node");
 
     assertThat(rule, Matchers.instanceOf(RuleAnalysisLegacyBuildRuleView.class));
   }

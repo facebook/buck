@@ -49,7 +49,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxHeaders;
@@ -110,7 +110,6 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
-import org.immutables.value.Value;
 
 public class AppleLibraryDescription
     implements DescriptionWithTargetGraph<AppleLibraryDescriptionArg>,
@@ -271,7 +270,6 @@ public class AppleLibraryDescription
   public Optional<BuildRule> createSwiftBuildRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       AppleNativeTargetDescriptionArg args,
@@ -345,7 +343,6 @@ public class AppleLibraryDescription
                     buildTarget,
                     cellRoots,
                     graphBuilder,
-                    params,
                     args,
                     projectFilesystem,
                     cxxPlatform,
@@ -377,7 +374,6 @@ public class AppleLibraryDescription
         createSwiftBuildRule(
             buildTarget,
             context.getProjectFilesystem(),
-            params,
             graphBuilder,
             context.getCellPathResolver(),
             args,
@@ -1018,8 +1014,7 @@ public class AppleLibraryDescription
     }
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractAppleLibraryDescriptionArg
       extends AppleNativeTargetDescriptionArg, HasContacts {
     Optional<SourcePath> getInfoPlist();

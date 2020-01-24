@@ -24,6 +24,7 @@ import com.facebook.buck.core.description.attr.ImplicitInputsInferringDescriptio
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.targetgraph.NodeCopier;
@@ -207,7 +208,7 @@ public class TargetNodeFactory implements NodeCopier {
     // ImplicitDepsInferringDescriptions may give different results for deps based on flavors.
     //
     // Note that this method strips away selected versions, and may be buggy because of it.
-    return ImmutableTargetNode.of(
+    return TargetNodeImpl.of(
         buildTarget,
         this,
         description,
@@ -246,6 +247,8 @@ public class TargetNodeFactory implements NodeCopier {
               pathsBuilder.add((Path) object);
             } else if (object instanceof BuildTarget) {
               depsBuilder.add((BuildTarget) object);
+            } else if (object instanceof BuildTargetWithOutputs) {
+              depsBuilder.add(((BuildTargetWithOutputs) object).getBuildTarget());
             }
           },
           constructorArg);

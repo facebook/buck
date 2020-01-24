@@ -1,18 +1,6 @@
 java_library(
     name = "impl",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//src/com/facebook/buck/artifact_cache:artifact_cache",
-        "//src/com/facebook/buck/core/build/action/resolver:resolver",
-        "//src/com/facebook/buck/core/build/engine:engine",
-        "//src/com/facebook/buck/core/build/engine/config:config",
-        "//src/com/facebook/buck/core/cell:cell",
-        "//src/com/facebook/buck/core/rules:rules",
-        "//src/com/facebook/buck/core/rules/build/strategy:strategy",
-        "//src/com/facebook/buck/rules/keys:keys",
-        "//src/com/facebook/buck/step:step",
-        "//src/com/facebook/buck/util:util",
-    ],
     tests = [
         "//test/com/facebook/buck/core/build/engine/impl:impl",
     ],
@@ -36,5 +24,17 @@ java_library(
         "//third-party/java/infer-annotations:infer-annotations",
         "//third-party/java/jackson:jackson-annotations",
         "//third-party/java/jackson:jackson-databind",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/artifact_cache:artifact_cache",
+        "//src/com/facebook/buck/core/build/action/resolver:resolver",
+        "//src/com/facebook/buck/core/build/engine:engine",
+        "//src/com/facebook/buck/core/build/engine/config:config",
+        "//src/com/facebook/buck/core/cell:cell",
+        "//src/com/facebook/buck/core/rules:rules",
+        "//src/com/facebook/buck/core/rules/build/strategy:strategy",
+        "//src/com/facebook/buck/rules/keys:keys",
+        "//src/com/facebook/buck/step:step",
+        "//src/com/facebook/buck/util:util",
     ],
 )

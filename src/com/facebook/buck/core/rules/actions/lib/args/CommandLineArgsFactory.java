@@ -17,8 +17,10 @@
 package com.facebook.buck.core.rules.actions.lib.args;
 
 import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.artifact.OutputArtifact;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.build.lib.actions.CommandLineItem;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * Factory class that returns more efficient implementations of {@link CommandLineArgs} depending on
@@ -29,16 +31,46 @@ import com.google.devtools.build.lib.actions.CommandLineItem;
  */
 public class CommandLineArgsFactory {
   /**
+   * Throws an exception if the {@code formatString} is not a valid stringification format string
+   */
+  public static String validateFormatString(String formatString) throws CommandLineArgException {
+    if (formatString.equals(CommandLineArgs.DEFAULT_FORMAT_STRING)) {
+      return CommandLineArgs.DEFAULT_FORMAT_STRING;
+    }
+    if (StringUtils.countMatches(formatString, "%s") == 0) {
+      throw new CommandLineArgException(
+          "format string '%s' must be a format string with one or more occurrences of %%%%s",
+          formatString.replace("%s", "%%s"));
+    }
+    return formatString;
+  }
+
+  /**
    * Create a {@link CommandLineArgs} instance for a list of arguments
    *
    * @param args the list of primitive command line args
    * @return A {@link CommandLineArgs} object for this collection of args
    * @throws CommandLineArgException if {@code args} contains an arg with an invalid type
    */
-  @SuppressWarnings("unchecked")
   public static CommandLineArgs from(ImmutableList<Object> args) throws CommandLineArgException {
+    return from(args, CommandLineArgs.DEFAULT_FORMAT_STRING);
+  }
+
+  /**
+   * Create a {@link CommandLineArgs} instance for a list of arguments
+   *
+   * @param args the list of primitive command line args
+   * @param formatString the format string to apply after stringifying arguments
+   * @return A {@link CommandLineArgs} object for this collection of args
+   * @throws CommandLineArgException if {@code args} contains an arg with an invalid type
+   */
+  @SuppressWarnings("unchecked")
+  public static CommandLineArgs from(ImmutableList<Object> args, String formatString)
+      throws CommandLineArgException {
     boolean foundCommandLineArg = false;
     boolean foundNonCommandLineArg = false;
+
+    String validatedFormatString = validateFormatString(formatString);
 
     // Yes, this means we loop over args.size() more than necessary sometimes. However, it also
     // allows us to do some quick conversions below. Worst case is 2N iterations, but best case is
@@ -48,8 +80,18 @@ public class CommandLineArgsFactory {
       if (arg instanceof String
           || arg instanceof Integer
           || arg instanceof CommandLineItem
-          || arg instanceof Artifact) {
+          || arg instanceof OutputArtifact) {
         foundNonCommandLineArg = true;
+      } else if (arg instanceof Artifact) {
+        foundNonCommandLineArg = true;
+        Artifact artifact = (Artifact) arg;
+        if (!artifact.isBound()) {
+          throw new CommandLineArgException(
+              "Artifact %s was not used as the output to an action. Either make it the output of "
+                  + "an action first to specify that it should be an input, or call "
+                  + "`.as_output()` on it when adding it to indicate it should be an output.",
+              arg);
+        }
       } else if (arg instanceof CommandLineArgs) {
         foundCommandLineArg = true;
       } else {
@@ -67,7 +109,7 @@ public class CommandLineArgsFactory {
                   if (arg instanceof CommandLineArgs) {
                     return (CommandLineArgs) arg;
                   } else {
-                    return new ListCommandLineArgs(ImmutableList.of(arg));
+                    return new ListCommandLineArgs(ImmutableList.of(arg), validatedFormatString);
                   }
                 })
             .forEach(builder::add);
@@ -81,6 +123,6 @@ public class CommandLineArgsFactory {
       }
     }
 
-    return new ListCommandLineArgs(args);
+    return new ListCommandLineArgs(args, validatedFormatString);
   }
 }

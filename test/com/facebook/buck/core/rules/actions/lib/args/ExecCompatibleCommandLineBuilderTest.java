@@ -21,11 +21,13 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.rules.providers.lib.ImmutableRunInfo;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedMap;
 import java.nio.file.Paths;
-import java.util.stream.Stream;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -45,30 +47,14 @@ public class ExecCompatibleCommandLineBuilderTest {
             PathSourcePath.of(filesystem, Paths.get("subdir", "some_bin")));
 
     CommandLineArgs args1 =
-        new CommandLineArgs() {
-          @Override
-          public Stream<Object> getArgs() {
-            return ImmutableList.<Object>of(path1, path2, 1, "foo", "bar").stream();
-          }
-
-          @Override
-          public int getEstimatedArgsCount() {
-            return 5;
-          }
-        };
+        new ImmutableRunInfo(
+            ImmutableSortedMap.of(),
+            CommandLineArgsFactory.from(ImmutableList.of(path1, path2, 1, "foo", "bar")));
 
     CommandLineArgs args2 =
-        new CommandLineArgs() {
-          @Override
-          public Stream<Object> getArgs() {
-            return ImmutableList.<Object>of(path3, path2, 1, "foo", "bar").stream();
-          }
-
-          @Override
-          public int getEstimatedArgsCount() {
-            return 5;
-          }
-        };
+        new ImmutableRunInfo(
+            ImmutableSortedMap.of("FOO", "bar"),
+            CommandLineArgsFactory.from(ImmutableList.of(path3, path2, 1, "foo", "bar")));
 
     assertEquals(
         ImmutableList.of(
@@ -80,6 +66,8 @@ public class ExecCompatibleCommandLineBuilderTest {
         new ExecCompatibleCommandLineBuilder(new ArtifactFilesystem(filesystem))
             .build(args1)
             .getCommandLineArgs());
+    CommandLine cli =
+        new ExecCompatibleCommandLineBuilder(new ArtifactFilesystem(filesystem)).build(args2);
     assertEquals(
         ImmutableList.of(
             filesystem.resolve(Paths.get("subdir", "some_bin")).toAbsolutePath().toString(),
@@ -87,9 +75,8 @@ public class ExecCompatibleCommandLineBuilderTest {
             "1",
             "foo",
             "bar"),
-        new ExecCompatibleCommandLineBuilder(new ArtifactFilesystem(filesystem))
-            .build(args2)
-            .getCommandLineArgs());
+        cli.getCommandLineArgs());
+    assertEquals(ImmutableSortedMap.of("FOO", "bar"), cli.getEnvironmentVariables());
   }
 
   @Test
@@ -97,22 +84,36 @@ public class ExecCompatibleCommandLineBuilderTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     CommandLineArgs args =
-        new CommandLineArgs() {
-          @Override
-          public Stream<Object> getArgs() {
-            return ImmutableList.<Object>of(ImmutableList.of("foo")).stream();
-          }
-
-          @Override
-          public int getEstimatedArgsCount() {
-            return 1;
-          }
-        };
+        new ImmutableRunInfo(
+            ImmutableSortedMap.of(),
+            new ListCommandLineArgs(
+                ImmutableList.of(ImmutableList.of("foo")), CommandLineArgs.DEFAULT_FORMAT_STRING));
 
     thrown.expect(CommandLineArgException.class);
 
     new ExecCompatibleCommandLineBuilder(new ArtifactFilesystem(filesystem))
         .build(args)
         .getCommandLineArgs();
+  }
+
+  @Test
+  public void throwsOnDuplicateEnvironmentVariables() {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    CommandLineArgs args =
+        CommandLineArgsFactory.from(
+            ImmutableList.of(
+                new ImmutableRunInfo(
+                    ImmutableSortedMap.of("foo", "foo_val1", "bar", "bar_val"),
+                    CommandLineArgsFactory.from(ImmutableList.of("arg"))),
+                new ImmutableRunInfo(
+                    ImmutableSortedMap.of("foo", "foo_val2", "baz", "baz_val"),
+                    CommandLineArgsFactory.from(ImmutableList.of("arg")))));
+
+    thrown.expect(HumanReadableException.class);
+    thrown.expectMessage(
+        "Error getting commandline arguments: Multiple entries with same key: foo=");
+    new ExecCompatibleCommandLineBuilder(new ArtifactFilesystem(filesystem))
+        .build(args)
+        .getEnvironmentVariables();
   }
 }

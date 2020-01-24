@@ -29,10 +29,9 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
+import com.facebook.buck.core.rules.actions.ActionExecutionResult;
 import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
 import com.facebook.buck.core.rules.actions.FakeAction;
-import com.facebook.buck.core.rules.actions.ImmutableActionExecutionFailure;
-import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -44,7 +43,7 @@ import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystemFactory;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
-import com.facebook.buck.step.ImmutableStepExecutionResult;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.FakeProcessExecutor;
@@ -83,7 +82,7 @@ public class ActionExecutionStepTest {
               Iterables.getOnlyElement(outputs).asBound().getSourcePath());
           ctx.logError(new RuntimeException("message"), "my error %s", 1);
           ctx.postEvent(ConsoleEvent.info("my test info"));
-          return ImmutableActionExecutionSuccess.of(
+          return ActionExecutionResult.success(
               Optional.empty(), Optional.of("my std err"), ImmutableList.of());
         };
 
@@ -104,25 +103,20 @@ public class ActionExecutionStepTest {
         new CapturingConsoleEventListener();
     testEventBus.register(consoleEventListener);
     assertEquals(
-        ImmutableStepExecutionResult.builder()
-            .setExitCode(0)
-            .setStderr(Optional.of("my std err"))
-            .build(),
+        StepExecutionResult.builder().setExitCode(0).setStderr(Optional.of("my std err")).build(),
         step.execute(
-            ExecutionContext.of(
-                Console.createNullConsole(),
-                testEventBus,
-                Platform.UNKNOWN,
-                ImmutableMap.of(),
-                new FakeJavaPackageFinder(),
-                ImmutableMap.of(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                TestCellPathResolver.get(projectFilesystem),
-                baseCell,
-                new FakeProcessExecutor(),
-                new FakeProjectFilesystemFactory())));
+            ExecutionContext.builder()
+                .setConsole(Console.createNullConsole())
+                .setBuckEventBus(testEventBus)
+                .setPlatform(Platform.UNKNOWN)
+                .setEnvironment(ImmutableMap.of())
+                .setJavaPackageFinder(new FakeJavaPackageFinder())
+                .setExecutors(ImmutableMap.of())
+                .setCellPathResolver(TestCellPathResolver.get(projectFilesystem))
+                .setBuildCellRootPath(baseCell)
+                .setProcessExecutor(new FakeProcessExecutor())
+                .setProjectFilesystemFactory(new FakeProjectFilesystemFactory())
+                .build()));
 
     assertThat(
         consoleEventListener.getLogMessages(),
@@ -142,8 +136,8 @@ public class ActionExecutionStepTest {
     BuckEventBus testEventBus = BuckEventBusForTests.newInstance();
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//my:foo");
 
-    ImmutableActionExecutionFailure result =
-        ImmutableActionExecutionFailure.of(
+    ActionExecutionResult.ActionExecutionFailure result =
+        ActionExecutionResult.failure(
             Optional.empty(), Optional.of("my std err"), ImmutableList.of(), Optional.empty());
 
     ActionRegistryForTests actionFactoryForTests = new ActionRegistryForTests(buildTarget);
@@ -163,25 +157,20 @@ public class ActionExecutionStepTest {
 
     assertFalse(projectFilesystem.exists(packagePath));
     assertEquals(
-        ImmutableStepExecutionResult.builder()
-            .setExitCode(-1)
-            .setStderr(Optional.of("my std err"))
-            .build(),
+        StepExecutionResult.builder().setExitCode(-1).setStderr(Optional.of("my std err")).build(),
         step.execute(
-            ExecutionContext.of(
-                Console.createNullConsole(),
-                testEventBus,
-                Platform.UNKNOWN,
-                ImmutableMap.of(),
-                new FakeJavaPackageFinder(),
-                ImmutableMap.of(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                TestCellPathResolver.get(projectFilesystem),
-                baseCell,
-                new FakeProcessExecutor(),
-                new DefaultProjectFilesystemFactory())));
+            ExecutionContext.builder()
+                .setConsole(Console.createNullConsole())
+                .setBuckEventBus(testEventBus)
+                .setPlatform(Platform.UNKNOWN)
+                .setEnvironment(ImmutableMap.of())
+                .setJavaPackageFinder(new FakeJavaPackageFinder())
+                .setExecutors(ImmutableMap.of())
+                .setCellPathResolver(TestCellPathResolver.get(projectFilesystem))
+                .setBuildCellRootPath(baseCell)
+                .setProcessExecutor(new FakeProcessExecutor())
+                .setProjectFilesystemFactory(new DefaultProjectFilesystemFactory())
+                .build()));
     assertTrue(projectFilesystem.isDirectory(packagePath));
   }
 
@@ -195,8 +184,8 @@ public class ActionExecutionStepTest {
     BuckEventBus testEventBus = BuckEventBusForTests.newInstance();
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//my:foo");
 
-    ImmutableActionExecutionFailure result =
-        ImmutableActionExecutionFailure.of(
+    ActionExecutionResult.ActionExecutionFailure result =
+        ActionExecutionResult.failure(
             Optional.empty(), Optional.of("my std err"), ImmutableList.of(), Optional.empty());
 
     ActionRegistryForTests actionFactoryForTests = new ActionRegistryForTests(buildTarget);
@@ -219,25 +208,20 @@ public class ActionExecutionStepTest {
 
     assertTrue(projectFilesystem.exists(expectedPath));
     assertEquals(
-        ImmutableStepExecutionResult.builder()
-            .setExitCode(-1)
-            .setStderr(Optional.of("my std err"))
-            .build(),
+        StepExecutionResult.builder().setExitCode(-1).setStderr(Optional.of("my std err")).build(),
         step.execute(
-            ExecutionContext.of(
-                Console.createNullConsole(),
-                testEventBus,
-                Platform.UNKNOWN,
-                ImmutableMap.of(),
-                new FakeJavaPackageFinder(),
-                ImmutableMap.of(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                TestCellPathResolver.get(projectFilesystem),
-                baseCell,
-                new FakeProcessExecutor(),
-                new DefaultProjectFilesystemFactory())));
-    assertFalse(projectFilesystem.exists(expectedPath));
+            ExecutionContext.builder()
+                .setConsole(Console.createNullConsole())
+                .setBuckEventBus(testEventBus)
+                .setPlatform(Platform.UNKNOWN)
+                .setEnvironment(ImmutableMap.of())
+                .setJavaPackageFinder(new FakeJavaPackageFinder())
+                .setExecutors(ImmutableMap.of())
+                .setCellPathResolver(TestCellPathResolver.get(projectFilesystem))
+                .setBuildCellRootPath(baseCell)
+                .setProcessExecutor(new FakeProcessExecutor())
+                .setProjectFilesystemFactory(new FakeProjectFilesystemFactory())
+                .build()));
+    assertFalse("file must exist: " + expectedPath, projectFilesystem.exists(expectedPath));
   }
 }

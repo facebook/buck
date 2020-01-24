@@ -29,8 +29,6 @@ import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -58,7 +56,6 @@ public class ExternallyBuiltApplePackageTest {
   private String bundleLocation;
   private BuildTarget buildTarget;
   private ProjectFilesystem projectFilesystem;
-  private BuildRuleParams params;
   private ActionGraphBuilder graphBuilder;
   private ExternallyBuiltApplePackage.ApplePackageConfigAndPlatformInfo config;
 
@@ -68,7 +65,6 @@ public class ExternallyBuiltApplePackageTest {
     bundleLocation = "Fake/Bundle/Location";
     buildTarget = BuildTargetFactory.newInstance("//foo", "package");
     projectFilesystem = new FakeProjectFilesystem();
-    params = TestBuildRuleParams.create();
     graphBuilder = new TestActionGraphBuilder();
     config =
         ImmutableApplePackageConfigAndPlatformInfo.of(
@@ -84,7 +80,6 @@ public class ExternallyBuiltApplePackageTest {
             projectFilesystem,
             new NoSandboxExecutionStrategy(),
             graphBuilder,
-            params,
             config,
             FakeSourcePath.of(bundleLocation),
             true,
@@ -116,7 +111,6 @@ public class ExternallyBuiltApplePackageTest {
             projectFilesystem,
             new NoSandboxExecutionStrategy(),
             graphBuilder,
-            params,
             config,
             FakeSourcePath.of("Fake/Bundle/Location"),
             true,
@@ -139,7 +133,6 @@ public class ExternallyBuiltApplePackageTest {
             projectFilesystem,
             new NoSandboxExecutionStrategy(),
             graphBuilder,
-            params,
             config,
             FakeSourcePath.of("Fake/Bundle/Location"),
             true,
@@ -167,8 +160,7 @@ public class ExternallyBuiltApplePackageTest {
                 projectFilesystem,
                 new NoSandboxExecutionStrategy(),
                 graphBuilder,
-                params,
-                config.withPlatform(config.getPlatform().withBuildVersion(input)),
+                config.withPlatform(config.getPlatform().withBuildVersion(Optional.of(input))),
                 FakeSourcePath.of("Fake/Bundle/Location"),
                 true,
                 Optional.empty(),
@@ -187,7 +179,6 @@ public class ExternallyBuiltApplePackageTest {
                 projectFilesystem,
                 new NoSandboxExecutionStrategy(),
                 graphBuilder,
-                params,
                 config.withPlatform(
                     config
                         .getPlatform()

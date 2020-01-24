@@ -3,11 +3,6 @@ load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
 java_library_with_plugins(
     name = "impl",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//src/com/facebook/buck/android:utils",
-        "//src/com/facebook/buck/android/toolchain:toolchain",
-        "//src/com/facebook/buck/android/toolchain/ndk:ndk",
-    ],
     tests = [
         "//test/com/facebook/buck/android/toolchain/impl:impl",
     ],
@@ -31,5 +26,10 @@ java_library_with_plugins(
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/environment:platform",
         "//third-party/java/guava:guava",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/android:utils",
+        "//src/com/facebook/buck/android/toolchain:toolchain",
+        "//src/com/facebook/buck/android/toolchain/ndk:ndk",
     ],
 )

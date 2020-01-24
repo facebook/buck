@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -84,7 +85,8 @@ abstract class FlavorSearchTargetNodeFinder {
       if (!flavorMapRawBuilder.containsKey(unflavoredTarget)) {
         flavorMapRawBuilder.put(unflavoredTarget, new ArrayList<>());
       }
-      flavorMapRawBuilder.get(unflavoredTarget).add(baseTarget.getFlavors());
+      Objects.requireNonNull(flavorMapRawBuilder.get(unflavoredTarget))
+          .add(baseTarget.getFlavors());
     }
     ImmutableMap.Builder<UnflavoredBuildTarget, ImmutableSet<ImmutableSet<Flavor>>>
         flavorMapBuilder = ImmutableMap.builder();

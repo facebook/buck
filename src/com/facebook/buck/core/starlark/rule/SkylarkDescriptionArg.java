@@ -151,13 +151,29 @@ public class SkylarkDescriptionArg implements SkylarkDescriptionArgBuilder, Buil
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public ImmutableSet<SourcePath> getLicenses() {
-    throw new AssertionError("not implemented");
+    // Unchecked as we validate this type with the Attribute
+    return ((ImmutableSortedSet<SourcePath>) getPostCoercionValue("licenses"));
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public ImmutableSortedSet<String> getLabels() {
-    throw new AssertionError("not implemented");
+    // Unchecked as we validate this type with the Attribute
+    return (ImmutableSortedSet<String>) getPostCoercionValue("labels");
+  }
+
+  /** @return contacts for this rule, or an empty set of `contacts` was not set */
+  @SuppressWarnings("unchecked")
+  public ImmutableSortedSet<String> getContacts() {
+    // Unchecked as we validate this type with the Attribute
+    Object rawValue = getPostCoercionValue("contacts");
+    if (rawValue == null) {
+      return ImmutableSortedSet.of();
+    } else {
+      return (ImmutableSortedSet<String>) rawValue;
+    }
   }
 
   @Override

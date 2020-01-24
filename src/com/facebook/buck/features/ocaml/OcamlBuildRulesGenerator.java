@@ -131,14 +131,13 @@ public class OcamlBuildRulesGenerator {
       rules.add(generateDebugLauncherRule());
     }
 
-    return OcamlGeneratedBuildRules.builder()
-        .setRules(rules.build())
-        .setNativeCompileDeps(ImmutableSortedSet.copyOf(nativeCompileDeps.build()))
-        .setBytecodeCompileDeps(ImmutableSortedSet.copyOf(bytecodeCompileDeps.build()))
-        .setObjectFiles(objFiles)
-        .setBytecodeLink(bytecodeLink)
-        .setOcamlContext(ocamlContext)
-        .build();
+    return ImmutableOcamlGeneratedBuildRules.of(
+        rules.build(),
+        ImmutableSortedSet.copyOf(nativeCompileDeps.build()),
+        ImmutableSortedSet.copyOf(bytecodeCompileDeps.build()),
+        objFiles,
+        bytecodeLink,
+        ocamlContext);
   }
 
   private static String getCOutputName(String name) {

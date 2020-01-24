@@ -25,7 +25,7 @@ import com.facebook.buck.core.graph.transformation.GraphTransformationEngine;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.impl.DefaultGraphTransformationEngine;
 import com.facebook.buck.core.graph.transformation.impl.GraphComputationStage;
-import com.facebook.buck.core.model.ImmutableCellRelativePath;
+import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern.Kind;
 import com.facebook.buck.core.parser.buildtargetpattern.ImmutableBuildTargetPattern;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -497,9 +497,7 @@ public abstract class AbstractBuildPackageComputationTest {
       CanonicalCellName cell, Kind kind, String basePath, String targetName) {
     return ImmutableBuildTargetPatternToBuildPackagePathKey.of(
         ImmutableBuildTargetPattern.of(
-            new ImmutableCellRelativePath(cell, ForwardRelativePath.of(basePath)),
-            kind,
-            targetName));
+            CellRelativePath.of(cell, ForwardRelativePath.of(basePath)), kind, targetName));
   }
 
   public BuildPackagePaths transform(

@@ -19,26 +19,35 @@ package com.facebook.buck.core.rules.impl;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.core.artifact.BoundArtifact;
+import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
+import com.facebook.buck.core.rules.attr.HasMultipleOutputs;
 import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
+import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.impl.ActionExecutionStep;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
+import com.google.devtools.build.lib.syntax.SkylarkDict;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -51,13 +60,14 @@ import javax.annotation.Nullable;
  * {@link com.facebook.buck.rules.modern.ModernBuildRule}
  */
 public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule
-    implements SupportsInputBasedRuleKey {
+    implements SupportsInputBasedRuleKey, HasMultipleOutputs {
 
   private final String type;
   @AddToRuleKey private final Optional<Action> action;
   private Supplier<SortedSet<BuildRule>> buildDepsSupplier;
   private BuildRuleResolver ruleResolver;
   private final ProviderInfoCollection providerInfoCollection;
+  private final Supplier<ImmutableSet<OutputLabel>> outputLabels;
 
   /**
    * @param type the type of this {@link BuildRule}
@@ -65,7 +75,7 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule
    * @param action the action of the result for which we want to provide the {@link BuildRule} view
    * @param ruleResolver the current {@link BuildRuleResolver} to query dependent rules
    * @param projectFilesystem the filesystem
-   * @param providerInfoCollection
+   * @param providerInfoCollection the providers returned by this build target
    */
   public RuleAnalysisLegacyBuildRuleView(
       String type,
@@ -80,6 +90,7 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule
     this.ruleResolver = ruleResolver;
     this.providerInfoCollection = providerInfoCollection;
     this.buildDepsSupplier = MoreSuppliers.memoize(this::getBuildDepsSupplier);
+    this.outputLabels = MoreSuppliers.memoize(this::getOutputLabelsSupplier);
   }
 
   @Override
@@ -116,9 +127,9 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule
       return ImmutableList.of();
     }
 
-    for (Artifact artifact : action.get().getOutputs()) {
+    for (OutputArtifact artifact : action.get().getOutputs()) {
       buildableContext.recordArtifact(
-          Objects.requireNonNull(artifact.asBound().asBuildArtifact())
+          Objects.requireNonNull(artifact.getArtifact().asBound().asBuildArtifact())
               .getSourcePath()
               .getResolvedPath());
     }
@@ -129,10 +140,43 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule
   @Nullable
   @Override
   public SourcePath getSourcePathToOutput() {
-    // TODO: support multiple outputs
-    return action
-        .map(a -> Iterables.getOnlyElement(a.getOutputs()).asBound().getSourcePath())
-        .orElse(null);
+    ImmutableSortedSet<SourcePath> output = getSourcePathToOutput(OutputLabel.defaultLabel());
+    if (output.isEmpty()) {
+      return null;
+    }
+    return Iterables.getOnlyElement(output);
+  }
+
+  @Override
+  public ImmutableSortedSet<SourcePath> getSourcePathToOutput(OutputLabel outputLabel) {
+    if (outputLabel.isDefault()) {
+      return convertToSourcePaths(providerInfoCollection.getDefaultInfo().defaultOutputs());
+    }
+    SkylarkDict<String, Set<Artifact>> namedOutputs =
+        providerInfoCollection.getDefaultInfo().namedOutputs();
+    Set<Artifact> artifacts = namedOutputs.get(OutputLabel.internals().getLabel(outputLabel));
+    if (artifacts != null) {
+      return convertToSourcePaths(artifacts);
+    }
+    throw new HumanReadableException(
+        "Cannot find output label [%s] for target %s", outputLabel, getBuildTarget());
+  }
+
+  @Override
+  public ImmutableSet<OutputLabel> getOutputLabels() {
+    return outputLabels.get();
+  }
+
+  private ImmutableSet<OutputLabel> getOutputLabelsSupplier() {
+    DefaultInfo defaultInfo = providerInfoCollection.getDefaultInfo();
+    ImmutableSet.Builder<OutputLabel> builder =
+        ImmutableSet.builderWithExpectedSize(defaultInfo.namedOutputs().size() + 1);
+    defaultInfo
+        .namedOutputs()
+        .keySet()
+        .forEach(outputLabel -> builder.add(OutputLabel.of(outputLabel)));
+    builder.add(OutputLabel.defaultLabel());
+    return builder.build();
   }
 
   @Override
@@ -149,5 +193,11 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule
   /** @return the {@link ProviderInfoCollection} returned from rule analysis */
   public ProviderInfoCollection getProviderInfos() {
     return providerInfoCollection;
+  }
+
+  private static ImmutableSortedSet<SourcePath> convertToSourcePaths(Set<Artifact> artifacts) {
+    return artifacts.stream()
+        .map(artifact -> artifact.asBound().getSourcePath())
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 }

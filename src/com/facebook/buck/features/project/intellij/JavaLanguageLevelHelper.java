@@ -18,7 +18,7 @@ package com.facebook.buck.features.project.intellij;
 
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
-import com.facebook.buck.jvm.java.AbstractJavacLanguageLevelOptions;
+import com.facebook.buck.jvm.java.JavacLanguageLevelOptions;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.infer.annotation.PropagatesNullable;
 import java.util.Optional;
@@ -34,7 +34,7 @@ public final class JavaLanguageLevelHelper {
     JvmLibraryArg arg = targetNode.getConstructorArg();
 
     if (arg.getSource().isPresent()) {
-      AbstractJavacLanguageLevelOptions languageLevelOptions =
+      JavacLanguageLevelOptions languageLevelOptions =
           projectConfig.getJavaBuckConfig().getJavacLanguageLevelOptions();
       String defaultSourceLevel = languageLevelOptions.getSourceLevel();
       String defaultTargetLevel = languageLevelOptions.getTargetLevel();

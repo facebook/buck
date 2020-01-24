@@ -38,6 +38,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimaps;
 import java.nio.file.Path;
@@ -376,16 +377,17 @@ public final class CxxInferEnhancer {
             cxxBuckConfig,
             cxxPlatform,
             preprocessorInputs,
-            Multimaps.transformValues(
-                CxxFlags.getLanguageFlagsWithMacros(
-                    args.getCompilerFlags(),
-                    args.getPlatformCompilerFlags(),
-                    args.getLangCompilerFlags(),
-                    args.getLangPlatformCompilerFlags(),
-                    cxxPlatform),
-                CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
-                        target, cellRoots, graphBuilder, cxxPlatform)
-                    ::convert),
+            ImmutableMultimap.copyOf(
+                Multimaps.transformValues(
+                    CxxFlags.getLanguageFlagsWithMacros(
+                        args.getCompilerFlags(),
+                        args.getPlatformCompilerFlags(),
+                        args.getLangCompilerFlags(),
+                        args.getLangPlatformCompilerFlags(),
+                        cxxPlatform),
+                    CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
+                            target, cellRoots, graphBuilder, cxxPlatform)
+                        ::convert)),
             args.getPrefixHeader(),
             args.getPrecompiledHeader(),
             PicType.PDC);

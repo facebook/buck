@@ -18,6 +18,7 @@ package com.facebook.buck.file;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -55,15 +56,14 @@ public class HttpFileBinaryTest {
     ImmutableList<URI> uris = ImmutableList.of(URI.create("https://example.com"));
     HashCode sha256 =
         HashCode.fromString("f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2");
-    String out = "foo.exe";
 
     HttpFileBinary binary =
-        new HttpFileBinary(target, filesysten, params, downloader, uris, sha256, out);
+        new HttpFileBinary(target, filesysten, params, downloader, uris, sha256, "foo.exe");
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     graphBuilder.addToIndex(binary);
 
-    Tool tool = binary.getExecutableCommand();
+    Tool tool = binary.getExecutableCommand(OutputLabel.defaultLabel());
 
     Path expectedPath =
         filesysten.resolve(

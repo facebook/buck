@@ -24,7 +24,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -114,8 +114,7 @@ public class PrebuiltOcamlLibraryDescription
         allDeps);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractPrebuiltOcamlLibraryDescriptionArg
       implements BuildRuleArg, HasDeclaredDeps {
 

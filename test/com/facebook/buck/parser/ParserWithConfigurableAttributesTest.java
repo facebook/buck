@@ -52,7 +52,7 @@ import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwar
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.ImmutableCellRelativePath;
+import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -94,7 +94,7 @@ import com.facebook.buck.parser.exceptions.MissingBuildFileException;
 import com.facebook.buck.parser.spec.BuildFileSpec;
 import com.facebook.buck.parser.spec.BuildTargetSpec;
 import com.facebook.buck.parser.spec.ImmutableBuildTargetSpec;
-import com.facebook.buck.parser.spec.ImmutableTargetNodePredicateSpec;
+import com.facebook.buck.parser.spec.TargetNodePredicateSpec;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -369,7 +369,6 @@ public class ParserWithConfigurableAttributesTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void testParseBuildFilesForTargetsWithOverlappingTargets() throws Exception {
     // Execute buildTargetGraphForBuildTargets() with multiple targets that require parsing the same
     // build file.
@@ -2616,9 +2615,9 @@ public class ParserWithConfigurableAttributesTest {
                 .buildTargetGraphWithTopLevelConfigurationTargets(
                     parsingContext,
                     ImmutableList.of(
-                        ImmutableTargetNodePredicateSpec.of(
+                        TargetNodePredicateSpec.of(
                             BuildFileSpec.fromRecursivePath(
-                                new ImmutableCellRelativePath(
+                                CellRelativePath.of(
                                     parsingContext.getCell().getCanonicalName(),
                                     ForwardRelativePath.of(""))))),
                     Optional.empty())
@@ -2717,7 +2716,6 @@ public class ParserWithConfigurableAttributesTest {
 
     // We know that the ProjectBuildFileParser emits a Started event when it parses a build file.
     @Subscribe
-    @SuppressWarnings("unused")
     public void call(ParseBuckFileEvent.Started parseEvent) {
       calls++;
     }

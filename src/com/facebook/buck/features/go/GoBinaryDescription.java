@@ -30,13 +30,12 @@ import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
-import org.immutables.value.Value;
 
 public class GoBinaryDescription
     implements DescriptionWithTargetGraph<GoBinaryDescriptionArg>,
@@ -118,8 +117,7 @@ public class GoBinaryDescription
         GoToolchain.DEFAULT_NAME, toolchainTargetConfiguration, GoToolchain.class);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractGoBinaryDescriptionArg
       extends BuildRuleArg, HasDeclaredDeps, HasSrcs, HasGoLinkable {}
 }

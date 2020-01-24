@@ -17,7 +17,7 @@
 package com.facebook.buck.event.listener;
 
 import com.facebook.buck.core.model.BuildId;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.chrome_trace.ChromeTraceBuckConfig;
@@ -32,7 +32,6 @@ import com.google.common.eventbus.Subscribe;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /** Upload the buck log file to the trace endpoint when the build is finished. */
 public class LogUploaderListener implements BuckEventListener {
@@ -79,7 +78,7 @@ public class LogUploaderListener implements BuckEventListener {
     }
 
     LogUploaderListenerCloseArgs args =
-        LogUploaderListenerCloseArgs.of(
+        ImmutableLogUploaderListenerCloseArgs.of(
             traceUploadUri.get(), logDirectoryPath, logFilePath, buildId);
     BackgroundTask<LogUploaderListenerCloseArgs> task =
         ImmutableBackgroundTask.<LogUploaderListenerCloseArgs>builder()
@@ -116,19 +115,14 @@ public class LogUploaderListener implements BuckEventListener {
   }
 
   /** Task arguments passed to {@link LogUploaderListenerCloseAction}. */
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractLogUploaderListenerCloseArgs {
-    @Value.Parameter
+  @BuckStyleValue
+  abstract static class LogUploaderListenerCloseArgs {
     public abstract URI getTraceUploadURI();
 
-    @Value.Parameter
     public abstract Path getLogDirectoryPath();
 
-    @Value.Parameter
     public abstract Path getLogFilePath();
 
-    @Value.Parameter
     public abstract BuildId getBuildId();
   }
 }

@@ -37,7 +37,7 @@ import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
 import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -57,7 +57,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 import javax.annotation.Nullable;
-import org.immutables.value.Value;
 
 public class LegacyRuleDescription
     implements LegacyProviderCompatibleDescription<LegacyRuleDescriptionArg> {
@@ -163,8 +162,7 @@ public class LegacyRuleDescription
         .build(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableSet.of(artifact)));
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractLegacyRuleDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     int getVal();
   }

@@ -23,15 +23,15 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.sandbox.SandboxConfig;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.versions.VersionRoot;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -113,14 +113,13 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
     return true;
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractGenruleDescriptionArg extends AbstractGenruleDescription.CommonArg {
     // Only one of out or outs should be used. out will be deprecated and removed once outs becomes
     // stable.
     Optional<String> getOut();
 
-    Optional<ImmutableMap<String, ImmutableList<String>>> getOuts();
+    Optional<ImmutableMap<String, ImmutableSet<String>>> getOuts();
 
     Optional<Boolean> getExecutable();
 

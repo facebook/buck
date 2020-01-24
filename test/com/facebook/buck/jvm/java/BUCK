@@ -19,12 +19,6 @@ java_library(
         "OptionAccumulator.java",
         "PrebuiltJarBuilder.java",
     ],
-    exported_deps = [
-        "//src/com/facebook/buck/core/sourcepath/resolver:resolver",
-        "//src/com/facebook/buck/jvm/java:rules",
-        "//test/com/facebook/buck/core/model/targetgraph:testutil",
-        "//test/com/facebook/buck/core/rules/impl:testutil",
-    ],
     visibility = [
         "//test/...",
     ],
@@ -144,6 +138,12 @@ java_library(
         "//third-party/java/okio:okio",
         "//third-party/java/stringtemplate:stringtemplate",
         "//third-party/java/thrift:libthrift",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/sourcepath/resolver:resolver",
+        "//src/com/facebook/buck/jvm/java:rules",
+        "//test/com/facebook/buck/core/model/targetgraph:testutil",
+        "//test/com/facebook/buck/core/rules/impl:testutil",
     ],
 )
 

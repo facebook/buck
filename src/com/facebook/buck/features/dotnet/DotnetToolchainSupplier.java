@@ -51,13 +51,12 @@ public class DotnetToolchainSupplier implements ToolchainSupplier {
         TargetConfiguration toolchainTargetConfiguration) {
       DotnetBuckConfig dotnetBuckConfig = context.getBuckConfig().getView(DotnetBuckConfig.class);
       SystemToolProvider systemCsharpCompiler =
-          SystemToolProvider.builder()
-              .setExecutableFinder(context.getExecutableFinder())
-              .setSourcePathConverter(context.getBuckConfig()::getPathSourcePath)
-              .setName(Paths.get("csc"))
-              .setEnvironment(context.getEnvironment())
-              .build();
-      return Optional.of(DotnetToolchain.of(dotnetBuckConfig, systemCsharpCompiler));
+          SystemToolProvider.of(
+              context.getExecutableFinder(),
+              context.getBuckConfig()::getPathSourcePath,
+              Paths.get("csc"),
+              context.getEnvironment());
+      return Optional.of(ImmutableDotnetToolchain.of(dotnetBuckConfig, systemCsharpCompiler));
     }
   }
 }

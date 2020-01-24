@@ -37,6 +37,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import javax.annotation.Nullable;
 
 public class RetryingCacheDecorator implements ArtifactCache, CacheDecorator {
@@ -95,7 +96,7 @@ public class RetryingCacheDecorator implements ArtifactCache, CacheDecorator {
                     "Failed to fetch %s over %s after %d attempts.",
                     ruleKey, cacheMode.name(), maxFetchRetries));
           }
-          return CacheResult.builder().from(result).setCacheError(msg).build();
+          return result.withCacheError(Optional.of(msg));
         },
         MoreExecutors.directExecutor());
   }

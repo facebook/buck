@@ -138,12 +138,10 @@ public class AppleCxxPlatforms {
       AppleConfig appleConfig,
       String toolName,
       String toolVersion) {
-    return VersionedTool.builder()
-        .setPath(
-            PathSourcePath.of(filesystem, getToolPath(toolName, toolSearchPaths, xcodeToolFinder)))
-        .setName(Joiner.on('-').join(ImmutableList.of("apple", toolName)))
-        .setVersion(appleConfig.getXcodeToolVersion(toolName, toolVersion))
-        .build();
+    return VersionedTool.of(
+        Joiner.on('-').join(ImmutableList.of("apple", toolName)),
+        PathSourcePath.of(filesystem, getToolPath(toolName, toolSearchPaths, xcodeToolFinder)),
+        appleConfig.getXcodeToolVersion(toolName, toolVersion));
   }
 
   @VisibleForTesting
@@ -469,12 +467,11 @@ public class AppleCxxPlatforms {
     AppleSdkPaths.Builder swiftSdkPathsBuilder = AppleSdkPaths.builder().from(sdkPaths);
     Optional<SwiftPlatform> swiftPlatform =
         getSwiftPlatform(
-            SwiftTargetTriple.builder()
-                .setArchitecture(targetArchitecture)
-                .setVendor("apple")
-                .setPlatformName(applePlatform.getSwiftName().orElse(applePlatform.getName()))
-                .setTargetSdkVersion(minVersion)
-                .build(),
+            SwiftTargetTriple.of(
+                targetArchitecture,
+                "apple",
+                applePlatform.getSwiftName().orElse(applePlatform.getName()),
+                minVersion),
             version,
             targetSdk,
             swiftSdkPathsBuilder.build(),
@@ -590,13 +587,7 @@ public class AppleCxxPlatforms {
     return xcodeToolFinder
         .getToolPath(toolSearchPaths, tool)
         .map(
-            input ->
-                VersionedTool.builder()
-                    .setPath(PathSourcePath.of(filesystem, input))
-                    .setName(tool)
-                    .setVersion(version)
-                    .setExtraArgs(params)
-                    .build());
+            input -> VersionedTool.of(tool, PathSourcePath.of(filesystem, input), version, params));
   }
 
   private static Path getToolPath(

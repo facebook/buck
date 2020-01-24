@@ -18,7 +18,7 @@ package com.facebook.buck.skylark.parser;
 
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.parser.api.FileManifest;
 import com.facebook.buck.parser.api.FileParser;
@@ -136,7 +136,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
     // Only export requested symbols, and ensure that all requsted symbols are present.
     ExtensionData data =
-        loadExtension(LoadImport.of(containingLabel, implicitInclude.get().getLoadPath()));
+        loadExtension(ImmutableLoadImport.of(containingLabel, implicitInclude.get().getLoadPath()));
     ImmutableMap<String, Object> symbols = data.getExtension().getBindings();
     ImmutableMap<String, String> expectedSymbols = implicitInclude.get().getSymbols();
     Builder<String, Object> loaded = ImmutableMap.builderWithExpectedSize(expectedSymbols.size());
@@ -150,7 +150,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       }
       loaded.put(kvp.getKey(), symbol);
     }
-    return ImplicitlyLoadedExtension.of(data, loaded.build());
+    return ImmutableImplicitlyLoadedExtension.of(data, loaded.build());
   }
 
   /** @return The parsed result defined in {@code parseFile}. */
@@ -241,7 +241,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
     parseContext.setup(env);
 
-    return EnvironmentData.of(
+    return ImmutableEnvironmentData.of(
         env, toLoadedPaths(buildFilePath, dependencies, implicitLoadExtensionData));
   }
 
@@ -360,7 +360,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
             ? ImmutableList.of()
             : loadIncludes(label, fileAst.getImports());
 
-    return IncludesData.of(
+    return ImmutableIncludesData.of(
         filePath, dependencies, toIncludedPaths(filePath.toString(), dependencies, null));
   }
 
@@ -376,7 +376,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       SkylarkImport skylarkImport = skylarkImports.get(i);
       // sometimes users include the same extension multiple times...
       if (!processed.add(skylarkImport)) continue;
-      LoadImport loadImport = LoadImport.of(containingLabel, skylarkImport);
+      LoadImport loadImport = ImmutableLoadImport.of(containingLabel, skylarkImport);
       try {
         includes.add(includesDataCache.getUnchecked(loadImport));
       } catch (UncheckedExecutionException e) {
@@ -415,7 +415,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       // sometimes users include the same extension multiple times...
       if (!processed.add(skylarkImport)) continue;
       try {
-        extensions.add(loadExtension(LoadImport.of(containingLabel, skylarkImport)));
+        extensions.add(loadExtension(ImmutableLoadImport.of(containingLabel, skylarkImport)));
       } catch (UncheckedExecutionException e) {
         propagateRootCause(e);
       }
@@ -581,7 +581,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   private @Nullable ExtensionData lookupExtensionForImport(
       com.google.devtools.build.lib.vfs.Path path, String importString) {
     ExtensionData ext = extensionDataCache.getIfPresent(path);
-    return ext == null ? ext : ExtensionData.copyOf(ext).withImportString(importString);
+    return ext == null ? ext : ext.withImportString(importString);
   }
 
   /**
@@ -612,7 +612,8 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     // Schedule missing dependencies to be loaded.
     boolean haveUnsatisfiedDeps = false;
     for (int i = 0; i < load.getAST().getImports().size(); ++i) {
-      LoadImport dependency = LoadImport.of(load.getLabel(), load.getAST().getImports().get(i));
+      LoadImport dependency =
+          ImmutableLoadImport.of(load.getLabel(), load.getAST().getImports().get(i));
 
       // Record dependency for this load.
       load.addDependency(dependency);
@@ -672,7 +673,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       loadedExtension = new Extension(extensionEnv);
     }
 
-    return ExtensionData.of(
+    return ImmutableExtensionData.of(
         loadedExtension,
         load.getPath(),
         dependencies,
@@ -837,15 +838,12 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
    * provide enough context. For instance, the same {@link SkylarkImport} can represent different
    * logical imports depending on which repository it is resolved in.
    */
-  @Value.Immutable(builder = false)
-  @BuckStyleImmutable
-  abstract static class AbstractLoadImport {
+  @BuckStyleValue
+  abstract static class LoadImport {
     /** Returns a label of the file containing this import. */
-    @Value.Parameter
     abstract Label getContainingLabel();
 
     /** Returns a Skylark import. */
-    @Value.Parameter
     abstract SkylarkImport getImport();
 
     /** Returns a label of current import file. */
@@ -859,18 +857,15 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
    * import information, and return some additional information needed to setup build file
    * environments in one swoop.
    */
-  @Value.Immutable(builder = false, copy = false)
-  @BuckStyleImmutable
-  abstract static class AbstractImplicitlyLoadedExtension {
-    @Value.Parameter
+  @BuckStyleValue
+  abstract static class ImplicitlyLoadedExtension {
     abstract @Nullable ExtensionData getExtensionData();
 
-    @Value.Parameter
     abstract ImmutableMap<String, Object> getLoadedSymbols();
 
     @Value.Lazy
     static ImplicitlyLoadedExtension empty() {
-      return ImplicitlyLoadedExtension.of(null, ImmutableMap.of());
+      return ImmutableImplicitlyLoadedExtension.of(null, ImmutableMap.of());
     }
   }
 }

@@ -41,6 +41,7 @@ import com.facebook.buck.apple.AppleBundleDestination;
 import com.facebook.buck.apple.AppleResourceDescriptionArg;
 import com.facebook.buck.apple.XcodePostbuildScriptBuilder;
 import com.facebook.buck.apple.XcodePrebuildScriptBuilder;
+import com.facebook.buck.apple.xcode.AbstractPBXObjectFactory;
 import com.facebook.buck.apple.xcode.xcodeproj.CopyFilePhaseDestinationSpec;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXCopyFilesBuildPhase;
@@ -90,7 +91,7 @@ public class XcodeNativeTargetProjectWriterTest {
   @Before
   public void setUp() {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
-    generatedProject = new PBXProject("TestProject");
+    generatedProject = new PBXProject("TestProject", AbstractPBXObjectFactory.DefaultFactory());
     buildRuleResolver = new TestActionGraphBuilder();
     sourcePathResolverAdapter = buildRuleResolver.getSourcePathResolver();
     pathRelativizer =
@@ -335,11 +336,11 @@ public class XcodeNativeTargetProjectWriterTest {
   public void testCopyFilesBuildPhase() throws NoSuchBuildTargetException {
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
 
-    CopyFilePhaseDestinationSpec.Builder specBuilder = CopyFilePhaseDestinationSpec.builder();
-    specBuilder.setDestination(PBXCopyFilesBuildPhase.Destination.FRAMEWORKS);
-    specBuilder.setPath("foo.png");
+    PBXBuildPhase copyPhase =
+        new PBXCopyFilesBuildPhase(
+            CopyFilePhaseDestinationSpec.of(
+                PBXCopyFilesBuildPhase.Destination.FRAMEWORKS, Optional.of("foo.png")));
 
-    PBXBuildPhase copyPhase = new PBXCopyFilesBuildPhase(specBuilder.build());
     mutator.setCopyFilesPhases(ImmutableList.of(copyPhase));
 
     NewNativeTargetProjectMutator.Result result =
@@ -355,11 +356,11 @@ public class XcodeNativeTargetProjectWriterTest {
       throws NoSuchBuildTargetException {
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
 
-    CopyFilePhaseDestinationSpec.Builder specBuilder = CopyFilePhaseDestinationSpec.builder();
-    specBuilder.setDestination(PBXCopyFilesBuildPhase.Destination.FRAMEWORKS);
-    specBuilder.setPath("script/input.png");
+    PBXBuildPhase copyFilesPhase =
+        new PBXCopyFilesBuildPhase(
+            CopyFilePhaseDestinationSpec.of(
+                PBXCopyFilesBuildPhase.Destination.FRAMEWORKS, Optional.of("script/input.png")));
 
-    PBXBuildPhase copyFilesPhase = new PBXCopyFilesBuildPhase(specBuilder.build());
     mutator.setCopyFilesPhases(ImmutableList.of(copyFilesPhase));
 
     TargetNode<?> postbuildNode =
@@ -463,7 +464,7 @@ public class XcodeNativeTargetProjectWriterTest {
     PBXShellScriptBuildPhase phase =
         getSingletonPhaseByType(result.target, PBXShellScriptBuildPhase.class);
     String shellScript = phase.getShellScript();
-    Path genPath = BuildTargetPaths.getGenPath(scenario.filesystem, depBuildTarget, "%s");
+    Path genPath = BuildTargetPaths.getGenPath(scenario.filesystem, depBuildTarget, "%s__");
     Path jsGenPath = genPath.resolve("js").toAbsolutePath();
     Path resGenPath = genPath.resolve("res").toAbsolutePath();
     assertEquals(
@@ -499,11 +500,11 @@ public class XcodeNativeTargetProjectWriterTest {
         getSingletonPhaseByType(result.target, PBXShellScriptBuildPhase.class);
     String shellScript = phase.getShellScript();
     Path depGenPath =
-        BuildTargetPaths.getGenPath(scenario.filesystem, depBuildTarget, "%s")
+        BuildTargetPaths.getGenPath(scenario.filesystem, depBuildTarget, "%s__")
             .resolve("js")
             .toAbsolutePath();
     Path bundleGenPath =
-        BuildTargetPaths.getGenPath(scenario.filesystem, bundleBuildTarget, "%s")
+        BuildTargetPaths.getGenPath(scenario.filesystem, bundleBuildTarget, "%s__")
             .resolve("res")
             .toAbsolutePath();
     assertEquals(

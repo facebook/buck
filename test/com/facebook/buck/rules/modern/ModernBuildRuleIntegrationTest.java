@@ -26,7 +26,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
@@ -38,7 +38,6 @@ import com.google.common.collect.ImmutableList;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Stream;
-import org.immutables.value.Value;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -63,7 +62,8 @@ public class ModernBuildRuleIntegrationTest {
             cell ->
                 KnownNativeRuleTypes.of(
                     ImmutableList.of(new TemporaryWritingDescription()),
-                    knownConfigurationDescriptions));
+                    knownConfigurationDescriptions,
+                    ImmutableList.of()));
     workspace.setUp();
   }
 
@@ -93,8 +93,7 @@ public class ModernBuildRuleIntegrationTest {
     }
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractTemporaryWritingDescriptionArg extends BuildRuleArg {}
 
   private static class TemporaryWritingDescription

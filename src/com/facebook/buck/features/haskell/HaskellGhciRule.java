@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -292,12 +293,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     public StepExecutionResult execute(ExecutionContext context) throws IOException {
       Path src = resolver.getRelativePath(lib).toRealPath();
       Path dest = symlinkDir.resolve(name);
-      SymlinkFileStep.Builder sl = SymlinkFileStep.builder();
-      return sl.setFilesystem(getProjectFilesystem())
-          .setExistingFile(src)
-          .setDesiredLink(dest)
-          .build()
-          .execute(context);
+      return SymlinkFileStep.of(getProjectFilesystem(), src, dest).execute(context);
     }
   }
 
@@ -587,7 +583,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Tool getExecutableCommand() {
+  public Tool getExecutableCommand(OutputLabel outputLabel) {
     SourcePath p = ExplicitBuildTargetSourcePath.of(getBuildTarget(), scriptPath());
     return new CommandTool.Builder().addArg(SourcePathArg.of(p)).build();
   }

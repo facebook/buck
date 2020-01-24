@@ -71,9 +71,6 @@ public class CacheCommand extends AbstractCommand {
   @Nullable
   private String outputDir = null;
 
-  @Option(name = "--distributed", usage = "If the request is for our distributed system.")
-  private boolean isRequestForDistributed = false;
-
   @Option(
       name = "--rule-key-with-target",
       usage =
@@ -161,8 +158,7 @@ public class CacheCommand extends AbstractCommand {
     BuildEvent.Started started = BuildEvent.started(getArguments());
 
     List<ArtifactRunner> results = null;
-    try (ArtifactCache cache =
-            params.getArtifactCacheFactory().newInstance(isRequestForDistributed);
+    try (ArtifactCache cache = params.getArtifactCacheFactory().newInstance();
         CommandThreadManager pool =
             new CommandThreadManager("Build", getConcurrencyLimit(params.getBuckConfig()))) {
       WeightedListeningExecutorService executor = pool.getWeightedListeningExecutorService();
@@ -284,19 +280,18 @@ public class CacheCommand extends AbstractCommand {
         .getBuckEventBus()
         .post(
             CacheCountersSummaryEvent.newSummary(
-                CacheCountersSummary.builder()
-                    .setCacheHitsPerMode(cacheHitsPerMode)
-                    .setCacheErrorsPerMode(cacheErrorsPerMode)
-                    .setTotalCacheHits(cacheHits)
-                    .setTotalCacheErrors(cacheErrors)
-                    .setTotalCacheMisses(cacheMisses)
-                    .setTotalCacheIgnores(cacheIgnored)
-                    .setTotalCacheLocalKeyUnchangedHits(localKeyUnchanged)
-                    .setFailureUploadCount(new AtomicInteger(0))
-                    .setSuccessUploadCount(new AtomicInteger(0))
-                    .setCacheBytesPerMode(cacheBytesPerMode)
-                    .setTotalCacheBytes(cacheBytes)
-                    .build()));
+                CacheCountersSummary.of(
+                    cacheHitsPerMode,
+                    cacheErrorsPerMode,
+                    cacheBytesPerMode,
+                    cacheHits,
+                    cacheErrors,
+                    cacheMisses,
+                    cacheIgnored,
+                    cacheBytes,
+                    localKeyUnchanged,
+                    new AtomicInteger(0),
+                    new AtomicInteger(0))));
 
     ExitCode exitCode = (totalRuns == goodRuns) ? ExitCode.SUCCESS : ExitCode.BUILD_ERROR;
     params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));

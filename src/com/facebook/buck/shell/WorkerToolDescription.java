@@ -21,6 +21,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -29,7 +30,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.ProxyArg;
 import com.facebook.buck.rules.macros.ClasspathMacroExpander;
@@ -92,7 +93,9 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
             buildTarget, args.getExe().get().getFullyQualifiedName());
       }
 
-      builder = new CommandTool.Builder(((BinaryBuildRule) rule).getExecutableCommand());
+      builder =
+          new CommandTool.Builder(
+              ((BinaryBuildRule) rule).getExecutableCommand(OutputLabel.defaultLabel()));
     } else {
       builder = new CommandTool.Builder();
     }
@@ -104,12 +107,8 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
             .collect(ImmutableList.toImmutableList()));
 
     StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(buildTarget)
-            .setCellPathResolver(context.getCellPathResolver())
-            .setActionGraphBuilder(graphBuilder)
-            .setExpanders(MACRO_EXPANDERS)
-            .build();
+        StringWithMacrosConverter.of(
+            buildTarget, context.getCellPathResolver(), graphBuilder, MACRO_EXPANDERS);
 
     if (args.getArgs().isLeft()) {
       builder.addArg(new SingleStringMacroArg(macrosConverter.convert(args.getArgs().getLeft())));
@@ -179,8 +178,7 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
     }
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractWorkerToolDescriptionArg extends BuildRuleArg {
     ImmutableMap<String, StringWithMacros> getEnv();
 

@@ -23,24 +23,34 @@ import java.util.stream.Collectors;
 
 /** Name of the target CPU + ABI. */
 public enum NdkTargetArchAbi {
-  X86("x86", "x86"),
-  X86_64("x86_64", "x86_64"),
-  ARMEABI("armeabi", "arm"),
-  ARMEABI_V7A("armeabi-v7a", "armv7"),
-  ARM64_V8A("arm64-v8a", "arm64"),
+  X86("x86", "x86", TargetCpuType.X86),
+  X86_64("x86_64", "x86_64", TargetCpuType.X86_64),
+  ARMEABI("armeabi", "arm", TargetCpuType.ARM),
+  ARMEABI_V7A("armeabi-v7a", "armv7", TargetCpuType.ARMV7),
+  ARM64_V8A("arm64-v8a", "arm64", TargetCpuType.ARM64),
   ;
 
   private final String value;
   private final String buckconfigValue;
+  private final TargetCpuType targetCpuType;
 
-  NdkTargetArchAbi(String value, String buckconfigValue) {
+  NdkTargetArchAbi(String value, String buckconfigValue, TargetCpuType targetCpuType) {
     this.value = Objects.requireNonNull(value);
     this.buckconfigValue = buckconfigValue;
+    this.targetCpuType = targetCpuType;
   }
 
   @Override
   public String toString() {
     return value;
+  }
+
+  public String getBuckconfigValue() {
+    return buckconfigValue;
+  }
+
+  public TargetCpuType getTargetCpuType() {
+    return targetCpuType;
   }
 
   /** Get a value from a string used in buckconfig, throw if ABI is unknown. */

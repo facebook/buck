@@ -32,14 +32,16 @@ import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent.State;
 import com.facebook.buck.remoteexecution.util.MultiThreadedBlobUploader;
 import com.facebook.buck.rules.modern.builders.LocalFallbackStrategy.FallbackStrategyBuildResult;
 import com.facebook.buck.step.AbstractExecutionStep;
-import com.facebook.buck.step.ImmutableStepExecutionResult;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.TestExecutionContext;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.SettableFuture;
 import io.grpc.Status;
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -154,7 +156,7 @@ public class LocalFallbackStrategyTest {
   }
 
   @Test
-  public void testExitCode() throws ExecutionException, InterruptedException {
+  public void testExitCode() throws ExecutionException, InterruptedException, IOException {
     Capture<LocalFallbackEvent> eventCapture = Capture.newInstance(CaptureType.ALL);
     eventBus.post(EasyMock.capture(eventCapture));
     EasyMock.expectLastCall().times(2);
@@ -163,19 +165,23 @@ public class LocalFallbackStrategyTest {
     ExecutedActionMetadata executedActionMetadata =
         ExecutedActionMetadata.newBuilder().setWorker(mockWorker).build();
 
+    StepFailedException exc =
+        StepFailedException.createForFailingStepWithExitCode(
+            new AbstractExecutionStep("remote_execution") {
+              @Override
+              public StepExecutionResult execute(ExecutionContext context) {
+                throw new RuntimeException();
+              }
+            },
+            executionContext,
+            StepExecutionResult.builder().setExitCode(1).setStderr("").build(),
+            executedActionMetadata);
+
+    // Just here to test if this is serializable by jackson, as we do Log.warn this.
+    new ObjectMapper().writeValueAsString(exc);
+
     EasyMock.expect(strategyBuildResult.getBuildResult())
-        .andReturn(
-            Futures.immediateFailedFuture(
-                StepFailedException.createForFailingStepWithExitCode(
-                    new AbstractExecutionStep("remote_execution") {
-                      @Override
-                      public StepExecutionResult execute(ExecutionContext context) {
-                        throw new RuntimeException();
-                      }
-                    },
-                    executionContext,
-                    ImmutableStepExecutionResult.builder().setExitCode(1).setStderr("").build(),
-                    executedActionMetadata)))
+        .andReturn(Futures.immediateFailedFuture(exc))
         .times(2);
     BuildResult localResult = successBuildResult("//local/did:though");
     EasyMock.expect(buildStrategyContext.runWithDefaultBehavior())
@@ -200,6 +206,23 @@ public class LocalFallbackStrategyTest {
     Assert.assertEquals(finishedEvent.getRemoteGrpcStatus(), Status.OK);
     Assert.assertEquals(finishedEvent.getExitCode(), OptionalInt.of(1));
     Assert.assertEquals(finishedEvent.getExecutedActionMetadata().get().getWorker(), mockWorker);
+  }
+
+  @Test
+  public void testCancellation() throws ExecutionException, InterruptedException {
+    Exception cause = new RuntimeException();
+    BuildResult cancelledResult = cancelledBuildResult(RULE_NAME, cause);
+    SettableFuture<Optional<BuildResult>> strategyResult = SettableFuture.create();
+    EasyMock.expect(strategyBuildResult.getBuildResult()).andReturn(strategyResult).anyTimes();
+    strategyBuildResult.cancel(cause);
+    EasyMock.expect(buildStrategyContext.createCancelledResult(cause)).andReturn(cancelledResult);
+    EasyMock.replay(strategyBuildResult, buildStrategyContext);
+    FallbackStrategyBuildResult fallbackStrategyBuildResult =
+        new FallbackStrategyBuildResult(
+            RULE_NAME, strategyBuildResult, buildStrategyContext, eventBus, true, false, true);
+    fallbackStrategyBuildResult.cancel(cause);
+    Assert.assertEquals(cancelledResult, fallbackStrategyBuildResult.getBuildResult().get().get());
+    EasyMock.verify(strategyBuildResult, buildStrategyContext);
   }
 
   @Test
@@ -298,7 +321,7 @@ public class LocalFallbackStrategyTest {
               }
             },
             executionContext,
-            ImmutableStepExecutionResult.builder().setExitCode(1).setStderr("").build());
+            StepExecutionResult.builder().setExitCode(1).setStderr("").build());
     EasyMock.expect(strategyBuildResult.getBuildResult())
         .andReturn(Futures.immediateFailedFuture(exception))
         .times(2);
@@ -420,6 +443,15 @@ public class LocalFallbackStrategyTest {
         .setStatus(BuildRuleStatus.SUCCESS)
         .setRule(buildRule(buildRuleName))
         .setSuccessOptional(BuildRuleSuccessType.BUILT_LOCALLY)
+        .setCacheResult(CacheResult.miss())
+        .build();
+  }
+
+  private static BuildResult cancelledBuildResult(String buildRuleName, Throwable cause) {
+    return BuildResult.builder()
+        .setStatus(BuildRuleStatus.CANCELED)
+        .setRule(buildRule(buildRuleName))
+        .setFailureOptional(cause)
         .setCacheResult(CacheResult.miss())
         .build();
   }

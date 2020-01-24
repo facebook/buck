@@ -21,7 +21,6 @@ import com.facebook.buck.core.cell.exception.UnknownCellException;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.CellRelativePath;
-import com.facebook.buck.core.model.ImmutableCellRelativePath;
 import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -141,7 +140,7 @@ public abstract class BuildTargetMatcherParser<T> {
     }
     ForwardRelativePath forwardRelativePath = ForwardRelativePath.of(basePath);
     CanonicalCellName cellName = cellNames.getNewCellPathResolver().getCanonicalCellName(cellPath);
-    return createForDescendants(new ImmutableCellRelativePath(cellName, forwardRelativePath));
+    return createForDescendants(CellRelativePath.of(cellName, forwardRelativePath));
   }
 
   /** Used when parsing target names in the {@code visibility} argument to a build rule. */
@@ -173,18 +172,18 @@ public abstract class BuildTargetMatcherParser<T> {
 
     @Override
     public BuildTargetMatcher createForDescendants(CellRelativePath cellRelativePath) {
-      return SubdirectoryBuildTargetMatcher.of(cellRelativePath);
+      return ImmutableSubdirectoryBuildTargetMatcher.of(cellRelativePath);
     }
 
     @Override
     public BuildTargetMatcher createForChildren(CellRelativePath cellRelativePath) {
-      return ImmediateDirectoryBuildTargetMatcher.of(cellRelativePath);
+      return ImmutableImmediateDirectoryBuildTargetMatcher.of(cellRelativePath);
     }
 
     @Override
     public BuildTargetMatcher createForSingleton(
         ImmutableUnconfiguredBuildTargetWithOutputs targetWithOutputs) {
-      return SingletonBuildTargetMatcher.of(targetWithOutputs.getBuildTarget().getData());
+      return ImmutableSingletonBuildTargetMatcher.of(targetWithOutputs.getBuildTarget().getData());
     }
   }
 }

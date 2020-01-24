@@ -30,26 +30,34 @@ import javax.annotation.Nullable;
 @SuppressWarnings("all")
 class BuckStarlarkParam implements Param {
 
-  public static final BuckStarlarkParam NONE = new BuckStarlarkParam("", Object.class, "");
+  public static final BuckStarlarkParam NONE = new BuckStarlarkParam("", Object.class, "", true);
 
   private final String name;
   private final Class<?> type;
   private final String defaultSkylarkValue;
+  private final boolean noneable;
 
-  private BuckStarlarkParam(String name, Class<?> type, String defaultSkylarkValue) {
+  private BuckStarlarkParam(
+      String name, Class<?> type, String defaultSkylarkValue, boolean noneable) {
     this.name = name;
     this.type = type;
     this.defaultSkylarkValue = defaultSkylarkValue;
+    this.noneable = noneable;
   }
 
   /**
    * @param parameter the parameter type class
    * @param namedParameter the name of the parameter, if any
+   * @param defaultSkylarkValue the string represetnation of the default skylark value
+   * @param noneable whether this parameter can accept `None`
    * @return an instance of the skylark annotation representing a parameter of the given type and
    *     name
    */
   static BuckStarlarkParam fromParam(
-      Class<?> parameter, @Nullable String namedParameter, @Nullable String defaultSkylarkValue) {
+      Class<?> parameter,
+      @Nullable String namedParameter,
+      @Nullable String defaultSkylarkValue,
+      boolean noneable) {
     if (namedParameter == null) {
       namedParameter = "";
     }
@@ -60,7 +68,7 @@ class BuckStarlarkParam implements Param {
     if (type.isPrimitive()) {
       type = Primitives.wrap(type);
     }
-    return new BuckStarlarkParam(namedParameter, type, defaultSkylarkValue);
+    return new BuckStarlarkParam(namedParameter, type, defaultSkylarkValue, noneable);
   }
 
   @Override
@@ -85,7 +93,7 @@ class BuckStarlarkParam implements Param {
 
   @Override
   public boolean noneable() {
-    return false;
+    return noneable;
   }
 
   @Override

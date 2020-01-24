@@ -26,10 +26,18 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.VersionStringComparator;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.function.ThrowingSupplier;
+import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import java.io.IOException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.Path;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.hamcrest.Matchers;
 import org.hamcrest.comparator.ComparatorMatcherBuilder;
 import org.junit.Rule;
@@ -75,5 +83,50 @@ public class PythonLibraryIntegrationTest {
             .collect(ImmutableList.toImmutableList()),
         Matchers.containsInAnyOrder(
             Matchers.matchesRegex("(__pycache__/)?foo(.cpython-3[0-9])?.pyc")));
+  }
+
+  @Test
+  public void compileDeterminism() throws Exception {
+    Path py3 = PythonTestUtils.assumeInterpreter("python3");
+    PythonTestUtils.assumeVersion(
+        py3,
+        Matchers.any(String.class),
+        ComparatorMatcherBuilder.comparedBy(new VersionStringComparator())
+            .greaterThanOrEqualTo("3.7"));
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "python_library_compile", tmp);
+    workspace.setUp();
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
+    String target = "//:lib#py-default,default,compile";
+
+    // A supplier which uses Buck to compile bytecode and return the content hashes.
+    ThrowingSupplier<Map<Path, Sha1HashCode>, IOException> buildAndGetHashes =
+        () -> {
+          Path dir =
+              filesystem.relativize(
+                  workspace.buildAndReturnOutput(
+                      // Generate some randomness to encourage this test to fail if propagated
+                      // through.
+                      ImmutableMap.of("PYTHONHASHSEED", "random"),
+                      "-c",
+                      "python.interpreter=" + py3,
+                      "//:lib#py-default,default,compile"));
+          Map<Path, Sha1HashCode> hashes = new HashMap<>();
+          for (Path path :
+              filesystem.asView().getFilesUnderPath(dir, EnumSet.noneOf(FileVisitOption.class))) {
+            hashes.put(path, filesystem.computeSha1(path));
+          }
+          workspace.getBuildLog().assertTargetBuiltLocally(target);
+          workspace.runBuckCommand("clean");
+          return hashes;
+        };
+
+    // Verify that running the compilation multiple times yeilds the same results.
+    assertThat(
+        Stream.generate(buildAndGetHashes.asSupplier())
+            .limit(10)
+            .distinct()
+            .collect(Collectors.toList()),
+        Matchers.hasSize(1));
   }
 }

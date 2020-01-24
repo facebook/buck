@@ -156,7 +156,7 @@
     <include name="aosp/apksig.jar" />
     <include name="asm/asm*-7.1.jar" />
     <include name="bazel/bazel_deploy.jar" />
-    <include name="bundletool/bundletool-0.10.3-fb.jar" />
+    <include name="bundletool/bundletool-0.12.0-fb.jar" />
     <include name="closure-templates/soy-excluding-deps.jar" />
     <include name="commons-compress/commons-compress-1.18.jar" />
     <include name="commons-logging/commons-logging-1.2.jar" />

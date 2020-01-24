@@ -11,19 +11,19 @@ def _output_rule_impl(ctx):
 
 output_rule = rule(
     attrs = {
-        "output": attr.output(),
         "contents": attr.string(),
+        "output": attr.output(),
     },
     implementation = _output_rule_impl,
 )
 
 output_rule_with_default = rule(
     attrs = {
+        "contents": attr.string(),
         "output": attr.output(
             default = "out.txt",
             mandatory = False,
         ),
-        "contents": attr.string(),
     },
     implementation = _output_rule_impl,
 )

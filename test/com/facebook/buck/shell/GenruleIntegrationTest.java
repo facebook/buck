@@ -27,6 +27,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.testutil.ProcessResult;
@@ -369,14 +370,46 @@ public class GenruleIntegrationTest {
   }
 
   @Test
+  public void genruleExeMacro() throws Exception {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_exe_macro", temporaryFolder);
+    workspace.setUp();
+
+    Path result =
+        workspace.buildAndReturnOutput(targetWithLabelIfNonEmptySuffix("//:exe_macro", "output"));
+    assertTrue(result.endsWith("example_out.txt"));
+    assertEquals("hello\n", workspace.getFileContents(result));
+  }
+
+  @Test
+  public void exeMacroThrowsForNamedOutputsIfNotOneOutput() throws Exception {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_exe_macro", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckBuild("//:exe_macro_with_invalid_outputs").assertFailure();
+    assertTrue(
+        result
+            .getStderr()
+            .contains("Unexpectedly found 0 outputs for //:extra_layer_for_test[DEFAULT]"));
+  }
+
+  @Test
   public void genruleZipOutputsAreScrubbed() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "genrule_zip_scrubber", temporaryFolder);
     workspace.setUp();
 
-    Path outputOne = workspace.buildAndReturnOutput(targetWithSuffix("//:genrule-one"));
-    Path outputTwo = workspace.buildAndReturnOutput(targetWithSuffix("//:genrule-two"));
+    Path outputOne =
+        workspace.buildAndReturnOutput(targetWithLabelIfNonEmptySuffix("//:genrule-one", "output"));
+    Path outputTwo =
+        workspace.buildAndReturnOutput(targetWithLabelIfNonEmptySuffix("//:genrule-two", "output"));
 
     assertZipsAreEqual(outputOne, outputTwo);
   }
@@ -388,8 +421,12 @@ public class GenruleIntegrationTest {
             this, "genrule_zip_scrubber", temporaryFolder);
     workspace.setUp();
 
-    Path outputOne = workspace.buildAndReturnOutput(targetWithSuffix("//:extended-time-one"));
-    Path outputTwo = workspace.buildAndReturnOutput(targetWithSuffix("//:extended-time-two"));
+    Path outputOne =
+        workspace.buildAndReturnOutput(
+            targetWithLabelIfNonEmptySuffix("//:extended-time-one", "output"));
+    Path outputTwo =
+        workspace.buildAndReturnOutput(
+            targetWithLabelIfNonEmptySuffix("//:extended-time-two", "output"));
 
     assertZipsAreEqual(outputOne, outputTwo);
   }
@@ -421,7 +458,8 @@ public class GenruleIntegrationTest {
             this, "genrule_with_sandbox", temporaryFolder);
     workspace.setUp();
 
-    Path output = workspace.buildAndReturnOutput(targetWithSuffix("//:cat_input"));
+    Path output =
+        workspace.buildAndReturnOutput(targetWithLabelIfNonEmptySuffix("//:cat_input", "output"));
     String expected =
         new String(Files.readAllBytes(workspace.getPath("undeclared_input.txt")), UTF_8);
     String actual = new String(Files.readAllBytes(output), UTF_8);
@@ -442,7 +480,9 @@ public class GenruleIntegrationTest {
 
     Path output =
         workspace.buildAndReturnOutput(
-            "--config", "sandbox.darwin_sandbox_enabled=False", "//:cat_input");
+            "--config",
+            "sandbox.darwin_sandbox_enabled=False",
+            targetWithLabelIfNonEmptySuffix("//:cat_input", "output"));
     String actual = new String(Files.readAllBytes(output), UTF_8);
 
     String expected =
@@ -461,7 +501,9 @@ public class GenruleIntegrationTest {
 
     Path output =
         workspace.buildAndReturnOutput(
-            "--config", "sandbox.genrule_sandbox_enabled=False", targetWithSuffix("//:cat_input"));
+            "--config",
+            "sandbox.genrule_sandbox_enabled=False",
+            targetWithLabelIfNonEmptySuffix("//:cat_input", "output"));
     String actual = new String(Files.readAllBytes(output), UTF_8);
 
     String expected =
@@ -555,17 +597,6 @@ public class GenruleIntegrationTest {
 
     Path result = workspace.buildAndReturnOutput("//:file_with_named_outputs");
     assertEquals("something" + System.lineSeparator(), workspace.getFileContents(result));
-  }
-
-  @Test
-  public void canUseGenruleDefaultOutputsInSrcs() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "genrule_output_label_used_in_srcs", temporaryFolder);
-    workspace.setUp();
-
-    Path result = workspace.buildAndReturnOutput("//:file_with_default_outputs");
-    assertThat(workspace.getFileContents(result), equalTo("other" + System.lineSeparator()));
   }
 
   @Test

@@ -17,7 +17,7 @@
 package com.facebook.buck.doctor;
 
 import com.facebook.buck.core.util.Optionals;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.doctor.config.BuildLogEntry;
 import com.facebook.buck.doctor.config.DoctorConfig;
@@ -49,7 +49,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /** Base class for gathering logs and other interesting information from buck. */
 public abstract class AbstractReport {
@@ -105,10 +104,10 @@ public abstract class AbstractReport {
 
   protected abstract Optional<UserReport> getUserReport();
 
-  protected abstract Optional<FileChangesIgnoredReport> getFileChangesIgnoredReport()
+  protected abstract Optional<DefectReporter.FileChangesIgnoredReport> getFileChangesIgnoredReport()
       throws IOException, InterruptedException;
 
-  public final Optional<DefectSubmitResult> collectAndSubmitResult()
+  public final Optional<DefectReporter.DefectSubmitResult> collectAndSubmitResult()
       throws IOException, InterruptedException {
 
     ImmutableSet<BuildLogEntry> selectedBuilds = promptForBuildSelection();
@@ -122,7 +121,8 @@ public abstract class AbstractReport {
     ImmutableSet<Path> extraInfoPaths = ImmutableSet.of();
     Optional<String> extraInfo = Optional.empty();
     try {
-      Optional<ExtraInfoResult> extraInfoResultOptional = extraInfoCollector.run();
+      Optional<ExtraInfoCollector.ExtraInfoResult> extraInfoResultOptional =
+          extraInfoCollector.run();
       if (extraInfoResultOptional.isPresent()) {
         extraInfoPaths = extraInfoResultOptional.get().getExtraFiles();
         extraInfo = Optional.of(extraInfoResultOptional.get().getOutput());
@@ -134,7 +134,8 @@ public abstract class AbstractReport {
           e.getMessage());
     }
 
-    Optional<FileChangesIgnoredReport> fileChangesIgnoredReport = getFileChangesIgnoredReport();
+    Optional<DefectReporter.FileChangesIgnoredReport> fileChangesIgnoredReport =
+        getFileChangesIgnoredReport();
 
     UserLocalConfiguration userLocalConfiguration =
         ImmutableUserLocalConfiguration.of(
@@ -163,8 +164,8 @@ public abstract class AbstractReport {
                     .orElse(ImmutableList.of()))
             .toSet();
 
-    DefectReport defectReport =
-        DefectReport.builder()
+    DefectReporter.DefectReport defectReport =
+        DefectReporter.DefectReport.builder()
             .setUserReport(userReport)
             .setHighlightedBuildIds(
                 RichStream.from(selectedBuilds)
@@ -183,14 +184,11 @@ public abstract class AbstractReport {
     return Optional.of(defectReporter.submitReport(defectReport));
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  interface AbstractUserReport {
+  @BuckStyleValue
+  interface UserReport {
 
-    @Value.Parameter
     String getUserIssueDescription();
 
-    @Value.Parameter
     String getIssueCategory();
   }
 
@@ -309,7 +307,7 @@ public abstract class AbstractReport {
   }
 
   @VisibleForTesting
-  Optional<FileChangesIgnoredReport> runWatchmanDiagReportCollector(UserInput input)
+  Optional<DefectReporter.FileChangesIgnoredReport> runWatchmanDiagReportCollector(UserInput input)
       throws IOException, InterruptedException {
     if (!watchmanDiagReportCollector.isPresent()
         || !input.confirm(
@@ -328,7 +326,6 @@ public abstract class AbstractReport {
           e);
     }
 
-    return Optional.of(
-        FileChangesIgnoredReport.builder().setWatchmanDiagReport(watchmanDiagReport).build());
+    return Optional.of(ImmutableFileChangesIgnoredReport.of(watchmanDiagReport));
   }
 }

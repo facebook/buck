@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -37,7 +38,7 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.Archive;
 import com.facebook.buck.cxx.CxxBinary;
 import com.facebook.buck.cxx.CxxBinaryDescription;
@@ -60,6 +61,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.query.Query;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -241,8 +243,7 @@ public class HalideLibraryDescription
       Optional<ImmutableList<String>> optionalFlags, CxxPlatform platform) {
     if (optionalFlags.isPresent()) {
       AddsToRuleKeyFunction<String, String> macroMapper =
-          new TranslateMacrosFunction(
-              ImmutableSortedMap.copyOf(platform.getFlagMacros()), platform);
+          new TranslateMacrosFunction(ImmutableSortedMap.copyOf(platform.getFlagMacros()));
       ImmutableList<String> flags = optionalFlags.get();
       ImmutableList.Builder<String> builder = ImmutableList.builder();
       for (String flag : flags) {
@@ -268,7 +269,7 @@ public class HalideLibraryDescription
         buildTarget,
         projectFilesystem,
         params.withExtraDeps(ImmutableSortedSet.of(halideCompiler)),
-        halideCompiler.getExecutableCommand(),
+        halideCompiler.getExecutableCommand(OutputLabel.defaultLabel()),
         halideBuckConfig.getHalideTargetForPlatform(platform),
         expandInvocationFlags(compilerInvocationFlags, platform),
         functionName);
@@ -376,8 +377,7 @@ public class HalideLibraryDescription
     return ((HalideLibraryDescriptionArg) args).getDeps();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable(copy = true)
+  @RuleArg
   interface AbstractHalideLibraryDescriptionArg extends CxxBinaryDescription.CommonArg {
     @Value.NaturalOrder
     ImmutableSortedSet<BuildTarget> getCompilerDeps();
@@ -390,5 +390,13 @@ public class HalideLibraryDescription
     ImmutableList<String> getCompilerInvocationFlags();
 
     Optional<String> getFunctionName();
+
+    @Override
+    default HalideLibraryDescriptionArg withDepsQuery(Query query) {
+      if (getDepsQuery().equals(Optional.of(query))) {
+        return (HalideLibraryDescriptionArg) this;
+      }
+      return HalideLibraryDescriptionArg.builder().from(this).setDepsQuery(query).build();
+    }
   }
 }

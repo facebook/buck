@@ -28,17 +28,17 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
-import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
 import com.facebook.buck.rules.macros.ClasspathMacroExpander;
 import com.facebook.buck.rules.macros.ExecutableMacro;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.ExecutableTargetMacro;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
+import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.test.config.TestBuckConfig;
@@ -54,13 +54,12 @@ import org.immutables.value.Value;
 
 public class ShTestDescription implements DescriptionWithTargetGraph<ShTestDescriptionArg> {
 
-  private static final ImmutableList<AbstractMacroExpanderWithoutPrecomputedWork<? extends Macro>>
-      MACRO_EXPANDERS =
-          ImmutableList.of(
-              new LocationMacroExpander(),
-              new ClasspathMacroExpander(),
-              new ExecutableMacroExpander<>(ExecutableMacro.class),
-              new ExecutableMacroExpander<>(ExecutableTargetMacro.class));
+  private static final ImmutableList<MacroExpander<? extends Macro, ?>> MACRO_EXPANDERS =
+      ImmutableList.of(
+          new LocationMacroExpander(),
+          new ClasspathMacroExpander(),
+          new ExecutableMacroExpander<>(ExecutableMacro.class),
+          new ExecutableMacroExpander<>(ExecutableTargetMacro.class));
 
   private final BuckConfig buckConfig;
 
@@ -117,8 +116,7 @@ public class ShTestDescription implements DescriptionWithTargetGraph<ShTestDescr
     return true;
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractShTestDescriptionArg
       extends BuildRuleArg, HasContacts, HasDeclaredDeps, HasTestTimeout {
     Optional<SourcePath> getTest();

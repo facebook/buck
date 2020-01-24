@@ -180,7 +180,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
               .resolve(context.getSourcePathResolver().getAbsolutePath(inputSourcePath))
               .toString();
       ImmutableList<String> arguments = compileRule.getCommand(context);
-      return CxxCompilationDatabaseEntry.of(
+      return ImmutableCxxCompilationDatabaseEntry.of(
           inputFilesystem.getRootPath().toString(), fileToCompile, arguments);
     }
   }

@@ -19,7 +19,6 @@ package com.facebook.buck.file;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -68,8 +67,7 @@ public class HttpArchive extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     this.implicitHttpFile = implicitHttpFile;
     this.format = format;
     this.stripPrefix = stripPrefix;
-
-    output = BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "%s/" + out);
+    this.output = HttpFile.outputPath(projectFilesystem, buildTarget, out);
   }
 
   @VisibleForTesting

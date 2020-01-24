@@ -44,7 +44,7 @@ import com.facebook.buck.core.test.rule.HasTestRunner;
 import com.facebook.buck.core.test.rule.coercer.TestRunnerSpecCoercer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.Optionals;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
@@ -85,7 +85,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.function.Function;
-import org.immutables.value.Value;
 
 public class PythonTestDescription
     implements DescriptionWithTargetGraph<PythonTestDescriptionArg>,
@@ -326,23 +325,18 @@ public class PythonTestDescription
 
     // Build up the list of everything going into the python test.
     PythonPackagable root =
-        PythonBinaryPackagable.builder()
-            .setBuildTarget(buildTarget)
-            .setFilesystem(projectFilesystem)
-            .addAllPythonPackageDeps(deps)
-            .setPythonModules(PythonMappedComponents.of(modules))
-            .setPythonResources(PythonMappedComponents.of(ImmutableSortedMap.copyOf(resources)))
-            .setPythonZipSafe(args.getZipSafe())
-            .build();
+        ImmutablePythonBinaryPackagable.of(
+            buildTarget,
+            projectFilesystem,
+            deps,
+            Optional.of(PythonMappedComponents.of(modules)),
+            Optional.of(PythonMappedComponents.of(ImmutableSortedMap.copyOf(resources))),
+            args.getZipSafe());
 
     CellPathResolver cellRoots = context.getCellPathResolver();
     StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(buildTarget)
-            .setCellPathResolver(cellRoots)
-            .setActionGraphBuilder(graphBuilder)
-            .setExpanders(PythonUtil.MACRO_EXPANDERS)
-            .build();
+        StringWithMacrosConverter.of(
+            buildTarget, cellRoots, graphBuilder, PythonUtil.MACRO_EXPANDERS);
     PythonPackageComponents allComponents =
         PythonUtil.getAllComponents(
             cellRoots,
@@ -515,8 +509,7 @@ public class PythonTestDescription
     return true;
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractPythonTestDescriptionArg
       extends HasContacts,
           HasTestRunner,

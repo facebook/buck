@@ -30,7 +30,6 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
@@ -81,7 +80,7 @@ public class AndroidResourceFilterIntegrationTest {
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     sdkResolver = AndroidSdkResolver.get(workspace).get();
 
-    filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    filesystem = workspace.getProjectFileSystem();
   }
 
   @Test

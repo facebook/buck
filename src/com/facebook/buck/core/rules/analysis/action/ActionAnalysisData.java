@@ -32,7 +32,17 @@ public interface ActionAnalysisData {
 
   /**
    * The ID used to identify this action. This should be unique and stable per instance of {@link
-   * ActionAnalysisData}
+   * ActionAnalysisData} from the same {@link com.facebook.buck.core.model.BuildTarget}.
    */
-  interface ID {}
+  class ID {
+    private final String id;
+
+    public ID(String id) {
+      this.id = id;
+    }
+
+    public String getID() {
+      return id;
+    }
+  }
 }

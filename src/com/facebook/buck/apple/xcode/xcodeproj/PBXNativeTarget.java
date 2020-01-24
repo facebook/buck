@@ -16,13 +16,15 @@
 
 package com.facebook.buck.apple.xcode.xcodeproj;
 
+import com.facebook.buck.apple.xcode.AbstractPBXObjectFactory;
+
 /**
  * Concrete target type representing targets built by xcode itself, rather than an external build
  * system.
  */
 public class PBXNativeTarget extends PBXTarget {
-  public PBXNativeTarget(String name) {
-    super(name);
+  public PBXNativeTarget(String name, AbstractPBXObjectFactory objectFactory) {
+    super(name, objectFactory);
   }
 
   @Override

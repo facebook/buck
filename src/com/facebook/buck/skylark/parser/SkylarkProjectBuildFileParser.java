@@ -22,7 +22,6 @@ import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.BuildFileManifestPojoizer;
 import com.facebook.buck.parser.api.ImmutableBuildFileManifest;
 import com.facebook.buck.parser.api.ImmutablePackageMetadata;
-import com.facebook.buck.parser.api.PojoTransformer;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -167,7 +166,7 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
     // implementation. BuildFileManifest should only have POJO classes.
     BuildFileManifestPojoizer pojoizer = BuildFileManifestPojoizer.of();
     pojoizer.addPojoTransformer(
-        PojoTransformer.of(
+        BuildFileManifestPojoizer.PojoTransformer.of(
             com.google.devtools.build.lib.syntax.SelectorList.class,
             obj -> {
               com.google.devtools.build.lib.syntax.SelectorList skylarkSelectorList =
@@ -179,7 +178,7 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
               return ImmutableListWithSelects.of(elements, skylarkSelectorList.getType());
             }));
     pojoizer.addPojoTransformer(
-        PojoTransformer.of(
+        BuildFileManifestPojoizer.PojoTransformer.of(
             com.google.devtools.build.lib.syntax.SelectorValue.class,
             obj -> {
               com.google.devtools.build.lib.syntax.SelectorValue skylarkSelectorValue =
@@ -192,7 +191,7 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
               return ImmutableSelectorValue.of(dictionary, skylarkSelectorValue.getNoMatchError());
             }));
     pojoizer.addPojoTransformer(
-        PojoTransformer.of(
+        BuildFileManifestPojoizer.PojoTransformer.of(
             com.google.devtools.build.lib.syntax.SkylarkNestedSet.class,
             obj -> {
               com.google.devtools.build.lib.syntax.SkylarkNestedSet skylarkNestedSet =

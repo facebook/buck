@@ -31,7 +31,7 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.jvm.java.AbstractJavacPluginProperties.Type;
+import com.facebook.buck.jvm.java.JavacPluginProperties.Type;
 import com.facebook.buck.rules.keys.TestInputBasedRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.google.common.collect.ImmutableMap;

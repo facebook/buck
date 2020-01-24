@@ -24,8 +24,11 @@ public class CommandLineArgException extends HumanReadableException {
   /** Creates an instance of {@link CommandLineArgException} */
   public CommandLineArgException(Object arg) {
     super(
-        String.format(
-            "Invalid command line argument type for %s. Must be a string, integer, artifact, or label",
-            arg.toString()));
+        "Invalid command line argument type for %s. Must be a string, integer, artifact, or label",
+        arg);
+  }
+
+  public CommandLineArgException(String formatString, Object arg) {
+    super(formatString, arg);
   }
 }

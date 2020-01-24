@@ -43,7 +43,7 @@ import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.FrameworkDependencies;
 import com.facebook.buck.cxx.LinkableListFilterFactory;
@@ -397,8 +397,7 @@ public class AppleBundleDescription
         CxxPlatformsProvider.class);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractAppleBundleDescriptionArg
       extends BuildRuleArg,
           HasAppleBundleFields,

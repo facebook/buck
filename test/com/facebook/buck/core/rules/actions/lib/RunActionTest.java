@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
+import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgException;
@@ -38,6 +39,8 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.devtools.build.lib.events.Location;
+import com.google.devtools.build.lib.syntax.EvalException;
 import com.sun.jna.Platform;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -55,7 +58,7 @@ public class RunActionTest {
   private Path scriptPath;
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() throws IOException, EvalException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "run_scripts", tmp);
     workspace.setUp();
@@ -71,7 +74,7 @@ public class RunActionTest {
         new WriteAction(
             runner.getRegistry(),
             ImmutableSortedSet.of(),
-            ImmutableSortedSet.of(script),
+            ImmutableSortedSet.of(script.asOutputArtifact()),
             filesystem.readFileIfItExists(scriptPath).get(),
             true));
   }
@@ -95,8 +98,6 @@ public class RunActionTest {
     RunAction action =
         new RunAction(
             runner.getRegistry(),
-            ImmutableSortedSet.of(),
-            ImmutableSortedSet.of(),
             "list",
             CommandLineArgsFactory.from(ImmutableList.of(script, "--foo", "bar")),
             ImmutableMap.of("CUSTOM_ENV", "value"));
@@ -111,8 +112,6 @@ public class RunActionTest {
     RunAction action =
         new RunAction(
             runner.getRegistry(),
-            ImmutableSortedSet.of(),
-            ImmutableSortedSet.of(),
             "list",
             CommandLineArgsFactory.from(ImmutableList.of()),
             ImmutableMap.of());
@@ -135,8 +134,6 @@ public class RunActionTest {
     RunAction action =
         new RunAction(
             runner.getRegistry(),
-            ImmutableSortedSet.of(),
-            ImmutableSortedSet.of(),
             "list",
             CommandLineArgsFactory.from(ImmutableList.of(script, "--foo", "bar")),
             ImmutableMap.of());
@@ -163,8 +160,6 @@ public class RunActionTest {
     RunAction action =
         new RunAction(
             runner.getRegistry(),
-            ImmutableSortedSet.of(),
-            ImmutableSortedSet.of(),
             "list",
             CommandLineArgsFactory.from(ImmutableList.of(sourceScript, "--foo", "bar")),
             ImmutableMap.of());
@@ -182,8 +177,6 @@ public class RunActionTest {
     RunAction action =
         new RunAction(
             runner.getRegistry(),
-            ImmutableSortedSet.of(),
-            ImmutableSortedSet.of(),
             "list",
             CommandLineArgsFactory.from(ImmutableList.of(script, "--foo", "bar")),
             ImmutableMap.of());
@@ -208,8 +201,6 @@ public class RunActionTest {
     RunAction action =
         new RunAction(
             runner.getRegistry(),
-            ImmutableSortedSet.of(),
-            ImmutableSortedSet.of(),
             "list",
             CommandLineArgsFactory.from(ImmutableList.of(script, "--foo", "bar")),
             ImmutableMap.of("EXIT_CODE", "1"));
@@ -218,5 +209,38 @@ public class RunActionTest {
 
     assertFalse(result.isSuccess());
     assertEquals(expectedStderr, getStderr(result));
+  }
+
+  @Test
+  public void getsInputsFromCommandLineArgs() throws IOException, EvalException {
+    Artifact otherInput = runner.declareArtifact(Paths.get("other.txt"));
+    Artifact output = runner.declareArtifact(Paths.get("out2.txt"));
+    runner.runAction(
+        new WriteAction(
+            runner.getRegistry(),
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(otherInput.asOutputArtifact()),
+            "contents",
+            false));
+
+    OutputArtifact outputArtifact = output.asOutputArtifact();
+    RunAction action =
+        new RunAction(
+            runner.getRegistry(),
+            "list",
+            CommandLineArgsFactory.from(
+                ImmutableList.of(
+                    script,
+                    "--foo",
+                    "bar",
+                    otherInput,
+                    output.asSkylarkOutputArtifact(Location.BUILTIN))),
+            ImmutableMap.of());
+
+    assertEquals(ImmutableSortedSet.of(otherInput, script), action.getInputs());
+    assertEquals(ImmutableSortedSet.of(outputArtifact), action.getOutputs());
+
+    StepExecutionResult result = runner.runAction(action).getResult();
+    assertTrue(result.isSuccess());
   }
 }

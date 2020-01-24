@@ -32,7 +32,6 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.step.ImmutableStepExecutionResult;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.TestExecutionContext;
@@ -149,7 +148,7 @@ public class JavacStepTest {
     assertThat(
         result,
         equalTo(
-            ImmutableStepExecutionResult.builder()
+            StepExecutionResult.builder()
                 .setExitCode(StepExecutionResults.ERROR_EXIT_CODE)
                 .setStderr(Optional.of("javac stderr\n"))
                 .build()));

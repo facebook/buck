@@ -22,6 +22,7 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_CONFIG;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_OPTIONS;
 import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
@@ -61,7 +62,7 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -87,6 +88,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.Optional;
+import java.util.OptionalInt;
 import org.immutables.value.Value;
 import org.junit.Test;
 
@@ -141,7 +143,7 @@ public class AndroidBinaryGraphEnhancerTest {
             Suppliers.ofInstance(originalDeps), ImmutableSortedSet::of, ImmutableSortedSet.of());
     AndroidBinaryGraphEnhancer graphEnhancer =
         createGraphEnhancer(
-            TestGraphEnhancerArgs.builder()
+            ImmutableTestGraphEnhancerArgs.builder()
                 .setTarget(apkTarget)
                 .setBuildRuleParams(originalParams)
                 .setGraphBuilder(graphBuilder)
@@ -272,7 +274,7 @@ public class AndroidBinaryGraphEnhancerTest {
             Suppliers.ofInstance(originalDeps), ImmutableSortedSet::of, ImmutableSortedSet.of());
     AndroidBinaryGraphEnhancer graphEnhancer =
         createGraphEnhancer(
-            TestGraphEnhancerArgs.builder()
+            ImmutableTestGraphEnhancerArgs.builder()
                 .setTarget(apkTarget)
                 .setBuildRuleParams(originalParams)
                 .setGraphBuilder(graphBuilder)
@@ -419,7 +421,7 @@ public class AndroidBinaryGraphEnhancerTest {
             Suppliers.ofInstance(originalDeps), ImmutableSortedSet::of, ImmutableSortedSet.of());
     AndroidBinaryGraphEnhancer graphEnhancer =
         createGraphEnhancer(
-            TestGraphEnhancerArgs.builder()
+            ImmutableTestGraphEnhancerArgs.builder()
                 .setTarget(apkTarget)
                 .setBuildRuleParams(originalParams)
                 .setGraphBuilder(graphBuilder)
@@ -488,7 +490,7 @@ public class AndroidBinaryGraphEnhancerTest {
   }
 
   @Test
-  public void testCreateDepsForPreDexingSplitDex() {
+  public void testCreateDepsForPreDexingSplitDexSingleGroup() {
     // Create three Java rules, :dep1, :dep2, and :lib. :lib depends on :dep1 and :dep2.
     BuildTarget javaDep1BuildTarget = BuildTargetFactory.newInstance("//java/com/example:dep1");
     TargetNode<?> javaDep1Node =
@@ -544,7 +546,7 @@ public class AndroidBinaryGraphEnhancerTest {
 
     AndroidBinaryGraphEnhancer graphEnhancer =
         createGraphEnhancer(
-            TestGraphEnhancerArgs.builder()
+            ImmutableTestGraphEnhancerArgs.builder()
                 .setTarget(apkTarget)
                 .setBuildRuleParams(originalParams)
                 .setGraphBuilder(graphBuilder)
@@ -595,8 +597,11 @@ public class AndroidBinaryGraphEnhancerTest {
     BuildTarget javaLibDexBuildTarget =
         javaLibBuildTarget.withAppendedFlavors(AndroidBinaryGraphEnhancer.D8_FLAVOR);
 
+    AndroidBinaryResourcesGraphEnhancer.AndroidBinaryResourcesGraphEnhancementResult
+        resourcesEnhancementResult = graphEnhancer.getResourcesGraphEnhancer().enhance(collection);
+
     HasDexFiles splitDexMergeEnhancerRule =
-        graphEnhancer.createPreDexMergeSplitDexRule(preDexedLibraries, ImmutableSet.of());
+        graphEnhancer.createPreDexMergeSplitDexRule(preDexedLibraries, resourcesEnhancementResult);
 
     BuildTarget splitDexMergeTarget =
         BuildTargetFactory.newInstance("//java/com/example:apk#d8,split_dex_merge");
@@ -605,7 +610,7 @@ public class AndroidBinaryGraphEnhancerTest {
     assertEquals(splitDexMergeRule, splitDexMergeEnhancerRule);
 
     BuildTarget dexGroupBuildTarget =
-        BuildTargetFactory.newInstance("//java/com/example:apk#secondary_dexes_1");
+        BuildTargetFactory.newInstance("//java/com/example:apk#secondary_dexes");
     BuildRule dexGroupRule = graphBuilder.getRule(dexGroupBuildTarget);
     assertThat(splitDexMergeRule.getBuildDeps(), hasItem(dexGroupRule));
     assertThat(
@@ -618,6 +623,159 @@ public class AndroidBinaryGraphEnhancerTest {
             not(hasItem(javaDep2BuildTarget)),
             not(hasItem(javaDep2DexBuildTarget)),
             hasItem(javaLibDexBuildTarget)));
+  }
+
+  @Test
+  public void testCreateDepsForPreDexingSplitDexMultiGroup() {
+    // Create three Java rules, :dep1, :dep2, and :lib. :lib depends on :dep1 and :dep2.
+    BuildTarget javaDep1BuildTarget = BuildTargetFactory.newInstance("//java/com/example:dep1");
+    TargetNode<?> javaDep1Node =
+        JavaLibraryBuilder.createBuilder(javaDep1BuildTarget)
+            .addSrc(Paths.get("java/com/example/Dep1.java"))
+            .build();
+
+    BuildTarget javaDep2BuildTarget = BuildTargetFactory.newInstance("//java/com/example:dep2");
+    TargetNode<?> javaDep2Node =
+        JavaLibraryBuilder.createBuilder(javaDep2BuildTarget)
+            .addSrc(Paths.get("java/com/example/Dep2.java"))
+            .build();
+
+    BuildTarget javaLibBuildTarget = BuildTargetFactory.newInstance("//java/com/example:lib");
+    TargetNode<?> javaLibNode =
+        JavaLibraryBuilder.createBuilder(javaLibBuildTarget)
+            .addSrc(Paths.get("java/com/example/Lib.java"))
+            .addDep(javaDep1Node.getBuildTarget())
+            .addDep(javaDep2Node.getBuildTarget())
+            .build();
+
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(javaDep1Node, javaDep2Node, javaLibNode);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+
+    BuildRule javaDep1 = graphBuilder.requireRule(javaDep1BuildTarget);
+    BuildRule javaDep2 = graphBuilder.requireRule(javaDep2BuildTarget);
+    BuildRule javaLib = graphBuilder.requireRule(javaLibBuildTarget);
+
+    // Assume we are enhancing an android_binary rule whose only dep
+    // is //java/com/example:lib, and that //java/com/example:dep2 is in its no_dx list.
+    ImmutableSortedSet<BuildRule> originalDeps = ImmutableSortedSet.of(javaLib);
+    ImmutableSet<BuildTarget> buildRulesToExcludeFromDex = ImmutableSet.of(javaDep2BuildTarget);
+    BuildTarget apkTarget = BuildTargetFactory.newInstance("//java/com/example:apk");
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildRuleParams originalParams =
+        new BuildRuleParams(
+            Suppliers.ofInstance(originalDeps), ImmutableSortedSet::of, ImmutableSortedSet.of());
+
+    DexSplitMode splitDexMode =
+        new DexSplitMode(
+            true,
+            ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
+            DexStore.JAR,
+            DexSplitMode.DEFAULT_LINEAR_ALLOC_HARD_LIMIT,
+            1,
+            ImmutableList.of(),
+            Optional.empty(),
+            Optional.empty(),
+            false,
+            Optional.empty(),
+            Optional.empty(),
+            false);
+
+    AndroidBinaryGraphEnhancer graphEnhancer =
+        createGraphEnhancer(
+            ImmutableTestGraphEnhancerArgs.builder()
+                .setTarget(apkTarget)
+                .setBuildRuleParams(originalParams)
+                .setGraphBuilder(graphBuilder)
+                .setResourceCompressionMode(ResourcesFilter.ResourceCompressionMode.DISABLED)
+                .setShouldPredex(true)
+                .setDexSplitMode(splitDexMode)
+                .setBuildRulesToExcludeFromDex(buildRulesToExcludeFromDex)
+                .setExopackageMode(EnumSet.noneOf(ExopackageMode.class))
+                .setTrimResourceIds(true)
+                .build());
+
+    BuildTarget aaptPackageResourcesTarget =
+        BuildTargetFactory.newInstance("//java/com/example:apk#aapt_package");
+    AaptPackageResources aaptPackageResources =
+        new AaptPackageResources(
+            aaptPackageResourcesTarget,
+            filesystem,
+            TestAndroidPlatformTargetFactory.create(),
+            graphBuilder,
+            /* manifest */ FakeSourcePath.of("java/src/com/facebook/base/AndroidManifest.xml"),
+            ImmutableList.of(),
+            new IdentityResourcesProvider(ImmutableList.of()),
+            ImmutableList.of(),
+            /* skipCrunchPngs */ false,
+            /* includesVectorDrawables */ false,
+            /* manifestEntries */ ManifestEntries.empty(),
+            ImmutableList.of());
+    graphBuilder.addToIndex(aaptPackageResources);
+
+    AndroidPackageableCollection collection =
+        new AndroidPackageableCollector(
+                /* collectionRoot */ apkTarget,
+                ImmutableSet.of(javaDep2BuildTarget),
+                new APKModuleGraph(TargetGraph.EMPTY, apkTarget, Optional.empty()))
+            .addClasspathEntry(((HasJavaClassHashes) javaDep1), FakeSourcePath.of("ignored"))
+            .addClasspathEntry(((HasJavaClassHashes) javaDep2), FakeSourcePath.of("ignored"))
+            .addClasspathEntry(((HasJavaClassHashes) javaLib), FakeSourcePath.of("ignored"))
+            .build();
+
+    ImmutableList<DexProducedFromJavaLibrary> preDexedLibraries =
+        graphEnhancer.createPreDexRulesForLibraries(
+            /* additionalJavaLibrariesToDex */
+            ImmutableList.of(), collection);
+
+    BuildTarget javaDep1DexBuildTarget =
+        javaDep1BuildTarget.withAppendedFlavors(AndroidBinaryGraphEnhancer.D8_FLAVOR);
+    BuildTarget javaLibDexBuildTarget =
+        javaLibBuildTarget.withAppendedFlavors(AndroidBinaryGraphEnhancer.D8_FLAVOR);
+
+    AndroidBinaryResourcesGraphEnhancer.AndroidBinaryResourcesGraphEnhancementResult
+        resourcesEnhancementResult = graphEnhancer.getResourcesGraphEnhancer().enhance(collection);
+
+    HasDexFiles splitDexMergeEnhancerRule =
+        graphEnhancer.createPreDexMergeSplitDexRule(preDexedLibraries, resourcesEnhancementResult);
+
+    BuildTarget splitDexMergeTarget =
+        BuildTargetFactory.newInstance("//java/com/example:apk#d8,split_dex_merge");
+    BuildRule splitDexMergeRule = graphBuilder.getRule(splitDexMergeTarget);
+
+    assertEquals(splitDexMergeRule, splitDexMergeEnhancerRule);
+
+    BuildTarget dexGroup1BuildTarget =
+        BuildTargetFactory.newInstance("//java/com/example:apk#secondary_dexes_1");
+    BuildTarget dexGroup2BuildTarget =
+        BuildTargetFactory.newInstance("//java/com/example:apk#secondary_dexes_2");
+    BuildRule dexGroup1Rule = graphBuilder.getRule(dexGroup1BuildTarget);
+    BuildRule dexGroup2Rule = graphBuilder.getRule(dexGroup2BuildTarget);
+    assertThat(splitDexMergeRule.getBuildDeps(), hasItem(dexGroup1Rule));
+
+    assertThat(
+        Iterables.transform(dexGroup1Rule.getBuildDeps(), BuildRule::getBuildTarget),
+        contains(javaDep1DexBuildTarget));
+    assertThat(
+        Iterables.transform(dexGroup2Rule.getBuildDeps(), BuildRule::getBuildTarget),
+        contains(javaLibDexBuildTarget));
+
+    BuildTarget trimUberRDotJavaTarget =
+        BuildTargetFactory.newInstance("//java/com/example:apk#trim_uber_r_dot_java");
+    BuildRule trimUberRDotJavaRule = graphBuilder.getRule(trimUberRDotJavaTarget);
+    BuildTarget rDotJavaDexTarget =
+        BuildTargetFactory.newInstance("//java/com/example:apk#r_dot_java_dex");
+
+    PreDexSplitDexGroup rDotJavaDexRule =
+        (PreDexSplitDexGroup) graphBuilder.getRule(rDotJavaDexTarget);
+    assertEquals(rDotJavaDexRule.getGroupIndex(), OptionalInt.of(3));
+
+    assertThat(
+        Iterables.transform(trimUberRDotJavaRule.getBuildDeps(), BuildRule::getBuildTarget),
+        contains(dexGroup1BuildTarget, dexGroup2BuildTarget));
+    assertThat(
+        Iterables.transform(splitDexMergeRule.getBuildDeps(), BuildRule::getBuildTarget),
+        contains(rDotJavaDexTarget, dexGroup1BuildTarget, dexGroup2BuildTarget));
   }
 
   @Test
@@ -648,7 +806,7 @@ public class AndroidBinaryGraphEnhancerTest {
     // set it up.
     AndroidBinaryGraphEnhancer graphEnhancer =
         createGraphEnhancer(
-            TestGraphEnhancerArgs.builder()
+            ImmutableTestGraphEnhancerArgs.builder()
                 .setTarget(apkTarget)
                 .setBuildRuleParams(originalParams)
                 .setGraphBuilder(graphBuilder)
@@ -722,7 +880,7 @@ public class AndroidBinaryGraphEnhancerTest {
         TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.of(resource));
     AndroidBinaryGraphEnhancer graphEnhancer =
         createGraphEnhancer(
-            TestGraphEnhancerArgs.builder()
+            ImmutableTestGraphEnhancerArgs.builder()
                 .setTarget(target)
                 .setBuildRuleParams(originalParams)
                 .setGraphBuilder(graphBuilder)
@@ -743,7 +901,7 @@ public class AndroidBinaryGraphEnhancerTest {
     BuildRuleParams originalParams = TestBuildRuleParams.create();
     AndroidBinaryGraphEnhancer graphEnhancer =
         createGraphEnhancer(
-            TestGraphEnhancerArgs.builder()
+            ImmutableTestGraphEnhancerArgs.builder()
                 .setTarget(target)
                 .setBuildRuleParams(originalParams)
                 .setGraphBuilder(graphBuilder)
@@ -792,7 +950,7 @@ public class AndroidBinaryGraphEnhancerTest {
         TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.of(resource));
     AndroidBinaryGraphEnhancer graphEnhancer =
         createGraphEnhancer(
-            TestGraphEnhancerArgs.builder()
+            ImmutableTestGraphEnhancerArgs.builder()
                 .setTarget(target)
                 .setBuildRuleParams(originalParams)
                 .setGraphBuilder(graphBuilder)
@@ -806,9 +964,8 @@ public class AndroidBinaryGraphEnhancerTest {
         resourcesDep);
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractTestGraphEnhancerArgs {
+  @BuckStyleValueWithBuilder
+  abstract static class TestGraphEnhancerArgs {
     abstract BuildTarget getTarget();
 
     abstract BuildRuleParams getBuildRuleParams();
@@ -830,6 +987,11 @@ public class AndroidBinaryGraphEnhancerTest {
 
     @Value.Default
     boolean getShouldPredex() {
+      return false;
+    }
+
+    @Value.Default
+    boolean getTrimResourceIds() {
       return false;
     }
 
@@ -900,7 +1062,7 @@ public class AndroidBinaryGraphEnhancerTest {
         /* buildConfigValues */ BuildConfigFields.of(),
         /* buildConfigValuesFiles */ Optional.empty(),
         XzStep.DEFAULT_COMPRESSION_LEVEL,
-        /* trimResourceIds */ false,
+        args.getTrimResourceIds(),
         /* keepResourcePattern */ Optional.empty(),
         false,
         /* nativeLibraryMergeMap */ Optional.empty(),
@@ -925,8 +1087,8 @@ public class AndroidBinaryGraphEnhancerTest {
         false);
   }
 
-  private NonPredexedDexBuildableArgs defaultNonPredexedArgs() {
-    return NonPredexedDexBuildableArgs.builder()
+  private NonPreDexedDexBuildable.NonPredexedDexBuildableArgs defaultNonPredexedArgs() {
+    return ImmutableNonPredexedDexBuildableArgs.builder()
         .setSdkProguardConfig(ProGuardObfuscateStep.SdkProguardType.NONE)
         .setDexReorderDataDumpFile(FakeSourcePath.of(""))
         .setDexReorderToolFile(FakeSourcePath.of(""))

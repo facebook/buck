@@ -24,7 +24,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcher;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.parser.function.BuckPyFunction;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.google.common.base.Joiner;
@@ -45,8 +45,7 @@ public class BuckPyFunctionTest {
     buckPyFunction = new BuckPyFunction(new DefaultTypeCoercerFactory());
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractNoName implements DataTransferObject {
     abstract String getRandom();
   }
@@ -60,8 +59,7 @@ public class BuckPyFunctionTest {
     assertTrue(definition.contains("name"));
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractNoVis implements DataTransferObject {
     abstract String getRandom();
   }
@@ -74,8 +72,7 @@ public class BuckPyFunctionTest {
     assertTrue(definition.contains("visibility=None"));
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractNamed implements DataTransferObject {}
 
   @Test
@@ -99,8 +96,7 @@ public class BuckPyFunctionTest {
         definition);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractLotsOfOptions implements DataTransferObject {
     abstract Optional<String> getThing();
 
@@ -131,8 +127,7 @@ public class BuckPyFunctionTest {
             "do_something=None, do_stuff=None, strings=None, targets=None, " + "thing=None"));
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractEither implements DataTransferObject {
     // Alphabetical ordering is deliberate.
     abstract Optional<String> getCat();
@@ -173,8 +168,7 @@ public class BuckPyFunctionTest {
         definition);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractVisible implements DataTransferObject {
     abstract Set<BuildTargetMatcher> getVisibility();
   }
@@ -184,8 +178,7 @@ public class BuckPyFunctionTest {
     buckPyFunction.toPythonFunction(RuleType.of("nope", RuleType.Kind.BUILD), Visible.class);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractDto implements DataTransferObject {
     abstract String getSomeField();
   }

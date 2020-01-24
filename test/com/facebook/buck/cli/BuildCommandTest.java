@@ -32,6 +32,7 @@ import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwar
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
@@ -70,7 +71,7 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.spec.BuildFileSpec;
 import com.facebook.buck.parser.spec.BuildTargetSpec;
-import com.facebook.buck.parser.spec.ImmutableTargetNodePredicateSpec;
+import com.facebook.buck.parser.spec.TargetNodePredicateSpec;
 import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
@@ -145,7 +146,7 @@ public class BuildCommandTest {
           }
         };
 
-    ImmutableSet<ImmutableBuildTargetWithOutputs> result =
+    ImmutableSet<BuildTargetWithOutputs> result =
         buildCommand
             .createGraphsAndTargets(
                 params, MoreExecutors.newDirectExecutorService(), specs -> specs, Optional.empty())
@@ -178,7 +179,7 @@ public class BuildCommandTest {
           }
         };
 
-    ImmutableSet<ImmutableBuildTargetWithOutputs> result =
+    ImmutableSet<BuildTargetWithOutputs> result =
         buildCommand
             .createGraphsAndTargets(
                 params,
@@ -217,7 +218,7 @@ public class BuildCommandTest {
           }
         };
 
-    ImmutableSet<ImmutableBuildTargetWithOutputs> result =
+    ImmutableSet<BuildTargetWithOutputs> result =
         buildCommand
             .createGraphsAndTargets(
                 params,
@@ -241,7 +242,7 @@ public class BuildCommandTest {
 
     ImmutableList<TargetNodeSpec> targetNodeSpecs =
         ImmutableList.of(
-            ImmutableTargetNodePredicateSpec.of(
+            TargetNodePredicateSpec.of(
                 BuildFileSpec.fromUnconfiguredBuildTarget(
                     UnconfiguredBuildTargetFactoryForTests.newInstance(
                         projectFilesystem, buildTargetName))));
@@ -257,7 +258,7 @@ public class BuildCommandTest {
           }
         };
 
-    ImmutableSet<ImmutableBuildTargetWithOutputs> result =
+    ImmutableSet<BuildTargetWithOutputs> result =
         buildCommand
             .createGraphsAndTargets(
                 params,
@@ -601,11 +602,8 @@ public class BuildCommandTest {
     ActionGraphAndBuilder actionGraphAndBuilder =
         createActionGraph(
             targetGraph, defaultPath, pathsByLabelsForTargets, useMultipleOutputsRule);
-    return ActionAndTargetGraphs.builder()
-        .setUnversionedTargetGraph(targetGraphCreationResult)
-        .setVersionedTargetGraph(targetGraphCreationResult)
-        .setActionGraphAndBuilder(actionGraphAndBuilder)
-        .build();
+    return ActionAndTargetGraphs.of(
+        targetGraphCreationResult, Optional.of(targetGraphCreationResult), actionGraphAndBuilder);
   }
 
   private BuildCommand.GraphsAndBuildTargets getGraphsAndBuildTargets(

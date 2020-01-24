@@ -31,6 +31,7 @@ import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsSupplier;
+import com.facebook.buck.cxx.toolchain.ProviderBackedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
@@ -176,6 +177,9 @@ public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatform
       Flavor flavor,
       CxxBuckConfig cxxConfig) {
     UnresolvedCxxPlatform baseUnresolvedCxxPlatform = cxxSystemPlatformsMap.get(flavor);
+    if (baseUnresolvedCxxPlatform instanceof ProviderBackedCxxPlatform) {
+      return Optional.of(baseUnresolvedCxxPlatform);
+    }
     CxxPlatform baseCxxPlatform;
     if (baseUnresolvedCxxPlatform == null) {
       if (possibleHostFlavors.contains(flavor)) {

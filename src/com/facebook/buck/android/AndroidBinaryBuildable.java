@@ -202,7 +202,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     ImmutableMap<String, SourcePath> mapOfModuleToSecondaryDexSourcePaths =
         dexFilesInfo.getMapOfModuleToSecondaryDexSourcePaths();
 
-    ModuleInfo.Builder baseModuleInfo = ModuleInfo.builder();
+    ImmutableModuleInfo.Builder baseModuleInfo = ImmutableModuleInfo.builder();
     baseModuleInfo.setModuleName("base");
 
     for (APKModule module : apkModules) {
@@ -389,7 +389,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       SourcePathResolverAdapter pathResolver,
       BuildContext context,
       ImmutableMap<String, SourcePath> mapOfModuleToSecondaryDexSourcePaths,
-      ModuleInfo.Builder baseModuleInfo,
+      ImmutableModuleInfo.Builder baseModuleInfo,
       ImmutableSet.Builder<ModuleInfo> modulesInfo) {
     boolean addThisModule = false;
     ImmutableMap.Builder<Path, String> assetDirectoriesBuilderForThisModule =
@@ -459,7 +459,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     } else {
       String moduleName = module.getName();
       modulesInfo.add(
-          ModuleInfo.of(
+          ImmutableModuleInfo.of(
               moduleName,
               resourcesDirectoryForThisModule,
               dexFileDirectoriesBuilderForThisModule.build(),

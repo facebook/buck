@@ -17,12 +17,15 @@
 package com.facebook.buck.skylark.function;
 
 import com.facebook.buck.core.description.arg.BuildRuleArg;
+import com.facebook.buck.core.description.arg.HasContacts;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
+import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableSourceSortedSetAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableStringAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableStringListAttribute;
+import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableStringSortedSetAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableUnconfiguredDepListAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableUnconfiguredOptionalDepAttribute;
 import com.facebook.buck.util.types.Pair;
@@ -44,10 +47,26 @@ class SkylarkRuleFunctionImplicitAttributes {
 
   private SkylarkRuleFunctionImplicitAttributes() {}
 
-  static ImmutableMap<String, Attribute<?>> compute() {
-    ImmutableMap.Builder<String, Attribute<?>> attrs = ImmutableMap.builder();
+  private static void addCommon(ImmutableMap.Builder<String, Attribute<?>> builder) {
     // BuildRuleArg defines attributes of all build rules, native or user defined
     for (Method method : BuildRuleArg.class.getMethods()) {
+      Optional<Pair<String, Attribute<?>>> pair = methodToAttribute(method);
+      if (pair.isPresent()) {
+        builder.put(pair.get().getFirst(), pair.get().getSecond());
+      }
+    }
+  }
+
+  static ImmutableMap<String, Attribute<?>> compute() {
+    ImmutableMap.Builder<String, Attribute<?>> attrs = ImmutableMap.builder();
+    addCommon(attrs);
+    return attrs.build();
+  }
+
+  static ImmutableMap<String, Attribute<?>> computeTest() {
+    ImmutableMap.Builder<String, Attribute<?>> attrs = ImmutableMap.builder();
+    addCommon(attrs);
+    for (Method method : HasContacts.class.getMethods()) {
       Optional<Pair<String, Attribute<?>>> pair = methodToAttribute(method);
       if (pair.isPresent()) {
         attrs.put(pair.get().getFirst(), pair.get().getSecond());
@@ -87,10 +106,10 @@ class SkylarkRuleFunctionImplicitAttributes {
           "", "The name of the target", !method.isDefault(), ImmutableList.of());
     } else if (new TypeToken<ImmutableSortedSet<String>>() {}.getType()
         .equals(method.getGenericReturnType())) {
-      return ImmutableStringListAttribute.of(ImmutableList.of(), "", false, true);
+      return ImmutableStringSortedSetAttribute.of(ImmutableSortedSet.of(), "", false, true);
     } else if (new TypeToken<ImmutableSet<SourcePath>>() {}.getType()
         .equals(method.getGenericReturnType())) {
-      return ImmutableStringListAttribute.of(ImmutableList.of(), "", false, true);
+      return ImmutableSourceSortedSetAttribute.of(ImmutableSortedSet.of(), "", false, true);
     } else if (new TypeToken<ImmutableList<BuildTarget>>() {}.getType()
         .equals(method.getGenericReturnType())) {
       return ImmutableStringListAttribute.of(ImmutableList.of(), "", false, true);

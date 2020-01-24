@@ -19,7 +19,9 @@ package com.facebook.buck.core.rules.actions;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.BoundArtifact;
 import com.facebook.buck.core.artifact.BuildArtifact;
+import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.google.common.collect.ImmutableSet;
@@ -31,8 +33,10 @@ import java.util.Objects;
 public abstract class AbstractAction implements Action {
 
   protected final BuildTarget owner;
-  protected final ImmutableSortedSet<Artifact> inputs;
-  protected final ImmutableSortedSet<Artifact> outputs;
+  private final String id;
+  @AddToRuleKey protected final ImmutableSortedSet<Artifact> inputs;
+  @AddToRuleKey protected final ImmutableSortedSet<OutputArtifact> outputs;
+  @AddToRuleKey private final String shortName;
 
   /**
    * @param registry the {@link DefaultActionRegistry} to registry this action for.
@@ -43,12 +47,14 @@ public abstract class AbstractAction implements Action {
   protected AbstractAction(
       ActionRegistry registry,
       ImmutableSortedSet<Artifact> inputs,
-      ImmutableSortedSet<Artifact> outputs) {
+      ImmutableSortedSet<OutputArtifact> outputs,
+      String shortName) {
     this.inputs = inputs;
     this.outputs = outputs;
     this.owner = registry.getOwner();
+    this.shortName = shortName;
 
-    registry.registerActionAnalysisDataForAction(this);
+    this.id = registry.registerActionAnalysisDataForAction(this);
   }
 
   @Override
@@ -62,18 +68,31 @@ public abstract class AbstractAction implements Action {
   }
 
   @Override
-  public final ImmutableSortedSet<Artifact> getOutputs() {
+  public final ImmutableSortedSet<OutputArtifact> getOutputs() {
     return outputs;
   }
 
   @Override
   public ImmutableSortedSet<SourcePath> getSourcePathOutputs() {
     return ImmutableSortedSet.copyOf(
-        Iterables.transform(getOutputs(), artifact -> artifact.asBound().getSourcePath()));
+        Iterables.transform(
+            getOutputs(), artifact -> artifact.getArtifact().asBound().getSourcePath()));
+  }
+
+  @Override
+  public final String getShortName() {
+    return shortName;
+  }
+
+  @Override
+  public final String getID() {
+    return id;
   }
 
   @Override
   public BuildTarget getBuildTarget() {
+    // TODO: this should no longer extend build engine action, and this build target is no longer
+    // relevant
     return getOwner();
   }
 

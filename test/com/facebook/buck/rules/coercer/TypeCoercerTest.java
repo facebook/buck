@@ -35,7 +35,7 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
@@ -878,8 +878,7 @@ public class TypeCoercerTest {
         map);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractSomeImmutable extends DataTransferObject {
     AnotherImmutable getAnotherImmutable();
   }
@@ -893,8 +892,7 @@ public class TypeCoercerTest {
     }
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractAnotherImmutable implements AnotherImmutableInterface {
     abstract Optional<String> getSetOptional();
 

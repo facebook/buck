@@ -195,7 +195,10 @@ public class HaskellLibraryDescriptionTest {
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.DEFAULT_PLATFORM.withArchiveContents(ArchiveContents.THIN);
     HaskellPlatform haskellPlatform =
-        HaskellTestUtils.DEFAULT_PLATFORM.withCxxPlatform(cxxPlatform);
+        HaskellPlatform.builder()
+            .from(HaskellTestUtils.DEFAULT_PLATFORM)
+            .setCxxPlatform(cxxPlatform)
+            .build();
     FlavorDomain<HaskellPlatform> haskellPlatforms =
         FlavorDomain.of("Haskell Platforms", haskellPlatform);
 
@@ -272,10 +275,13 @@ public class HaskellLibraryDescriptionTest {
   @Test
   public void defaultPlatform() {
     HaskellPlatform ruleDefaultPlatform =
-        HaskellTestUtils.DEFAULT_PLATFORM.withCxxPlatform(
-            HaskellTestUtils.DEFAULT_PLATFORM
-                .getCxxPlatform()
-                .withFlavor(InternalFlavor.of("custom_platform")));
+        HaskellPlatform.builder()
+            .from(HaskellTestUtils.DEFAULT_PLATFORM)
+            .setCxxPlatform(
+                HaskellTestUtils.DEFAULT_PLATFORM
+                    .getCxxPlatform()
+                    .withFlavor(InternalFlavor.of("custom_platform")))
+            .build();
     HaskellLibraryBuilder libBuilder =
         new HaskellLibraryBuilder(
             BuildTargetFactory.newInstance("//:rule"),

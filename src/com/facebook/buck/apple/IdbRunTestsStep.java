@@ -22,7 +22,6 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.TeeInputStream;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.step.ImmutableStepExecutionResult;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -397,7 +396,7 @@ public class IdbRunTestsStep implements Step {
         }
       }
 
-      return ImmutableStepExecutionResult.builder()
+      return StepExecutionResult.builder()
           .setExitCode(exitCode)
           .setExecutedCommand(launchedProcess.getCommand())
           .setStderr(Optional.ofNullable(stderr))

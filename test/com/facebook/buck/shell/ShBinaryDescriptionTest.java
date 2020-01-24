@@ -19,6 +19,7 @@ package com.facebook.buck.shell;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -40,7 +41,7 @@ public class ShBinaryDescriptionTest {
             .setMain(main)
             .build(graphBuilder);
     assertThat(
-        BuildableSupport.deriveInputs(shBinary.getExecutableCommand())
+        BuildableSupport.deriveInputs(shBinary.getExecutableCommand(OutputLabel.defaultLabel()))
             .collect(ImmutableList.toImmutableList()),
         Matchers.hasItem(main));
   }
@@ -56,7 +57,7 @@ public class ShBinaryDescriptionTest {
             .setResources(ImmutableSet.of(resource))
             .build(graphBuilder);
     assertThat(
-        BuildableSupport.deriveInputs(shBinary.getExecutableCommand())
+        BuildableSupport.deriveInputs(shBinary.getExecutableCommand(OutputLabel.defaultLabel()))
             .collect(ImmutableList.toImmutableList()),
         Matchers.hasItem(resource));
   }

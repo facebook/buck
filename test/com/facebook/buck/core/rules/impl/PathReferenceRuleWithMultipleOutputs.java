@@ -25,9 +25,11 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 /**
  * A {@link PathReferenceRule} that supports multiple outputs. Returns specific sets of {@link
@@ -51,7 +53,7 @@ public class PathReferenceRuleWithMultipleOutputs extends PathReferenceRule
           OutputLabel.defaultLabel(),
           source == null
               ? ImmutableSortedSet.of()
-              : ImmutableSortedSet.of(getSourcePathToOutput()));
+              : ImmutableSortedSet.of(ExplicitBuildTargetSourcePath.of(getBuildTarget(), source)));
     }
     for (Map.Entry<OutputLabel, ImmutableSet<Path>> entry : outputLabelsToOutputs.entrySet()) {
       builder.put(
@@ -65,18 +67,25 @@ public class PathReferenceRuleWithMultipleOutputs extends PathReferenceRule
 
   @Override
   public ImmutableSortedSet<SourcePath> getSourcePathToOutput(OutputLabel outputLabel) {
-    if (outputLabel.isDefault()) {
-      SourcePath sourcePath = getSourcePathToOutput();
-      if (sourcePath == null) {
-        return ImmutableSortedSet.of();
-      }
-      return ImmutableSortedSet.of(sourcePath);
+    ImmutableSortedSet<SourcePath> outputs = outputLabelsToSourcePaths.get(outputLabel);
+    if (outputs == null) {
+      return ImmutableSortedSet.of();
     }
-    return outputLabelsToSourcePaths.get(outputLabel);
+    return outputs;
+  }
+
+  @Nullable
+  @Override
+  public SourcePath getSourcePathToOutput() {
+    ImmutableSortedSet<SourcePath> sourcePaths = getSourcePathToOutput(OutputLabel.defaultLabel());
+    if (sourcePaths.size() == 1) {
+      return Iterables.getOnlyElement(sourcePaths);
+    }
+    return null;
   }
 
   @Override
-  public ImmutableMap<OutputLabel, ImmutableSortedSet<SourcePath>> getSourcePathsByOutputsLabels() {
-    return outputLabelsToSourcePaths;
+  public ImmutableSet<OutputLabel> getOutputLabels() {
+    return outputLabelsToSourcePaths.keySet();
   }
 }

@@ -16,12 +16,27 @@
 
 package com.facebook.buck.features.apple.projectV2;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.dd.plist.NSDictionary;
+import com.dd.plist.NSString;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXGroup;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXSourcesBuildPhase;
+import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import java.nio.file.Path;
+import java.util.Map;
+import java.util.Optional;
 
 public class PBXTestUtils {
   public static PBXFileReference assertHasFileReferenceWithNameAndReturnIt(
@@ -56,5 +71,72 @@ public class PBXTestUtils {
       group = assertHasSubgroupAndReturnIt(group, component);
     }
     return group;
+  }
+
+  public static void assertHasSingleSourcesPhaseWithSourcesAndFlags(
+      PBXTarget target,
+      ImmutableMap<String, Optional<String>> sourcesAndFlags,
+      ProjectFilesystem projectFilesystem,
+      Path outputDirectory) {
+
+    PBXSourcesBuildPhase sourcesBuildPhase =
+        ProjectGeneratorTestUtils.getSingleBuildPhaseOfType(target, PBXSourcesBuildPhase.class);
+
+    assertEquals(
+        "Sources build phase should have correct number of sources",
+        sourcesAndFlags.size(),
+        sourcesBuildPhase.getFiles().size());
+
+    // map keys to absolute paths
+    ImmutableMap.Builder<String, Optional<String>> absolutePathFlagMapBuilder =
+        ImmutableMap.builder();
+    for (Map.Entry<String, Optional<String>> name : sourcesAndFlags.entrySet()) {
+      absolutePathFlagMapBuilder.put(
+          projectFilesystem
+              .getRootPath()
+              .resolve(name.getKey())
+              .toAbsolutePath()
+              .normalize()
+              .toString(),
+          name.getValue());
+    }
+    ImmutableMap<String, Optional<String>> absolutePathFlagMap = absolutePathFlagMapBuilder.build();
+
+    for (PBXBuildFile file : sourcesBuildPhase.getFiles()) {
+      String filePath =
+          assertFileRefIsRelativeAndResolvePath(
+              file.getFileRef(), projectFilesystem, outputDirectory);
+      Optional<String> flags = absolutePathFlagMap.get(filePath);
+      assertNotNull(String.format("Unexpected file ref '%s' found", filePath), flags);
+      if (flags.isPresent()) {
+        assertTrue("Build file should have settings dictionary", file.getSettings().isPresent());
+
+        NSDictionary buildFileSettings = file.getSettings().get();
+        NSString compilerFlags = (NSString) buildFileSettings.get("COMPILER_FLAGS");
+
+        assertNotNull("Build file settings should have COMPILER_FLAGS entry", compilerFlags);
+        assertEquals(
+            "Build file settings should be expected value",
+            flags.get(),
+            compilerFlags.getContent());
+      } else {
+        assertFalse(
+            "Build file should not have settings dictionary", file.getSettings().isPresent());
+      }
+    }
+  }
+
+  public static String assertFileRefIsRelativeAndResolvePath(
+      PBXReference fileRef, ProjectFilesystem projectFilesystem, Path outputDirectory) {
+    assert (!fileRef.getPath().startsWith("/"));
+    assertEquals(
+        "file path should be relative to project directory",
+        PBXReference.SourceTree.SOURCE_ROOT,
+        fileRef.getSourceTree());
+    return projectFilesystem
+        .resolve(outputDirectory)
+        .resolve(fileRef.getPath())
+        .normalize()
+        .toString();
   }
 }

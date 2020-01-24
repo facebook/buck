@@ -17,7 +17,6 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.android.toolchain.AndroidTools;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.HasOutputName;
 import com.facebook.buck.core.model.OutputLabel;
@@ -40,11 +39,11 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -64,7 +63,7 @@ import java.util.stream.Collectors;
  * )
  * </pre>
  *
- * The output of this rule would likely be used as follows:
+ * <p>The output of this rule would likely be used as follows:
  *
  * <pre>
  * android_binary(
@@ -76,7 +75,43 @@ import java.util.stream.Collectors;
  * )
  * </pre>
  *
- * A <code>genrule</code> is evaluated by running the shell command specified by {@code cmd} with
+ * <p>Named outputs are availabe in genrules by using `outs` instead of `out`. Only one of 'out' or
+ * 'outs' may be present in a genrule. For example, the aforementioned rule can be defined as:
+ *
+ * <pre>
+ * genrule(
+ *   name = 'katana_manifest',
+ *   srcs = [
+ *     'wakizashi_to_katana_manifest.py',
+ *     'AndroidManifest.xml',
+ *   ],
+ *   cmd = 'python wakizashi_to_katana_manifest.py ${SRCDIR}/AndroidManfiest.xml &gt; $OUT',
+ *   outs = {
+ *    'manifest': [ 'AndroidManifest.xml'] ,
+ *   },
+ * )
+ * </pre>
+ *
+ * <p>The key-value pairs in 'outs' define the named output groups provided by this genrule. The
+ * keys are {@link OutputLabel} instances, while the values are outputs relative to this genrule's
+ * output directory. Genrule outputs with 'outs' can be consumed using the {@link
+ * com.facebook.buck.core.model.BuildTargetWithOutputs} syntax. For example:
+ *
+ * <pre>
+ * android_binary(
+ *   name = 'katana',
+ *   manifest = ':katana_manifest[manifest]',
+ *   deps = [
+ *     # Additional dependent android_library rules would be listed here, as well.
+ *   ],
+ * )
+ * </pre>
+ *
+ * <p>If a rule with 'outs' is consumed without an output label, the default output group is
+ * returned. Currently, the default output group is an empty set. In the future, it would be the set
+ * of all named outputs.
+ *
+ * <p>A <code>genrule</code> is evaluated by running the shell command specified by {@code cmd} with
  * the following environment variable substitutions:
  *
  * <ul>
@@ -84,9 +119,10 @@ import java.util.stream.Collectors;
  *       attribute where each element of <code>srcs</code> will be translated into an absolute path.
  *   <li><code>SRCDIR</code> will be a directory containing all files mentioned in the srcs.
  *   <li><code>TMP</code> will be a temporary directory which can be used for intermediate results
- *   <li><code>OUT</code> is the output file for the <code>genrule()</code>. The file specified by
- *       this variable must always be written by this command. If not, the execution of this rule
- *       will be considered a failure, halting the build process.
+ *   <li><code>OUT</code> is </code>the output file for the <code>genrule()</code> if 'out' is used.
+ *       If using `outs`, it is the output directory. The file specified by this variable must
+ *       always be written by this command. If not, the execution of this rule will be considered a
+ *       failure, halting the build process.
  * </ul>
  *
  * In the above example, if the {@code katana_manifest} rule were defined in the {@code
@@ -117,13 +153,13 @@ public class Genrule extends ModernBuildRule<GenruleBuildable>
       Optional<Arg> cmdExe,
       Optional<String> type,
       Optional<String> out,
-      Optional<ImmutableMap<String, ImmutableList<String>>> outs,
+      Optional<ImmutableMap<String, ImmutableSet<String>>> outs,
       boolean enableSandboxingInGenrule,
       boolean isCacheable,
       Optional<String> environmentExpansionSeparator,
       Optional<AndroidTools> androidTools,
       boolean executeRemotely) {
-    super(
+    this(
         buildTarget,
         projectFilesystem,
         buildRuleResolver,
@@ -151,6 +187,18 @@ public class Genrule extends ModernBuildRule<GenruleBuildable>
             executeRemotely));
   }
 
+  protected Genrule(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleResolver buildRuleResolver,
+      GenruleBuildable buildable) {
+    super(buildTarget, projectFilesystem, buildRuleResolver, buildable);
+  }
+
+  /**
+   * Returns the output defined in 'out'. Should not be used with multiple outputs. Use {@link
+   * #getSourcePathToOutput(OutputLabel)} instead.
+   */
   @Override
   public SourcePath getSourcePathToOutput() {
     ImmutableSortedSet<SourcePath> sourcePaths = getSourcePathToOutput(OutputLabel.defaultLabel());
@@ -163,22 +211,12 @@ public class Genrule extends ModernBuildRule<GenruleBuildable>
 
   @Override
   public ImmutableSortedSet<SourcePath> getSourcePathToOutput(OutputLabel outputLabel) {
-    ImmutableSortedSet<SourcePath> sourcePaths =
-        getSourcePaths(getBuildable().getOutputs(outputLabel));
-    if (outputLabel.isDefault() && sourcePaths.size() > 1) {
-      // This will fail anyway even without this exception being thrown here, but throwing the
-      // exception here gives a genrule-specific error rather than a more generic framework error.
-      throw new HumanReadableException(
-          "Genrule target %s doesn't support multiple default outputs yet. Use named outputs.",
-          getBuildTarget().getFullyQualifiedName());
-    }
-    return sourcePaths;
+    return getSourcePaths(getBuildable().getOutputs(outputLabel));
   }
 
   @Override
-  public ImmutableMap<OutputLabel, ImmutableSortedSet<SourcePath>> getSourcePathsByOutputsLabels() {
-    return getBuildable().getOutputMap().entrySet().stream()
-        .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, e -> getSourcePaths(e.getValue())));
+  public ImmutableSet<OutputLabel> getOutputLabels() {
+    return getBuildable().getOutputLabels();
   }
 
   @Override
@@ -186,18 +224,10 @@ public class Genrule extends ModernBuildRule<GenruleBuildable>
     return super.getType() + (getBuildable().type.map(typeStr -> "_" + typeStr).orElse(""));
   }
 
-  /**
-   * Get the output name of the generated file, as listed in the BUCK file. Should only be called if
-   * 'out' is specified in the BUCK file.
-   */
+  /** Get the output name of the generated file, as listed in the BUCK file. */
   @Override
-  public String getOutputName() {
-    Optional<String> out = getBuildable().out;
-    Preconditions.checkState(
-        out.isPresent(),
-        "Unexpectedly cannot find output for %s.",
-        getBuildTarget().getFullyQualifiedName());
-    return out.get();
+  public String getOutputName(OutputLabel outputLabel) {
+    return getBuildable().getOutputName(outputLabel);
   }
 
   /** Get whether or not the output of this genrule can be cached. */

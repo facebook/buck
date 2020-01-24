@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android.toolchain.impl;
 
+import com.facebook.buck.android.toolchain.AdbToolchain;
 import com.facebook.buck.android.toolchain.AndroidBuildToolsLocation;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
@@ -45,6 +46,8 @@ public class AndroidSdkToolchainsSupplier implements ToolchainSupplier {
             AndroidSdkLocation.class,
             AndroidSdkLocationFactory.class),
         ToolchainDescriptor.of(
-            DxToolchain.DEFAULT_NAME, DxToolchain.class, DxToolchainFactory.class));
+            DxToolchain.DEFAULT_NAME, DxToolchain.class, DxToolchainFactory.class),
+        ToolchainDescriptor.of(
+            AdbToolchain.DEFAULT_NAME, AdbToolchain.class, AdbToolchainFactory.class));
   }
 }

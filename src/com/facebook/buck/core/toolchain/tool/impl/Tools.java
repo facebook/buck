@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.toolchain.tool.impl;
 
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
@@ -36,6 +37,6 @@ public class Tools {
     Verify.verify(sourcePath instanceof BuildTargetSourcePath);
     BuildRule rule = resolver.getRule(((BuildTargetSourcePath) sourcePath).getTarget());
     Verify.verify(rule instanceof BinaryBuildRule);
-    return ((BinaryBuildRule) rule).getExecutableCommand();
+    return ((BinaryBuildRule) rule).getExecutableCommand(OutputLabel.defaultLabel());
   }
 }

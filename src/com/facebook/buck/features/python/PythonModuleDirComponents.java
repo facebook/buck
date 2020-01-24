@@ -23,6 +23,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.step.fs.SymlinkPaths;
+import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -69,6 +70,7 @@ abstract class PythonModuleDirComponents implements PythonComponents {
     private final Path directory;
 
     public Resolved(Path directory) {
+      Preconditions.checkArgument(directory.isAbsolute());
       this.directory = directory;
     }
 

@@ -17,6 +17,9 @@
 package com.facebook.buck.core.sourcepath;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
+import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ComparisonChain;
@@ -37,19 +40,38 @@ public abstract class ExplicitBuildTargetSourcePath implements BuildTargetSource
    *
    * @param target The value for the {@code target} attribute
    * @param resolvedPath The value for the {@code resolvedPath} attribute
-   * @return An immutable ExplicitBuildTargetSourcePath instance
+   * @return An immutable ExplicitBuildTargetSourcePath instance pointing to the given target's
+   *     default outputs
    */
   public static ExplicitBuildTargetSourcePath of(BuildTarget target, Path resolvedPath) {
+    return of(
+        ImmutableBuildTargetWithOutputs.of(target, OutputLabel.defaultLabel()),
+        resolvedPath,
+        Optional.empty());
+  }
+
+  /**
+   * Construct a new immutable {@code ExplicitBuildTargetSourcePath} instance.
+   *
+   * @param target The {@link BuildTargetWithOutputs} associated with this {@link SourcePath}
+   * @param resolvedPath The value for the {@code resolvedPath} attribute
+   * @return An immutable ExplicitBuildTargetSourcePath instance pointing to outputs associated with
+   *     the given {@code targetWithOutputs}
+   */
+  public static ExplicitBuildTargetSourcePath of(BuildTargetWithOutputs target, Path resolvedPath) {
     return of(target, resolvedPath, Optional.empty());
   }
 
   public static ExplicitBuildTargetSourcePath of(
-      BuildTarget target, Path resolvedPath, Optional<? extends HashCode> precomputedHash) {
-    return ImmutableExplicitBuildTargetSourcePath.of(target, resolvedPath, precomputedHash);
+      BuildTargetWithOutputs targetWithOutputs,
+      Path resolvedPath,
+      Optional<? extends HashCode> precomputedHash) {
+    return ImmutableExplicitBuildTargetSourcePath.of(
+        targetWithOutputs, resolvedPath, precomputedHash);
   }
 
   @Override
-  public abstract BuildTarget getTarget();
+  public abstract BuildTargetWithOutputs getTargetWithOutputs();
 
   public abstract Path getResolvedPath();
 
@@ -58,7 +80,7 @@ public abstract class ExplicitBuildTargetSourcePath implements BuildTargetSource
 
   @Override
   public int hashCode() {
-    return Objects.hash(getTarget(), getResolvedPath());
+    return Objects.hash(getTargetWithOutputs(), getResolvedPath());
   }
 
   @Override
@@ -72,12 +94,13 @@ public abstract class ExplicitBuildTargetSourcePath implements BuildTargetSource
     }
 
     ExplicitBuildTargetSourcePath that = (ExplicitBuildTargetSourcePath) other;
-    return getTarget().equals(that.getTarget()) && getResolvedPath().equals(that.getResolvedPath());
+    return getTargetWithOutputs().equals(that.getTargetWithOutputs())
+        && getResolvedPath().equals(that.getResolvedPath());
   }
 
   @Override
   public String toString() {
-    return String.valueOf(new Pair<>(getTarget(), getResolvedPath()));
+    return String.valueOf(new Pair<>(getTargetWithOutputs(), getResolvedPath()));
   }
 
   @Override
@@ -94,7 +117,7 @@ public abstract class ExplicitBuildTargetSourcePath implements BuildTargetSource
     ExplicitBuildTargetSourcePath that = (ExplicitBuildTargetSourcePath) other;
 
     return ComparisonChain.start()
-        .compare(getTarget(), that.getTarget())
+        .compare(getTargetWithOutputs(), that.getTargetWithOutputs())
         .compare(getResolvedPath(), that.getResolvedPath())
         .result();
   }

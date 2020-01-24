@@ -43,7 +43,7 @@ public class ElfClearProgramHeadersStepTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "elf_shared_lib", tmp);
     workspace.setUp();
     ElfClearProgramHeadersStep step =
-        ElfClearProgramHeadersStep.of(
+        ImmutableElfClearProgramHeadersStep.of(
             TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()),
             tmp.getRoot().getFileSystem().getPath("libfoo.so"));
     step.execute(TestExecutionContext.newInstance());

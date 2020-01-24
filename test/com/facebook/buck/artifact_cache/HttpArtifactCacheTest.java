@@ -90,7 +90,7 @@ public class HttpArtifactCacheTest {
       "{cache_name} encountered an error: {error_message}";
   private static final int ERROR_TEXT_LIMIT = 100;
 
-  private NetworkCacheArgs.Builder argsBuilder;
+  private ImmutableNetworkCacheArgs.Builder argsBuilder;
 
   private ResponseBody createResponseBody(
       ImmutableSet<RuleKey> ruleKeys,
@@ -138,7 +138,7 @@ public class HttpArtifactCacheTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     CellPathResolver cellPathResolver = TestCellPathResolver.get(projectFilesystem);
     this.argsBuilder =
-        NetworkCacheArgs.builder()
+        ImmutableNetworkCacheArgs.builder()
             .setCacheName("http")
             .setCacheMode(ArtifactCacheMode.http)
             .setRepository("some_repository")

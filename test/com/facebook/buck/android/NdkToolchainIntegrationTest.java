@@ -37,11 +37,11 @@ public class NdkToolchainIntegrationTest {
   @Before
   public void setUp() throws Exception {
     AssumeAndroidPlatform.getForDefaultFilesystem().assumeSdkIsAvailable();
-    AssumeAndroidPlatform.getForDefaultFilesystem().assumeNdkIsAvailable();
   }
 
   @Test
   public void testBuildWithCustomNdkToolchain() throws IOException {
+    AssumeAndroidPlatform.getForDefaultFilesystem().assumeNdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "ndk_toolchain", tmp);
     CxxToolchainHelper.addCxxToolchainToWorkspace(workspace);
@@ -66,6 +66,7 @@ public class NdkToolchainIntegrationTest {
 
   @Test
   public void testBuildWithBadToolchain() throws IOException {
+    AssumeAndroidPlatform.getForDefaultFilesystem().assumeNdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "ndk_toolchain", tmp);
     CxxToolchainHelper.addCxxToolchainToWorkspace(workspace);
@@ -79,6 +80,29 @@ public class NdkToolchainIntegrationTest {
     ProcessResult result = workspace.runBuckBuild("-c", "ndk.cpu_abis=x86", "//:fat_apk");
     result.assertFailure();
     assertThat(result.getStderr(), containsString("stderr: unimplemented"));
+  }
+
+  @Test
+  public void testBuildWithCustomNdkToolchainNdkPath() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "ndk_toolchain", tmp);
+    CxxToolchainHelper.addCxxToolchainToWorkspace(workspace);
+
+    workspace.addBuckConfigLocalOption(
+        "ndk",
+        "toolchain_target_per_cpu_abi",
+        "armv7 => //ndk_toolchain:good_with_ndk, arm64 => //ndk_toolchain:good_with_ndk, x86 => //ndk_toolchain:bad");
+    workspace.setUp();
+
+    Path output = workspace.buildAndReturnOutput("-c", "ndk.cpu_abis=armv7,arm64", "//:fat_apk");
+
+    ZipInspector inspector = new ZipInspector(output);
+    inspector.assertFileContents("lib/armeabi-v7a/libc++_shared.so", "strip:\nit's a runtime");
+    inspector.assertFileContents("lib/arm64-v8a/libc++_shared.so", "strip:\nit's a runtime");
+    inspector.assertFileContents(
+        "lib/armeabi-v7a/libnative.so", "strip:\nlinker:\ncompile output: native");
+    inspector.assertFileContents(
+        "lib/arm64-v8a/libnative.so", "strip:\nlinker:\ncompile output: native");
   }
 
   // TODO(cjhopman): Consider adding a test that the relinker uses the custom objdump.

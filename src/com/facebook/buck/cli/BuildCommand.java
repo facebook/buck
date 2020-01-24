@@ -27,6 +27,7 @@ import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -47,7 +48,6 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
-import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.listener.FileSerializationOutputRuleDepsListener;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -56,7 +56,6 @@ import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
-import com.facebook.buck.parser.spec.BuildTargetSpec;
 import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
@@ -348,14 +347,11 @@ public class BuildCommand extends AbstractCommand {
       Function<ImmutableList<TargetNodeSpec>, ImmutableList<TargetNodeSpec>> targetNodeSpecEnhancer,
       ImmutableSet<String> additionalTargets)
       throws Exception {
-    if (showOutput
-        && params.getConsole().getAnsi().isAnsiTerminal()
-        && params.getBuckConfig().getView(CliConfig.class).getEnableShowOutputWarning()) {
-      params
-          .getBuckEventBus()
-          .post(
-              ConsoleEvent.warning(
-                  "--show-output is being deprecated. Use --show-outputs instead. Note that with --show-outputs, multiple files may be printed for each individual build target."));
+    if (showOutput) {
+      CommandHelper.maybePrintShowOutputWarning(
+          params.getBuckConfig().getView(CliConfig.class),
+          params.getConsole().getAnsi(),
+          params.getBuckEventBus());
     }
     if (!additionalTargets.isEmpty()) {
       this.arguments.addAll(additionalTargets);
@@ -411,63 +407,25 @@ public class BuildCommand extends AbstractCommand {
     }
 
     TargetGraphCreationResult targetGraphForLocalBuild =
-        ActionAndTargetGraphs.getTargetGraphForLocalBuild(
-            unversionedTargetGraph, versionedTargetGraph);
+        ActionAndTargetGraphs.getTargetGraph(unversionedTargetGraph, versionedTargetGraph);
     checkSingleBuildTargetSpecifiedForOutBuildMode(targetGraphForLocalBuild);
     ActionGraphAndBuilder actionGraph =
         createActionGraphAndResolver(params, targetGraphForLocalBuild, ruleKeyLogger);
 
-    ImmutableSet<ImmutableBuildTargetWithOutputs> buildTargetsWithOutputs =
+    ImmutableSet<BuildTargetWithOutputs> buildTargetsWithOutputs =
         justBuildTarget == null
-            ? getBuildTargetsWithOutputs(specs, targetGraphForLocalBuild.getBuildTargets())
+            ? matchBuildTargetsWithLabelsFromSpecs(
+                specs, targetGraphForLocalBuild.getBuildTargets())
             : getBuildTargetsWithOutputsForJustBuild(
                 params, params.getTargetConfiguration(), actionGraph, justBuildTarget);
 
     ActionAndTargetGraphs actionAndTargetGraphs =
-        ActionAndTargetGraphs.builder()
-            .setUnversionedTargetGraph(unversionedTargetGraph)
-            .setVersionedTargetGraph(versionedTargetGraph)
-            .setActionGraphAndBuilder(actionGraph)
-            .build();
+        ActionAndTargetGraphs.of(unversionedTargetGraph, versionedTargetGraph, actionGraph);
 
     return ImmutableGraphsAndBuildTargets.of(actionAndTargetGraphs, buildTargetsWithOutputs);
   }
 
-  private ImmutableSet<ImmutableBuildTargetWithOutputs> getBuildTargetsWithOutputs(
-      ImmutableList<TargetNodeSpec> specs, ImmutableSet<BuildTarget> buildTargets) {
-    ImmutableSet.Builder<ImmutableBuildTargetWithOutputs> builder =
-        ImmutableSet.builderWithExpectedSize(buildTargets.size());
-    for (BuildTarget target : buildTargets) {
-      boolean mappedTarget = false;
-
-      // Need to look through all the specs even after finding a match because there may be multiple
-      // matches
-      for (TargetNodeSpec spec : specs) {
-        if (!(spec instanceof BuildTargetSpec)) {
-          continue;
-        }
-        BuildTargetSpec buildTargetSpec = (BuildTargetSpec) spec;
-        if (buildTargetSpec
-            .getUnconfiguredBuildTargetView()
-            .equals(target.getUnconfiguredBuildTargetView())) {
-          builder.add(
-              ImmutableBuildTargetWithOutputs.of(
-                  target,
-                  buildTargetSpec.getUnconfiguredBuildTargetViewWithOutputs().getOutputLabel()));
-          mappedTarget = true;
-        }
-      }
-
-      // A target may not map to an output label if the build command wasn't invoked with a build
-      // pattern that specifies a specific target
-      if (!mappedTarget) {
-        builder.add(ImmutableBuildTargetWithOutputs.of(target, OutputLabel.defaultLabel()));
-      }
-    }
-    return builder.build();
-  }
-
-  private ImmutableSet<ImmutableBuildTargetWithOutputs> getBuildTargetsWithOutputsForJustBuild(
+  private ImmutableSet<BuildTargetWithOutputs> getBuildTargetsWithOutputsForJustBuild(
       CommandRunnerParams params,
       Optional<TargetConfiguration> targetConfiguration,
       ActionGraphAndBuilder actionGraphAndBuilder,
@@ -583,8 +541,7 @@ public class BuildCommand extends AbstractCommand {
       showOutputs(params, graphsAndBuildTargets, ruleKeyCacheScope);
     }
     if (outputPathForSingleBuildTarget != null) {
-      BuildTarget loneTarget =
-          Iterables.getOnlyElement(graphs.getTargetGraphForLocalBuild().getBuildTargets());
+      BuildTarget loneTarget = Iterables.getOnlyElement(graphs.getTargetGraph().getBuildTargets());
       BuildRule rule =
           graphs.getActionGraphAndBuilder().getActionGraphBuilder().getRule(loneTarget);
       if (!rule.outputFileCanBeCopied()) {
@@ -650,7 +607,7 @@ public class BuildCommand extends AbstractCommand {
         graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder().getActionGraphBuilder();
     SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
 
-    for (ImmutableBuildTargetWithOutputs buildTargetWithOutputs :
+    for (BuildTargetWithOutputs buildTargetWithOutputs :
         graphsAndBuildTargets.getBuildTargetWithOutputs()) {
       BuildRule rule = graphBuilder.requireRule(buildTargetWithOutputs.getBuildTarget());
       linkRuleToHashedBuckOut(
@@ -676,8 +633,15 @@ public class BuildCommand extends AbstractCommand {
       return;
     }
     Path absolutePathWithHash = outputPath.get().toAbsolutePath();
-    Path absolutePathWithoutHash =
+    Optional<Path> maybeAbsolutePathWithoutHash =
         BuildPaths.removeHashFrom(absolutePathWithHash, rule.getBuildTarget());
+    if (!maybeAbsolutePathWithoutHash.isPresent()) {
+      // hash was not found, for example `export_file` rule outputs files in source directory, not
+      // in buck-out
+      // so we don't create any links
+      return;
+    }
+    Path absolutePathWithoutHash = maybeAbsolutePathWithoutHash.get();
     Files.deleteIfExists(absolutePathWithoutHash);
     Files.createDirectories(absolutePathWithoutHash.getParent());
 
@@ -745,7 +709,7 @@ public class BuildCommand extends AbstractCommand {
         graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder().getActionGraphBuilder();
     SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
 
-    for (ImmutableBuildTargetWithOutputs targetWithOutputs :
+    for (BuildTargetWithOutputs targetWithOutputs :
         graphsAndBuildTargets.getBuildTargetWithOutputs()) {
       BuildRule rule = graphBuilder.requireRule(targetWithOutputs.getBuildTarget());
       // If it's an apple bundle, we'd like to also link the dSYM file over here.
@@ -790,7 +754,7 @@ public class BuildCommand extends AbstractCommand {
                   ruleKeyCacheScope.getCache(),
                   Optional.empty()));
     }
-    for (ImmutableBuildTargetWithOutputs targetWithOutputs :
+    for (BuildTargetWithOutputs targetWithOutputs :
         graphsAndBuildTargets.getBuildTargetWithOutputs()) {
       BuildRule rule = graphBuilder.requireRule(targetWithOutputs.getBuildTarget());
       Optional<Path> outputPath =
@@ -894,7 +858,6 @@ public class BuildCommand extends AbstractCommand {
             new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
             executor,
             isKeepGoing(),
-            false,
             ruleKeyCacheScope,
             getBuildEngineMode(),
             ruleKeyLogger,
@@ -986,7 +949,7 @@ public class BuildCommand extends AbstractCommand {
   interface GraphsAndBuildTargets {
     ActionAndTargetGraphs getGraphs();
 
-    ImmutableSet<ImmutableBuildTargetWithOutputs> getBuildTargetWithOutputs();
+    ImmutableSet<BuildTargetWithOutputs> getBuildTargetWithOutputs();
 
     @Value.Lazy
     default ImmutableSet<BuildTarget> getBuildTargets() {

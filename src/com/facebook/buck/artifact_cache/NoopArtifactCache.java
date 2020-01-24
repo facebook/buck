@@ -65,7 +65,7 @@ public class NoopArtifactCache implements ArtifactCache {
   @Override
   public ListenableFuture<CacheDeleteResult> deleteAsync(List<RuleKey> ruleKeys) {
     ImmutableList<String> cacheNames = ImmutableList.of(NoopArtifactCache.class.getSimpleName());
-    return Futures.immediateFuture(CacheDeleteResult.builder().setCacheNames(cacheNames).build());
+    return Futures.immediateFuture(CacheDeleteResult.of(cacheNames));
   }
 
   @Override
@@ -87,17 +87,12 @@ public class NoopArtifactCache implements ArtifactCache {
     }
 
     @Override
-    public ArtifactCache newInstance(boolean distributedBuildModeEnabled) {
+    public ArtifactCache remoteOnlyInstance() {
       return new NoopArtifactCache();
     }
 
     @Override
-    public ArtifactCache remoteOnlyInstance(boolean distributedBuildModeEnabled) {
-      return new NoopArtifactCache();
-    }
-
-    @Override
-    public ArtifactCache localOnlyInstance(boolean distributedBuildModeEnabled) {
+    public ArtifactCache localOnlyInstance() {
       return new NoopArtifactCache();
     }
 

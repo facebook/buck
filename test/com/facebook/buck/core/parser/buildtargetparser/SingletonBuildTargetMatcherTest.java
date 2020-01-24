@@ -31,7 +31,7 @@ public class SingletonBuildTargetMatcherTest {
   @Test
   public void testApply() {
     SingletonBuildTargetMatcher pattern =
-        SingletonBuildTargetMatcher.of(
+        ImmutableSingletonBuildTargetMatcher.of(
             BuildTargetFactory.newInstance("//src/com/facebook/buck:buck")
                 .getUnconfiguredBuildTargetView()
                 .getData());

@@ -40,7 +40,7 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.cxx.AbstractCxxSource.Type;
+import com.facebook.buck.cxx.CxxSource.Type;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.impl.StaticUnresolvedCxxPlatform;
@@ -838,7 +838,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         (PrebuiltCxxLibrary) prebuiltCxxLibraryBuilder.build(graphBuilder, filesystem, targetGraph);
     assertFalse(
         rule.getNativeLinkable(CXX_PLATFORM, graphBuilder)
-            .getNativeLinkTarget(graphBuilder)
+            .getNativeLinkTarget(graphBuilder, true)
             .isPresent());
   }
 
@@ -855,7 +855,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         (PrebuiltCxxLibrary) prebuiltCxxLibraryBuilder.build(graphBuilder, filesystem, targetGraph);
     assertFalse(
         rule.getNativeLinkable(CXX_PLATFORM, graphBuilder)
-            .getNativeLinkTarget(graphBuilder)
+            .getNativeLinkTarget(graphBuilder, true)
             .isPresent());
   }
 
@@ -871,7 +871,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         (PrebuiltCxxLibrary) prebuiltCxxLibraryBuilder.build(graphBuilder, filesystem, targetGraph);
     assertTrue(
         rule.getNativeLinkable(CXX_PLATFORM, graphBuilder)
-            .getNativeLinkTarget(graphBuilder)
+            .getNativeLinkTarget(graphBuilder, true)
             .isPresent());
   }
 
@@ -888,7 +888,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         (PrebuiltCxxLibrary) prebuiltCxxLibraryBuilder.build(graphBuilder, filesystem, targetGraph);
     assertThat(
         rule.getNativeLinkable(CXX_PLATFORM, graphBuilder)
-            .getNativeLinkTarget(graphBuilder)
+            .getNativeLinkTarget(graphBuilder, true)
             .get()
             .getNativeLinkTargetMode(),
         Matchers.equalTo(NativeLinkTargetMode.library("libsoname.so")));
@@ -922,7 +922,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     assertThat(
         FluentIterable.from(
                 rule.getNativeLinkable(CXX_PLATFORM, graphBuilder)
-                    .getNativeLinkTarget(graphBuilder)
+                    .getNativeLinkTarget(graphBuilder, true)
                     .get()
                     .getNativeLinkTargetDeps(graphBuilder))
             .transform(d -> d.getBuildTarget()),
@@ -943,7 +943,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         (PrebuiltCxxLibrary) ruleBuilder.build(graphBuilder, filesystem, targetGraph);
     NativeLinkableInput input =
         rule.getNativeLinkable(CXX_PLATFORM, graphBuilder)
-            .getNativeLinkTarget(graphBuilder)
+            .getNativeLinkTarget(graphBuilder, true)
             .get()
             .getNativeLinkTargetInput(graphBuilder, pathResolver);
     assertThat(Arg.stringify(input.getArgs(), pathResolver), Matchers.hasItems("--exported-flag"));

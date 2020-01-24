@@ -31,7 +31,6 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.ImmutableUnconfiguredTargetNodeWithDeps;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDeps;
-import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.parser.UnconfiguredTargetNodeToTargetNodeFactory;
 import com.facebook.buck.parser.config.ParserConfig;
@@ -116,7 +115,9 @@ public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation
             buildTarget,
             dependencyStack,
             key.getUnconfiguredTargetNode(),
-            id -> SimplePerfEvent.scope(Optional.empty(), PerfEventId.of("raw_to_targetnode")));
+            id ->
+                SimplePerfEvent.scope(
+                    Optional.empty(), SimplePerfEvent.PerfEventId.of("raw_to_targetnode")));
 
     ImmutableSet<UnconfiguredBuildTarget> deps =
         targetNode.getParseDeps().stream()

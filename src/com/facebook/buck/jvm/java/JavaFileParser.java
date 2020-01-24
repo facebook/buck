@@ -458,7 +458,7 @@ public class JavaFileParser {
     this.javaVersion = javaVersion;
   }
 
-  public static JavaFileParser createJavaFileParser(AbstractJavacLanguageLevelOptions options) {
+  public static JavaFileParser createJavaFileParser(JavacLanguageLevelOptions options) {
     String javaVersion = Objects.requireNonNull(javaVersionMap.get(options.getSourceLevel()));
     return new JavaFileParser(AST.JLS8, javaVersion);
   }

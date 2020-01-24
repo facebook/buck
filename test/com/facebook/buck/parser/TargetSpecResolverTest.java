@@ -28,7 +28,7 @@ import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwar
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.ImmutableCellRelativePath;
+import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -46,7 +46,7 @@ import com.facebook.buck.parser.TargetSpecResolver.FlavorEnhancer;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.spec.BuildFileSpec;
-import com.facebook.buck.parser.spec.ImmutableTargetNodePredicateSpec;
+import com.facebook.buck.parser.spec.TargetNodePredicateSpec;
 import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
@@ -154,9 +154,9 @@ public class TargetSpecResolverTest {
     ImmutableList<ImmutableSet<BuildTarget>> targets =
         resolve(
             ImmutableList.of(
-                ImmutableTargetNodePredicateSpec.of(
+                TargetNodePredicateSpec.of(
                     BuildFileSpec.fromRecursivePath(
-                        new ImmutableCellRelativePath(
+                        CellRelativePath.of(
                             cell.getCanonicalName(), ForwardRelativePath.of(""))))));
 
     ImmutableSet<BuildTarget> expectedTargets =
@@ -183,14 +183,12 @@ public class TargetSpecResolverTest {
 
     resolve(
         ImmutableList.of(
-            ImmutableTargetNodePredicateSpec.of(
+            TargetNodePredicateSpec.of(
                 BuildFileSpec.fromRecursivePath(
-                    new ImmutableCellRelativePath(
-                        cell.getCanonicalName(), ForwardRelativePath.of("bar")))),
-            ImmutableTargetNodePredicateSpec.of(
+                    CellRelativePath.of(cell.getCanonicalName(), ForwardRelativePath.of("bar")))),
+            TargetNodePredicateSpec.of(
                 BuildFileSpec.fromRecursivePath(
-                    new ImmutableCellRelativePath(
-                        cell.getCanonicalName(), ForwardRelativePath.of("foo"))))));
+                    CellRelativePath.of(cell.getCanonicalName(), ForwardRelativePath.of("foo"))))));
   }
 
   @Test
@@ -208,26 +206,26 @@ public class TargetSpecResolverTest {
     ImmutableList<ImmutableSet<BuildTarget>> targets =
         resolve(
             ImmutableList.of(
-                ImmutableTargetNodePredicateSpec.of(
+                TargetNodePredicateSpec.of(
                     BuildFileSpec.fromRecursivePath(
-                        new ImmutableCellRelativePath(
+                        CellRelativePath.of(
                             cell.getCanonicalName(), ForwardRelativePath.of("bar")))),
-                ImmutableTargetNodePredicateSpec.of(
+                TargetNodePredicateSpec.of(
                     BuildFileSpec.fromRecursivePath(
-                        new ImmutableCellRelativePath(
+                        CellRelativePath.of(
                             cell.getCanonicalName(), ForwardRelativePath.of("foo"))))));
     assertThat(targets, equalTo(ImmutableList.of(ImmutableSet.of(bar), ImmutableSet.of(foo))));
 
     targets =
         resolve(
             ImmutableList.of(
-                ImmutableTargetNodePredicateSpec.of(
+                TargetNodePredicateSpec.of(
                     BuildFileSpec.fromRecursivePath(
-                        new ImmutableCellRelativePath(
+                        CellRelativePath.of(
                             cell.getCanonicalName(), ForwardRelativePath.of("foo")))),
-                ImmutableTargetNodePredicateSpec.of(
+                TargetNodePredicateSpec.of(
                     BuildFileSpec.fromRecursivePath(
-                        new ImmutableCellRelativePath(
+                        CellRelativePath.of(
                             cell.getCanonicalName(), ForwardRelativePath.of("bar"))))));
     assertThat(targets, equalTo(ImmutableList.of(ImmutableSet.of(foo), ImmutableSet.of(bar))));
   }
@@ -242,9 +240,9 @@ public class TargetSpecResolverTest {
     ImmutableList<ImmutableSet<BuildTarget>> targets =
         resolve(
             ImmutableList.of(
-                ImmutableTargetNodePredicateSpec.of(
+                TargetNodePredicateSpec.of(
                     BuildFileSpec.fromRecursivePath(
-                        new ImmutableCellRelativePath(
+                        CellRelativePath.of(
                             cell.getCanonicalName(), ForwardRelativePath.ofPath(buckout))))));
     assertThat(targets, equalTo(ImmutableList.of(ImmutableSet.of())));
   }

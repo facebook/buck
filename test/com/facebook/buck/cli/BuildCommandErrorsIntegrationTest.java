@@ -34,10 +34,9 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.rules.impl.NoopBuildRule;
 import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.AbstractExecutionStep;
-import com.facebook.buck.step.ImmutableStepExecutionResult;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.testutil.ProcessResult;
@@ -60,7 +59,6 @@ import java.util.Optional;
 import java.util.SortedSet;
 import javax.annotation.Nullable;
 import org.hamcrest.Matchers;
-import org.immutables.value.Value;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -84,7 +82,9 @@ public class BuildCommandErrorsIntegrationTest {
             knownConfigurationDescriptions) ->
             cell ->
                 KnownNativeRuleTypes.of(
-                    ImmutableList.of(mockDescription), knownConfigurationDescriptions));
+                    ImmutableList.of(mockDescription),
+                    knownConfigurationDescriptions,
+                    ImmutableList.of()));
   }
 
   // TODO(cjhopman): Add cases for errors in other phases of the build (watchman, parsing,
@@ -497,7 +497,7 @@ public class BuildCommandErrorsIntegrationTest {
           new AbstractExecutionStep("step_with_exit_code_" + exitCode) {
             @Override
             public StepExecutionResult execute(ExecutionContext context) {
-              return ImmutableStepExecutionResult.builder()
+              return StepExecutionResult.builder()
                   .setExitCode(exitCode)
                   .setStderr(Optional.of(message))
                   .build();
@@ -512,8 +512,7 @@ public class BuildCommandErrorsIntegrationTest {
     }
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractMockArg extends BuildRuleArg {}
 
   private class MockDescription implements DescriptionWithTargetGraph<MockArg> {

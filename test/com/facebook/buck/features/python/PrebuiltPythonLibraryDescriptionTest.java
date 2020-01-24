@@ -26,10 +26,12 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -83,5 +85,21 @@ public class PrebuiltPythonLibraryDescriptionTest {
                 .keySet(),
             Object::toString),
         Matchers.containsInAnyOrder("libdep.so", "libcxx.so"));
+  }
+
+  @Test
+  public void compileOptOut() {
+    PrebuiltPythonLibraryBuilder libBuilder =
+        PrebuiltPythonLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"))
+            .setBinarySrc(FakeSourcePath.of("test.whl"))
+            .setCompile(false);
+    ActionGraphBuilder graphBuilder =
+        new TestActionGraphBuilder(TargetGraphFactory.newInstance(libBuilder.build()));
+    PrebuiltPythonLibrary library =
+        (PrebuiltPythonLibrary) graphBuilder.requireRule(libBuilder.getTarget());
+    assertThat(
+        library.getPythonBytecode(
+            PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder),
+        Matchers.equalTo(Optional.empty()));
   }
 }

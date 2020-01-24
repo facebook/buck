@@ -21,7 +21,6 @@ import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.engine.BuildEngine;
 import com.facebook.buck.core.build.engine.BuildEngineBuildContext;
-import com.facebook.buck.core.build.engine.BuildEngineResult;
 import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
@@ -31,7 +30,7 @@ import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -66,7 +65,6 @@ import java.util.Optional;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
-import org.immutables.value.Value;
 
 public class Build implements Closeable {
 
@@ -103,25 +101,18 @@ public class Build implements Closeable {
 
   private BuildEngineBuildContext createBuildContext(boolean isKeepGoing) {
     BuildId buildId = executionContext.getBuildId();
-    return BuildEngineBuildContext.builder()
-        .setBuildContext(
-            BuildContext.builder()
-                .setSourcePathResolver(graphBuilder.getSourcePathResolver())
-                .setBuildCellRootPath(rootCell.getRoot())
-                .setJavaPackageFinder(javaPackageFinder)
-                .setEventBus(executionContext.getBuckEventBus())
-                .setShouldDeleteTemporaries(
-                    rootCell
-                        .getBuckConfig()
-                        .getView(BuildBuckConfig.class)
-                        .getShouldDeleteTemporaries())
-                .build())
-        .setClock(clock)
-        .setArtifactCache(artifactCache)
-        .setBuildId(buildId)
-        .putAllEnvironment(executionContext.getEnvironment())
-        .setKeepGoing(isKeepGoing)
-        .build();
+    return BuildEngineBuildContext.of(
+        BuildContext.of(
+            graphBuilder.getSourcePathResolver(),
+            rootCell.getRoot(),
+            javaPackageFinder,
+            executionContext.getBuckEventBus(),
+            rootCell.getBuckConfig().getView(BuildBuckConfig.class).getShouldDeleteTemporaries()),
+        artifactCache,
+        clock,
+        buildId,
+        executionContext.getEnvironment(),
+        isKeepGoing);
   }
 
   public ActionGraphBuilder getGraphBuilder() {
@@ -141,13 +132,9 @@ public class Build implements Closeable {
       throws Exception {
 
     ImmutableList<BuildRule> rulesToBuild = getRulesToBuild(targetsish);
-    List<BuildEngineResult> resultFutures = initializeBuild(rulesToBuild);
+    List<BuildEngine.BuildEngineResult> resultFutures = initializeBuild(rulesToBuild);
     return waitForBuildToFinishAndPrintFailuresToEventBus(
         rulesToBuild, resultFutures, eventBus, console, pathToBuildReport);
-  }
-
-  public void terminateBuildWithFailure(Throwable failure) {
-    buildEngine.terminateBuildWithFailure(failure);
   }
 
   /** Setup all the symlinks necessary for a build */
@@ -257,13 +244,9 @@ public class Build implements Closeable {
         resultBuilder.put(rule, Optional.ofNullable(buildResults.get(i)));
       }
 
-      return BuildExecutionResult.builder()
-          .setFailures(
-              buildResults.stream()
-                  .filter(input -> !input.isSuccess())
-                  .collect(Collectors.toList()))
-          .setResults(resultBuilder)
-          .build();
+      return ImmutableBuildExecutionResult.of(
+          resultBuilder,
+          buildResults.stream().filter(input -> !input.isSuccess()).collect(Collectors.toList()));
     }
   }
 
@@ -278,15 +261,13 @@ public class Build implements Closeable {
       resultBuilder.put(rule, Optional.ofNullable(results.get(i)));
     }
 
-    return BuildExecutionResult.builder()
-        .setFailures(
-            results.stream().filter(input -> !input.isSuccess()).collect(Collectors.toList()))
-        .setResults(resultBuilder)
-        .build();
+    return ImmutableBuildExecutionResult.of(
+        resultBuilder,
+        results.stream().filter(input -> !input.isSuccess()).collect(Collectors.toList()));
   }
 
   /** Starts building the given BuildRules asynchronously. */
-  private List<BuildEngineResult> initializeBuild(ImmutableList<BuildRule> rulesToBuild)
+  private List<BuildEngine.BuildEngineResult> initializeBuild(ImmutableList<BuildRule> rulesToBuild)
       throws IOException {
     setupBuildSymlinks();
 
@@ -296,12 +277,14 @@ public class Build implements Closeable {
   }
 
   private BuildExecutionResult waitForBuildToFinish(
-      ImmutableList<BuildRule> rulesToBuild, List<BuildEngineResult> resultFutures)
+      ImmutableList<BuildRule> rulesToBuild, List<BuildEngine.BuildEngineResult> resultFutures)
       throws ExecutionException, InterruptedException, CleanBuildShutdownException {
     // Get the Future representing the build and then block until everything is built.
     ListenableFuture<List<BuildResult>> buildFuture =
         Futures.allAsList(
-            resultFutures.stream().map(BuildEngineResult::getResult).collect(Collectors.toList()));
+            resultFutures.stream()
+                .map(BuildEngine.BuildEngineResult::getResult)
+                .collect(Collectors.toList()));
     List<BuildResult> results;
     try {
       results = buildFuture.get();
@@ -398,7 +381,7 @@ public class Build implements Closeable {
    */
   public ExitCode waitForBuildToFinishAndPrintFailuresToEventBus(
       ImmutableList<BuildRule> rulesToBuild,
-      List<BuildEngineResult> resultFutures,
+      List<BuildEngine.BuildEngineResult> resultFutures,
       BuckEventBus eventBus,
       Console console,
       Optional<Path> pathToBuildReport)
@@ -443,7 +426,7 @@ public class Build implements Closeable {
     try {
       String jsonBuildReport = buildReport.generateJsonBuildReport();
       eventBus.post(BuildEvent.buildReport(jsonBuildReport));
-      Files.write(jsonBuildReport, pathToBuildReport.toFile(), Charsets.UTF_8);
+      Files.asCharSink(pathToBuildReport.toFile(), Charsets.UTF_8).write(jsonBuildReport);
     } catch (IOException writeException) {
       LOG.warn(writeException, "Failed to write the build report to %s", pathToBuildReport);
       eventBus.post(ThrowableConsoleEvent.create(e, "Failed writing report"));
@@ -457,9 +440,8 @@ public class Build implements Closeable {
     // when it doesn't do anything.
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractBuildExecutionResult {
+  @BuckStyleValue
+  abstract static class BuildExecutionResult {
 
     /**
      * @return Keys are build rules built during this invocation of Buck. Values reflect the success

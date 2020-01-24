@@ -166,6 +166,8 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
             .setBuildFileName(cell.getBuckConfigView(ParserConfig.class).getBuildFileName())
             .setDefaultIncludes(parserConfig.getDefaultIncludes())
             .setDescriptions(knownRuleTypesProvider.getNativeRuleTypes(cell).getDescriptions())
+            .setPerFeatureProviders(
+                knownRuleTypesProvider.getNativeRuleTypes(cell).getPerFeatureProviders())
             .setUseWatchmanGlob(useWatchmanGlob)
             .setWatchmanGlobStatResults(watchmanGlobStatResults)
             .setWatchmanUseGlobGenerator(watchmanUseGlobGenerator)
@@ -174,8 +176,8 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
             .setRawConfig(
                 cell.getBuckConfig().getView(ConfigIgnoredByDaemon.class).getRawConfigForParser())
             .setBuildFileImportWhitelist(parserConfig.getBuildFileImportWhitelist())
-            .setDisableImplicitNativeRules(parserConfig.getDisableImplicitNativeRules())
-            .setEnableUserDefinedRules(parserConfig.getEnableUserDefinedRules())
+            .setImplicitNativeRulesState(parserConfig.getImplicitNativeRulesState())
+            .setUserDefinedRulesState(parserConfig.getUserDefinedRulesState())
             .setWarnAboutDeprecatedSyntax(parserConfig.isWarnAboutDeprecatedSyntax())
             .setPackageImplicitIncludes(parserConfig.getPackageImplicitIncludes())
             .build();
@@ -324,16 +326,17 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
       throw new RuntimeException(
           "Watchman glob handler was requested, but Watchman client cannot be created", e);
     }
+
     BuckGlobals buckGlobals =
-        BuckGlobals.builder()
-            .setSkylarkFunctionModule(SkylarkBuildModule.BUILD_MODULE)
-            .setDisableImplicitNativeRules(buildFileParserOptions.getDisableImplicitNativeRules())
-            .setEnableUserDefinedRules(buildFileParserOptions.getEnableUserDefinedRules())
-            .setDescriptions(buildFileParserOptions.getDescriptions())
-            .setRuleFunctionFactory(new RuleFunctionFactory(typeCoercerFactory))
-            .setLabelCache(LabelCache.newLabelCache())
-            .setKnownUserDefinedRuleTypes(knownUserDefinedRuleTypes)
-            .build();
+        BuckGlobals.of(
+            SkylarkBuildModule.BUILD_MODULE,
+            buildFileParserOptions.getDescriptions(),
+            buildFileParserOptions.getUserDefinedRulesState(),
+            buildFileParserOptions.getImplicitNativeRulesState(),
+            new RuleFunctionFactory(typeCoercerFactory),
+            LabelCache.newLabelCache(),
+            knownUserDefinedRuleTypes,
+            buildFileParserOptions.getPerFeatureProviders());
 
     HumanReadableExceptionAugmentor augmentor;
     try {

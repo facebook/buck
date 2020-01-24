@@ -63,7 +63,7 @@ public class InteractiveReportIntegrationTest {
     Optional<BuildLogEntry> entry =
         helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
 
-    DefectSubmitResult report =
+    DefectReporter.DefectSubmitResult report =
         DoctorTestUtils.createDefectReport(
             traceWorkspace,
             ImmutableSet.of(entry.get()),
@@ -92,7 +92,7 @@ public class InteractiveReportIntegrationTest {
     Optional<BuildLogEntry> entry =
         helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
 
-    DefectSubmitResult report =
+    DefectReporter.DefectSubmitResult report =
         DoctorTestUtils.createDefectReport(
             traceWorkspace,
             ImmutableSet.of(entry.get()),
@@ -116,7 +116,7 @@ public class InteractiveReportIntegrationTest {
     Optional<BuildLogEntry> entry =
         helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
 
-    DefectSubmitResult report =
+    DefectReporter.DefectSubmitResult report =
         DoctorTestUtils.createDefectReport(
             traceWorkspace,
             ImmutableSet.of(entry.get()),
@@ -141,7 +141,7 @@ public class InteractiveReportIntegrationTest {
     Optional<BuildLogEntry> entry =
         helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
 
-    DefectSubmitResult report =
+    DefectReporter.DefectSubmitResult report =
         DoctorTestUtils.createDefectReport(
             traceWorkspace,
             ImmutableSet.of(entry.get()),
@@ -167,7 +167,7 @@ public class InteractiveReportIntegrationTest {
     Optional<BuildLogEntry> entry =
         helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
 
-    DefectSubmitResult report =
+    DefectReporter.DefectSubmitResult report =
         DoctorTestUtils.createDefectReport(
             traceWorkspace,
             ImmutableSet.of(entry.get()),

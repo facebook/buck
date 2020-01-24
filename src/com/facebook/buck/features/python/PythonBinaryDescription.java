@@ -35,7 +35,7 @@ import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.Optionals;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -311,27 +311,21 @@ public class PythonBinaryDescription
 
     // Build up the list of all components going into the python binary.
     PythonPackagable root =
-        PythonBinaryPackagable.builder()
-            .setBuildTarget(buildTarget)
-            .setFilesystem(projectFilesystem)
-            .setPythonPackageDeps(
-                PythonUtil.getDeps(
-                        pythonPlatform, cxxPlatform, args.getDeps(), args.getPlatformDeps())
-                    .stream()
-                    .map(graphBuilder::getRule)
-                    .collect(ImmutableList.toImmutableList()))
-            .setPythonModules(modules)
-            .setPythonZipSafe(args.getZipSafe())
-            .build();
+        ImmutablePythonBinaryPackagable.of(
+            buildTarget,
+            projectFilesystem,
+            PythonUtil.getDeps(pythonPlatform, cxxPlatform, args.getDeps(), args.getPlatformDeps())
+                .stream()
+                .map(graphBuilder::getRule)
+                .collect(ImmutableList.toImmutableList()),
+            modules,
+            Optional.empty(),
+            args.getZipSafe());
 
     CellPathResolver cellRoots = context.getCellPathResolver();
     StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(buildTarget)
-            .setCellPathResolver(cellRoots)
-            .setActionGraphBuilder(graphBuilder)
-            .setExpanders(PythonUtil.MACRO_EXPANDERS)
-            .build();
+        StringWithMacrosConverter.of(
+            buildTarget, cellRoots, graphBuilder, PythonUtil.MACRO_EXPANDERS);
     PythonPackageComponents allPackageComponents =
         PythonUtil.getAllComponents(
             cellRoots,
@@ -392,8 +386,7 @@ public class PythonBinaryDescription
     return true;
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractPythonBinaryDescriptionArg
       extends BuildRuleArg, HasDeclaredDeps, HasTests, HasVersionUniverse {
     Optional<SourcePath> getMain();

@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.Matchers.not;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.HttpdForTests;
@@ -243,24 +244,29 @@ public class HttpArchiveIntegrationTest {
 
   @Test
   public void downloadsZipFileAndValidatesItWithNoSymlinksOnWindows() throws IOException {
-    // TODO: Windows has some issues w/ symlinks in zip files. Once fixed, remove this distinction
-    Assume.assumeThat(Platform.detect(), is(WINDOWS));
-
     rewriteBuckFileTemplate(workspace);
 
     Path outputPath =
         workspace
-            .getBuckPaths()
-            .getGenDir()
-            .resolve("test_no_symlinks.zip")
+            .resolve(
+                BuildTargetPaths.getGenPath(
+                    workspace.getProjectFileSystem(),
+                    BuildTargetFactory.newInstance("//:test_no_symlinks.zip"),
+                    "%s"))
             .resolve("test_no_symlinks.zip");
     Path scratchDownloadPath =
-        workspace.getBuckPaths().getScratchDir().resolve("test_no_symlinks.zip#archive-download");
+        workspace.resolve(
+            BuildTargetPaths.getScratchPath(
+                workspace.getProjectFileSystem(),
+                BuildTargetFactory.newInstance("//:test_no_symlinks.zip#archive-download"),
+                "%s"));
     Path downloadPath =
         workspace
-            .getBuckPaths()
-            .getGenDir()
-            .resolve("test_no_symlinks.zip#archive-download")
+            .resolve(
+                BuildTargetPaths.getGenPath(
+                    workspace.getProjectFileSystem(),
+                    BuildTargetFactory.newInstance("//:test_no_symlinks.zip#archive-download"),
+                    "%s"))
             .resolve("test_no_symlinks.zip");
     Path expectedMainDotJavaPath = outputPath.resolve("root").resolve(mainDotJavaPath);
     Path expectedEchoDotShPath = outputPath.resolve("root").resolve(echoDotShPath);
@@ -494,9 +500,6 @@ public class HttpArchiveIntegrationTest {
 
   @Test
   public void stripsZipPrefixIfRequestedWithNoSymlinksOnWindows() throws IOException {
-    // TODO: Windows has some issues w/ symlinks in zip files. Once fixed, remove this distinction
-    Assume.assumeThat(Platform.detect(), is(WINDOWS));
-
     rewriteBuckFileTemplate(workspace);
 
     Path outputPath =
@@ -784,5 +787,18 @@ public class HttpArchiveIntegrationTest {
         httpdHandler.getRequestedPaths());
     Assert.assertEquals(
         0, Files.walk(workspace.resolve(scratchDownloadPath)).filter(Files::isRegularFile).count());
+  }
+
+  @Test
+  public void canBeUsedAsDependencyInRuleAnalysis() throws IOException {
+    workspace.setUp();
+    rewriteBuckFileTemplate(workspace);
+
+    workspace.addBuckConfigLocalOption("parser", "default_build_file_syntax", "skylark");
+    workspace.addBuckConfigLocalOption("parser", "user_defined_rules", "enabled");
+    workspace.addBuckConfigLocalOption("rule_analysis", "mode", "PROVIDER_COMPATIBLE");
+    workspace.addBuckConfigLocalOption("download", "in_build", "true");
+
+    workspace.runBuckBuild("//rag:expect_path").assertSuccess();
   }
 }

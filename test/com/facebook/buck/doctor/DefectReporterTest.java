@@ -53,20 +53,19 @@ public class DefectReporterTest {
   DoctorConfig config;
   Clock clock;
   DefectReporter reporter;
-  DefectReport.Builder defectReportBuilder;
+  DefectReporter.DefectReport.Builder defectReportBuilder;
 
   private static final BuildEnvironmentDescription TEST_ENV_DESCRIPTION =
-      BuildEnvironmentDescription.builder()
-          .setUser("test_user")
-          .setHostname("test_hostname")
-          .setOs("test_os")
-          .setAvailableCores(1)
-          .setSystemMemory(1024L)
-          .setBuckDirty(Optional.of(false))
-          .setBuckCommit("test_commit")
-          .setJavaVersion("test_java_version")
-          .setJsonProtocolVersion(1)
-          .build();
+      BuildEnvironmentDescription.of(
+          "test_user",
+          "test_hostname",
+          "test_os",
+          1,
+          1024L,
+          Optional.of(false),
+          "test_commit",
+          "test_java_version",
+          1);
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
@@ -90,7 +89,7 @@ public class DefectReporterTest {
             ImmutableMap.of("config_key", "config_value"));
 
     defectReportBuilder =
-        DefectReport.builder()
+        DefectReporter.DefectReport.builder()
             .setBuildEnvironmentDescription(TEST_ENV_DESCRIPTION)
             .setUserLocalConfiguration(testUserLocalConfiguration);
   }
@@ -103,7 +102,7 @@ public class DefectReporterTest {
     String fileToBeIncludedContent = "testcontentbehere";
     filesystem.writeContentsToPath(fileToBeIncludedContent, fileToBeIncluded);
 
-    DefectSubmitResult defectSubmitResult =
+    DefectReporter.DefectSubmitResult defectSubmitResult =
         reporter.submitReport(defectReportBuilder.setIncludedPaths(fileToBeIncluded).build());
 
     Path reportPath = filesystem.resolve(defectSubmitResult.getReportSubmitLocation().get());
@@ -113,7 +112,8 @@ public class DefectReporterTest {
 
   @Test
   public void testAttachesReport() throws Exception {
-    DefectSubmitResult defectSubmitResult = reporter.submitReport(defectReportBuilder.build());
+    DefectReporter.DefectSubmitResult defectSubmitResult =
+        reporter.submitReport(defectReportBuilder.build());
 
     Path reportPath = filesystem.resolve(defectSubmitResult.getReportSubmitLocation().get());
     try (ZipFile zipFile = new ZipFile(reportPath.toFile())) {
@@ -152,7 +152,7 @@ public class DefectReporterTest {
   @Test
   public void testSourceControlExceptionAllowsGeneratingReport() throws Exception {
 
-    DefectSubmitResult defectSubmitResult =
+    DefectReporter.DefectSubmitResult defectSubmitResult =
         reporter.submitReport(
             defectReportBuilder
                 .setSourceControlInfo(

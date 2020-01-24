@@ -210,17 +210,17 @@ public class BuildTracesTest {
       ProjectFilesystem fs, String commandName, String buildId, int seconds) {
     InvocationInfo info =
         InvocationInfo.of(
-                new BuildId(buildId),
-                false,
-                false,
-                commandName,
-                ImmutableList.of(),
-                ImmutableList.of(),
-                fs.getBuckPaths().getLogDir(),
-                false,
-                "repository",
-                "")
-            .withTimestampMillis(TimeUnit.SECONDS.toMillis(seconds));
+            new BuildId(buildId),
+            false,
+            false,
+            commandName,
+            ImmutableList.of(),
+            ImmutableList.of(),
+            fs.getBuckPaths().getLogDir(),
+            false,
+            "repository",
+            "",
+            TimeUnit.SECONDS.toMillis(seconds));
     return info.getLogDirectoryPath().resolve("build." + buildId + ".trace");
   }
 }

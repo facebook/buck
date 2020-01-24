@@ -39,7 +39,7 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxHeaders;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
@@ -432,12 +432,8 @@ public class NdkLibraryDescription
     }
 
     StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(buildTarget)
-            .setCellPathResolver(context.getCellPathResolver())
-            .setActionGraphBuilder(graphBuilder)
-            .setExpanders(MACRO_EXPANDERS)
-            .build();
+        StringWithMacrosConverter.of(
+            buildTarget, context.getCellPathResolver(), graphBuilder, MACRO_EXPANDERS);
 
     ImmutableList<Arg> flags =
         args.getFlags().stream()
@@ -485,8 +481,7 @@ public class NdkLibraryDescription
                                 platform.getParseTimeDeps(buildTarget.getTargetConfiguration()))));
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractNdkLibraryDescriptionArg extends BuildRuleArg, HasDeclaredDeps, HasSrcs {
     ImmutableList<StringWithMacros> getFlags();
 

@@ -40,7 +40,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
@@ -66,13 +66,11 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
 import com.facebook.buck.rules.macros.StringWithMacros;
-import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
@@ -135,7 +133,7 @@ public class PrebuiltCxxLibraryDescription
 
   private PrebuiltCxxLibraryPaths getPaths(
       BuildTarget target, AbstractPrebuiltCxxLibraryDescriptionArg args) {
-    return NewPrebuiltCxxLibraryPaths.builder()
+    return ImmutableNewPrebuiltCxxLibraryPaths.builder()
         .setTarget(target)
         .setHeaderDirs(args.getHeaderDirs())
         .setPlatformHeaderDirs(args.getPlatformHeaderDirs())
@@ -214,7 +212,6 @@ public class PrebuiltCxxLibraryDescription
   private BuildRule createSharedLibraryBuildRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
@@ -260,9 +257,11 @@ public class PrebuiltCxxLibraryDescription
         Linker.LinkableDepType.SHARED,
         Optional.empty(),
         CxxLinkOptions.of(),
-        FluentIterable.from(params.getBuildDeps())
-            .filter(NativeLinkableGroup.class)
-            .transform(g -> g.getNativeLinkable(cxxPlatform, graphBuilder)),
+        args.getCxxDeps().get(graphBuilder, cxxPlatform).stream()
+            .filter(NativeLinkableGroup.class::isInstance)
+            .map(NativeLinkableGroup.class::cast)
+            .map(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
+            .collect(ImmutableList.toImmutableList()),
         Optional.empty(),
         Optional.empty(),
         ImmutableSet.of(),
@@ -408,7 +407,6 @@ public class PrebuiltCxxLibraryDescription
         return createSharedLibraryBuildRule(
             buildTarget,
             projectFilesystem,
-            params,
             graphBuilder,
             cellRoots,
             cxxPlatform,
@@ -499,12 +497,6 @@ public class PrebuiltCxxLibraryDescription
 
       private final TransitiveCxxPreprocessorInputCache transitiveCxxPreprocessorInputCache =
           new TransitiveCxxPreprocessorInputCache(this);
-
-      CxxDeps allExportedDeps =
-          CxxDeps.builder()
-              .addDeps(args.getExportedDeps())
-              .addPlatformDeps(args.getExportedPlatformDeps())
-              .build();
 
       private boolean hasHeaders(CxxPlatform cxxPlatform) {
         if (!args.getExportedHeaders().isEmpty()) {
@@ -644,7 +636,10 @@ public class PrebuiltCxxLibraryDescription
         if (!isPlatformSupported(cxxPlatform)) {
           return ImmutableList.of();
         }
-        return FluentIterable.from(getBuildDeps()).filter(CxxPreprocessorDep.class);
+        return args.getCxxDeps().get(ruleResolver, cxxPlatform).stream()
+            .filter(CxxPreprocessorDep.class::isInstance)
+            .map(CxxPreprocessorDep.class::cast)
+            .collect(ImmutableList.toImmutableList());
       }
 
       @Override
@@ -710,16 +705,18 @@ public class PrebuiltCxxLibraryDescription
         }
 
         ImmutableList<NativeLinkable> deps =
-            FluentIterable.from(getDeclaredDeps())
-                .filter(NativeLinkableGroup.class)
-                .transform(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
-                .toList();
+            args.getPrivateCxxDeps().get(graphBuilder, cxxPlatform).stream()
+                .filter(NativeLinkableGroup.class::isInstance)
+                .map(NativeLinkableGroup.class::cast)
+                .map(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
+                .collect(ImmutableList.toImmutableList());
 
         ImmutableList<NativeLinkable> exportedDeps =
-            RichStream.from(allExportedDeps.get(graphBuilder, cxxPlatform))
-                .filter(NativeLinkableGroup.class)
+            args.getExportedCxxDeps().get(graphBuilder, cxxPlatform).stream()
+                .filter(NativeLinkableGroup.class::isInstance)
+                .map(NativeLinkableGroup.class::cast)
                 .map(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
-                .toImmutableList();
+                .collect(ImmutableList.toImmutableList());
 
         ImmutableList<Arg> exportedLinkerFlags = getExportedLinkerFlags(cxxPlatform, graphBuilder);
         ImmutableList<Arg> exportedPostLinkerFlags = getExportedPostLinkerFlags(cxxPlatform);
@@ -882,7 +879,8 @@ public class PrebuiltCxxLibraryDescription
 
       @Override
       public Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver) {
-        return AndroidPackageableCollector.getPackageableRules(params.getBuildDeps());
+        return AndroidPackageableCollector.getPackageableRules(
+            args.getCxxDeps().getForAllPlatforms(ruleResolver));
       }
 
       @Override
@@ -1005,8 +1003,7 @@ public class PrebuiltCxxLibraryDescription
     return true;
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractPrebuiltCxxLibraryDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
 
     // New API.
@@ -1166,5 +1163,26 @@ public class PrebuiltCxxLibraryDescription
     }
 
     Optional<Boolean> getSupportsMergedLinking();
+
+    /** @return C/C++ deps which are *not* propagated to dependents. */
+    @Value.Derived
+    default CxxDeps getPrivateCxxDeps() {
+      return CxxDeps.builder().addDeps(getDeps()).build();
+    }
+
+    /** @return C/C++ deps which are propagated to dependents. */
+    @Value.Derived
+    default CxxDeps getExportedCxxDeps() {
+      return CxxDeps.builder()
+          .addDeps(getExportedDeps())
+          .addPlatformDeps(getExportedPlatformDeps())
+          .build();
+    }
+
+    /** @return the C/C++ deps this rule builds against. */
+    @Value.Derived
+    default CxxDeps getCxxDeps() {
+      return CxxDeps.concat(getPrivateCxxDeps(), getExportedCxxDeps());
+    }
   }
 }

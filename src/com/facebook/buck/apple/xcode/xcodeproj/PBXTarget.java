@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple.xcode.xcodeproj;
 
+import com.facebook.buck.apple.xcode.AbstractPBXObjectFactory;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,11 +32,11 @@ public abstract class PBXTarget extends PBXProjectItem {
   @Nullable private PBXFileReference productReference;
   @Nullable private ProductType productType;
 
-  public PBXTarget(String name) {
+  public PBXTarget(String name, AbstractPBXObjectFactory objectFactory) {
     this.name = name;
     this.dependencies = new ArrayList<>();
     this.buildPhases = new ArrayList<>();
-    this.buildConfigurationList = new XCConfigurationList();
+    this.buildConfigurationList = objectFactory.createConfigurationList();
   }
 
   public String getName() {

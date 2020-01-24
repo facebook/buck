@@ -36,7 +36,7 @@ public class ApiStubber {
         .writeTo(
             new DefaultProjectFilesystemFactory()
                 .createProjectFilesystem(
-                    CanonicalCellName.unsafeNotACell(), Paths.get("").toAbsolutePath()),
+                    CanonicalCellName.unsafeNotACell(), Paths.get("").toAbsolutePath(), false),
             destination);
   }
 }

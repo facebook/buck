@@ -19,7 +19,6 @@ package com.facebook.buck.shell;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.step.ImmutableStepExecutionResult;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -132,7 +131,7 @@ public abstract class ShellStep implements Step {
           stderr.orElse(""));
     }
 
-    return ImmutableStepExecutionResult.builder()
+    return StepExecutionResult.builder()
         .setExitCode(exitCode)
         .setExecutedCommand(result.getCommand())
         .setStderr(stderr)

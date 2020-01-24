@@ -2,7 +2,7 @@
   "success" : true,
   "results" : {
     "//:rule_with_output" : {
-      "success" : true,
+      "success" : "SUCCESS",
       "type" : "BUILT_LOCALLY",
       "output" : "<OUTPUT_PREFIX>rule_with_output.txt",
       "outputs" : {
@@ -10,7 +10,7 @@
       }
     },
     "//:rule_without_output" : {
-      "success" : true,
+      "success" : "SUCCESS",
       "type" : "BUILT_LOCALLY"
     }
   },

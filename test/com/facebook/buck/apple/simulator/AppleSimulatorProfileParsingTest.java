@@ -39,7 +39,7 @@ public class AppleSimulatorProfileParsingTest {
     }
 
     AppleSimulatorProfile expected =
-        AppleSimulatorProfile.builder()
+        ImmutableAppleSimulatorProfile.builder()
             .addSupportedProductFamilyIDs(1)
             .addSupportedArchitectures("i386", "x86_64")
             .build();

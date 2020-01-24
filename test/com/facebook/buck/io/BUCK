@@ -9,9 +9,6 @@ java_library(
             "*Test.java",
         ],
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/io:executable-finder",
-    ],
     visibility = ["//test/..."],
     deps = [
         "//src/com/facebook/buck/core/config:config",
@@ -38,6 +35,9 @@ java_library(
         "//third-party/java/jackson:jackson-databind",
         "//third-party/java/jna:jna",
         "//third-party/java/jsr:jsr305",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/io:executable-finder",
     ],
 )
 

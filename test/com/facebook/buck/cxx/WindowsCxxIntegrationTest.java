@@ -20,6 +20,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.WindowsUtils;
@@ -100,7 +102,14 @@ public class WindowsCxxIntegrationTest {
   public void simpleBinaryIsExecutableByCmd() throws IOException {
     ProcessResult runResult = workspace.runBuckCommand("build", "//app:log");
     runResult.assertSuccess();
-    Path outputPath = workspace.resolve("buck-out/gen/app/log/log.txt");
+    Path outputPath =
+        workspace
+            .resolve(
+                BuildTargetPaths.getGenPath(
+                    workspace.getProjectFileSystem(),
+                    BuildTargetFactory.newInstance("//app:log"),
+                    "%s"))
+            .resolve("log.txt");
     assertThat(
         workspace.getFileContents(outputPath), Matchers.containsString("The process is 64bits"));
   }
@@ -109,7 +118,13 @@ public class WindowsCxxIntegrationTest {
   public void simpleBinaryWithAsm64IsExecutableByCmd() throws IOException {
     ProcessResult runResult = workspace.runBuckCommand("build", "//app_asm:log");
     runResult.assertSuccess();
-    Path outputPath = workspace.resolve("buck-out/gen/app_asm/log/log.txt");
+    Path outputPath =
+        workspace.resolve(
+            BuildTargetPaths.getGenPath(
+                    workspace.getProjectFileSystem(),
+                    BuildTargetFactory.newInstance("//app_asm:log"),
+                    "%s")
+                .resolve("log.txt"));
     assertThat(workspace.getFileContents(outputPath), Matchers.equalToIgnoringCase("42"));
   }
 
@@ -129,7 +144,14 @@ public class WindowsCxxIntegrationTest {
 
     ProcessResult logResult = workspace.runBuckCommand("build", "//implib_usage:log");
     logResult.assertSuccess();
-    Path outputPath = workspace.resolve("buck-out/gen/implib_usage/log/log.txt");
+    Path outputPath =
+        workspace
+            .resolve(
+                BuildTargetPaths.getGenPath(
+                    workspace.getProjectFileSystem(),
+                    BuildTargetFactory.newInstance("//implib_usage:log"),
+                    "%s"))
+            .resolve("log.txt");
     assertThat(workspace.getFileContents(outputPath), Matchers.containsString("a + (a * b)"));
   }
 
@@ -143,17 +165,36 @@ public class WindowsCxxIntegrationTest {
     buildLog.assertTargetWasFetchedFromCache("//implib:implib_debug#windows-x86_64,shared");
     buildLog.assertTargetWasFetchedFromCache("//implib_usage:app_debug#windows-x86_64,binary");
     assertTrue(
-        Files.exists(workspace.resolve("buck-out/gen/implib_usage/app_debug#windows-x86_64.pdb")));
-    assertTrue(
         Files.exists(
             workspace.resolve(
-                "buck-out/gen/implib/implib_debug#shared,windows-x86_64/implib_debug.pdb")));
+                BuildTargetPaths.getGenPath(
+                    workspace.getProjectFileSystem(),
+                    BuildTargetFactory.newInstance("//implib_usage:app_debug#windows-x86_64"),
+                    "%s.pdb"))));
+    assertTrue(
+        Files.exists(
+            workspace
+                .resolve(
+                    BuildTargetPaths.getGenPath(
+                        workspace.getProjectFileSystem(),
+                        BuildTargetFactory.newInstance(
+                            "//implib:implib_debug#windows-x86_64,shared"),
+                        "%s"))
+                .resolve("implib_debug.pdb")));
   }
 
   @Test
-  public void implibOutputAccessible() {
+  public void implibOutputAccessible() throws IOException {
     workspace.runBuckCommand("build", "//implib:implib_copy").assertSuccess();
-    assertTrue(Files.exists(workspace.resolve("buck-out/gen/implib/implib_copy/implib_copy.lib")));
+    assertTrue(
+        Files.exists(
+            workspace
+                .resolve(
+                    BuildTargetPaths.getGenPath(
+                        workspace.getProjectFileSystem(),
+                        BuildTargetFactory.newInstance("//implib:implib_copy"),
+                        "%s"))
+                .resolve("implib_copy.lib")));
   }
 
   @Test
@@ -168,7 +209,14 @@ public class WindowsCxxIntegrationTest {
 
     ProcessResult logResult = workspace.runBuckCommand("build", "//implib_prebuilt:log");
     logResult.assertSuccess();
-    Path outputPath = workspace.resolve("buck-out/gen/implib_prebuilt/log/log.txt");
+    Path outputPath =
+        workspace
+            .resolve(
+                BuildTargetPaths.getGenPath(
+                    workspace.getProjectFileSystem(),
+                    BuildTargetFactory.newInstance("//implib_prebuilt:log"),
+                    "%s"))
+            .resolve("log.txt");
     String outputPathContents = workspace.getFileContents(outputPath);
     assertThat(outputPathContents, Matchers.containsString("a + (a * b)"));
     assertThat(outputPathContents, Matchers.containsString("Hello, world!"));
@@ -186,7 +234,16 @@ public class WindowsCxxIntegrationTest {
 
     ProcessResult logResult = workspace.runBuckCommand("build", "implib_prebuilt_cell2//:log");
     logResult.assertSuccess();
-    Path outputPath = workspace.resolve("implib_prebuilt/cell2/buck-out/gen/log/log.txt");
+    Path outputPath =
+        workspace
+            .resolve("implib_prebuilt/cell2/buck-out/gen")
+            .resolve(
+                BuildTargetPaths.getBasePath(
+                        workspace.getProjectFileSystem(),
+                        BuildTargetFactory.newInstance("implib_prebuilt_cell2//:log"),
+                        "%s")
+                    .toString())
+            .resolve("log.txt");
     assertThat(workspace.getFileContents(outputPath), Matchers.containsString("a + (a * b)"));
   }
 

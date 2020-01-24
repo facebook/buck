@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.HasOutputName;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
@@ -41,7 +42,7 @@ public class CxxGenrule extends NoopBuildRuleWithDeclaredAndExtraDeps implements
   }
 
   @Override
-  public String getOutputName() {
+  public String getOutputName(OutputLabel outputLabel) {
     return output;
   }
 

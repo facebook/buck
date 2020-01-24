@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -180,7 +181,10 @@ public class RustTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private ImmutableList<String> getTestCommand(
       SourcePathResolverAdapter pathResolver, String... additionalArgs) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
-    args.addAll(testExeBuild.getExecutableCommand().getCommandPrefix(pathResolver));
+    args.addAll(
+        testExeBuild
+            .getExecutableCommand(OutputLabel.defaultLabel())
+            .getCommandPrefix(pathResolver));
     args.add(additionalArgs);
     return args.build();
   }
@@ -270,8 +274,8 @@ public class RustTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Tool getExecutableCommand() {
-    return testExeBuild.getExecutableCommand();
+  public Tool getExecutableCommand(OutputLabel outputLabel) {
+    return testExeBuild.getExecutableCommand(OutputLabel.defaultLabel());
   }
 
   @Override
@@ -290,7 +294,8 @@ public class RustTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
     return Stream.concat(
             getDeclaredDeps().stream(),
-            BuildableSupport.getDeps(getExecutableCommand(), buildRuleResolver))
+            BuildableSupport.getDeps(
+                getExecutableCommand(OutputLabel.defaultLabel()), buildRuleResolver))
         .map(BuildRule::getBuildTarget);
   }
 }

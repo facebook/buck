@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
@@ -30,6 +31,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.events.Location;
+import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Printer;
 import com.google.devtools.build.lib.vfs.PathFragment;
 import java.nio.file.Path;
@@ -54,7 +56,7 @@ public class ArtifactImplTest {
     assertFalse(artifact.isBound());
 
     ImmutableActionAnalysisDataKey key =
-        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID() {});
+        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
     BuildArtifact materialized = artifact.materialize(key);
 
     assertTrue(materialized.isBound());
@@ -200,7 +202,7 @@ public class ArtifactImplTest {
     assertEquals(artifact1.hashCode(), artifact2.hashCode());
 
     ImmutableActionAnalysisDataKey key =
-        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID() {});
+        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
 
     artifact1 = (ArtifactImpl) artifact1.materialize(key);
     artifact2 = (ArtifactImpl) artifact2.materialize(key);
@@ -231,9 +233,9 @@ public class ArtifactImplTest {
         ArtifactImpl.of(target, genDir, packagePath, Paths.get("some/path"), Location.BUILTIN);
 
     ImmutableActionAnalysisDataKey key1 =
-        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID() {});
+        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
     ImmutableActionAnalysisDataKey key2 =
-        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID() {});
+        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
 
     artifact1 = (ArtifactImpl) artifact1.materialize(key1);
     artifact2 = (ArtifactImpl) artifact2.materialize(key2);
@@ -242,16 +244,16 @@ public class ArtifactImplTest {
   }
 
   @Test
-  public void toStringMakesSense() {
+  public void toStringMakesSense() throws EvalException {
     BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
     Path packagePath = Paths.get("my", "foo__");
     Location location =
         Location.fromPathAndStartColumn(
             PathFragment.create("foo").getChild("bar.bzl"), 0, 5, new Location.LineAndColumn(3, 4));
     ImmutableActionAnalysisDataKey key1 =
-        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID() {});
+        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
     ImmutableActionAnalysisDataKey key2 =
-        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID() {});
+        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
 
     ArtifactImpl declaredWithLocation =
         ArtifactImpl.of(target, genDir, packagePath, Paths.get("some/path"), location);
@@ -281,9 +283,79 @@ public class ArtifactImplTest {
     String expectedBoundWithoutLocation =
         String.format("Artifact<%s, bound to %s>", artifactPathString, key2);
 
+    String expectedWithLocationAsOutput =
+        String.format(
+            "Artifact<%s, as output, declared at %s:3:4>", artifactPathString, extensionPathString);
+
+    String expectedWithoutLocationAsOutput =
+        String.format("Artifact<%s, as output, declared>", artifactPathString);
+
     assertEquals(expectedWithLocation, declaredWithLocation.toString());
+    assertEquals(
+        expectedWithLocationAsOutput,
+        declaredWithLocation.asSkylarkOutputArtifact(Location.BUILTIN).toString());
+    assertEquals(expectedWithLocationAsOutput, declaredWithLocation.asOutputArtifact().toString());
     assertEquals(expectedBoundWithLocation, boundWithLocation.toString());
     assertEquals(expectedWithoutLocation, declaredWithoutLocation.toString());
+    assertEquals(
+        expectedWithoutLocationAsOutput,
+        declaredWithoutLocation.asSkylarkOutputArtifact(Location.BUILTIN).toString());
+    assertEquals(
+        expectedWithoutLocationAsOutput, declaredWithoutLocation.asOutputArtifact().toString());
     assertEquals(expectedBoundWithoutLocation, boundWithoutLocation.toString());
+  }
+
+  @Test
+  public void refusesToCreateSkylarkOutputArtifactIfBound() throws EvalException {
+    BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
+    Path packagePath = Paths.get("my/foo__");
+    Path path = Paths.get("bar");
+    ArtifactImpl artifact = ArtifactImpl.of(target, genDir, packagePath, path, Location.BUILTIN);
+    ImmutableActionAnalysisDataKey key =
+        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
+    BuildArtifact materialized = artifact.materialize(key);
+
+    assertTrue(materialized.isBound());
+
+    expectedException.expect(EvalException.class);
+    expectedException.expectMessage("cannot be used as an output artifact");
+    artifact.asSkylarkOutputArtifact(Location.BUILTIN);
+  }
+
+  @Test
+  public void refusesToCreateOutputArtifactIfBound() {
+    BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
+    Path packagePath = Paths.get("my/foo__");
+    Path path = Paths.get("bar");
+    ArtifactImpl artifact = ArtifactImpl.of(target, genDir, packagePath, path, Location.BUILTIN);
+    ImmutableActionAnalysisDataKey key =
+        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
+    BuildArtifact materialized = artifact.materialize(key);
+
+    assertTrue(materialized.isBound());
+
+    expectedException.expect(HumanReadableException.class);
+    expectedException.expectMessage("cannot be used as an output artifact");
+    artifact.asOutputArtifact();
+  }
+
+  @Test
+  public void isImmutable() throws EvalException {
+    BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
+    Path packagePath = Paths.get("my/foo__");
+    Path path = Paths.get("bar");
+    ArtifactImpl artifact = ArtifactImpl.of(target, genDir, packagePath, path, Location.BUILTIN);
+
+    assertFalse(artifact.isBound());
+    assertTrue(artifact.isImmutable());
+
+    assertTrue(artifact.asSkylarkOutputArtifact(Location.BUILTIN).isImmutable());
+
+    ImmutableActionAnalysisDataKey key =
+        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
+    BuildArtifact materialized = artifact.materialize(key);
+
+    assertTrue(materialized.isBound());
+    assertTrue(artifact.isImmutable());
   }
 }

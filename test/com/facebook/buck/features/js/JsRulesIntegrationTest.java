@@ -33,7 +33,6 @@ import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.impl.TargetConfigurationHasher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.PredicateMatcher;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -69,7 +68,7 @@ public class JsRulesIntegrationTest {
     assumeFalse(Platform.detect() == Platform.WINDOWS);
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "js_rules", tmp);
     workspace.setUp();
-    projectFilesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    projectFilesystem = workspace.getProjectFileSystem();
     genPath = projectFilesystem.getBuckPaths().getGenDir();
     if (projectFilesystem.getBuckPaths().shouldIncludeTargetConfigHash()) {
       genPath =
@@ -77,11 +76,21 @@ public class JsRulesIntegrationTest {
     }
   }
 
+  private static String normalizeObservedContent(String content) {
+    // Replace a string like `fruit#file-apple.js-9635e8d52e.jsfile`
+    // with `fruit#file-apple.js-<HASH>.jsfile`.
+    return content.replaceAll(
+        "\\.(js|json)-[0-9a-f]{10}(,ios)?(,release)?\\.jsfile", ".$1-<HASH>$2$3.jsfile");
+  }
+
   @Test
   public void testSimpleLibraryBuild() throws IOException {
     workspace.runBuckBuild("//js:fruit").assertSuccess();
 
-    workspace.verify(Paths.get("simple_library_build.expected"), genPath);
+    workspace.verify(
+        Paths.get("simple_library_build.expected"),
+        genPath,
+        JsRulesIntegrationTest::normalizeObservedContent);
   }
 
   @Test
@@ -152,49 +161,68 @@ public class JsRulesIntegrationTest {
   public void testLibraryWithExtraJson() throws IOException {
     workspace.runBuckBuild("//js:extras").assertSuccess();
 
-    workspace.verify(Paths.get("with_extra_json.expected"), genPath);
+    workspace.verify(
+        Paths.get("with_extra_json.expected"),
+        genPath,
+        JsRulesIntegrationTest::normalizeObservedContent);
   }
 
   @Test
   public void testBuildWithExtraJson() throws IOException {
     workspace.runBuckBuild("//js:bundle_with_extra_json").assertSuccess();
 
-    workspace.verify(Paths.get("bundle_with_extra_json.expected"), genPath);
+    workspace.verify(
+        Paths.get("bundle_with_extra_json.expected"),
+        genPath,
+        JsRulesIntegrationTest::normalizeObservedContent);
   }
 
   @Test
   public void testOptimizationBuild() throws IOException {
     workspace.runBuckBuild("//js:fruit#release,android").assertSuccess();
 
-    workspace.verify(Paths.get("simple_release_build.expected"), genPath);
+    workspace.verify(
+        Paths.get("simple_release_build.expected"),
+        genPath,
+        JsRulesIntegrationTest::normalizeObservedContent);
   }
 
   @Test
   public void testBuildWithDeps() throws IOException {
     workspace.runBuckBuild("//js:fruit-salad").assertSuccess();
 
-    workspace.verify(Paths.get("with_deps.expected"), genPath);
+    workspace.verify(
+        Paths.get("with_deps.expected"), genPath, JsRulesIntegrationTest::normalizeObservedContent);
   }
 
   @Test
   public void testReleaseBuildWithDeps() throws IOException {
     workspace.runBuckBuild("//js:fruit-salad#release,ios").assertSuccess();
 
-    workspace.verify(Paths.get("release_flavor_with_deps.expected"), genPath);
+    workspace.verify(
+        Paths.get("release_flavor_with_deps.expected"),
+        genPath,
+        JsRulesIntegrationTest::normalizeObservedContent);
   }
 
   @Test
   public void testFlavoredAndUnflavoredBuild() throws IOException {
     workspace.runBuckBuild("//js:fruit#release,android", "//js:fruit").assertSuccess();
 
-    workspace.verify(Paths.get("same_target_with_and_without_flavors.expected"), genPath);
+    workspace.verify(
+        Paths.get("same_target_with_and_without_flavors.expected"),
+        genPath,
+        JsRulesIntegrationTest::normalizeObservedContent);
   }
 
   @Test
   public void testBuildTargetOutputs() throws IOException {
     workspace.runBuckBuild("//js:build-target-output").assertSuccess();
 
-    workspace.verify(Paths.get("with_build_target.expected"), genPath);
+    workspace.verify(
+        Paths.get("with_build_target.expected"),
+        genPath,
+        JsRulesIntegrationTest::normalizeObservedContent);
   }
 
   @Test
@@ -203,42 +231,58 @@ public class JsRulesIntegrationTest {
         .runBuckBuild("//external:replace-file-prefix", "//js:replace-build-target-prefix")
         .assertSuccess();
 
-    workspace.verify(Paths.get("replace_path_prefix.expected"), genPath);
+    workspace.verify(
+        Paths.get("replace_path_prefix.expected"),
+        genPath,
+        JsRulesIntegrationTest::normalizeObservedContent);
   }
 
   @Test
   public void testSubPathsOfBuildTargets() throws IOException {
     workspace.runBuckBuild("//js:node_modules").assertSuccess();
 
-    workspace.verify(Paths.get("subpaths.expected"), genPath);
+    workspace.verify(
+        Paths.get("subpaths.expected"), genPath, JsRulesIntegrationTest::normalizeObservedContent);
   }
 
   @Test
   public void testLibraryWithDepsQuery() throws IOException {
     workspace.runBuckBuild("//js:lib-with-deps-query").assertSuccess();
 
-    workspace.verify(Paths.get("with_deps_query.expected"), genPath);
+    workspace.verify(
+        Paths.get("with_deps_query.expected"),
+        genPath,
+        JsRulesIntegrationTest::normalizeObservedContent);
   }
 
   @Test
   public void testBundleBuild() throws IOException {
     workspace.runBuckBuild("//js:fruit-salad-in-a-bundle#ios").assertSuccess();
 
-    workspace.verify(Paths.get("simple_bundle.expected"), genPath);
+    workspace.verify(
+        Paths.get("simple_bundle.expected"),
+        genPath,
+        JsRulesIntegrationTest::normalizeObservedContent);
   }
 
   @Test
   public void testBundleBuildWithFlavors() throws IOException {
     workspace.runBuckBuild("//js:fruit-salad-in-a-bundle#android,release").assertSuccess();
 
-    workspace.verify(Paths.get("simple_bundle_with_flavors.expected"), genPath);
+    workspace.verify(
+        Paths.get("simple_bundle_with_flavors.expected"),
+        genPath,
+        JsRulesIntegrationTest::normalizeObservedContent);
   }
 
   @Test
   public void testBundleBuildWithName() throws IOException {
     workspace.runBuckBuild("//js:fruit-with-extras").assertSuccess();
 
-    workspace.verify(Paths.get("named_flavored_bundle.expected"), genPath);
+    workspace.verify(
+        Paths.get("named_flavored_bundle.expected"),
+        genPath,
+        JsRulesIntegrationTest::normalizeObservedContent);
   }
 
   @Test
@@ -260,7 +304,10 @@ public class JsRulesIntegrationTest {
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
 
     workspace.runBuckBuild("//js:bundle-with-android-lib#android,release").assertSuccess();
-    workspace.verify(Paths.get("android_library_bundle.expected"), genPath);
+    workspace.verify(
+        Paths.get("android_library_bundle.expected"),
+        genPath,
+        JsRulesIntegrationTest::normalizeObservedContent);
   }
 
   @Test
@@ -269,7 +316,8 @@ public class JsRulesIntegrationTest {
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     workspace.runBuckBuild("//ios:DemoApp#iphonesimulator-x86_64,no-debug").assertSuccess();
-    workspace.verify(Paths.get("ios_app.expected"), genPath);
+    workspace.verify(
+        Paths.get("ios_app.expected"), genPath, JsRulesIntegrationTest::normalizeObservedContent);
   }
 
   @Test
@@ -284,7 +332,10 @@ public class JsRulesIntegrationTest {
             "project.ide=xcode",
             "//ios:DemoApp#iphonesimulator-x86_64,no-debug")
         .assertSuccess();
-    workspace.verify(Paths.get("ios_project.expected"), workspace.getDestPath());
+    workspace.verify(
+        Paths.get("ios_project.expected"),
+        workspace.getDestPath(),
+        JsRulesIntegrationTest::normalizeObservedContent);
   }
 
   @Test
@@ -294,7 +345,10 @@ public class JsRulesIntegrationTest {
             "//js:fruit-salad-in-a-bundle#dependencies,ios,release",
             "//js:fruit-with-extras#android,dependencies")
         .assertSuccess();
-    workspace.verify(Paths.get("dependencies.expected"), genPath);
+    workspace.verify(
+        Paths.get("dependencies.expected"),
+        genPath,
+        JsRulesIntegrationTest::normalizeObservedContent);
   }
 
   @Test
@@ -305,7 +359,10 @@ public class JsRulesIntegrationTest {
   @Test
   public void bundleGenrule() throws IOException {
     workspace.runBuckBuild("//js:genrule-inner", "//js:genrule-outer").assertSuccess();
-    workspace.verify(Paths.get("bundle_genrules.expected"), genPath);
+    workspace.verify(
+        Paths.get("bundle_genrules.expected"),
+        genPath,
+        JsRulesIntegrationTest::normalizeObservedContent);
 
     String genruleSourceMapTarget = "//js:genrule-outer#source_map";
     String underlyingBundleSourceMapTarget = "//js:fruit-with-extras#source_map";
@@ -331,7 +388,10 @@ public class JsRulesIntegrationTest {
     workspace
         .runBuckBuild("//ios:DemoAppWithJsBundleGenrule#iphonesimulator-x86_64,no-debug")
         .assertSuccess();
-    workspace.verify(Paths.get("ios_app_with_genrule.expected"), genPath);
+    workspace.verify(
+        Paths.get("ios_app_with_genrule.expected"),
+        genPath,
+        JsRulesIntegrationTest::normalizeObservedContent);
   }
 
   @Test
@@ -346,7 +406,10 @@ public class JsRulesIntegrationTest {
             "project.ide=xcode",
             "//ios:DemoAppWithJsBundleGenrule#iphonesimulator-x86_64,no-debug")
         .assertSuccess();
-    workspace.verify(Paths.get("ios_project_with_genrule.expected"), workspace.getDestPath());
+    workspace.verify(
+        Paths.get("ios_project_with_genrule.expected"),
+        workspace.getDestPath(),
+        JsRulesIntegrationTest::normalizeObservedContent);
   }
 
   @Test
@@ -367,7 +430,10 @@ public class JsRulesIntegrationTest {
   @Test
   public void genruleAllowsToRewriteSourcemap() throws IOException {
     workspace.runBuckBuild("//js:sourcemap-genrule#source_map").assertSuccess();
-    workspace.verify(Paths.get("sourcemap_genrule.expected"), genPath);
+    workspace.verify(
+        Paths.get("sourcemap_genrule.expected"),
+        genPath,
+        JsRulesIntegrationTest::normalizeObservedContent);
   }
 
   @Test
@@ -378,13 +444,19 @@ public class JsRulesIntegrationTest {
   @Test
   public void genruleAllowsToRewriteMiscDir() throws IOException {
     workspace.runBuckBuild("//js:misc-genrule").assertSuccess();
-    workspace.verify(Paths.get("misc_genrule.expected"), genPath);
+    workspace.verify(
+        Paths.get("misc_genrule.expected"),
+        genPath,
+        JsRulesIntegrationTest::normalizeObservedContent);
   }
 
   @Test
   public void genruleAllowsToRewriteDepsFile() throws IOException {
     workspace.runBuckBuild("//js:deps-file-genrule#dependencies").assertSuccess();
-    workspace.verify(Paths.get("deps_file_genrule.expected"), genPath);
+    workspace.verify(
+        Paths.get("deps_file_genrule.expected"),
+        genPath,
+        JsRulesIntegrationTest::normalizeObservedContent);
   }
 
   private Path getGenPath(String filename) {

@@ -1,9 +1,6 @@
 java_library(
     name = "impl",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//src/com/facebook/buck/io/filesystem:filesystem",
-    ],
     tests = [
         "//test/com/facebook/buck/io/filesystem/impl:impl",
     ],
@@ -28,5 +25,8 @@ java_library(
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/io/filesystem:filesystem",
     ],
 )

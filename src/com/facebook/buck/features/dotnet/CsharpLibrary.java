@@ -19,7 +19,6 @@ package com.facebook.buck.features.dotnet;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -61,15 +60,13 @@ public class CsharpLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       Tool csharpCompiler,
-      String dllName,
       ImmutableSortedSet<SourcePath> srcs,
       ImmutableList<Either<BuildRule, String>> refs,
       ImmutableMap<String, SourcePath> resources,
       FrameworkVersion version,
-      ImmutableList<String> compilerFlags) {
+      ImmutableList<String> compilerFlags,
+      Path output) {
     super(buildTarget, projectFilesystem, params);
-
-    Preconditions.checkArgument(dllName.endsWith(".dll"));
 
     this.csharpCompiler = csharpCompiler;
     this.srcs = srcs;
@@ -77,7 +74,8 @@ public class CsharpLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     this.resources = resources;
     this.version = version;
 
-    this.output = BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "%s/" + dllName);
+    // e.g. buck-out/gen/foo/bar__/Baz.dll for //foo:bar
+    this.output = output;
     this.compilerFlags = compilerFlags;
   }
 

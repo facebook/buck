@@ -26,7 +26,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.step.ImmutableStepExecutionResult;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -292,7 +291,7 @@ public class MergeAndroidResourcesStep implements Step {
       }
       return StepExecutionResults.SUCCESS;
     } catch (DuplicateResourceException e) {
-      return ImmutableStepExecutionResult.builder()
+      return StepExecutionResult.builder()
           .setExitCode(StepExecutionResults.ERROR_EXIT_CODE)
           .setStderr(Optional.of(e.getMessage()))
           .build();

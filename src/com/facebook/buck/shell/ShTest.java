@@ -19,6 +19,7 @@ package com.facebook.buck.shell;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -125,7 +126,7 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
                 Arg.stringify(args, buildContext.getSourcePathResolver()),
                 Arg.stringify(env, buildContext.getSourcePathResolver()),
                 testRuleTimeoutMs,
-                getBuildTarget().getFullyQualifiedName(),
+                getBuildTarget(),
                 getPathToTestOutputResult()))
         .build();
   }
@@ -180,7 +181,7 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Tool getExecutableCommand() {
+  public Tool getExecutableCommand(OutputLabel outputLabel) {
     CommandTool.Builder builder = new CommandTool.Builder().addInputs(resources);
 
     for (Arg arg : args) {

@@ -28,27 +28,14 @@ public interface VersionControlCmdLineInterface {
   /**
    * @param baseRevision
    * @param tipRevision
-   * @return {@link VersionControlSupplier} of the input stream of the diff between two revisions
-   * @throws InterruptedException
-   */
-  VersionControlSupplier<InputStream> diffBetweenRevisions(String baseRevision, String tipRevision)
-      throws VersionControlCommandFailedException, InterruptedException;
-
-  /**
-   * @param baseRevision
-   * @param tipRevision
    * @return {@link VersionControlSupplier} of the input stream of the diff between two revisions or
    *     {@link Optional#empty}
+   * @throws VersionControlCommandFailedException
    * @throws InterruptedException
    */
-  default Optional<VersionControlSupplier<InputStream>> diffBetweenRevisionsOrAbsent(
-      String baseRevision, String tipRevision) throws InterruptedException {
-    try {
-      return Optional.of(diffBetweenRevisions(baseRevision, tipRevision));
-    } catch (VersionControlCommandFailedException e) {
-      return Optional.empty();
-    }
-  }
+  Optional<VersionControlSupplier<InputStream>> diffBetweenRevisions(
+      String baseRevision, String tipRevision)
+      throws VersionControlCommandFailedException, InterruptedException;
 
   /**
    * @param fromRevisionId

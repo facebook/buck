@@ -330,11 +330,7 @@ public class AndroidBinary extends AbstractBuildRule
   /** The APK at this path is the final one that points to an APK that a user should install. */
   @Override
   public ApkInfo getApkInfo() {
-    return ApkInfo.builder()
-        .setApkPath(getSourcePathToOutput())
-        .setManifestPath(manifestPath)
-        .setExopackageInfo(exopackageInfo)
-        .build();
+    return ImmutableApkInfo.of(manifestPath, getSourcePathToOutput(), exopackageInfo);
   }
 
   @Override

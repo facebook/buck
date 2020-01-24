@@ -26,13 +26,6 @@ java_immutables_library(
         ["*.java"],
         exclude = ["*Test.java"],
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/core/description/arg:arg",
-        "//src/com/facebook/buck/core/description/attr:attr",
-        "//src/com/facebook/buck/core/model/targetgraph:targetgraph",
-        "//src/com/facebook/buck/core/model/targetgraph/raw:raw",
-        "//src/com/facebook/buck/core/rules:rules",
-    ],
     visibility = [
         "//test/...",
     ],
@@ -51,5 +44,12 @@ java_immutables_library(
         "//test/com/facebook/buck/core/rules:testutil",
         "//test/com/facebook/buck/core/rules/impl:testutil",
         "//test/com/facebook/buck/core/toolchain/impl:testutil",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/description/arg:arg",
+        "//src/com/facebook/buck/core/description/attr:attr",
+        "//src/com/facebook/buck/core/model/targetgraph:targetgraph",
+        "//src/com/facebook/buck/core/model/targetgraph/raw:raw",
+        "//src/com/facebook/buck/core/rules:rules",
     ],
 )

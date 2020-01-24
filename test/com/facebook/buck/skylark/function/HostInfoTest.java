@@ -26,6 +26,7 @@ import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.parser.LabelCache;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
+import com.facebook.buck.parser.options.UserDefinedRulesState;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.skylark.io.impl.NativeGlobber;
 import com.facebook.buck.skylark.parser.BuckGlobals;
@@ -258,7 +259,7 @@ public class HostInfoTest {
             .setBuildFileName("BUCK")
             .setBuildFileImportWhitelist(ImmutableList.of())
             .setPythonInterpreter("skylark")
-            .setEnableUserDefinedRules(false)
+            .setUserDefinedRulesState(UserDefinedRulesState.of(false))
             .build();
     RuleFunctionFactory ruleFunctionFactory =
         new RuleFunctionFactory(new DefaultTypeCoercerFactory());
@@ -266,15 +267,15 @@ public class HostInfoTest {
         options,
         BuckEventBusForTests.newInstance(),
         SkylarkFilesystem.using(filesystem),
-        BuckGlobals.builder()
-            .setSkylarkFunctionModule(SkylarkBuildModule.BUILD_MODULE)
-            .setDescriptions(options.getDescriptions())
-            .setDisableImplicitNativeRules(options.getDisableImplicitNativeRules())
-            .setRuleFunctionFactory(ruleFunctionFactory)
-            .setEnableUserDefinedRules(options.getEnableUserDefinedRules())
-            .setLabelCache(LabelCache.newLabelCache())
-            .setKnownUserDefinedRuleTypes(new KnownUserDefinedRuleTypes())
-            .build(),
+        BuckGlobals.of(
+            SkylarkBuildModule.BUILD_MODULE,
+            options.getDescriptions(),
+            options.getUserDefinedRulesState(),
+            options.getImplicitNativeRulesState(),
+            ruleFunctionFactory,
+            LabelCache.newLabelCache(),
+            new KnownUserDefinedRuleTypes(),
+            options.getPerFeatureProviders()),
         eventHandler,
         NativeGlobber::create);
   }

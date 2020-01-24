@@ -18,7 +18,6 @@ package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.CacheStatsEvent;
-import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.util.cache.CacheStats;
 
@@ -33,7 +32,8 @@ public class EventPostingRuleKeyCacheScope<V> implements RuleKeyCacheScope<V> {
     this.cache = cache;
 
     try (SimplePerfEvent.Scope scope =
-        SimplePerfEvent.scope(buckEventBus, PerfEventId.of("rule_key_cache_setup"))) {
+        SimplePerfEvent.scope(
+            buckEventBus, SimplePerfEvent.PerfEventId.of("rule_key_cache_setup"))) {
 
       // Run additional setup.
       setup(scope);
@@ -54,7 +54,8 @@ public class EventPostingRuleKeyCacheScope<V> implements RuleKeyCacheScope<V> {
   @Override
   public final void close() {
     try (SimplePerfEvent.Scope scope =
-        SimplePerfEvent.scope(buckEventBus, PerfEventId.of("rule_key_cache_cleanup"))) {
+        SimplePerfEvent.scope(
+            buckEventBus, SimplePerfEvent.PerfEventId.of("rule_key_cache_cleanup"))) {
 
       // Log stats.
       CacheStats stats = cache.getStats();

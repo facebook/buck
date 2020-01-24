@@ -18,11 +18,35 @@ package com.facebook.buck.core.rules.actions.lib.args;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
+import com.facebook.buck.core.artifact.OutputArtifact;
 import com.google.devtools.build.lib.actions.CommandLineItem;
 
 /** Helper methods to convert / validate objects that are command line arguments for actions */
 public class CommandLineArgStringifier {
   private CommandLineArgStringifier() {}
+
+  /**
+   * @param filesystem the filesystem to use to stringify {@link Artifact}s
+   * @param absolute If the path returned should be absolute. This can be necessary for functions
+   *     like {@link ProcessBuilder#start()}. On windows it does not do path resolution properly for
+   *     relative paths, even if the {@code directory} is set so an absolute path must be provided.
+   * @param argAndFormatString the object to stringify and the format string to apply after initial
+   *     stringification
+   * @return the string representation of an argument to pass to a command line application in an
+   *     action
+   */
+  public static String asString(
+      ArtifactFilesystem filesystem,
+      boolean absolute,
+      CommandLineArgs.ArgAndFormatString argAndFormatString) {
+    String stringValue = asString(filesystem, absolute, argAndFormatString.getObject());
+    String formatString = argAndFormatString.getPostStringificationFormatString();
+    if (formatString.isEmpty() || formatString.equals("%s")) {
+      return stringValue;
+    } else {
+      return formatString.replace("%s", stringValue);
+    }
+  }
 
   /**
    * @param filesystem the filesystem to use to stringify {@link Artifact}s
@@ -45,6 +69,10 @@ public class CommandLineArgStringifier {
       return absolute
           ? filesystem.stringifyAbsolute((Artifact) object)
           : filesystem.stringify((Artifact) object);
+    } else if (object instanceof OutputArtifact) {
+      return absolute
+          ? filesystem.stringifyAbsolute(((OutputArtifact) object).getArtifact())
+          : filesystem.stringify(((OutputArtifact) object).getArtifact());
     } else {
       throw new CommandLineArgException(object);
     }

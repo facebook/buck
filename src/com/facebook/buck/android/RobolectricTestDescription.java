@@ -35,7 +35,7 @@ import com.facebook.buck.core.test.rule.TestRunnerSpec;
 import com.facebook.buck.core.test.rule.coercer.TestRunnerSpecCoercer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -190,12 +190,11 @@ public class RobolectricTestDescription
             /* skipNonUnionRDotJava */ false);
 
     StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(buildTarget)
-            .setCellPathResolver(context.getCellPathResolver())
-            .setActionGraphBuilder(graphBuilder)
-            .setExpanders(JavaTestDescription.MACRO_EXPANDERS)
-            .build();
+        StringWithMacrosConverter.of(
+            buildTarget,
+            context.getCellPathResolver(),
+            graphBuilder,
+            JavaTestDescription.MACRO_EXPANDERS);
     ImmutableList<Arg> vmArgs =
         ImmutableList.copyOf(Lists.transform(args.getVmArgs(), macrosConverter::convert));
 
@@ -481,8 +480,7 @@ public class RobolectricTestDescription
         targetGraphOnlyDepsBuilder, constructorArg, buildTarget.getTargetConfiguration());
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable(copy = true)
+  @RuleArg
   interface AbstractRobolectricTestDescriptionArg
       extends JavaTestDescription.CoreArg, AndroidKotlinCoreArg, HasTestRunner {
 
@@ -505,6 +503,20 @@ public class RobolectricTestDescription
     @Value.Default
     default boolean isUseBinaryResources() {
       return false;
+    }
+
+    default RobolectricTestDescriptionArg withDeps(Iterable<BuildTarget> deps) {
+      if (getDeps().equals(deps)) {
+        return (RobolectricTestDescriptionArg) this;
+      }
+      return RobolectricTestDescriptionArg.builder().from(this).setDeps(deps).build();
+    }
+
+    default RobolectricTestDescriptionArg withSrcs(Iterable<SourcePath> srcs) {
+      if (getSrcs().equals(srcs)) {
+        return (RobolectricTestDescriptionArg) this;
+      }
+      return RobolectricTestDescriptionArg.builder().from(this).setSrcs(srcs).build();
     }
 
   }

@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
@@ -60,7 +61,7 @@ public class AuditRuleTypesCommandTest {
 
   private static class AnotherBuildRuleDescription extends SomeBuildRuleDescription {}
 
-  private static final ImmutableList<DescriptionWithTargetGraph<?>> DESCRIPTIONS =
+  private static final ImmutableList<Description<?>> DESCRIPTIONS =
       ImmutableList.of(new SomeBuildRuleDescription(), new AnotherBuildRuleDescription());
 
   @Before
@@ -72,7 +73,9 @@ public class AuditRuleTypesCommandTest {
     TestConsole console = new TestConsole();
 
     AuditRuleTypesCommand.collectAndDumpBuildRuleTypesInformation(
-        console, KnownNativeRuleTypes.of(DESCRIPTIONS, ImmutableList.of()), true);
+        console,
+        KnownNativeRuleTypes.of(DESCRIPTIONS, ImmutableList.of(), ImmutableList.of()),
+        true);
 
     @SuppressWarnings("PMD.LooseCoupling")
     List<String> buildRuleTypes =
@@ -87,7 +90,9 @@ public class AuditRuleTypesCommandTest {
     TestConsole console = new TestConsole();
 
     AuditRuleTypesCommand.collectAndDumpBuildRuleTypesInformation(
-        console, KnownNativeRuleTypes.of(DESCRIPTIONS, ImmutableList.of()), false);
+        console,
+        KnownNativeRuleTypes.of(DESCRIPTIONS, ImmutableList.of(), ImmutableList.of()),
+        false);
 
     List<String> buildRuleTypes =
         Splitter.on(System.lineSeparator())

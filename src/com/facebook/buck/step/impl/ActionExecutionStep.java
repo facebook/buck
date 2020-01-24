@@ -22,7 +22,6 @@ import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.actions.ActionExecutionContext;
 import com.facebook.buck.core.rules.actions.ActionExecutionResult;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionContext;
-import com.facebook.buck.step.ImmutableStepExecutionResult;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -64,8 +63,8 @@ public class ActionExecutionStep implements Step {
     executionContext.getArtifactFilesystem().removeBuildArtifacts(action.getOutputs());
 
     ActionExecutionResult result = action.execute(executionContext);
-    ImmutableStepExecutionResult.Builder stepExecutionResultBuilder =
-        ImmutableStepExecutionResult.builder()
+    StepExecutionResult.Builder stepExecutionResultBuilder =
+        StepExecutionResult.builder()
             .setExecutedCommand(result.getCommand())
             .setStderr(result.getStdErr());
     if (result instanceof ActionExecutionResult.ActionExecutionSuccess) {

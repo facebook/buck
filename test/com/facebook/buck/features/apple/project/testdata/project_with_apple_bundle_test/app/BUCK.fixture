@@ -4,8 +4,8 @@ apple_bundle(
     extension = "app",
     info_plist = "Info.plist",
     tests = [
-        ':barTests'
-    ]
+        ":barTests",
+    ],
 )
 
 apple_binary(
@@ -25,18 +25,18 @@ apple_binary(
 )
 
 apple_test(
-    name = 'barTests',
-    info_plist = 'tests/Info.plist',
-    test_host_app = ':bundle',
+    name = "barTests",
+    info_plist = "tests/Info.plist",
+    test_host_app = ":bundle",
     headers = glob([
-        'tests/*.h',
+        "tests/*.h",
     ]),
     srcs = glob([
-        'tests/*.m',
+        "tests/*.m",
     ]),
     frameworks = [
-        '$SDKROOT/System/Library/Frameworks/Foundation.framework',
-        '$SDKROOT/System/Library/Frameworks/Cocoa.framework',
-        '$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework',
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+        "$SDKROOT/System/Library/Frameworks/Cocoa.framework",
+        "$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework",
     ],
 )

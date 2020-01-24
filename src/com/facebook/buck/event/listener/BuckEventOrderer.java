@@ -128,9 +128,8 @@ public class BuckEventOrderer<T extends BuckEvent> implements AutoCloseable {
       T o1First = o1.getFirst();
       T o2First = o2.getFirst();
       int result = Long.compare(o1First.getNanoTime(), o2First.getNanoTime());
-      if (result == 0) {
+      if (result == 0)
         result = Long.compare(o1First.getEventKey().getValue(), o2First.getEventKey().getValue());
-      }
       return result;
     }
   }

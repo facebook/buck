@@ -43,8 +43,7 @@ import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.impl.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.toolchain.objectfile.ObjectFileScrubbers;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
@@ -129,7 +128,7 @@ public class CxxLibraryIntegrationTest {
         Files.isRegularFile(
             workspace.getPath(
                 BuildTargetPaths.getGenPath(
-                    TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath()),
+                    workspace.getProjectFileSystem(),
                     BuildTargetFactory.newInstance("//subdir:library")
                         .withFlavors(
                             DefaultCxxPlatforms.FLAVOR, CxxDescriptionEnhancer.SHARED_FLAVOR),
@@ -321,8 +320,7 @@ public class CxxLibraryIntegrationTest {
     Path rootPath = tmp.getRoot();
     assumeSymLinkTreeWithHeaderMap(rootPath);
 
-    DefaultProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     Path publicGenDir =
         BuildPaths.getGenDir(
@@ -350,8 +348,7 @@ public class CxxLibraryIntegrationTest {
     Path rootPath = tmp.getRoot();
     assumeSymLinkTreeWithHeaderMap(rootPath);
 
-    DefaultProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     Path publicGenDir =
         BuildPaths.getGenDir(
@@ -378,8 +375,7 @@ public class CxxLibraryIntegrationTest {
     Path rootPath = tmp.getRoot();
     assumeSymLinkTreeWithHeaderMap(rootPath);
 
-    DefaultProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     Path publicGenDir =
         BuildPaths.getGenDir(
@@ -406,8 +402,7 @@ public class CxxLibraryIntegrationTest {
         .assertSuccess();
     Path rootPath = tmp.getRoot();
 
-    DefaultProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     Path publicGenDir =
         BuildPaths.getGenDir(
@@ -439,8 +434,7 @@ public class CxxLibraryIntegrationTest {
     Path rootPath = tmp.getRoot();
     assumeSymLinkTreeWithHeaderMap(rootPath);
 
-    DefaultProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     Path publicGenDir =
         BuildPaths.getGenDir(
@@ -504,8 +498,7 @@ public class CxxLibraryIntegrationTest {
         .runBuckBuild("-c", "cxx.unique_library_name_enabled=true", "//:foo#default,static")
         .assertSuccess();
 
-    DefaultProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     Path genDir =
         BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//:foo#default,static"));

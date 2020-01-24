@@ -18,6 +18,7 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
@@ -198,7 +199,7 @@ public class CommandAliasBuilder
     public ImmutableList<String> exeOf(BuildTarget target) {
       return graphBuilder
           .getRuleWithType(target, BinaryBuildRule.class)
-          .getExecutableCommand()
+          .getExecutableCommand(OutputLabel.defaultLabel())
           .getCommandPrefix(sourcePathResolverAdapter);
     }
 
@@ -219,11 +220,15 @@ public class CommandAliasBuilder
     }
 
     public ImmutableList<String> getCommandPrefix() {
-      return commandAlias.getExecutableCommand().getCommandPrefix(sourcePathResolverAdapter);
+      return commandAlias
+          .getExecutableCommand(OutputLabel.defaultLabel())
+          .getCommandPrefix(sourcePathResolverAdapter);
     }
 
     public ImmutableMap<String, String> getEnvironment() {
-      return commandAlias.getExecutableCommand().getEnvironment(sourcePathResolverAdapter);
+      return commandAlias
+          .getExecutableCommand(OutputLabel.defaultLabel())
+          .getEnvironment(sourcePathResolverAdapter);
     }
 
     public Iterable<BuildTarget> getRuntimeDeps() {

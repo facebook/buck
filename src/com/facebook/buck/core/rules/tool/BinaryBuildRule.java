@@ -16,11 +16,16 @@
 
 package com.facebook.buck.core.rules.tool;
 
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.toolchain.tool.Tool;
 
 /** Build rules that can be executed on the command line. */
 public interface BinaryBuildRule extends BuildRule {
-  /** Command to execute the output of this rule. */
-  Tool getExecutableCommand();
+  /**
+   * Command to execute the output of this rule.
+   *
+   * @param outputLabel associated with the executable
+   */
+  Tool getExecutableCommand(OutputLabel outputLabel);
 }

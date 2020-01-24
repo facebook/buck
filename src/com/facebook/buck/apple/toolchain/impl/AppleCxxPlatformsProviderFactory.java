@@ -16,8 +16,10 @@
 
 package com.facebook.buck.apple.toolchain.impl;
 
+import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
+import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.AppleSdk;
 import com.facebook.buck.apple.toolchain.AppleSdkLocation;
 import com.facebook.buck.apple.toolchain.AppleSdkPaths;
@@ -26,6 +28,7 @@ import com.facebook.buck.apple.toolchain.AppleToolchainProvider;
 import com.facebook.buck.apple.toolchain.UnresolvedAppleCxxPlatform;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -48,7 +51,13 @@ public class AppleCxxPlatformsProviderFactory
       ToolchainProvider toolchainProvider,
       ToolchainCreationContext context,
       TargetConfiguration toolchainTargetConfiguration) {
-
+    AppleConfig appleConfig = context.getBuckConfig().getView(AppleConfig.class);
+    Optional<BuildTarget> toolchainSetTarget =
+        appleConfig.getAppleToolchainSetTarget(toolchainTargetConfiguration);
+    if (toolchainSetTarget.isPresent()) {
+      return Optional.of(
+          AppleCxxPlatformsProvider.of(createDynamicPlatforms(toolchainSetTarget.get())));
+    }
     Optional<AppleSdkLocation> appleSdkLocation =
         toolchainProvider.getByNameIfPresent(
             AppleSdkLocation.DEFAULT_NAME, toolchainTargetConfiguration, AppleSdkLocation.class);
@@ -109,5 +118,14 @@ public class AppleCxxPlatformsProviderFactory
       }
       platformsMap.put(flavor, platform);
     }
+  }
+
+  private static FlavorDomain<UnresolvedAppleCxxPlatform> createDynamicPlatforms(
+      BuildTarget toolchainSetTarget) {
+    ImmutableList<UnresolvedAppleCxxPlatform> unresolvedAppleCxxPlatforms =
+        ApplePlatform.ALL_PLATFORM_FLAVORS.stream()
+            .map(flavor -> new ProviderBackedUnresolvedAppleCxxPlatform(toolchainSetTarget, flavor))
+            .collect(ImmutableList.toImmutableList());
+    return FlavorDomain.from("Apple C++ Platform", unresolvedAppleCxxPlatforms);
   }
 }

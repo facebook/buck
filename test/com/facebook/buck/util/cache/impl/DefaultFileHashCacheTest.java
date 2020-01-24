@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemDelegate;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.cache.FileHashCacheMode;
@@ -37,6 +38,7 @@ import com.google.common.hash.Hashing;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -251,7 +253,7 @@ public class DefaultFileHashCacheTest {
     cache.getForArchiveMember(abiJarPath, memberPath);
   }
 
-  @Test(expected = NoSuchFileException.class)
+  @Test(expected = UnsupportedOperationException.class)
   public void whenJarMemberWithEmptyManifestIsQueriedThenThrow() throws IOException {
     Assume.assumeFalse(fileHashCacheMode == FileHashCacheMode.PARALLEL_COMPARISON);
     Assume.assumeFalse(fileHashCacheMode == FileHashCacheMode.LIMITED_PREFIX_TREE_PARALLEL);
@@ -347,5 +349,25 @@ public class DefaultFileHashCacheTest {
     assertFalse(cache.willGet(filesystem.getPath("buck-out/file.txt")));
     assertFalse(cache.willGet(filesystem.getPath("buck-out/cells/file.txt")));
     assertTrue(cache.willGet(filesystem.getPath("file.txt")));
+  }
+
+  @Test
+  public void thatBuckOutCacheUsesCorrectDelegate()
+      throws NoSuchFieldException, IllegalAccessException {
+    // TODO: add way to spoof that we're running on an eden filesystem so we can assert that
+    // initially the filesystme contains an EdenProjectFilesystemDelegate, but that the
+    // FileHashCache created with createBuckOutFileHashCache instead has a Filesystem with a
+    // DefaultProjectFilesystemDelegate
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+
+    DefaultFileHashCache buckOutCache =
+        DefaultFileHashCache.createBuckOutFileHashCache(filesystem, fileHashCacheMode);
+
+    Class<?> buckOutCacheClass = buckOutCache.getFilesystem().getClass();
+    Field buckOutCacheClassDelegate = buckOutCacheClass.getDeclaredField("delegate");
+    buckOutCacheClassDelegate.setAccessible(true);
+    assertTrue(
+        buckOutCacheClassDelegate.get(buckOutCache.getFilesystem())
+            instanceof DefaultProjectFilesystemDelegate);
   }
 }

@@ -104,9 +104,9 @@ def buck_module(
     native.java_library(
         name = name + "_module_for_test",
         exported_deps = depset([":" + final_module_jar_name] +
-                        list(kwargs.get("provided_deps", [])) +
-                        list(kwargs.get("exported_provided_deps", [])) +
-                        convert_module_deps_to_test(module_deps)),
+                               list(kwargs.get("provided_deps", [])) +
+                               list(kwargs.get("exported_provided_deps", [])) +
+                               convert_module_deps_to_test(module_deps)),
         visibility = ["PUBLIC"],
     )
 

@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -31,13 +32,19 @@ import java.util.Optional;
 
 class RegisterDebugSymbolsStep implements Step {
 
+  private final ProjectFilesystem filesystem;
   private final SourcePath binary;
   private final Tool lldb;
   private final SourcePathResolverAdapter resolver;
   private final Path dsymPath;
 
   public RegisterDebugSymbolsStep(
-      SourcePath binary, Tool lldb, SourcePathResolverAdapter resolver, Path dsymPath) {
+      ProjectFilesystem filesystem,
+      SourcePath binary,
+      Tool lldb,
+      SourcePathResolverAdapter resolver,
+      Path dsymPath) {
+    this.filesystem = filesystem;
     this.binary = binary;
     this.lldb = lldb;
     this.resolver = resolver;
@@ -61,7 +68,7 @@ class RegisterDebugSymbolsStep implements Step {
                 Optional.of(
                     String.format(
                         "target create %s\ntarget symbols add %s",
-                        resolver.getAbsolutePath(binary), dsymPath)),
+                        resolver.getAbsolutePath(binary), filesystem.resolve(dsymPath))),
                 Optional.empty(),
                 Optional.empty()));
   }

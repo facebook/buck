@@ -41,5 +41,5 @@ apple_binary(
         "$SDKROOT/usr/lib/libobjc.dylib",
     ],
     preprocessor_flags = ["-fobjc-arc"],
-    deps = [":DemoAppResources",":ConflictingResources"],
+    deps = [":DemoAppResources", ":ConflictingResources"],
 )

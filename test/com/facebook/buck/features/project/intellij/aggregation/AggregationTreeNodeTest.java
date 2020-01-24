@@ -33,7 +33,7 @@ public class AggregationTreeNodeTest {
 
   public static AggregationModule createModule(
       Path moduleBasePath, IjModuleType moduleType, String aggregationTag) {
-    return AggregationModule.builder()
+    return ImmutableAggregationModule.builder()
         .setModuleType(moduleType)
         .setModuleBasePath(moduleBasePath)
         .setAggregationTag(aggregationTag)

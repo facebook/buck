@@ -32,7 +32,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
@@ -40,14 +40,11 @@ import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.shell.ExportFile;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.ExportFileDirectoryAction;
-import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.SortedSet;
-import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 public class JsBundleGenruleDescription
@@ -129,7 +126,6 @@ public class JsBundleGenruleDescription
           buildTarget, bundleTarget);
     }
 
-    Supplier<? extends SortedSet<BuildRule>> originalExtraDeps = params.getExtraDeps();
     JsBundleOutputs bundleOutputs = (JsBundleOutputs) jsBundle;
     JsDependenciesOutputs jsDepsFileRule = bundleOutputs.getJsDependenciesOutputs(graphBuilder);
 
@@ -137,14 +133,6 @@ public class JsBundleGenruleDescription
         buildTarget,
         projectFilesystem,
         graphBuilder,
-        params.withExtraDeps(
-            MoreSuppliers.memoize(
-                () ->
-                    ImmutableSortedSet.<BuildRule>naturalOrder()
-                        .addAll(originalExtraDeps.get())
-                        .add(jsBundle)
-                        .add(jsDepsFileRule)
-                        .build())),
         sandboxExecutionStrategy,
         args,
         cmd,
@@ -188,8 +176,7 @@ public class JsBundleGenruleDescription
     return Optional.of(JsBundleDescription.FLAVOR_DOMAINS);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractJsBundleGenruleDescriptionArg
       extends AbstractGenruleDescription.CommonArg, HasBundleName {
     BuildTarget getJsBundle();

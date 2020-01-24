@@ -21,6 +21,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -505,7 +506,7 @@ abstract class GoDescriptors {
                   platform);
             });
 
-    return ((BinaryBuildRule) generator).getExecutableCommand();
+    return ((BinaryBuildRule) generator).getExecutableCommand(OutputLabel.defaultLabel());
   }
 
   private static String extractTestMainGenerator() {

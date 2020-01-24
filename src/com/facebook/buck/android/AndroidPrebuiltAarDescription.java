@@ -36,7 +36,7 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.CalculateClassAbi;
@@ -249,8 +249,7 @@ public class AndroidPrebuiltAarDescription
         toolchainProvider, buildTarget, targetGraphOnlyDepsBuilder);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractAndroidPrebuiltAarDescriptionArg
       extends BuildRuleArg, HasDeclaredDeps, MaybeRequiredForSourceOnlyAbiArg {
     SourcePath getAar();

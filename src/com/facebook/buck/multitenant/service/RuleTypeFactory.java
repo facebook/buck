@@ -19,10 +19,10 @@ package com.facebook.buck.multitenant.service;
 import com.facebook.buck.core.model.RuleType;
 
 /**
- * {@link com.facebook.buck.core.model.AbstractRuleType.Kind} does not appear to be accessible via
- * {@link RuleType} in Kotlin as it is in Java. To that end, we create this special factory for
- * {@link RuleType} objects so that {@code IndexBuilder} can create instances of {@link RuleType}
- * based on the {@code buck.type} it deserializes from JSON.
+ * {@link RuleType#getKind()} does not appear to be accessible via {@link RuleType} in Kotlin as it
+ * is in Java. To that end, we create this special factory for {@link RuleType} objects so that
+ * {@code IndexBuilder} can create instances of {@link RuleType} based on the {@code buck.type} it
+ * deserializes from JSON.
  *
  * <p><strong>This is not designed for general use in the Buck codebase. Consider {@code
  * com.facebook.buck.core.description.impl.RuleTypeFactory} instead.</strong>

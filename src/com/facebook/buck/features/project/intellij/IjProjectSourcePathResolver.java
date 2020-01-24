@@ -65,7 +65,6 @@ import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.ExportFileDescriptionArg;
 import com.facebook.buck.shell.GenruleDescriptionArg;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -159,7 +158,12 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
    */
   private Optional<Path> getOutputPathForJarGenrule(
       BuildTarget buildTarget, ProjectFilesystem filesystem) {
-    return Optional.of(BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s.jar"));
+    // Note: `getShortNameAndFlavorPostfix` comes from the implementation of the "%s" formatter in
+    // `getGenPath`, and JarGenrule names its jarfile after the name of the target. JarGenrule
+    // doesn't have flavors, so this is roughly equivalent to `getShortName`, but it's more correct
+    // in that it's what `getGenPath` does.
+    String jarName = buildTarget.getShortNameAndFlavorPostfix() + ".jar";
+    return Optional.of(BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s").resolve(jarName));
   }
 
   /**
@@ -337,7 +341,7 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
       return getGenPathForOutput(buildTarget, filesystem, constructorArg.getOut().get());
     }
     OutputLabel outputLabel = targetWithOutputs.getOutputLabel();
-    ImmutableMap<String, ImmutableList<String>> outputLabelToOutputs =
+    ImmutableMap<String, ImmutableSet<String>> outputLabelToOutputs =
         constructorArg.getOuts().get();
     return Iterables.getOnlyElement(
         outputLabelToOutputs.entrySet().stream()

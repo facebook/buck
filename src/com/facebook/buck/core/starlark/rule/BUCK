@@ -3,16 +3,10 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 java_immutables_library(
     name = "rule",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//src/com/facebook/buck/core/description/arg:arg",
-        "//src/com/facebook/buck/core/starlark/coercer:coercer",
-        "//src/com/facebook/buck/core/starlark/rule/args:args",
-        "//src/com/facebook/buck/core/starlark/rule/attr:attr",
-        "//third-party/java/bazel:bazel",
-    ],
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/core/description:description",
+        "//src/com/facebook/buck/core/description/impl:impl",
         "//src/com/facebook/buck/core/rules/actions/lib:lib",
         "//src/com/facebook/buck/core/rules/providers/collect/impl:impl",
         "//src/com/facebook/buck/core/rules/providers/lib:lib",
@@ -28,5 +22,12 @@ java_immutables_library(
         "//src/com/facebook/buck/util/environment:platform",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/description/arg:arg",
+        "//src/com/facebook/buck/core/starlark/coercer:coercer",
+        "//src/com/facebook/buck/core/starlark/rule/args:args",
+        "//src/com/facebook/buck/core/starlark/rule/attr:attr",
+        "//third-party/java/bazel:bazel",
     ],
 )

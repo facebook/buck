@@ -68,6 +68,11 @@ public class PrebuiltPythonLibraryBuilder
     return this;
   }
 
+  public PrebuiltPythonLibraryBuilder setCompile(boolean compile) {
+    getArgForPopulating().setCompile(compile);
+    return this;
+  }
+
   public PrebuiltPythonLibraryBuilder setExcludeDepsFromMergedLinking(
       boolean excludeDepsFromOmnibus) {
     getArgForPopulating().setExcludeDepsFromMergedLinking(excludeDepsFromOmnibus);

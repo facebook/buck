@@ -42,7 +42,6 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -79,6 +78,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
@@ -122,15 +122,18 @@ public class NdkCxxPlatformTest {
     ImmutableMap.Builder<TargetCpuType, RuleKey> ruleKeys = ImmutableMap.builder();
     for (Map.Entry<TargetCpuType, UnresolvedNdkCxxPlatform> entry : cxxPlatforms.entrySet()) {
       CxxSourceRuleFactory cxxSourceRuleFactory =
-          CxxSourceRuleFactory.builder()
-              .setBaseBuildTarget(target)
-              .setProjectFilesystem(new FakeProjectFilesystem())
-              .setActionGraphBuilder(graphBuilder)
-              .setPathResolver(graphBuilder.getSourcePathResolver())
-              .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
-              .setCxxPlatform(entry.getValue().resolve(graphBuilder).getCxxPlatform())
-              .setPicType(PicType.PIC)
-              .build();
+          CxxSourceRuleFactory.of(
+              new FakeProjectFilesystem(),
+              target,
+              graphBuilder,
+              graphBuilder.getSourcePathResolver(),
+              CxxPlatformUtils.DEFAULT_CONFIG,
+              entry.getValue().resolve(graphBuilder).getCxxPlatform(),
+              ImmutableList.of(),
+              ImmutableMultimap.of(),
+              Optional.empty(),
+              Optional.empty(),
+              PicType.PIC);
       CxxPreprocessAndCompile rule;
       switch (operation) {
         case PREPROCESS_AND_COMPILE:
@@ -319,11 +322,7 @@ public class NdkCxxPlatformTest {
     NdkCxxPlatformTargetConfiguration targetConfiguration =
         NdkCxxPlatforms.getTargetConfiguration(
             TargetCpuType.X86,
-            NdkCxxPlatformCompiler.builder()
-                .setType(NdkCompilerType.GCC)
-                .setVersion("gcc-version")
-                .setGccVersion("clang-version")
-                .build(),
+            NdkCxxPlatformCompiler.of(NdkCompilerType.GCC, "gcc-version", "clang-version"),
             "android-16");
     MostFiles.writeLinesToFile(ImmutableList.of("r9c"), ndkRoot.resolve("RELEASE.TXT"));
     UnresolvedNdkCxxPlatform platform =
@@ -357,11 +356,7 @@ public class NdkCxxPlatformTest {
     NdkCxxPlatformTargetConfiguration targetConfiguration =
         NdkCxxPlatforms.getTargetConfiguration(
             TargetCpuType.X86,
-            NdkCxxPlatformCompiler.builder()
-                .setType(NdkCompilerType.GCC)
-                .setVersion("gcc-version")
-                .setGccVersion("clang-version")
-                .build(),
+            NdkCxxPlatformCompiler.of(NdkCompilerType.GCC, "gcc-version", "clang-version"),
             "android-12");
     MostFiles.writeLinesToFile(ImmutableList.of("r9c"), ndkRoot.resolve("RELEASE.TXT"));
     BuckConfig buckConfig =
@@ -458,11 +453,7 @@ public class NdkCxxPlatformTest {
     NdkCxxPlatformTargetConfiguration targetConfiguration =
         NdkCxxPlatforms.getTargetConfiguration(
             TargetCpuType.X86,
-            NdkCxxPlatformCompiler.builder()
-                .setType(NdkCompilerType.GCC)
-                .setVersion("gcc-version")
-                .setGccVersion("clang-version")
-                .build(),
+            NdkCxxPlatformCompiler.of(NdkCompilerType.GCC, "gcc-version", "clang-version"),
             "android-16");
     MostFiles.writeLinesToFile(ImmutableList.of("r9c"), ndkRoot.resolve("RELEASE.TXT"));
     BuckConfig buckConfig =
@@ -569,12 +560,7 @@ public class NdkCxxPlatformTest {
                   new AndroidBuckConfig(FakeBuckConfig.builder().build(), platform),
                   filesystem,
                   root,
-                  UnconfiguredTargetConfiguration.INSTANCE,
-                  NdkCxxPlatformCompiler.builder()
-                      .setType(config.getFirst())
-                      .setVersion("gcc-version")
-                      .setGccVersion("clang-version")
-                      .build(),
+                  NdkCxxPlatformCompiler.of(config.getFirst(), "gcc-version", "clang-version"),
                   NdkCxxRuntime.GNUSTL,
                   NdkCxxRuntimeType.DYNAMIC,
                   ImmutableSet.of(NdkTargetArchAbi.X86),
@@ -623,12 +609,7 @@ public class NdkCxxPlatformTest {
             new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect()),
             filesystem,
             root,
-            UnconfiguredTargetConfiguration.INSTANCE,
-            NdkCxxPlatformCompiler.builder()
-                .setType(NdkCompilerType.GCC)
-                .setVersion("gcc-version")
-                .setGccVersion("clang-version")
-                .build(),
+            NdkCxxPlatformCompiler.of(NdkCompilerType.GCC, "gcc-version", "clang-version"),
             NdkCxxRuntime.GNUSTL,
             NdkCxxRuntimeType.DYNAMIC,
             ImmutableSet.of(NdkTargetArchAbi.X86),

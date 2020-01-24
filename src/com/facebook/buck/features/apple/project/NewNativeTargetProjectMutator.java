@@ -29,6 +29,7 @@ import com.facebook.buck.apple.RuleUtils;
 import com.facebook.buck.apple.XcodePostbuildScriptDescription;
 import com.facebook.buck.apple.XcodePrebuildScriptDescription;
 import com.facebook.buck.apple.XcodeScriptDescriptionArg;
+import com.facebook.buck.apple.xcode.AbstractPBXObjectFactory;
 import com.facebook.buck.apple.xcode.xcodeproj.CopyFilePhaseDestinationSpec;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
@@ -300,7 +301,8 @@ class NewNativeTargetProjectMutator {
   }
 
   public Result buildTargetAndAddToProject(PBXProject project, boolean addBuildPhases) {
-    PBXNativeTarget target = new PBXNativeTarget(targetName);
+    PBXNativeTarget target =
+        new PBXNativeTarget(targetName, AbstractPBXObjectFactory.DefaultFactory());
 
     Optional<PBXGroup> optTargetGroup;
     if (addBuildPhases) {

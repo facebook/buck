@@ -42,8 +42,8 @@ public class LoadBalancedService implements HttpService {
   public HttpResponse makeRequest(String path, Request.Builder requestBuilder) throws IOException {
     URI server = slb.getBestServer();
     long startRequestNanos = System.nanoTime();
-    LoadBalancedServiceEventData.Builder data =
-        LoadBalancedServiceEventData.builder().setServer(server);
+    ImmutableLoadBalancedServiceEventData.Builder data =
+        ImmutableLoadBalancedServiceEventData.builder().setServer(server);
     URL fullUrl = SingleUriService.getFullUrl(server, path);
     requestBuilder.url(fullUrl);
     Request request = requestBuilder.build();

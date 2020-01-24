@@ -44,7 +44,6 @@ import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystem;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import com.facebook.buck.support.cli.args.GlobalCliOptions;
@@ -99,12 +98,19 @@ public class TargetsCommandIntegrationTest {
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
-  private static Path getLegacyGenDir(String buildTarget, ProjectWorkspace workspace) {
-    DefaultProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+  private static Path getLegacyGenDir(String buildTarget, ProjectWorkspace workspace)
+      throws IOException {
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     BuildTarget target = BuildTargetFactory.newInstance(buildTarget);
     // targets like genrule use the legacy path (without double underscore suffix)
     return BuildTargetPaths.getGenPath(filesystem, target, "%s");
+  }
+
+  private static Path getNonLegacyGenDir(String buildTarget, ProjectWorkspace workspace) {
+    return BuildTargetPaths.getGenPath(
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath()),
+        BuildTargetFactory.newInstance(buildTarget),
+        "%s__");
   }
 
   private static void assertJsonMatchesWithOutputPlaceholder(String expectedJson, String actualJson)
@@ -144,14 +150,91 @@ public class TargetsCommandIntegrationTest {
         linesToText(
             "//:another-test "
                 + MorePaths.pathWithPlatformSeparators(
-                    getLegacyGenDir("//:another-test", workspace)
-                        .resolve("test-output")
-                        .toString()),
+                    getLegacyGenDir("//:another-test", workspace).resolve("test-output")),
             "//:test "
                 + MorePaths.pathWithPlatformSeparators(
-                    getLegacyGenDir("//:test", workspace).resolve("test-output").toString()),
+                    getLegacyGenDir("//:test", workspace).resolve("test-output")),
             ""),
         result.getStdout());
+  }
+
+  @Test
+  public void showOutputsWithoutMultipleOutputsShouldBehaveLikeShowOutput() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_path", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand("targets", "--show-outputs", "//:test", "//:another-test");
+    result.assertSuccess();
+    assertEquals(
+        linesToText(
+            "//:another-test "
+                + MorePaths.pathWithPlatformSeparators(
+                    getLegacyGenDir("//:another-test", workspace).resolve("test-output")),
+            "//:test "
+                + MorePaths.pathWithPlatformSeparators(
+                    getLegacyGenDir("//:test", workspace).resolve("test-output")),
+            ""),
+        result.getStdout());
+  }
+
+  @Test
+  public void showOutputsForMultipleNamedOutputs() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_paths", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand("targets", "--show-outputs", "//:test_multiple_outputs[out2]");
+    result.assertSuccess();
+    assertEquals(
+        linesToText(
+            "//:test_multiple_outputs[out2] "
+                + MorePaths.pathWithPlatformSeparators(
+                    getNonLegacyGenDir("//:test_multiple_outputs", workspace).resolve("out2.txt")),
+            ""),
+        result.getStdout());
+
+    result =
+        workspace.runBuckCommand("targets", "--show-outputs", "//:test_multiple_outputs[out1]");
+    result.assertSuccess();
+    assertEquals(
+        linesToText(
+            "//:test_multiple_outputs[out1] "
+                + MorePaths.pathWithPlatformSeparators(
+                    getNonLegacyGenDir("//:test_multiple_outputs", workspace).resolve("out1.txt")),
+            ""),
+        result.getStdout());
+  }
+
+  @Test
+  public void showOutputsForMultipleDefaultOutputs() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_paths", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace
+            .runBuckCommand("targets", "--show-outputs", "//:test_multiple_outputs")
+            .assertSuccess();
+    assertThat(result.getStdout(), containsString("//:test_multiple_outputs"));
+    assertThat(result.getStdout(), not(containsString("buck-out")));
+  }
+
+  @Test
+  public void mustUseShowOutputsForNamedOutput() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_paths", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace
+            .runBuckCommand("targets", "--show-output", "//:test_multiple_outputs[out1]")
+            .assertExitCode(ExitCode.BUILD_ERROR);
+    assertThat(
+        result.getStderr(),
+        containsString("genrule target //:test_multiple_outputs[out1] should use --show-outputs"));
   }
 
   @Test
@@ -211,8 +294,7 @@ public class TargetsCommandIntegrationTest {
             this, "targets_command_annotation_processor", tmp);
     workspace.setUp();
 
-    DefaultProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     ProcessResult result = workspace.runBuckCommand("targets", "--show-output", "//:");
     result.assertSuccess();
@@ -228,8 +310,7 @@ public class TargetsCommandIntegrationTest {
             this, "targets_command_annotation_processor", tmp);
     workspace.setUp();
 
-    DefaultProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     ProcessResult result = workspace.runBuckCommand("targets", "--show-full-output", "//:");
     result.assertSuccess();
@@ -342,8 +423,7 @@ public class TargetsCommandIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand("targets", "--show-output", "...");
     result.assertSuccess();
-    DefaultProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     BuildTarget javaLibTarget = BuildTargetFactory.newInstance("//:java_lib");
     assertEquals(
         linesToText(
@@ -841,6 +921,21 @@ public class TargetsCommandIntegrationTest {
 
     assertJsonMatchesWithOutputPlaceholder(
         workspace.getFileContents("output_path_json.js"), result.getStdout());
+  }
+
+  @Test
+  public void jsonWithShowOutputsFails() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_path", tmp);
+    workspace.setUp();
+    ProcessResult result =
+        workspace.runBuckCommand("targets", "--json", "--show-outputs", "//:test");
+
+    result.assertFailure();
+    assertThat(
+        result.getStderr(),
+        containsString(
+            "JSON printing not supported yet with multiple outputs. Use --show-outputs without --json"));
   }
 
   @Test

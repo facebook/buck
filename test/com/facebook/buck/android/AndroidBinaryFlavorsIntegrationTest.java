@@ -23,7 +23,6 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -50,9 +49,9 @@ public class AndroidBinaryFlavorsIntegrationTest {
   }
 
   @Test
-  public void testPackageStringAssetsFlavorOutput() {
+  public void testPackageStringAssetsFlavorOutput() throws IOException {
     String target = "//apps/sample:app_comp_str#package_string_assets";
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     ProcessResult result = workspace.runBuckCommand("targets", "--show-output", target);
     Path path =
         BuildTargetPaths.getScratchPath(
@@ -64,9 +63,9 @@ public class AndroidBinaryFlavorsIntegrationTest {
   }
 
   @Test
-  public void testPackageStringsOnlyFlavorOutput() {
+  public void testPackageStringsOnlyFlavorOutput() throws IOException {
     String target = "//apps/sample:app_str#package_string_assets";
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     ProcessResult result = workspace.runBuckCommand("targets", "--show-output", target);
     Path path =
         BuildTargetPaths.getScratchPath(

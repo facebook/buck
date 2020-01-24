@@ -58,7 +58,7 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaLibrary;
-import com.facebook.buck.jvm.java.AbstractJavacPluginProperties.Type;
+import com.facebook.buck.jvm.java.JavacPluginProperties.Type;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
@@ -129,7 +129,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     annotationScenarioGenPath =
         filesystem
             .resolve(
-                AbstractCompilerOutputPaths.of(
+                CompilerOutputPaths.of(
                         BuildTargetFactory.newInstance("//android/java/src/com/facebook:fb"),
                         filesystem)
                     .getAnnotationPath())
@@ -485,11 +485,9 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     Path root = libraryOneRule.getProjectFilesystem().getRootPath();
     assertEquals(
         ImmutableSet.of(
-            root.resolve(
-                AbstractCompilerOutputPaths.getOutputJarPath(libraryOneTarget, filesystem)),
-            root.resolve(
-                AbstractCompilerOutputPaths.getOutputJarPath(libraryTwoTarget, filesystem)),
-            root.resolve(AbstractCompilerOutputPaths.getOutputJarPath(parentTarget, filesystem))),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(libraryOneTarget, filesystem)),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(libraryTwoTarget, filesystem)),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(parentTarget, filesystem))),
         resolve(parentRule.getTransitiveClasspaths(), graphBuilder.getSourcePathResolver()));
   }
 
@@ -813,35 +811,30 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         "A java_library that depends on //:libone should include only libone.jar in its "
             + "classpath when compiling itself.",
         ImmutableSet.of(
-            root.resolve(
-                AbstractCompilerOutputPaths.getOutputJarPath(nonIncludedTarget, filesystem))),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(nonIncludedTarget, filesystem))),
         resolve(getJavaLibrary(notIncluded).getOutputClasspaths(), pathResolver));
 
     assertEquals(
         ImmutableSet.of(
-            root.resolve(AbstractCompilerOutputPaths.getOutputJarPath(includedTarget, filesystem))),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(includedTarget, filesystem))),
         resolve(getJavaLibrary(included).getOutputClasspaths(), pathResolver));
 
     assertEquals(
         ImmutableSet.of(
-            root.resolve(AbstractCompilerOutputPaths.getOutputJarPath(includedTarget, filesystem)),
-            root.resolve(
-                AbstractCompilerOutputPaths.getOutputJarPath(libraryOneTarget, filesystem)),
-            root.resolve(AbstractCompilerOutputPaths.getOutputJarPath(includedTarget, filesystem))),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(includedTarget, filesystem)),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(libraryOneTarget, filesystem)),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(includedTarget, filesystem))),
         resolve(getJavaLibrary(libraryOne).getOutputClasspaths(), pathResolver));
 
     assertEquals(
         "//:libtwo exports its deps, so a java_library that depends on //:libtwo should include "
             + "both libone.jar and libtwo.jar in its classpath when compiling itself.",
         ImmutableSet.of(
-            root.resolve(
-                AbstractCompilerOutputPaths.getOutputJarPath(libraryOneTarget, filesystem)),
-            root.resolve(AbstractCompilerOutputPaths.getOutputJarPath(includedTarget, filesystem)),
-            root.resolve(
-                AbstractCompilerOutputPaths.getOutputJarPath(libraryOneTarget, filesystem)),
-            root.resolve(
-                AbstractCompilerOutputPaths.getOutputJarPath(libraryTwoTarget, filesystem)),
-            root.resolve(AbstractCompilerOutputPaths.getOutputJarPath(includedTarget, filesystem))),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(libraryOneTarget, filesystem)),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(includedTarget, filesystem)),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(libraryOneTarget, filesystem)),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(libraryTwoTarget, filesystem)),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(includedTarget, filesystem))),
         resolve(getJavaLibrary(libraryTwo).getOutputClasspaths(), pathResolver));
 
     assertEquals(
@@ -849,16 +842,11 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             + "parent.jar.",
         ImmutableSet.<Path>builder()
             .add(
-                root.resolve(
-                    AbstractCompilerOutputPaths.getOutputJarPath(includedTarget, filesystem)),
-                root.resolve(
-                    AbstractCompilerOutputPaths.getOutputJarPath(nonIncludedTarget, filesystem)),
-                root.resolve(
-                    AbstractCompilerOutputPaths.getOutputJarPath(libraryOneTarget, filesystem)),
-                root.resolve(
-                    AbstractCompilerOutputPaths.getOutputJarPath(libraryTwoTarget, filesystem)),
-                root.resolve(
-                    AbstractCompilerOutputPaths.getOutputJarPath(parentTarget, filesystem)))
+                root.resolve(CompilerOutputPaths.getOutputJarPath(includedTarget, filesystem)),
+                root.resolve(CompilerOutputPaths.getOutputJarPath(nonIncludedTarget, filesystem)),
+                root.resolve(CompilerOutputPaths.getOutputJarPath(libraryOneTarget, filesystem)),
+                root.resolve(CompilerOutputPaths.getOutputJarPath(libraryTwoTarget, filesystem)),
+                root.resolve(CompilerOutputPaths.getOutputJarPath(parentTarget, filesystem)))
             .build(),
         resolve(getJavaLibrary(parent).getTransitiveClasspaths(), pathResolver));
 
@@ -877,7 +865,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         "A java_library that depends on //:parent should include only parent.jar in its "
             + "-classpath when compiling itself.",
         ImmutableSet.of(
-            root.resolve(AbstractCompilerOutputPaths.getOutputJarPath(parentTarget, filesystem))),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(parentTarget, filesystem))),
         resolve(getJavaLibrary(parent).getOutputClasspaths(), pathResolver));
   }
 
@@ -928,7 +916,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             /* srcs */ ImmutableSortedSet.of("foo/Bar.java"),
             /* deps */ ImmutableSortedSet.of(),
             /* exportedDeps */ ImmutableSortedSet.of(),
-            Optional.of(AbstractJavacOptions.SpoolMode.DIRECT_TO_JAR),
+            Optional.of(JavacOptions.SpoolMode.DIRECT_TO_JAR),
             /* postprocessClassesCommands */ ImmutableList.of());
 
     BuildContext buildContext = createBuildContext();
@@ -951,7 +939,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             /* srcs */ ImmutableSortedSet.of("foo/Bar.java"),
             /* deps */ ImmutableSortedSet.of(),
             /* exportedDeps */ ImmutableSortedSet.of(),
-            Optional.of(AbstractJavacOptions.SpoolMode.DIRECT_TO_JAR),
+            Optional.of(JavacOptions.SpoolMode.DIRECT_TO_JAR),
             /* postprocessClassesCommands */ ImmutableList.of("process_class_files.py"));
 
     BuildContext buildContext = createBuildContext();
@@ -974,7 +962,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             /* srcs */ ImmutableSortedSet.of("foo/Bar.java"),
             /* deps */ ImmutableSortedSet.of(),
             /* exportedDeps */ ImmutableSortedSet.of(),
-            Optional.of(AbstractJavacOptions.SpoolMode.INTERMEDIATE_TO_DISK),
+            Optional.of(JavacOptions.SpoolMode.INTERMEDIATE_TO_DISK),
             /* postprocessClassesCommands */ ImmutableList.of());
 
     BuildContext buildContext = createBuildContext();
@@ -1335,7 +1323,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
       ImmutableSet<String> srcs,
       ImmutableSortedSet<BuildRule> deps,
       ImmutableSortedSet<BuildRule> exportedDeps,
-      Optional<AbstractJavacOptions.SpoolMode> spoolMode,
+      Optional<JavacOptions.SpoolMode> spoolMode,
       ImmutableList<String> postprocessClassesCommands)
       throws NoSuchBuildTargetException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
@@ -1602,19 +1590,19 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   // standard javac plugin, test scenarios.
   private class TestJavaPluginScenario {
 
-    private final AbstractJavacPluginParams.Builder annotationProcessorParams;
-    private final AbstractJavacPluginParams.Builder standardJavacPluginParams;
+    private final JavacPluginParams.Builder annotationProcessorParams;
+    private final JavacPluginParams.Builder standardJavacPluginParams;
 
     public TestJavaPluginScenario() {
       annotationProcessorParams = JavacPluginParams.builder();
       standardJavacPluginParams = JavacPluginParams.builder();
     }
 
-    public AbstractJavacPluginParams.Builder getAnnotationProcessingParamsBuilder() {
+    public JavacPluginParams.Builder getAnnotationProcessingParamsBuilder() {
       return annotationProcessorParams;
     }
 
-    public AbstractJavacPluginParams.Builder getStandardJavacPluginParamsBuilder() {
+    public JavacPluginParams.Builder getStandardJavacPluginParamsBuilder() {
       return standardJavacPluginParams;
     }
 

@@ -29,7 +29,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.CalculateClassAbi;
@@ -178,8 +178,7 @@ public class AndroidBuildConfigDescription
         targetGraphOnlyDepsBuilder, null, buildTarget.getTargetConfiguration());
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractAndroidBuildConfigDescriptionArg extends BuildRuleArg {
     /** For R.java */
     String getPackage();

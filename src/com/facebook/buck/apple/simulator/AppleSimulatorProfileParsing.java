@@ -54,7 +54,8 @@ public class AppleSimulatorProfileParsing {
     }
     NSArray supportedProductFamilyIDs = (NSArray) supportedProductFamilyIDsObject;
 
-    AppleSimulatorProfile.Builder profileBuilder = AppleSimulatorProfile.builder();
+    ImmutableAppleSimulatorProfile.Builder profileBuilder =
+        ImmutableAppleSimulatorProfile.builder();
     for (NSObject supportedProductFamilyID : supportedProductFamilyIDs.getArray()) {
       if (supportedProductFamilyID instanceof NSNumber) {
         profileBuilder.addSupportedProductFamilyIDs(

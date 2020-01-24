@@ -44,19 +44,18 @@ public class LuaBuckConfig {
 
   private LuaPlatform getPlatform(
       String section, TargetConfiguration targetConfiguration, CxxPlatform cxxPlatform) {
-    return LuaPlatform.builder()
+    return ImmutableLuaPlatform.builder()
         .setLua(
             delegate
                 .getView(ToolConfig.class)
                 .getToolProvider(section, "lua")
                 .orElseGet(
                     () ->
-                        SystemToolProvider.builder()
-                            .setExecutableFinder(finder)
-                            .setSourcePathConverter(delegate::getPathSourcePath)
-                            .setName(Paths.get("lua"))
-                            .setEnvironment(delegate.getEnvironment())
-                            .build()))
+                        SystemToolProvider.of(
+                            finder,
+                            delegate::getPathSourcePath,
+                            Paths.get("lua"),
+                            delegate.getEnvironment())))
         .setLuaCxxLibraryTarget(
             delegate.getBuildTarget(section, "cxx_library", targetConfiguration))
         .setStarterType(

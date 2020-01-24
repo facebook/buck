@@ -131,7 +131,7 @@ public class AndroidAppModularityGraphEnhancer {
             ? Optional.of(buildModuleToSharedLibraries(packageableCollection))
             : Optional.empty();
 
-    return AndroidAppModularityGraphEnhancementResult.builder()
+    return ImmutableAndroidAppModularityGraphEnhancementResult.builder()
         .setPackageableCollection(packageableCollection)
         .setFinalDeps(enhancedDeps.build())
         .setAPKModuleGraph(apkModuleGraph)

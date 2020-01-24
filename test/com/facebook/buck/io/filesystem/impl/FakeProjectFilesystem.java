@@ -25,6 +25,7 @@ import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.util.timing.Clock;
@@ -251,7 +252,8 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
         CanonicalCellName.rootCell(),
         root,
         new DefaultProjectFilesystemDelegate(root),
-        DefaultProjectFilesystemFactory.getWindowsFSInstance()) {
+        DefaultProjectFilesystemFactory.getWindowsFSInstance(),
+        TestProjectFilesystems.BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST) {
       @Override
       public Path resolve(Path path) {
         // Avoid resolving paths from different Java FileSystems.
@@ -260,22 +262,14 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
     };
   }
 
-  public static ProjectFilesystem createFilesystemWithTargetConfigHashInBuckPaths() {
+  public static ProjectFilesystem createFilesystemWithTargetConfigHashInBuckPaths(
+      boolean buckOutIncludeTargetConfigHash) {
     Path root = DEFAULT_ROOT;
     return new DefaultProjectFilesystem(
         root,
         ImmutableSet.of(),
-        BuckPaths.createDefaultBuckPaths(CanonicalCellName.rootCell(), root, true),
-        new DefaultProjectFilesystemDelegate(root),
-        DefaultProjectFilesystemFactory.getWindowsFSInstance());
-  }
-
-  public static ProjectFilesystem createFilesystemWithoutTargetConfigHashInBuckPaths() {
-    Path root = DEFAULT_ROOT;
-    return new DefaultProjectFilesystem(
-        root,
-        ImmutableSet.of(),
-        BuckPaths.createDefaultBuckPaths(CanonicalCellName.rootCell(), root, false),
+        BuckPaths.createDefaultBuckPaths(
+            CanonicalCellName.rootCell(), root, buckOutIncludeTargetConfigHash),
         new DefaultProjectFilesystemDelegate(root),
         DefaultProjectFilesystemFactory.getWindowsFSInstance());
   }
@@ -312,7 +306,8 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
         cellName,
         root,
         new DefaultProjectFilesystemDelegate(root),
-        DefaultProjectFilesystemFactory.getWindowsFSInstance());
+        DefaultProjectFilesystemFactory.getWindowsFSInstance(),
+        TestProjectFilesystems.BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST);
     // We use LinkedHashMap to preserve insertion order, so the
     // behavior of this test is consistent across versions. (It also lets
     // us write tests which explicitly test iterating over entries in
@@ -339,6 +334,11 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
 
     // Generally, tests don't care whether files exist.
     ignoreValidityOfPaths = true;
+  }
+
+  @Override
+  public FakeProjectFilesystem clone() throws CloneNotSupportedException {
+    return (FakeProjectFilesystem) super.clone();
   }
 
   @Override

@@ -36,14 +36,12 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
-import com.facebook.buck.cxx.CxxLibraryGroup;
 import com.facebook.buck.cxx.CxxLinkOptions;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPreprocessables;
@@ -254,32 +252,6 @@ public class SwiftLibraryDescription
 
       // Direct swift dependencies.
       SortedSet<BuildRule> buildDeps = params.getBuildDeps();
-      ImmutableSet<SwiftCompile> swiftCompileRules =
-          RichStream.from(buildDeps)
-              .filter(SwiftLibrary.class)
-              .map(input -> input.requireSwiftCompileRule(cxxPlatform.getFlavor()))
-              .toImmutableSet();
-
-      // Implicitly generated swift libraries of apple_library dependencies with swift code.
-      ImmutableSet<SwiftCompile> implicitSwiftCompileRules =
-          RichStream.from(buildDeps)
-              .filter(CxxLibraryGroup.class)
-              .flatMap(
-                  input -> {
-                    BuildTarget companionTarget =
-                        input.getBuildTarget().withAppendedFlavors(SWIFT_COMPANION_FLAVOR);
-                    // Note, this is liable to race conditions. The presence or absence of the
-                    // companion
-                    // rule should be determined by metadata query, not by assumptions.
-                    return RichStream.from(
-                        graphBuilder
-                            .getRuleOptional(companionTarget)
-                            .map(
-                                companion ->
-                                    ((SwiftLibrary) companion)
-                                        .requireSwiftCompileRule(cxxPlatform.getFlavor())));
-                  })
-              .toImmutableSet();
 
       List<CxxPreprocessorDep> preprocessorDeps = new ArrayList<>();
       // Build up the map of all C/C++ preprocessable dependencies.
@@ -306,8 +278,9 @@ public class SwiftLibraryDescription
               RichStream.from(inputs.getIncludes())
                   .filter(
                       headers -> headers.getIncludeType() != CxxPreprocessables.IncludeType.SYSTEM)
-                  .toImmutableSet(),
-              inputs.getFrameworks());
+                  .distinct()
+                  .toImmutableList(),
+              ImmutableList.copyOf(inputs.getFrameworks()));
       Preprocessor preprocessor =
           cxxPlatform.getCpp().resolve(graphBuilder, buildTarget.getTargetConfiguration());
 
@@ -317,24 +290,10 @@ public class SwiftLibraryDescription
           swiftBuckConfig,
           buildTarget,
           args.getTargetSdkVersion()
-              .map(
-                  version ->
-                      SwiftTargetTriple.builder()
-                          .from(swiftPlatform.get().getSwiftTarget())
-                          .setTargetSdkVersion(version)
-                          .build())
+              .map(version -> swiftPlatform.get().getSwiftTarget().withTargetSdkVersion(version))
               .orElse(swiftPlatform.get().getSwiftTarget()),
           projectFilesystem,
-          params.copyAppendingExtraDeps(
-              () ->
-                  ImmutableSet.<BuildRule>builder()
-                      .addAll(swiftCompileRules)
-                      .addAll(implicitSwiftCompileRules)
-                      .addAll(cxxDeps.getDeps(graphBuilder))
-                      // This is only used for generating include args and may not be actually
-                      // needed.
-                      .addAll(BuildableSupport.getDepsCollection(preprocessor, graphBuilder))
-                      .build()),
+          graphBuilder,
           swiftPlatform.get().getSwiftc(),
           args.getFrameworks(),
           args.getModuleName().orElse(buildTarget.getShortName()),
@@ -486,7 +445,6 @@ public class SwiftLibraryDescription
       SwiftPlatform swiftPlatform,
       SwiftBuckConfig swiftBuckConfig,
       BuildTarget buildTarget,
-      BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       ProjectFilesystem projectFilesystem,
@@ -498,7 +456,6 @@ public class SwiftLibraryDescription
 
     DepsBuilder srcsDepsBuilder = new DepsBuilder(graphBuilder);
     args.getSrcs().forEach(src -> srcsDepsBuilder.add(src));
-    BuildRuleParams paramsWithSrcDeps = params.copyAppendingExtraDeps(srcsDepsBuilder.build());
 
     return new SwiftCompile(
         cxxPlatform,
@@ -506,7 +463,7 @@ public class SwiftLibraryDescription
         buildTarget,
         swiftTarget.orElse(swiftPlatform.getSwiftTarget()),
         projectFilesystem,
-        paramsWithSrcDeps,
+        graphBuilder,
         swiftPlatform.getSwiftc(),
         args.getFrameworks(),
         args.getModuleName().orElse(buildTarget.getShortName()),
@@ -541,8 +498,7 @@ public class SwiftLibraryDescription
         .getUnresolvedCxxPlatforms();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractSwiftLibraryDescriptionArg extends BuildRuleArg, HasDeclaredDeps, HasSrcs {
     Optional<String> getModuleName();
 

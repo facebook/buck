@@ -28,6 +28,7 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.junit.Test;
@@ -87,7 +88,7 @@ public class BuildPathsTest {
   @Parameters(method = "getTargetsForTest")
   public void basePathFormatWithTargetConfigHash(BuildTarget target, ForwardRelativePath path) {
     ProjectFilesystem filesystem =
-        FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths();
+        FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(true);
     String hash = TargetConfigurationHasher.hash(target.getTargetConfiguration());
     assertEquals(
         BuildPaths.getBaseDir(filesystem, target), ForwardRelativePath.of(hash).resolve(path));
@@ -98,9 +99,9 @@ public class BuildPathsTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//my/folder:foo");
 
     ProjectFilesystem filesystemWithTargetConfigHashInBuckPaths =
-        FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths();
+        FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(true);
     ProjectFilesystem filesystemWithoutTargetConfigHashInBuckPaths =
-        FakeProjectFilesystem.createFilesystemWithoutTargetConfigHashInBuckPaths();
+        FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(false);
     Path hashedGenPath =
         BuildPaths.getGenDir(filesystemWithTargetConfigHashInBuckPaths, buildTarget)
             .resolve("a.out");
@@ -112,7 +113,8 @@ public class BuildPathsTest {
 
     assertTrue(Iterables.contains(hashedGenPath, hash));
     assertFalse(Iterables.contains(legacyGenPath, hash));
-    assertEquals(legacyGenPath, BuildPaths.removeHashFrom(hashedGenPath, buildTarget));
+    assertEquals(legacyGenPath, BuildPaths.removeHashFrom(hashedGenPath, buildTarget).get());
+    assertEquals(Optional.empty(), BuildPaths.removeHashFrom(legacyGenPath, buildTarget));
   }
 
   @Test
@@ -120,9 +122,9 @@ public class BuildPathsTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//my/folder:foo");
 
     ProjectFilesystem filesystemWithTargetConfigHashInBuckPaths =
-        FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths();
+        FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(true);
     ProjectFilesystem filesystemWithoutTargetConfigHashInBuckPaths =
-        FakeProjectFilesystem.createFilesystemWithoutTargetConfigHashInBuckPaths();
+        FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(false);
     Path hashedGenPath =
         BuildPaths.getGenDir(filesystemWithTargetConfigHashInBuckPaths, buildTarget)
             .resolve("a.out")
@@ -136,6 +138,7 @@ public class BuildPathsTest {
 
     assertTrue(Iterables.contains(hashedGenPath, hash));
     assertFalse(Iterables.contains(legacyGenPath, hash));
-    assertEquals(legacyGenPath, BuildPaths.removeHashFrom(hashedGenPath, buildTarget));
+    assertEquals(legacyGenPath, BuildPaths.removeHashFrom(hashedGenPath, buildTarget).get());
+    assertEquals(Optional.empty(), BuildPaths.removeHashFrom(legacyGenPath, buildTarget));
   }
 }

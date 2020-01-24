@@ -177,7 +177,7 @@ public class CxxCompilationDatabaseTest {
         step.createEntries().collect(Collectors.toList());
     Iterable<CxxCompilationDatabaseEntry> expectedEntries =
         ImmutableList.of(
-            CxxCompilationDatabaseEntry.of(
+            ImmutableCxxCompilationDatabaseEntry.of(
                 root,
                 root + "/test.cpp",
                 ImmutableList.of(

@@ -55,7 +55,6 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
@@ -543,8 +542,7 @@ public class CxxBinaryIntegrationTest {
   @Test
   public void testInferCxxBinaryWithDepsEmitsAllTheDependenciesResultsDirs() throws IOException {
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     BuildTarget inputBuildTarget =
         BuildTargetFactory.newInstance("//foo:binary_with_chain_deps")
@@ -684,8 +682,7 @@ public class CxxBinaryIntegrationTest {
 
     result.assertSuccess();
 
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(primary.getDestPath());
+    ProjectFilesystem filesystem = primary.getProjectFileSystem();
     String reportPath =
         BuildTargetPaths.getGenPath(filesystem, inputBuildTarget, "infer-%s/report.json")
             .toString();
@@ -699,8 +696,7 @@ public class CxxBinaryIntegrationTest {
       throws IOException {
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
     workspace.enableDirCache();
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     BuildTarget inputBuildTarget =
         BuildTargetFactory.newInstance("//foo:binary_with_diamond_deps")
@@ -818,8 +814,7 @@ public class CxxBinaryIntegrationTest {
       throws IOException {
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
     workspace.enableDirCache();
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     BuildTarget inputBuildTarget =
         BuildTargetFactory.newInstance("//foo:binary_with_diamond_deps")
@@ -903,8 +898,7 @@ public class CxxBinaryIntegrationTest {
       throws IOException {
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
     workspace.enableDirCache();
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     BuildTarget inputBuildTarget = BuildTargetFactory.newInstance("//foo:binary_with_diamond_deps");
     String inputBuildTargetName =
@@ -1032,8 +1026,7 @@ public class CxxBinaryIntegrationTest {
   public void testInferCxxBinaryWithDiamondDepsEmitsAllTransitiveCaptureRulesOnce()
       throws IOException {
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     BuildTarget inputBuildTarget =
         BuildTargetFactory.newInstance("//foo:binary_with_diamond_deps")
@@ -1110,8 +1103,7 @@ public class CxxBinaryIntegrationTest {
   public void testInferCxxBinarySkipsBlacklistedFiles() throws IOException {
     ProjectWorkspace workspace =
         InferHelper.setupCxxInferWorkspace(this, tmp, Optional.of(".*one\\.c"));
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     BuildTarget inputBuildTarget = BuildTargetFactory.newInstance("//foo:binary_with_chain_deps");
     String inputBuildTargetName =
@@ -1162,8 +1154,7 @@ public class CxxBinaryIntegrationTest {
   @Test
   public void testInferCxxBinaryRunsOnAllFilesWhenBlacklistIsNotSpecified() throws IOException {
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     BuildTarget inputBuildTarget = BuildTargetFactory.newInstance("//foo:binary_with_chain_deps");
     String inputBuildTargetName =
@@ -1213,8 +1204,7 @@ public class CxxBinaryIntegrationTest {
   public void testInferCxxBinaryWithCachedDepsGetsAllItsTransitiveDeps() throws IOException {
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
     workspace.enableDirCache();
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     BuildTarget inputBuildTarget =
         BuildTargetFactory.newInstance("//foo:binary_with_chain_deps")
@@ -1260,8 +1250,7 @@ public class CxxBinaryIntegrationTest {
   @Test
   public void testInferCxxBinaryMergesAllReportsOfDependencies() throws IOException {
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     BuildTarget inputBuildTarget =
         BuildTargetFactory.newInstance("//foo:binary_with_chain_deps")
@@ -1286,8 +1275,7 @@ public class CxxBinaryIntegrationTest {
   @Test
   public void testInferCxxBinaryWritesSpecsListFilesOfTransitiveDependencies() throws IOException {
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     BuildTarget inputBuildTarget =
         BuildTargetFactory.newInstance("//foo:binary_with_chain_deps")
@@ -1322,8 +1310,8 @@ public class CxxBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple", tmp);
     workspace.setUp();
     workspace.enableDirCache();
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
+
     BuildTarget target = BuildTargetFactory.newInstance("//foo:simple");
     BuildTarget linkTarget = CxxDescriptionEnhancer.createCxxLinkTarget(target, Optional.empty());
 
@@ -1407,8 +1395,7 @@ public class CxxBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple", tmp);
     workspace.setUp();
     workspace.enableDirCache();
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     BuildTarget target = BuildTargetFactory.newInstance("//foo:simple");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
@@ -1434,8 +1421,7 @@ public class CxxBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple", tmp);
     workspace.setUp();
     workspace.enableDirCache();
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     BuildTarget target = BuildTargetFactory.newInstance("//foo:simple");
     workspace
@@ -1541,9 +1527,8 @@ public class CxxBinaryIntegrationTest {
         buildLog.getAllTargets());
     buildLog.assertTargetHadMatchingRuleKey(aggregatedDepsTarget);
     assertThat(
-        buildLog.getLogEntry(binaryTarget).getStatus(), Matchers.equalTo(BuildRuleStatus.CANCELED));
-    assertThat(
-        buildLog.getLogEntry(target).getStatus(), Matchers.equalTo(BuildRuleStatus.CANCELED));
+        buildLog.getLogEntry(binaryTarget).getStatus(), Matchers.equalTo(BuildRuleStatus.FAIL));
+    assertThat(buildLog.getLogEntry(target).getStatus(), Matchers.equalTo(BuildRuleStatus.FAIL));
   }
 
   @Test
@@ -1811,7 +1796,12 @@ public class CxxBinaryIntegrationTest {
       assertThat(
           indexContents,
           containsString(
-              "-Xlinker -plugin-opt -Xlinker 'thinlto-prefix-replace=;buck-out/gen/bin#incremental-thinlto,thinindex/thinlto.indices'"));
+              "-Xlinker -plugin-opt -Xlinker 'thinlto-prefix-replace=;"
+                  + BuildTargetPaths.getGenPath(
+                          workspace.getProjectFileSystem(),
+                          BuildTargetFactory.newInstance("//:bin#incremental-thinlto,thinindex"),
+                          "%s")
+                      .resolve("thinlto.indices")));
     }
 
     // Since we don't have the full thinLTO toolchain, we're just going to verify that the
@@ -1923,8 +1913,7 @@ public class CxxBinaryIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "resolved", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     workspace.writeContentsToPath("#invalid_pragma", "lib2.h");
 
@@ -2214,8 +2203,8 @@ public class CxxBinaryIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "header_namespace", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
+
     workspace
         .runBuckCommand(
             "build", "--config", "cxx.cxxflags=-g", strippedTarget.getFullyQualifiedName())
@@ -2254,8 +2243,7 @@ public class CxxBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "header_namespace", tmp);
     workspace.setUp();
     workspace.enableDirCache();
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     workspace
         .runBuckCommand(
@@ -2292,8 +2280,7 @@ public class CxxBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "header_namespace", tmp);
     workspace.setUp();
     workspace.enableDirCache();
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     workspace
         .runBuckCommand(
@@ -2364,8 +2351,7 @@ public class CxxBinaryIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "header_namespace", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     workspace
         .runBuckCommand("build", "--config", "cxx.cxxflags=-g", target.getFullyQualifiedName())

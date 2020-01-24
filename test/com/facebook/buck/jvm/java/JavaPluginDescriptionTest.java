@@ -27,7 +27,7 @@ import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.jvm.java.AbstractJavacPluginProperties.Type;
+import com.facebook.buck.jvm.java.JavacPluginProperties.Type;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;

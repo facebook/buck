@@ -23,9 +23,8 @@ import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.google.common.base.Preconditions;
-import org.immutables.value.Value;
 
 /**
  * A rule for specifying external test runners. This rule does nothing except propagate a binary
@@ -52,8 +51,7 @@ public class ExternalTestRunnerDescription
         buildTarget, context.getProjectFilesystem(), (BinaryBuildRule) rule);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractExternalTestRunnerDescriptionArg extends BuildRuleArg {
     BuildTarget getBinary();
   }

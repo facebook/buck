@@ -1,7 +1,10 @@
+#!/usr/bin/env python3
+
 import shutil
 import sys
 
-import impl
+from tools import impl
+
 
 parser = impl.argparser()
 (options, args) = parser.parse_known_args()
@@ -22,6 +25,6 @@ with open(secret, "a") as secretfile:
     secretfile.write("ranlib applied.\n")
 
 with open(archive, "wb") as output:
-    output.write("!<arch>\n")
+    output.write(b"!<arch>\n")
 
 sys.exit(0)

@@ -93,7 +93,7 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
   @Test
   public void frameworkPath() {
     assertEquals(
-        "sourceTreePath:com.facebook.buck.rules.coercer.FrameworkPath<\n"
+        "sourceTreePath:com.facebook.buck.rules.coercer.ImmutableFrameworkPath<\n"
             + "  type:string(SOURCE_TREE_PATH)\n"
             + "  sourceTreePath:com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath<\n"
             + "    sourceTree:string(SDKROOT)\n"
@@ -102,7 +102,7 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
             + "  >\n"
             + "  sourcePath:null\n"
             + ">\n"
-            + "sourcePath:com.facebook.buck.rules.coercer.FrameworkPath<\n"
+            + "sourcePath:com.facebook.buck.rules.coercer.ImmutableFrameworkPath<\n"
             + "  type:string(SOURCE_PATH)\n"
             + "  sourceTreePath:null\n"
             + "  sourcePath:SourcePath($ROOT$/some/path)\n"

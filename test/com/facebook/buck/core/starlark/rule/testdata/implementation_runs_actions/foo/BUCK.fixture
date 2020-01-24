@@ -1,4 +1,4 @@
-load("//:defs.bzl", "test_script", "my_rule", "invalid_types")
+load("//:defs.bzl", "invalid_types", "my_rule", "test_script")
 
 test_script(name = "exe")
 
@@ -31,16 +31,6 @@ my_rule(
 )
 
 invalid_types(
-    name = "invalid_outputs",
-    type = "outputs",
-)
-
-invalid_types(
-    name = "invalid_inputs",
-    type = "inputs",
-)
-
-invalid_types(
     name = "invalid_arguments",
     type = "arguments",
 )
@@ -48,4 +38,9 @@ invalid_types(
 invalid_types(
     name = "invalid_env",
     type = "env",
+)
+
+invalid_types(
+    name = "invalid_zeroargs",
+    type = "zeroargs",
 )

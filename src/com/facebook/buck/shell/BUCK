@@ -18,7 +18,6 @@ java_library_with_plugins(
         "GenruleBinary.java",
         "GenruleBuildable.java",
         "GenruleDescription.java",
-        "LegacyGenrule.java",
         "ShBinary.java",
         "ShBinaryDescription.java",
         "ShTest.java",
@@ -26,11 +25,6 @@ java_library_with_plugins(
         "ShellDescriptionsProvider.java",
         "TestSuite.java",
         "TestSuiteDescription.java",
-    ],
-    exported_deps = [
-        "//src/com/facebook/buck/core/description/arg:arg",
-        "//src/com/facebook/buck/core/rules/tool:tool",
-        "//src/com/facebook/buck/rules/coercer:coercer",
     ],
     tests = [
         "//test/com/facebook/buck/shell:shell",
@@ -85,6 +79,11 @@ java_library_with_plugins(
         "//third-party/java/jackson:jackson-databind",
         "//third-party/java/stringtemplate:stringtemplate",
     ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/description/arg:arg",
+        "//src/com/facebook/buck/core/rules/tool:tool",
+        "//src/com/facebook/buck/rules/coercer:coercer",
+    ],
 )
 
 java_library(
@@ -94,6 +93,7 @@ java_library(
         "BashStep.java",
         "DefaultShellStep.java",
         "RunShTestAndRecordResultStep.java",
+        "RunTestAndRecordResultStep.java",
         "Shell.java",
         "ShellStep.java",
         "SymlinkFilesIntoDirectoryStep.java",

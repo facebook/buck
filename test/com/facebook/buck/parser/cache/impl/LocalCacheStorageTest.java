@@ -251,22 +251,14 @@ public class LocalCacheStorageTest {
     assertNotNull(localCachePath);
 
     GlobSpec globSpec =
-        GlobSpec.builder()
-            .setExclude(ImmutableList.of("excludeSpec"))
-            .setInclude(ImmutableList.of("includeSpec"))
-            .setExcludeDirectories(true)
-            .build();
+        GlobSpec.of(ImmutableList.of("excludeSpec"), ImmutableList.of("includeSpec"), true);
 
     ImmutableList.Builder<GlobSpecWithResult> globSpecBuilder =
         ImmutableList.<GlobSpecWithResult>builder()
             .add(GlobSpecWithResult.of(globSpec, ImmutableSet.of("FooBar.java")));
 
     globSpec =
-        GlobSpec.builder()
-            .setExclude(ImmutableList.of("excludeSpec1"))
-            .setInclude(ImmutableList.of("includeSpec1"))
-            .setExcludeDirectories(false)
-            .build();
+        GlobSpec.of(ImmutableList.of("excludeSpec1"), ImmutableList.of("includeSpec1"), false);
 
     globSpecBuilder.add(GlobSpecWithResult.of(globSpec, ImmutableSet.of("FooBar.java")));
     ImmutableList<GlobSpecWithResult> globSpecMap = globSpecBuilder.build();

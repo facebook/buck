@@ -34,8 +34,10 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.events.Location;
+import com.google.devtools.build.lib.syntax.EvalException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -145,39 +147,40 @@ public class ArtifactFilesystemTest {
   }
 
   @Test
-  public void createsPackagePathsForOutputs() throws IOException {
+  public void createsPackagePathsForOutputs() throws IOException, EvalException {
     ArtifactFilesystem artifactFilesystem = new ArtifactFilesystem(filesystem);
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     BuildArtifactFactory factory = new BuildArtifactFactory(buildTarget, filesystem);
     ActionAnalysisDataKey key =
-        ImmutableActionAnalysisDataKey.of(buildTarget, new ActionAnalysisData.ID() {});
+        ImmutableActionAnalysisDataKey.of(buildTarget, new ActionAnalysisData.ID("a"));
 
-    ImmutableSet<Artifact> artifacts =
-        ImmutableSet.of(
-            factory
-                .createDeclaredArtifact(Paths.get("out.txt"), Location.BUILTIN)
-                .materialize(key));
+    DeclaredArtifact declaredArtifact =
+        factory.createDeclaredArtifact(Paths.get("out.txt"), Location.BUILTIN);
+    OutputArtifact outputArtifact = declaredArtifact.asOutputArtifact();
+    declaredArtifact.materialize(key);
 
     Path expectedPath = BuildPaths.getGenDir(filesystem, buildTarget);
 
     assertFalse(filesystem.isDirectory(expectedPath));
 
-    artifactFilesystem.createPackagePaths(artifacts);
+    artifactFilesystem.createPackagePaths(ImmutableSortedSet.of(outputArtifact));
 
     assertTrue(filesystem.isDirectory(expectedPath));
   }
 
   @Test
-  public void deletesBuildArtifactsForOutputs() throws IOException {
+  public void deletesBuildArtifactsForOutputs() throws IOException, EvalException {
     ArtifactFilesystem artifactFilesystem = new ArtifactFilesystem(filesystem);
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
 
     BuildArtifactFactory factory = new BuildArtifactFactory(buildTarget, filesystem);
     ActionAnalysisDataKey key =
-        ImmutableActionAnalysisDataKey.of(buildTarget, new ActionAnalysisData.ID() {});
+        ImmutableActionAnalysisDataKey.of(buildTarget, new ActionAnalysisData.ID("a"));
 
-    BuildArtifact artifact =
-        factory.createDeclaredArtifact(Paths.get("out.txt"), Location.BUILTIN).materialize(key);
+    DeclaredArtifact declaredArtifact =
+        factory.createDeclaredArtifact(Paths.get("out.txt"), Location.BUILTIN);
+    OutputArtifact outputArtifact = declaredArtifact.asOutputArtifact();
+    BuildArtifact artifact = declaredArtifact.materialize(key);
 
     artifactFilesystem.writeContentsToPath("contents", artifact);
 
@@ -185,7 +188,7 @@ public class ArtifactFilesystemTest {
 
     assertTrue(filesystem.isFile(expectedBuildPath));
 
-    artifactFilesystem.removeBuildArtifacts(ImmutableSet.of(artifact));
+    artifactFilesystem.removeBuildArtifacts(ImmutableSet.of(outputArtifact));
 
     assertFalse(filesystem.isFile(expectedBuildPath));
   }

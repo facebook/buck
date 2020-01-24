@@ -32,7 +32,7 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.AbsoluteOutputMacro;
 import com.facebook.buck.rules.macros.CcFlagsMacro;
@@ -189,31 +189,31 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                 .build(),
             ImmutableList.of(
                 new BuildTargetMacroTypeCoercer<>(
-                    buildTargetTypeCoercer,
+                    buildTargetWithOutputsTypeCoercer,
                     ClasspathMacro.class,
                     BuildTargetMacroTypeCoercer.TargetOrHost.TARGET,
                     ClasspathMacro::of),
                 new BuildTargetMacroTypeCoercer<>(
-                    buildTargetTypeCoercer,
+                    buildTargetWithOutputsTypeCoercer,
                     ClasspathAbiMacro.class,
                     BuildTargetMacroTypeCoercer.TargetOrHost.TARGET,
                     ClasspathAbiMacro::of),
                 new BuildTargetMacroTypeCoercer<>(
-                    buildTargetTypeCoercer,
+                    buildTargetWithOutputsTypeCoercer,
                     ExecutableMacro.class,
                     // TODO(nga): switch to host
                     BuildTargetMacroTypeCoercer.TargetOrHost.TARGET,
                     ExecutableMacro::of),
                 new BuildTargetMacroTypeCoercer<>(
-                    buildTargetTypeCoercer,
+                    buildTargetWithOutputsTypeCoercer,
                     ExecutableTargetMacro.class,
                     BuildTargetMacroTypeCoercer.TargetOrHost.TARGET,
                     ExecutableTargetMacro::of),
                 new EnvMacroTypeCoercer(),
-                new LocationMacroTypeCoercer(buildTargetTypeCoercer),
-                new LocationPlatformMacroTypeCoercer(buildTargetTypeCoercer),
+                new LocationMacroTypeCoercer(buildTargetWithOutputsTypeCoercer),
+                new LocationPlatformMacroTypeCoercer(buildTargetWithOutputsTypeCoercer),
                 new BuildTargetMacroTypeCoercer<>(
-                    buildTargetTypeCoercer,
+                    buildTargetWithOutputsTypeCoercer,
                     MavenCoordinatesMacro.class,
                     BuildTargetMacroTypeCoercer.TargetOrHost.TARGET,
                     MavenCoordinatesMacro::of),
@@ -227,7 +227,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                     queryTypeCoercer, QueryPathsMacro.class, QueryPathsMacro::of),
                 new QueryTargetsAndOutputsMacroTypeCoercer(queryTypeCoercer),
                 new BuildTargetMacroTypeCoercer<>(
-                    buildTargetTypeCoercer,
+                    buildTargetWithOutputsTypeCoercer,
                     WorkerMacro.class,
                     BuildTargetMacroTypeCoercer.TargetOrHost.TARGET,
                     WorkerMacro::of),
@@ -360,7 +360,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
       if (selectedTypeCoercer == null
           && DataTransferObject.class.isAssignableFrom(rawClass)
           && Types.getSupertypes(rawClass).stream()
-              .anyMatch(c -> c.getAnnotation(BuckStyleImmutable.class) != null)) {
+              .anyMatch(c -> c.getAnnotation(RuleArg.class) != null)) {
         selectedTypeCoercer =
             new ImmutableTypeCoercer<>(
                 getConstructorArgDescriptor((Class<? extends DataTransferObject>) rawClass));

@@ -23,7 +23,7 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 
 /** Reference to a concrete file. */
-public class PBXFileReference extends PBXReference {
+public final class PBXFileReference extends PBXReference {
   private Optional<String> explicitFileType;
   private Optional<String> lastKnownFileType;
 

@@ -18,7 +18,8 @@ package com.facebook.buck.cli.endtoend;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.filesystem.BuckPaths;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.endtoend.EndToEndEnvironment;
 import com.facebook.buck.testutil.endtoend.EndToEndRunner;
@@ -75,7 +76,8 @@ public class BaseDirEndToEndTest {
             .resolve(Paths.get("mybase-buck-out", "gen"))
             .resolve(
                 BuildTargetPaths.getBasePath(
-                        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath()),
+                        FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(
+                            BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH),
                         BuildTargetFactory.newInstance(
                             "//simple_successful_helloworld:simple_successful_helloworld"),
                         "%s")
@@ -88,7 +90,8 @@ public class BaseDirEndToEndTest {
             .resolve(Paths.get("buck-out", "gen"))
             .resolve(
                 BuildTargetPaths.getBasePath(
-                        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath()),
+                        FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(
+                            BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH),
                         BuildTargetFactory.newInstance(
                             "//simple_successful_helloworld:simple_successful_helloworld"),
                         "%s")

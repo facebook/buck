@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 @BuckStyleValue
@@ -28,11 +28,11 @@ public abstract class ClasspathMacro extends BuildTargetMacro {
   }
 
   @Override
-  protected ClasspathMacro withTarget(BuildTarget target) {
+  protected ClasspathMacro withTargetWithOutputs(BuildTargetWithOutputs target) {
     return ImmutableClasspathMacro.of(target);
   }
 
-  public static ClasspathMacro of(BuildTarget buildTarget) {
+  public static ClasspathMacro of(BuildTargetWithOutputs buildTarget) {
     return ImmutableClasspathMacro.of(buildTarget);
   }
 }

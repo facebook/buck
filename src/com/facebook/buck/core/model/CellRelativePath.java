@@ -18,16 +18,15 @@ package com.facebook.buck.core.model;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ComparisonChain;
-import org.immutables.value.Value;
 
 /**
  * A pair of {@link CanonicalCellName} and {@link ForwardRelativePath} relative the the cell.
  *
  * <p>This object can identify a buck package or a buck file.
  */
-@Value.Immutable(builder = false, copy = false, intern = false)
-@Value.Style(of = "new", allParameters = true)
+@BuckStyleValue
 public abstract class CellRelativePath implements Comparable<CellRelativePath> {
 
   public abstract CanonicalCellName getCellName();
@@ -50,5 +49,9 @@ public abstract class CellRelativePath implements Comparable<CellRelativePath> {
         .compare(this.getCellName(), that.getCellName())
         .compare(this.getPath(), that.getPath())
         .result();
+  }
+
+  public static CellRelativePath of(CanonicalCellName cellName, ForwardRelativePath path) {
+    return ImmutableCellRelativePath.of(cellName, path);
   }
 }

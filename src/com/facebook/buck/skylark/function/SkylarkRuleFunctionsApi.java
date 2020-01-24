@@ -72,7 +72,30 @@ public interface SkylarkRuleFunctionsApi {
             type = SkylarkDict.class,
             positional = false,
             named = true,
-            doc = "A mapping of parameter names to the type of value that is expected")
+            doc = "A mapping of parameter names to the type of value that is expected"),
+        @Param(
+            name = "infer_run_info",
+            type = Boolean.class,
+            positional = false,
+            named = true,
+            defaultValue = "False",
+            doc =
+                "Whether a RunInfo provider should be inferred for this rule. If false, "
+                    + "`implementation` must return a RunInfo provider in order to make the target "
+                    + "executable. If true, the `implementation` function MUST not return a RunInfo "
+                    + "provider. One will be created based on DefaultInfo. If a RunInfo instance "
+                    + "cannot be inferred (e.g. if more than one default output was declared), "
+                    + "an error will occur. "),
+        @Param(
+            name = "test",
+            type = Boolean.class,
+            positional = false,
+            named = true,
+            defaultValue = "False",
+            doc =
+                "Whether this rule is a test rule or not. If true, a TestInfo and RunInfo provider "
+                    + "must be returned. If a TestInfo provider is not returned, Buck will attempt "
+                    + "to create one from various implicit parameters.")
       },
       useEnvironment = true,
       useAst = true,
@@ -80,6 +103,8 @@ public interface SkylarkRuleFunctionsApi {
   SkylarkUserDefinedRule rule(
       BaseFunction implementation,
       SkylarkDict<String, AttributeHolder> attrs,
+      boolean executable,
+      boolean test,
       Location loc,
       FuncallExpression ast,
       Environment env)

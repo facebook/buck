@@ -29,77 +29,75 @@ import org.junit.Test;
 public class ApplePlatformTest {
   @Test
   public void definitions() {
-    assertSame(AbstractApplePlatform.MACOSX.getType(), ApplePlatformType.MAC);
-    assertTrue(AbstractApplePlatform.MACOSX.getName().contains("osx"));
-    assertFalse(AbstractApplePlatform.MACOSX.getName().contains("iphoneos"));
-    assertFalse(AbstractApplePlatform.MACOSX.getName().contains("iphonesimulator"));
-    assertFalse(AbstractApplePlatform.MACOSX.getName().contains("watchos"));
-    assertFalse(AbstractApplePlatform.MACOSX.getName().contains("watchsimulator"));
-    assertFalse(AbstractApplePlatform.MACOSX.getName().contains("appletvos"));
-    assertFalse(AbstractApplePlatform.MACOSX.getName().contains("appletvsimulator"));
+    assertSame(ApplePlatform.MACOSX.getType(), ApplePlatformType.MAC);
+    assertTrue(ApplePlatform.MACOSX.getName().contains("osx"));
+    assertFalse(ApplePlatform.MACOSX.getName().contains("iphoneos"));
+    assertFalse(ApplePlatform.MACOSX.getName().contains("iphonesimulator"));
+    assertFalse(ApplePlatform.MACOSX.getName().contains("watchos"));
+    assertFalse(ApplePlatform.MACOSX.getName().contains("watchsimulator"));
+    assertFalse(ApplePlatform.MACOSX.getName().contains("appletvos"));
+    assertFalse(ApplePlatform.MACOSX.getName().contains("appletvsimulator"));
 
-    assertSame(AbstractApplePlatform.IPHONEOS.getType(), ApplePlatformType.IOS_DEVICE);
-    assertFalse(AbstractApplePlatform.IPHONEOS.getName().contains("osx"));
-    assertTrue(AbstractApplePlatform.IPHONEOS.getName().contains("iphoneos"));
-    assertFalse(AbstractApplePlatform.IPHONEOS.getName().contains("iphonesimulator"));
-    assertFalse(AbstractApplePlatform.IPHONEOS.getName().contains("watchos"));
-    assertFalse(AbstractApplePlatform.IPHONEOS.getName().contains("watchsimulator"));
-    assertFalse(AbstractApplePlatform.IPHONEOS.getName().contains("appletvos"));
-    assertFalse(AbstractApplePlatform.IPHONEOS.getName().contains("appletvsimulator"));
+    assertSame(ApplePlatform.IPHONEOS.getType(), ApplePlatformType.IOS_DEVICE);
+    assertFalse(ApplePlatform.IPHONEOS.getName().contains("osx"));
+    assertTrue(ApplePlatform.IPHONEOS.getName().contains("iphoneos"));
+    assertFalse(ApplePlatform.IPHONEOS.getName().contains("iphonesimulator"));
+    assertFalse(ApplePlatform.IPHONEOS.getName().contains("watchos"));
+    assertFalse(ApplePlatform.IPHONEOS.getName().contains("watchsimulator"));
+    assertFalse(ApplePlatform.IPHONEOS.getName().contains("appletvos"));
+    assertFalse(ApplePlatform.IPHONEOS.getName().contains("appletvsimulator"));
 
-    assertSame(AbstractApplePlatform.IPHONESIMULATOR.getType(), ApplePlatformType.IOS_SIMULATOR);
-    assertFalse(AbstractApplePlatform.IPHONESIMULATOR.getName().contains("osx"));
-    assertFalse(AbstractApplePlatform.IPHONESIMULATOR.getName().contains("iphoneos"));
-    assertTrue(AbstractApplePlatform.IPHONESIMULATOR.getName().contains("iphonesimulator"));
-    assertFalse(AbstractApplePlatform.IPHONESIMULATOR.getName().contains("watchos"));
-    assertFalse(AbstractApplePlatform.IPHONESIMULATOR.getName().contains("watchsimulator"));
-    assertFalse(AbstractApplePlatform.IPHONESIMULATOR.getName().contains("appletvos"));
-    assertFalse(AbstractApplePlatform.IPHONESIMULATOR.getName().contains("appletvsimulator"));
+    assertSame(ApplePlatform.IPHONESIMULATOR.getType(), ApplePlatformType.IOS_SIMULATOR);
+    assertFalse(ApplePlatform.IPHONESIMULATOR.getName().contains("osx"));
+    assertFalse(ApplePlatform.IPHONESIMULATOR.getName().contains("iphoneos"));
+    assertTrue(ApplePlatform.IPHONESIMULATOR.getName().contains("iphonesimulator"));
+    assertFalse(ApplePlatform.IPHONESIMULATOR.getName().contains("watchos"));
+    assertFalse(ApplePlatform.IPHONESIMULATOR.getName().contains("watchsimulator"));
+    assertFalse(ApplePlatform.IPHONESIMULATOR.getName().contains("appletvos"));
+    assertFalse(ApplePlatform.IPHONESIMULATOR.getName().contains("appletvsimulator"));
 
-    assertSame(AbstractApplePlatform.WATCHOS.getType(), ApplePlatformType.WATCH_DEVICE);
-    assertFalse(AbstractApplePlatform.WATCHOS.getName().contains("osx"));
-    assertFalse(AbstractApplePlatform.WATCHOS.getName().contains("iphoneos"));
-    assertFalse(AbstractApplePlatform.WATCHOS.getName().contains("iphonesimulator"));
-    assertTrue(AbstractApplePlatform.WATCHOS.getName().contains("watchos"));
-    assertFalse(AbstractApplePlatform.WATCHOS.getName().contains("watchsimulator"));
-    assertFalse(AbstractApplePlatform.WATCHOS.getName().contains("appletvos"));
-    assertFalse(AbstractApplePlatform.WATCHOS.getName().contains("appletvsimulator"));
+    assertSame(ApplePlatform.WATCHOS.getType(), ApplePlatformType.WATCH_DEVICE);
+    assertFalse(ApplePlatform.WATCHOS.getName().contains("osx"));
+    assertFalse(ApplePlatform.WATCHOS.getName().contains("iphoneos"));
+    assertFalse(ApplePlatform.WATCHOS.getName().contains("iphonesimulator"));
+    assertTrue(ApplePlatform.WATCHOS.getName().contains("watchos"));
+    assertFalse(ApplePlatform.WATCHOS.getName().contains("watchsimulator"));
+    assertFalse(ApplePlatform.WATCHOS.getName().contains("appletvos"));
+    assertFalse(ApplePlatform.WATCHOS.getName().contains("appletvsimulator"));
 
-    assertSame(AbstractApplePlatform.WATCHSIMULATOR.getType(), ApplePlatformType.WATCH_SIMULATOR);
-    assertFalse(AbstractApplePlatform.WATCHSIMULATOR.getName().contains("osx"));
-    assertFalse(AbstractApplePlatform.WATCHSIMULATOR.getName().contains("iphoneos"));
-    assertFalse(AbstractApplePlatform.WATCHSIMULATOR.getName().contains("iphonesimulator"));
-    assertFalse(AbstractApplePlatform.WATCHSIMULATOR.getName().contains("watchos"));
-    assertTrue(AbstractApplePlatform.WATCHSIMULATOR.getName().contains("watchsimulator"));
-    assertFalse(AbstractApplePlatform.WATCHSIMULATOR.getName().contains("appletvos"));
-    assertFalse(AbstractApplePlatform.WATCHSIMULATOR.getName().contains("appletvsimulator"));
+    assertSame(ApplePlatform.WATCHSIMULATOR.getType(), ApplePlatformType.WATCH_SIMULATOR);
+    assertFalse(ApplePlatform.WATCHSIMULATOR.getName().contains("osx"));
+    assertFalse(ApplePlatform.WATCHSIMULATOR.getName().contains("iphoneos"));
+    assertFalse(ApplePlatform.WATCHSIMULATOR.getName().contains("iphonesimulator"));
+    assertFalse(ApplePlatform.WATCHSIMULATOR.getName().contains("watchos"));
+    assertTrue(ApplePlatform.WATCHSIMULATOR.getName().contains("watchsimulator"));
+    assertFalse(ApplePlatform.WATCHSIMULATOR.getName().contains("appletvos"));
+    assertFalse(ApplePlatform.WATCHSIMULATOR.getName().contains("appletvsimulator"));
 
-    assertSame(AbstractApplePlatform.APPLETVOS.getType(), ApplePlatformType.TV_DEVICE);
-    assertFalse(AbstractApplePlatform.APPLETVOS.getName().contains("osx"));
-    assertFalse(AbstractApplePlatform.APPLETVOS.getName().contains("iphoneos"));
-    assertFalse(AbstractApplePlatform.APPLETVOS.getName().contains("iphonesimulator"));
-    assertFalse(AbstractApplePlatform.APPLETVOS.getName().contains("watchos"));
-    assertFalse(AbstractApplePlatform.APPLETVOS.getName().contains("watchsimulator"));
-    assertTrue(AbstractApplePlatform.APPLETVOS.getName().contains("appletvos"));
-    assertFalse(AbstractApplePlatform.APPLETVOS.getName().contains("appletvsimulator"));
+    assertSame(ApplePlatform.APPLETVOS.getType(), ApplePlatformType.TV_DEVICE);
+    assertFalse(ApplePlatform.APPLETVOS.getName().contains("osx"));
+    assertFalse(ApplePlatform.APPLETVOS.getName().contains("iphoneos"));
+    assertFalse(ApplePlatform.APPLETVOS.getName().contains("iphonesimulator"));
+    assertFalse(ApplePlatform.APPLETVOS.getName().contains("watchos"));
+    assertFalse(ApplePlatform.APPLETVOS.getName().contains("watchsimulator"));
+    assertTrue(ApplePlatform.APPLETVOS.getName().contains("appletvos"));
+    assertFalse(ApplePlatform.APPLETVOS.getName().contains("appletvsimulator"));
 
-    assertSame(AbstractApplePlatform.APPLETVSIMULATOR.getType(), ApplePlatformType.TV_SIMULATOR);
-    assertFalse(AbstractApplePlatform.APPLETVSIMULATOR.getName().contains("osx"));
-    assertFalse(AbstractApplePlatform.APPLETVSIMULATOR.getName().contains("iphoneos"));
-    assertFalse(AbstractApplePlatform.APPLETVSIMULATOR.getName().contains("iphonesimulator"));
-    assertFalse(AbstractApplePlatform.APPLETVSIMULATOR.getName().contains("watchos"));
-    assertFalse(AbstractApplePlatform.APPLETVSIMULATOR.getName().contains("watchsimulator"));
-    assertFalse(AbstractApplePlatform.APPLETVSIMULATOR.getName().contains("appletvos"));
-    assertTrue(AbstractApplePlatform.APPLETVSIMULATOR.getName().contains("appletvsimulator"));
+    assertSame(ApplePlatform.APPLETVSIMULATOR.getType(), ApplePlatformType.TV_SIMULATOR);
+    assertFalse(ApplePlatform.APPLETVSIMULATOR.getName().contains("osx"));
+    assertFalse(ApplePlatform.APPLETVSIMULATOR.getName().contains("iphoneos"));
+    assertFalse(ApplePlatform.APPLETVSIMULATOR.getName().contains("iphonesimulator"));
+    assertFalse(ApplePlatform.APPLETVSIMULATOR.getName().contains("watchos"));
+    assertFalse(ApplePlatform.APPLETVSIMULATOR.getName().contains("watchsimulator"));
+    assertFalse(ApplePlatform.APPLETVSIMULATOR.getName().contains("appletvos"));
+    assertTrue(ApplePlatform.APPLETVSIMULATOR.getName().contains("appletvsimulator"));
   }
 
   @Test
   public void watchTypes() {
-    AbstractApplePlatform[] watchPlatforms = {
-      AbstractApplePlatform.WATCHOS, AbstractApplePlatform.WATCHSIMULATOR
-    };
+    ApplePlatform[] watchPlatforms = {ApplePlatform.WATCHOS, ApplePlatform.WATCHSIMULATOR};
 
-    for (AbstractApplePlatform platform : watchPlatforms) {
+    for (ApplePlatform platform : watchPlatforms) {
       assertTrue(platform.getType().isWatch());
       assertTrue(platform.getName().contains("watch"));
     }

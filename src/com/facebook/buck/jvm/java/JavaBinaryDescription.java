@@ -32,7 +32,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -51,7 +51,6 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Pattern;
-import org.immutables.value.Value;
 
 public class JavaBinaryDescription
     implements DescriptionWithTargetGraph<JavaBinaryDescriptionArg>,
@@ -203,8 +202,7 @@ public class JavaBinaryDescription
         .addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractJavaBinaryDescriptionArg extends BuildRuleArg, HasDeclaredDeps, HasTests {
     Optional<String> getMainClass();
 

@@ -23,13 +23,12 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.file.downloader.Downloader;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.hash.HashCode;
 import java.net.URI;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 public class RemoteFileDescription implements DescriptionWithTargetGraph<RemoteFileDescriptionArg> {
   @Override
@@ -76,8 +75,7 @@ public class RemoteFileDescription implements DescriptionWithTargetGraph<RemoteF
     return true;
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractRemoteFileDescriptionArg extends BuildRuleArg {
     URI getUrl();
 

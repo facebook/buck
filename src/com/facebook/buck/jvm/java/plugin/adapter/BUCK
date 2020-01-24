@@ -3,8 +3,8 @@ java_library(
     # We use conditional compilation to support building against both Java 8 and 11, despite
     # breaking interface changes in the JDK.
     srcs = glob(["*.java"]) + select({
-        "//tools/build/config:java_8": glob(["java8/*.java"]),
         "//tools/build/config:java_11": glob(["java11/*.java"]),
+        "//tools/build/config:java_8": glob(["java8/*.java"]),
     }),
     provided_deps = [
         # Tools.jar is the compiler itself, and will already be present at runtime;

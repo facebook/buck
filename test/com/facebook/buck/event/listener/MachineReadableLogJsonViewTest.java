@@ -20,7 +20,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.facebook.buck.artifact_cache.CacheCountersSummary;
 import com.facebook.buck.artifact_cache.CacheResult;
-import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.core.build.engine.BuildRuleStatus;
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
@@ -124,19 +123,13 @@ public class MachineReadableLogJsonViewTest {
     BuildRuleEvent.Finished event =
         BuildRuleEvent.finished(
             started,
-            BuildRuleKeys.builder()
-                .setRuleKey(new RuleKey("aaaa"))
-                .setInputRuleKey(Optional.of(new RuleKey("bbbb")))
-                .build(),
-            BuildRuleStatus.SUCCESS,
-            CacheResult.of(
-                CacheResultType.MISS,
-                Optional.of("my-secret-source"),
-                Optional.of(ArtifactCacheMode.dir),
-                Optional.empty(),
-                Optional.empty(),
+            BuildRuleKeys.of(
+                new RuleKey("aaaa"),
+                Optional.of(new RuleKey("bbbb")),
                 Optional.empty(),
                 Optional.empty()),
+            BuildRuleStatus.SUCCESS,
+            CacheResult.miss("my-secret-source", ArtifactCacheMode.dir),
             Optional.empty(),
             Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
             UploadToCacheResultType.UNCACHEABLE,
@@ -194,7 +187,8 @@ public class MachineReadableLogJsonViewTest {
             + "\"totalRulekeyTimeMs\":42,"
             + "\"fetchTimeMs\":0,"
             + "\"buildTimeMs\":23,"
-            + "\"installTimeMs\":42}}",
+            + "\"installTimeMs\":42,"
+            + "\"projectTimeMs\":0}}",
         message);
   }
 

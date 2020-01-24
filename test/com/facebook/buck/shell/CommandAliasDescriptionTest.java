@@ -29,6 +29,8 @@ import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -110,7 +112,7 @@ public class CommandAliasDescriptionTest {
             result
                 .graphBuilder()
                 .getRuleWithType(delegate, BinaryBuildRule.class)
-                .getExecutableCommand()
+                .getExecutableCommand(OutputLabel.defaultLabel())
                 .getCommandPrefix(result.sourcePathResolver())));
     assertThat(result.getRuntimeDeps(), hasItem(delegate));
   }
@@ -336,7 +338,7 @@ public class CommandAliasDescriptionTest {
     CommandAliasBuilder.BuildResult result =
         builder.setPlatformExe(Platform.WINDOWS, subCommand).buildResult();
 
-    Tool tool = result.commandAlias().getExecutableCommand();
+    Tool tool = result.commandAlias().getExecutableCommand(OutputLabel.defaultLabel());
     ImmutableList<String> commandPrefix = tool.getCommandPrefix(result.sourcePathResolver());
     assertEquals(commandPrefix.subList(1, commandPrefix.size()), ImmutableList.copyOf(args));
     assertEquals(tool.getEnvironment(result.sourcePathResolver()), ImmutableMap.of("EF", "gh"));
@@ -406,7 +408,8 @@ public class CommandAliasDescriptionTest {
         platform -> {
           CommandAliasBuilder.BuildResult result =
               builder(platform).setPlatformExe(platformExe).buildResult();
-          return ruleKey(result, result.commandAlias().getExecutableCommand());
+          return ruleKey(
+              result, result.commandAlias().getExecutableCommand(OutputLabel.defaultLabel()));
         };
 
     RuleKey windows = ruleKeyForPlatform.apply(Platform.WINDOWS);
@@ -424,7 +427,8 @@ public class CommandAliasDescriptionTest {
           CommandAliasBuilder.BuildResult result =
               builder().setExe(new TestBinaryBuilder(delegate, arg, "").build()).buildResult();
 
-          return ruleKey(result, result.commandAlias().getExecutableCommand());
+          return ruleKey(
+              result, result.commandAlias().getExecutableCommand(OutputLabel.defaultLabel()));
         };
 
     assertNotEquals(ruleKeyForArg.apply("abc"), ruleKeyForArg.apply("def"));
@@ -437,7 +441,8 @@ public class CommandAliasDescriptionTest {
           CommandAliasBuilder.BuildResult result =
               builder().setExe(new TestBinaryBuilder(delegate, "", env).build()).buildResult();
 
-          return ruleKey(result, result.commandAlias().getExecutableCommand());
+          return ruleKey(
+              result, result.commandAlias().getExecutableCommand(OutputLabel.defaultLabel()));
         };
 
     assertNotEquals(ruleKeyForEnv.apply("abc"), ruleKeyForEnv.apply("def"));
@@ -454,7 +459,8 @@ public class CommandAliasDescriptionTest {
                   .setPlatformExe(Platform.MACOS, new TestBinaryBuilder(unused, arg, "").build())
                   .buildResult();
 
-          return ruleKey(result, result.commandAlias().getExecutableCommand());
+          return ruleKey(
+              result, result.commandAlias().getExecutableCommand(OutputLabel.defaultLabel()));
         };
 
     assertNotEquals(ruleKeyForArg.apply("abc"), ruleKeyForArg.apply("def"));
@@ -469,7 +475,8 @@ public class CommandAliasDescriptionTest {
                   .setPlatformExe(Platform.LINUX, new TestBinaryBuilder(delegate, "", env).build())
                   .buildResult();
 
-          return ruleKey(result, result.commandAlias().getExecutableCommand());
+          return ruleKey(
+              result, result.commandAlias().getExecutableCommand(OutputLabel.defaultLabel()));
         };
 
     assertNotEquals(ruleKeyForEnv.apply("abc"), ruleKeyForEnv.apply("def"));
@@ -485,7 +492,8 @@ public class CommandAliasDescriptionTest {
                       Platform.UNKNOWN, new TestBinaryBuilder(delegate, arg, "").build())
                   .buildResult();
 
-          return ruleKey(result, result.commandAlias().getExecutableCommand());
+          return ruleKey(
+              result, result.commandAlias().getExecutableCommand(OutputLabel.defaultLabel()));
         };
 
     assertNotEquals(ruleKeyForArg.apply("abc"), ruleKeyForArg.apply("def"));
@@ -495,8 +503,13 @@ public class CommandAliasDescriptionTest {
   public void supportsEnvWithExeMacro() {
     ImmutableMap<String, StringWithMacros> env =
         ImmutableSortedMap.of(
-            "apples", StringWithMacrosUtils.format("some"),
-            "pears", StringWithMacrosUtils.format("%s", ExecutableMacro.of(macroTarget)));
+            "apples",
+            StringWithMacrosUtils.format("some"),
+            "pears",
+            StringWithMacrosUtils.format(
+                "%s",
+                ExecutableMacro.of(
+                    ImmutableBuildTargetWithOutputs.of(macroTarget, OutputLabel.defaultLabel()))));
 
     CommandAliasBuilder.BuildResult result =
         builder()
@@ -522,7 +535,8 @@ public class CommandAliasDescriptionTest {
                   .setPlatformExe(Platform.MACOS, new TestBinaryBuilder(unused, "", env).build())
                   .buildResult();
 
-          return ruleKey(result, result.commandAlias().getExecutableCommand());
+          return ruleKey(
+              result, result.commandAlias().getExecutableCommand(OutputLabel.defaultLabel()));
         };
 
     assertNotEquals(ruleKeyForEnv.apply("abc"), ruleKeyForEnv.apply("def"));
@@ -562,7 +576,7 @@ public class CommandAliasDescriptionTest {
     }
 
     @Override
-    public Tool getExecutableCommand() {
+    public Tool getExecutableCommand(OutputLabel outputLabel) {
       return tool;
     }
   }

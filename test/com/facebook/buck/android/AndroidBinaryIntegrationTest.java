@@ -42,7 +42,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -98,6 +97,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
 
   private static final String SIMPLE_TARGET = "//apps/multidex:app";
   private static final String RES_D8_TARGET = "//apps/multidex:app_with_resources_and_d8";
+  private static final String RES_GROUPS_TARGET = "//apps/multidex:app_with_resources_and_groups";
   private static final String RAW_DEX_TARGET = "//apps/multidex:app-art";
   private static final String APP_REDEX_TARGET = "//apps/sample:app_redex";
 
@@ -110,7 +110,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
     setWorkspaceCompilationMode(workspace);
-    filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    filesystem = workspace.getProjectFileSystem();
   }
 
   @Test
@@ -403,6 +403,30 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
+  public void testDexGroupsWithSecondaryResources() throws IOException {
+    Path apkPath = workspace.buildAndReturnOutput("//apps/multidex:dex_groups_r_dot_secondary_dex");
+
+    String secondaryDex2 = "assets/secondary-program-dex-jars/secondary-2_1.dex.jar";
+    String secondaryDex3 = "assets/secondary-program-dex-jars/secondary-3_1.dex.jar";
+    String rDotJavaDex = "assets/secondary-program-dex-jars/secondary-4_1.dex.jar";
+
+    ZipInspector zipInspector = new ZipInspector(apkPath);
+    zipInspector.assertFileExists(secondaryDex2);
+    zipInspector.assertFileExists(secondaryDex3);
+    DexTestUtils.validateMetadata(apkPath, ImmutableSet.of(), false);
+
+    DexInspector dex2Inspector = new DexInspector(apkPath, secondaryDex2);
+    dex2Inspector.assertTypeExists("Lcom/facebook/sample/Sample;");
+    dex2Inspector.assertTypeExists("Lcom/facebook/sample/Sample2;");
+    dex2Inspector.assertTypeExists("Lcom/facebook/sample/Sample3;");
+    DexInspector dex3Inspector = new DexInspector(apkPath, secondaryDex3);
+    dex3Inspector.assertTypeExists("Lcom/facebook/sample2/Sample;");
+    DexInspector rDotJavaInspector = new DexInspector(apkPath, rDotJavaDex);
+    rDotJavaInspector.assertTypeExists("Lcom/sample/R;");
+    rDotJavaInspector.assertTypeExists("Lcom/sample2/R;");
+  }
+
+  @Test
   public void testProvidedDependenciesAreExcludedEvenIfSpecifiedInOtherDeps() throws IOException {
     String target = "//apps/sample:app_with_exported_and_provided_deps";
     ProcessResult result = workspace.runBuckBuild(target);
@@ -436,11 +460,10 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testDxFindsReferencedResources() {
+  public void testDxFindsReferencedResources() throws IOException {
     workspace.runBuckBuild(SIMPLE_TARGET).assertSuccess();
     BuildTarget dexTarget = BuildTargetFactory.newInstance("//java/com/sample/lib:lib#d8");
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     Optional<String> resourcesFromMetadata =
         DexProducedFromJavaLibrary.getMetadataResources(filesystem, dexTarget);
     assertTrue(resourcesFromMetadata.isPresent());
@@ -448,15 +471,32 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testD8FindsReferencedResources() {
+  public void testD8FindsReferencedResources() throws IOException {
     workspace.runBuckBuild(RES_D8_TARGET).assertSuccess();
     BuildTarget dexTarget = BuildTargetFactory.newInstance("//java/com/sample/lib:lib#d8");
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     Optional<String> resourcesFromMetadata =
         DexProducedFromJavaLibrary.getMetadataResources(filesystem, dexTarget);
     assertTrue(resourcesFromMetadata.isPresent());
     assertEquals("[\"com.sample.top_layout\",\"com.sample2.title\"]", resourcesFromMetadata.get());
+  }
+
+  @Test
+  public void testDexGroupsReferencedResources() throws IOException {
+    workspace.runBuckBuild(RES_GROUPS_TARGET).assertSuccess();
+    BuildTarget dexTarget =
+        BuildTargetFactory.newInstance(
+            "//apps/multidex:app_with_resources_and_groups#secondary_dexes_1");
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
+    Path resourcesFile =
+        BuildTargetPaths.getGenPath(filesystem, dexTarget, "%s")
+            .resolve("referenced_resources.txt");
+    Optional<String> referencedResources = filesystem.readFileIfItExists(resourcesFile);
+    assertTrue(referencedResources.isPresent());
+    // resources from both //java/com/sample/lib:lib and //java/com/sample2:lib
+    assertEquals(
+        "[\"com.sample.top_layout\",\"com.sample2.title\",\"com.sample2.sample2_string\"]",
+        referencedResources.get());
   }
 
   @Test

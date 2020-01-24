@@ -19,26 +19,23 @@ package com.facebook.buck.parser.spec;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.ImmutableCellRelativePath;
+import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetLanguageConstants;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
 import com.facebook.buck.core.parser.buildtargetpattern.ImmutableBuildTargetPattern;
 import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableMap;
-import org.immutables.value.Value;
 
 /** Matches all {@link TargetNode} objects in a repository that match the specification. */
-@Value.Immutable(builder = false)
+@BuckStyleValue
 public abstract class TargetNodePredicateSpec implements TargetNodeSpec {
 
   @Override
-  @Value.Parameter
   public abstract BuildFileSpec getBuildFileSpec();
 
-  @Value.Default
-  public boolean onlyTests() {
-    return false;
-  }
+  public abstract boolean onlyTests();
 
   @Override
   public TargetType getTargetType() {
@@ -72,10 +69,32 @@ public abstract class TargetNodePredicateSpec implements TargetNodeSpec {
 
     ForwardRelativePath basePath = buildFileSpec.getCellRelativeBaseName().getPath();
     return ImmutableBuildTargetPattern.of(
-        new ImmutableCellRelativePath(cellName, basePath),
+        CellRelativePath.of(cellName, basePath),
         buildFileSpec.isRecursive()
             ? BuildTargetPattern.Kind.RECURSIVE
             : BuildTargetPattern.Kind.PACKAGE,
         "");
+  }
+
+  public static TargetNodePredicateSpec of(BuildFileSpec buildFileSpec) {
+    return of(buildFileSpec, false);
+  }
+
+  public static TargetNodePredicateSpec of(BuildFileSpec buildFileSpec, boolean onlyTests) {
+    return ImmutableTargetNodePredicateSpec.of(buildFileSpec, onlyTests);
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder builder =
+        new StringBuilder(getBuildFileSpec().getCellRelativeBaseName().toString());
+    if (getBuildFileSpec().isRecursive()) {
+      builder
+          .append(BuildTargetLanguageConstants.PATH_SYMBOL)
+          .append(BuildTargetLanguageConstants.RECURSIVE_SYMBOL);
+    } else {
+      builder.append(BuildTargetLanguageConstants.TARGET_SYMBOL);
+    }
+    return builder.toString();
   }
 }

@@ -17,22 +17,21 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.LocationPlatformMacro;
-import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.util.Optional;
 
 /** Coerces `$(location-platform ...)` macros into {@link LocationPlatformMacro}. */
 class LocationPlatformMacroTypeCoercer
     extends AbstractLocationMacroTypeCoercer<LocationPlatformMacro> {
 
-  public LocationPlatformMacroTypeCoercer(TypeCoercer<BuildTarget> buildTargetTypeCoercer) {
+  public LocationPlatformMacroTypeCoercer(
+      TypeCoercer<BuildTargetWithOutputs> buildTargetTypeCoercer) {
     super(buildTargetTypeCoercer);
   }
 
@@ -54,7 +53,7 @@ class LocationPlatformMacroTypeCoercer
       throw new CoerceFailedException(
           String.format("expected at least one argument (found %d)", args.size()));
     }
-    Pair<BuildTarget, Optional<String>> target =
+    BuildTargetWithOutputs targetWithOutputs =
         coerceTarget(
             cellRoots,
             filesystem,
@@ -63,8 +62,7 @@ class LocationPlatformMacroTypeCoercer
             hostConfiguration,
             args.get(0));
     return LocationPlatformMacro.of(
-        target.getFirst(),
-        target.getSecond(),
+        targetWithOutputs,
         args.subList(1, args.size()).stream()
             .map(InternalFlavor::of)
             .collect(ImmutableSet.toImmutableSet()));

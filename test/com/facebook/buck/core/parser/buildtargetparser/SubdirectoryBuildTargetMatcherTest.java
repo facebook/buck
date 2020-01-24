@@ -21,7 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.ImmutableCellRelativePath;
+import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -34,8 +34,8 @@ public class SubdirectoryBuildTargetMatcherTest {
   @Test
   public void testApply() {
     SubdirectoryBuildTargetMatcher pattern =
-        SubdirectoryBuildTargetMatcher.of(
-            new ImmutableCellRelativePath(
+        ImmutableSubdirectoryBuildTargetMatcher.of(
+            CellRelativePath.of(
                 CanonicalCellName.rootCell(), ForwardRelativePath.of("src/com/facebook/buck")));
 
     assertTrue(pattern.matches(BuildTargetFactory.newInstance("//src/com/facebook/buck:buck")));

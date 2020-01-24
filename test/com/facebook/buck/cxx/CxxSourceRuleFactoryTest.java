@@ -59,13 +59,13 @@ import com.facebook.buck.shell.ShBinaryBuilder;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.hamcrest.Matchers;
@@ -110,16 +110,18 @@ public class CxxSourceRuleFactoryTest {
           CxxPreprocessorInput.builder().addRules(dep.getBuildTarget()).build();
 
       CxxSourceRuleFactory cxxSourceRuleFactory =
-          CxxSourceRuleFactory.builder()
-              .setProjectFilesystem(PROJECT_FILESYSTEM)
-              .setBaseBuildTarget(target)
-              .setActionGraphBuilder(graphBuilder)
-              .setPathResolver(graphBuilder.getSourcePathResolver())
-              .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
-              .setCxxPlatform(CXX_PLATFORM)
-              .addCxxPreprocessorInput(cxxPreprocessorInput)
-              .setPicType(PicType.PDC)
-              .build();
+          CxxSourceRuleFactory.of(
+              PROJECT_FILESYSTEM,
+              target,
+              graphBuilder,
+              graphBuilder.getSourcePathResolver(),
+              CxxPlatformUtils.DEFAULT_CONFIG,
+              CXX_PLATFORM,
+              ImmutableList.of(cxxPreprocessorInput),
+              ImmutableMultimap.of(),
+              Optional.empty(),
+              Optional.empty(),
+              PicType.PDC);
 
       String name = "foo/bar.cpp";
       SourcePath input =
@@ -163,16 +165,18 @@ public class CxxSourceRuleFactoryTest {
       CxxPreprocessorInput cxxPreprocessorInput = CxxPreprocessorInput.of();
 
       CxxSourceRuleFactory cxxSourceRuleFactory =
-          CxxSourceRuleFactory.builder()
-              .setProjectFilesystem(PROJECT_FILESYSTEM)
-              .setBaseBuildTarget(target)
-              .setActionGraphBuilder(graphBuilder)
-              .setPathResolver(pathResolver)
-              .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
-              .setCxxPlatform(platform)
-              .addCxxPreprocessorInput(cxxPreprocessorInput)
-              .setPicType(PicType.PDC)
-              .build();
+          CxxSourceRuleFactory.of(
+              PROJECT_FILESYSTEM,
+              target,
+              graphBuilder,
+              pathResolver,
+              CxxPlatformUtils.DEFAULT_CONFIG,
+              platform,
+              ImmutableList.of(cxxPreprocessorInput),
+              ImmutableMultimap.of(),
+              Optional.empty(),
+              Optional.empty(),
+              PicType.PDC);
 
       String name = "source.cpp";
       CxxSource cxxSource =
@@ -215,15 +219,18 @@ public class CxxSourceRuleFactoryTest {
       graphBuilder.addToIndex(dep);
       SourcePath input = dep.getSourcePathToOutput();
       CxxSourceRuleFactory cxxSourceRuleFactory =
-          CxxSourceRuleFactory.builder()
-              .setProjectFilesystem(PROJECT_FILESYSTEM)
-              .setBaseBuildTarget(target)
-              .setActionGraphBuilder(graphBuilder)
-              .setPathResolver(graphBuilder.getSourcePathResolver())
-              .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
-              .setCxxPlatform(CXX_PLATFORM)
-              .setPicType(PicType.PDC)
-              .build();
+          CxxSourceRuleFactory.of(
+              PROJECT_FILESYSTEM,
+              target,
+              graphBuilder,
+              graphBuilder.getSourcePathResolver(),
+              CxxPlatformUtils.DEFAULT_CONFIG,
+              CXX_PLATFORM,
+              ImmutableList.of(),
+              ImmutableMultimap.of(),
+              Optional.empty(),
+              Optional.empty(),
+              PicType.PDC);
 
       String nameCompile = "foo/bar.ii";
       CxxSource cxxSourceCompile =
@@ -250,18 +257,32 @@ public class CxxSourceRuleFactoryTest {
       SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
       BuildContext context = FakeBuildContext.withSourcePathResolver(pathResolver);
 
-      CxxSourceRuleFactory.Builder cxxSourceRuleFactoryBuilder =
-          CxxSourceRuleFactory.builder()
-              .setProjectFilesystem(PROJECT_FILESYSTEM)
-              .setBaseBuildTarget(target)
-              .setActionGraphBuilder(graphBuilder)
-              .setPathResolver(pathResolver)
-              .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
-              .setCxxPlatform(CXX_PLATFORM);
       CxxSourceRuleFactory cxxSourceRuleFactoryPDC =
-          cxxSourceRuleFactoryBuilder.setPicType(PicType.PDC).build();
+          CxxSourceRuleFactory.of(
+              PROJECT_FILESYSTEM,
+              target,
+              graphBuilder,
+              pathResolver,
+              CxxPlatformUtils.DEFAULT_CONFIG,
+              CXX_PLATFORM,
+              ImmutableList.of(),
+              ImmutableMultimap.of(),
+              Optional.empty(),
+              Optional.empty(),
+              PicType.PDC);
       CxxSourceRuleFactory cxxSourceRuleFactoryPIC =
-          cxxSourceRuleFactoryBuilder.setPicType(PicType.PIC).build();
+          CxxSourceRuleFactory.of(
+              PROJECT_FILESYSTEM,
+              target,
+              graphBuilder,
+              pathResolver,
+              CxxPlatformUtils.DEFAULT_CONFIG,
+              CXX_PLATFORM,
+              ImmutableList.of(),
+              ImmutableMultimap.of(),
+              Optional.empty(),
+              Optional.empty(),
+              PicType.PIC);
 
       String name = "foo/bar.ii";
       CxxSource cxxSource =
@@ -327,16 +348,18 @@ public class CxxSourceRuleFactoryTest {
       SourcePath prefixHeaderSourcePath = FakeSourcePath.of(filesystem, prefixHeaderName);
 
       CxxSourceRuleFactory cxxSourceRuleFactory =
-          CxxSourceRuleFactory.builder()
-              .setProjectFilesystem(PROJECT_FILESYSTEM)
-              .setBaseBuildTarget(target)
-              .setActionGraphBuilder(graphBuilder)
-              .setPathResolver(pathResolver)
-              .setCxxBuckConfig(cxxBuckConfig)
-              .setCxxPlatform(platform)
-              .setPrefixHeader(prefixHeaderSourcePath)
-              .setPicType(PicType.PDC)
-              .build();
+          CxxSourceRuleFactory.of(
+              PROJECT_FILESYSTEM,
+              target,
+              graphBuilder,
+              pathResolver,
+              cxxBuckConfig,
+              platform,
+              ImmutableList.of(),
+              ImmutableMultimap.of(),
+              Optional.of(prefixHeaderSourcePath),
+              Optional.empty(),
+              PicType.PDC);
 
       String objcSourceName = "test.m";
       CxxSource objcSource =
@@ -361,15 +384,18 @@ public class CxxSourceRuleFactoryTest {
       CxxPlatform platform = CxxPlatformUtils.build(new CxxBuckConfig(buckConfig));
 
       CxxSourceRuleFactory cxxSourceRuleFactory =
-          CxxSourceRuleFactory.builder()
-              .setProjectFilesystem(PROJECT_FILESYSTEM)
-              .setBaseBuildTarget(target)
-              .setActionGraphBuilder(graphBuilder)
-              .setPathResolver(graphBuilder.getSourcePathResolver())
-              .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
-              .setCxxPlatform(platform)
-              .setPicType(PicType.PDC)
-              .build();
+          CxxSourceRuleFactory.of(
+              PROJECT_FILESYSTEM,
+              target,
+              graphBuilder,
+              graphBuilder.getSourcePathResolver(),
+              CxxPlatformUtils.DEFAULT_CONFIG,
+              platform,
+              ImmutableList.of(),
+              ImmutableMultimap.of(),
+              Optional.empty(),
+              Optional.empty(),
+              PicType.PDC);
 
       String objcSourceName = "test.m";
       CxxSource objcSource =
@@ -415,16 +441,18 @@ public class CxxSourceRuleFactoryTest {
                       false));
 
       CxxSourceRuleFactory cxxSourceRuleFactory =
-          CxxSourceRuleFactory.builder()
-              .setProjectFilesystem(PROJECT_FILESYSTEM)
-              .setBaseBuildTarget(target)
-              .setActionGraphBuilder(graphBuilder)
-              .setPathResolver(graphBuilder.getSourcePathResolver())
-              .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
-              .setCxxPlatform(cxxPlatform)
-              .addCxxPreprocessorInput(CxxPreprocessorInput.of())
-              .setPicType(PicType.PDC)
-              .build();
+          CxxSourceRuleFactory.of(
+              PROJECT_FILESYSTEM,
+              target,
+              graphBuilder,
+              graphBuilder.getSourcePathResolver(),
+              CxxPlatformUtils.DEFAULT_CONFIG,
+              cxxPlatform,
+              ImmutableList.of(CxxPreprocessorInput.of()),
+              ImmutableMultimap.of(),
+              Optional.empty(),
+              Optional.empty(),
+              PicType.PDC);
 
       String name = "foo/bar.cpp";
       SourcePath input =
@@ -501,15 +529,18 @@ public class CxxSourceRuleFactoryTest {
       CxxPlatform platform = CxxPlatformUtils.build(new CxxBuckConfig(buckConfig));
 
       CxxSourceRuleFactory cxxSourceRuleFactory =
-          CxxSourceRuleFactory.builder()
-              .setProjectFilesystem(PROJECT_FILESYSTEM)
-              .setBaseBuildTarget(target)
-              .setActionGraphBuilder(graphBuilder)
-              .setPathResolver(graphBuilder.getSourcePathResolver())
-              .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
-              .setCxxPlatform(platform)
-              .setPicType(PicType.PDC)
-              .build();
+          CxxSourceRuleFactory.of(
+              PROJECT_FILESYSTEM,
+              target,
+              graphBuilder,
+              graphBuilder.getSourcePathResolver(),
+              CxxPlatformUtils.DEFAULT_CONFIG,
+              platform,
+              ImmutableList.of(),
+              ImmutableMultimap.of(),
+              Optional.empty(),
+              Optional.empty(),
+              PicType.PDC);
 
       String[] sourceNames = testExampleSourceSets.get(testExampleSourceSet);
       Map<String, CxxSource> sources = new HashMap<>();
@@ -624,18 +655,21 @@ public class CxxSourceRuleFactoryTest {
       CxxPlatform platform = CxxPlatformUtils.build(new CxxBuckConfig(buckConfig));
 
       CxxSourceRuleFactory cxxSourceRuleFactory =
-          CxxSourceRuleFactory.builder()
-              .setProjectFilesystem(PROJECT_FILESYSTEM)
-              .setBaseBuildTarget(target)
-              .setActionGraphBuilder(graphBuilder)
-              .setPathResolver(sourcePathResolverAdapter)
-              .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
-              .setCxxPlatform(platform)
-              .addCxxPreprocessorInput(cxxPreprocessorInput)
-              .setPicType(PicType.PDC)
-              .build();
+          CxxSourceRuleFactory.of(
+              PROJECT_FILESYSTEM,
+              target,
+              graphBuilder,
+              sourcePathResolverAdapter,
+              CxxPlatformUtils.DEFAULT_CONFIG,
+              platform,
+              ImmutableList.of(cxxPreprocessorInput),
+              ImmutableMultimap.of(),
+              Optional.empty(),
+              Optional.empty(),
+              PicType.PDC);
 
-      List<String> perFileFlags = ImmutableList.of("-per-file-flag", "-and-another-per-file-flag");
+      ImmutableList<String> perFileFlags =
+          ImmutableList.of("-per-file-flag", "-and-another-per-file-flag");
       CxxSource cSource = CxxSource.of(sourceType, FakeSourcePath.of(sourceName), perFileFlags);
       CxxPreprocessAndCompile cPreprocess =
           cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(sourceName, cSource);
@@ -671,18 +705,20 @@ public class CxxSourceRuleFactoryTest {
       CxxPlatform platform = CxxPlatformUtils.build(new CxxBuckConfig(buckConfig));
 
       CxxSourceRuleFactory cxxSourceRuleFactory =
-          CxxSourceRuleFactory.builder()
-              .setProjectFilesystem(PROJECT_FILESYSTEM)
-              .setBaseBuildTarget(target)
-              .setActionGraphBuilder(graphBuilder)
-              .setPathResolver(sourcePathResolverAdapter)
-              .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
-              .setCxxPlatform(platform)
-              .setCompilerFlags(CxxFlags.toLanguageFlags(StringArg.from(expectedCompilerFlags)))
-              .setPicType(PicType.PDC)
-              .build();
+          CxxSourceRuleFactory.of(
+              PROJECT_FILESYSTEM,
+              target,
+              graphBuilder,
+              sourcePathResolverAdapter,
+              CxxPlatformUtils.DEFAULT_CONFIG,
+              platform,
+              ImmutableList.of(),
+              CxxFlags.toLanguageFlags(StringArg.from(expectedCompilerFlags)),
+              Optional.empty(),
+              Optional.empty(),
+              PicType.PDC);
 
-      List<String> perFileFlags = ImmutableList.of("-per-file-flag");
+      ImmutableList<String> perFileFlags = ImmutableList.of("-per-file-flag");
       CxxSource source = CxxSource.of(sourceType, FakeSourcePath.of(sourceName), perFileFlags);
       CxxPreprocessAndCompile rule;
       if (source.getType().isPreprocessable()) {
@@ -724,15 +760,18 @@ public class CxxSourceRuleFactoryTest {
       BuildContext context = FakeBuildContext.withSourcePathResolver(sourcePathResolverAdapter);
       BuildTarget target = BuildTargetFactory.newInstance("//:target");
       CxxSourceRuleFactory cxxSourceRuleFactory =
-          CxxSourceRuleFactory.builder()
-              .setProjectFilesystem(PROJECT_FILESYSTEM)
-              .setBaseBuildTarget(target)
-              .setActionGraphBuilder(graphBuilder)
-              .setPathResolver(sourcePathResolverAdapter)
-              .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
-              .setCxxPlatform(CXX_PLATFORM)
-              .setPicType(PicType.PDC)
-              .build();
+          CxxSourceRuleFactory.of(
+              PROJECT_FILESYSTEM,
+              target,
+              graphBuilder,
+              sourcePathResolverAdapter,
+              CxxPlatformUtils.DEFAULT_CONFIG,
+              CXX_PLATFORM,
+              ImmutableList.of(),
+              ImmutableMultimap.of(),
+              Optional.empty(),
+              Optional.empty(),
+              PicType.PDC);
 
       SourcePath input =
           FakeSourcePath.of(

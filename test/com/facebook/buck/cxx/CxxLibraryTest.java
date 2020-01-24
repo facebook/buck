@@ -100,18 +100,14 @@ public class CxxLibraryTest {
     CxxPreprocessorInput expectedPublicCxxPreprocessorInput =
         CxxPreprocessorInput.builder()
             .addIncludes(
-                CxxSymlinkTreeHeaders.builder()
-                    .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
-                    .setNameToPathMap(
-                        ImmutableSortedMap.of(
-                            Paths.get("header.h"),
-                            DefaultBuildTargetSourcePath.of(publicHeaderTarget)))
-                    .setRoot(DefaultBuildTargetSourcePath.of(publicHeaderSymlinkTreeTarget))
-                    .setIncludeRoot(
-                        Either.ofRight(
-                            DefaultBuildTargetSourcePath.of(publicHeaderSymlinkTreeTarget)))
-                    .setSymlinkTreeClass(HeaderSymlinkTree.class.getName())
-                    .build())
+                CxxSymlinkTreeHeaders.of(
+                    CxxPreprocessables.IncludeType.LOCAL,
+                    DefaultBuildTargetSourcePath.of(publicHeaderSymlinkTreeTarget),
+                    Either.ofRight(DefaultBuildTargetSourcePath.of(publicHeaderSymlinkTreeTarget)),
+                    Optional.empty(),
+                    ImmutableSortedMap.of(
+                        Paths.get("header.h"), DefaultBuildTargetSourcePath.of(publicHeaderTarget)),
+                    HeaderSymlinkTree.class.getName()))
             .build();
     assertEquals(
         expectedPublicCxxPreprocessorInput,
@@ -120,18 +116,15 @@ public class CxxLibraryTest {
     CxxPreprocessorInput expectedPrivateCxxPreprocessorInput =
         CxxPreprocessorInput.builder()
             .addIncludes(
-                CxxSymlinkTreeHeaders.builder()
-                    .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
-                    .setRoot(DefaultBuildTargetSourcePath.of(privateHeaderSymlinkTreeTarget))
-                    .setIncludeRoot(
-                        Either.ofRight(
-                            DefaultBuildTargetSourcePath.of(privateHeaderSymlinkTreeTarget)))
-                    .setNameToPathMap(
-                        ImmutableSortedMap.of(
-                            Paths.get("header.h"),
-                            DefaultBuildTargetSourcePath.of(privateHeaderTarget)))
-                    .setSymlinkTreeClass(HeaderSymlinkTree.class.getName())
-                    .build())
+                CxxSymlinkTreeHeaders.of(
+                    CxxPreprocessables.IncludeType.LOCAL,
+                    DefaultBuildTargetSourcePath.of(privateHeaderSymlinkTreeTarget),
+                    Either.ofRight(DefaultBuildTargetSourcePath.of(privateHeaderSymlinkTreeTarget)),
+                    Optional.empty(),
+                    ImmutableSortedMap.of(
+                        Paths.get("header.h"),
+                        DefaultBuildTargetSourcePath.of(privateHeaderTarget)),
+                    HeaderSymlinkTree.class.getName()))
             .build();
     assertEquals(
         expectedPrivateCxxPreprocessorInput,
@@ -202,7 +195,7 @@ public class CxxLibraryTest {
             /* headerOnly */ x -> true,
             (unused1, unused2) -> StringArg.from("-ldl"),
             (unused1, unused2) -> StringArg.from("-lfoobarbaz"),
-            /* linkTargetInput */ (unused1, unused2, unused3) -> NativeLinkableInput.of(),
+            /* linkTargetInput */ (unused1, unused2, unused3, unused4) -> NativeLinkableInput.of(),
             /* supportedPlatformsRegex */ Optional.empty(),
             ImmutableSet.of(frameworkPath),
             ImmutableSet.of(),
@@ -218,7 +211,7 @@ public class CxxLibraryTest {
 
     NativeLinkableInput expectedSharedNativeLinkableInput =
         NativeLinkableInput.of(
-            StringArg.from("-ldl", "-lfoobarbaz"),
+            ImmutableList.copyOf(StringArg.from("-ldl", "-lfoobarbaz")),
             ImmutableSet.of(frameworkPath),
             ImmutableSet.of());
 
@@ -261,7 +254,7 @@ public class CxxLibraryTest {
             /* headerOnly */ x -> true,
             (unused1, unused2) -> StringArg.from("-ldl"),
             (unused1, unused2) -> StringArg.from("-lfoobarbaz"),
-            /* linkTargetInput */ (unused1, unused2, unused3) -> NativeLinkableInput.of(),
+            /* linkTargetInput */ (unused1, unused2, unused3, unused4) -> NativeLinkableInput.of(),
             /* supportedPlatformsRegex */ Optional.empty(),
             ImmutableSet.of(frameworkPath),
             ImmutableSet.of(),

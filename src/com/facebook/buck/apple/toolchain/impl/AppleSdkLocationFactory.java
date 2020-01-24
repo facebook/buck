@@ -17,11 +17,11 @@
 package com.facebook.buck.apple.toolchain.impl;
 
 import com.facebook.buck.apple.AppleConfig;
-import com.facebook.buck.apple.toolchain.AbstractAppleToolchainProvider;
 import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryProvider;
 import com.facebook.buck.apple.toolchain.AppleSdk;
 import com.facebook.buck.apple.toolchain.AppleSdkLocation;
 import com.facebook.buck.apple.toolchain.AppleSdkPaths;
+import com.facebook.buck.apple.toolchain.AppleToolchainProvider;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainFactory;
@@ -40,7 +40,7 @@ public class AppleSdkLocationFactory implements ToolchainFactory<AppleSdkLocatio
       ToolchainCreationContext context,
       TargetConfiguration toolchainTargetConfiguration) {
     if (!toolchainProvider.isToolchainPresent(
-        AbstractAppleToolchainProvider.DEFAULT_NAME, toolchainTargetConfiguration)) {
+        AppleToolchainProvider.DEFAULT_NAME, toolchainTargetConfiguration)) {
       return Optional.empty();
     }
 
@@ -53,11 +53,11 @@ public class AppleSdkLocationFactory implements ToolchainFactory<AppleSdkLocatio
             .map(AppleDeveloperDirectoryProvider::getAppleDeveloperDirectory);
 
     AppleConfig appleConfig = context.getBuckConfig().getView(AppleConfig.class);
-    AbstractAppleToolchainProvider appleToolchainProvider =
+    AppleToolchainProvider appleToolchainProvider =
         toolchainProvider.getByName(
-            AbstractAppleToolchainProvider.DEFAULT_NAME,
+            AppleToolchainProvider.DEFAULT_NAME,
             toolchainTargetConfiguration,
-            AbstractAppleToolchainProvider.class);
+            AppleToolchainProvider.class);
     try {
       ImmutableMap<AppleSdk, AppleSdkPaths> appleSdkPaths =
           AppleSdkDiscovery.discoverAppleSdkPaths(

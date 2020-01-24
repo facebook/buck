@@ -60,6 +60,7 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Comparator;
 import java.util.Optional;
@@ -102,7 +103,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       Optional<Arg> bash,
       Optional<Arg> cmdExe,
       Optional<String> outputFileName,
-      Optional<ImmutableMap<String, ImmutableList<String>>> outputFileNames) {
+      Optional<ImmutableMap<String, ImmutableSet<String>>> outputFileNames) {
     return new Genrule(
         buildTarget,
         projectFilesystem,

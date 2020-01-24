@@ -6,10 +6,6 @@ load(
 java_library_with_plugins(
     name = "impl",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//src/com/facebook/buck/android/toolchain/ndk:ndk",
-        "//src/com/facebook/buck/core/toolchain:toolchain",
-    ],
     tests = [
         "//test/com/facebook/buck/android/toolchain/ndk/impl:impl",
     ],
@@ -30,5 +26,9 @@ java_library_with_plugins(
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/environment:platform",
         "//third-party/java/infer-annotations:infer-annotations",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/android/toolchain/ndk:ndk",
+        "//src/com/facebook/buck/core/toolchain:toolchain",
     ],
 )

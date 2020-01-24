@@ -28,7 +28,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.base.Preconditions;
@@ -76,15 +76,13 @@ public class PrebuiltGoLibraryDescription
       SourcePath output = graphBuilder.requireRule(buildTarget).getSourcePathToOutput();
       return Optional.of(
           metadataClass.cast(
-              GoLinkable.builder()
-                  .setGoLinkInput(
-                      ImmutableMap.of(
-                          args.getPackageName()
-                              .map(Paths::get)
-                              .orElse(goBuckConfig.getDefaultPackageName(buildTarget)),
-                          output))
-                  .setExportedDeps(args.getExportedDeps())
-                  .build()));
+              GoLinkable.of(
+                  ImmutableMap.of(
+                      args.getPackageName()
+                          .map(Paths::get)
+                          .orElse(goBuckConfig.getDefaultPackageName(buildTarget)),
+                      output),
+                  args.getExportedDeps())));
     } else if (buildTarget.getFlavors().contains(GoDescriptors.TRANSITIVE_LINKABLES_FLAVOR)) {
       Preconditions.checkState(platform.isPresent());
 
@@ -123,8 +121,7 @@ public class PrebuiltGoLibraryDescription
         args.getExportedDeps());
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractPrebuiltGoLibraryDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     SourcePath getLibrary();
 

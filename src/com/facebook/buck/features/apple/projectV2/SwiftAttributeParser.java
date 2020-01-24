@@ -61,7 +61,8 @@ public class SwiftAttributeParser {
   /** Parse Swift specific attributes for the {@code targetNode}. */
   public SwiftAttributes parseSwiftAttributes(
       TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode) {
-    SwiftAttributes.Builder builder = SwiftAttributes.builder().setTargetNode(targetNode);
+    ImmutableSwiftAttributes.Builder builder =
+        ImmutableSwiftAttributes.builder().setTargetNode(targetNode);
 
     Optional<String> swiftVersion = getSwiftVersionForTargetNode(targetNode);
     builder.setSwiftVersion(swiftVersion);

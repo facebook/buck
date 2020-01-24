@@ -140,7 +140,10 @@ public abstract class IsolatedBuildableBuilder {
     // Root filesystemCell doesn't require embedded buck-out info.
     ProjectFilesystem filesystem =
         projectFilesystemFactory.createProjectFilesystem(
-            CanonicalCellName.rootCell(), canonicalProjectRoot, config);
+            CanonicalCellName.rootCell(),
+            canonicalProjectRoot,
+            config,
+            BuckPaths.getBuckOutIncludeTargetConfigHashFromRootCellConfig(config));
 
     Architecture architecture = Architecture.detect();
     Platform platform = Platform.detect();
@@ -196,55 +199,49 @@ public abstract class IsolatedBuildableBuilder {
     this.eventBus = createEventBus(console);
 
     this.executionContext =
-        ExecutionContext.of(
-            console,
-            eventBus,
-            platform,
-            clientEnvironment,
-            javaPackageFinder,
-            ImmutableMap.of(),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.empty(),
-            cellPathResolver,
-            canonicalProjectRoot,
-            processExecutor,
-            projectFilesystemFactory);
+        ExecutionContext.builder()
+            .setConsole(console)
+            .setBuckEventBus(eventBus)
+            .setPlatform(platform)
+            .setEnvironment(clientEnvironment)
+            .setJavaPackageFinder(javaPackageFinder)
+            .setExecutors(ImmutableMap.of())
+            .setCellPathResolver(cellPathResolver)
+            .setBuildCellRootPath(canonicalProjectRoot)
+            .setProcessExecutor(processExecutor)
+            .setProjectFilesystemFactory(projectFilesystemFactory)
+            .build();
 
     this.buildContext =
-        BuildContext.builder()
-            .setSourcePathResolver(
-                new SourcePathResolverAdapter(
-                    new AbstractSourcePathResolver() {
-                      @Override
-                      protected ProjectFilesystem getBuildTargetSourcePathFilesystem(
-                          BuildTargetSourcePath sourcePath) {
-                        Preconditions.checkState(
-                            sourcePath instanceof ExplicitBuildTargetSourcePath);
-                        BuildTarget target = sourcePath.getTarget();
-                        return filesystemFunction.apply(target.getCell().getLegacyName());
-                      }
+        BuildContext.of(
+            new SourcePathResolverAdapter(
+                new AbstractSourcePathResolver() {
+                  @Override
+                  protected ProjectFilesystem getBuildTargetSourcePathFilesystem(
+                      BuildTargetSourcePath sourcePath) {
+                    Preconditions.checkState(sourcePath instanceof ExplicitBuildTargetSourcePath);
+                    BuildTarget target = sourcePath.getTarget();
+                    return filesystemFunction.apply(target.getCell().getLegacyName());
+                  }
 
-                      @Override
-                      protected ImmutableSortedSet<SourcePath> resolveDefaultBuildTargetSourcePath(
-                          DefaultBuildTargetSourcePath targetSourcePath) {
-                        throw new IllegalStateException(
-                            "Cannot resolve DefaultBuildTargetSourcePaths when running with an isolated strategy. "
-                                + "These should have been resolved to the underlying ExplicitBuildTargetSourcePath already.");
-                      }
+                  @Override
+                  protected ImmutableSortedSet<SourcePath> resolveDefaultBuildTargetSourcePath(
+                      DefaultBuildTargetSourcePath targetSourcePath) {
+                    throw new IllegalStateException(
+                        "Cannot resolve DefaultBuildTargetSourcePaths when running with an isolated strategy. "
+                            + "These should have been resolved to the underlying ExplicitBuildTargetSourcePath already.");
+                  }
 
-                      @Override
-                      public String getSourcePathName(BuildTarget target, SourcePath sourcePath) {
-                        throw new IllegalStateException(
-                            "Cannot resolve SourcePath names during build when running with an isolated strategy.");
-                      }
-                    }))
-            .setBuildCellRootPath(canonicalProjectRoot)
-            .setEventBus(eventBus)
-            .setJavaPackageFinder(javaPackageFinder)
-            .setShouldDeleteTemporaries(
-                buckConfig.getView(BuildBuckConfig.class).getShouldDeleteTemporaries())
-            .build();
+                  @Override
+                  public String getSourcePathName(BuildTarget target, SourcePath sourcePath) {
+                    throw new IllegalStateException(
+                        "Cannot resolve SourcePath names during build when running with an isolated strategy.");
+                  }
+                }),
+            canonicalProjectRoot,
+            javaPackageFinder,
+            eventBus,
+            buckConfig.getView(BuildBuckConfig.class).getShouldDeleteTemporaries());
 
     this.toolchainProviderFunction =
         cellName ->

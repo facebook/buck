@@ -86,6 +86,8 @@ public class SkylarkProjectBuildFileParserTestUtils {
         .setBuildFileName("BUCK")
         .setRawConfig(ImmutableMap.of("dummy_section", ImmutableMap.of("dummy_key", "dummy_value")))
         .setDescriptions(knownRuleTypesProvider.getNativeRuleTypes(cell).getDescriptions())
+        .setPerFeatureProviders(
+            knownRuleTypesProvider.getNativeRuleTypes(cell).getPerFeatureProviders())
         .setBuildFileImportWhitelist(ImmutableList.of())
         .setPythonInterpreter("skylark");
   }
@@ -100,15 +102,15 @@ public class SkylarkProjectBuildFileParserTestUtils {
         options,
         BuckEventBusForTests.newInstance(),
         skylarkFilesystem,
-        BuckGlobals.builder()
-            .setSkylarkFunctionModule(SkylarkBuildModule.BUILD_MODULE)
-            .setRuleFunctionFactory(new RuleFunctionFactory(new DefaultTypeCoercerFactory()))
-            .setDescriptions(options.getDescriptions())
-            .setDisableImplicitNativeRules(options.getDisableImplicitNativeRules())
-            .setEnableUserDefinedRules(options.getEnableUserDefinedRules())
-            .setLabelCache(LabelCache.newLabelCache())
-            .setKnownUserDefinedRuleTypes(knownRuleTypesProvider.getUserDefinedRuleTypes(cell))
-            .build(),
+        BuckGlobals.of(
+            SkylarkBuildModule.BUILD_MODULE,
+            options.getDescriptions(),
+            options.getUserDefinedRulesState(),
+            options.getImplicitNativeRulesState(),
+            new RuleFunctionFactory(new DefaultTypeCoercerFactory()),
+            LabelCache.newLabelCache(),
+            knownRuleTypesProvider.getUserDefinedRuleTypes(cell),
+            options.getPerFeatureProviders()),
         eventHandler,
         NativeGlobber::create);
   }

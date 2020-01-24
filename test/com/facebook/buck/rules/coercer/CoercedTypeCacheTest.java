@@ -21,7 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.description.arg.Hint;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.util.Optional;
@@ -155,8 +155,7 @@ public class CoercedTypeCacheTest {
     String getConsistentOverriddenInterfaceNonInput();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractDto implements DtoInterface {
     abstract Optional<String> getOptional();
 

@@ -36,8 +36,6 @@ import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
@@ -89,7 +87,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
   @Test
   public void sanitizeWorkingDirectory() throws IOException {
     BuildTarget target = BuildTargetFactory.newInstance("//:simple#default,static");
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
     Path lib = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s/libsimple.a"));
     String contents = Files.asByteSource(lib.toFile()).asCharSource(Charsets.ISO_8859_1).read();
@@ -97,7 +95,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
     // ...
     ProjectWorkspace longPwdWorkspace = setupWorkspace(tmp_long_pwd);
-    ProjectFilesystem longPwdFilesystem = new FakeProjectFilesystem();
+    ProjectFilesystem longPwdFilesystem = workspace.getProjectFileSystem();
     longPwdWorkspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
     Path longPwdLib =
         longPwdWorkspace.getPath(
@@ -110,7 +108,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
   @Test
   public void sanitizeWorkingDirectoryWhenBuildingAssembly() throws IOException {
     BuildTarget target = BuildTargetFactory.newInstance("//:simple_assembly#default,static");
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     ProcessResult processResult = workspace.runBuckBuild(target.getFullyQualifiedName());
     processResult.assertSuccess();
     Path lib =
@@ -124,8 +122,6 @@ public class CxxPreprocessAndCompileIntegrationTest {
   public void sanitizeSymlinkedWorkingDirectory() throws IOException {
     TemporaryFolder folder = new TemporaryFolder();
     folder.create();
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(folder.getRoot().toPath());
 
     // Setup up a symlink to our working directory.
     Path symlinkedRoot = folder.getRoot().toPath().resolve("symlinked-root");
@@ -144,7 +140,10 @@ public class CxxPreprocessAndCompileIntegrationTest {
         .assertSuccess();
 
     // Verify that we still sanitized this path correctly.
-    Path lib = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s/libsimple.a"));
+    Path lib =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                workspace.getProjectFileSystem(), target, "%s/libsimple.a"));
     String contents = Files.asByteSource(lib.toFile()).asCharSource(Charsets.ISO_8859_1).read();
     assertFalse(lib.toString(), contents.contains(tmp.getRoot().toString()));
     assertFalse(lib.toString(), contents.contains(symlinkedRoot.toString()));

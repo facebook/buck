@@ -105,9 +105,6 @@ public class ParallelActionGraphFactory implements ActionGraphFactoryDelegate {
     MoreFutures.getUncheckedInterruptibly(Futures.allAsList(futures.values()));
     LOG.debug("end target graph walk");
 
-    return ActionGraphAndBuilder.builder()
-        .setActionGraph(new ActionGraph(graphBuilder.getBuildRules()))
-        .setActionGraphBuilder(graphBuilder)
-        .build();
+    return ActionGraphAndBuilder.of(new ActionGraph(graphBuilder.getBuildRules()), graphBuilder);
   }
 }

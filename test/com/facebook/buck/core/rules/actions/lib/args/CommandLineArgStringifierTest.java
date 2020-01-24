@@ -21,11 +21,20 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
+import com.facebook.buck.core.artifact.OutputArtifact;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildPaths;
+import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
+import com.facebook.buck.core.rules.actions.lib.WriteAction;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
+import com.google.devtools.build.lib.syntax.EvalException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Test;
 
@@ -78,5 +87,47 @@ public class CommandLineArgStringifierTest {
         filesystem.resolve(Paths.get("foo")).toAbsolutePath().toString(),
         CommandLineArgStringifier.asString(
             new ArtifactFilesystem(filesystem), true, shortArtifact));
+  }
+
+  @Test
+  public void convertsOutputArtifactToString() throws EvalException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    BuildTarget target = BuildTargetFactory.newInstance("//:some_rule");
+    ActionRegistryForTests registry = new ActionRegistryForTests(target, filesystem);
+
+    Artifact artifact = registry.declareArtifact(Paths.get("foo", "bar.cpp"));
+    Artifact shortArtifact = registry.declareArtifact(Paths.get("foo"));
+    OutputArtifact artifactOutput = artifact.asOutputArtifact();
+    OutputArtifact shortArtifactOutput = shortArtifact.asOutputArtifact();
+
+    new WriteAction(
+        registry, ImmutableSortedSet.of(), ImmutableSortedSet.of(artifactOutput), "out", false);
+    new WriteAction(
+        registry,
+        ImmutableSortedSet.of(),
+        ImmutableSortedSet.of(shortArtifactOutput),
+        "out",
+        false);
+
+    Path expectedPath =
+        BuildPaths.getGenDir(filesystem, target).resolve(Paths.get("foo", "bar.cpp"));
+    Path expectedShortPath = BuildPaths.getGenDir(filesystem, target).resolve(Paths.get("foo"));
+
+    assertEquals(
+        expectedPath.toString(),
+        CommandLineArgStringifier.asString(
+            new ArtifactFilesystem(filesystem), false, artifactOutput));
+    assertEquals(
+        expectedShortPath.toString(),
+        CommandLineArgStringifier.asString(
+            new ArtifactFilesystem(filesystem), false, shortArtifactOutput));
+    assertEquals(
+        filesystem.resolve(expectedPath).toAbsolutePath().toString(),
+        CommandLineArgStringifier.asString(
+            new ArtifactFilesystem(filesystem), true, artifactOutput));
+    assertEquals(
+        filesystem.resolve(expectedShortPath).toAbsolutePath().toString(),
+        CommandLineArgStringifier.asString(
+            new ArtifactFilesystem(filesystem), true, shortArtifactOutput));
   }
 }

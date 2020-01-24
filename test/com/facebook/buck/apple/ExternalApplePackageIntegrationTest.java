@@ -21,6 +21,8 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -45,7 +47,12 @@ public class ExternalApplePackageIntegrationTest {
     workspace.setUp();
     workspace.runBuckBuild("//:FooPackage#iphonesimulator-x86_64").assertSuccess();
     assertThat(
-        workspace.getFileContents("buck-out/gen/FooPackage#iphonesimulator-x86_64/FooPackage.omg"),
+        workspace.getFileContents(
+            BuildTargetPaths.getGenPath(
+                    workspace.getProjectFileSystem(),
+                    BuildTargetFactory.newInstance("//:FooPackage#iphonesimulator-x86_64"),
+                    "%s")
+                .resolve("FooPackage.omg")),
         matchesPattern("I AM A BUNDLE FROM .*/iPhoneSimulator\\.sdk .*/FooBundle.app\n"));
   }
 
@@ -58,7 +65,12 @@ public class ExternalApplePackageIntegrationTest {
         .runBuckBuild("--config=cxx.default_platform=iphonesimulator-x86_64", "//:FooPackage")
         .assertSuccess();
     assertThat(
-        workspace.getFileContents("buck-out/gen/FooPackage/FooPackage.omg"),
+        workspace.getFileContents(
+            BuildTargetPaths.getGenPath(
+                    workspace.getProjectFileSystem(),
+                    BuildTargetFactory.newInstance("//:FooPackage"),
+                    "%s")
+                .resolve("FooPackage.omg")),
         matchesPattern("I AM A BUNDLE FROM .*/iPhoneSimulator\\.sdk .*/FooBundle.app\n"));
   }
 }

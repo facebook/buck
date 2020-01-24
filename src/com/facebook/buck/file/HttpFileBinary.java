@@ -17,6 +17,7 @@
 package com.facebook.buck.file;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -45,7 +46,7 @@ public class HttpFileBinary extends HttpFile implements BinaryBuildRule {
   }
 
   @Override
-  public Tool getExecutableCommand() {
+  public Tool getExecutableCommand(OutputLabel outputLabel) {
     return new CommandTool.Builder().addArg(SourcePathArg.of(getSourcePathToOutput())).build();
   }
 }

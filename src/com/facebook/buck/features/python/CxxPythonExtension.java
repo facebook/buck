@@ -56,5 +56,8 @@ public abstract class CxxPythonExtension extends NoopBuildRuleWithDeclaredAndExt
   }
 
   public abstract NativeLinkTarget getNativeLinkTarget(
-      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);
+      PythonPlatform pythonPlatform,
+      CxxPlatform cxxPlatform,
+      ActionGraphBuilder graphBuilder,
+      boolean includePrivateLinkerFlags);
 }

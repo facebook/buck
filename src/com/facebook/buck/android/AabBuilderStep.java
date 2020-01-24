@@ -127,6 +127,7 @@ public class AabBuilderStep implements Step {
     BuildBundleCommand.Builder bundleBuilder =
         BuildBundleCommand.builder()
             .setOutputPath(filesystem.getPathForRelativePath(pathToOutputAabFile))
+            .setOverwriteOutput(true)
             .setModulesPaths(getModulesPaths());
 
     if (pathToBundleConfigFile.isPresent()) {
@@ -503,6 +504,8 @@ public class AabBuilderStep implements Step {
             .add("build-bundle")
             .add("--output")
             .add("\"" + filesystem.getPathForRelativePath(pathToOutputAabFile).toString() + "\"")
+            .add("--overwrite")
+            .add("true")
             .add("--modules")
             .add("\"" + Joiner.on(",").join(getModulesPaths()) + "\"");
 

@@ -32,7 +32,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
@@ -40,6 +40,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.features.go.GoListStep.ListType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.base.Preconditions;
@@ -109,15 +110,13 @@ public class CgoLibraryDescription
       SourcePath output = graphBuilder.requireRule(buildTarget).getSourcePathToOutput();
       return Optional.of(
           metadataClass.cast(
-              GoLinkable.builder()
-                  .setGoLinkInput(
-                      ImmutableMap.of(
-                          args.getPackageName()
-                              .map(Paths::get)
-                              .orElse(goBuckConfig.getDefaultPackageName(buildTarget)),
-                          output))
-                  .setExportedDeps(args.getExportedDeps())
-                  .build()));
+              GoLinkable.of(
+                  ImmutableMap.of(
+                      args.getPackageName()
+                          .map(Paths::get)
+                          .orElse(goBuckConfig.getDefaultPackageName(buildTarget)),
+                      output),
+                  args.getExportedDeps())));
     } else if (buildTarget.getFlavors().contains(GoDescriptors.TRANSITIVE_LINKABLES_FLAVOR)) {
       Preconditions.checkState(platform.isPresent());
 
@@ -223,8 +222,7 @@ public class CgoLibraryDescription
                         buildTarget.getTargetConfiguration(), platform.getCxxPlatform())));
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable(copy = true)
+  @RuleArg
   interface AbstractCgoLibraryDescriptionArg extends CxxBinaryDescription.CommonArg {
     ImmutableList<String> getCgoCompilerFlags();
 
@@ -245,6 +243,14 @@ public class CgoLibraryDescription
     default ImmutableList<StringWithMacros> getCompilerFlags() {
       // used for compilers other than gcc (due to __gcc_struct__)
       return wrapFlags(ImmutableList.of("-Wno-unknown-attributes"));
+    }
+
+    @Override
+    default CgoLibraryDescriptionArg withDepsQuery(Query query) {
+      if (getDepsQuery().equals(Optional.of(query))) {
+        return (CgoLibraryDescriptionArg) this;
+      }
+      return CgoLibraryDescriptionArg.builder().from(this).setDepsQuery(query).build();
     }
   }
 

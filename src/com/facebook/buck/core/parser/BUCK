@@ -3,9 +3,6 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 java_immutables_library(
     name = "parser",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//src/com/facebook/buck/core/graph/transformation:transformation",
-    ],
     tests = [
         "//test/com/facebook/buck/core/parser:parser",
     ],
@@ -20,5 +17,8 @@ java_immutables_library(
         "//src/com/facebook/buck/io/watchman:watchman",
         "//src/com/facebook/buck/skylark/io/impl:impl",
         "//third-party/java/guava:guava",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/graph/transformation:transformation",
     ],
 )

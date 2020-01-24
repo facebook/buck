@@ -4,4 +4,4 @@
 
 [parser]
   default_build_file_syntax = SKYLARK
-  enable_user_defined_rules = true
+  user_defined_rules = enabled

@@ -21,14 +21,13 @@ import com.facebook.buck.core.description.RuleDescription;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
+import com.facebook.buck.core.rules.actions.ActionExecutionResult;
 import com.facebook.buck.core.rules.actions.FakeAction;
-import com.facebook.buck.core.rules.actions.ImmutableActionExecutionFailure;
-import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.collect.impl.TestProviderInfoCollectionImpl;
 import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -38,7 +37,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Paths;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 public class FakeRuleRuleDescription implements RuleDescription<FakeRuleDescriptionArg> {
 
@@ -57,10 +55,10 @@ public class FakeRuleRuleDescription implements RuleDescription<FakeRuleDescript
               fileout.write("testcontent".getBytes(Charsets.UTF_8));
             }
           } catch (IOException e) {
-            return ImmutableActionExecutionFailure.of(
+            return ActionExecutionResult.failure(
                 Optional.empty(), Optional.empty(), ImmutableList.of(), Optional.of(e));
           }
-          return ImmutableActionExecutionSuccess.of(
+          return ActionExecutionResult.success(
               Optional.empty(), Optional.empty(), ImmutableList.of());
         };
 
@@ -71,7 +69,7 @@ public class FakeRuleRuleDescription implements RuleDescription<FakeRuleDescript
         ImmutableSortedSet.of(artifact),
         actionExecution);
     return TestProviderInfoCollectionImpl.builder()
-        .build(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of()));
+        .build(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of(artifact)));
   }
 
   @Override
@@ -79,7 +77,6 @@ public class FakeRuleRuleDescription implements RuleDescription<FakeRuleDescript
     return FakeRuleDescriptionArg.class;
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractFakeRuleDescriptionArg implements BuildRuleArg {}
 }

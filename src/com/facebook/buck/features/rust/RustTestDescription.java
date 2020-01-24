@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -32,7 +33,7 @@ import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.tool.BinaryWrapperRule;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.features.rust.RustBinaryDescription.Type;
@@ -138,7 +139,7 @@ public class RustTestDescription
                         allDeps.get(graphBuilder, rustPlatform.getCxxPlatform()),
                         args.getNamedDeps()));
 
-    Tool testExe = testExeBuild.getExecutableCommand();
+    Tool testExe = testExeBuild.getExecutableCommand(OutputLabel.defaultLabel());
 
     BuildRuleParams testParams =
         params.copyAppendingExtraDeps(BuildableSupport.getDepsCollection(testExe, graphBuilder));
@@ -178,8 +179,7 @@ public class RustTestDescription
         RustToolchain.DEFAULT_NAME, toolchainTargetConfiguration, RustToolchain.class);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractRustTestDescriptionArg extends RustCommonArgs, HasVersionUniverse {
     ImmutableSet<String> getContacts();
 

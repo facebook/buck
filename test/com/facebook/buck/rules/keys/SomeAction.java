@@ -17,11 +17,12 @@
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.artifact.OutputArtifact;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.actions.AbstractAction;
 import com.facebook.buck.core.rules.actions.ActionExecutionContext;
 import com.facebook.buck.core.rules.actions.ActionExecutionResult;
 import com.facebook.buck.core.rules.actions.ActionRegistry;
-import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
@@ -29,11 +30,11 @@ import java.util.Optional;
 /** Just a Fake do nothing Action for rulekey tests */
 class SomeAction extends AbstractAction {
 
-  private final int i;
-  private final String a;
+  @AddToRuleKey private final int i;
+  @AddToRuleKey private final String a;
 
   protected SomeAction(ActionRegistry actionRegistry, int i, String a) {
-    super(actionRegistry, ImmutableSortedSet.of(), ImmutableSortedSet.of());
+    super(actionRegistry, ImmutableSortedSet.of(), ImmutableSortedSet.of(), "some");
     this.i = i;
     this.a = a;
   }
@@ -41,23 +42,17 @@ class SomeAction extends AbstractAction {
   protected SomeAction(
       ActionRegistry actionRegistry,
       ImmutableSortedSet<Artifact> inputs,
-      ImmutableSortedSet<Artifact> outputs,
+      ImmutableSortedSet<OutputArtifact> outputs,
       int i,
       String a) {
-    super(actionRegistry, inputs, outputs);
+    super(actionRegistry, inputs, outputs, "some");
     this.i = i;
     this.a = a;
   }
 
   @Override
-  public String getShortName() {
-    return "some";
-  }
-
-  @Override
   public ActionExecutionResult execute(ActionExecutionContext executionContext) {
-    return ImmutableActionExecutionSuccess.of(
-        Optional.empty(), Optional.empty(), ImmutableList.of());
+    return ActionExecutionResult.success(Optional.empty(), Optional.empty(), ImmutableList.of());
   }
 
   @Override

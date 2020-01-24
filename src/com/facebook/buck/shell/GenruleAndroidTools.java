@@ -28,7 +28,6 @@ import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import java.nio.file.Path;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /**
  * Immutable class for holding Android paths and tools, for use in {@link GenruleBuildable}.
@@ -43,9 +42,8 @@ import org.immutables.value.Value;
  * in a {@link com.facebook.buck.rules.modern.Buildable} must implement AddsToRuleKey so that a
  * serializer can be derived.
  */
-@Value.Immutable(prehash = false, builder = false, copy = false)
 @BuckStyleValue
-abstract class GenruleAndroidTools implements AddsToRuleKey {
+public abstract class GenruleAndroidTools implements AddsToRuleKey {
   public abstract Path getAndroidSdkLocation();
 
   public abstract Path getAndroidPathToDx();

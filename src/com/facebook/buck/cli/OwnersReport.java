@@ -206,8 +206,9 @@ final class OwnersReport {
     private ImmutableSet<Path> getAllBasePathsForPath(
         BuildFileTree buildFileTree, Path cellRelativePath) {
       if (rootCell
-          .getBuckConfigView(ParserConfig.class)
-          .isEnforcingBuckPackageBoundaries(cellRelativePath)) {
+              .getBuckConfigView(ParserConfig.class)
+              .getPackageBoundaryEnforcementPolicy(cellRelativePath)
+          == ParserConfig.PackageBoundaryEnforcement.ENFORCE) {
         return buildFileTree
             .getBasePathOfAncestorTarget(cellRelativePath)
             .map(ImmutableSet::of)

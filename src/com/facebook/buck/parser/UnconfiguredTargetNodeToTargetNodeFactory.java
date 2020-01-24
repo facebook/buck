@@ -33,7 +33,6 @@ import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectorListResolver;
-import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.SimplePerfEvent.Scope;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
@@ -91,7 +90,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
       BuildTarget target,
       DependencyStack dependencyStack,
       UnconfiguredTargetNode unconfiguredTargetNode,
-      Function<PerfEventId, Scope> perfEventScope) {
+      Function<SimplePerfEvent.PerfEventId, Scope> perfEventScope) {
 
     KnownRuleTypes knownRuleTypes = knownRuleTypesProvider.get(cell);
     RuleType ruleType = unconfiguredTargetNode.getRuleType();
@@ -105,7 +104,8 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
     ImmutableSortedSet.Builder<BuildTarget> configurationDeps = ImmutableSortedSet.naturalOrder();
     Object constructorArg;
     try (SimplePerfEvent.Scope scope =
-        perfEventScope.apply(PerfEventId.of("MarshalledConstructorArg.convertRawAttributes"))) {
+        perfEventScope.apply(
+            SimplePerfEvent.PerfEventId.of("MarshalledConstructorArg.convertRawAttributes"))) {
       DataTransferObjectDescriptor<? extends ConstructorArg> builder =
           knownRuleTypes.getConstructorArgDescriptor(
               typeCoercerFactory, ruleType, description.getConstructorArgType());

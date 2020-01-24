@@ -32,6 +32,7 @@ import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Printer;
 import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.vfs.PathFragment;
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -78,6 +79,22 @@ public class UserDefinedProviderTest {
 
     assertTrue(provider.isImmutable());
     assertTrue(provider.isExported());
+  }
+
+  @Test
+  public void mutabilityOfInfoIsCorrect()
+      throws InterruptedException, EvalException, LabelSyntaxException {
+    UserDefinedProvider provider =
+        new UserDefinedProvider(location, new String[] {"foo", "bar", "baz"});
+    provider.export(Label.parseAbsolute("//package:file.bzl", ImmutableMap.of()), "FooInfo");
+
+    try (TestMutableEnv env = new TestMutableEnv()) {
+      UserDefinedProviderInfo providerInfo =
+          (UserDefinedProviderInfo)
+              provider.callWithArgArray(
+                  new Object[] {"val_1", "val_2", "val_3"}, null, env.getEnv(), Location.BUILTIN);
+      Assert.assertTrue(providerInfo.isImmutable());
+    }
   }
 
   @Test

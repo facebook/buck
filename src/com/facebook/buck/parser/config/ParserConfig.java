@@ -27,6 +27,8 @@ import com.facebook.buck.io.watchman.WatchmanWatcher;
 import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.parser.exceptions.MissingBuildFileException;
 import com.facebook.buck.parser.implicit.ImplicitInclude;
+import com.facebook.buck.parser.options.ImplicitNativeRulesState;
+import com.facebook.buck.parser.options.UserDefinedRulesState;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -273,8 +275,9 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
    *     only accessible in extension files under the 'native' object
    */
   @Value.Lazy
-  public boolean getDisableImplicitNativeRules() {
-    return getDelegate().getBooleanValue("parser", "disable_implicit_native_rules", false);
+  public ImplicitNativeRulesState getImplicitNativeRulesState() {
+    return ImplicitNativeRulesState.of(
+        !getDelegate().getBooleanValue("parser", "disable_implicit_native_rules", false));
   }
 
   /** @return whether Buck should warn about deprecated syntax. */
@@ -389,24 +392,44 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
   }
 
   /**
+   * @returns {@code true} if details about paths that violate package boundaries, but were marked
+   *     as excepted paths (See {@link #getBuckPackageBoundaryExceptions()})), should be written to
+   *     the log.
+   */
+  @Value.Lazy
+  public boolean getLogPackageBoundaryExceptionViolations() {
+    return getDelegate()
+        .getBooleanValue("project", "log_package_boundary_exception_violations", false);
+  }
+
+  /** How package boundary violation should be enforced */
+  public enum PackageBoundaryEnforcement {
+    DISABLED,
+    WARN,
+    ENFORCE,
+  }
+
+  /**
    * Whether the cell is enforcing buck package boundaries for the package at the passed path.
    *
    * @param path Path of package (or file in a package) relative to the cell root.
+   * @return How to enforce buck package boundaries for {@code path}
    */
-  public boolean isEnforcingBuckPackageBoundaries(Path path) {
+  public PackageBoundaryEnforcement getPackageBoundaryEnforcementPolicy(Path path) {
     if (!getEnforceBuckPackageBoundary()) {
-      return false;
+      return PackageBoundaryEnforcement.DISABLED;
     }
 
     Path absolutePath = getDelegate().getFilesystem().resolve(path);
-
     ImmutableList<Path> exceptions = getBuckPackageBoundaryExceptions();
     for (Path exception : exceptions) {
       if (absolutePath.startsWith(exception)) {
-        return false;
+        return getLogPackageBoundaryExceptionViolations()
+            ? PackageBoundaryEnforcement.WARN
+            : PackageBoundaryEnforcement.DISABLED;
       }
     }
-    return true;
+    return PackageBoundaryEnforcement.ENFORCE;
   }
 
   /**
@@ -415,8 +438,10 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
    *     time.
    */
   @Value.Lazy
-  public boolean getEnableUserDefinedRules() {
-    return getDelegate().getBooleanValue("parser", "enable_user_defined_rules", false);
+  public UserDefinedRulesState getUserDefinedRulesState() {
+    return getDelegate()
+        .getEnum("parser", "user_defined_rules", UserDefinedRulesState.class)
+        .orElse(UserDefinedRulesState.DISABLED);
   }
 
   /** @return Whether to enable parsing of PACKAGE files and apply their attributes to nodes. */

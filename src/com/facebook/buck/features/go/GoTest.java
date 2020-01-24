@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -129,7 +130,8 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
     ImmutableList.Builder<String> args = ImmutableList.builder();
-    args.addAll(testMain.getExecutableCommand().getCommandPrefix(resolver));
+    args.addAll(
+        testMain.getExecutableCommand(OutputLabel.defaultLabel()).getCommandPrefix(resolver));
     args.add("-test.v");
     if (coverageMode != Mode.NONE) {
       Path coverProfile =
@@ -161,7 +163,9 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 getPathToTestWorkingDirectory(),
                 args.build(),
                 Stream.of(
-                        testMain.getExecutableCommand().getEnvironment(resolver),
+                        testMain
+                            .getExecutableCommand(OutputLabel.defaultLabel())
+                            .getEnvironment(resolver),
                         Arg.stringify(env, resolver))
                     .flatMap(m -> m.entrySet().stream())
                     .collect(ImmutableMap.toImmutableMap(Entry::getKey, Entry::getValue)),
@@ -378,16 +382,20 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .setTarget(getBuildTarget())
         .setType("go")
         .putAllEnv(
-            testMain.getExecutableCommand().getEnvironment(buildContext.getSourcePathResolver()))
+            testMain
+                .getExecutableCommand(OutputLabel.defaultLabel())
+                .getEnvironment(buildContext.getSourcePathResolver()))
         .addAllCommand(
-            testMain.getExecutableCommand().getCommandPrefix(buildContext.getSourcePathResolver()))
+            testMain
+                .getExecutableCommand(OutputLabel.defaultLabel())
+                .getCommandPrefix(buildContext.getSourcePathResolver()))
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
         .build();
   }
 
   @Override
-  public Tool getExecutableCommand() {
-    return testMain.getExecutableCommand();
+  public Tool getExecutableCommand(OutputLabel outputLabel) {
+    return testMain.getExecutableCommand(OutputLabel.defaultLabel());
   }
 }

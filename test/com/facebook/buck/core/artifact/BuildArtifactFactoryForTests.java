@@ -44,6 +44,6 @@ public class BuildArtifactFactoryForTests {
   public BuildArtifact createBuildArtifact(Path output, Location location) {
     ArtifactImpl declared = ArtifactImpl.of(target, genDir, basePath, output, location);
     return declared.materialize(
-        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID() {}));
+        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a")));
   }
 }

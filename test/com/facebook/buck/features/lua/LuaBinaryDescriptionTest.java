@@ -270,7 +270,7 @@ public class LuaBinaryDescriptionTest {
                     new ToolchainProviderBuilder()
                         .withToolchain(
                             LuaPlatformsProvider.DEFAULT_NAME,
-                            LuaPlatformsProvider.of(
+                            ImmutableLuaPlatformsProvider.of(
                                 LuaTestUtils.DEFAULT_PLATFORM, LuaTestUtils.DEFAULT_PLATFORMS))
                         .withToolchain(
                             PythonPlatformsProvider.DEFAULT_NAME,

@@ -19,10 +19,6 @@ package com.facebook.buck.rules.keys;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
-import com.facebook.buck.core.artifact.BuildArtifact;
-import com.facebook.buck.core.artifact.BuildTargetSourcePathToArtifactConverter;
-import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
-import com.facebook.buck.core.artifact.SourceArtifact;
 import com.facebook.buck.core.build.action.BuildEngineAction;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -33,14 +29,13 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.actions.Action;
+import com.facebook.buck.core.rules.actions.ActionExecutionResult;
 import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
 import com.facebook.buck.core.rules.actions.FakeAction;
-import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.facebook.buck.core.rules.resolver.impl.FakeActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
-import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -64,7 +59,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.junit.Test;
 
@@ -90,8 +87,7 @@ public class RuleKeyBuilderTest {
   static {
     FakeAction.FakeActionExecuteLambda executeLambda =
         (ignored, ignored1, ignored2, ignored3) ->
-            ImmutableActionExecutionSuccess.of(
-                Optional.empty(), Optional.empty(), ImmutableList.of());
+            ActionExecutionResult.success(Optional.empty(), Optional.empty(), ImmutableList.of());
 
     ActionRegistryForTests actionRegistry = new ActionRegistryForTests(TARGET_1);
     ACTION_1 =
@@ -125,9 +121,6 @@ public class RuleKeyBuilderTest {
   private static final ProjectFilesystem FILESYSTEM = new FakeProjectFilesystem();
   private static final SourcePath SOURCE_PATH_1 = PathSourcePath.of(FILESYSTEM, PATH_1);
   private static final SourcePath SOURCE_PATH_2 = PathSourcePath.of(FILESYSTEM, PATH_2);
-  private static final PathSourcePath SOURCE_PATH_3 = PathSourcePath.of(FILESYSTEM, PATH_3);
-  private static final SourceArtifact SOURCE_ARTIFACT =
-      ImmutableSourceArtifactImpl.of(SOURCE_PATH_3);
 
   private static final ArchiveMemberSourcePath ARCHIVE_PATH_1 =
       ArchiveMemberSourcePath.of(SOURCE_PATH_1, Paths.get("member"));
@@ -137,10 +130,6 @@ public class RuleKeyBuilderTest {
       DefaultBuildTargetSourcePath.of(TARGET_1);
   private static final DefaultBuildTargetSourcePath TARGET_PATH_2 =
       DefaultBuildTargetSourcePath.of(TARGET_2);
-  private static final ExplicitBuildTargetSourcePath TARGET_PATH_3 =
-      ExplicitBuildTargetSourcePath.of(TARGET_2, Paths.get("example/three"));
-  private static final BuildArtifact BUILD_ARTIFACT =
-      BuildTargetSourcePathToArtifactConverter.convert(FILESYSTEM, TARGET_PATH_3);
 
   @Test
   public void testUniqueness() {
@@ -194,8 +183,6 @@ public class RuleKeyBuilderTest {
           ARCHIVE_PATH_2,
           TARGET_PATH_1,
           TARGET_PATH_2,
-          SOURCE_ARTIFACT,
-          BUILD_ARTIFACT,
 
           // Buck rules & appendables
           RULE_1,
@@ -217,6 +204,8 @@ public class RuleKeyBuilderTest {
           ImmutableMap.of(42, 42),
           ImmutableList.of(ImmutableList.of(1, 2, 3, 4)),
           ImmutableList.of(ImmutableList.of(1, 2), ImmutableList.of(3, 4)),
+          (Supplier<Stream<Object>>) () -> Stream.of(ImmutableList.of(42), SOURCE_PATH_1),
+          (Supplier<Stream<Object>>) () -> Stream.of(ImmutableList.of(42), SOURCE_PATH_2),
         };
 
     List<RuleKey> ruleKeys = new ArrayList<>();

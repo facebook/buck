@@ -21,11 +21,9 @@ import com.facebook.buck.core.config.BuckConfig;
 public interface ArtifactCacheFactory {
   ArtifactCache newInstance();
 
-  ArtifactCache newInstance(boolean distributedBuildModeEnabled);
+  ArtifactCache remoteOnlyInstance();
 
-  ArtifactCache remoteOnlyInstance(boolean distributedBuildModeEnabled);
-
-  ArtifactCache localOnlyInstance(boolean distributedBuildModeEnabled);
+  ArtifactCache localOnlyInstance();
 
   ArtifactCacheFactory cloneWith(BuckConfig newConfig);
 }

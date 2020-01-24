@@ -28,7 +28,7 @@ public class XcodeprojSerializerTest {
 
   @Test
   public void testEmptyProject() {
-    PBXProject project = new PBXProject("TestProject");
+    PBXProject project = new PBXProject("TestProject", AbstractPBXObjectFactory.DefaultFactory());
     XcodeprojSerializer xcodeprojSerializer = new XcodeprojSerializer(new GidGenerator(), project);
     NSDictionary rootObject = xcodeprojSerializer.toPlist();
 

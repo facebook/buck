@@ -8,12 +8,12 @@ java_library(
             "*Test.java",
         ],
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/util/config:config",
-    ],
     visibility = ["//test/..."],
     deps = [
         "//third-party/java/guava:guava",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/util/config:config",
     ],
 )
 

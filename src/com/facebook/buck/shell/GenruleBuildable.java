@@ -55,6 +55,7 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.worker.WorkerJobParams;
 import com.facebook.buck.worker.WorkerProcessIdentity;
 import com.facebook.buck.worker.WorkerProcessParams;
@@ -66,6 +67,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.Iterables;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -76,6 +78,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -83,6 +86,9 @@ import java.util.stream.Collectors;
  * extending the functionality of a bare Genrule.
  */
 public class GenruleBuildable implements Buildable {
+  private static final ImmutableSet<OutputPath> DEFAULT_OUTPUTS = ImmutableSet.of();
+  private static final ImmutableSet<String> DEFAULT_OUTS = ImmutableSet.of();
+
   /**
    * Name of the "srcs" subdirectory in the gen directory tree. GenruleBuildable symlinks all source
    * files into this directory and sets this directory to be the working directory of the command.
@@ -113,10 +119,16 @@ public class GenruleBuildable implements Buildable {
   @AddToRuleKey protected final Optional<Arg> cmdExe;
 
   /**
-   * The name of the output file that this genrule intends to generate. Should not be present if
-   * {@link #outputPaths} is present.
+   * The name of the output file that this genrule intends to generate. One and only one of {@link
+   * #out} and {@link #outs} must be present.
    */
   @AddToRuleKey protected final Optional<String> out;
+
+  /**
+   * The names of the output files that this genrule intends to generate relative to $OUT mapped to
+   * their respective output group names.
+   */
+  @AddToRuleKey protected final Optional<ImmutableMap<OutputLabel, ImmutableSet<String>>> outs;
 
   /** Whether this target should be executed in a sandbox, if one is supported on this platform. */
   @AddToRuleKey private final boolean enableSandboxingInGenrule;
@@ -147,6 +159,8 @@ public class GenruleBuildable implements Buildable {
    */
   @AddToRuleKey
   protected final Optional<ImmutableMap<OutputLabel, ImmutableSet<OutputPath>>> outputPaths;
+
+  @AddToRuleKey private final Supplier<ImmutableSet<OutputLabel>> outputLabelsSupplier;
 
   /**
    * Whether or not this genrule can be cached. This is not used within this class, but is required
@@ -210,7 +224,7 @@ public class GenruleBuildable implements Buildable {
       Optional<Arg> cmdExe,
       Optional<String> type,
       Optional<String> out,
-      Optional<ImmutableMap<String, ImmutableList<String>>> outs,
+      Optional<ImmutableMap<String, ImmutableSet<String>>> outs,
       boolean enableSandboxingInGenrule,
       boolean isCacheable,
       String environmentExpansionSeparator,
@@ -225,6 +239,18 @@ public class GenruleBuildable implements Buildable {
     this.cmdExe = cmdExe;
     this.type = type;
     this.out = out;
+    this.outs =
+        outs.map(
+            outputs -> {
+              ImmutableMap.Builder<OutputLabel, ImmutableSet<String>> builder =
+                  ImmutableMap.builderWithExpectedSize(outputs.size() + 1);
+              outputs
+                  .entrySet()
+                  .forEach(e -> builder.put(OutputLabel.of(e.getKey()), e.getValue()));
+              builder.put(OutputLabel.defaultLabel(), DEFAULT_OUTS);
+              return builder.build();
+            });
+    this.outputLabelsSupplier = MoreSuppliers.memoize(this::getOutputLabelsSupplier);
     this.enableSandboxingInGenrule = enableSandboxingInGenrule;
     this.isCacheable = isCacheable;
     this.environmentExpansionSeparator = environmentExpansionSeparator;
@@ -236,10 +262,10 @@ public class GenruleBuildable implements Buildable {
     Preconditions.checkArgument(
         out.isPresent() ^ outs.isPresent(), "Genrule unexpectedly has both 'out' and 'outs'.");
     if (outs.isPresent()) {
-      ImmutableMap<String, ImmutableList<String>> outputs = outs.get();
+      ImmutableMap<String, ImmutableSet<String>> outputs = outs.get();
       ImmutableMap.Builder<OutputLabel, ImmutableSet<OutputPath>> mapBuilder =
           ImmutableMap.builderWithExpectedSize(outputs.size());
-      for (Map.Entry<String, ImmutableList<String>> outputLabelToOutputs : outputs.entrySet()) {
+      for (Map.Entry<String, ImmutableSet<String>> outputLabelToOutputs : outputs.entrySet()) {
         mapBuilder.put(
             OutputLabel.of(outputLabelToOutputs.getKey()),
             outputLabelToOutputs.getValue().stream()
@@ -288,15 +314,15 @@ public class GenruleBuildable implements Buildable {
         .map(
             paths -> {
               if (outputLabel.isDefault()) {
-                return getAllOutputPaths(paths);
+                return DEFAULT_OUTPUTS;
               }
-              ImmutableSet<OutputPath> pathsforLabel = paths.get(outputLabel);
-              if (pathsforLabel == null) {
+              ImmutableSet<OutputPath> pathsForLabel = paths.get(outputLabel);
+              if (pathsForLabel == null) {
                 throw new HumanReadableException(
                     "Cannot find output label [%s] for target %s",
                     outputLabel, buildTarget.getFullyQualifiedName());
               }
-              return pathsforLabel;
+              return pathsForLabel;
             })
         .orElseGet(
             () -> {
@@ -309,22 +335,49 @@ public class GenruleBuildable implements Buildable {
             });
   }
 
-  /** Returns a map of output labels to its associated {@link OutputPath} instances. */
-  public ImmutableMap<OutputLabel, ImmutableSet<OutputPath>> getOutputMap() {
+  /** Returns a set of output labels associated with this buildable. */
+  public ImmutableSet<OutputLabel> getOutputLabels() {
+    return outputLabelsSupplier.get();
+  }
+
+  private ImmutableSet<OutputLabel> getOutputLabelsSupplier() {
     if (!outputPaths.isPresent()) {
-      return ImmutableMap.of(OutputLabel.defaultLabel(), ImmutableSet.of(outputPath.get()));
+      return ImmutableSet.of(OutputLabel.defaultLabel());
     }
-    ImmutableMap<OutputLabel, ImmutableSet<OutputPath>> paths = outputPaths.get();
-    return ImmutableMap.<OutputLabel, ImmutableSet<OutputPath>>builderWithExpectedSize(
-            paths.size() + 1)
-        .putAll(paths)
-        .put(OutputLabel.defaultLabel(), getAllOutputPaths(paths))
+    ImmutableSet<OutputLabel> outputLabels = outputPaths.get().keySet();
+    return ImmutableSet.<OutputLabel>builderWithExpectedSize(outputLabels.size() + 1)
+        .addAll(outputLabels)
+        .add(OutputLabel.defaultLabel())
         .build();
   }
 
-  private ImmutableSet<OutputPath> getAllOutputPaths(
-      ImmutableMap<OutputLabel, ImmutableSet<OutputPath>> paths) {
-    return paths.values().stream().flatMap(Set::stream).collect(ImmutableSet.toImmutableSet());
+  /** Returns a String representation of the output path relative to the root output directory. */
+  public String getOutputName(OutputLabel outputLabel) {
+    return outs.map(
+            outputs -> {
+              ImmutableSet<String> outputNames = outputs.get(outputLabel);
+              if (outputNames == null) {
+                throw new HumanReadableException(
+                    "Output label [%s] not found for target %s",
+                    outputLabel, buildTarget.getFullyQualifiedName());
+              }
+              if (outputNames.isEmpty()) {
+                throw new HumanReadableException(
+                    "Default outputs not supported for genrule %s (that uses `outs`). "
+                        + "Use named outputs",
+                    buildTarget.getFullyQualifiedName());
+              }
+              return Iterables.getOnlyElement(outputNames);
+            })
+        .orElseGet(
+            () -> {
+              Preconditions.checkArgument(
+                  outputLabel.isDefault(),
+                  "Unexpectedly received non-default label [%s] for target %s",
+                  outputLabel,
+                  buildTarget.getFullyQualifiedName());
+              return out.get();
+            });
   }
 
   @Override
@@ -519,6 +572,11 @@ public class GenruleBuildable implements Buildable {
     return cmd;
   }
 
+  @VisibleForTesting
+  public SourceSet getSrcs() {
+    return srcs;
+  }
+
   private ProgramRunner createProgramRunner() {
     if (sandboxExecutionStrategy.isSandboxEnabled() && enableSandboxingInGenrule) {
       Preconditions.checkState(
@@ -629,7 +687,8 @@ public class GenruleBuildable implements Buildable {
    * @param tmpPath Path to the genrule temporary directory
    * @param environmentVariablesBuilder Environment map builder
    */
-  protected void addEnvironmentVariables(
+  @VisibleForTesting
+  public void addEnvironmentVariables(
       SourcePathResolverAdapter pathResolver,
       OutputPathResolver outputPathResolver,
       ProjectFilesystem filesystem,

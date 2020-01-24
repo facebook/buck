@@ -49,7 +49,7 @@ public class BuildArtifactFactoryTest {
     BuildArtifactFactory factory = new BuildArtifactFactory(target, filesystem);
 
     ActionAnalysisDataKey key =
-        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID() {});
+        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
     DeclaredArtifact declaredArtifact =
         factory.createDeclaredArtifact(Paths.get("bar"), Location.BUILTIN);
     BuildArtifact buildArtifact = declaredArtifact.materialize(key);
@@ -84,7 +84,7 @@ public class BuildArtifactFactoryTest {
     Path path = Paths.get("some/output");
     DeclaredArtifact artifact = factory.createDeclaredArtifact(path, Location.BUILTIN);
     factory.bindtoBuildArtifact(
-        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID() {}), artifact);
+        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a")), artifact);
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(
@@ -104,7 +104,7 @@ public class BuildArtifactFactoryTest {
             PathFragment.create("my").getChild("BUCK"), 0, 0, new Location.LineAndColumn(2, 4));
     DeclaredArtifact artifact = factory.createDeclaredArtifact(path, declaredLocation);
     factory.bindtoBuildArtifact(
-        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID() {}), artifact);
+        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a")), artifact);
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(
@@ -132,7 +132,7 @@ public class BuildArtifactFactoryTest {
     DeclaredArtifact artifact =
         factory.createDeclaredArtifact(Paths.get("path1"), Location.BUILTIN);
     factory.bindtoBuildArtifact(
-        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID() {}), artifact);
+        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a")), artifact);
 
     factory.verifyAllArtifactsBound();
   }

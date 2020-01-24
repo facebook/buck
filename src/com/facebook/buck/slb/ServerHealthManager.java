@@ -149,15 +149,16 @@ public class ServerHealthManager {
   }
 
   private Optional<URI> calculateBestServer() {
-    ServerHealthManagerEventData.Builder data =
-        ServerHealthManagerEventData.builder().setServerPoolName(serverPoolName);
-    Map<URI, PerServerData.Builder> allPerServerData = new HashMap<>();
+    ImmutableServerHealthManagerEventData.Builder data =
+        ImmutableServerHealthManagerEventData.builder().setServerPoolName(serverPoolName);
+    Map<URI, ImmutablePerServerData.Builder> allPerServerData = new HashMap<>();
     try {
       long epochMillis = clock.currentTimeMillis();
       List<Pair<URI, Long>> serverLatencies = new ArrayList<>();
       for (ServerHealthState state : servers.values()) {
         URI server = state.getServer();
-        PerServerData.Builder perServerData = PerServerData.builder().setServer(server);
+        ImmutablePerServerData.Builder perServerData =
+            ImmutablePerServerData.builder().setServer(server);
         allPerServerData.put(server, perServerData);
 
         float errorPercentage = state.getErrorPercentage(epochMillis, errorCheckTimeRangeMillis);
@@ -179,7 +180,7 @@ public class ServerHealthManager {
       Objects.requireNonNull(allPerServerData.get(bestServer)).setBestServer(true);
       return Optional.of(bestServer);
     } finally {
-      for (PerServerData.Builder builder : allPerServerData.values()) {
+      for (ImmutablePerServerData.Builder builder : allPerServerData.values()) {
         data.addPerServerData(builder.build());
       }
       eventBus.post(new ServerHealthManagerEvent(data.build()));

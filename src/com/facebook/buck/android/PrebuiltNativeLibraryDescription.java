@@ -25,7 +25,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSortedSet;
@@ -68,8 +68,7 @@ public class PrebuiltNativeLibraryDescription
         librarySources);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractPrebuiltNativeLibraryDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     @Value.Default
     default boolean getIsAsset() {

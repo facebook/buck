@@ -17,7 +17,7 @@
 package com.facebook.buck.android.exopackage;
 
 import com.facebook.buck.android.AdbHelper;
-import com.facebook.buck.android.ApkInfo;
+import com.facebook.buck.android.HasInstallableApk;
 import com.facebook.buck.android.agent.util.AgentUtil;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -25,7 +25,6 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.NamedTemporaryFile;
@@ -86,7 +85,8 @@ public class ExopackageInstaller {
 
   /** @return Returns true. */
   // TODO(cjhopman): This return value is silly. Change it to be void.
-  public boolean doInstall(ApkInfo apkInfo, @Nullable String processName) throws Exception {
+  public boolean doInstall(HasInstallableApk.ApkInfo apkInfo, @Nullable String processName)
+      throws Exception {
     if (exopackageEnabled(apkInfo)) {
       device.mkDirP(dataRoot.toString());
       ImmutableSortedSet<Path> presentFiles = device.listDirRecursive(dataRoot);
@@ -99,7 +99,8 @@ public class ExopackageInstaller {
     return true;
   }
 
-  public void killApp(ApkInfo apkInfo, @Nullable String processName) throws Exception {
+  public void killApp(HasInstallableApk.ApkInfo apkInfo, @Nullable String processName)
+      throws Exception {
     // TODO(dreiss): Make this work on Gingerbread.
     try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "kill_app")) {
       // If a specific process name is given and we're not installing a full APK,
@@ -112,7 +113,7 @@ public class ExopackageInstaller {
     }
   }
 
-  public void installApkIfNecessary(ApkInfo apkInfo) throws Exception {
+  public void installApkIfNecessary(HasInstallableApk.ApkInfo apkInfo) throws Exception {
     File apk = pathResolver.getAbsolutePath(apkInfo.getApkPath()).toFile();
     // TODO(dreiss): Support SD installation.
     boolean installViaSd = false;
@@ -215,7 +216,7 @@ public class ExopackageInstaller {
    * @param apkInfo the apk info to examine for exopackage items
    * @return true if the given apk info contains any items which need to be installed via exopackage
    */
-  public static boolean exopackageEnabled(ApkInfo apkInfo) {
+  public static boolean exopackageEnabled(HasInstallableApk.ApkInfo apkInfo) {
     return apkInfo
         .getExopackageInfo()
         .map(
@@ -230,12 +231,12 @@ public class ExopackageInstaller {
   private Optional<PackageInfo> getPackageInfo(String packageName) throws Exception {
     try (SimplePerfEvent.Scope ignored =
         SimplePerfEvent.scope(
-            eventBus, PerfEventId.of("get_package_info"), "package", packageName)) {
+            eventBus, SimplePerfEvent.PerfEventId.of("get_package_info"), "package", packageName)) {
       return device.getPackageInfo(packageName);
     }
   }
 
-  private boolean shouldAppBeInstalled(ApkInfo apkInfo) throws Exception {
+  private boolean shouldAppBeInstalled(HasInstallableApk.ApkInfo apkInfo) throws Exception {
     Optional<PackageInfo> appPackageInfo = getPackageInfo(packageName);
     if (!appPackageInfo.isPresent()) {
       eventBus.post(ConsoleEvent.info("App not installed.  Installing now."));

@@ -30,6 +30,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -43,7 +44,7 @@ import com.facebook.buck.core.test.rule.HasTestRunner;
 import com.facebook.buck.core.test.rule.coercer.TestRunnerSpecCoercer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.features.go.GoListStep.ListType;
@@ -123,9 +124,7 @@ public class GoTestDescription
       Path packageName = getGoPackageName(graphBuilder, buildTarget, args);
 
       SourcePath output = graphBuilder.requireRule(buildTarget).getSourcePathToOutput();
-      return Optional.of(
-          metadataClass.cast(
-              GoLinkable.builder().setGoLinkInput(ImmutableMap.of(packageName, output)).build()));
+      return Optional.of(metadataClass.cast(GoLinkable.of(ImmutableMap.of(packageName, output))));
     } else if (buildTarget.getFlavors().contains(GoDescriptors.TRANSITIVE_LINKABLES_FLAVOR)
         && buildTarget.getFlavors().contains(TEST_LIBRARY_FLAVOR)) {
       Preconditions.checkState(platform.isPresent());
@@ -305,7 +304,8 @@ public class GoTestDescription
                           ImmutableList.of(),
                           platform));
 
-      Tool testMainGenerator = testMainGeneratorRule.getExecutableCommand();
+      Tool testMainGenerator =
+          testMainGeneratorRule.getExecutableCommand(OutputLabel.defaultLabel());
 
       generatedTestMain =
           new GoTestMain(
@@ -349,12 +349,8 @@ public class GoTestDescription
     graphBuilder.addToIndex(testMain);
 
     StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(buildTarget)
-            .setCellPathResolver(context.getCellPathResolver())
-            .setActionGraphBuilder(graphBuilder)
-            .setExpanders(MACRO_EXPANDERS)
-            .build();
+        StringWithMacrosConverter.of(
+            buildTarget, context.getCellPathResolver(), graphBuilder, MACRO_EXPANDERS);
 
     if (args.getSpecs().isPresent()) {
       return new GoTestX(
@@ -569,8 +565,7 @@ public class GoTestDescription
         GoToolchain.DEFAULT_NAME, toolchainTargetConfiguration, GoToolchain.class);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractGoTestDescriptionArg
       extends BuildRuleArg,
           HasContacts,

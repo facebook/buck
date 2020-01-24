@@ -39,6 +39,7 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.TemporaryPaths;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -82,12 +83,11 @@ public class QueryPathsMacroExpanderTest {
 
     QueryPathsMacroExpander expander = new QueryPathsMacroExpander(Optional.of(targetGraph));
     StringWithMacrosConverter converter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(targetNode.getBuildTarget())
-            .setCellPathResolver(cellPathResolver)
-            .setActionGraphBuilder(graphBuilder)
-            .addExpanders(expander)
-            .build();
+        StringWithMacrosConverter.of(
+            targetNode.getBuildTarget(),
+            cellPathResolver,
+            graphBuilder,
+            ImmutableList.of(expander));
 
     String input = "$(query_paths 'deps(//some:target)')";
 

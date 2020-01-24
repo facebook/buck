@@ -17,19 +17,17 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.LocationMacro;
-import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
-import java.util.Optional;
 
 /** Coerces `$(location ...)` macros into {@link LocationMacro}. */
 class LocationMacroTypeCoercer extends AbstractLocationMacroTypeCoercer<LocationMacro> {
 
-  public LocationMacroTypeCoercer(TypeCoercer<BuildTarget> buildTargetTypeCoercer) {
+  public LocationMacroTypeCoercer(TypeCoercer<BuildTargetWithOutputs> buildTargetTypeCoercer) {
     super(buildTargetTypeCoercer);
   }
 
@@ -51,7 +49,7 @@ class LocationMacroTypeCoercer extends AbstractLocationMacroTypeCoercer<Location
       throw new CoerceFailedException(
           String.format("expected exactly one argument (found %d)", args.size()));
     }
-    Pair<BuildTarget, Optional<String>> target =
+    BuildTargetWithOutputs targetWithOutputs =
         coerceTarget(
             cellRoots,
             filesystem,
@@ -59,6 +57,6 @@ class LocationMacroTypeCoercer extends AbstractLocationMacroTypeCoercer<Location
             targetConfiguration,
             hostConfiguration,
             args.get(0));
-    return LocationMacro.of(target.getFirst(), target.getSecond());
+    return LocationMacro.of(targetWithOutputs);
   }
 }

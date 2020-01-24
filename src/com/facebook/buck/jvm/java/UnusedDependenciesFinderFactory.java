@@ -36,20 +36,19 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
       reason = "includes source paths",
       serialization = DefaultFieldSerialization.class,
       inputs = DefaultFieldInputs.class)
-  private final ImmutableList<AbstractUnusedDependenciesFinder.DependencyAndExportedDeps> deps;
+  private final ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDeps> deps;
 
   @ExcludeFromRuleKey(
       reason = "includes source paths",
       serialization = DefaultFieldSerialization.class,
       inputs = DefaultFieldInputs.class)
-  private final ImmutableList<AbstractUnusedDependenciesFinder.DependencyAndExportedDeps>
-      providedDeps;
+  private final ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDeps> providedDeps;
 
   public UnusedDependenciesFinderFactory(
       Optional<String> buildozerPath,
       boolean onlyPrintCommands,
-      ImmutableList<AbstractUnusedDependenciesFinder.DependencyAndExportedDeps> deps,
-      ImmutableList<AbstractUnusedDependenciesFinder.DependencyAndExportedDeps> providedDeps) {
+      ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDeps> deps,
+      ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDeps> providedDeps) {
     this.buildozerPath = buildozerPath;
     this.onlyPrintCommands = onlyPrintCommands;
     this.deps = deps;
@@ -61,7 +60,7 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
       ProjectFilesystem projectFilesystem,
       SourcePathResolverAdapter sourcePathResolverAdapter,
       JavaBuckConfig.UnusedDependenciesAction unusedDependenciesAction) {
-    return UnusedDependenciesFinder.of(
+    return ImmutableUnusedDependenciesFinder.of(
         buildTarget,
         projectFilesystem,
         CompilerOutputPaths.getDepFilePath(buildTarget, projectFilesystem),

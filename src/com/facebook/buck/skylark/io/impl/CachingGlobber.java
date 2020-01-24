@@ -66,12 +66,7 @@ public class CachingGlobber implements Globber {
   public Set<String> run(
       Collection<String> include, Collection<String> exclude, boolean excludeDirectories)
       throws IOException, InterruptedException {
-    GlobSpec key =
-        GlobSpec.builder()
-            .setInclude(include)
-            .setExclude(exclude)
-            .setExcludeDirectories(excludeDirectories)
-            .build();
+    GlobSpec key = GlobSpec.of(include, exclude, excludeDirectories);
     @Nullable Set<String> expandedPaths = cache.get(key);
     if (expandedPaths == null) {
       expandedPaths = delegate.run(include, exclude, excludeDirectories);

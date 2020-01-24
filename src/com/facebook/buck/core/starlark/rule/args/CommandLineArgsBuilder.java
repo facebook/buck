@@ -17,9 +17,11 @@
 package com.facebook.buck.core.starlark.rule.args;
 
 import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgException;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgs;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgsFactory;
+import com.facebook.buck.core.starlark.compatible.BuckSkylarkTypes;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.build.lib.actions.CommandLineItem;
 import com.google.devtools.build.lib.events.Location;
@@ -52,16 +54,19 @@ public class CommandLineArgsBuilder implements CommandLineArgsBuilderApi {
     if (arg instanceof String
         || arg instanceof Integer
         || arg instanceof CommandLineItem
-        || arg instanceof Artifact) {
+        || arg instanceof Artifact
+        || arg instanceof OutputArtifact
+        || arg instanceof CommandLineArgs) {
       return arg;
     }
     throw new CommandLineArgException(arg);
   }
 
   @Override
-  public CommandLineArgsBuilder add(Object argNameOrValue, Object value, Location location)
+  public CommandLineArgsBuilder add(
+      Object argNameOrValue, Object value, String formatString, Location location)
       throws EvalException {
-
+    formatString = CommandLineArgsFactory.validateFormatString(formatString);
     try {
       ImmutableList<Object> args;
       if (value == Runtime.UNBOUND) {
@@ -69,7 +74,7 @@ public class CommandLineArgsBuilder implements CommandLineArgsBuilderApi {
       } else {
         args = ImmutableList.of(requireCorrectType(argNameOrValue), requireCorrectType(value));
       }
-      argsBuilder.add(CommandLineArgsFactory.from(args));
+      argsBuilder.add(CommandLineArgsFactory.from(args, formatString));
     } catch (CommandLineArgException e) {
       throw new EvalException(location, e.getHumanReadableErrorMessage());
     }
@@ -78,14 +83,16 @@ public class CommandLineArgsBuilder implements CommandLineArgsBuilderApi {
   }
 
   @Override
-  public CommandLineArgsBuilder addAll(SkylarkList<Object> values, Location location)
-      throws EvalException {
+  public CommandLineArgsBuilder addAll(
+      SkylarkList<?> values, String formatString, Location location) throws EvalException {
 
     try {
       for (Object value : values) {
         requireCorrectType(value);
       }
-      argsBuilder.add(CommandLineArgsFactory.from(values.getImmutableList()));
+      argsBuilder.add(
+          CommandLineArgsFactory.from(
+              BuckSkylarkTypes.toJavaList(values, Object.class, "object class"), formatString));
     } catch (CommandLineArgException e) {
       throw new EvalException(location, e.getHumanReadableErrorMessage());
     }

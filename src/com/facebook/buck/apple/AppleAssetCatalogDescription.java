@@ -23,7 +23,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -50,8 +50,7 @@ public class AppleAssetCatalogDescription
         buildTarget, context.getProjectFilesystem(), params);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractAppleAssetCatalogDescriptionArg extends BuildRuleArg {
     @Value.NaturalOrder
     ImmutableSortedSet<SourcePath> getDirs();

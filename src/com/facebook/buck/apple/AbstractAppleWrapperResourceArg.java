@@ -17,13 +17,11 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.core.description.arg.BuildRuleArg;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import java.nio.file.Path;
-import org.immutables.value.Value;
 
 /** A description for a resource defined by a single path. */
-@BuckStyleImmutable
-@Value.Immutable
+@RuleArg
 interface AbstractAppleWrapperResourceArg extends BuildRuleArg {
   Path getPath();
 }

@@ -16,7 +16,12 @@
 
 package com.facebook.buck.core.rules.actions.lib.args;
 
+import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.artifact.OutputArtifact;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedMap;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 /**
@@ -28,8 +33,8 @@ import java.util.stream.Stream;
  * can also be more efficient
  */
 class ListCommandLineArgs implements CommandLineArgs {
-
-  private final ImmutableList<Object> objects;
+  @AddToRuleKey private final ImmutableList<Object> objects;
+  @AddToRuleKey private final String formatString;
 
   /**
    * Create an instance of {@link ListCommandLineArgs}
@@ -37,17 +42,35 @@ class ListCommandLineArgs implements CommandLineArgs {
    * @param objects a list of command line arguments. These must have been validated by {@link
    *     CommandLineArgsFactory}
    */
-  ListCommandLineArgs(ImmutableList<Object> objects) {
+  ListCommandLineArgs(ImmutableList<Object> objects, String formatString) {
     this.objects = objects;
+    this.formatString = formatString;
   }
 
   @Override
-  public Stream<Object> getArgs() {
-    return objects.stream();
+  public ImmutableSortedMap<String, String> getEnvironmentVariables() {
+    return ImmutableSortedMap.of();
+  }
+
+  @Override
+  public Stream<ArgAndFormatString> getArgsAndFormatStrings() {
+    return objects.stream().map(o -> ImmutableArgAndFormatString.of(o, formatString));
   }
 
   @Override
   public int getEstimatedArgsCount() {
     return objects.size();
+  }
+
+  @Override
+  public void visitInputsAndOutputs(Consumer<Artifact> inputs, Consumer<OutputArtifact> outputs) {
+    objects.forEach(
+        arg -> {
+          if (arg instanceof Artifact) {
+            inputs.accept((Artifact) arg);
+          } else if (arg instanceof OutputArtifact) {
+            outputs.accept((OutputArtifact) arg);
+          }
+        });
   }
 }

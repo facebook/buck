@@ -27,7 +27,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.Optionals;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -53,7 +53,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.util.Optional;
 import java.util.function.Function;
-import org.immutables.value.Value;
 
 public class ScalaTestDescription
     implements DescriptionWithTargetGraph<ScalaTestDescriptionArg>,
@@ -133,12 +132,8 @@ public class ScalaTestDescription
     }
 
     StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(buildTarget)
-            .setCellPathResolver(cellRoots)
-            .setActionGraphBuilder(graphBuilder)
-            .setExpanders(JavaTestDescription.MACRO_EXPANDERS)
-            .build();
+        StringWithMacrosConverter.of(
+            buildTarget, cellRoots, graphBuilder, JavaTestDescription.MACRO_EXPANDERS);
     JavaLibrary testsLibrary = graphBuilder.addToIndex(scalaLibraryBuilder.buildLibrary());
 
     return new JavaTest(
@@ -198,8 +193,7 @@ public class ScalaTestDescription
         targetGraphOnlyDepsBuilder, constructorArg, buildTarget.getTargetConfiguration());
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractScalaTestDescriptionArg
       extends ScalaLibraryDescription.CoreArg, JavaTestDescription.CoreArg {}
 }

@@ -2,13 +2,13 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 
 PUBLIC_API_SOURCES = [
     "AbstractArtifactCacheEventFactory.java",
-    "AbstractArtifactInfo.java",
-    "AbstractCacheResult.java",
-    "AbstractCacheCountersSummary.java",
+    "ArtifactInfo.java",
+    "CacheResult.java",
+    "CacheCountersSummary.java",
     "CacheCountersSummaryEvent.java",
-    "AbstractCacheDeleteResult.java",
-    "AbstractNetworkCacheArgs.java",
-    "AbstractRuleKeyCacheResult.java",
+    "CacheDeleteResult.java",
+    "NetworkCacheArgs.java",
+    "RuleKeyCacheResult.java",
     "ArtifactCache.java",
     "ArtifactCacheConnectEvent.java",
     "ArtifactCacheEvent.java",
@@ -28,11 +28,6 @@ PUBLIC_API_SOURCES = [
 java_immutables_library(
     name = "artifact_cache",
     srcs = PUBLIC_API_SOURCES,
-    exported_deps = [
-        "//src/com/facebook/buck/artifact_cache/config:config",
-        "//src/com/facebook/buck/core/cell:cell",
-        "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
-    ],
     tests = [
         "//test/com/facebook/buck/artifact_cache:artifact_cache",
     ],
@@ -63,6 +58,11 @@ java_immutables_library(
         "//third-party/java/jackson:jackson-databind",
         "//third-party/java/okhttp:okhttp-tls",
         "//third-party/java/zstd-jni:zstd-jni",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/artifact_cache/config:config",
+        "//src/com/facebook/buck/core/cell:cell",
+        "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
     ],
 )
 

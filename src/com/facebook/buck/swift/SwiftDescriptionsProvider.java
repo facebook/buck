@@ -22,8 +22,8 @@ import com.facebook.buck.core.description.DescriptionCreationContext;
 import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import org.pf4j.Extension;
 
 @Extension
@@ -36,7 +36,8 @@ public class SwiftDescriptionsProvider implements DescriptionProvider {
     SwiftBuckConfig swiftBuckConfig = new SwiftBuckConfig(config);
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
 
-    return Collections.singleton(
-        new SwiftLibraryDescription(toolchainProvider, cxxBuckConfig, swiftBuckConfig));
+    return Arrays.asList(
+        new SwiftLibraryDescription(toolchainProvider, cxxBuckConfig, swiftBuckConfig),
+        new SwiftToolchainDescription());
   }
 }

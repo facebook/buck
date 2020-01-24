@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -610,6 +611,24 @@ public class ProjectIntegrationTest {
     result.assertSuccess();
 
     runXcodebuild(workspace, "Test.xcworkspace", "Test");
+  }
+
+  @Test
+  @Ignore("Currently failing")
+  public void testBuckProjectUsingDefaultPlatformAttributePropagatesFlavor() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(
+        AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.IPHONESIMULATOR));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "default_platform_attribute_in_bundle_deps", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "project", "//app:app", "--config", "project.shared_libraries_in_bundles=true");
+    result.assertSuccess();
   }
 
   @Test

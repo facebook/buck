@@ -24,7 +24,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 public class OcamlTestUtils {
 
   public static final OcamlPlatform DEFAULT_PLATFORM =
-      OcamlPlatform.builder()
+      ImmutableOcamlPlatform.builder()
           .setOcamlCompiler(new ConstantToolProvider(new CommandTool.Builder().build()))
           .setOcamlDepTool(new ConstantToolProvider(new CommandTool.Builder().build()))
           .setYaccCompiler(new ConstantToolProvider(new CommandTool.Builder().build()))

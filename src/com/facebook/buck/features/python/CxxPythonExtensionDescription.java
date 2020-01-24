@@ -34,7 +34,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.Optionals;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxConstructorArg;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
@@ -84,7 +84,6 @@ import com.google.common.collect.Multimaps;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.stream.Stream;
-import org.immutables.value.Value;
 
 public class CxxPythonExtensionDescription
     implements DescriptionWithTargetGraph<CxxPythonExtensionDescriptionArg>,
@@ -249,17 +248,21 @@ public class CxxPythonExtensionDescription
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
       CxxPythonExtensionDescriptionArg args,
-      ImmutableSet<BuildRule> deps) {
+      ImmutableSet<BuildRule> deps,
+      boolean includePrivateLinkerFlags) {
 
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
-    CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
-            args.getLinkerFlags(), args.getPlatformLinkerFlags(), cxxPlatform)
-        .stream()
-        .map(
-            CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
-                    target, cellRoots, graphBuilder, cxxPlatform)
-                ::convert)
-        .forEach(argsBuilder::add);
+
+    if (includePrivateLinkerFlags) {
+      CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
+              args.getLinkerFlags(), args.getPlatformLinkerFlags(), cxxPlatform)
+          .stream()
+          .map(
+              CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
+                      target, cellRoots, graphBuilder, cxxPlatform)
+                  ::convert)
+          .forEach(argsBuilder::add);
+    }
 
     // Embed a origin-relative library path into the binary so it can find the shared libraries.
     argsBuilder.addAll(
@@ -355,7 +358,8 @@ public class CxxPythonExtensionDescription
                     cellRoots,
                     cxxPlatform,
                     args,
-                    deps))
+                    deps,
+                    true))
             .setFrameworks(args.getFrameworks())
             .setLibraries(args.getLibraries())
             .build(),
@@ -495,7 +499,10 @@ public class CxxPythonExtensionDescription
 
       @Override
       public NativeLinkTarget getNativeLinkTarget(
-          PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+          PythonPlatform pythonPlatform,
+          CxxPlatform cxxPlatform,
+          ActionGraphBuilder graphBuilder,
+          boolean includePrivateLinkerFlags) {
         ImmutableList<NativeLinkable> linkTargetDeps =
             RichStream.from(getPlatformDeps(graphBuilder, pythonPlatform, cxxPlatform, args))
                 .filter(NativeLinkableGroup.class)
@@ -513,7 +520,8 @@ public class CxxPythonExtensionDescription
                         cellRoots,
                         cxxPlatform,
                         args,
-                        getPlatformDeps(graphBuilder, pythonPlatform, cxxPlatform, args)))
+                        getPlatformDeps(graphBuilder, pythonPlatform, cxxPlatform, args),
+                        includePrivateLinkerFlags))
                 .addAllFrameworks(args.getFrameworks())
                 .build();
         return new NativeLinkTargetInfo(
@@ -585,8 +593,7 @@ public class CxxPythonExtensionDescription
         .getUnresolvedCxxPlatforms();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractCxxPythonExtensionDescriptionArg extends CxxConstructorArg {
     Optional<String> getBaseModule();
 

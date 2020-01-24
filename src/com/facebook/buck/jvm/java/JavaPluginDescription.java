@@ -22,10 +22,9 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.jvm.core.JavaLibrary;
-import com.facebook.buck.jvm.java.AbstractJavacPluginProperties.Type;
-import org.immutables.value.Value;
+import com.facebook.buck.jvm.java.JavacPluginProperties.Type;
 
 /** Description of a rule that builds a javac {@link com.sun.source.util.Plugin}. */
 public class JavaPluginDescription implements DescriptionWithTargetGraph<JavaPluginDescriptionArg> {
@@ -65,8 +64,7 @@ public class JavaPluginDescription implements DescriptionWithTargetGraph<JavaPlu
     return new StandardJavacPlugin(buildTarget, context.getProjectFilesystem(), params, properties);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractJavaPluginDescriptionArg extends JavacPluginArgs {
 
     String getPluginName();

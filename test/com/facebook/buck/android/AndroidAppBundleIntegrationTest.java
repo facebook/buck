@@ -32,7 +32,6 @@ import com.android.bundle.Files.TargetedNativeDirectory;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -69,7 +68,7 @@ public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
     AssumeAndroidPlatform.get(workspace).assumeBundleBuildIsSupported();
 
     setWorkspaceCompilationMode(workspace);
-    filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    filesystem = workspace.getProjectFileSystem();
   }
 
   @Test

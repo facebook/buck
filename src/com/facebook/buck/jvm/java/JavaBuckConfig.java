@@ -113,8 +113,8 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
       builder.setTrackJavacPhaseEvents(trackJavacPhaseEvents.get());
     }
 
-    Optional<AbstractJavacOptions.SpoolMode> spoolMode =
-        delegate.getEnum(SECTION, "jar_spool_mode", AbstractJavacOptions.SpoolMode.class);
+    Optional<JavacOptions.SpoolMode> spoolMode =
+        delegate.getEnum(SECTION, "jar_spool_mode", JavacOptions.SpoolMode.class);
     if (spoolMode.isPresent()) {
       builder.setSpoolMode(spoolMode.get());
     }

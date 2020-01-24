@@ -21,9 +21,9 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
-import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -39,7 +39,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
@@ -132,7 +131,8 @@ public class BuildReportIntegrationTest {
     assertEquals(
         "buck-out/cells/cell2/gen/"
             + BuildTargetPaths.getBasePath(
-                    new FakeProjectFilesystem(CanonicalCellName.unsafeOf(Optional.of("cell2"))),
+                    FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(
+                        BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH),
                     BuildTargetFactory.newInstance("cell2//:bar"),
                     "%s")
                 .resolve("bar.txt"),
@@ -145,7 +145,7 @@ public class BuildReportIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "build_report", tmp).setUp();
     Path expectedBasePath =
         BuildTargetPaths.getGenPath(
-            new FakeProjectFilesystem(),
+            workspace.getProjectFileSystem(),
             BuildTargetFactory.newInstance("//:rule_with_multiple_outputs"),
             "%s__");
     Path buildReport = tmpFolderForBuildReport.getRoot().resolve("build-report.txt");
@@ -170,10 +170,6 @@ public class BuildReportIntegrationTest {
     assertThat(
         outputs.get("output2"),
         Matchers.containsInAnyOrder(expectedBasePath.resolve("out2.txt").toString()));
-    assertThat(
-        outputs.get("DEFAULT"),
-        Matchers.containsInAnyOrder(
-            expectedBasePath.resolve("out1.txt").toString(),
-            expectedBasePath.resolve("out2.txt").toString()));
+    assertThat(outputs.get("DEFAULT"), Matchers.empty());
   }
 }

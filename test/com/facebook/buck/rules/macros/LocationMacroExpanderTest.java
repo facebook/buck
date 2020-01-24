@@ -40,6 +40,7 @@ import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
@@ -62,12 +63,11 @@ public class LocationMacroExpanderTest {
     cellPathResolver = TestCellBuilder.createCellRoots(projectFilesystem);
     graphBuilder = new TestActionGraphBuilder();
     converter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(buildTarget)
-            .setCellPathResolver(cellPathResolver)
-            .setActionGraphBuilder(graphBuilder)
-            .addExpanders(new LocationMacroExpander())
-            .build();
+        StringWithMacrosConverter.of(
+            buildTarget,
+            cellPathResolver,
+            graphBuilder,
+            ImmutableList.of(new LocationMacroExpander()));
     return graphBuilder;
   }
 

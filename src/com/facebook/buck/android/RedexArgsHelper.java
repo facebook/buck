@@ -26,9 +26,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.google.common.collect.ImmutableList;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class RedexArgsHelper {
 
@@ -48,20 +46,13 @@ public class RedexArgsHelper {
         androidBuckConfig.getRedexTool(graphBuilder, buildTarget.getTargetConfiguration());
 
     StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(buildTarget)
-            .setCellPathResolver(cellRoots)
-            .setActionGraphBuilder(graphBuilder)
-            .setExpanders(MacroExpandersForAndroidRules.MACRO_EXPANDERS)
-            .build();
-    List<Arg> redexExtraArgsList =
-        redexExtraArgs.stream().map(macrosConverter::convert).collect(Collectors.toList());
+        StringWithMacrosConverter.of(
+            buildTarget, cellRoots, graphBuilder, MacroExpandersForAndroidRules.MACRO_EXPANDERS);
+    ImmutableList<Arg> redexExtraArgsList =
+        redexExtraArgs.stream()
+            .map(macrosConverter::convert)
+            .collect(ImmutableList.toImmutableList());
 
-    return Optional.of(
-        RedexOptions.builder()
-            .setRedex(redexBinary)
-            .setRedexConfig(redexConfig)
-            .setRedexExtraArgs(redexExtraArgsList)
-            .build());
+    return Optional.of(RedexOptions.of(redexBinary, redexConfig, redexExtraArgsList));
   }
 }

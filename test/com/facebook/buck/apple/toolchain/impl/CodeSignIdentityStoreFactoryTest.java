@@ -66,16 +66,12 @@ public class CodeSignIdentityStoreFactoryTest {
 
     ImmutableList<CodeSignIdentity> expected =
         ImmutableList.of(
-            CodeSignIdentity.builder()
-                .setFingerprint(
-                    CodeSignIdentity.toFingerprint("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"))
-                .setSubjectCommonName("iPhone Developer: Foo Bar (54321EDCBA)")
-                .build(),
-            CodeSignIdentity.builder()
-                .setFingerprint(
-                    CodeSignIdentity.toFingerprint("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"))
-                .setSubjectCommonName("Apple Development: Fizz Buzz (12345AAAAA)")
-                .build());
+            CodeSignIdentity.of(
+                CodeSignIdentity.toFingerprint("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"),
+                "iPhone Developer: Foo Bar (54321EDCBA)"),
+            CodeSignIdentity.of(
+                CodeSignIdentity.toFingerprint("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"),
+                "Apple Development: Fizz Buzz (12345AAAAA)"));
 
     assertThat(store.getIdentitiesSupplier().get(), equalTo(expected));
   }
@@ -93,11 +89,9 @@ public class CodeSignIdentityStoreFactoryTest {
 
     ImmutableList<CodeSignIdentity> expected =
         ImmutableList.of(
-            CodeSignIdentity.builder()
-                .setFingerprint(
-                    CodeSignIdentity.toFingerprint("0000000000000000000000000000000000000000"))
-                .setSubjectCommonName("iPhone Developer: Fake")
-                .build());
+            CodeSignIdentity.of(
+                CodeSignIdentity.toFingerprint("0000000000000000000000000000000000000000"),
+                "iPhone Developer: Fake"));
 
     assertThat(store.getIdentitiesSupplier().get(), is(equalTo(expected)));
   }

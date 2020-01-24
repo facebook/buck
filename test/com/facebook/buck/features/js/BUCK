@@ -9,9 +9,6 @@ java_library(
             "*Test.java",
         ],
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/features/js:js",
-    ],
     visibility = ["//test/..."],
     deps = [
         "//src-gen:thrift",
@@ -116,6 +113,9 @@ java_library(
         "//third-party/java/okhttp:okhttp",
         "//third-party/java/stringtemplate:stringtemplate",
         "//third-party/java/thrift:libthrift",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/features/js:js",
     ],
 )
 

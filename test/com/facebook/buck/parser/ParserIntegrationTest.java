@@ -26,7 +26,6 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -51,7 +50,7 @@ public class ParserIntegrationTest {
     workspace.setUp();
 
     BuildTarget target = workspace.newBuildTarget("//:base_genrule");
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     ProcessResult buildResult = workspace.runBuckCommand("build", "", "-v", "2");
     buildResult.assertSuccess();

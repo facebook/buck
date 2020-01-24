@@ -118,7 +118,7 @@ public class InMemoryArtifactCache implements ArtifactCache {
 
     ImmutableList<String> cacheNames =
         ImmutableList.of(InMemoryArtifactCache.class.getSimpleName());
-    return Futures.immediateFuture(CacheDeleteResult.builder().setCacheNames(cacheNames).build());
+    return Futures.immediateFuture(CacheDeleteResult.of(cacheNames));
   }
 
   @Override

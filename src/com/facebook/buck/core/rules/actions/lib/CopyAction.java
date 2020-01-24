@@ -18,14 +18,14 @@ package com.facebook.buck.core.rules.actions.lib;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
+import com.facebook.buck.core.artifact.OutputArtifact;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.actions.AbstractAction;
 import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.actions.ActionExecutionContext;
 import com.facebook.buck.core.rules.actions.ActionExecutionResult;
 import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.core.rules.actions.DefaultActionRegistry;
-import com.facebook.buck.core.rules.actions.ImmutableActionExecutionFailure;
-import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -35,8 +35,7 @@ import java.util.Optional;
 
 /** {@link Action} that copies specified contents to the given output {@link Artifact}s */
 public class CopyAction extends AbstractAction {
-
-  private final CopySourceMode mode;
+  @AddToRuleKey private final CopySourceMode mode;
 
   /**
    * Create an instance of {@link CopyAction}
@@ -47,29 +46,27 @@ public class CopyAction extends AbstractAction {
    * @param mode the {@link CopySourceMode} as needed by the filesystem
    */
   public CopyAction(
-      ActionRegistry actionRegistry, Artifact input, Artifact output, CopySourceMode mode) {
-    super(actionRegistry, ImmutableSortedSet.of(input), ImmutableSortedSet.of(output));
+      ActionRegistry actionRegistry, Artifact input, OutputArtifact output, CopySourceMode mode) {
+    super(
+        actionRegistry,
+        ImmutableSortedSet.of(input),
+        ImmutableSortedSet.of(output),
+        String.format("copy <%s>", mode));
     this.mode = mode;
-  }
-
-  @Override
-  public String getShortName() {
-    return String.format("copy <%s>", mode);
   }
 
   @Override
   public ActionExecutionResult execute(ActionExecutionContext executionContext) {
     ArtifactFilesystem filesystem = executionContext.getArtifactFilesystem();
     Artifact toCopy = Iterables.getOnlyElement(inputs);
-    Artifact dest = Iterables.getOnlyElement(outputs);
+    Artifact dest = Iterables.getOnlyElement(outputs).getArtifact();
 
     try {
       filesystem.copy(toCopy, dest, mode);
 
-      return ImmutableActionExecutionSuccess.of(
-          Optional.empty(), Optional.empty(), ImmutableList.of());
+      return ActionExecutionResult.success(Optional.empty(), Optional.empty(), ImmutableList.of());
     } catch (IOException e) {
-      return ImmutableActionExecutionFailure.of(
+      return ActionExecutionResult.failure(
           Optional.empty(), Optional.empty(), ImmutableList.of(), Optional.of(e));
     }
   }

@@ -168,13 +168,15 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
       synchronized (lock) {
         hasCancellationBeenRequested = true;
         if (isLocalBuildAlreadyRunning()) {
-          // Don't interrupt ongoing local builds to avoid leaving buck-out in a bad state.
-          localStrategyBuildResult.get().cancel(/* mayInterruptIfRunning */ false);
+          // We can't cancel already running local builds.
+          return;
         } else {
+          // TODO(cjhopman): I think this is wrong. The HybridLocalStrategy is a lot more careful
+          // about actually waiting for the delegate to finish cancellation.
           remoteStrategyBuildResult.cancel(cause);
         }
 
-        combinedFinalResult.cancel(false);
+        combinedFinalResult.set(Optional.of(strategyContext.createCancelledResult(cause)));
       }
     }
 
@@ -322,7 +324,7 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
     }
 
     private void handleLocalBuildFailedWithException(Throwable t) {
-      LOG.error(t, "Local fallback for one build rule failed as well for [%s].", buildTarget);
+      LOG.warn(t, "Local fallback for one build rule failed as well for [%s].", buildTarget);
       completeCombinedFutureWithException(t, remoteBuildResult.get(), Result.EXCEPTION);
     }
 

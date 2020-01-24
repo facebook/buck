@@ -144,7 +144,7 @@ public class AndroidBinaryGraphEnhancer {
   private final DxConfig dxConfig;
   private final String dexTool;
   private final AndroidBinaryResourcesGraphEnhancer androidBinaryResourcesGraphEnhancer;
-  private final NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs;
+  private final NonPreDexedDexBuildable.NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs;
   private final Supplier<ImmutableSet<JavaLibrary>> rulesToExcludeFromDex;
   private final AndroidNativeTargetConfigurationMatcher androidNativeTargetConfigurationMatcher;
 
@@ -209,7 +209,7 @@ public class AndroidBinaryGraphEnhancer {
       DxConfig dxConfig,
       String dexTool,
       Optional<Arg> postFilterResourcesCmd,
-      NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs,
+      NonPreDexedDexBuildable.NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs,
       Supplier<ImmutableSet<JavaLibrary>> rulesToExcludeFromDex,
       boolean useProtoFormat,
       AndroidNativeTargetConfigurationMatcher androidNativeTargetConfigurationMatcher,
@@ -414,8 +414,9 @@ public class AndroidBinaryGraphEnhancer {
       additionalJavaLibrariesBuilder.add(compileMergedNativeLibMapGenCode);
     }
 
-    AndroidBinaryResourcesGraphEnhancementResult resourcesEnhancementResult =
-        androidBinaryResourcesGraphEnhancer.enhance(packageableCollection);
+    AndroidBinaryResourcesGraphEnhancer.AndroidBinaryResourcesGraphEnhancementResult
+        resourcesEnhancementResult =
+            androidBinaryResourcesGraphEnhancer.enhance(packageableCollection);
 
     // BuildConfig deps should not be added for instrumented APKs because BuildConfig.class has
     // already been added to the APK under test.
@@ -454,16 +455,14 @@ public class AndroidBinaryGraphEnhancer {
     if (shouldPreDex) {
       ImmutableList<DexProducedFromJavaLibrary> preDexedLibrariesExceptRDotJava =
           createPreDexRulesForLibraries(additionalJavaLibraries, packageableCollection);
-      JavaLibrary compileUberRDotJava =
-          createTrimAndCompileUberRDotJava(
-              resourcesEnhancementResult, preDexedLibrariesExceptRDotJava);
-      ImmutableCollection<DexProducedFromJavaLibrary> dexUberRDotJavaParts =
-          createSplitAndDexUberRDotJava(compileUberRDotJava);
 
       if (dexSplitMode.isShouldSplitDex()) {
         dexMergeRule =
-            createPreDexMergeSplitDexRule(preDexedLibrariesExceptRDotJava, dexUberRDotJavaParts);
+            createPreDexMergeSplitDexRule(
+                preDexedLibrariesExceptRDotJava, resourcesEnhancementResult);
       } else {
+        ImmutableCollection<DexProducedFromJavaLibrary> dexUberRDotJavaParts =
+            createUberRDotJavaDexes(resourcesEnhancementResult, preDexedLibrariesExceptRDotJava);
         dexMergeRule =
             createPreDexMergeSingleDexRule(
                 ImmutableList.copyOf(
@@ -484,7 +483,7 @@ public class AndroidBinaryGraphEnhancer {
               javaBuckConfig.shouldDesugarInterfaceMethods());
     }
 
-    return AndroidGraphEnhancementResult.builder()
+    return ImmutableAndroidGraphEnhancementResult.builder()
         .setPackageableCollection(packageableCollection)
         .setPrimaryResourcesApkPath(resourcesEnhancementResult.getPrimaryResourcesApkPath())
         .setPrimaryApkAssetZips(resourcesEnhancementResult.getPrimaryApkAssetZips())
@@ -501,11 +500,28 @@ public class AndroidBinaryGraphEnhancer {
         .build();
   }
 
+  @VisibleForTesting
+  public AndroidBinaryResourcesGraphEnhancer getResourcesGraphEnhancer() {
+    return androidBinaryResourcesGraphEnhancer;
+  }
+
+  @Nonnull
+  private ImmutableList<DexProducedFromJavaLibrary> createUberRDotJavaDexes(
+      AndroidBinaryResourcesGraphEnhancer.AndroidBinaryResourcesGraphEnhancementResult
+          resourcesEnhancementResult,
+      ImmutableList<? extends TrimUberRDotJava.UsesResources> preDexedLibrariesExceptRDotJava) {
+    JavaLibrary compileUberRDotJava =
+        createTrimAndCompileUberRDotJava(
+            resourcesEnhancementResult, preDexedLibrariesExceptRDotJava);
+    return createSplitAndDexUberRDotJava(compileUberRDotJava);
+  }
+
   private JavaLibrary createTrimAndCompileUberRDotJava(
-      AndroidBinaryResourcesGraphEnhancementResult resourcesEnhancementResult,
-      ImmutableList<DexProducedFromJavaLibrary> preDexedLibrariesExceptRDotJava) {
+      AndroidBinaryResourcesGraphEnhancer.AndroidBinaryResourcesGraphEnhancementResult
+          resourcesEnhancementResult,
+      ImmutableList<? extends TrimUberRDotJava.UsesResources> preDexedLibrariesExceptRDotJava) {
     // Create rule to trim uber R.java sources.
-    Collection<DexProducedFromJavaLibrary> preDexedLibrariesForResourceIdFiltering =
+    Collection<? extends TrimUberRDotJava.UsesResources> preDexedLibrariesForResourceIdFiltering =
         trimResourceIds ? preDexedLibrariesExceptRDotJava : ImmutableList.of();
     BuildRuleParams paramsForTrimUberRDotJava =
         buildRuleParams.withDeclaredDeps(
@@ -740,12 +756,7 @@ public class AndroidBinaryGraphEnhancer {
     ImmutableMultimap.Builder<APKModule, List<DexProducedFromJavaLibrary>> resultBuilder =
         ImmutableMultimap.builder();
 
-    // Dex group partitioning is currently limited to JAR compression mode.
-    // XZS (and possibly XZ) aggregate dexes in a way that is not compatible with dex group merging
-    // RAW expects dex files to have a single sequential index, and could break on some API levels
-    // if more than 100 total dex files are produced, which is more likely to happen with dex
-    // groups.
-    int limit = dexSplitMode.getDexStore() == DexStore.JAR ? dexSplitMode.getDexGroupLibLimit() : 0;
+    int limit = dexSplitMode.getDexGroupLibLimit();
     for (APKModule module : dexFilesToMerge.keySet()) {
       List<DexProducedFromJavaLibrary> currentDexContents = null;
       for (DexProducedFromJavaLibrary dexWithClasses : dexFilesToMerge.get(module)) {
@@ -767,40 +778,81 @@ public class AndroidBinaryGraphEnhancer {
    */
   @VisibleForTesting
   PreDexSplitDexMerge createPreDexMergeSplitDexRule(
-      ImmutableList<DexProducedFromJavaLibrary> preDexedLibrariesExceptRDotJavaList,
-      ImmutableCollection<DexProducedFromJavaLibrary> dexUberRDotJavaParts) {
-    ImmutableMultimap.Builder<APKModule, DexProducedFromJavaLibrary> preDexedLibrariesBuilder =
+      ImmutableList<DexProducedFromJavaLibrary> preDexedLibrariesExceptRDotJava,
+      AndroidBinaryResourcesGraphEnhancer.AndroidBinaryResourcesGraphEnhancementResult
+          resourcesEnhancementResult) {
+
+    ImmutableMultimap.Builder<APKModule, DexProducedFromJavaLibrary> moduleDexesBuilder =
         ImmutableMultimap.builder();
-    for (DexProducedFromJavaLibrary dex : preDexedLibrariesExceptRDotJavaList) {
-      preDexedLibrariesBuilder.put(
+    for (DexProducedFromJavaLibrary dex : preDexedLibrariesExceptRDotJava) {
+      moduleDexesBuilder.put(
           apkModuleGraph.findModuleForTarget(dex.getJavaLibraryBuildTarget()), dex);
     }
-    preDexedLibrariesBuilder.putAll(apkModuleGraph.getRootAPKModule(), dexUberRDotJavaParts);
 
-    ImmutableMultimap<APKModule, DexProducedFromJavaLibrary> preDexedLibraries =
-        preDexedLibrariesBuilder.build();
+    ImmutableList.Builder<PreDexSplitDexGroup> dexGroupsBuilder = ImmutableList.builder();
 
-    ImmutableMultimap<APKModule, List<DexProducedFromJavaLibrary>> dexGroupMap =
-        groupDexes(preDexedLibraries);
+    // Dex group partitioning is currently limited to JAR compression mode.
+    // XZS (and possibly XZ) aggregate dexes in a way that is not compatible with dex group merging
+    // RAW expects dex files to have a single sequential index, and could break on some API levels
+    // if more than 100 total dex files are produced, which is more likely to happen with dex
+    // groups.
+    if (dexSplitMode.getDexStore() != DexStore.JAR || dexSplitMode.getDexGroupLibLimit() == 0) {
+      ImmutableCollection<DexProducedFromJavaLibrary> dexUberRDotJavaParts =
+          createUberRDotJavaDexes(resourcesEnhancementResult, preDexedLibrariesExceptRDotJava);
+      moduleDexesBuilder.putAll(apkModuleGraph.getRootAPKModule(), dexUberRDotJavaParts);
 
-    ImmutableList.Builder<PreDexSplitDexGroup> rulesBuilder = ImmutableList.builder();
-    for (APKModule module : dexGroupMap.keySet()) {
-      int i = 1;
-      int numGroups = dexGroupMap.get(module).size();
-      String moduleName = module.isRootModule() ? "secondary" : module.getName();
-      String ruleNameFormat = moduleName + "_dexes_%d";
-      for (List<DexProducedFromJavaLibrary> dexes : dexGroupMap.get(module)) {
-        OptionalInt groupNum = numGroups > 1 ? OptionalInt.of(i) : OptionalInt.empty();
-        rulesBuilder.add(
+      ImmutableMultimap<APKModule, DexProducedFromJavaLibrary> dexFilesToMerge =
+          moduleDexesBuilder.build();
+      for (APKModule module : dexFilesToMerge.keySet()) {
+        String moduleName = module.isRootModule() ? "secondary" : module.getName();
+        dexGroupsBuilder.add(
             createPreDexGroupRule(
-                module, dexes, InternalFlavor.of(String.format(ruleNameFormat, i)), groupNum));
-        i += 1;
+                module,
+                dexFilesToMerge.get(module),
+                InternalFlavor.of(moduleName + "_dexes"),
+                OptionalInt.empty()));
       }
+    } else {
+      ImmutableMultimap<APKModule, DexProducedFromJavaLibrary> moduleDexes =
+          moduleDexesBuilder.build();
+      ImmutableMultimap<APKModule, List<DexProducedFromJavaLibrary>> dexGroupMap =
+          groupDexes(moduleDexes);
+      ImmutableList.Builder<PreDexSplitDexGroup> groupsBuilder = ImmutableList.builder();
+      for (APKModule module : dexGroupMap.keySet()) {
+        int i = 1;
+        String moduleName = module.isRootModule() ? "secondary" : module.getName();
+        String ruleNameFormat = moduleName + "_dexes_%d";
+        for (List<DexProducedFromJavaLibrary> dexes : dexGroupMap.get(module)) {
+          groupsBuilder.add(
+              createPreDexGroupRule(
+                  module,
+                  dexes,
+                  InternalFlavor.of(String.format(ruleNameFormat, i)),
+                  OptionalInt.of(i)));
+          i += 1;
+        }
+      }
+      // Make trim resources rule depend on dex groups instead of predexed libs so that only
+      // groups need to be fetched.
+      ImmutableList<PreDexSplitDexGroup> dexGroupsExceptRDotJava = groupsBuilder.build();
+      ImmutableCollection<DexProducedFromJavaLibrary> dexUberRDotJavaParts =
+          createUberRDotJavaDexes(resourcesEnhancementResult, dexGroupsExceptRDotJava);
+
+      // Make sure this index is larger than the last index used for secondary dexes in the root
+      // APK module, so that an existing secondary dex can't be overwritten in the merge step.
+      int finalDexGroupIndex = dexGroupMap.get(apkModuleGraph.getRootAPKModule()).size() + 1;
+      PreDexSplitDexGroup rDotJavaDex =
+          createPreDexGroupRule(
+              apkModuleGraph.getRootAPKModule(),
+              dexUberRDotJavaParts,
+              InternalFlavor.of("r_dot_java_dex"),
+              OptionalInt.of(finalDexGroupIndex));
+      dexGroupsBuilder.addAll(dexGroupsExceptRDotJava);
+      dexGroupsBuilder.add(rDotJavaDex);
     }
 
-    ImmutableList<PreDexSplitDexGroup> partialDexRules = rulesBuilder.build();
-
-    for (PreDexSplitDexGroup rule : partialDexRules) {
+    ImmutableList<PreDexSplitDexGroup> dexGroupRules = dexGroupsBuilder.build();
+    for (PreDexSplitDexGroup rule : dexGroupRules) {
       graphBuilder.addToIndex(rule);
     }
 
@@ -811,12 +863,12 @@ public class AndroidBinaryGraphEnhancer {
                 getDexFlavor(dexTool),
                 InternalFlavor.of("split_dex_merge")),
             projectFilesystem,
-            buildRuleParams.withDeclaredDeps(ImmutableSortedSet.copyOf(partialDexRules)),
+            buildRuleParams.withDeclaredDeps(ImmutableSortedSet.copyOf(dexGroupRules)),
             androidPlatformTarget,
             dexTool,
             dexSplitMode,
             apkModuleGraph,
-            partialDexRules,
+            dexGroupRules,
             dxExecutorService,
             xzCompressionLevel,
             dxConfig.getDxMaxHeapSize());

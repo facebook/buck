@@ -30,6 +30,7 @@ import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -96,7 +97,7 @@ public class GenruleBuilder
     return this;
   }
 
-  public GenruleBuilder setOuts(ImmutableMap<String, ImmutableList<String>> outs) {
+  public GenruleBuilder setOuts(ImmutableMap<String, ImmutableSet<String>> outs) {
     getArgForPopulating().setOuts(outs);
     return this;
   }

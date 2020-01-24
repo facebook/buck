@@ -18,7 +18,9 @@ package com.facebook.buck.core.rules.transformer.impl;
 
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.RuleDescription;
+import com.facebook.buck.core.description.RuleDescriptionWithInstanceName;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
+import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -32,6 +34,10 @@ import com.facebook.buck.core.rules.analysis.computation.RuleAnalysisGraph;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.impl.RuleAnalysisLegacyBuildRuleView;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
+import com.facebook.buck.core.rules.providers.lib.RunInfo;
+import com.facebook.buck.core.rules.providers.lib.TestInfo;
+import com.facebook.buck.core.rules.tool.RuleAnalysisLegacyBinaryBuildRuleView;
+import com.facebook.buck.core.rules.tool.RuleAnalysisLegacyTestBuildRuleView;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.google.common.collect.ImmutableCollection;
@@ -65,7 +71,6 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer
       ProviderInfoCollection providerInfoCollection) {
     BaseDescription<T> description = targetNode.getDescription();
     if (description instanceof RuleDescription) {
-      RuleDescription<T> legacyRuleDescription = (RuleDescription<T>) description;
       RuleAnalysisResult result =
           ruleAnalysisComputation.get(ImmutableRuleAnalysisKey.of(targetNode.getBuildTarget()));
 
@@ -80,13 +85,41 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer
             Optional.of(((ActionWrapperData) Iterables.getOnlyElement(actions)).getAction());
       }
 
-      return new RuleAnalysisLegacyBuildRuleView(
-          legacyRuleDescription.getConstructorArgType().getTypeName(),
-          result.getBuildTarget(),
-          correspondingAction,
-          graphBuilder,
-          targetNode.getFilesystem(),
-          result.getProviderInfos());
+      ProviderInfoCollection providerInfos = result.getProviderInfos();
+      String ruleName = getRuleName(description, targetNode.getConstructorArg());
+      return providerInfos
+          .get(TestInfo.PROVIDER)
+          .<BuildRule>map(
+              testInfo ->
+                  new RuleAnalysisLegacyTestBuildRuleView(
+                      ruleName,
+                      result.getBuildTarget(),
+                      correspondingAction,
+                      graphBuilder,
+                      targetNode.getFilesystem(),
+                      providerInfos))
+          .orElseGet(
+              () ->
+                  providerInfos
+                      .get(RunInfo.PROVIDER)
+                      .<BuildRule>map(
+                          runInfo ->
+                              new RuleAnalysisLegacyBinaryBuildRuleView(
+                                  ruleName,
+                                  result.getBuildTarget(),
+                                  correspondingAction,
+                                  graphBuilder,
+                                  targetNode.getFilesystem(),
+                                  providerInfos))
+                      .orElseGet(
+                          () ->
+                              new RuleAnalysisLegacyBuildRuleView(
+                                  ruleName,
+                                  result.getBuildTarget(),
+                                  correspondingAction,
+                                  graphBuilder,
+                                  targetNode.getFilesystem(),
+                                  providerInfos)));
     }
 
     return delegate.transform(
@@ -96,5 +129,14 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer
         graphBuilder,
         targetNode,
         providerInfoCollection);
+  }
+
+  private static <T extends BuildRuleArg> String getRuleName(
+      BaseDescription<T> baseDescription, T constructorArg) {
+    if (baseDescription instanceof RuleDescriptionWithInstanceName) {
+      return ((RuleDescriptionWithInstanceName<T>) baseDescription).getRuleName(constructorArg);
+    } else {
+      return DescriptionCache.getRuleType(baseDescription).getName();
+    }
   }
 }

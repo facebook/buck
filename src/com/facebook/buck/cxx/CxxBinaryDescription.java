@@ -33,9 +33,10 @@ import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.versions.HasVersionUniverse;
 import com.facebook.buck.versions.Version;
@@ -169,7 +170,14 @@ public class CxxBinaryDescription
     }
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable(copy = true)
-  interface AbstractCxxBinaryDescriptionArg extends CxxBinaryDescription.CommonArg {}
+  @RuleArg
+  interface AbstractCxxBinaryDescriptionArg extends CxxBinaryDescription.CommonArg {
+    @Override
+    default CxxBinaryDescriptionArg withDepsQuery(Query query) {
+      if (getDepsQuery().equals(Optional.of(query))) {
+        return (CxxBinaryDescriptionArg) this;
+      }
+      return CxxBinaryDescriptionArg.builder().from(this).setDepsQuery(query).build();
+    }
+  }
 }

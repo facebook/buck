@@ -79,8 +79,9 @@ public interface ActionRegistry {
    * com.google.devtools.build.lib.packages.Provider}s to be consumed.
    *
    * @param action the {@link Action} to create an {@link ActionWrapperData} for and registers it
+   * @return the assigned unique ID for this {@link Action}
    */
-  void registerActionAnalysisDataForAction(Action action) throws ActionCreationException;
+  String registerActionAnalysisDataForAction(Action action) throws ActionCreationException;
 
   /**
    * @return the {@link BuildTarget} responsible for all the {@link Action}s registered to this

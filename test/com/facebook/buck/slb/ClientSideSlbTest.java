@@ -74,7 +74,7 @@ public class ClientSideSlbTest extends EasyMockSupport {
     EasyMock.expect(mockClock.currentTimeMillis()).andReturn(42L).anyTimes();
 
     config =
-        ClientSideSlbConfig.builder()
+        ImmutableClientSideSlbConfig.builder()
             .setClock(mockClock)
             .setServerPool(SERVERS)
             .setEventBus(mockBus)

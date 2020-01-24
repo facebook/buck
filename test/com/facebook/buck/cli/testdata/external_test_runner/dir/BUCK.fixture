@@ -1,53 +1,53 @@
 python_library(
-  name = 'python_lib',
-  srcs = [
-    'simple.py',
-    'also_simple.py',
-  ],
+    name = "python_lib",
+    srcs = [
+        "simple.py",
+        "also_simple.py",
+    ],
 )
 
 python_test(
-  name = 'python-coverage',
-  srcs = [
-    'test_simple.py'
-  ],
-  deps = [
-    ':python_lib',
-  ],
-  needed_coverage = [
-    (0, ':python_lib', 'simple.py'),
-    (75, ':python_lib'),
-    (100, ':python_lib', 'also_simple.py'),
-  ],
+    name = "python-coverage",
+    srcs = [
+        "test_simple.py",
+    ],
+    deps = [
+        ":python_lib",
+    ],
+    needed_coverage = [
+        (0, ":python_lib", "simple.py"),
+        (75, ":python_lib"),
+        (100, ":python_lib", "also_simple.py"),
+    ],
 )
 
 python_test(
-  name = 'python-cxx-additional-coverage',
-  srcs = [
-    'test_simple.py'
-  ],
-  deps = [
-    ':python_lib',
-    ':cpp_binary',
-  ],
-  additional_coverage_targets = [
-    ':cpp_binary',
-  ],
+    name = "python-cxx-additional-coverage",
+    srcs = [
+        "test_simple.py",
+    ],
+    deps = [
+        ":python_lib",
+        ":cpp_binary",
+    ],
+    additional_coverage_targets = [
+        ":cpp_binary",
+    ],
 )
 
 cxx_binary(
-  name = 'cpp_binary',
-  srcs = [
-    'foo.cpp',
-  ],
+    name = "cpp_binary",
+    srcs = [
+        "foo.cpp",
+    ],
 )
 
 cxx_test(
-  name = 'cpp_test',
-  srcs = [
-    'test.cpp',
-  ],
-  additional_coverage_targets = [
-    ':cpp_binary',
-  ],
+    name = "cpp_test",
+    srcs = [
+        "test.cpp",
+    ],
+    additional_coverage_targets = [
+        ":cpp_binary",
+    ],
 )

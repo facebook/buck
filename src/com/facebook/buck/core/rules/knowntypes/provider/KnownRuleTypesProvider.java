@@ -23,6 +23,7 @@ import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.starlark.knowntypes.KnownUserDefinedRuleTypes;
 import com.facebook.buck.parser.config.ParserConfig;
+import com.facebook.buck.parser.options.UserDefinedRulesState;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -58,9 +59,8 @@ public class KnownRuleTypesProvider {
               new CacheLoader<Cell, KnownRuleTypes>() {
                 @Override
                 public KnownRuleTypes load(Cell cell) {
-                  if (cell.getBuckConfig()
-                      .getView(ParserConfig.class)
-                      .getEnableUserDefinedRules()) {
+                  if (cell.getBuckConfig().getView(ParserConfig.class).getUserDefinedRulesState()
+                      == UserDefinedRulesState.ENABLED) {
                     return new HybridKnownRuleTypes(
                         getNativeRuleTypes(cell), getUserDefinedRuleTypes(cell));
                   } else {

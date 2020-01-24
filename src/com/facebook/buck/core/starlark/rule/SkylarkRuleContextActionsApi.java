@@ -20,6 +20,7 @@ import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.starlark.rule.args.CommandLineArgsBuilderApi;
 import com.facebook.buck.core.starlark.rule.artifact.SkylarkArtifactApi;
 import com.google.devtools.build.lib.events.Location;
+import com.google.devtools.build.lib.skylarkbuildapi.CommandLineArgsApi;
 import com.google.devtools.build.lib.skylarkinterface.Param;
 import com.google.devtools.build.lib.skylarkinterface.ParamType;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
@@ -54,24 +55,50 @@ public interface SkylarkRuleContextActionsApi {
   Artifact declareFile(String path, Location location) throws EvalException;
 
   @SkylarkCallable(
+      name = "copy_file",
+      doc = "Copies a file",
+      useLocation = true,
+      parameters = {
+        @Param(name = "src", doc = "The file to copy", type = Artifact.class, named = true),
+        @Param(
+            name = "dest",
+            doc =
+                "The destination to copy to. This may either be a file declared with "
+                    + "`declare_file`, or a string that will be used to declare a new file "
+                    + "(which is returned by this function)",
+            type = Object.class,
+            allowedTypes = {@ParamType(type = Artifact.class), @ParamType(type = String.class)},
+            named = true),
+      })
+  Artifact copyFile(Artifact src, Object dest, Location location) throws EvalException;
+
+  @SkylarkCallable(
       name = "write",
       doc =
           "Creates a file write action. When the action is executed, it will write the given "
               + "content to a file. This is used to generate files using information available "
-              + "in the analysis phase",
+              + "in the analysis phase. Returns the artifact in `output`",
       useLocation = true,
       parameters = {
         @Param(
             name = "output",
             doc =
-                "The file to write to. This must have been declared previously either as an output, or via declare_file",
-            type = SkylarkArtifactApi.class,
+                "The file to write to. This may either be a string, in which case the Artifact "
+                    + "is declared for you, or it must have been returned from "
+                    + "ctx.actions.declare_file",
+            allowedTypes = {
+              @ParamType(type = SkylarkArtifactApi.class),
+              @ParamType(type = String.class)
+            },
             named = true),
-        // TODO(pjameson): Once Arg is implemented, accept that as well?
         @Param(
             name = "content",
             doc = "The content to write to this file",
-            type = String.class,
+            allowedTypes = {
+              @ParamType(type = CommandLineArgsBuilderApi.class),
+              @ParamType(type = CommandLineArgsApi.class),
+              @ParamType(type = String.class)
+            },
             named = true),
         @Param(
             name = "is_executable",
@@ -80,13 +107,35 @@ public interface SkylarkRuleContextActionsApi {
             named = true,
             defaultValue = "False")
       })
-  void write(Artifact output, String content, boolean isExecutable, Location location)
+  Artifact write(Object output, Object content, boolean isExecutable, Location location)
       throws EvalException;
 
   @SkylarkCallable(
       name = "args",
-      doc = "Get an instance of Args to construct command lines for actions")
-  CommandLineArgsBuilderApi args();
+      doc = "Get an instance of Args to construct command lines for actions",
+      useLocation = true,
+      parameters = {
+        @Param(
+            name = "args",
+            doc =
+                "Values to initialize the new Args object with. If a list is provided, "
+                    + "these args are passed to `Args.add_all`. If a single non-list item is "
+                    + "provided, it is passed to `Args.add`.",
+            defaultValue = "None",
+            noneable = true,
+            type = Object.class),
+        @Param(
+            name = "format",
+            doc =
+                "A format string to apply after stringifying each argument. This must contain one "
+                    + "or more %s. Each will be replaced with the string value of each argument "
+                    + "at execution time.",
+            type = String.class,
+            named = true,
+            defaultValue = "\"%s\"")
+      })
+  CommandLineArgsBuilderApi args(Object args, String formatString, Location location)
+      throws EvalException;
 
   @SkylarkCallable(
       name = "run",
@@ -94,24 +143,6 @@ public interface SkylarkRuleContextActionsApi {
           "Creates a run action. When the action is executed it will run the specified executable with the given arguments and environment",
       useLocation = true,
       parameters = {
-        @Param(
-            name = "outputs",
-            doc = "The files that will be written by this action",
-            named = true,
-            type = SkylarkList.class,
-            noneable = false,
-            generic1 = Artifact.class),
-        @Param(
-            name = "inputs",
-            doc = "A list of files that will be used by this action",
-            named = true,
-            type = SkylarkList.class,
-            defaultValue = "[]"),
-        @Param(
-            name = "executable",
-            doc = "The executable to run",
-            named = true,
-            allowedTypes = {@ParamType(type = String.class), @ParamType(type = Artifact.class)}),
         @Param(
             name = "arguments",
             doc =
@@ -134,13 +165,6 @@ public interface SkylarkRuleContextActionsApi {
             type = SkylarkDict.class,
             defaultValue = "None")
       })
-  void run(
-      SkylarkList<Artifact> outputs,
-      SkylarkList<Artifact> inputs,
-      Object executable,
-      SkylarkList<Object> arguments,
-      Object shortName,
-      Object userEnv,
-      Location location)
+  void run(SkylarkList<Object> arguments, Object shortName, Object userEnv, Location location)
       throws EvalException;
 }

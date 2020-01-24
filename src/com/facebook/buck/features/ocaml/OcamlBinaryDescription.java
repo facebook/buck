@@ -30,7 +30,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -160,8 +160,7 @@ public class OcamlBinaryDescription
             getPlatform(constructorArg.getPlatform(), buildTarget.getTargetConfiguration())));
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractOcamlBinaryDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     Optional<SourceSet> getSrcs();
 

@@ -23,7 +23,6 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
@@ -76,7 +75,7 @@ public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTe
         .runBuckBuild(
             DEX_EXOPACKAGE_TARGET, NATIVE_EXOPACKAGE_TARGET, DEX_AND_NATIVE_EXOPACKAGE_TARGET)
         .assertSuccess();
-    filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    filesystem = workspace.getProjectFileSystem();
   }
 
   @Test

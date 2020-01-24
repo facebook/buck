@@ -25,7 +25,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.file.ProjectFilesystemMatchers;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.ParameterizedTests;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -56,11 +55,9 @@ public class PrecompiledHeaderIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-  private String getHeaderGenPath(String buildTarget, String suffix) {
+  private String getHeaderGenPath(String buildTarget, String suffix) throws IOException {
     return BuildTargetPaths.getGenPath(
-                TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath()),
-                BuildTargetFactory.newInstance(buildTarget),
-                "%s")
+                workspace.getProjectFileSystem(), BuildTargetFactory.newInstance(buildTarget), "%s")
             .toString()
         + suffix;
   }

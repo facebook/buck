@@ -1,9 +1,6 @@
 java_library(
     name = "function",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//src/com/facebook/buck/core/rules/providers:providers",
-    ],
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/core/description/arg:arg",
@@ -21,5 +18,8 @@ java_library(
         "//third-party/java/bazel:bazel",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/rules/providers:providers",
     ],
 )

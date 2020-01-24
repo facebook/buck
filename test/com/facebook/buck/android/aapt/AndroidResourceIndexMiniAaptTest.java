@@ -88,9 +88,9 @@ public class AndroidResourceIndexMiniAaptTest {
 
     assertEquals(
         ImmutableSet.of(
-            AndroidResourceIndexEntry.of(
+            ImmutableAndroidResourceIndexEntry.of(
                 RType.ID, "button1", 4, 41, Paths.get("sample_resources_1.xml")),
-            AndroidResourceIndexEntry.of(
+            ImmutableAndroidResourceIndexEntry.of(
                 RType.ID, "button3", 7, 55, Paths.get("sample_resources_1.xml"))),
         definitions);
   }
@@ -105,24 +105,25 @@ public class AndroidResourceIndexMiniAaptTest {
 
     assertEquals(
         ImmutableSet.of(
-            AndroidResourceIndexEntry.of(RType.STRING, "hello", 2, 25, valuesFile),
-            AndroidResourceIndexEntry.of(RType.PLURALS, "people", 4, 27, valuesFile),
-            AndroidResourceIndexEntry.of(RType.INTEGER, "number", 9, 27, valuesFile),
-            AndroidResourceIndexEntry.of(RType.DIMEN, "dimension", 10, 28, valuesFile),
-            AndroidResourceIndexEntry.of(RType.STYLEABLE, "MyNiceView", 11, 41, valuesFile),
-            AndroidResourceIndexEntry.of(
+            ImmutableAndroidResourceIndexEntry.of(RType.STRING, "hello", 2, 25, valuesFile),
+            ImmutableAndroidResourceIndexEntry.of(RType.PLURALS, "people", 4, 27, valuesFile),
+            ImmutableAndroidResourceIndexEntry.of(RType.INTEGER, "number", 9, 27, valuesFile),
+            ImmutableAndroidResourceIndexEntry.of(RType.DIMEN, "dimension", 10, 28, valuesFile),
+            ImmutableAndroidResourceIndexEntry.of(
+                RType.STYLEABLE, "MyNiceView", 11, 41, valuesFile),
+            ImmutableAndroidResourceIndexEntry.of(
                 RType.STYLEABLE, "MyNiceView_titleText", 11, 41, valuesFile),
-            AndroidResourceIndexEntry.of(
+            ImmutableAndroidResourceIndexEntry.of(
                 RType.STYLEABLE, "MyNiceView_subtitleText", 11, 41, valuesFile),
-            AndroidResourceIndexEntry.of(
+            ImmutableAndroidResourceIndexEntry.of(
                 RType.STYLEABLE, "MyNiceView_complexAttr", 11, 41, valuesFile),
-            AndroidResourceIndexEntry.of(
+            ImmutableAndroidResourceIndexEntry.of(
                 RType.STYLEABLE, "MyNiceView_android_layout_gravity", 11, 41, valuesFile),
-            AndroidResourceIndexEntry.of(RType.ATTR, "titleText", 11, 41, valuesFile),
-            AndroidResourceIndexEntry.of(RType.ATTR, "subtitleText", 11, 41, valuesFile),
-            AndroidResourceIndexEntry.of(RType.ATTR, "complexAttr", 11, 41, valuesFile),
-            AndroidResourceIndexEntry.of(RType.ID, "some_id", 23, 36, valuesFile),
-            AndroidResourceIndexEntry.of(RType.STYLE, "Widget_Theme", 24, 31, valuesFile)),
+            ImmutableAndroidResourceIndexEntry.of(RType.ATTR, "titleText", 11, 41, valuesFile),
+            ImmutableAndroidResourceIndexEntry.of(RType.ATTR, "subtitleText", 11, 41, valuesFile),
+            ImmutableAndroidResourceIndexEntry.of(RType.ATTR, "complexAttr", 11, 41, valuesFile),
+            ImmutableAndroidResourceIndexEntry.of(RType.ID, "some_id", 23, 36, valuesFile),
+            ImmutableAndroidResourceIndexEntry.of(RType.STYLE, "Widget_Theme", 24, 31, valuesFile)),
         definitions);
   }
 
@@ -147,7 +148,7 @@ public class AndroidResourceIndexMiniAaptTest {
     assertEquals(
         definitions,
         ImmutableSet.of(
-            AndroidResourceIndexEntry.of(
+            ImmutableAndroidResourceIndexEntry.of(
                 RType.STRING, "hello", 3, 22, Paths.get("sample_resources_4.xml"))));
   }
 
@@ -162,7 +163,7 @@ public class AndroidResourceIndexMiniAaptTest {
         definitions,
         IsEqual.equalToObject(
             ImmutableSet.of(
-                AndroidResourceIndexEntry.of(
+                ImmutableAndroidResourceIndexEntry.of(
                     RType.DRAWABLE,
                     "sample_resources_android_drawables",
                     0,
@@ -181,7 +182,7 @@ public class AndroidResourceIndexMiniAaptTest {
         definitions,
         IsEqual.equalToObject(
             ImmutableSet.of(
-                AndroidResourceIndexEntry.of(
+                ImmutableAndroidResourceIndexEntry.of(
                     RType.DRAWABLE,
                     "sample_resources_custom_drawables",
                     0,
@@ -202,7 +203,7 @@ public class AndroidResourceIndexMiniAaptTest {
         definitions,
         IsEqual.equalToObject(
             ImmutableSet.of(
-                AndroidResourceIndexEntry.of(
+                ImmutableAndroidResourceIndexEntry.of(
                     RType.DRAWABLE, "fbui_tomato", 0, 0, Paths.get("fbui_tomato.g.png")))));
   }
 
@@ -278,15 +279,15 @@ public class AndroidResourceIndexMiniAaptTest {
 
     assertEquals(
         ImmutableSet.of(
-            AndroidResourceIndexEntry.of(
+            ImmutableAndroidResourceIndexEntry.of(
                 RType.DRAWABLE, "icon", 0, 0, Paths.get("sample_res/drawable/icon.png")),
-            AndroidResourceIndexEntry.of(
+            ImmutableAndroidResourceIndexEntry.of(
                 RType.DRAWABLE,
                 "nine_patch",
                 0,
                 0,
                 Paths.get("sample_res/drawable-ldpi/nine_patch.9.png")),
-            AndroidResourceIndexEntry.of(
+            ImmutableAndroidResourceIndexEntry.of(
                 RType.TRANSITION,
                 "some_transition",
                 0,

@@ -26,114 +26,106 @@ duplicate elements are ignored). Functions that return new sets always return
 them as the `set` type, regardless of the types of the inputs.
 """
 
-
 def _precondition_only_sets_or_lists(*args):
-  """Verifies that all arguments are either sets or lists.
+    """Verifies that all arguments are either sets or lists.
 
-  The build will fail if any of the arguments is neither a set nor a list.
+    The build will fail if any of the arguments is neither a set nor a list.
 
-  Args:
-    *args: A list of values that must be sets or lists.
-  """
-  for a in args:
-    t = type(a)
-    if t not in("depset", "list"):
-      fail("Expected arguments to be depset or list, but found type %s: %r" %
-           (t, a))
-
+    Args:
+      *args: A list of values that must be sets or lists.
+    """
+    for a in args:
+        t = type(a)
+        if t not in ("depset", "list"):
+            fail("Expected arguments to be depset or list, but found type %s: %r" %
+                 (t, a))
 
 def _is_equal(a, b):
-  """Returns whether two sets are equal.
+    """Returns whether two sets are equal.
 
-  Args:
-    a: A depset or a list.
-    b: A depset or a list.
-  Returns:
-    True if `a` is equal to `b`, False otherwise.
-  """
-  _precondition_only_sets_or_lists(a, b)
-  return sorted(depset(a)) == sorted(depset(b))
-
+    Args:
+      a: A depset or a list.
+      b: A depset or a list.
+    Returns:
+      True if `a` is equal to `b`, False otherwise.
+    """
+    _precondition_only_sets_or_lists(a, b)
+    return sorted(depset(a).to_list()) == sorted(depset(b).to_list())
 
 def _is_subset(a, b):
-  """Returns whether `a` is a subset of `b`.
+    """Returns whether `a` is a subset of `b`.
 
-  Args:
-    a: A depset or a list.
-    b: A depset or a list.
+    Args:
+      a: A depset or a list.
+      b: A depset or a list.
 
-  Returns:
-    True if `a` is a subset of `b`, False otherwise.
-  """
-  _precondition_only_sets_or_lists(a, b)
-  for e in a:
-    if e not in b:
-      return False
-  return True
-
+    Returns:
+      True if `a` is a subset of `b`, False otherwise.
+    """
+    _precondition_only_sets_or_lists(a, b)
+    for e in a:
+        if e not in b:
+            return False
+    return True
 
 def _disjoint(a, b):
-  """Returns whether two sets are disjoint.
+    """Returns whether two sets are disjoint.
 
-  Two sets are disjoint if they have no elements in common.
+    Two sets are disjoint if they have no elements in common.
 
-  Args:
-    a: A set or list.
-    b: A set or list.
+    Args:
+      a: A set or list.
+      b: A set or list.
 
-  Returns:
-    True if `a` and `b` are disjoint, False otherwise.
-  """
-  _precondition_only_sets_or_lists(a, b)
-  for e in a:
-    if e in b:
-      return False
-  return True
-
+    Returns:
+      True if `a` and `b` are disjoint, False otherwise.
+    """
+    _precondition_only_sets_or_lists(a, b)
+    for e in a:
+        if e in b:
+            return False
+    return True
 
 def _intersection(a, b):
-  """Returns the intersection of two sets.
+    """Returns the intersection of two sets.
 
-  Args:
-    a: A set or list.
-    b: A set or list.
+    Args:
+      a: A set or list.
+      b: A set or list.
 
-  Returns:
-    A set containing the elements that are in both `a` and `b`.
-  """
-  _precondition_only_sets_or_lists(a, b)
-  return depset([e for e in a if e in b])
-
+    Returns:
+      A set containing the elements that are in both `a` and `b`.
+    """
+    _precondition_only_sets_or_lists(a, b)
+    return depset([e for e in a if e in b])
 
 def _union(*args):
-  """Returns the union of several sets.
+    """Returns the union of several sets.
 
-  Args:
-    *args: An arbitrary number of sets or lists.
+    Args:
+      *args: An arbitrary number of sets or lists.
 
-  Returns:
-    The set union of all sets or lists in `*args`.
-  """
-  _precondition_only_sets_or_lists(*args)
-  r = depset()
-  for a in args:
-    r += a
-  return r
-
+    Returns:
+      The set union of all sets or lists in `*args`.
+    """
+    _precondition_only_sets_or_lists(*args)
+    r = depset()
+    for a in args:
+        r += a
+    return r
 
 def _difference(a, b):
-  """Returns the elements in `a` that are not in `b`.
+    """Returns the elements in `a` that are not in `b`.
 
-  Args:
-    a: A set or list.
-    b: A set or list.
+    Args:
+      a: A set or list.
+      b: A set or list.
 
-  Returns:
-    A set containing the elements that are in `a` but not in `b`.
-  """
-  _precondition_only_sets_or_lists(a, b)
-  return depset([e for e in a if e not in b])
-
+    Returns:
+      A set containing the elements that are in `a` but not in `b`.
+    """
+    _precondition_only_sets_or_lists(a, b)
+    return depset([e for e in a if e not in b])
 
 sets = struct(
     difference = _difference,

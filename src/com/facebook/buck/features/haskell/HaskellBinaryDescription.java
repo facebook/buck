@@ -37,7 +37,7 @@ import com.facebook.buck.core.rules.impl.MappedSymlinkTree;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
@@ -52,6 +52,7 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.stream.RichStream;
@@ -372,8 +373,7 @@ public class HaskellBinaryDescription
     }
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable(copy = true)
+  @RuleArg
   interface AbstractHaskellBinaryDescriptionArg extends BuildRuleArg, HasDepsQuery {
 
     @Value.Default
@@ -414,6 +414,14 @@ public class HaskellBinaryDescription
     @Value.Default
     default PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getGhciPlatformPreloadDeps() {
       return PatternMatchedCollection.of();
+    }
+
+    @Override
+    default HaskellBinaryDescriptionArg withDepsQuery(Query query) {
+      if (getDepsQuery().equals(Optional.of(query))) {
+        return (HaskellBinaryDescriptionArg) this;
+      }
+      return HaskellBinaryDescriptionArg.builder().from(this).setDepsQuery(query).build();
     }
   }
 }

@@ -84,18 +84,10 @@ public class CachingGlobberTest {
         equalTo(
             ImmutableList.of(
                 GlobSpecWithResult.of(
-                    GlobSpec.builder()
-                        .setInclude(ImmutableList.of("does_not_exist"))
-                        .setExclude(ImmutableList.of())
-                        .setExcludeDirectories(true)
-                        .build(),
+                    GlobSpec.of(ImmutableList.of("does_not_exist"), ImmutableList.of(), true),
                     ImmutableSet.of()),
                 GlobSpecWithResult.of(
-                    GlobSpec.builder()
-                        .setInclude(ImmutableList.of("path"))
-                        .setExclude(ImmutableList.of())
-                        .setExcludeDirectories(false)
-                        .build(),
+                    GlobSpec.of(ImmutableList.of("path"), ImmutableList.of(), false),
                     ImmutableSet.of("path")))));
   }
 

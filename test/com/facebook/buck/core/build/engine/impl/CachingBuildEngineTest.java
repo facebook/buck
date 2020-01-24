@@ -49,8 +49,8 @@ import com.facebook.buck.core.build.action.resolver.BuildEngineActionToBuildRule
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
+import com.facebook.buck.core.build.engine.BuildEngine;
 import com.facebook.buck.core.build.engine.BuildEngineBuildContext;
-import com.facebook.buck.core.build.engine.BuildEngineResult;
 import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.build.engine.BuildRuleStatus;
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
@@ -275,12 +275,13 @@ public class CachingBuildEngineTest {
       fileHashCache =
           StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
       buildContext =
-          BuildEngineBuildContext.builder()
-              .setBuildContext(FakeBuildContext.NOOP_CONTEXT)
-              .setArtifactCache(cache)
-              .setBuildId(new BuildId())
-              .setClock(new IncrementingFakeClock())
-              .build();
+          BuildEngineBuildContext.of(
+              FakeBuildContext.NOOP_CONTEXT,
+              cache,
+              new IncrementingFakeClock(),
+              new BuildId(),
+              ImmutableMap.of(),
+              false);
       buildContext.getEventBus().register(listener);
       graphBuilder = new TestActionGraphBuilder();
       pathResolver = graphBuilder.getSourcePathResolver();
@@ -546,12 +547,13 @@ public class CachingBuildEngineTest {
           .andDelegateTo(new FakeArtifactCacheThatWritesAZipFile(desiredZipEntries, metadata));
 
       BuildEngineBuildContext buildContext =
-          BuildEngineBuildContext.builder()
-              .setBuildContext(FakeBuildContext.withSourcePathResolver(pathResolver))
-              .setClock(new DefaultClock())
-              .setBuildId(new BuildId())
-              .setArtifactCache(artifactCache)
-              .build();
+          BuildEngineBuildContext.of(
+              FakeBuildContext.withSourcePathResolver(pathResolver),
+              artifactCache,
+              new DefaultClock(),
+              new BuildId(),
+              ImmutableMap.of(),
+              false);
 
       // Build the rule!
       replayAll();
@@ -639,12 +641,13 @@ public class CachingBuildEngineTest {
           .andDelegateTo(new FakeArtifactCacheThatWritesAZipFile(desiredZipEntries, metadata));
 
       BuildEngineBuildContext buildContext =
-          BuildEngineBuildContext.builder()
-              .setBuildContext(FakeBuildContext.withSourcePathResolver(pathResolver))
-              .setClock(new DefaultClock())
-              .setBuildId(new BuildId())
-              .setArtifactCache(artifactCache)
-              .build();
+          BuildEngineBuildContext.of(
+              FakeBuildContext.withSourcePathResolver(pathResolver),
+              artifactCache,
+              new DefaultClock(),
+              new BuildId(),
+              ImmutableMap.of(),
+              false);
 
       // Build the rule!
       replayAll();
@@ -991,10 +994,10 @@ public class CachingBuildEngineTest {
           listeningDecorator(Executors.newFixedThreadPool(4));
       try (CachingBuildEngine cachingBuildEngine =
           cachingBuildEngineFactory().setExecutorService(executorService).build()) {
-        BuildEngineResult engineResultOne =
+        BuildEngine.BuildEngineResult engineResultOne =
             cachingBuildEngine.build(
                 buildContext, TestExecutionContext.newInstance(), interleavedRuleOne);
-        BuildEngineResult engineResultTwo =
+        BuildEngine.BuildEngineResult engineResultTwo =
             cachingBuildEngine.build(
                 buildContext, TestExecutionContext.newInstance(), interleavedRuleTwo);
         assertThat(engineResultOne.getResult().get().getStatus(), equalTo(BuildRuleStatus.SUCCESS));
@@ -1035,7 +1038,7 @@ public class CachingBuildEngineTest {
                 .getResult()
                 .get();
 
-        assertThat(result.getStatus(), equalTo(BuildRuleStatus.CANCELED));
+        assertThat(result.getStatus(), equalTo(BuildRuleStatus.FAIL));
         assertThat(result.getFailure(), instanceOf(BuildRuleFailedException.class));
         Throwable cause = result.getFailure().getCause();
         assertThat(cause, instanceOf(StepFailedException.class));
@@ -1096,7 +1099,7 @@ public class CachingBuildEngineTest {
                 .getResult()
                 .get();
 
-        assertThat(result.getStatus(), equalTo(BuildRuleStatus.CANCELED));
+        assertThat(result.getStatus(), equalTo(BuildRuleStatus.FAIL));
         assertThat(result.getFailure(), instanceOf(BuildRuleFailedException.class));
         Throwable cause = result.getFailure().getCause();
         assertThat(cause, instanceOf(StepFailedException.class));
@@ -1138,7 +1141,7 @@ public class CachingBuildEngineTest {
                 .getResult()
                 .get();
 
-        assertThat(result.getStatus(), equalTo(BuildRuleStatus.CANCELED));
+        assertThat(result.getStatus(), equalTo(BuildRuleStatus.FAIL));
       }
     }
 
@@ -1571,7 +1574,7 @@ public class CachingBuildEngineTest {
                 .build(buildContext, TestExecutionContext.newInstance(), rule)
                 .getResult()
                 .get();
-        assertThat(result.getStatus(), equalTo(BuildRuleStatus.CANCELED));
+        assertThat(result.getStatus(), equalTo(BuildRuleStatus.FAIL));
         assertThat(
             Objects.requireNonNull(cachingBuildEngine.getBuildRuleResult(dep1.getBuildTarget()))
                 .getStatus(),
@@ -1579,7 +1582,7 @@ public class CachingBuildEngineTest {
         assertThat(
             Objects.requireNonNull(cachingBuildEngine.getBuildRuleResult(dep2.getBuildTarget()))
                 .getStatus(),
-            equalTo(BuildRuleStatus.CANCELED));
+            equalTo(BuildRuleStatus.FAIL));
         assertThat(
             Objects.requireNonNull(cachingBuildEngine.getBuildRuleResult(dep3.getBuildTarget()))
                 .getStatus(),
@@ -3602,13 +3605,9 @@ public class CachingBuildEngineTest {
     @Test
     public void customWeights() throws Exception {
       BuildTarget target1 = BuildTargetFactory.newInstance("//:rule1");
-      ControlledRule rule1 =
-          new ControlledRule(
-              target1, filesystem, RuleScheduleInfo.builder().setJobsMultiplier(2).build());
+      ControlledRule rule1 = new ControlledRule(target1, filesystem, RuleScheduleInfo.of(2));
       BuildTarget target2 = BuildTargetFactory.newInstance("//:rule2");
-      ControlledRule rule2 =
-          new ControlledRule(
-              target2, filesystem, RuleScheduleInfo.builder().setJobsMultiplier(2).build());
+      ControlledRule rule2 = new ControlledRule(target2, filesystem, RuleScheduleInfo.of(2));
       ListeningMultiSemaphore semaphore =
           new ListeningMultiSemaphore(
               ResourceAmounts.of(3, 0, 0, 0), ResourceAllocationFairness.FAIR);
@@ -4267,7 +4266,7 @@ public class CachingBuildEngineTest {
         throw new RuntimeException(e);
       }
       return Futures.immediateFuture(
-          CacheResult.hit("dir", ArtifactCacheMode.dir).withMetadata(metadata));
+          CacheResult.hit("dir", ArtifactCacheMode.dir).withMetadata(Optional.of(metadata)));
     }
 
     @Override

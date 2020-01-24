@@ -31,6 +31,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.watchman.WatchmanWatcher.CursorType;
 import com.facebook.buck.parser.implicit.ImplicitInclude;
+import com.facebook.buck.parser.options.UserDefinedRulesState;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -207,6 +208,17 @@ public class ParserConfigTest {
             ImplicitInclude.fromConfigurationString("//foo/bar:includes.bzl::get_name::get_value"));
 
     assertEquals(expected, actual);
+  }
+
+  @Test
+  public void userDefinedRulesState() throws IOException {
+    assertEquals(UserDefinedRulesState.DISABLED, getDefaultConfig().getUserDefinedRulesState());
+
+    ParserConfig config = parseConfig("[parser]\nuser_defined_rules = disabled");
+    assertEquals(UserDefinedRulesState.DISABLED, config.getUserDefinedRulesState());
+
+    config = parseConfig("[parser]\nuser_defined_rules = enabled");
+    assertEquals(UserDefinedRulesState.ENABLED, config.getUserDefinedRulesState());
   }
 
   private ParserConfig getDefaultConfig() {

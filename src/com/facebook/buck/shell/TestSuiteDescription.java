@@ -23,7 +23,7 @@ import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.test.rule.TestRule;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -71,8 +71,7 @@ public class TestSuiteDescription implements DescriptionWithTargetGraph<TestSuit
   }
 
   /** Args for test_suite */
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractTestSuiteDescriptionArg extends BuildRuleArg {
     /** Test or TestSuite targets that should be invoked when this rule run through buck test */
     @Value.NaturalOrder

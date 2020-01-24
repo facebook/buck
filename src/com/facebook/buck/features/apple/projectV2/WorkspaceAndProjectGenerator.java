@@ -24,6 +24,7 @@ import com.facebook.buck.apple.AppleDependenciesCache;
 import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
 import com.facebook.buck.apple.AppleTestDescriptionArg;
 import com.facebook.buck.apple.XCodeDescriptions;
+import com.facebook.buck.apple.xcode.PBXObjectGIDFactory;
 import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
@@ -40,6 +41,7 @@ import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.util.graph.TopologicalSort;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
@@ -65,9 +67,11 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -92,7 +96,6 @@ public class WorkspaceAndProjectGenerator {
   private final CxxPlatform defaultCxxPlatform;
   private final ImmutableSet<Flavor> appleCxxFlavors;
 
-  private Optional<ProjectGenerator> combinedProjectGenerator;
   private final Map<String, SchemeGenerator> schemeGenerators = new HashMap<>();
   private final String buildFileName;
   private final Function<TargetNode<?>, ActionGraphBuilder> graphBuilderForNode;
@@ -113,20 +116,17 @@ public class WorkspaceAndProjectGenerator {
 
   /** The result of generating a workspace project. */
   public static class Result {
-    private final Path workspacePath;
-    private final PBXProject project;
+    public final Path workspacePath;
+    public final PBXProject project;
+    public final ImmutableMap<BuildTarget, PBXTarget> buildTargetToPBXTarget;
 
-    public Result(Path workspacePath, PBXProject project) {
+    public Result(
+        Path workspacePath,
+        PBXProject project,
+        ImmutableMap<BuildTarget, PBXTarget> buildTargetToPBXTarget) {
       this.workspacePath = workspacePath;
       this.project = project;
-    }
-
-    public Path getWorkspacePath() {
-      return this.workspacePath;
-    }
-
-    public PBXProject getProject() {
-      return this.project;
+      this.buildTargetToPBXTarget = buildTargetToPBXTarget;
     }
   }
 
@@ -166,7 +166,6 @@ public class WorkspaceAndProjectGenerator {
     this.graphBuilderForNode = graphBuilderForNode;
     this.buckEventBus = buckEventBus;
     this.swiftBuckConfig = swiftBuckConfig;
-    this.combinedProjectGenerator = Optional.empty();
     this.halideBuckConfig = halideBuckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
     this.appleConfig = appleConfig;
@@ -177,11 +176,6 @@ public class WorkspaceAndProjectGenerator {
     workspaceArguments
         .getSrcTarget()
         .ifPresent(buildTarget -> this.focusedTargetMatcher.addTarget(buildTarget));
-  }
-
-  @VisibleForTesting
-  Optional<ProjectGenerator> getCombinedProjectGenerator() {
-    return combinedProjectGenerator;
   }
 
   @VisibleForTesting
@@ -207,7 +201,8 @@ public class WorkspaceAndProjectGenerator {
    * @return A result indicating the output of the generation
    * @throws IOException
    */
-  public Result generateWorkspaceAndDependentProjects() throws IOException {
+  public Result generateWorkspaceAndDependentProjects(
+      ListeningExecutorService listeningExecutorService) throws IOException, InterruptedException {
     LOG.debug("Generating workspace for target %s", workspaceBuildTarget);
 
     String workspaceName =
@@ -259,10 +254,13 @@ public class WorkspaceAndProjectGenerator {
         ImmutableMap.builder();
     ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder = ImmutableMap.builder();
 
+    PBXObjectGIDFactory objectFactory = new PBXObjectGIDFactory();
     XcodeProjectWriteOptions xcodeProjectWriteOptions =
-        XcodeProjectWriteOptions.of(new PBXProject(workspaceName), outputDirectory);
+        XcodeProjectWriteOptions.of(
+            objectFactory.createProject(workspaceName), objectFactory, outputDirectory);
 
     generateProject(
+        listeningExecutorService,
         xcodeProjectWriteOptions,
         workspaceGenerator,
         targetsInRequiredProjects,
@@ -296,7 +294,7 @@ public class WorkspaceAndProjectGenerator {
     requiredBuildTargetsBuilder.addAll(getModularNodesToGenerate());
 
     Path workspacePath = workspaceGenerator.writeWorkspace();
-    return new Result(workspacePath, xcodeProjectWriteOptions.project());
+    return new Result(workspacePath, xcodeProjectWriteOptions.project(), buildTargetToPBXTarget);
   }
 
   /**
@@ -340,23 +338,45 @@ public class WorkspaceAndProjectGenerator {
   }
 
   private void generateProject(
+      ListeningExecutorService listeningExecutorService,
       XcodeProjectWriteOptions xcodeProjectWriteOptions,
       WorkspaceGenerator workspaceGenerator,
       ImmutableSet<BuildTarget> targetsInRequiredProjects,
       ImmutableMap.Builder<BuildTarget, PBXTarget> buildTargetToPbxTargetMapBuilder,
       ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder)
-      throws IOException {
+      throws IOException, InterruptedException {
     ImmutableSet.Builder<BuildTarget> buildTargets = ImmutableSet.builder();
+
+    HashSet<BuildTarget> unflavoredTargetsToGenerate = new HashSet<>();
+
     for (TargetNode<?> targetNode : projectGraph.getNodes()) {
       BuildTarget buildTarget = targetNode.getBuildTarget();
-      if (focusedTargetMatcher.matches(targetNode.getBuildTarget())) {
+
+      BuildTarget targetWithoutAppleCxxFlavors =
+          targetNode.getBuildTarget().withoutFlavors(appleCxxFlavors);
+      BuildTarget targetWithoutSpecificFlavors =
+          targetWithoutAppleCxxFlavors.withoutFlavors(CxxDescriptionEnhancer.STATIC_FLAVOR);
+
+      // Filter out targets that are not part of our focus set as well as
+      // ignore certain flavors when considering a target previously generated:
+      //  - AppleCxx  : Differing platforms should be generated as one target.
+      //  - static    : Static is the default. This avoids duplication when `static` is passed
+      // directly.
+      // This allows us to dedupe targets with different flavors, if any.
+      if (focusedTargetMatcher.matches(targetNode.getBuildTarget())
+          && !unflavoredTargetsToGenerate.contains(targetWithoutSpecificFlavors)) {
         buildTargets.add(buildTarget);
+        unflavoredTargetsToGenerate.add(targetWithoutSpecificFlavors);
       }
     }
 
     GenerationResult generationResult =
         generateProjectForDirectory(
-            xcodeProjectWriteOptions, rootCell, buildTargets.build(), targetsInRequiredProjects);
+            listeningExecutorService,
+            xcodeProjectWriteOptions,
+            rootCell,
+            buildTargets.build(),
+            targetsInRequiredProjects);
 
     processGenerationResult(
         buildTargetToPbxTargetMapBuilder, targetToProjectPathMapBuilder, generationResult);
@@ -381,11 +401,12 @@ public class WorkspaceAndProjectGenerator {
   }
 
   private GenerationResult generateProjectForDirectory(
+      ListeningExecutorService listeningExecutorService,
       XcodeProjectWriteOptions xcodeProjectWriteOptions,
       Cell projectCell,
       ImmutableSet<BuildTarget> rules,
       ImmutableSet<BuildTarget> targetsInRequiredProjects)
-      throws IOException {
+      throws IOException, InterruptedException {
     ProjectGenerator generator =
         new ProjectGenerator(
             xcodeDescriptions,
@@ -395,7 +416,6 @@ public class WorkspaceAndProjectGenerator {
             rules,
             projectCell,
             buildFileName,
-            xcodeProjectWriteOptions,
             projectGeneratorOptions,
             ruleKeyConfiguration,
             workspaceArguments.getSrcTarget().get(),
@@ -410,7 +430,16 @@ public class WorkspaceAndProjectGenerator {
             swiftBuckConfig,
             sharedLibraryToBundle);
 
-    ProjectGenerator.Result result = generator.createXcodeProjects();
+    ProjectGenerator.Result result =
+        generator.createXcodeProject(xcodeProjectWriteOptions, listeningExecutorService);
+
+    result.sourcePathsToBuild.stream()
+        .filter(sourcePath -> focusedTargetMatcher.matches(sourcePath.getTarget()))
+        .forEach(
+            sourcePath -> {
+              Utils.addRequiredBuildTargetFromSourcePath(
+                  sourcePath, requiredBuildTargetsBuilder, projectGraph, graphBuilderForNode);
+            });
 
     ImmutableMap<BuildTarget, PBXTarget> buildTargetToGeneratedTargetMap =
         result.buildTargetsToGeneratedTargetMap;
@@ -421,7 +450,7 @@ public class WorkspaceAndProjectGenerator {
         xcodeProjectWriteOptions.project(), buildTargetToGeneratedTargetMap.values());
 
     return GenerationResult.of(
-        generator.getXcodeProjPath(),
+        xcodeProjectWriteOptions.xcodeProjPath(),
         true,
         result.requiredBuildTargets,
         result.xcconfigPaths,
@@ -738,7 +767,12 @@ public class WorkspaceAndProjectGenerator {
                           .getConstructorArg()
                           .getModulemapMode()
                           .orElse(appleConfig.moduleMapMode()));
-              return NodeHelper.getModularMapTarget(modularNode, headerMode, defaultCxxPlatform);
+              Flavor defaultPlatformFlavor =
+                  modularNode
+                      .getConstructorArg()
+                      .getDefaultPlatform()
+                      .orElse(defaultCxxPlatform.getFlavor());
+              return NodeHelper.getModularMapTarget(modularNode, headerMode, defaultPlatformFlavor);
             })
         .collect(ImmutableSet.toImmutableSet());
   }

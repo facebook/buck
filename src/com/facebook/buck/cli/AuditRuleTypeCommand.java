@@ -23,11 +23,13 @@ import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.ImmutableMap;
 import java.io.PrintStream;
 import java.util.function.Consumer;
+import javax.annotation.Nullable;
 import org.kohsuke.args4j.Argument;
 
 /** Prints a requested rule type as a Python function with all supported attributes. */
@@ -37,6 +39,10 @@ public class AuditRuleTypeCommand extends AbstractCommand {
 
   @Override
   public ExitCode runWithoutHelp(CommandRunnerParams params) {
+    if (ruleName == null || ruleName.isEmpty()) {
+      throw new CommandLineException("Must specify the rule name");
+    }
+
     KnownRuleTypes knownRuleTypes = params.getKnownRuleTypesProvider().get(params.getCell());
     RuleType buildRuleType = knownRuleTypes.getRuleType(ruleName);
     BaseDescription<?> description = knownRuleTypes.getDescription(buildRuleType);
@@ -44,8 +50,7 @@ public class AuditRuleTypeCommand extends AbstractCommand {
     return ExitCode.SUCCESS;
   }
 
-  @Argument(required = true, metaVar = "RULE_NAME")
-  private String ruleName;
+  @Argument @Nullable private String ruleName;
 
   @Override
   public boolean isReadOnly() {

@@ -62,19 +62,16 @@ public class CopyResourcesStepTest {
             filesystem,
             buildContext,
             buildTarget,
-            ResourcesParameters.builder()
-                .setResources(
-                    ResourcesParameters.getNamedResources(
-                        ruleFinder,
-                        filesystem,
-                        ImmutableSortedSet.of(
-                            FakeSourcePath.of(
-                                filesystem, "android/java/src/com/facebook/base/data.json"),
-                            FakeSourcePath.of(
-                                filesystem,
-                                "android/java/src/com/facebook/common/util/data.json"))))
-                .setResourcesRoot(Optional.empty())
-                .build(),
+            ResourcesParameters.of(
+                ResourcesParameters.getNamedResources(
+                    ruleFinder,
+                    filesystem,
+                    ImmutableSortedSet.of(
+                        FakeSourcePath.of(
+                            filesystem, "android/java/src/com/facebook/base/data.json"),
+                        FakeSourcePath.of(
+                            filesystem, "android/java/src/com/facebook/common/util/data.json"))),
+                Optional.empty()),
             filesystem
                 .getBuckPaths()
                 .getScratchDir()
@@ -95,20 +92,17 @@ public class CopyResourcesStepTest {
             MkdirStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
                     buildContext.getBuildCellRootPath(), filesystem, target1.getParent())),
-            SymlinkFileStep.builder()
-                .setFilesystem(filesystem)
-                .setExistingFile(filesystem.resolve("android/java/src/com/facebook/base/data.json"))
-                .setDesiredLink(target1)
-                .build(),
+            SymlinkFileStep.of(
+                filesystem,
+                filesystem.resolve("android/java/src/com/facebook/base/data.json"),
+                target1),
             MkdirStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
                     buildContext.getBuildCellRootPath(), filesystem, target.getParent())),
-            SymlinkFileStep.builder()
-                .setFilesystem(filesystem)
-                .setExistingFile(
-                    filesystem.resolve("android/java/src/com/facebook/common/util/data.json"))
-                .setDesiredLink(target)
-                .build());
+            SymlinkFileStep.of(
+                filesystem,
+                filesystem.resolve("android/java/src/com/facebook/common/util/data.json"),
+                target));
     assertEquals(expected, step.buildSteps());
   }
 
@@ -132,19 +126,16 @@ public class CopyResourcesStepTest {
             filesystem,
             buildContext,
             buildTarget,
-            ResourcesParameters.builder()
-                .setResources(
-                    ResourcesParameters.getNamedResources(
-                        ruleFinder,
-                        filesystem,
-                        ImmutableSortedSet.of(
-                            FakeSourcePath.of(
-                                filesystem, "android/java/src/com/facebook/base/data.json"),
-                            FakeSourcePath.of(
-                                filesystem,
-                                "android/java/src/com/facebook/common/util/data.json"))))
-                .setResourcesRoot(Optional.empty())
-                .build(),
+            ResourcesParameters.of(
+                ResourcesParameters.getNamedResources(
+                    ruleFinder,
+                    filesystem,
+                    ImmutableSortedSet.of(
+                        FakeSourcePath.of(
+                            filesystem, "android/java/src/com/facebook/base/data.json"),
+                        FakeSourcePath.of(
+                            filesystem, "android/java/src/com/facebook/common/util/data.json"))),
+                Optional.empty()),
             filesystem
                 .getBuckPaths()
                 .getScratchDir()
@@ -165,20 +156,17 @@ public class CopyResourcesStepTest {
             MkdirStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
                     buildContext.getBuildCellRootPath(), filesystem, target1.getParent())),
-            SymlinkFileStep.builder()
-                .setFilesystem(filesystem)
-                .setExistingFile(filesystem.resolve("android/java/src/com/facebook/base/data.json"))
-                .setDesiredLink(target1)
-                .build(),
+            SymlinkFileStep.of(
+                filesystem,
+                filesystem.resolve("android/java/src/com/facebook/base/data.json"),
+                target1),
             MkdirStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
                     buildContext.getBuildCellRootPath(), filesystem, target.getParent())),
-            SymlinkFileStep.builder()
-                .setFilesystem(filesystem)
-                .setExistingFile(
-                    filesystem.resolve("android/java/src/com/facebook/common/util/data.json"))
-                .setDesiredLink(target)
-                .build());
+            SymlinkFileStep.of(
+                filesystem,
+                filesystem.resolve("android/java/src/com/facebook/common/util/data.json"),
+                target));
     assertEquals(expected, step.buildSteps());
   }
 
@@ -204,19 +192,16 @@ public class CopyResourcesStepTest {
             filesystem,
             buildContext,
             buildTarget,
-            ResourcesParameters.builder()
-                .setResources(
-                    ResourcesParameters.getNamedResources(
-                        ruleFinder,
-                        filesystem,
-                        ImmutableSortedSet.of(
-                            FakeSourcePath.of(
-                                filesystem, "android/java/src/com/facebook/base/data.json"),
-                            FakeSourcePath.of(
-                                filesystem,
-                                "android/java/src/com/facebook/common/util/data.json"))))
-                .setResourcesRoot(Optional.empty())
-                .build(),
+            ResourcesParameters.of(
+                ResourcesParameters.getNamedResources(
+                    ruleFinder,
+                    filesystem,
+                    ImmutableSortedSet.of(
+                        FakeSourcePath.of(
+                            filesystem, "android/java/src/com/facebook/base/data.json"),
+                        FakeSourcePath.of(
+                            filesystem, "android/java/src/com/facebook/common/util/data.json"))),
+                Optional.empty()),
             filesystem
                 .getBuckPaths()
                 .getScratchDir()
@@ -241,20 +226,17 @@ public class CopyResourcesStepTest {
             MkdirStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
                     buildContext.getBuildCellRootPath(), filesystem, target1.getParent())),
-            SymlinkFileStep.builder()
-                .setFilesystem(filesystem)
-                .setExistingFile(filesystem.resolve("android/java/src/com/facebook/base/data.json"))
-                .setDesiredLink(target1)
-                .build(),
+            SymlinkFileStep.of(
+                filesystem,
+                filesystem.resolve("android/java/src/com/facebook/base/data.json"),
+                target1),
             MkdirStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
                     buildContext.getBuildCellRootPath(), filesystem, target.getParent())),
-            SymlinkFileStep.builder()
-                .setFilesystem(filesystem)
-                .setExistingFile(
-                    filesystem.resolve("android/java/src/com/facebook/common/util/data.json"))
-                .setDesiredLink(target)
-                .build());
+            SymlinkFileStep.of(
+                filesystem,
+                filesystem.resolve("android/java/src/com/facebook/common/util/data.json"),
+                target));
     assertEquals(expected, step.buildSteps());
   }
 

@@ -16,7 +16,13 @@
 
 package com.facebook.buck.core.rules.actions.lib.args;
 
+import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.artifact.OutputArtifact;
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedMap;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 /**
@@ -25,8 +31,7 @@ import java.util.stream.Stream;
  * without copying them.
  */
 class AggregateCommandLineArgs implements CommandLineArgs {
-
-  private final ImmutableList<CommandLineArgs> args;
+  @AddToRuleKey private final ImmutableList<CommandLineArgs> args;
 
   AggregateCommandLineArgs(ImmutableList<CommandLineArgs> args) {
     this.args = args;
@@ -38,7 +43,28 @@ class AggregateCommandLineArgs implements CommandLineArgs {
   }
 
   @Override
-  public Stream<Object> getArgs() {
-    return args.stream().flatMap(CommandLineArgs::getArgs);
+  public void visitInputsAndOutputs(Consumer<Artifact> inputs, Consumer<OutputArtifact> outputs) {
+    args.forEach(arg -> arg.visitInputsAndOutputs(inputs, outputs));
+  }
+
+  @Override
+  public ImmutableSortedMap<String, String> getEnvironmentVariables() {
+    ImmutableSortedMap.Builder<String, String> builder = ImmutableSortedMap.naturalOrder();
+    try {
+      for (CommandLineArgs arg : args) {
+        builder.putAll(arg.getEnvironmentVariables());
+      }
+      return builder.build();
+    } catch (IllegalArgumentException e) {
+      // Thrown if two arguments have the same keys
+      // TODO(pjameson): Decide if we want to have a way to override instead
+      throw new HumanReadableException(
+          e, "Error getting commandline arguments: %s", e.getMessage());
+    }
+  }
+
+  @Override
+  public Stream<ArgAndFormatString> getArgsAndFormatStrings() {
+    return args.stream().flatMap(CommandLineArgs::getArgsAndFormatStrings);
   }
 }

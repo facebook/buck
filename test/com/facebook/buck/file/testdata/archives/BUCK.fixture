@@ -35,6 +35,7 @@ http_archive(
     urls = [
         "http://<HOST>:<PORT>/foo.tar",
     ],
+    visibility = ["PUBLIC"],
 )
 
 http_archive(

@@ -42,7 +42,7 @@ struct ArtifactMetadata {
   5: optional string artifactPayloadCrc32;  // DEPRECATED: Will be removed soon.
   6: optional string scheduleType;
   7: optional string artifactPayloadMd5;
-  8: optional bool distributedBuildModeEnabled;
+  // 8: DEPRECATED.
   // Free-form identifier of a service that produced the artifact
   9: optional string producerId;
   // How long it took to build this artifact, in milliseconds
@@ -106,7 +106,7 @@ struct BuckCacheFetchRequest {
   1: optional RuleKey ruleKey;
   2: optional string repository;
   3: optional string scheduleType;
-  4: optional bool distributedBuildModeEnabled;
+  // 4: DEPRECATED.
   // The fully qualified target name associated with the ruleKey
   5: optional string buildTarget;
 }
@@ -131,7 +131,7 @@ struct BuckCacheMultiContainsRequest {
   1: optional list<RuleKey> ruleKeys;
   2: optional string repository;
   3: optional string scheduleType;
-  4: optional bool distributedBuildModeEnabled;
+  // 4: DEPRECATED.
 }
 
 struct BuckCacheMultiContainsResponse {
@@ -174,7 +174,7 @@ struct BuckCacheMultiFetchRequest {
   1: optional list<RuleKey> ruleKeys;
   2: optional string repository;
   3: optional string scheduleType;
-  4: optional bool distributedBuildModeEnabled;
+  // 4: DEPRECATED.
   // Fully qualified target names associated with the rulekeys. There should
   // always be the same number of these as ruleKeys, and the entries should
   // match 1:1 (aka buildTargets[2] is associated with ruleKeys[2]).
@@ -195,7 +195,7 @@ struct BuckCacheDeleteRequest {
   1: optional list<RuleKey> ruleKeys;
   2: optional string repository;
   3: optional string scheduleType;
-  4: optional bool distributedBuildModeEnabled;
+  // 4: DEPRECATED.
 }
 
 struct DeleteDebugInfo {

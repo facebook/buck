@@ -28,7 +28,7 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.TestCellNameResolver;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.ImmutableCellRelativePath;
+import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
@@ -68,15 +68,15 @@ public class BuildTargetMatcherParserTest {
         BuildTargetMatcherParser.forVisibilityArgument();
 
     assertEquals(
-        ImmediateDirectoryBuildTargetMatcher.of(
-            new ImmutableCellRelativePath(
+        ImmutableImmediateDirectoryBuildTargetMatcher.of(
+            CellRelativePath.of(
                 CanonicalCellName.rootCell(),
                 ForwardRelativePath.of("test/com/facebook/buck/parser"))),
         buildTargetPatternParser.parse(
             createCellRoots(filesystem), "//test/com/facebook/buck/parser:"));
 
     assertEquals(
-        SingletonBuildTargetMatcher.of(
+        ImmutableSingletonBuildTargetMatcher.of(
             BuildTargetFactory.newInstance("//test/com/facebook/buck/parser:parser")
                 .getUnconfiguredBuildTargetView()
                 .getData()),
@@ -84,8 +84,8 @@ public class BuildTargetMatcherParserTest {
             createCellRoots(filesystem), "//test/com/facebook/buck/parser:parser"));
 
     assertEquals(
-        SubdirectoryBuildTargetMatcher.of(
-            new ImmutableCellRelativePath(
+        ImmutableSubdirectoryBuildTargetMatcher.of(
+            CellRelativePath.of(
                 CanonicalCellName.unsafeRootCell(),
                 ForwardRelativePath.of("test/com/facebook/buck/parser"))),
         buildTargetPatternParser.parse(
@@ -98,20 +98,18 @@ public class BuildTargetMatcherParserTest {
         BuildTargetMatcherParser.forVisibilityArgument();
 
     assertEquals(
-        ImmediateDirectoryBuildTargetMatcher.of(
-            new ImmutableCellRelativePath(
-                CanonicalCellName.rootCell(), ForwardRelativePath.of(""))),
+        ImmutableImmediateDirectoryBuildTargetMatcher.of(
+            CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelativePath.of(""))),
         buildTargetPatternParser.parse(createCellRoots(filesystem), "//:"));
 
     assertEquals(
-        SingletonBuildTargetMatcher.of(
+        ImmutableSingletonBuildTargetMatcher.of(
             BuildTargetFactory.newInstance("//:parser").getUnconfiguredBuildTargetView().getData()),
         buildTargetPatternParser.parse(createCellRoots(filesystem), "//:parser"));
 
     assertEquals(
-        SubdirectoryBuildTargetMatcher.of(
-            new ImmutableCellRelativePath(
-                CanonicalCellName.unsafeRootCell(), ForwardRelativePath.of(""))),
+        ImmutableSubdirectoryBuildTargetMatcher.of(
+            CellRelativePath.of(CanonicalCellName.unsafeRootCell(), ForwardRelativePath.of(""))),
         buildTargetPatternParser.parse(createCellRoots(filesystem), "//..."));
   }
 
@@ -126,14 +124,14 @@ public class BuildTargetMatcherParserTest {
             ImmutableMap.of("other", filesystem.getPath("../other")));
 
     assertEquals(
-        SingletonBuildTargetMatcher.of(
+        ImmutableSingletonBuildTargetMatcher.of(
             BuildTargetFactory.newInstance("other//:something")
                 .getUnconfiguredBuildTargetView()
                 .getData()),
         buildTargetPatternParser.parse(cellNames, "other//:something"));
     assertEquals(
-        SubdirectoryBuildTargetMatcher.of(
-            new ImmutableCellRelativePath(
+        ImmutableSubdirectoryBuildTargetMatcher.of(
+            CellRelativePath.of(
                 CanonicalCellName.unsafeOf(Optional.of("other")), ForwardRelativePath.of("sub"))),
         buildTargetPatternParser.parse(cellNames, "other//sub/..."));
   }

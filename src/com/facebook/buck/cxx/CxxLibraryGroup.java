@@ -45,7 +45,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.facebook.buck.util.function.TriFunction;
+import com.facebook.buck.util.function.QuadFunction;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.Cache;
@@ -85,8 +85,12 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
       exportedLinkerFlags;
   private final BiFunction<? super CxxPlatform, ActionGraphBuilder, Iterable<? extends Arg>>
       postExportedLinkerFlags;
-  private final TriFunction<
-          ? super CxxPlatform, ActionGraphBuilder, SourcePathResolverAdapter, NativeLinkableInput>
+  private final QuadFunction<
+          ? super CxxPlatform,
+          ActionGraphBuilder,
+          SourcePathResolverAdapter,
+          Boolean,
+          NativeLinkableInput>
       linkTargetInput;
   private final Optional<Pattern> supportedPlatformsRegex;
   private final ImmutableSet<FrameworkPath> frameworks;
@@ -126,10 +130,11 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
           exportedLinkerFlags,
       BiFunction<? super CxxPlatform, ActionGraphBuilder, Iterable<? extends Arg>>
           postExportedLinkerFlags,
-      TriFunction<
+      QuadFunction<
               ? super CxxPlatform,
               ActionGraphBuilder,
               SourcePathResolverAdapter,
+              Boolean,
               NativeLinkableInput>
           linkTargetInput,
       Optional<Pattern> supportedPlatformsRegex,
@@ -484,12 +489,14 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
   public NativeLinkableInput getNativeLinkTargetInput(
       CxxPlatform cxxPlatform,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolverAdapter pathResolver) {
+      SourcePathResolverAdapter pathResolver,
+      boolean includePrivateLinkerFlags) {
     if (!isPlatformSupported(cxxPlatform)) {
       LOG.verbose("Skipping library %s on platform %s", this, cxxPlatform.getFlavor());
       return NativeLinkableInput.of();
     }
-    return linkTargetInput.apply(cxxPlatform, graphBuilder, pathResolver);
+    return linkTargetInput.apply(
+        cxxPlatform, graphBuilder, pathResolver, includePrivateLinkerFlags);
   }
 
   @Override

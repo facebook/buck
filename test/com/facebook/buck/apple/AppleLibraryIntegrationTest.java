@@ -35,8 +35,10 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
+import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -479,11 +481,13 @@ public class AppleLibraryIntegrationTest {
 
     Path dsymPath =
         tmp.getRoot()
-            .resolve(filesystem.getBuckPaths().getGenDir())
             .resolve(
-                "Libraries/TestLibrary/"
-                    + "TestLibrary#dwarf-and-dsym,framework,include-frameworks,macosx-x86_64/"
-                    + "TestLibrary.framework.dSYM");
+                BuildTargetPaths.getGenPath(
+                    filesystem,
+                    BuildTargetFactory.newInstance(
+                        "//Libraries/TestLibrary:TestLibrary#dwarf-and-dsym,framework,include-frameworks,macosx-x86_64"),
+                    "%s"))
+            .resolve("TestLibrary.framework.dSYM");
     assertThat(Files.exists(dsymPath), is(true));
     AppleDsymTestUtil.checkDsymFileHasDebugSymbol("+[TestClass answer]", workspace, dsymPath);
   }
@@ -608,9 +612,12 @@ public class AppleLibraryIntegrationTest {
 
     Path dsymPath =
         tmp.getRoot()
-            .resolve(filesystem.getBuckPaths().getGenDir())
-            .resolve("Libraries/TestLibrary")
-            .resolve("TestLibrary#apple-dsym,macosx-x86_64,shared.dSYM");
+            .resolve(
+                BuildTargetPaths.getGenPath(
+                    filesystem,
+                    BuildTargetFactory.newInstance(
+                        "//Libraries/TestLibrary:TestLibrary#apple-dsym,macosx-x86_64,shared"),
+                    "%s.dSYM"));
     assertThat(Files.exists(dsymPath), is(true));
     AppleDsymTestUtil.checkDsymFileHasDebugSymbol("+[TestClass answer]", workspace, dsymPath);
   }
@@ -765,8 +772,6 @@ public class AppleLibraryIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_library_is_hermetic", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target =
         BuildTargetFactory.newInstance(
@@ -783,7 +788,8 @@ public class AppleLibraryIntegrationTest {
 
     Path objectPath =
         BuildTargetPaths.getGenPath(
-                filesystem,
+                FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(
+                    BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH),
                 target.withFlavors(
                     InternalFlavor.of("compile-" + sanitize("TestClass.m.o")),
                     InternalFlavor.of("iphonesimulator-x86_64")),
@@ -793,7 +799,12 @@ public class AppleLibraryIntegrationTest {
         workspace.getPath(Paths.get("first").resolve(objectPath)),
         workspace.getPath(Paths.get("second").resolve(objectPath)));
     Path libraryPath =
-        BuildTargetPaths.getGenPath(filesystem, target, "%s").resolve("libTestLibrary.a");
+        BuildTargetPaths.getGenPath(
+                FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(
+                    BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH),
+                target,
+                "%s")
+            .resolve("libTestLibrary.a");
     MoreAsserts.assertContentsEqual(
         workspace.getPath(Paths.get("first").resolve(libraryPath)),
         workspace.getPath(Paths.get("second").resolve(libraryPath)));
@@ -975,8 +986,11 @@ public class AppleLibraryIntegrationTest {
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
     Path dwarfPath =
         tmp.getRoot()
-            .resolve(filesystem.getBuckPaths().getGenDir())
-            .resolve("Mixed#apple-dsym,macosx-x86_64,shared.dSYM")
+            .resolve(
+                BuildTargetPaths.getGenPath(
+                    filesystem,
+                    BuildTargetFactory.newInstance("//:Mixed#apple-dsym,macosx-x86_64,shared"),
+                    "%s.dSYM"))
             .resolve("Contents/Resources/DWARF/Mixed");
     assertThat(Files.exists(dwarfPath), is(true));
     AppleDsymTestUtil.checkDsymFileHasSection("__SWIFT", "__ast", workspace, dwarfPath);
@@ -1028,9 +1042,12 @@ public class AppleLibraryIntegrationTest {
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
     Path headersPath =
         tmp.getRoot()
-            .resolve(filesystem.getBuckPaths().getGenDir())
             .resolve(
-                "ObjCLibrary#header-mode-symlink-tree-with-umbrella-directory-modulemap,headers,iphonesimulator-x86_64")
+                BuildTargetPaths.getGenPath(
+                    filesystem,
+                    BuildTargetFactory.newInstance(
+                        "//:ObjCLibrary#header-mode-symlink-tree-with-umbrella-directory-modulemap,headers,iphonesimulator-x86_64"),
+                    "%s"))
             .resolve("ObjCLibrary");
 
     Path umbrellaHeaderPath = headersPath.resolve("ObjCLibrary.h");

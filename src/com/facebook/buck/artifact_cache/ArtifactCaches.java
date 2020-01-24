@@ -45,7 +45,6 @@ import com.facebook.buck.support.bgtasks.BackgroundTask;
 import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskAction;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
-import com.facebook.buck.support.bgtasks.Timeout;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
@@ -124,7 +123,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
             .setAction(new ArtifactCachesCloseAction())
             .setActionArgs(artifactCaches)
             .setName("ArtifactCaches_close")
-            .setTimeout(Timeout.of(TIMEOUT_SECONDS, TimeUnit.SECONDS))
+            .setTimeout(BackgroundTask.Timeout.of(TIMEOUT_SECONDS, TimeUnit.SECONDS))
             .build();
     managerScope.schedule(closeTask);
 
@@ -185,34 +184,27 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
     return builder;
   }
 
-  @Override
-  public ArtifactCache newInstance() {
-    return newInstance(false);
-  }
-
   /**
    * Creates a new instance of the cache for use during a build.
    *
-   * @param distributedBuildModeEnabled true if this is a distributed build
    * @return ArtifactCache instance
    */
   @Override
-  public ArtifactCache newInstance(boolean distributedBuildModeEnabled) {
-    return newInstanceInternal(ImmutableSet.of(), distributedBuildModeEnabled);
+  public ArtifactCache newInstance() {
+    return newInstanceInternal(ImmutableSet.of());
   }
 
   @Override
-  public ArtifactCache remoteOnlyInstance(boolean distributedBuildModeEnabled) {
-    return newInstanceInternal(ImmutableSet.of(local), distributedBuildModeEnabled);
+  public ArtifactCache remoteOnlyInstance() {
+    return newInstanceInternal(ImmutableSet.of(local));
   }
 
   @Override
-  public ArtifactCache localOnlyInstance(boolean distributedBuildModeEnabled) {
-    return newInstanceInternal(ImmutableSet.of(remote), distributedBuildModeEnabled);
+  public ArtifactCache localOnlyInstance() {
+    return newInstanceInternal(ImmutableSet.of(remote));
   }
 
-  private ArtifactCache newInstanceInternal(
-      ImmutableSet<CacheType> cacheTypeBlacklist, boolean distributedBuildModeEnabled) {
+  private ArtifactCache newInstanceInternal(ImmutableSet<CacheType> cacheTypeBlacklist) {
     ArtifactCacheConnectEvent.Started started = ArtifactCacheConnectEvent.started();
     buckEventBus.post(started);
 
@@ -228,7 +220,6 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
             httpFetchExecutorService,
             dirWriteExecutorService,
             cacheTypeBlacklist,
-            distributedBuildModeEnabled,
             producerId,
             producerHostname,
             clientCertificateHandler);
@@ -293,7 +284,6 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
       ListeningExecutorService httpFetchExecutorService,
       ListeningExecutorService dirWriteExecutorService,
       ImmutableSet<CacheType> cacheTypeBlacklist,
-      boolean distributedBuildModeEnabled,
       String producerId,
       String producerHostname,
       Optional<ClientCertificateHandler> clientCertificateHandler) {
@@ -365,7 +355,6 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
                   new ThriftArtifactCache(
                       args,
                       buckConfig.getHybridThriftEndpoint().get(),
-                      distributedBuildModeEnabled,
                       buckEventBus.getBuildId(),
                       getMultiFetchLimit(buckConfig),
                       buckConfig.getHttpFetchConcurrency(),
@@ -686,7 +675,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
     }
 
     return factory.newInstance(
-        NetworkCacheArgs.builder()
+        ImmutableNetworkCacheArgs.builder()
             .setCacheName(cacheMode.name())
             .setCacheMode(cacheMode)
             .setRepository(config.getRepository())

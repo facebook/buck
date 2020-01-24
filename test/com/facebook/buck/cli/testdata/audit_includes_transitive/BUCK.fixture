@@ -1,3 +1,5 @@
+load("//:java_rules.bzl", "java_rule")
+
 include_defs("//build_defs")
 
-load("//:java_rules.bzl", "my_rule")
+java_rule()

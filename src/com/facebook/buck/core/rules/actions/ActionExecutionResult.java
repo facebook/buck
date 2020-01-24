@@ -16,9 +16,9 @@
 
 package com.facebook.buck.core.rules.actions;
 
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 /** Represents the result of executing the {@link Action} */
 public interface ActionExecutionResult {
@@ -31,38 +31,44 @@ public interface ActionExecutionResult {
 
   ImmutableList<String> getCommand();
 
+  static ActionExecutionSuccess success(
+      Optional<String> stdOut, Optional<String> stdErr, ImmutableList<String> command) {
+    return ImmutableActionExecutionSuccess.of(stdOut, stdErr, command);
+  }
+
+  static ActionExecutionFailure failure(
+      Optional<String> stdOut,
+      Optional<String> stdErr,
+      ImmutableList<String> command,
+      Optional<Exception> exception) {
+    return ImmutableActionExecutionFailure.of(stdOut, stdErr, command, exception);
+  }
+
   /** A successful action execution */
-  @Value.Immutable(copy = false, builder = false)
+  @BuckStyleValue
   interface ActionExecutionSuccess extends ActionExecutionResult {
-    @Value.Parameter
     @Override
     Optional<String> getStdOut();
 
-    @Value.Parameter
     @Override
     Optional<String> getStdErr();
 
-    @Value.Parameter
     @Override
     ImmutableList<String> getCommand();
   }
 
   /** execution that failed */
-  @Value.Immutable(copy = false, builder = false)
+  @BuckStyleValue
   interface ActionExecutionFailure extends ActionExecutionResult {
-    @Value.Parameter
     @Override
     Optional<String> getStdOut();
 
-    @Value.Parameter
     @Override
     Optional<String> getStdErr();
 
-    @Value.Parameter
     @Override
     ImmutableList<String> getCommand();
 
-    @Value.Parameter
     Optional<Exception> getException();
   }
 }

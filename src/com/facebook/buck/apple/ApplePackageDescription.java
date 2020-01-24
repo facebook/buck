@@ -36,15 +36,13 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
@@ -93,15 +91,6 @@ public class ApplePackageDescription
           projectFilesystem,
           sandboxExecutionStrategy,
           graphBuilder,
-          params.withExtraDeps(
-              () ->
-                  ImmutableSortedSet.<BuildRule>naturalOrder()
-                      .add(bundle)
-                      .addAll(
-                          BuildableSupport.getDepsCollection(
-                              applePackageConfigAndPlatformInfo.get().getExpandedArg(),
-                              graphBuilder))
-                      .build()),
           applePackageConfigAndPlatformInfo.get(),
           Objects.requireNonNull(bundle.getSourcePathToOutput()),
           bundle.isCacheable(),
@@ -160,8 +149,7 @@ public class ApplePackageDescription
     return true;
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractApplePackageDescriptionArg extends BuildRuleArg, HasDefaultPlatform {
     @Hint(isDep = false)
     BuildTarget getBundle();

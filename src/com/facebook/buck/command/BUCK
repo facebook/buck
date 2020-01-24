@@ -3,9 +3,6 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 java_immutables_library(
     name = "command",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
-    ],
     tests = [
         "//test/com/facebook/buck/cli:cli",
     ],
@@ -50,5 +47,8 @@ java_immutables_library(
         "//src/com/facebook/buck/util/string:string",
         "//src/com/facebook/buck/util/timing:timing",
         "//third-party/java/jackson:jackson-databind",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
     ],
 )

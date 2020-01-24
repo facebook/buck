@@ -1,0 +1,25 @@
+load("//:defs.bzl", "runnable_rule")
+
+runnable_rule(
+    name = "runnable_sh_success",
+    script = "runnable.sh",
+    exit = 0,
+)
+
+runnable_rule(
+    name = "runnable_sh_failure",
+    script = "runnable.sh",
+    exit = 100,
+)
+
+runnable_rule(
+    name = "runnable_bat_success",
+    script = "runnable.bat",
+    exit = 0,
+)
+
+runnable_rule(
+    name = "runnable_bat_failure",
+    script = "runnable.bat",
+    exit = 100,
+)

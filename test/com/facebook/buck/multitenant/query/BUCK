@@ -4,15 +4,15 @@ kotlin_library(
         ["*.kt"],
         exclude = ["*Test.kt"],
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/core/cell:cell",
-    ],
     deps = [
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/sourcepath:types",
         "//src/com/facebook/buck/multitenant/query:query",
         "//src/com/facebook/buck/multitenant/service:service",
         "//src/com/facebook/buck/query:query",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/cell:cell",
     ],
 )
 

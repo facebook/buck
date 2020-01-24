@@ -3,10 +3,6 @@ java_library(
     srcs = glob(
         ["*.java"],
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/core/test/rule:rule",
-        "//src/com/facebook/buck/rules/macros:macros",
-    ],
     tests = [
         "//test/com/facebook/buck/core/test/rule:rule",
     ],
@@ -14,5 +10,9 @@ java_library(
     deps = [
         "//src/com/facebook/buck/rules/args:args",
         "//third-party/java/guava:guava",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/test/rule:rule",
+        "//src/com/facebook/buck/rules/macros:macros",
     ],
 )

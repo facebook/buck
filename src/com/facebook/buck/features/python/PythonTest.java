@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -163,7 +164,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 getProjectFilesystem().getRootPath(),
                 getBuildTarget().getFullyQualifiedName(),
                 binary
-                    .getExecutableCommand()
+                    .getExecutableCommand(OutputLabel.defaultLabel())
                     .getCommandPrefix(buildContext.getSourcePathResolver()),
                 getMergedEnv(buildContext.getSourcePathResolver()),
                 options.getTestSelectorList(),
@@ -174,7 +175,8 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private ImmutableMap<String, String> getMergedEnv(SourcePathResolverAdapter pathResolver) {
     return new ImmutableMap.Builder<String, String>()
-        .putAll(binary.getExecutableCommand().getEnvironment(pathResolver))
+        .putAll(
+            binary.getExecutableCommand(OutputLabel.defaultLabel()).getEnvironment(pathResolver))
         .putAll(Arg.stringify(getEnv(), pathResolver))
         .build();
   }
@@ -240,7 +242,8 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .map(BuildRule::getBuildTarget)
         .concat(binary.getRuntimeDeps(buildRuleResolver))
         .concat(
-            BuildableSupport.getDeps(binary.getExecutableCommand(), buildRuleResolver)
+            BuildableSupport.getDeps(
+                    binary.getExecutableCommand(OutputLabel.defaultLabel()), buildRuleResolver)
                 .map(BuildRule::getBuildTarget));
   }
 
@@ -259,8 +262,8 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Tool getExecutableCommand() {
-    return binary.getExecutableCommand();
+  public Tool getExecutableCommand(OutputLabel outputLabel) {
+    return binary.getExecutableCommand(OutputLabel.defaultLabel());
   }
 
   @Override
@@ -274,7 +277,9 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .setType("pyunit")
         .setNeededCoverage(neededCoverage)
         .addAllCommand(
-            binary.getExecutableCommand().getCommandPrefix(buildContext.getSourcePathResolver()))
+            binary
+                .getExecutableCommand(OutputLabel.defaultLabel())
+                .getCommandPrefix(buildContext.getSourcePathResolver()))
         .putAllEnv(getMergedEnv(buildContext.getSourcePathResolver()))
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())

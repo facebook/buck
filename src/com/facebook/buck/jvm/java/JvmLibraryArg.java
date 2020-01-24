@@ -16,8 +16,8 @@
 
 package com.facebook.buck.jvm.java;
 
-import static com.facebook.buck.jvm.java.AbstractJavacPluginProperties.Type.ANNOTATION_PROCESSOR;
-import static com.facebook.buck.jvm.java.AbstractJavacPluginProperties.Type.JAVAC_PLUGIN;
+import static com.facebook.buck.jvm.java.JavacPluginProperties.Type.ANNOTATION_PROCESSOR;
+import static com.facebook.buck.jvm.java.JavacPluginProperties.Type.JAVAC_PLUGIN;
 
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -143,7 +143,7 @@ public interface JvmLibraryArg extends BuildRuleArg, MaybeRequiredForSourceOnlyA
   }
 
   default List<BuildRule> getPluginsOf(
-      BuildRuleResolver resolver, final AbstractJavacPluginProperties.Type type) {
+      BuildRuleResolver resolver, final JavacPluginProperties.Type type) {
     return getPlugins().stream()
         .map(pluginTarget -> resolver.getRule(pluginTarget))
         .filter(
@@ -152,10 +152,10 @@ public interface JvmLibraryArg extends BuildRuleArg, MaybeRequiredForSourceOnlyA
   }
 
   default void addPlugins(
-      AbstractJavacPluginParams.Builder builder,
+      JavacPluginParams.Builder builder,
       BuildRuleResolver resolver,
       BuildTarget owner,
-      AbstractJavacPluginProperties.Type type) {
+      JavacPluginProperties.Type type) {
     for (BuildTarget pluginTarget : getPlugins()) {
       BuildRule pluginRule = resolver.getRule(pluginTarget);
       if (!(pluginRule instanceof JavacPlugin)) {
@@ -180,7 +180,7 @@ public interface JvmLibraryArg extends BuildRuleArg, MaybeRequiredForSourceOnlyA
       return JavacPluginParams.EMPTY;
     }
 
-    AbstractJavacPluginParams.Builder builder = JavacPluginParams.builder();
+    JavacPluginParams.Builder builder = JavacPluginParams.builder();
     addPlugins(builder, resolver, owner, JAVAC_PLUGIN);
     for (String processorParam : getJavaPluginParams()) {
       builder.addParameters(processorParam);
@@ -188,8 +188,7 @@ public interface JvmLibraryArg extends BuildRuleArg, MaybeRequiredForSourceOnlyA
     return builder.build();
   }
 
-  default void addLegacyProcessors(
-      AbstractJavacPluginParams.Builder builder, BuildRuleResolver resolver) {
+  default void addLegacyProcessors(JavacPluginParams.Builder builder, BuildRuleResolver resolver) {
     builder.setLegacyAnnotationProcessorNames(getAnnotationProcessors());
     ImmutableSortedSet<BuildRule> processorDeps =
         resolver.getAllRules(getAnnotationProcessorDeps());
@@ -207,7 +206,7 @@ public interface JvmLibraryArg extends BuildRuleArg, MaybeRequiredForSourceOnlyA
       return JavacPluginParams.EMPTY;
     }
 
-    AbstractJavacPluginParams.Builder builder = JavacPluginParams.builder();
+    JavacPluginParams.Builder builder = JavacPluginParams.builder();
     addLegacyProcessors(builder, resolver);
     addPlugins(builder, resolver, owner, ANNOTATION_PROCESSOR);
     for (String processorParam : getAnnotationProcessorParams()) {

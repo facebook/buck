@@ -325,7 +325,6 @@ public class ManifestTest {
                     new RuleKey("bb"),
                     ImmutableMap.of("bar.h", HashCode.fromInt(0))))
             .getStats(),
-        Matchers.equalTo(
-            ManifestStats.builder().setNumDepFiles(2).setNumInputs(2).setNumHashes(1).build()));
+        Matchers.equalTo(ImmutableManifestStats.of(2, 1, 2)));
   }
 }

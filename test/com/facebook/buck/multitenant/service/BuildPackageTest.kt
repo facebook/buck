@@ -16,7 +16,6 @@
 
 package com.facebook.buck.multitenant.service
 
-import com.facebook.buck.core.model.AbstractRuleType
 import com.facebook.buck.core.model.RuleType
 import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser
 import com.facebook.buck.multitenant.fs.FsAgnosticPath
@@ -31,7 +30,7 @@ class BuildPackageTest {
         val buildPackage = BuildPackage(buildFileDirectory = FsAgnosticPath.of("foo/bar"),
             rules = setOf(RawBuildRule(targetNode = ServiceUnconfiguredTargetNode(
                 buildTarget = UnconfiguredBuildTargetParser.parse("cell//foo/bar:baz", true),
-                ruleType = RuleType.of("java_library", AbstractRuleType.Kind.BUILD),
+                ruleType = RuleType.of("java_library", RuleType.Kind.BUILD),
                 attributes = ImmutableMap.of("attr1", "va1", "attr2", "val2")),
                 deps = setOf(UnconfiguredBuildTargetParser.parse("cell//foo/bar:baz_lib", true)))),
             errors = listOf(BuildPackageParsingError(message = "parsing error",

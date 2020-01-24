@@ -44,6 +44,9 @@ public class AndroidBuckConfig {
 
   private static final String CONFIG_ENTRY_IN_SDK_PATH_SEARCH_ORDER = "<CONFIG>";
 
+  public static final String PATH_ENTRY_IN_ADB_PATH_SEARCH_ORDER = "<PATH>";
+  public static final String SDK_ENTRY_IN_ADB_PATH_SEARCH_ORDER = "<SDK>";
+
   /** Values acceptable for ndk.ndk_search_order. */
   public enum NdkSearchOrderEntry {
     ANDROID_NDK_REPOSITORY_ENV("ANDROID_NDK_REPOSITORY"),
@@ -62,6 +65,8 @@ public class AndroidBuckConfig {
 
   private static final ImmutableList<String> DEFAULT_SDK_PATH_SEARCH_ORDER =
       ImmutableList.of("ANDROID_SDK", "ANDROID_HOME", CONFIG_ENTRY_IN_SDK_PATH_SEARCH_ORDER);
+  private static final ImmutableList<String> DEFAULT_ADB_SEARCH_ORDER =
+      ImmutableList.of(SDK_ENTRY_IN_ADB_PATH_SEARCH_ORDER, PATH_ENTRY_IN_ADB_PATH_SEARCH_ORDER);
   private static final ImmutableList<NdkSearchOrderEntry> DEFAULT_NDK_SEARCH_ORDER =
       ImmutableList.of(
           NdkSearchOrderEntry.ANDROID_NDK_REPOSITORY_ENV,
@@ -116,10 +121,21 @@ public class AndroidBuckConfig {
 
   /**
    * Returns the path to the adb executable overridden by the current project. If not specified, the
-   * adb executable in android.sdk_path/platform-tools will be used.
+   * {@link #getAdbSearchOrder} will be used to find adb.
    */
   public Optional<Path> getAdbOverride() {
     return delegate.getPath("android", "adb");
+  }
+
+  /**
+   * Defines the order to search for the adb executable: a list consisting of the elements '<PATH>',
+   * representing the first adb on the system PATH, or '<SDK>', representing the adb in the
+   * platform-tools directory of the currently configured Android SDK location.
+   */
+  public ImmutableList<String> getAdbSearchOrder() {
+    return delegate
+        .getOptionalListWithoutComments("android", "adb_search_order")
+        .orElse(DEFAULT_ADB_SEARCH_ORDER);
   }
 
   public Integer getAdbTimeout() {
@@ -284,11 +300,12 @@ public class AndroidBuckConfig {
 
   /** Gets the ndk_toolchain target for the abi if it is specified in the config. */
   public Optional<BuildTarget> getNdkCxxToolchainTargetForAbi(
-      String cpuAbi, TargetConfiguration targetConfiguration) {
+      NdkTargetArchAbi cpuAbi, TargetConfiguration targetConfiguration) {
     ImmutableMap<String, String> platformMap =
         delegate.getMap("ndk", "toolchain_target_per_cpu_abi");
     platformMap.keySet().forEach(key -> Verify.verify(VALID_ABI_KEYS.contains(key)));
-    Optional<String> platformTarget = Optional.ofNullable(platformMap.get(cpuAbi));
+    Optional<String> platformTarget =
+        Optional.ofNullable(platformMap.get(cpuAbi.getBuckconfigValue()));
     return platformTarget.map(
         target -> delegate.getBuildTargetForFullyQualifiedTarget(target, targetConfiguration));
   }

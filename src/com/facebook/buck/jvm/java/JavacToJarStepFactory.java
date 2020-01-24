@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
-import static com.facebook.buck.jvm.java.AbstractJavacOptions.SpoolMode;
+import static com.facebook.buck.jvm.java.JavacOptions.SpoolMode;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
@@ -188,7 +188,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
     boolean isSpoolingToJarEnabled =
         compilerParameters.getAbiGenerationMode().isSourceAbi()
             || (postprocessClassesCommands.isEmpty()
-                && javacOptions.getSpoolMode() == AbstractJavacOptions.SpoolMode.DIRECT_TO_JAR
+                && javacOptions.getSpoolMode() == JavacOptions.SpoolMode.DIRECT_TO_JAR
                 && javac instanceof Jsr199Javac);
 
     LOG.info(

@@ -16,16 +16,15 @@
 
 package com.facebook.buck.util.cache;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.hashing.FileHashLoader;
+import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
-import org.immutables.value.Value;
 
 /**
  * A cache which maps Paths to cached hashes of their contents, based on a simplified subset of the
@@ -57,13 +56,22 @@ public interface FileHashCache extends FileHashLoader {
         "FileHashCache class " + getClass().getName() + " does not support debugDump.");
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  interface AbstractFileHashCacheVerificationResult {
+  @BuckStyleValue
+  interface FileHashCacheVerificationResult {
     int getCachesExamined();
 
     int getFilesExamined();
 
-    List<String> getVerificationErrors();
+    ImmutableList<String> getVerificationErrors();
+
+    static FileHashCacheVerificationResult of(int cachesExamined, int filesExamined) {
+      return of(cachesExamined, filesExamined, ImmutableList.of());
+    }
+
+    static FileHashCacheVerificationResult of(
+        int cachesExamined, int filesExamined, ImmutableList<String> verificationErrors) {
+      return ImmutableFileHashCacheVerificationResult.of(
+          cachesExamined, filesExamined, verificationErrors);
+    }
   }
 }

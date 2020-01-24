@@ -23,7 +23,7 @@ import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.google.common.collect.ImmutableSortedSet;
 import org.immutables.value.Value;
 
@@ -50,8 +50,7 @@ public class GenAidlDescription implements DescriptionWithTargetGraph<GenAidlDes
         args.getAidlSrcs());
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractGenAidlDescriptionArg implements BuildRuleArg, HasDeclaredDeps {
     abstract SourcePath getAidl();
 

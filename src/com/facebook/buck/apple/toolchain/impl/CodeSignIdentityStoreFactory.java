@@ -91,11 +91,7 @@ public class CodeSignIdentityStoreFactory implements ToolchainFactory<CodeSignId
                   break;
                 }
                 String subjectCommonName = matcher.group(2);
-                CodeSignIdentity identity =
-                    CodeSignIdentity.builder()
-                        .setFingerprint(fingerprint)
-                        .setSubjectCommonName(subjectCommonName)
-                        .build();
+                CodeSignIdentity identity = CodeSignIdentity.of(fingerprint, subjectCommonName);
                 builder.add(identity);
                 LOG.debug("Found code signing identity: " + identity);
               }

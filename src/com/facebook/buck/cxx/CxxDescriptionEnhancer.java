@@ -41,8 +41,8 @@ import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.cxx.AbstractCxxSource.Type;
 import com.facebook.buck.cxx.CxxBinaryDescription.CommonArg;
+import com.facebook.buck.cxx.CxxSource.Type;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
@@ -70,8 +70,8 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
-import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
 import com.facebook.buck.rules.macros.Macro;
+import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.OutputMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
@@ -526,7 +526,7 @@ public class CxxDescriptionEnhancer {
 
     for (String privateInclude : includeDirectories) {
       builder.addIncludes(
-          CxxIncludes.of(
+          ImmutableCxxIncludes.of(
               CxxPreprocessables.IncludeType.LOCAL,
               PathSourcePath.of(
                   projectFilesystem,
@@ -721,7 +721,7 @@ public class CxxDescriptionEnhancer {
       this.resolver = resolver;
       this.translateMacrosFn =
           new CxxFlags.TranslateMacrosFunction(
-              ImmutableSortedMap.copyOf(cxxPlatform.getFlagMacros()), cxxPlatform);
+              ImmutableSortedMap.copyOf(cxxPlatform.getFlagMacros()));
     }
 
     @Override
@@ -1101,17 +1101,16 @@ public class CxxDescriptionEnhancer {
 
     // Build up the linker flags, which support macro expansion.
     {
-      ImmutableList<AbstractMacroExpanderWithoutPrecomputedWork<? extends Macro>> expanders =
+      ImmutableList<MacroExpander<? extends Macro, ?>> expanders =
           ImmutableList.of(new CxxLocationMacroExpander(cxxPlatform), new OutputMacroExpander());
 
       StringWithMacrosConverter macrosConverter =
-          StringWithMacrosConverter.builder()
-              .setBuildTarget(target)
-              .setCellPathResolver(cellRoots)
-              .setActionGraphBuilder(graphBuilder)
-              .setExpanders(expanders)
-              .setSanitizer(getStringWithMacrosArgSanitizer(cxxPlatform))
-              .build();
+          StringWithMacrosConverter.of(
+              target,
+              cellRoots,
+              graphBuilder,
+              expanders,
+              Optional.of(getStringWithMacrosArgSanitizer(cxxPlatform)));
       CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
               linkerFlags, platformLinkerFlags, cxxPlatform)
           .stream()
@@ -1628,7 +1627,7 @@ public class CxxDescriptionEnhancer {
     // graphBuilder for the parts that don't.
     BuildRule buildRule = graphBuilder.requireRule(buildTarget);
     sourcePaths.add(buildRule.getSourcePathToOutput());
-    return Optional.of(CxxCompilationDatabaseDependencies.of(sourcePaths.build()));
+    return Optional.of(ImmutableCxxCompilationDatabaseDependencies.of(sourcePaths.build()));
   }
 
   /**
@@ -1806,13 +1805,12 @@ public class CxxDescriptionEnhancer {
       CellPathResolver cellPathResolver,
       ActionGraphBuilder graphBuilder,
       CxxPlatform cxxPlatform) {
-    return StringWithMacrosConverter.builder()
-        .setBuildTarget(target)
-        .setCellPathResolver(cellPathResolver)
-        .setActionGraphBuilder(graphBuilder)
-        .addExpanders(new CxxLocationMacroExpander(cxxPlatform), new OutputMacroExpander())
-        .setSanitizer(getStringWithMacrosArgSanitizer(cxxPlatform))
-        .build();
+    return StringWithMacrosConverter.of(
+        target,
+        cellPathResolver,
+        graphBuilder,
+        ImmutableList.of(new CxxLocationMacroExpander(cxxPlatform), new OutputMacroExpander()),
+        Optional.of(getStringWithMacrosArgSanitizer(cxxPlatform)));
   }
 
   private static Function<String, String> getStringWithMacrosArgSanitizer(CxxPlatform platform) {

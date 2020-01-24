@@ -18,6 +18,7 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.rules.BuildRule;
@@ -58,12 +59,12 @@ public class CommandAlias extends NoopBuildRule implements BinaryBuildRule, HasR
    * #platformDelegates}.
    *
    * <p>If this is a {@link BinaryBuildRule}, the implementation uses {@link
-   * BinaryBuildRule#getExecutableCommand()}. For other build rule types, the output returned by
-   * {@link BuildRule#getSourcePathToOutput()} is run (and has to be executable).
+   * BinaryBuildRule#getExecutableCommand(OutputLabel)}. For other build rule types, the output
+   * returned by {@link BuildRule#getSourcePathToOutput()} is run (and has to be executable).
    *
-   * <p>If empty, {@link #getExecutableCommand()} will return a {@link Tool} that throws {@link
-   * UnsupportedPlatformException} when attempting to call any method on it, unless the command is
-   * overridden for the current host {@link Platform}.
+   * <p>If empty, {@link BinaryBuildRule#getExecutableCommand(OutputLabel)} will return a {@link
+   * Tool} that throws {@link UnsupportedPlatformException} when attempting to call any method on
+   * it, unless the command is overridden for the current host {@link Platform}.
    */
   @AddToRuleKey private final Optional<BuildRule> genericDelegate;
 
@@ -119,7 +120,7 @@ public class CommandAlias extends NoopBuildRule implements BinaryBuildRule, HasR
   }
 
   @Override
-  public Tool getExecutableCommand() {
+  public Tool getExecutableCommand(OutputLabel outputLabel) {
     ImmutableSortedMap<Platform, Tool> platformTools =
         platformDelegates.entrySet().stream()
             .collect(
@@ -137,7 +138,9 @@ public class CommandAlias extends NoopBuildRule implements BinaryBuildRule, HasR
   private Tool buildRuleAsTool(BuildRule rule) {
     CommandTool.Builder tool;
     if (rule instanceof BinaryBuildRule) {
-      tool = new CommandTool.Builder(((BinaryBuildRule) rule).getExecutableCommand());
+      tool =
+          new CommandTool.Builder(
+              ((BinaryBuildRule) rule).getExecutableCommand(OutputLabel.defaultLabel()));
     } else {
       SourcePath output =
           Objects.requireNonNull(

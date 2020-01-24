@@ -24,9 +24,8 @@ import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.google.common.collect.ImmutableSet;
-import org.immutables.value.Value;
 
 /**
  * A description for {@code constraint_value}.
@@ -74,8 +73,7 @@ public class ConstraintValueDescription
     return ImmutableSet.of(ConfigurationBuildTargets.convert(arg.getConstraintSetting()));
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractConstraintValueArg extends ConfigurationRuleArg {
     @Hint(isConfigurable = false)
     UnconfiguredBuildTargetView getConstraintSetting();

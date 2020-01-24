@@ -28,13 +28,12 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.LegacyProviderCompatibleDescription;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.google.common.collect.ImmutableCollection;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.immutables.value.Value;
 
 public class FakeTargetNodeBuilder
     extends AbstractNodeBuilder<
@@ -91,8 +90,7 @@ public class FakeTargetNodeBuilder
     return newBuilder(rule).build();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractFakeTargetNodeArg extends BuildRuleArg, HasDeclaredDeps {}
 
   public static class FakeDescription
