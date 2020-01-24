@@ -54,7 +54,7 @@ import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 
-public class PertTimesEventListenerTest {
+public class PerfTimesEventListenerTest {
 
   private ExecutionEnvironment executionEnvironment;
   private SettableFakeClock fakeClock;
