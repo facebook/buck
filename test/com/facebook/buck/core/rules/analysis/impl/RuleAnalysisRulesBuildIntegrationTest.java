@@ -20,6 +20,7 @@ import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildPaths;
@@ -60,22 +61,11 @@ public class RuleAnalysisRulesBuildIntegrationTest {
   public void ruleAnalysisRuleBuilds() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "basic_rule", tmp);
-
     workspace.setUp();
 
-    workspace.setKnownRuleTypesFactoryFactory(
-        (executor,
-            pluginManager,
-            sandboxExecutionStrategyFactory,
-            knownConfigurationDescriptions) ->
-            cell ->
-                KnownNativeRuleTypes.of(
-                    ImmutableList.of(new FakeRuleRuleDescription()),
-                    ImmutableList.of(),
-                    ImmutableList.of()));
+    setKnownRuleTypesFactoryFactory(workspace, new FakeRuleRuleDescription());
 
     Path resultPath = workspace.buildAndReturnOutput("//:bar");
-
     assertEquals(ImmutableList.of("testcontent"), Files.readAllLines(resultPath));
   }
 
@@ -87,16 +77,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
     workspace.setUp();
     workspace.enableDirCache();
 
-    workspace.setKnownRuleTypesFactoryFactory(
-        (executor,
-            pluginManager,
-            sandboxExecutionStrategyFactory,
-            knownConfigurationDescriptions) ->
-            cell ->
-                KnownNativeRuleTypes.of(
-                    ImmutableList.of(new BasicRuleRuleDescription()),
-                    ImmutableList.of(),
-                    ImmutableList.of()));
+    setKnownRuleTypesFactoryFactory(workspace, new BasicRuleRuleDescription());
 
     Path resultPath = workspace.buildAndReturnOutput("//:bar");
 
@@ -175,22 +156,14 @@ public class RuleAnalysisRulesBuildIntegrationTest {
                     ImmutableList.of(Paths.get("dir", "faz__", "output")))),
             ImmutableList.of(Paths.get("bar__", "output")));
 
-    JsonParser parser = ObjectMappers.createParser(resultPath);
-    Map<String, Object> data = parser.readValueAs(Map.class);
-    parser.close();
-
-    assertThat(data, ruleOutputToMatchers(output));
+    assertJsonEquals(output, resultPath);
 
     // clean
     workspace.runBuckCommand("clean", "--keep-cache");
 
     // rebuild should be same result and cached
     resultPath = workspace.buildAndReturnOutput("//:bar");
-    parser = ObjectMappers.createParser(resultPath);
-    data = parser.readValueAs(Map.class);
-    parser.close();
-
-    assertThat(data, ruleOutputToMatchers(output));
+    assertJsonEquals(output, resultPath);
 
     workspace.getBuildLog().assertTargetWasFetchedFromCache("//:bar");
 
@@ -281,11 +254,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
                     ImmutableList.of(Paths.get("dir/faz__", "output")))),
             ImmutableList.of(Paths.get("bar__", "output")));
 
-    parser = ObjectMappers.createParser(resultPath);
-    data = parser.readValueAs(Map.class);
-    parser.close();
-
-    assertThat(data, ruleOutputToMatchers(output));
+    assertJsonEquals(output, resultPath);
   }
 
   @Test
@@ -294,17 +263,8 @@ public class RuleAnalysisRulesBuildIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "rule_with_legacy_deps", tmp);
 
     workspace.setUp();
-
-    workspace.setKnownRuleTypesFactoryFactory(
-        (executor,
-            pluginManager,
-            sandboxExecutionStrategyFactory,
-            knownConfigurationDescriptions) ->
-            cell ->
-                KnownNativeRuleTypes.of(
-                    ImmutableList.of(new BasicRuleRuleDescription(), new LegacyRuleDescription()),
-                    ImmutableList.of(),
-                    ImmutableList.of()));
+    setKnownRuleTypesFactoryFactory(
+        workspace, new BasicRuleRuleDescription(), new LegacyRuleDescription());
 
     Path resultPath = workspace.buildAndReturnOutput("//:bar");
 
@@ -382,11 +342,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
                     ImmutableList.of(Paths.get("output")))),
             ImmutableList.of(Paths.get("bar__", "output")));
 
-    JsonParser parser = ObjectMappers.createParser(resultPath);
-    Map<String, Object> data = parser.readValueAs(Map.class);
-    parser.close();
-
-    assertThat(data, ruleOutputToMatchers(output));
+    assertJsonEquals(output, resultPath);
   }
 
   @Test
@@ -397,16 +353,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
     workspace.setUp();
     workspace.enableDirCache();
 
-    workspace.setKnownRuleTypesFactoryFactory(
-        (executor,
-            pluginManager,
-            sandboxExecutionStrategyFactory,
-            knownConfigurationDescriptions) ->
-            cell ->
-                KnownNativeRuleTypes.of(
-                    ImmutableList.of(new BasicRuleRuleDescription()),
-                    ImmutableList.of(),
-                    ImmutableList.of()));
+    setKnownRuleTypesFactoryFactory(workspace, new BasicRuleRuleDescription());
 
     Path resultPath = workspace.buildAndReturnOutput("//:bar");
 
@@ -430,22 +377,14 @@ public class RuleAnalysisRulesBuildIntegrationTest {
             ImmutableList.of(),
             ImmutableList.of(Paths.get("bar__", "output")));
 
-    JsonParser parser = ObjectMappers.createParser(resultPath);
-    Map<String, Object> data = parser.readValueAs(Map.class);
-    parser.close();
-
-    assertThat(data, ruleOutputToMatchers(output));
+    assertJsonEquals(output, resultPath);
 
     // clean
     workspace.runBuckCommand("clean", "--keep-cache");
 
     // rebuild should be same result and cached
     resultPath = workspace.buildAndReturnOutput("//:bar");
-    parser = ObjectMappers.createParser(resultPath);
-    data = parser.readValueAs(Map.class);
-    parser.close();
-
-    assertThat(data, ruleOutputToMatchers(output));
+    assertJsonEquals(output, resultPath);
 
     workspace.getBuildLog().assertTargetWasFetchedFromCache("//:bar");
 
@@ -482,11 +421,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
             ImmutableList.of(),
             ImmutableList.of(Paths.get("bar__", "output")));
 
-    parser = ObjectMappers.createParser(resultPath);
-    data = parser.readValueAs(Map.class);
-    parser.close();
-
-    assertThat(data, ruleOutputToMatchers(output));
+    assertJsonEquals(output, resultPath);
   }
 
   @Test
@@ -729,17 +664,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "rule_with_named_outputs", tmp)
             .setUp();
-
-    workspace.setKnownRuleTypesFactoryFactory(
-        (executor,
-            pluginManager,
-            sandboxExecutionStrategyFactory,
-            knownConfigurationDescriptions) ->
-            cell ->
-                KnownNativeRuleTypes.of(
-                    ImmutableList.of(new BasicRuleRuleDescription()),
-                    ImmutableList.of(),
-                    ImmutableList.of()));
+    setKnownRuleTypesFactoryFactory(workspace, new BasicRuleRuleDescription());
 
     Path resultPath = workspace.buildAndReturnOutput("//:foo");
     assertTrue(resultPath.endsWith("d-d-default!!!"));
@@ -759,10 +684,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
                 Paths.get("foo__", "baz"),
                 Paths.get("foo__", "quux")));
 
-    JsonParser parser = ObjectMappers.createParser(resultPath);
-    Map<String, Object> actualData = parser.readValueAs(Map.class);
-
-    assertThat(actualData, ruleOutputToMatchers(expectedOutput));
+    assertJsonEquals(expectedOutput, resultPath);
   }
 
   @Test
@@ -770,17 +692,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "rule_with_named_outputs", tmp)
             .setUp();
-
-    workspace.setKnownRuleTypesFactoryFactory(
-        (executor,
-            pluginManager,
-            sandboxExecutionStrategyFactory,
-            knownConfigurationDescriptions) ->
-            cell ->
-                KnownNativeRuleTypes.of(
-                    ImmutableList.of(new BasicRuleRuleDescription()),
-                    ImmutableList.of(),
-                    ImmutableList.of()));
+    setKnownRuleTypesFactoryFactory(workspace, new BasicRuleRuleDescription());
 
     Path resultPath = workspace.buildAndReturnOutput("//:rule_with_named_output_src");
     assertTrue(resultPath.endsWith("dundundun"));
@@ -793,11 +705,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
             ImmutableList.of(),
             ImmutableList.of(Paths.get("rule_with_named_output_src__", "dundundun")));
 
-    JsonParser parser = ObjectMappers.createParser(resultPath);
-    Map<String, Object> actualData = parser.readValueAs(Map.class);
-
-    assertThat(actualData, ruleOutputToMatchers(expectedOutput));
-    parser.close();
+    assertJsonEquals(expectedOutput, resultPath);
   }
 
   @Test
@@ -805,17 +713,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "rule_with_named_outputs", tmp)
             .setUp();
-
-    workspace.setKnownRuleTypesFactoryFactory(
-        (executor,
-            pluginManager,
-            sandboxExecutionStrategyFactory,
-            knownConfigurationDescriptions) ->
-            cell ->
-                KnownNativeRuleTypes.of(
-                    ImmutableList.of(new BasicRuleRuleDescription()),
-                    ImmutableList.of(),
-                    ImmutableList.of()));
+    setKnownRuleTypesFactoryFactory(workspace, new BasicRuleRuleDescription());
 
     Path resultPath = workspace.buildAndReturnOutput("//:rule_with_default_output_src");
     assertTrue(resultPath.endsWith("heeheehee"));
@@ -828,11 +726,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
             ImmutableList.of(),
             ImmutableList.of(Paths.get("rule_with_default_output_src__", "heeheehee")));
 
-    JsonParser parser = ObjectMappers.createParser(resultPath);
-    Map<String, Object> actualData = parser.readValueAs(Map.class);
-
-    assertThat(actualData, ruleOutputToMatchers(expectedOutput));
-    parser.close();
+    assertJsonEquals(expectedOutput, resultPath);
   }
 
   @Test
@@ -840,17 +734,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "rule_with_named_outputs", tmp)
             .setUp();
-
-    workspace.setKnownRuleTypesFactoryFactory(
-        (executor,
-            pluginManager,
-            sandboxExecutionStrategyFactory,
-            knownConfigurationDescriptions) ->
-            cell ->
-                KnownNativeRuleTypes.of(
-                    ImmutableList.of(new BasicRuleRuleDescription()),
-                    ImmutableList.of(),
-                    ImmutableList.of()));
+    setKnownRuleTypesFactoryFactory(workspace, new BasicRuleRuleDescription());
 
     ProcessResult result =
         workspace
@@ -859,6 +743,26 @@ public class RuleAnalysisRulesBuildIntegrationTest {
     assertThat(
         result.getStderr(),
         Matchers.containsString("Cannot find output label [bad] for target //:foo"));
+  }
+
+  private void setKnownRuleTypesFactoryFactory(
+      ProjectWorkspace workspace, Description<?>... descriptions) {
+    workspace.setKnownRuleTypesFactoryFactory(
+        (executor,
+            pluginManager,
+            sandboxExecutionStrategyFactory,
+            knownConfigurationDescriptions) ->
+            cell ->
+                KnownNativeRuleTypes.of(
+                    ImmutableList.copyOf(descriptions), ImmutableList.of(), ImmutableList.of()));
+  }
+
+  private void assertJsonEquals(RuleOutput expected, Path actualJsonPath) throws IOException {
+    JsonParser parser = ObjectMappers.createParser(actualJsonPath);
+    Map<String, Object> data = parser.readValueAs(Map.class);
+    parser.close();
+
+    assertThat(data, ruleOutputToMatchers(expected));
   }
 
   private static class RuleOutput {
@@ -879,7 +783,6 @@ public class RuleAnalysisRulesBuildIntegrationTest {
   }
 
   private Matcher<Map<String, Object>> ruleOutputToMatchers(RuleOutput ruleOutput) {
-
     Matcher<Map<? extends String, ? extends Object>> targetMatcher =
         Matchers.hasEntry("target", ruleOutput.target);
     Matcher<Map<? extends String, ? extends Object>> valMatcher =
