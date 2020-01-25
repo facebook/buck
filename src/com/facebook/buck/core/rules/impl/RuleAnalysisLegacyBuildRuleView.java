@@ -20,10 +20,11 @@ import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.core.artifact.BoundArtifact;
 import com.facebook.buck.core.artifact.OutputArtifact;
+import com.facebook.buck.core.artifact.converter.DefaultInfoArtifactsRetriever;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -44,7 +45,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
-import com.google.devtools.build.lib.syntax.SkylarkDict;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -149,17 +149,10 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule
 
   @Override
   public ImmutableSortedSet<SourcePath> getSourcePathToOutput(OutputLabel outputLabel) {
-    if (outputLabel.isDefault()) {
-      return convertToSourcePaths(providerInfoCollection.getDefaultInfo().defaultOutputs());
-    }
-    SkylarkDict<String, Set<Artifact>> namedOutputs =
-        providerInfoCollection.getDefaultInfo().namedOutputs();
-    Set<Artifact> artifacts = namedOutputs.get(OutputLabel.internals().getLabel(outputLabel));
-    if (artifacts != null) {
-      return convertToSourcePaths(artifacts);
-    }
-    throw new HumanReadableException(
-        "Cannot find output label [%s] for target %s", outputLabel, getBuildTarget());
+    return convertToSourcePaths(
+        DefaultInfoArtifactsRetriever.getArtifacts(
+            providerInfoCollection.getDefaultInfo(),
+            ImmutableBuildTargetWithOutputs.of(getBuildTarget(), outputLabel)));
   }
 
   @Override

@@ -1,0 +1,29 @@
+basic_rule(
+    name = "foo",
+    val = 3,
+    default_outs = ["d-d-default!!!"],
+    named_outs = {
+        "bar": ["baz"],
+        "qux": ["quux"],
+    },
+)
+
+basic_rule(
+    name = "rule_with_named_output_src",
+    val = 2,
+    srcs = [":foo[bar]"],
+    default_outs = ["dundundun"],
+)
+
+basic_rule(
+    name = "rule_with_default_output_src",
+    val = 1,
+    srcs = [":foo"],
+    default_outs = ["heeheehee"],
+)
+
+basic_rule(
+    name = "rule_with_nonexistent_named_src",
+    val = 2,
+    srcs = [":foo[bad]"],
+)

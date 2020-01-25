@@ -31,6 +31,7 @@ import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonParser;
@@ -721,6 +722,143 @@ public class RuleAnalysisRulesBuildIntegrationTest {
 
     ProcessResult result = workspace.runBuckTest("//:without_run").assertFailure();
     assertThat(result.getStderr(), Matchers.containsString("did not return a RunInfo object"));
+  }
+
+  @Test
+  public void ruleAnalysisRulesCanReturnNamedOutputs() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "rule_with_named_outputs", tmp)
+            .setUp();
+
+    workspace.setKnownRuleTypesFactoryFactory(
+        (executor,
+            pluginManager,
+            sandboxExecutionStrategyFactory,
+            knownConfigurationDescriptions) ->
+            cell ->
+                KnownNativeRuleTypes.of(
+                    ImmutableList.of(new BasicRuleRuleDescription()),
+                    ImmutableList.of(),
+                    ImmutableList.of()));
+
+    Path resultPath = workspace.buildAndReturnOutput("//:foo");
+    assertTrue(resultPath.endsWith("d-d-default!!!"));
+    resultPath = workspace.buildAndReturnOutput("//:foo[bar]");
+    assertTrue(resultPath.endsWith("baz"));
+    resultPath = workspace.buildAndReturnOutput("//:foo[qux]");
+    assertTrue(resultPath.endsWith("quux"));
+
+    RuleOutput expectedOutput =
+        new RuleOutput(
+            "foo",
+            3,
+            ImmutableList.of(),
+            ImmutableList.of(),
+            ImmutableList.of(
+                Paths.get("foo__", "d-d-default!!!"),
+                Paths.get("foo__", "baz"),
+                Paths.get("foo__", "quux")));
+
+    JsonParser parser = ObjectMappers.createParser(resultPath);
+    Map<String, Object> actualData = parser.readValueAs(Map.class);
+
+    assertThat(actualData, ruleOutputToMatchers(expectedOutput));
+  }
+
+  @Test
+  public void ruleAnalysisRulesCanConsumeNamedOutputs() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "rule_with_named_outputs", tmp)
+            .setUp();
+
+    workspace.setKnownRuleTypesFactoryFactory(
+        (executor,
+            pluginManager,
+            sandboxExecutionStrategyFactory,
+            knownConfigurationDescriptions) ->
+            cell ->
+                KnownNativeRuleTypes.of(
+                    ImmutableList.of(new BasicRuleRuleDescription()),
+                    ImmutableList.of(),
+                    ImmutableList.of()));
+
+    Path resultPath = workspace.buildAndReturnOutput("//:rule_with_named_output_src");
+    assertTrue(resultPath.endsWith("dundundun"));
+
+    RuleOutput expectedOutput =
+        new RuleOutput(
+            "rule_with_named_output_src",
+            2,
+            ImmutableList.of(Paths.get("foo__", "baz")),
+            ImmutableList.of(),
+            ImmutableList.of(Paths.get("rule_with_named_output_src__", "dundundun")));
+
+    JsonParser parser = ObjectMappers.createParser(resultPath);
+    Map<String, Object> actualData = parser.readValueAs(Map.class);
+
+    assertThat(actualData, ruleOutputToMatchers(expectedOutput));
+    parser.close();
+  }
+
+  @Test
+  public void ruleAnalysisRulesCanConsumeDefaultOutputs() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "rule_with_named_outputs", tmp)
+            .setUp();
+
+    workspace.setKnownRuleTypesFactoryFactory(
+        (executor,
+            pluginManager,
+            sandboxExecutionStrategyFactory,
+            knownConfigurationDescriptions) ->
+            cell ->
+                KnownNativeRuleTypes.of(
+                    ImmutableList.of(new BasicRuleRuleDescription()),
+                    ImmutableList.of(),
+                    ImmutableList.of()));
+
+    Path resultPath = workspace.buildAndReturnOutput("//:rule_with_default_output_src");
+    assertTrue(resultPath.endsWith("heeheehee"));
+
+    RuleOutput expectedOutput =
+        new RuleOutput(
+            "rule_with_default_output_src",
+            1,
+            ImmutableList.of(Paths.get("foo__", "d-d-default!!!")),
+            ImmutableList.of(),
+            ImmutableList.of(Paths.get("rule_with_default_output_src__", "heeheehee")));
+
+    JsonParser parser = ObjectMappers.createParser(resultPath);
+    Map<String, Object> actualData = parser.readValueAs(Map.class);
+
+    assertThat(actualData, ruleOutputToMatchers(expectedOutput));
+    parser.close();
+  }
+
+  @Test
+  public void failsIfTryToConsumeNonexistentNamedOutput() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "rule_with_named_outputs", tmp)
+            .setUp();
+
+    workspace.setKnownRuleTypesFactoryFactory(
+        (executor,
+            pluginManager,
+            sandboxExecutionStrategyFactory,
+            knownConfigurationDescriptions) ->
+            cell ->
+                KnownNativeRuleTypes.of(
+                    ImmutableList.of(new BasicRuleRuleDescription()),
+                    ImmutableList.of(),
+                    ImmutableList.of()));
+
+    ProcessResult result =
+        workspace
+            .runBuckBuild("//:rule_with_nonexistent_named_src")
+            .assertExitCode(ExitCode.FATAL_GENERIC);
+    assertThat(
+        result.getStderr(),
+        Matchers.containsString("Cannot find output label [bad] for target //:foo"));
   }
 
   private static class RuleOutput {

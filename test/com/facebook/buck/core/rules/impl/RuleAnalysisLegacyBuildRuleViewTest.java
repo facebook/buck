@@ -25,7 +25,6 @@ import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.OutputLabel;
@@ -268,7 +267,7 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
 
   @Test
   public void invalidLabelThrows() throws ActionCreationException, EvalException {
-    exception.expect(HumanReadableException.class);
+    exception.expect(NullPointerException.class);
     exception.expectMessage("Cannot find output label [nonexistent] for target //my:foo");
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//my:foo");
