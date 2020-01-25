@@ -104,6 +104,13 @@ public abstract class AbstractContainerCommand extends CommandWithPluginManager 
     stream.println("  " + prefix + " <command> --help");
     stream.println("  " + prefix + " <command> [<command-options>]");
     stream.println();
+    // Note environment variables are handled by a Python wrapper
+    stream.println("Environment variables:");
+    stream.println("  NO_BUCKD              do not launch buck daemon");
+    stream.println("  BUCK_DEBUG_MODE       start buck with debugger agent listening on port 8888");
+    stream.println("  BUCK_EXTRA_JAVA_ARGS  JVM arguments used when launching buck process");
+    stream.println("  FAKE_JAVA_VERSION     override a version used in rule key computation");
+    stream.println();
 
     stream.println("Available commands:");
 
