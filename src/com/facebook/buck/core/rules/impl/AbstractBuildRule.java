@@ -24,6 +24,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.CaseFormat;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableSet;
 import java.lang.reflect.Field;
@@ -43,6 +44,12 @@ public abstract class AbstractBuildRule implements BuildRule {
   private final int hashCode;
 
   protected AbstractBuildRule(BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
+    Preconditions.checkArgument(
+        projectFilesystem.getBuckPaths().getCellName().equals(buildTarget.getCell()),
+        "filesystem cell '%s' must match build target cell: %s",
+        projectFilesystem.getBuckPaths().getCellName(),
+        buildTarget);
+
     this.buildTarget = buildTarget;
     this.projectFilesystem = projectFilesystem;
     this.hashCode = computeHashCode();
