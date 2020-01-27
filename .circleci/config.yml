@@ -552,3 +552,5 @@ workflows:
   macos_jobs:
     jobs:
       - mac_build_openjdk8
+      - macos_unit_groovy
+
