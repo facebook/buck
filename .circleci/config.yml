@@ -467,8 +467,8 @@ jobs:
   mac_build_openjdk8:
     environment:
       PLATFORM: "macos"
-      BUCKROOT: "/home/circleci/buck"
-      ANDROID_SDK: "/home/circleci/android-sdk"
+      BUCKROOT: "/Users/distiller/buck"
+      ANDROID_SDK: "/Users/distiller/android-sdk"
       TERM: "dumb"
       BUCK_NUM_THREADS: 3
     working_directory: "~/buck"
