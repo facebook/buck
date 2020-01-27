@@ -473,7 +473,7 @@ jobs:
       BUCK_NUM_THREADS: 3
     working_directory: "/Users/distiller/buck"
     macos:
-      xcode: "10.3.0"
+      xcode: "11.3.1"
     steps:
       # Steps run sequentially in separate shells
       - checkout
@@ -507,7 +507,7 @@ jobs:
       BUCK_NUM_THREADS: 3
     working_directory: "/Users/distiller/buck"
     macos:
-      xcode: "10.3.0"
+      xcode: "11.3.1"
     steps:
       - checkout
       - run:
@@ -543,7 +543,7 @@ jobs:
       BUCK_NUM_THREADS: 3
     working_directory: "/Users/distiller/buck"
     macos:
-      xcode: "10.3.0"
+      xcode: "11.3.1"
     steps:
       - checkout
       - run:
@@ -577,7 +577,7 @@ jobs:
       BUCK_NUM_THREADS: 3
     working_directory: "/Users/distiller/buck"
     macos:
-      xcode: "10.3.0"
+      xcode: "11.3.1"
     steps:
       - checkout
       - run:
@@ -615,7 +615,7 @@ jobs:
       BUCK_NUM_THREADS: 3
     working_directory: "/Users/distiller/buck"
     macos:
-      xcode: "10.3.0"
+      xcode: "11.3.1"
     steps:
       - checkout
       - run:
@@ -654,7 +654,7 @@ jobs:
       BUCK_NUM_THREADS: 3
     working_directory: "/Users/distiller/buck"
     macos:
-      xcode: "10.3.0"
+      xcode: "11.3.1"
     steps:
       - checkout
       - run:
