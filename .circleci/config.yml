@@ -9,9 +9,8 @@ install_openjdk8: &install_openjdk8
       sudo update-java-alternatives -s java-1.8.0-openjdk-amd64
     elif [ "x${PLATFORM}" == "xmacos" ]
     then
-      brew tap caskroom/cask
-      brew tap caskroom/versions
-      brew cask install java8
+      brew tap homebrew/cask-versions
+      brew cask install adoptopenjdk8
     fi
     java -version
 
