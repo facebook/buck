@@ -23,7 +23,7 @@ install_android_sdk: &install_android_sdk
       sdk_os="darwin"
     fi
     sdk_zip_filename="sdk-tools-${sdk_os}-4333796.zip"
-    mkdir ${ANDROID_SDK}
+    mkdir -p ${ANDROID_SDK}
     cd ${ANDROID_SDK}
     curl -O https://dl.google.com/android/repository/${sdk_zip_filename}
     unzip ${sdk_zip_filename}
@@ -467,8 +467,8 @@ jobs:
   mac_build_openjdk8:
     environment:
       PLATFORM: "macos"
-      BUCKROOT: "~/buck"
-      ANDROID_SDK: "~/android-sdk"
+      BUCKROOT: "/home/circleci/buck"
+      ANDROID_SDK: "/home/circleci/android-sdk"
       TERM: "dumb"
       BUCK_NUM_THREADS: 3
     working_directory: "~/buck"
