@@ -9,7 +9,7 @@ install_openjdk8: &install_openjdk8
       sudo update-java-alternatives -s java-1.8.0-openjdk-amd64
     elif [ "x${PLATFORM}" == "xmacos" ]
     then
-      brew tap homebrew/cask-versions
+      #brew tap homebrew/cask-versions
       brew cask install adoptopenjdk8
     fi
     java -version
@@ -690,14 +690,14 @@ workflows:
     # jobs run in parallel
     jobs:
       - linux_build_openjdk8
-      - linux_unit_groovy
-      - linux_build_ant
-      - linux_test_integration
-      - linux_test_heavy_integration
-      - linux_test_android_ndk_15
-      - linux_test_android_ndk_16
-      - linux_test_android_ndk_17
-      - linux_test_android_ndk_18
+#      - linux_unit_groovy
+#      - linux_build_ant
+#      - linux_test_integration
+#      - linux_test_heavy_integration
+#      - linux_test_android_ndk_15
+#      - linux_test_android_ndk_16
+#      - linux_test_android_ndk_17
+#      - linux_test_android_ndk_18
 
   macos_jobs:
     jobs:
