@@ -488,6 +488,7 @@ jobs:
       - run:
           name: Run Build Tests
           command: |
+            brew install ant
             cd ${BUCKROOT}
             export PATH=${ANDROID_SDK}/tools/bin:$PATH
             export PATH="$(pyenv root)/shims:$PATH"
