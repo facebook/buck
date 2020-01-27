@@ -64,13 +64,9 @@ install_python: &install_python
   command: |
     if [ "x${PLATFORM}" == "xmacos" ]
     then
-      pyenv --version
-      if [ $? != 0 ]
-      then
-         sudo chown -R $(whoami) /usr/local/bin /usr/local/lib /usr/local/sbin
-         brew update
-         brew install pyenv
-      fi
+      # sudo chown -R $(whoami) /usr/local/bin /usr/local/lib /usr/local/sbin
+      brew update
+      brew install pyenv
     fi
     pyenv install -s 3.6.2
     pyenv global 3.6.2 system
