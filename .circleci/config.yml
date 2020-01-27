@@ -567,9 +567,9 @@ jobs:
 
   macos_test_integration:
     environment:
-      PLATFORM: "linux"
-      BUCKROOT: "/home/circleci/buck"
-      ANDROID_SDK: "/home/circleci/android-sdk"
+      PLATFORM: "macos"
+      BUCKROOT: "/Users/distiller/buck"
+      ANDROID_SDK: "/Users/distiller/android-sdk"
       TERM: "dumb"
       BUCK_NUM_THREADS: 3
     macos:
