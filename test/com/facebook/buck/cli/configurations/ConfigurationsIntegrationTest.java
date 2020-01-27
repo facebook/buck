@@ -307,6 +307,22 @@ public class ConfigurationsIntegrationTest {
   }
 
   @Test
+  public void testIncompatibleFilteringLogging() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_target_filtering", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "build", "--target-platforms", "//config:linux_x86_64", "//compatible_with:cat_on_osx");
+    result.assertSuccess();
+    MatcherAssert.assertThat(
+        result.getStderr(),
+        Matchers.containsString(
+            "1 target skipped due to incompatibility with target configuration"));
+  }
+
+  @Test
   public void defaultTargetPlatformInAndroidBinaryWithVersions() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
