@@ -471,7 +471,6 @@ jobs:
       ANDROID_SDK: "/Users/distiller/android-sdk"
       TERM: "dumb"
       BUCK_NUM_THREADS: 3
-    working_directory: "/Users/distiller/buck"
     macos:
       xcode: "11.3.0"
     steps:
@@ -505,7 +504,6 @@ jobs:
       ANDROID_SDK: "/Users/distiller/android-sdk"
       TERM: "dumb"
       BUCK_NUM_THREADS: 3
-    working_directory: "/Users/distiller/buck"
     macos:
       xcode: "11.3.0"
     steps:
@@ -541,7 +539,6 @@ jobs:
       ANDROID_SDK: "/Users/distiller/android-sdk"
       TERM: "dumb"
       BUCK_NUM_THREADS: 3
-    working_directory: "/Users/distiller/buck"
     machine:
       image: ubuntu-1604:201903-01
     steps:
