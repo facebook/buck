@@ -473,7 +473,7 @@ jobs:
       BUCK_NUM_THREADS: 3
     working_directory: "/Users/distiller/buck"
     macos:
-      xcode: "11.3.0"
+      xcode: "10.3.0"
     steps:
       # Steps run sequentially in separate shells
       - checkout
@@ -507,7 +507,7 @@ jobs:
       BUCK_NUM_THREADS: 3
     working_directory: "/Users/distiller/buck"
     macos:
-      xcode: "11.3.0"
+      xcode: "10.3.0"
     steps:
       - checkout
       - run:
@@ -543,7 +543,7 @@ jobs:
       BUCK_NUM_THREADS: 3
     working_directory: "/Users/distiller/buck"
     macos:
-      xcode: "11.3.0"
+      xcode: "10.3.0"
     steps:
       - checkout
       - run:
@@ -577,7 +577,7 @@ jobs:
       BUCK_NUM_THREADS: 3
     working_directory: "/Users/distiller/buck"
     macos:
-      xcode: "11.3.0"
+      xcode: "10.3.0"
     steps:
       - checkout
       - run:
@@ -615,7 +615,7 @@ jobs:
       BUCK_NUM_THREADS: 3
     working_directory: "/Users/distiller/buck"
     macos:
-      xcode: "11.3.0"
+      xcode: "10.3.0"
     steps:
       - checkout
       - run:
@@ -627,7 +627,7 @@ jobs:
           command: |
             cd ${BUCKROOT}
             export NDK_HOME="${HOME}/android-ndk-${PLATFORM}"
-            ./scripts/travisci_install_android_ndk.sh ${PLATFORM}
+            ./scripts/travisci_install_android_ndk.sh "${PLATFORM}"
       - run:
           <<: *install_golang
       - run:
@@ -644,6 +644,45 @@ jobs:
             set -eux
             ./new_buck.pex build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/... //test/com/facebook/buck/jvm/java/...
             ./new_buck.pex test --num-threads=1 //test/com/facebook/buck/android/... //test/com/facebook/buck/jvm/java/... --filter '.*[Ii]ntegration.*'
+
+  macos_test_android_ndk_15:
+    environment:
+      PLATFORM: "macos"
+      BUCKROOT: "/Users/distiller/buck"
+      ANDROID_SDK: "/Users/distiller/android-sdk"
+      TERM: "dumb"
+      BUCK_NUM_THREADS: 3
+    working_directory: "/Users/distiller/buck"
+    macos:
+      xcode: "10.3.0"
+    steps:
+      - checkout
+      - run:
+          <<: *install_openjdk8
+      - run:
+          <<: *install_android_sdk
+      - run:
+          name: Install Android NDK 15
+          command: |
+            cd ${BUCKROOT}
+            export NDK_HOME="${HOME}/android-ndk-${PLATFORM}"
+            ./scripts/travisci_unzip_android_ndk.sh android-ndk-r15c "${PLATFORM}"
+      - run:
+          <<: *install_golang
+      - run:
+          <<: *install_python
+      - run:
+          <<: *run_ant_build
+      - run:
+          <<: *run_buck_build
+      - run:
+          name: Run Android NDK 15 Tests
+          command: |
+            export NDK_HOME="${HOME}/android-ndk-${PLATFORM}"
+            export ANDROID_HOME=${ANDROID_SDK}
+            set -eux
+            ./new_buck.pex build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
+            ./new_buck.pex test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
 
 workflows:
   version: 2.1
@@ -667,4 +706,5 @@ workflows:
       - macos_build_ant
       - macos_test_integration
       - macos_test_heavy_integration
+      - macos_test_android_ndk_15
 

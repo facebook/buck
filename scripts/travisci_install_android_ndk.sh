@@ -15,6 +15,7 @@
 
 set -x
 
+# $1: OS
 export OS="linux"
 if [ "x$1" == "xmacos" ]
 then
@@ -43,3 +44,4 @@ rm "$NDK_FILENAME";
 # Move ndk into the proper place.
 rm -rf ${NDK_HOME}
 mv android-ndk-r10e ${NDK_HOME}
+
