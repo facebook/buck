@@ -471,7 +471,7 @@ jobs:
       ANDROID_SDK: "/Users/distiller/android-sdk"
       TERM: "dumb"
       BUCK_NUM_THREADS: 3
-    working_directory: "~/buck"
+    working_directory: "/Users/distiller/buck"
     macos:
       xcode: "11.3.0"
     steps:
@@ -505,7 +505,7 @@ jobs:
       ANDROID_SDK: "/Users/distiller/android-sdk"
       TERM: "dumb"
       BUCK_NUM_THREADS: 3
-    working_directory: "/home/circleci/buck"
+    working_directory: "/Users/distiller/buck"
     macos:
       xcode: "11.3.0"
     steps:
