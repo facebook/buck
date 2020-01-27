@@ -471,6 +471,7 @@ jobs:
       ANDROID_SDK: "/Users/distiller/android-sdk"
       TERM: "dumb"
       BUCK_NUM_THREADS: 3
+    working_directory: "/Users/distiller/buck"
     macos:
       xcode: "11.3.0"
     steps:
@@ -504,6 +505,7 @@ jobs:
       ANDROID_SDK: "/Users/distiller/android-sdk"
       TERM: "dumb"
       BUCK_NUM_THREADS: 3
+    working_directory: "/Users/distiller/buck"
     macos:
       xcode: "11.3.0"
     steps:
@@ -539,6 +541,7 @@ jobs:
       ANDROID_SDK: "/Users/distiller/android-sdk"
       TERM: "dumb"
       BUCK_NUM_THREADS: 3
+    working_directory: "/Users/distiller/buck"
     macos:
       xcode: "11.3.0"
     steps:
@@ -572,6 +575,7 @@ jobs:
       ANDROID_SDK: "/Users/distiller/android-sdk"
       TERM: "dumb"
       BUCK_NUM_THREADS: 3
+    working_directory: "/Users/distiller/buck"
     macos:
       xcode: "11.3.0"
     steps:
@@ -602,6 +606,45 @@ jobs:
             set -eux
             ./new_buck.pex test --num-threads=$BUCK_NUM_THREADS --all --filter '^(?!(com.facebook.buck.android|com.facebook.buck.jvm.java)).*[Ii]ntegration.*'
 
+  macos_test_heavy_integration:
+    environment:
+      PLATFORM: "macos"
+      BUCKROOT: "/Users/distiller/buck"
+      ANDROID_SDK: "/Users/distiller/android-sdk"
+      TERM: "dumb"
+      BUCK_NUM_THREADS: 3
+    working_directory: "/Users/distiller/buck"
+    macos:
+      xcode: "11.3.0"
+    steps:
+      - checkout
+      - run:
+          <<: *install_openjdk8
+      - run:
+          <<: *install_android_sdk
+      - run:
+          name: Install Android NDK
+          command: |
+            cd ${BUCKROOT}
+            export NDK_HOME="${HOME}/android-ndk-linux"
+            ./scripts/travisci_install_android_ndk.sh
+      - run:
+          <<: *install_golang
+      - run:
+          <<: *install_python
+      - run:
+          <<: *run_ant_build
+      - run:
+          <<: *run_buck_build
+      - run:
+          name: Run Heavy Integration Tests
+          command: |
+            export NDK_HOME="${HOME}/android-ndk-linux"
+            export ANDROID_HOME=${ANDROID_SDK}
+            set -eux
+            ./new_buck.pex build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/... //test/com/facebook/buck/jvm/java/...
+            ./new_buck.pex test --num-threads=1 //test/com/facebook/buck/android/... //test/com/facebook/buck/jvm/java/... --filter '.*[Ii]ntegration.*'
+
 workflows:
   version: 2.1
   linux_jobs:
@@ -623,4 +666,5 @@ workflows:
       - macos_unit_groovy
       - macos_build_ant
       - macos_test_integration
+      - macos_test_heavy_integration
 
