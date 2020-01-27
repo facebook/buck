@@ -626,8 +626,8 @@ jobs:
           name: Install Android NDK
           command: |
             cd ${BUCKROOT}
-            export NDK_HOME="${HOME}/android-ndk-linux"
-            ./scripts/travisci_install_android_ndk.sh
+            export NDK_HOME="${HOME}/android-ndk-${PLATFORM}"
+            ./scripts/travisci_install_android_ndk.sh ${PLATFORM}
       - run:
           <<: *install_golang
       - run:
@@ -639,7 +639,7 @@ jobs:
       - run:
           name: Run Heavy Integration Tests
           command: |
-            export NDK_HOME="${HOME}/android-ndk-linux"
+            export NDK_HOME="${HOME}/android-ndk-${PLATFORM}"
             export ANDROID_HOME=${ANDROID_SDK}
             set -eux
             ./new_buck.pex build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/... //test/com/facebook/buck/jvm/java/...
