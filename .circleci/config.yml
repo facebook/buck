@@ -758,6 +758,12 @@ jobs:
       - run:
           <<: *run_buck_build
       - run:
+          name: Need android-27 and android-28 to run the tests, install them.
+          command: |
+            export PATH=${ANDROID_SDK}/tools/bin:$PATH
+            echo 'y' |sdkmanager --install "platforms;android-27"
+            echo 'y' |sdkmanager --install "platforms;android-28"
+      - run:
           name: Run Android NDK 17 Tests
           command: |
             export NDK_HOME="${HOME}/android-ndk-${PLATFORM}"
