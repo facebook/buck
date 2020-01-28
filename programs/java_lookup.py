@@ -81,20 +81,19 @@ def _get_java_path_for_highest_minor_version(base_path, desired_major_version):
         if desired_major_version <= 8
         else JDK_9_AND_OVER_PATH_VERSION_REGEXES
     )
-    for _, dirs, _ in os.walk(base_path):
-        for dir in dirs:
-            for regex in regexes:
-                match = regex.match(dir)
-                if match:
-                    major_version = int(match.group('major'))
-                    if major_version == desired_major_version:
-                        version_string = match.group('full')
-                        version = tuple(
-                            map(int, version_string.replace("_", ".").split("."))
-                        )
-                        if not max_version or version > max_version:
-                            max_version = version
-                            max_dir = dir
+    for dir in sorted(os.listdir(base_path)):
+        for regex in regexes:
+            match = regex.match(dir)
+            if match:
+                major_version = int(match.group('major'))
+                if major_version == desired_major_version:
+                    version_string = match.group('full')
+                    version = tuple(
+                        map(int, version_string.replace("_", ".").split("."))
+                    )
+                    if not max_version or version > max_version:
+                        max_version = version
+                        max_dir = dir
 
     return os.path.join(base_path, max_dir) if max_dir else None
 
