@@ -1,10 +1,13 @@
-load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+load("//tools/build_rules:java_rules.bzl", "standard_java_benchmark", "standard_java_test")
 
 java_library(
     name = "testutil",
     srcs = glob(
         ["*.java"],
-        exclude = glob(["*Test.java"]),
+        exclude = glob([
+            "*Test.java",
+            "*Benchmark.java",
+        ]),
     ),
     visibility = [
         "PUBLIC",
@@ -76,5 +79,12 @@ standard_java_test(
         "//third-party/java/guava:guava",
         "//third-party/java/hamcrest:hamcrest-junit",
         "//third-party/java/junit:junit",
+    ],
+)
+
+standard_java_benchmark(
+    name = "benchmark_lib",
+    deps = [
+        "//src/com/facebook/buck/cxx/toolchain:toolchain",
     ],
 )
