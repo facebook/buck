@@ -261,7 +261,8 @@ public class BuildCacheArtifactFetcher {
                   ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
       onDiskBuildInfo.validateArtifact(extractedFiles);
-      fullSize = Long.parseLong(onDiskBuildInfo.getValue(BuildInfo.MetadataKey.OUTPUT_SIZE).get());
+      fullSize =
+          Long.parseLong(onDiskBuildInfo.getValue(BuildInfo.MetadataKey.OUTPUT_SIZE).getLeft());
 
       // We only delete the ZIP file when it has been unzipped successfully. Otherwise, we leave it
       // around for debugging purposes.

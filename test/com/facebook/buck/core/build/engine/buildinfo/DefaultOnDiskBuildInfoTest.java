@@ -26,6 +26,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.timing.DefaultClock;
+import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
@@ -51,7 +52,7 @@ public class DefaultOnDiskBuildInfoTest {
   public void whenMetadataEmptyStringThenGetValueReturnsEmptyString() throws IOException {
     setMetadata("KEY", "");
     DefaultOnDiskBuildInfo onDiskBuildInfo = createOnDiskBuildInfo();
-    assertThat(onDiskBuildInfo.getValue("KEY"), Matchers.equalTo(Optional.of("")));
+    assertThat(onDiskBuildInfo.getValue("KEY"), Matchers.equalTo(Either.ofLeft("")));
   }
 
   @Test

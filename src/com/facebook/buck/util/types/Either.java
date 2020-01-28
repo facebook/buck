@@ -17,6 +17,7 @@
 package com.facebook.buck.util.types;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 
 /** A discriminated union of two parameters that holds a value of either the LEFT or RIGHT type. */
@@ -41,6 +42,12 @@ public abstract class Either<LEFT, RIGHT> {
    * @throws IllegalStateException if this instance does not hold a right value.
    */
   public abstract RIGHT getRight();
+
+  /** Left value or empty otherwise. */
+  public abstract Optional<LEFT> getLeftOption();
+
+  /** Right value or empty otherwise. */
+  public abstract Optional<RIGHT> getRightOption();
 
   /** Apply a function based on whether the instance holds a left or right value. */
   public abstract <X> X transform(
@@ -84,6 +91,16 @@ public abstract class Either<LEFT, RIGHT> {
     @Override
     public RIGHT getRight() {
       throw new IllegalStateException("Cannot get Right value of a Left either.");
+    }
+
+    @Override
+    public Optional<LEFT> getLeftOption() {
+      return Optional.of(value);
+    }
+
+    @Override
+    public Optional<RIGHT> getRightOption() {
+      return Optional.empty();
     }
 
     @Override
@@ -136,6 +153,16 @@ public abstract class Either<LEFT, RIGHT> {
     @Override
     public RIGHT getRight() {
       return value;
+    }
+
+    @Override
+    public Optional<LEFT> getLeftOption() {
+      return Optional.empty();
+    }
+
+    @Override
+    public Optional<RIGHT> getRightOption() {
+      return Optional.of(value);
     }
 
     @Override

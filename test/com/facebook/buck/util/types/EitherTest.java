@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Optional;
 import java.util.function.Function;
 import org.junit.Test;
 
@@ -42,6 +43,14 @@ public class EitherTest {
 
     assertSame("Left getLeft returns value", value, Either.ofLeft(value).getLeft());
     assertSame("Right getRight returns value", value, Either.ofRight(value).getRight());
+  }
+
+  @Test
+  public void getOption() {
+    assertEquals(Optional.empty(), Either.ofRight("a").getLeftOption());
+    assertEquals(Optional.empty(), Either.ofLeft("a").getRightOption());
+    assertEquals(Optional.of("a"), Either.ofRight("a").getRightOption());
+    assertEquals(Optional.of("a"), Either.ofLeft("a").getLeftOption());
   }
 
   @Test

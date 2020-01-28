@@ -158,6 +158,7 @@ import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.timing.IncrementingFakeClock;
+import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.types.Unit;
 import com.facebook.buck.util.zip.ZipConstants;
@@ -1800,7 +1801,8 @@ public class CachingBuildEngineTest {
             onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY),
             equalTo(Optional.empty()));
         assertThat(
-            onDiskBuildInfo.getValue(BuildInfo.MetadataKey.OUTPUT_SIZE), equalTo(Optional.of("6")));
+            onDiskBuildInfo.getValue(BuildInfo.MetadataKey.OUTPUT_SIZE),
+            equalTo(Either.ofLeft("6")));
       }
     }
 
