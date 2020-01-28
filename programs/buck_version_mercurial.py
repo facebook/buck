@@ -22,8 +22,7 @@ import sys
 import tempfile
 from subprocess import CalledProcessError, check_output
 
-from buck_version import EmptyTempFile
-from subprocutils import which
+from programs.subprocutils import which
 
 
 def is_vcs(dirpath):  # type: (str) -> bool
@@ -86,17 +85,17 @@ def get_clean_buck_version(dirpath, allow_dirty=False):  # type: (str, bool) -> 
 def get_dirty_buck_version(dirpath):  # type: (str) -> str
     hasher = hashlib.sha1()
 
-    hasher.update(get_vcs_revision(dirpath))
+    hasher.update(get_vcs_revision(dirpath).encode("utf-8"))
 
     output = check_output(["hg", "status"], cwd=dirpath).decode("utf-8")
     for line in output.splitlines():
         # include modificaton style and filename in hash
-        hasher.update(line)
+        hasher.update(line.encode("utf-8"))
         parts = line.split(" ", 1)
         if len(parts) != 2:
             continue
         try:
-            with open(os.path.normpath(os.path.join(dirpath, parts[1])), "r") as fh:
+            with open(os.path.normpath(os.path.join(dirpath, parts[1])), "rb") as fh:
                 # Only hash 512mb max
                 hasher.update(fh.read(512 * 1024 * 1024))
         except IOError:
