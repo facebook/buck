@@ -18,7 +18,9 @@ package com.facebook.buck.io;
 
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.base.Preconditions;
 import java.nio.file.Path;
+import org.immutables.value.Value;
 
 /**
  * A path which is relative to the build cell root, i.e. the top-level cell in which the build was
@@ -30,6 +32,15 @@ import java.nio.file.Path;
 public abstract class BuildCellRelativePath {
 
   public abstract Path getPathRelativeToBuildCellRoot();
+
+  /** Check the path is relative. */
+  @Value.Check
+  protected void check() {
+    Preconditions.checkState(
+        !getPathRelativeToBuildCellRoot().isAbsolute(),
+        "expecting cell-relative path: %s",
+        getPathRelativeToBuildCellRoot());
+  }
 
   public static BuildCellRelativePath fromCellRelativePath(
       Path buildCellRootPath,
