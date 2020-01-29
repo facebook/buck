@@ -40,7 +40,8 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
       CellPathResolver cellPathResolver) {
     ImmutableSetMultimap<Path, Path> classUsageMap = tracker.getClassUsageMap();
     try {
-      Preconditions.checkState(filesystem.exists(relativePath.getParent()));
+      Path parent = relativePath.getParent();
+      Preconditions.checkState(filesystem.exists(parent), "directory must exist: %s", parent);
       ObjectMappers.WRITER.writeValue(
           filesystem.resolve(relativePath).toFile(),
           relativizeMap(classUsageMap, filesystem, cellPathResolver));
