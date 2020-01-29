@@ -293,6 +293,6 @@ public class LegacyCompatibleRuleAnalysisComputationTest {
 
     assertTrue(createProvidersCalled.get());
 
-    assertTrue(ruleAnalysisResult instanceof LegacyProviderRuleAnalysisResultImpl);
+    assertTrue(ruleAnalysisResult instanceof LegacyProviderRuleAnalysisResult);
   }
 }

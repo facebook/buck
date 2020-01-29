@@ -85,7 +85,7 @@ public class DefaultActionRegistry extends BuildArtifactFactory implements Actio
     ActionAnalysisDataKey key = ActionAnalysisDataKey.of(target, new ID(uniqueID));
     action.getOutputs().forEach(artifact -> bindtoBuildArtifact(key, artifact.getArtifact()));
 
-    ActionWrapperData actionAnalysisData = ImmutableActionWrapperDataImpl.of(key, action);
+    ActionWrapperData actionAnalysisData = ImmutableActionWrapperData.of(key, action);
     actionRegistry.registerAction(actionAnalysisData);
 
     return uniqueID;

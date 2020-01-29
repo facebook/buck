@@ -23,7 +23,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 /** Just here to provide test visibility */
 @BuckStyleValue
 public abstract class FakeLegacyProviderRuleAnalysisResultImpl
-    extends LegacyProviderRuleAnalysisResultImpl {
+    extends LegacyProviderRuleAnalysisResult {
 
   public static FakeLegacyProviderRuleAnalysisResultImpl of(
       BuildTarget buildTarget, ProviderInfoCollection providerInfos) {
