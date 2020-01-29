@@ -1090,10 +1090,13 @@ class BuckTool(object):
                 and os.environ.get("BUCK_DEBUG_MODE") != "0"
             ):
                 suspend = "n" if os.environ.get("BUCK_DEBUG_MODE") == "2" else "y"
+                port = "8888"
                 java_args.append(
                     "-agentlib:jdwp=transport=dt_socket,"
-                    "server=y,suspend=" + suspend + ",quiet=y,address=8888"
+                    "server=y,suspend=" + suspend + ",quiet=y,address=" + port
                 )
+                if (suspend=="y"):
+                    logging.info("Waiting for debugger on port {}...".format(port))
 
             if (
                 "BUCK_HTTP_PORT" in os.environ
