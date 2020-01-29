@@ -21,10 +21,10 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
-import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTargetWithOutputs;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -46,14 +46,14 @@ public class TargetWithOutputsTypeCoercerTest {
   private static final ForwardRelativePath BASE_PATH =
       ForwardRelativePath.of("java/com/facebook/buck/example");
   private static final ProjectFilesystem FILESYSTEM = new FakeProjectFilesystem();
-  private static final BiFunction<String, OutputLabel, ImmutableUnconfiguredBuildTargetWithOutputs>
+  private static final BiFunction<String, OutputLabel, UnconfiguredBuildTargetWithOutputs>
       EXPECTED_UNCONFIGURED_BUILD_TARGET_WITH_OUTPUTS_BI_FUNCTION =
           (bt, ol) ->
-              ImmutableUnconfiguredBuildTargetWithOutputs.of(
+              UnconfiguredBuildTargetWithOutputs.of(
                   UnconfiguredBuildTargetFactoryForTests.newInstance(FILESYSTEM, bt), ol);
-  private static final BiFunction<String, OutputLabel, ImmutableBuildTargetWithOutputs>
+  private static final BiFunction<String, OutputLabel, BuildTargetWithOutputs>
       EXPECTED_BUILD_TARGET_WITH_OUTPUTS_BI_FUNCTION =
-          (bt, ol) -> ImmutableBuildTargetWithOutputs.of(BuildTargetFactory.newInstance(bt), ol);
+          (bt, ol) -> BuildTargetWithOutputs.of(BuildTargetFactory.newInstance(bt), ol);
 
   @Parameterized.Parameters(name = "{0}")
   public static Collection<Object> data() {

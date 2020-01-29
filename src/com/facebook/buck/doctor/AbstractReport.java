@@ -21,8 +21,6 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.doctor.config.BuildLogEntry;
 import com.facebook.buck.doctor.config.DoctorConfig;
-import com.facebook.buck.doctor.config.ImmutableSourceControlInfo;
-import com.facebook.buck.doctor.config.ImmutableUserLocalConfiguration;
 import com.facebook.buck.doctor.config.SourceControlInfo;
 import com.facebook.buck.doctor.config.UserLocalConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -93,7 +91,7 @@ public abstract class AbstractReport {
     }
     FullVersionControlStats versionControlStats = versionControlStatsOptional.get();
     return Optional.of(
-        ImmutableSourceControlInfo.of(
+        SourceControlInfo.of(
             versionControlStats.getCurrentRevisionId(),
             versionControlStats.getBaseBookmarks(),
             Optional.of(versionControlStats.getBranchedFromMasterRevisionId()),
@@ -138,7 +136,7 @@ public abstract class AbstractReport {
         getFileChangesIgnoredReport();
 
     UserLocalConfiguration userLocalConfiguration =
-        ImmutableUserLocalConfiguration.of(
+        UserLocalConfiguration.of(
             isNoBuckCheckPresent(), getLocalConfigs(), getConfigOverrides(selectedBuilds));
 
     ImmutableSet<Path> includedPaths =

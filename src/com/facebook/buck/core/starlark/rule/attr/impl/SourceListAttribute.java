@@ -88,6 +88,14 @@ public abstract class SourceListAttribute extends Attribute<ImmutableList<Source
     return this::postCoercionTransform;
   }
 
+  public static SourceListAttribute of(
+      ImmutableList<String> preCoercionDefaultValue,
+      String doc,
+      boolean mandatory,
+      boolean allowEmpty) {
+    return ImmutableSourceListAttribute.of(preCoercionDefaultValue, doc, mandatory, allowEmpty);
+  }
+
   private ImmutableList<Artifact> postCoercionTransform(
       Object coercedValue, RuleAnalysisContext analysisContext) {
     if (!(coercedValue instanceof List<?>)) {

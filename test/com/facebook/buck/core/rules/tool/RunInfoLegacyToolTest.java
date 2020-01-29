@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.core.artifact.Artifact;
-import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
+import com.facebook.buck.core.artifact.SourceArtifactImpl;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -57,7 +57,7 @@ public class RunInfoLegacyToolTest {
     Path path = Paths.get("some_file");
 
     ImmutableMap<String, String> env = ImmutableMap.of("FOO", "foo_value");
-    Artifact artifact = ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, path));
+    Artifact artifact = SourceArtifactImpl.of(PathSourcePath.of(filesystem, path));
     RunInfo runInfo =
         new ImmutableRunInfo(
             env, CommandLineArgsFactory.from(ImmutableList.of(artifact, "--foo", "--bar")));
@@ -90,33 +90,25 @@ public class RunInfoLegacyToolTest {
             ImmutableMap.of("FOO", "foo_value"),
             CommandLineArgsFactory.from(
                 ImmutableList.of(
-                    ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, path)),
-                    "--foo",
-                    "--bar")));
+                    SourceArtifactImpl.of(PathSourcePath.of(filesystem, path)), "--foo", "--bar")));
     RunInfo runInfo2 =
         new ImmutableRunInfo(
             ImmutableMap.of("FOO", "foo_value"),
             CommandLineArgsFactory.from(
                 ImmutableList.of(
-                    ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, path)),
-                    "--foo",
-                    "--bar")));
+                    SourceArtifactImpl.of(PathSourcePath.of(filesystem, path)), "--foo", "--bar")));
     RunInfo runInfo3 =
         new ImmutableRunInfo(
             ImmutableMap.of("BAR", "bar_value"),
             CommandLineArgsFactory.from(
                 ImmutableList.of(
-                    ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, path)),
-                    "--foo",
-                    "--bar")));
+                    SourceArtifactImpl.of(PathSourcePath.of(filesystem, path)), "--foo", "--bar")));
     RunInfo runInfo4 =
         new ImmutableRunInfo(
             ImmutableMap.of("FOO", "different_env"),
             CommandLineArgsFactory.from(
                 ImmutableList.of(
-                    ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, path)),
-                    "--foo",
-                    "--bar")));
+                    SourceArtifactImpl.of(PathSourcePath.of(filesystem, path)), "--foo", "--bar")));
 
     RunInfoLegacyTool tool1 = RunInfoLegacyTool.of(runInfo1);
     RunInfoLegacyTool tool2 = RunInfoLegacyTool.of(runInfo2);

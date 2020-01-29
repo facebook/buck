@@ -29,7 +29,6 @@ import com.facebook.buck.core.graph.transformation.GraphTransformationEngine;
 import com.facebook.buck.core.graph.transformation.model.ComposedKey;
 import com.facebook.buck.core.graph.transformation.model.ComposedResult;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
-import com.facebook.buck.core.graph.transformation.model.ImmutableComposedKey;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
@@ -40,7 +39,6 @@ import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.impl.InMemoryBuildFileTree;
-import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -48,7 +46,6 @@ import com.facebook.buck.core.model.targetgraph.impl.TargetGraphHashing;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDepsPackage;
 import com.facebook.buck.core.parser.BuildTargetPatternToBuildPackagePathKey;
-import com.facebook.buck.core.parser.ImmutableBuildTargetPatternToBuildPackagePathKey;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternParser;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -432,9 +429,8 @@ public class TargetsCommand extends AbstractCommand {
                 cellAndPatterns.getValue().stream()
                     .map(
                         pattern ->
-                            ImmutableComposedKey.of(
-                                (BuildTargetPatternToBuildPackagePathKey)
-                                    ImmutableBuildTargetPatternToBuildPackagePathKey.of(pattern),
+                            ComposedKey.of(
+                                BuildTargetPatternToBuildPackagePathKey.of(pattern),
                                 UnconfiguredTargetNodeWithDepsPackage.class))
                     .collect(ImmutableSet.toImmutableSet());
 
@@ -590,7 +586,7 @@ public class TargetsCommand extends AbstractCommand {
     ActionGraphAndBuilder result =
         params
             .getActionGraphProvider()
-            .getActionGraph(ImmutableTargetGraphCreationResult.of(targetGraph, ImmutableSet.of()));
+            .getActionGraph(TargetGraphCreationResult.of(targetGraph, ImmutableSet.of()));
 
     // construct real graph
     MutableDirectedGraph<BuildRule> actionGraphMutable = new MutableDirectedGraph<>();
@@ -665,10 +661,11 @@ public class TargetsCommand extends AbstractCommand {
       SortedMap<String, TargetNode<?>> matchingNodes =
           getMatchingNodes(params, completeTargetGraphAndBuildTargets, descriptionClasses);
 
-      Iterable<BuildTarget> buildTargets =
-          FluentIterable.from(matchingNodes.values()).transform(TargetNode::getBuildTarget);
+      ImmutableSet<BuildTarget> buildTargets =
+          ImmutableSet.copyOf(
+              FluentIterable.from(matchingNodes.values()).transform(TargetNode::getBuildTarget));
 
-      return ImmutableTargetGraphCreationResult.of(
+      return TargetGraphCreationResult.of(
           completeTargetGraphAndBuildTargets.getTargetGraph(), buildTargets);
     } else {
       return filterTargetGraphCreationResultByType(
@@ -700,7 +697,7 @@ public class TargetsCommand extends AbstractCommand {
     }
 
     TargetGraph targetGraph = targetGraphCreationResult.getTargetGraph();
-    return ImmutableTargetGraphCreationResult.of(
+    return TargetGraphCreationResult.of(
         targetGraph,
         targetGraphCreationResult.getBuildTargets().stream()
             .filter(
@@ -772,7 +769,7 @@ public class TargetsCommand extends AbstractCommand {
     TargetGraphCreationResult targetGraphCreationResult;
     if (arguments.isEmpty() || isDetectTestChanges) {
       targetGraphCreationResult =
-          ImmutableTargetGraphCreationResult.of(
+          TargetGraphCreationResult.of(
               params
                   .getParser()
                   .buildTargetGraphWithTopLevelConfigurationTargets(
@@ -1137,7 +1134,7 @@ public class TargetsCommand extends AbstractCommand {
             params
                 .getActionGraphProvider()
                 .getActionGraph(
-                    ImmutableTargetGraphCreationResult.of(
+                    TargetGraphCreationResult.of(
                         targetGraphAndTargetNodes.getFirst(), ImmutableSet.of()));
         actionGraph = Optional.of(result.getActionGraph());
         graphBuilder = Optional.of(result.getActionGraphBuilder());

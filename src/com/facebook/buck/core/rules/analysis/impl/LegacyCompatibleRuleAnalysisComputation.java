@@ -28,7 +28,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.core.rules.ImmutableProviderCreationContext;
 import com.facebook.buck.core.rules.LegacyProviderCompatibleDescription;
 import com.facebook.buck.core.rules.ProviderCreationContext;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
@@ -112,7 +111,7 @@ public class LegacyCompatibleRuleAnalysisComputation
       LegacyProviderCompatibleDescription<T> description) {
     ProviderInfoCollection providerInfoCollection =
         description.createProviders(
-            ImmutableProviderCreationContext.of(
+            ProviderCreationContext.of(
                 env.getDeps(RuleAnalysisKey.IDENTIFIER).values().stream()
                     .collect(
                         ImmutableMap.toImmutableMap(

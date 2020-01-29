@@ -36,4 +36,12 @@ public interface ConfigurationRuleRegistry {
 
   /** Resolves target configuration to a platform. */
   TargetPlatformResolver getTargetPlatformResolver();
+
+  static ConfigurationRuleRegistry of(
+      ConfigurationRuleResolver configurationRuleResolver,
+      ConstraintResolver constraintResolver,
+      TargetPlatformResolver targetPlatformResolver) {
+    return ImmutableConfigurationRuleRegistry.of(
+        configurationRuleResolver, constraintResolver, targetPlatformResolver);
+  }
 }

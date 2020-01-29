@@ -33,4 +33,10 @@ public abstract class Package {
   public abstract ImmutableSet<VisibilityPattern> getVisibilityPatterns();
 
   public abstract ImmutableSet<VisibilityPattern> getWithinViewPatterns();
+
+  public static Package of(
+      ImmutableSet<VisibilityPattern> visibilityPatterns,
+      ImmutableSet<VisibilityPattern> withinViewPatterns) {
+    return ImmutablePackage.of(visibilityPatterns, withinViewPatterns);
+  }
 }

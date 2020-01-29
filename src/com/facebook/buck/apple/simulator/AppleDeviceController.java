@@ -58,7 +58,7 @@ public class AppleDeviceController {
   }
 
   /** @return the set of all Apple simulators and physical devices available */
-  private ImmutableSet<ImmutableAppleDevice> getDevices() throws IOException, InterruptedException {
+  private ImmutableSet<AppleDevice> getDevices() throws IOException, InterruptedException {
     ImmutableList<String> command = ImmutableList.of(idbPath.toString(), "list-targets", "--json");
     ProcessExecutorParams processExecutorParams =
         ProcessExecutorParams.builder().setCommand(command).build();
@@ -80,7 +80,7 @@ public class AppleDeviceController {
     // Treating the json returned by idb
     String[] targetsJson = result.getStdout().orElse("").split("\n");
 
-    ImmutableSet.Builder<ImmutableAppleDevice> targets = ImmutableSet.builder();
+    ImmutableSet.Builder<AppleDevice> targets = ImmutableSet.builder();
 
     for (String json : targetsJson) {
       targets.add(
@@ -91,9 +91,9 @@ public class AppleDeviceController {
   }
 
   /** @return the set of Apple simulators */
-  public ImmutableSet<ImmutableAppleDevice> getSimulators() {
-    ImmutableSet<ImmutableAppleDevice> devices;
-    ImmutableSet.Builder<ImmutableAppleDevice> simulators = ImmutableSet.builder();
+  public ImmutableSet<AppleDevice> getSimulators() {
+    ImmutableSet<AppleDevice> devices;
+    ImmutableSet.Builder<AppleDevice> simulators = ImmutableSet.builder();
     try {
       devices = getDevices();
     } catch (IOException | InterruptedException e) {
@@ -101,7 +101,7 @@ public class AppleDeviceController {
       devices = ImmutableSet.of();
     }
 
-    for (ImmutableAppleDevice device : devices) {
+    for (AppleDevice device : devices) {
       if (device.getType().equals("simulator")) simulators.add(device);
     }
 
@@ -109,9 +109,9 @@ public class AppleDeviceController {
   }
 
   /** @return the set of Apple physical devices */
-  public ImmutableSet<ImmutableAppleDevice> getPhysicalDevices() {
-    ImmutableSet<ImmutableAppleDevice> devices;
-    ImmutableSet.Builder<ImmutableAppleDevice> physicalDevices = ImmutableSet.builder();
+  public ImmutableSet<AppleDevice> getPhysicalDevices() {
+    ImmutableSet<AppleDevice> devices;
+    ImmutableSet.Builder<AppleDevice> physicalDevices = ImmutableSet.builder();
     try {
       devices = getDevices();
     } catch (IOException | InterruptedException e) {
@@ -119,7 +119,7 @@ public class AppleDeviceController {
       devices = ImmutableSet.of();
     }
 
-    for (ImmutableAppleDevice device : devices) {
+    for (AppleDevice device : devices) {
       if (device.getType().equals("device")) physicalDevices.add(device);
     }
     return physicalDevices.build();
@@ -128,9 +128,9 @@ public class AppleDeviceController {
   /** @return set of udids of the booted devices */
   public ImmutableSet<String> getBootedSimulatorsUdids() {
     ImmutableSet.Builder<String> bootedSimulatorUdids = ImmutableSet.builder();
-    ImmutableSet<ImmutableAppleDevice> allTargets = getSimulators();
+    ImmutableSet<AppleDevice> allTargets = getSimulators();
 
-    for (ImmutableAppleDevice target : allTargets) {
+    for (AppleDevice target : allTargets) {
       if (target.getState().toLowerCase().equals("booted")
           && target.getType().equals("simulator")) {
         bootedSimulatorUdids.add(target.getUdid());
@@ -144,14 +144,14 @@ public class AppleDeviceController {
    *     name, will return optional empty
    */
   public Optional<String> getUdidFromDeviceName(String name) {
-    ImmutableSet<ImmutableAppleDevice> devices;
+    ImmutableSet<AppleDevice> devices;
     try {
       devices = getDevices();
     } catch (IOException | InterruptedException e) {
       e.printStackTrace();
       return Optional.empty();
     }
-    for (ImmutableAppleDevice device : devices) {
+    for (AppleDevice device : devices) {
       if (device.getName().equals(name)) {
         return Optional.of(device.getUdid());
       }
@@ -166,16 +166,16 @@ public class AppleDeviceController {
    *     If there are none, returns optional empty
    */
   public Optional<String> getSimulatorUdidForTest() {
-    ImmutableSet<ImmutableAppleDevice> simulators = getSimulators();
+    ImmutableSet<AppleDevice> simulators = getSimulators();
     if (simulators.isEmpty()) {
       return Optional.empty();
     }
-    for (ImmutableAppleDevice simulator : simulators) {
+    for (AppleDevice simulator : simulators) {
       if (simulator.getState().toLowerCase().equals("booted")) {
         return Optional.of(simulator.getUdid());
       }
     }
-    for (ImmutableAppleDevice simulator : simulators) {
+    for (AppleDevice simulator : simulators) {
       if (getDeviceKind(simulator) == AppleDeviceKindEnum.MOBILE) {
         return Optional.of(simulator.getUdid());
       }
@@ -208,8 +208,8 @@ public class AppleDeviceController {
    */
   public boolean isSimulatorAvailable(String simulatorUdid) {
     AppleDeviceController deviceController = new AppleDeviceController(processExecutor, idbPath);
-    ImmutableSet<ImmutableAppleDevice> simulators = deviceController.getSimulators();
-    for (ImmutableAppleDevice simulator : simulators) {
+    ImmutableSet<AppleDevice> simulators = deviceController.getSimulators();
+    for (AppleDevice simulator : simulators) {
       if (simulator.getUdid().equals(simulatorUdid)) {
         return true;
       }
@@ -351,7 +351,7 @@ public class AppleDeviceController {
    * @param device to be analized
    * @return the enum indicating the kind of device it is
    */
-  public AppleDeviceKindEnum getDeviceKind(ImmutableAppleDevice device) {
+  public AppleDeviceKindEnum getDeviceKind(AppleDevice device) {
     if (device.getName().contains("TV")) return AppleDeviceKindEnum.TV;
     if (device.getName().contains("Watch")) return AppleDeviceKindEnum.WATCH;
     return AppleDeviceKindEnum.MOBILE;

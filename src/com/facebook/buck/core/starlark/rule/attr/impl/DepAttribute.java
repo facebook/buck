@@ -66,6 +66,14 @@ public abstract class DepAttribute extends Attribute<BuildTarget> {
     return this::postCoercionTransform;
   }
 
+  public static DepAttribute of(
+      Object preCoercionDefaultValue,
+      String doc,
+      boolean mandatory,
+      ImmutableList<Provider<?>> providers) {
+    return ImmutableDepAttribute.of(preCoercionDefaultValue, doc, mandatory, providers);
+  }
+
   private SkylarkDependency postCoercionTransform(Object dep, RuleAnalysisContext analysisContext) {
     Verify.verify(dep instanceof BuildTarget, "%s must be a BuildTarget", dep);
     BuildTarget target = (BuildTarget) dep;

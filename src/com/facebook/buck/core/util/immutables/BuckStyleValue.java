@@ -24,7 +24,12 @@ import java.lang.annotation.Target;
 import org.immutables.value.Value;
 
 /**
- * Value-style objects conforming to {@link RuleArg} naming style.
+ * Value-style objects.
+ *
+ * <p>The generated immutable will be package private only so that the immutable generated class is
+ * not used. The declaring interface/abstract class should re-expose constructors as appropriate
+ * (like auto-value). It is intended that all users of the immutable ever only refer to the
+ * interface/abstract class so that the underlying immmutable implementation can change freely.
  *
  * <p>Value-style objects have all attributes as "of" constructor parameters, do not have builders,
  * "with" methods, "copy" methods.
@@ -40,7 +45,7 @@ import org.immutables.value.Value;
     get = {"is*", "get*"},
     init = "set*",
     of = "of",
-    visibility = Value.Style.ImplementationVisibility.SAME,
+    visibility = Value.Style.ImplementationVisibility.PACKAGE,
     allParameters = true,
     defaults = @Value.Immutable(builder = false, copy = false, prehash = false),
     forceJacksonPropertyNames = false,

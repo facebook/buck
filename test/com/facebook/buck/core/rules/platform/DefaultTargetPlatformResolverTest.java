@@ -23,7 +23,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
-import com.facebook.buck.core.model.ImmutableRuleBasedTargetConfiguration;
+import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.platform.Platform;
@@ -136,7 +136,7 @@ public class DefaultTargetPlatformResolverTest {
     ConstraintBasedPlatform platform =
         (ConstraintBasedPlatform)
             targetPlatformResolver.getTargetPlatform(
-                ImmutableRuleBasedTargetConfiguration.of(platformTarget), DependencyStack.root());
+                RuleBasedTargetConfiguration.of(platformTarget), DependencyStack.root());
 
     assertEquals("//platform:platform", platform.toString());
     assertEquals(1, platform.getConstraintValues().size());

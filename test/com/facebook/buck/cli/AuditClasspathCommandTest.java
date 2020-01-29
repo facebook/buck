@@ -25,8 +25,8 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.TestTargetGraphCreationResultFactory;
@@ -132,8 +132,7 @@ public class AuditClasspathCommandTest {
     // - dependencies are walked
     // - independent targets in the same BUCK file are not included in the output
     auditClasspathCommand.printClasspath(
-        params,
-        ImmutableTargetGraphCreationResult.of(targetGraph, ImmutableSet.of(testAndroidTarget)));
+        params, TargetGraphCreationResult.of(targetGraph, ImmutableSet.of(testAndroidTarget)));
 
     Path root = projectFilesystem.getRootPath();
     SortedSet<String> expectedPaths =
@@ -166,7 +165,7 @@ public class AuditClasspathCommandTest {
     setUp();
     auditClasspathCommand.printClasspath(
         params,
-        ImmutableTargetGraphCreationResult.of(
+        TargetGraphCreationResult.of(
             TargetGraphFactory.newInstance(
                 ImmutableSet.of(
                     javaLibraryNode,
@@ -224,7 +223,7 @@ public class AuditClasspathCommandTest {
 
     auditClasspathCommand.printJsonClasspath(
         params,
-        ImmutableTargetGraphCreationResult.of(
+        TargetGraphCreationResult.of(
             TargetGraphFactory.newInstance(ImmutableSet.of(androidNode, javaNode)),
             ImmutableSet.of(androidTarget, javaTarget)));
 
@@ -285,7 +284,7 @@ public class AuditClasspathCommandTest {
             FakeBuckConfig.builder()
                 .setSections(ImmutableMap.of("build", ImmutableMap.of("versions", "true")))
                 .build()),
-        ImmutableTargetGraphCreationResult.of(targetGraph, targets));
+        TargetGraphCreationResult.of(targetGraph, targets));
 
     // Verify output.
     Path root = projectFilesystem.getRootPath();
@@ -343,7 +342,7 @@ public class AuditClasspathCommandTest {
             FakeBuckConfig.builder()
                 .setSections(ImmutableMap.of("build", ImmutableMap.of("versions", "true")))
                 .build()),
-        ImmutableTargetGraphCreationResult.of(targetGraph, targets));
+        TargetGraphCreationResult.of(targetGraph, targets));
 
     // Verify output.
     Path root = projectFilesystem.getRootPath();

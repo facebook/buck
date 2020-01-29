@@ -20,10 +20,10 @@ import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.BuildArtifactFactoryForTests;
-import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
+import com.facebook.buck.core.artifact.SourceArtifactImpl;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.collect.impl.TestProviderInfoCollectionImpl;
@@ -63,7 +63,7 @@ public class SourceArtifactConverterTest {
     PathSourcePath pathSourcePath = PathSourcePath.of(filesystem, Paths.get("source"));
     DefaultBuildTargetSourcePath buildTargetSourcePath =
         DefaultBuildTargetSourcePath.of(
-            ImmutableBuildTargetWithOutputs.of(target, OutputLabel.defaultLabel()));
+            BuildTargetWithOutputs.of(target, OutputLabel.defaultLabel()));
 
     ImmutableSet<SourcePath> sources = ImmutableSet.of(pathSourcePath, buildTargetSourcePath);
 
@@ -73,7 +73,7 @@ public class SourceArtifactConverterTest {
     assertThat(
         artifacts,
         Matchers.containsInAnyOrder(
-            ImmutableSourceArtifactImpl.of(pathSourcePath),
+            SourceArtifactImpl.of(pathSourcePath),
             Iterables.getOnlyElement(dep.getDefaultInfo().defaultOutputs())));
   }
 }

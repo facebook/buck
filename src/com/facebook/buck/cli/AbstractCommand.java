@@ -24,7 +24,6 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
-import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
@@ -353,7 +352,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
   }
 
   /**
-   * Returns a set of {@link ImmutableBuildTargetWithOutputs} instances by matching the given {@link
+   * Returns a set of {@link BuildTargetWithOutputs} instances by matching the given {@link
    * BuildTarget} instances with the given {@link TargetNodeSpec} instances, and applying any {@link
    * OutputLabel} instances to the matching {@link BuildTarget} instances. Applies the default label
    * if a given build target cannot find a matching spec.
@@ -376,7 +375,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
             .getUnconfiguredBuildTargetView()
             .equals(target.getUnconfiguredBuildTargetView())) {
           builder.add(
-              ImmutableBuildTargetWithOutputs.of(
+              BuildTargetWithOutputs.of(
                   target,
                   buildTargetSpec.getUnconfiguredBuildTargetViewWithOutputs().getOutputLabel()));
           mappedTarget = true;
@@ -386,7 +385,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
       // A target may not map to an output label if the build command wasn't invoked with a build
       // pattern that specifies a specific target
       if (!mappedTarget) {
-        builder.add(ImmutableBuildTargetWithOutputs.of(target, OutputLabel.defaultLabel()));
+        builder.add(BuildTargetWithOutputs.of(target, OutputLabel.defaultLabel()));
       }
     }
     return builder.build();

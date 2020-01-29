@@ -21,8 +21,8 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
-import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
 import com.facebook.buck.core.artifact.OutputArtifact;
+import com.facebook.buck.core.artifact.SourceArtifactImpl;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -174,7 +174,7 @@ public class RunInfoTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path txtPath = Paths.get("subdir", "file.txt");
     try (Mutability mut = Mutability.create("test")) {
-      Artifact artifact = ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, txtPath));
+      Artifact artifact = SourceArtifactImpl.of(PathSourcePath.of(filesystem, txtPath));
 
       BuildTarget target = BuildTargetFactory.newInstance("//:some_rule");
       ActionRegistryForTests registry = new ActionRegistryForTests(target, filesystem);

@@ -41,8 +41,7 @@ import com.facebook.buck.core.select.impl.DefaultSelectorListResolver;
 import com.facebook.buck.parser.NoopPackageBoundaryChecker;
 import com.facebook.buck.parser.UnconfiguredTargetNodeToTargetNodeFactory;
 import com.facebook.buck.parser.api.BuildFileManifest;
-import com.facebook.buck.parser.api.ImmutableBuildFileManifest;
-import com.facebook.buck.parser.manifest.ImmutableBuildPackagePathToBuildFileManifestKey;
+import com.facebook.buck.parser.manifest.BuildPackagePathToBuildFileManifestKey;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -117,7 +116,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
             ImmutableSet.of());
 
     BuildFileManifest buildFileManifest =
-        ImmutableBuildFileManifest.of(
+        BuildFileManifest.of(
             ImmutableMap.of("target1", rawAttributes1, "target2", rawAttributes2),
             ImmutableSortedSet.of(),
             ImmutableMap.of(),
@@ -133,7 +132,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
             ImmutableBuildPackagePathToUnconfiguredTargetNodePackageKey.of(Paths.get("")),
             new FakeComputationEnvironment(
                 ImmutableMap.of(
-                    ImmutableBuildPackagePathToBuildFileManifestKey.of(Paths.get("")),
+                    BuildPackagePathToBuildFileManifestKey.of(Paths.get("")),
                     buildFileManifest,
                     ImmutableBuildTargetToUnconfiguredTargetNodeKey.of(
                         unconfiguredBuildTarget1, Paths.get("")),

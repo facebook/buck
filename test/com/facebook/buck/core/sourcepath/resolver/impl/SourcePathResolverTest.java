@@ -24,7 +24,6 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
-import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -100,7 +99,7 @@ public class SourcePathResolverTest {
             ImmutableMap.of(OutputLabel.of("bar"), ImmutableSet.of(expectedPath)));
     graphBuilder.addToIndex(rule);
     BuildTargetWithOutputs buildTargetWithOutputs =
-        ImmutableBuildTargetWithOutputs.of(buildTarget, OutputLabel.of("bar"));
+        BuildTargetWithOutputs.of(buildTarget, OutputLabel.of("bar"));
     SourcePath sourcePath = DefaultBuildTargetSourcePath.of(buildTargetWithOutputs);
 
     assertEquals(expectedPath, pathResolver.getRelativePath(sourcePath));
@@ -127,7 +126,7 @@ public class SourcePathResolverTest {
                 ImmutableSet.of(Paths.get("foo").resolve("qux"))));
     graphBuilder.addToIndex(rule);
     BuildTargetWithOutputs buildTargetWithOutputs =
-        ImmutableBuildTargetWithOutputs.of(buildTarget, OutputLabel.of("bar"));
+        BuildTargetWithOutputs.of(buildTarget, OutputLabel.of("bar"));
     SourcePath sourcePath = DefaultBuildTargetSourcePath.of(buildTargetWithOutputs);
 
     assertEquals(expectedPath, pathResolver.getRelativePath(sourcePath));
@@ -151,7 +150,7 @@ public class SourcePathResolverTest {
             ImmutableMap.of(OutputLabel.of("bar"), ImmutableSet.of(path)));
     graphBuilder.addToIndex(rule);
     BuildTargetWithOutputs buildTargetWithOutputs =
-        ImmutableBuildTargetWithOutputs.of(buildTarget, OutputLabel.of("baz"));
+        BuildTargetWithOutputs.of(buildTarget, OutputLabel.of("baz"));
     SourcePath sourcePath = DefaultBuildTargetSourcePath.of(buildTargetWithOutputs);
 
     pathResolver.getRelativePath(sourcePath);
@@ -172,7 +171,7 @@ public class SourcePathResolverTest {
         new PathReferenceRule(buildTarget, new FakeProjectFilesystem(), Paths.get("foo"));
     graphBuilder.addToIndex(rule);
     BuildTargetWithOutputs buildTargetWithOutputs =
-        ImmutableBuildTargetWithOutputs.of(buildTarget, OutputLabel.of("bar"));
+        BuildTargetWithOutputs.of(buildTarget, OutputLabel.of("bar"));
     SourcePath sourcePath = DefaultBuildTargetSourcePath.of(buildTargetWithOutputs);
 
     pathResolver.getRelativePath(sourcePath);
@@ -300,7 +299,7 @@ public class SourcePathResolverTest {
             .build(graphBuilder);
     DefaultBuildTargetSourcePath buildTargetSourcePath =
         DefaultBuildTargetSourcePath.of(
-            ImmutableBuildTargetWithOutputs.of(genrule.getBuildTarget(), OutputLabel.of("name")));
+            BuildTargetWithOutputs.of(genrule.getBuildTarget(), OutputLabel.of("name")));
     String actual =
         pathResolver.getSourcePathName(
             BuildTargetFactory.newInstance("//:test"), buildTargetSourcePath);

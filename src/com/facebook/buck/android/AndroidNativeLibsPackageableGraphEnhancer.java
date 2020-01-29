@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
-import com.facebook.buck.android.packageable.ImmutableNativeLinkableEnhancementResult;
 import com.facebook.buck.android.packageable.NativeLinkableEnhancementResult;
 import com.facebook.buck.android.relinker.NativeRelinker;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
@@ -430,7 +429,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
         (module, group) ->
             linkableAssetsBuilder.put(module, group.getNativeLinkable(cxxPlatform, graphBuilder)));
 
-    return ImmutableNativeLinkableEnhancementResult.of(
+    return NativeLinkableEnhancementResult.of(
         linkablesBuilder.build(), linkableAssetsBuilder.build());
   }
 

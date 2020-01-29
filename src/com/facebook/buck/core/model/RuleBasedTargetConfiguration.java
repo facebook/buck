@@ -42,4 +42,8 @@ public abstract class RuleBasedTargetConfiguration extends TargetConfiguration {
   public String toString() {
     return getTargetPlatform().toString();
   }
+
+  public static RuleBasedTargetConfiguration of(BuildTarget targetPlatform) {
+    return ImmutableRuleBasedTargetConfiguration.of(targetPlatform);
+  }
 }

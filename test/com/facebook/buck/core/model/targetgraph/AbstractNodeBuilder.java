@@ -27,10 +27,10 @@ import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.core.rules.ImmutableBuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.config.registry.impl.ConfigurationRuleRegistryFactory;
 import com.facebook.buck.core.rules.providers.collect.impl.LegacyProviderInfoCollectionImpl;
@@ -144,7 +144,7 @@ public abstract class AbstractNodeBuilder<
     TBuildRule rule =
         (TBuildRule)
             description.createBuildRule(
-                ImmutableBuildRuleCreationContextWithTargetGraph.of(
+                BuildRuleCreationContextWithTargetGraph.of(
                     targetGraph,
                     graphBuilder,
                     filesystem,

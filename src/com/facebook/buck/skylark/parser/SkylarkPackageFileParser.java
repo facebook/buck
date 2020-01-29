@@ -19,10 +19,9 @@ package com.facebook.buck.skylark.parser;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.parser.api.ImmutablePackageFileManifest;
-import com.facebook.buck.parser.api.ImmutablePackageMetadata;
 import com.facebook.buck.parser.api.PackageFileManifest;
 import com.facebook.buck.parser.api.PackageFileParser;
+import com.facebook.buck.parser.api.PackageMetadata;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
@@ -86,7 +85,7 @@ public class SkylarkPackageFileParser extends AbstractSkylarkFileParser<PackageF
       ParseContext context,
       Globber globber,
       ImmutableList<String> loadedPaths) {
-    ImmutablePackageMetadata pkg = context.getPackage();
+    PackageMetadata pkg = context.getPackage();
     if (LOG.isVerboseEnabled()) {
       LOG.verbose("Got package: %s", pkg);
     }
@@ -99,6 +98,7 @@ public class SkylarkPackageFileParser extends AbstractSkylarkFileParser<PackageF
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public PackageFileManifest getManifest(java.nio.file.Path packageFile)
       throws BuildFileParseException, InterruptedException, IOException {
     LOG.verbose("Started parsing package file file %s", packageFile);
@@ -109,10 +109,11 @@ public class SkylarkPackageFileParser extends AbstractSkylarkFileParser<PackageF
     try {
       ParseResult parseResult = parse(packageFile);
 
-      return ImmutablePackageFileManifest.of(
+      return PackageFileManifest.of(
           parseResult.getPackage(),
           ImmutableSortedSet.copyOf(parseResult.getLoadedPaths()),
-          parseResult.getReadConfigurationOptions(),
+          (ImmutableMap<String, Object>)
+              (ImmutableMap<String, ? extends Object>) parseResult.getReadConfigurationOptions(),
           Optional.empty(),
           ImmutableList.of());
     } finally {

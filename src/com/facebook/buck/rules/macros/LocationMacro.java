@@ -18,7 +18,6 @@ package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
-import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
@@ -38,7 +37,7 @@ public abstract class LocationMacro extends BaseLocationMacro {
 
   /** Shorthand for constructing a LocationMacro referring to the main default output. */
   public static LocationMacro of(BuildTarget buildTarget) {
-    return of(ImmutableBuildTargetWithOutputs.of(buildTarget, OutputLabel.defaultLabel()));
+    return of(BuildTargetWithOutputs.of(buildTarget, OutputLabel.defaultLabel()));
   }
 
   public static LocationMacro of(BuildTargetWithOutputs target) {

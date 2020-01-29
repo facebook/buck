@@ -49,7 +49,7 @@ import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisException;
 import com.facebook.buck.core.rules.analysis.computation.RuleAnalysisGraph;
 import com.facebook.buck.core.rules.analysis.impl.FakeRuleAnalysisGraph;
-import com.facebook.buck.core.rules.analysis.impl.ImmutableFakeRuleAnalysisResultImpl;
+import com.facebook.buck.core.rules.analysis.impl.FakeRuleAnalysisResultImpl;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.config.registry.impl.ConfigurationRuleRegistryFactory;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
@@ -227,7 +227,7 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
             ruleAnalysisKey -> {
               ruleAnalysisCalled.set(true);
               assertSame(target, ruleAnalysisKey.getBuildTarget());
-              return ImmutableFakeRuleAnalysisResultImpl.of(
+              return FakeRuleAnalysisResultImpl.of(
                   target,
                   TestProviderInfoCollectionImpl.builder()
                       .build(
@@ -320,7 +320,7 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
             ruleAnalysisKey -> {
               ruleAnalysisCalled.set(true);
               assertSame(target, ruleAnalysisKey.getBuildTarget());
-              return ImmutableFakeRuleAnalysisResultImpl.of(
+              return FakeRuleAnalysisResultImpl.of(
                   target, TestProviderInfoCollectionImpl.builder().build(), ImmutableMap.of());
             });
 
@@ -415,7 +415,7 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
     RuleAnalysisGraph ruleAnalysisComputation =
         new FakeRuleAnalysisGraph(
             ruleAnalysisKey ->
-                ImmutableFakeRuleAnalysisResultImpl.of(
+                FakeRuleAnalysisResultImpl.of(
                     ruleAnalysisKey.getBuildTarget(),
                     TestProviderInfoCollectionImpl.builder().build(),
                     ImmutableMap.of()));

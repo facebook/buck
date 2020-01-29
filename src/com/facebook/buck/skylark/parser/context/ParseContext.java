@@ -16,7 +16,6 @@
 
 package com.facebook.buck.skylark.parser.context;
 
-import com.facebook.buck.parser.api.ImmutablePackageMetadata;
 import com.facebook.buck.parser.api.PackageMetadata;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.google.common.base.Preconditions;
@@ -43,7 +42,7 @@ public class ParseContext {
   // remove parse state from rules and as such makes rules reusable across parse invocations
   private static final String PARSE_CONTEXT = "$parse_context";
 
-  private @Nullable ImmutablePackageMetadata pkg;
+  private @Nullable PackageMetadata pkg;
 
   private final Map<String, ImmutableMap<String, Object>> rawRules;
   // stores every accessed configuration option while parsing the build file.
@@ -58,8 +57,7 @@ public class ParseContext {
   }
 
   /** Records the parsed {@code rawPackage}. */
-  public void recordPackage(ImmutablePackageMetadata pkg, FuncallExpression ast)
-      throws EvalException {
+  public void recordPackage(PackageMetadata pkg, FuncallExpression ast) throws EvalException {
     Preconditions.checkState(rawRules.isEmpty(), "Package files cannot contain rules.");
     if (this.pkg != null) {
       throw new EvalException(
@@ -104,7 +102,7 @@ public class ParseContext {
   }
 
   /** @return The package in the parsed package file if defined. */
-  public ImmutablePackageMetadata getPackage() {
+  public PackageMetadata getPackage() {
     if (pkg == null) {
       return PackageMetadata.EMPTY_SINGLETON;
     }

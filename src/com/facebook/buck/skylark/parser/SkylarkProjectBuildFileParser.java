@@ -20,14 +20,13 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.BuildFileManifestPojoizer;
-import com.facebook.buck.parser.api.ImmutableBuildFileManifest;
-import com.facebook.buck.parser.api.ImmutablePackageMetadata;
+import com.facebook.buck.parser.api.PackageMetadata;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
-import com.facebook.buck.parser.syntax.ImmutableListWithSelects;
-import com.facebook.buck.parser.syntax.ImmutableSelectorValue;
+import com.facebook.buck.parser.syntax.ListWithSelects;
+import com.facebook.buck.parser.syntax.SelectorValue;
 import com.facebook.buck.skylark.io.GlobSpec;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.skylark.io.Globber;
@@ -116,7 +115,7 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
     }
     LOG.verbose("Parsed %d rules from %s", rules.size(), parseFile);
     return ParseResult.of(
-        ImmutablePackageMetadata.EMPTY_SINGLETON,
+        PackageMetadata.EMPTY_SINGLETON,
         rules,
         loadedPaths,
         context.getAccessedConfigurationOptions(),
@@ -124,6 +123,7 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public BuildFileManifest getManifest(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     LOG.verbose("Started parsing build file %s", buildFile);
@@ -141,17 +141,17 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
       // By contract, BuildFileManifestPojoizer converts any Map to ImmutableMap.
       // ParseResult.getRawRules() returns ImmutableMap<String, Map<String, Object>>, so it is
       // a safe downcast here
-      @SuppressWarnings("unchecked")
       ImmutableMap<String, ImmutableMap<String, Object>> targets =
           (ImmutableMap<String, ImmutableMap<String, Object>>)
               getBuildFileManifestPojoizer().convertToPojo(rawRules);
 
       rulesParsed = targets.size();
 
-      return ImmutableBuildFileManifest.of(
+      return BuildFileManifest.of(
           targets,
           ImmutableSortedSet.copyOf(parseResult.getLoadedPaths()),
-          parseResult.getReadConfigurationOptions(),
+          (ImmutableMap<String, Object>)
+              (ImmutableMap<String, ? extends Object>) parseResult.getReadConfigurationOptions(),
           Optional.empty(),
           parseResult.getGlobManifestWithResult(),
           ImmutableList.of());
@@ -175,7 +175,7 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
               @SuppressWarnings("unchecked")
               ImmutableList<Object> elements =
                   (ImmutableList<Object>) pojoizer.convertToPojo(skylarkSelectorList.getElements());
-              return ImmutableListWithSelects.of(elements, skylarkSelectorList.getType());
+              return ListWithSelects.of(elements, skylarkSelectorList.getType());
             }));
     pojoizer.addPojoTransformer(
         BuildFileManifestPojoizer.PojoTransformer.of(
@@ -188,7 +188,7 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
               ImmutableMap<String, Object> dictionary =
                   (ImmutableMap<String, Object>)
                       pojoizer.convertToPojo(skylarkSelectorValue.getDictionary());
-              return ImmutableSelectorValue.of(dictionary, skylarkSelectorValue.getNoMatchError());
+              return SelectorValue.of(dictionary, skylarkSelectorValue.getNoMatchError());
             }));
     pojoizer.addPojoTransformer(
         BuildFileManifestPojoizer.PojoTransformer.of(

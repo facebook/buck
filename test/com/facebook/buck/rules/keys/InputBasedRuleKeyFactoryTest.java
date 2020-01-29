@@ -19,7 +19,7 @@ package com.facebook.buck.rules.keys;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.artifact.BuildTargetSourcePathToArtifactConverter;
-import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
+import com.facebook.buck.core.artifact.SourceArtifactImpl;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -185,8 +185,7 @@ public class InputBasedRuleKeyFactoryTest {
     SomeAction action =
         new SomeAction(
             new ActionRegistryForTests(BuildTargetFactory.newInstance("//:rule")),
-            ImmutableSortedSet.of(
-                ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, output))),
+            ImmutableSortedSet.of(SourceArtifactImpl.of(PathSourcePath.of(filesystem, output))),
             ImmutableSortedSet.of(),
             1,
             "a");

@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
@@ -108,7 +108,7 @@ public class SourcePathTypeCoercerTest {
 
     assertEquals(
         DefaultBuildTargetSourcePath.of(
-            ImmutableBuildTargetWithOutputs.of(
+            BuildTargetWithOutputs.of(
                 BuildTargetFactory.newInstance("//:hello"), OutputLabel.of("label"))),
         sourcePath);
   }
@@ -141,7 +141,7 @@ public class SourcePathTypeCoercerTest {
 
     assertEquals(
         DefaultBuildTargetSourcePath.of(
-            ImmutableBuildTargetWithOutputs.of(
+            BuildTargetWithOutputs.of(
                 BuildTargetFactory.newInstance("//:hello"), OutputLabel.of("label"))),
         sourcePath);
   }

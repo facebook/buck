@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.targetgraph.impl.Package;
-import com.facebook.buck.parser.api.ImmutablePackageMetadata;
+import com.facebook.buck.parser.api.PackageMetadata;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
@@ -36,8 +36,8 @@ public class PackageFactoryTest {
   private Package createGenericPackage() {
     Path packageFile = Paths.get("foo/PACKAGE");
 
-    ImmutablePackageMetadata rawPackage =
-        ImmutablePackageMetadata.of(ImmutableList.of("//a/..."), ImmutableList.of("//b/..."));
+    PackageMetadata rawPackage =
+        PackageMetadata.of(ImmutableList.of("//a/..."), ImmutableList.of("//b/..."));
 
     Package pkg = PackageFactory.create(cell, packageFile, rawPackage, Optional.empty());
     return pkg;
@@ -59,8 +59,8 @@ public class PackageFactoryTest {
 
     Path packageFile = Paths.get("foo/bar/PACKAGE");
 
-    ImmutablePackageMetadata rawPackage =
-        ImmutablePackageMetadata.of(ImmutableList.of("//c/..."), ImmutableList.of("//d/..."));
+    PackageMetadata rawPackage =
+        PackageMetadata.of(ImmutableList.of("//c/..."), ImmutableList.of("//d/..."));
 
     Package pkg = PackageFactory.create(cell, packageFile, rawPackage, Optional.of(parentPkg));
 

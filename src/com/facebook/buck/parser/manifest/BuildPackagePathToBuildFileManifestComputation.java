@@ -22,7 +22,6 @@ import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.parser.api.BuildFileManifest;
-import com.facebook.buck.parser.api.ImmutableBuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.ParsingError;
@@ -80,7 +79,7 @@ public class BuildPackagePathToBuildFileManifestComputation
         throw ex;
       }
 
-      return ImmutableBuildFileManifest.of(
+      return BuildFileManifest.of(
           ImmutableMap.of(),
           ImmutableSortedSet.of(),
           ImmutableMap.of(),

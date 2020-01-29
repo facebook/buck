@@ -19,7 +19,6 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
-import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -63,8 +62,7 @@ public final class BuildTargetMacroTypeCoercer<M extends BuildTargetMacro>
     // TODO(irenewchen): Add output label to BuildTargetMacro and pass it on here
     buildTargetWithOutputsTypeCoercer.traverse(
         cellRoots,
-        ImmutableBuildTargetWithOutputs.of(
-            macro.getTarget(), macro.getTargetWithOutputs().getOutputLabel()),
+        BuildTargetWithOutputs.of(macro.getTarget(), macro.getTargetWithOutputs().getOutputLabel()),
         traversal);
   }
 

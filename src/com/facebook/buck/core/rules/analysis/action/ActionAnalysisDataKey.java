@@ -39,4 +39,8 @@ public interface ActionAnalysisDataKey {
 
   /** @return the unique and stable ID of the corresponding {@link ActionAnalysisData} */
   ActionAnalysisData.ID getID();
+
+  static ActionAnalysisDataKey of(BuildTarget buildTarget, ActionAnalysisData.ID iD) {
+    return ImmutableActionAnalysisDataKey.of(buildTarget, iD);
+  }
 }

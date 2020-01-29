@@ -79,7 +79,7 @@ public class FileSerializationOutputRuleDepsListener
   /** Data object that is used to serialize rule execution information into a file */
   @BuckStyleValue
   @JsonSerialize
-  @JsonDeserialize
+  @JsonDeserialize(as = ImmutableRuleExecutionTimeData.class)
   public interface RuleExecutionTimeData {
 
     String getTargetId();

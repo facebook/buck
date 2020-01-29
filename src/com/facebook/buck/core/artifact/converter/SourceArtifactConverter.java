@@ -17,7 +17,7 @@
 package com.facebook.buck.core.artifact.converter;
 
 import com.facebook.buck.core.artifact.Artifact;
-import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
+import com.facebook.buck.core.artifact.SourceArtifactImpl;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
@@ -61,7 +61,7 @@ public class SourceArtifactConverter {
       }
       return Iterables.getOnlyElement(artifacts);
     } else if (src instanceof PathSourcePath) {
-      return ImmutableSourceArtifactImpl.of((PathSourcePath) src);
+      return SourceArtifactImpl.of((PathSourcePath) src);
     } else {
       throw new IllegalStateException(
           String.format("%s must either be a source file, or a BuildTarget", src));

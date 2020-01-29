@@ -23,7 +23,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData.ID;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataRegistry;
-import com.facebook.buck.core.rules.analysis.action.ImmutableActionAnalysisDataKey;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
@@ -83,7 +82,7 @@ public class DefaultActionRegistry extends BuildArtifactFactory implements Actio
     int uniqueCounter = registeredShortNameIDs.add(normalizedShortName, 1);
     String uniqueID = normalizedShortName.concat(String.format("-%s", uniqueCounter));
 
-    ActionAnalysisDataKey key = ImmutableActionAnalysisDataKey.of(target, new ID(uniqueID));
+    ActionAnalysisDataKey key = ActionAnalysisDataKey.of(target, new ID(uniqueID));
     action.getOutputs().forEach(artifact -> bindtoBuildArtifact(key, artifact.getArtifact()));
 
     ActionWrapperData actionAnalysisData = ImmutableActionWrapperDataImpl.of(key, action);

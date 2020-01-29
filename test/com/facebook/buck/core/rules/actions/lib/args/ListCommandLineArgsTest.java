@@ -24,8 +24,8 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.core.artifact.BuildArtifactFactoryForTests;
-import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
 import com.facebook.buck.core.artifact.OutputArtifact;
+import com.facebook.buck.core.artifact.SourceArtifactImpl;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildPaths;
@@ -65,10 +65,8 @@ public class ListCommandLineArgsTest {
   public void returnsProperStreamAndSize() throws EvalException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
-    Artifact path1 =
-        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("some_bin")));
-    Artifact path2 =
-        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("other_file")));
+    Artifact path1 = SourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("some_bin")));
+    Artifact path2 = SourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("other_file")));
     BuildTarget target = BuildTargetFactory.newInstance("//:some_rule");
     ActionRegistryForTests registry = new ActionRegistryForTests(target, filesystem);
     Artifact artifact3 = registry.declareArtifact(Paths.get("out.txt"), Location.BUILTIN);
@@ -112,10 +110,8 @@ public class ListCommandLineArgsTest {
   public void formatsStrings() throws EvalException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
-    Artifact path1 =
-        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("some_bin")));
-    Artifact path2 =
-        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("other_file")));
+    Artifact path1 = SourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("some_bin")));
+    Artifact path2 = SourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("other_file")));
     BuildTarget target = BuildTargetFactory.newInstance("//:some_rule");
     ActionRegistryForTests registry = new ActionRegistryForTests(target, filesystem);
     Artifact artifact3 = registry.declareArtifact(Paths.get("out.txt"), Location.BUILTIN);
@@ -172,10 +168,8 @@ public class ListCommandLineArgsTest {
 
     FakeFileHashCache hashCache = new FakeFileHashCache(hashes);
 
-    Artifact path1 =
-        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("some_bin")));
-    Artifact path2 =
-        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("other_file")));
+    Artifact path1 = SourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("some_bin")));
+    Artifact path2 = SourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("other_file")));
     /**
      * Make sure that we have a build target source path. This tests that we don't run into problems
      * with infinite recursion. See {@link CommandLineArgs} for details
@@ -230,7 +224,7 @@ public class ListCommandLineArgsTest {
   @Test
   public void isImmutable() throws LabelSyntaxException, EvalException, InterruptedException {
     Artifact path1 =
-        ImmutableSourceArtifactImpl.of(
+        SourceArtifactImpl.of(
             PathSourcePath.of(new FakeProjectFilesystem(), Paths.get("some_bin")));
     CommandLineArgs args = CommandLineArgsFactory.from(ImmutableList.of(1, "foo", path1));
 

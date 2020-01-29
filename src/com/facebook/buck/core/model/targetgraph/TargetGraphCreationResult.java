@@ -49,4 +49,9 @@ public abstract class TargetGraphCreationResult {
   public TargetGraphCreationResult withBuildTargets(Iterable<? extends BuildTarget> elements) {
     return ImmutableTargetGraphCreationResult.of(getTargetGraph(), elements);
   }
+
+  public static TargetGraphCreationResult of(
+      TargetGraph targetGraph, ImmutableSet<BuildTarget> buildTargets) {
+    return ImmutableTargetGraphCreationResult.of(targetGraph, buildTargets);
+  }
 }

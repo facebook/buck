@@ -22,6 +22,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -46,5 +47,10 @@ public abstract class DefaultCellNameResolver implements CellNameResolver {
                     getKnownCells().keySet().stream()
                         .flatMap(optional -> optional.map(Stream::of).orElse(Stream.empty()))
                         .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()))));
+  }
+
+  public static ImmutableDefaultCellNameResolver of(
+      Map<? extends Optional<String>, ? extends CanonicalCellName> knownCells) {
+    return ImmutableDefaultCellNameResolver.of(knownCells);
   }
 }

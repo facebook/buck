@@ -34,8 +34,8 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.ProviderCreationContext;
-import com.facebook.buck.core.rules.analysis.ImmutableRuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
+import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
 import com.facebook.buck.core.rules.analysis.cache.RuleAnalysisCache;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
@@ -120,7 +120,7 @@ public class RuleAnalysisGraphImplTest {
         RuleAnalysisGraphImpl.of(targetGraph, depsAwareExecutor, cache, eventBus);
 
     RuleAnalysisResult ruleAnalysisResult =
-        ruleAnalysisComputation.get(ImmutableRuleAnalysisKey.of(buildTarget));
+        ruleAnalysisComputation.get(RuleAnalysisKey.of(buildTarget));
 
     // We shouldn't be making copies of the providers or build target in our transformation. It
     // should be as given.
@@ -204,7 +204,7 @@ public class RuleAnalysisGraphImplTest {
         RuleAnalysisGraphImpl.of(targetGraph, depsAwareExecutor, cache, eventBus);
 
     RuleAnalysisResult ruleAnalysisResult =
-        ruleAnalysisComputation.get(ImmutableRuleAnalysisKey.of(buildTarget));
+        ruleAnalysisComputation.get(RuleAnalysisKey.of(buildTarget));
 
     // We shouldn't be making copies of the providers or build target in our transformation. It
     // should be as given.
@@ -288,7 +288,7 @@ public class RuleAnalysisGraphImplTest {
             cache);
 
     RuleAnalysisResult ruleAnalysisResult =
-        ruleAnalysisComputation.get(ImmutableRuleAnalysisKey.of(buildTarget));
+        ruleAnalysisComputation.get(RuleAnalysisKey.of(buildTarget));
 
     // We shouldn't be making copies of the providers or build target in our transformation. It
     // should be as given.

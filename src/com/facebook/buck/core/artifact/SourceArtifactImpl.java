@@ -104,4 +104,8 @@ public abstract class SourceArtifactImpl extends AbstractArtifact
   public OutputArtifact asOutputArtifact() {
     throw new HumanReadableException("source file %s cannot be used as an output artifact", this);
   }
+
+  public static SourceArtifactImpl of(PathSourcePath sourcePath) {
+    return ImmutableSourceArtifactImpl.of(sourcePath);
+  }
 }

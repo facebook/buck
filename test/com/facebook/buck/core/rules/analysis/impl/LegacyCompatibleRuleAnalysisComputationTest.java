@@ -37,7 +37,6 @@ import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ProviderCreationContext;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
-import com.facebook.buck.core.rules.analysis.ImmutableRuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisException;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
@@ -96,14 +95,12 @@ public class LegacyCompatibleRuleAnalysisComputationTest {
             targetGraph);
 
     assertEquals(
-        ImmutableSet.of(),
-        transformer.discoverPreliminaryDeps(ImmutableRuleAnalysisKey.of(buildTarget)));
+        ImmutableSet.of(), transformer.discoverPreliminaryDeps(RuleAnalysisKey.of(buildTarget)));
 
     assertEquals(
         ImmutableSet.of(),
         transformer.discoverDeps(
-            ImmutableRuleAnalysisKey.of(buildTarget),
-            new FakeComputationEnvironment(ImmutableMap.of())));
+            RuleAnalysisKey.of(buildTarget), new FakeComputationEnvironment(ImmutableMap.of())));
   }
 
   @Test
@@ -134,9 +131,9 @@ public class LegacyCompatibleRuleAnalysisComputationTest {
     AtomicBoolean depsCalled = new AtomicBoolean();
 
     ImmutableSet<RuleAnalysisKey> pdepsKeys =
-        ImmutableSet.of(ImmutableRuleAnalysisKey.of(BuildTargetFactory.newInstance("//some:pdep")));
+        ImmutableSet.of(RuleAnalysisKey.of(BuildTargetFactory.newInstance("//some:pdep")));
     ImmutableSet<RuleAnalysisKey> depsKeys =
-        ImmutableSet.of(ImmutableRuleAnalysisKey.of(BuildTargetFactory.newInstance("//some:dep")));
+        ImmutableSet.of(RuleAnalysisKey.of(BuildTargetFactory.newInstance("//some:dep")));
 
     LegacyCompatibleRuleAnalysisComputation transformer =
         new LegacyCompatibleRuleAnalysisComputation(
@@ -156,15 +153,13 @@ public class LegacyCompatibleRuleAnalysisComputationTest {
             },
             targetGraph);
 
-    assertSame(
-        pdepsKeys, transformer.discoverPreliminaryDeps(ImmutableRuleAnalysisKey.of(buildTarget)));
+    assertSame(pdepsKeys, transformer.discoverPreliminaryDeps(RuleAnalysisKey.of(buildTarget)));
     assertTrue(pdepsCalled.get());
 
     assertSame(
         depsKeys,
         transformer.discoverDeps(
-            ImmutableRuleAnalysisKey.of(buildTarget),
-            new FakeComputationEnvironment(ImmutableMap.of())));
+            RuleAnalysisKey.of(buildTarget), new FakeComputationEnvironment(ImmutableMap.of())));
     assertTrue(depsCalled.get());
   }
 
@@ -226,8 +221,7 @@ public class LegacyCompatibleRuleAnalysisComputationTest {
 
     RuleAnalysisResult ruleAnalysisResult =
         transformer.transform(
-            ImmutableRuleAnalysisKey.of(buildTarget),
-            new FakeComputationEnvironment(ImmutableMap.of()));
+            RuleAnalysisKey.of(buildTarget), new FakeComputationEnvironment(ImmutableMap.of()));
 
     // We shouldn't be making copies of the providers or build target in our transformation. It
     // should be as given.
@@ -290,8 +284,7 @@ public class LegacyCompatibleRuleAnalysisComputationTest {
 
     RuleAnalysisResult ruleAnalysisResult =
         transformer.transform(
-            ImmutableRuleAnalysisKey.of(buildTarget),
-            new FakeComputationEnvironment(ImmutableMap.of()));
+            RuleAnalysisKey.of(buildTarget), new FakeComputationEnvironment(ImmutableMap.of()));
 
     // We shouldn't be making copies of the providers or build target in our transformation. It
     // should be as given.

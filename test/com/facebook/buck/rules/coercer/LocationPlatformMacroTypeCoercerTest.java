@@ -21,7 +21,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -67,7 +67,7 @@ public class LocationPlatformMacroTypeCoercerTest {
             ImmutableList.of("//:test")),
         Matchers.equalTo(
             LocationPlatformMacro.of(
-                ImmutableBuildTargetWithOutputs.of(
+                BuildTargetWithOutputs.of(
                     BuildTargetFactory.newInstance("//:test"), OutputLabel.defaultLabel()),
                 ImmutableSet.of())));
     assertThat(
@@ -80,7 +80,7 @@ public class LocationPlatformMacroTypeCoercerTest {
             ImmutableList.of("//:test[foo]")),
         Matchers.equalTo(
             LocationPlatformMacro.of(
-                ImmutableBuildTargetWithOutputs.of(
+                BuildTargetWithOutputs.of(
                     BuildTargetFactory.newInstance("//:test"), OutputLabel.of("foo")),
                 ImmutableSet.of())));
   }
@@ -97,7 +97,7 @@ public class LocationPlatformMacroTypeCoercerTest {
             ImmutableList.of("//:test", "flavor1", "flavor2")),
         Matchers.equalTo(
             LocationPlatformMacro.of(
-                ImmutableBuildTargetWithOutputs.of(
+                BuildTargetWithOutputs.of(
                     BuildTargetFactory.newInstance("//:test"), OutputLabel.defaultLabel()),
                 ImmutableSet.of(InternalFlavor.of("flavor1"), InternalFlavor.of("flavor2")))));
   }

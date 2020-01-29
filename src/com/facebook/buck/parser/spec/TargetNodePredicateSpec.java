@@ -23,7 +23,6 @@ import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetLanguageConstants;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
-import com.facebook.buck.core.parser.buildtargetpattern.ImmutableBuildTargetPattern;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableMap;
@@ -68,7 +67,7 @@ public abstract class TargetNodePredicateSpec implements TargetNodeSpec {
     CanonicalCellName cellName = cell.getCanonicalName();
 
     ForwardRelativePath basePath = buildFileSpec.getCellRelativeBaseName().getPath();
-    return ImmutableBuildTargetPattern.of(
+    return BuildTargetPattern.of(
         CellRelativePath.of(cellName, basePath),
         buildFileSpec.isRecursive()
             ? BuildTargetPattern.Kind.RECURSIVE

@@ -82,6 +82,15 @@ public abstract class UnconfiguredDepListAttribute
     return this::postCoercionTransform;
   }
 
+  public static UnconfiguredDepListAttribute of(
+      ImmutableList<String> preCoercionDefaultValue,
+      String doc,
+      boolean mandatory,
+      boolean allowEmpty) {
+    return ImmutableUnconfiguredDepListAttribute.of(
+        preCoercionDefaultValue, doc, mandatory, allowEmpty);
+  }
+
   @SuppressWarnings("unused")
   private ImmutableList<SkylarkDependency> postCoercionTransform(
       Object coercedValue, RuleAnalysisContext analysisContext) {

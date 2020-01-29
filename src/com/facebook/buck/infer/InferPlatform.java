@@ -50,4 +50,14 @@ public abstract class InferPlatform implements AddsToRuleKey {
   @AddToRuleKey
   @CustomFieldBehavior(RemoteExecutionEnabled.class)
   abstract boolean executeRemotely();
+
+  public static InferPlatform of(
+      Tool inferBin,
+      Optional<String> inferVersion,
+      Optional<? extends SourcePath> inferConfig,
+      Optional<? extends SourcePath> nullsafeThirdPartySignatures,
+      boolean executeRemotely) {
+    return ImmutableInferPlatform.of(
+        inferBin, inferVersion, inferConfig, nullsafeThirdPartySignatures, executeRemotely);
+  }
 }

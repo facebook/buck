@@ -30,7 +30,7 @@ import com.dd.plist.NSObject;
 import com.facebook.buck.cli.MainForTests;
 import com.facebook.buck.cli.MainRunner;
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.cell.ImmutableCellConfig;
+import com.facebook.buck.core.cell.CellConfig;
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.cell.impl.LocalCellProviderFactory;
 import com.facebook.buck.core.config.BuckConfig;
@@ -772,7 +772,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
     return LocalCellProviderFactory.create(
             filesystem,
             buckConfig,
-            ImmutableCellConfig.EMPTY_INSTANCE,
+            CellConfig.EMPTY_INSTANCE,
             rootCellCellPathResolver.getPathMapping(),
             rootCellCellPathResolver,
             TestBuckModuleManagerFactory.create(pluginManager),

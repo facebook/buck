@@ -21,7 +21,6 @@ import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -172,7 +171,7 @@ abstract class AbstractParser implements Parser {
       throws IOException, InterruptedException, BuildFileParseException {
 
     if (toExplore.isEmpty()) {
-      return ImmutableTargetGraphCreationResult.of(TargetGraph.EMPTY, toExplore);
+      return TargetGraphCreationResult.of(TargetGraph.EMPTY, toExplore);
     }
 
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
@@ -245,7 +244,7 @@ abstract class AbstractParser implements Parser {
       }
 
       targetGraph = new TargetGraph(graph, ImmutableMap.copyOf(index));
-      return ImmutableTargetGraphCreationResult.of(targetGraph, toExplore);
+      return TargetGraphCreationResult.of(targetGraph, toExplore);
     } catch (CycleException e) {
       throw new HumanReadableException(e.getMessage());
     } catch (RuntimeException e) {

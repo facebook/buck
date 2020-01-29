@@ -31,7 +31,6 @@ import com.facebook.buck.json.BuildFileParseExceptionStackTraceEntry;
 import com.facebook.buck.json.BuildFilePythonResult;
 import com.facebook.buck.json.BuildFileSyntaxError;
 import com.facebook.buck.parser.api.BuildFileManifest;
-import com.facebook.buck.parser.api.ImmutableBuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.parser.events.ParseBuckProfilerReportEvent;
@@ -39,8 +38,7 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.implicit.PackageImplicitIncludesFinder;
 import com.facebook.buck.parser.options.ImplicitNativeRulesState;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
-import com.facebook.buck.parser.syntax.ImmutableListWithSelects;
-import com.facebook.buck.parser.syntax.ImmutableSelectorValue;
+import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.parser.syntax.SelectorValue;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
@@ -469,7 +467,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       if (values.isEmpty()) {
         // in case Python process cannot send values due to serialization issues, it will send an
         // empty list
-        return ImmutableBuildFileManifest.of(
+        return BuildFileManifest.of(
             ImmutableMap.of(),
             ImmutableSortedSet.of(),
             ImmutableMap.of(),
@@ -497,13 +495,14 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
 
   @SuppressWarnings("unchecked")
   private BuildFileManifest toBuildFileManifest(ImmutableList<Map<String, Object>> values) {
-    return ImmutableBuildFileManifest.of(
+    return BuildFileManifest.of(
         indexTargetsByName(values.subList(0, values.size() - 3).asList()),
         ImmutableSortedSet.copyOf(
             Objects.requireNonNull(
                 (List<String>) values.get(values.size() - 3).get(MetaRules.INCLUDES))),
-        Objects.requireNonNull(
-            (Map<String, Object>) values.get(values.size() - 2).get(MetaRules.CONFIGS)),
+        ImmutableMap.copyOf(
+            Objects.requireNonNull(
+                (Map<String, Object>) values.get(values.size() - 2).get(MetaRules.CONFIGS))),
         Optional.of(
             ImmutableMap.copyOf(
                 Maps.transformValues(
@@ -565,14 +564,13 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
           (Map<String, Object>) Objects.requireNonNull(attributeValue.get("conditions"));
       Map<String, Object> convertedConditions =
           Maps.transformValues(conditions, v -> v == null ? Runtime.NONE : v);
-      return ImmutableSelectorValue.of(
+      return SelectorValue.of(
           convertedConditions, Objects.toString(attributeValue.get("no_match_message"), ""));
     } else {
       Preconditions.checkState("SelectorList".equals(type));
       List<Object> items = (List<Object>) Objects.requireNonNull(attributeValue.get("items"));
       ImmutableList<Object> convertedElements = convertToSelectableAttributesIfNeeded(items);
-      return ImmutableListWithSelects.of(
-          convertedElements, getType(Iterables.getLast(convertedElements)));
+      return ListWithSelects.of(convertedElements, getType(Iterables.getLast(convertedElements)));
     }
   }
 

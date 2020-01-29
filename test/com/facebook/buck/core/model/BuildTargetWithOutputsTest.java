@@ -33,14 +33,14 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class BuildTargetWithOutputsTest {
   private static final ProjectFilesystem FILESYSTEM = new FakeProjectFilesystem();
-  private static final BiFunction<String, OutputLabel, ImmutableUnconfiguredBuildTargetWithOutputs>
+  private static final BiFunction<String, OutputLabel, UnconfiguredBuildTargetWithOutputs>
       UNCONFIGURED_BUILD_TARGET_WITH_OUTPUTS_GENERATOR =
           (bt, ol) ->
-              ImmutableUnconfiguredBuildTargetWithOutputs.of(
+              UnconfiguredBuildTargetWithOutputs.of(
                   UnconfiguredBuildTargetFactoryForTests.newInstance(FILESYSTEM, bt), ol);
-  private static final BiFunction<String, OutputLabel, ImmutableBuildTargetWithOutputs>
+  private static final BiFunction<String, OutputLabel, BuildTargetWithOutputs>
       BUILD_TARGET_WITH_OUTPUTS_GENERATOR =
-          (bt, ol) -> ImmutableBuildTargetWithOutputs.of(BuildTargetFactory.newInstance(bt), ol);
+          (bt, ol) -> BuildTargetWithOutputs.of(BuildTargetFactory.newInstance(bt), ol);
 
   @Parameterized.Parameters(name = "{0}")
   public static Collection<Object> data() {

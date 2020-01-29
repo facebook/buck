@@ -27,7 +27,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.actions.ActionWrapperData;
-import com.facebook.buck.core.rules.analysis.ImmutableRuleAnalysisKey;
+import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.core.rules.analysis.computation.RuleAnalysisGraph;
@@ -72,7 +72,7 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer
     BaseDescription<T> description = targetNode.getDescription();
     if (description instanceof RuleDescription) {
       RuleAnalysisResult result =
-          ruleAnalysisComputation.get(ImmutableRuleAnalysisKey.of(targetNode.getBuildTarget()));
+          ruleAnalysisComputation.get(RuleAnalysisKey.of(targetNode.getBuildTarget()));
 
       // TODO(bobyf): add support for multiple actions from a rule
       ImmutableCollection<ActionAnalysisData> actions = result.getRegisteredActions().values();

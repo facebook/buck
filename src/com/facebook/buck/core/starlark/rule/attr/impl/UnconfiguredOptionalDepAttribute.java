@@ -80,6 +80,12 @@ public abstract class UnconfiguredOptionalDepAttribute
     return this::postCoercionTransform;
   }
 
+  public static UnconfiguredOptionalDepAttribute of(
+      Optional<String> preCoercionDefaultValue, String doc, boolean mandatory, boolean allowEmpty) {
+    return ImmutableUnconfiguredOptionalDepAttribute.of(
+        preCoercionDefaultValue, doc, mandatory, allowEmpty);
+  }
+
   @SuppressWarnings("unused")
   private ImmutableList<SkylarkDependency> postCoercionTransform(
       Object coercedValue, RuleAnalysisContext analysisContext) {

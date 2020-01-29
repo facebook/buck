@@ -24,9 +24,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.ActionGraphSerializer.ActionGraphData;
-import com.facebook.buck.cli.ImmutableActionGraphData;
 import com.facebook.buck.event.listener.FileSerializationOutputRuleDepsListener.RuleExecutionTimeData;
-import com.facebook.buck.event.listener.ImmutableRuleExecutionTimeData;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -63,14 +61,14 @@ public class FileSerializationOutputRuleDepsListenerTest {
         workspace.getFileContents(lastBuildCommandLogDir.resolve("action_graph.json"));
     Map<String, List<ActionGraphData>> actionGraphData =
         Stream.of(actionGraphFileContent.split(System.lineSeparator()))
-            .map(line -> convertToObject(line, ImmutableActionGraphData.class))
+            .map(line -> convertToObject(line, ActionGraphData.class))
             .collect(Collectors.groupingBy(ActionGraphData::getTargetId));
 
     String ruleExecutionTimeFileContent =
         workspace.getFileContents(lastBuildCommandLogDir.resolve("rule_exec_time.json"));
     Map<String, List<RuleExecutionTimeData>> executionTime =
         Stream.of(ruleExecutionTimeFileContent.split(System.lineSeparator()))
-            .map(line -> convertToObject(line, ImmutableRuleExecutionTimeData.class))
+            .map(line -> convertToObject(line, RuleExecutionTimeData.class))
             .collect(Collectors.groupingBy(RuleExecutionTimeData::getTargetId));
 
     assertEquals(2, actionGraphData.size());

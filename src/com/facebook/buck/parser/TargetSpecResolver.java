@@ -35,7 +35,7 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.parser.BuildPackagePaths;
 import com.facebook.buck.core.parser.BuildTargetPatternToBuildPackagePathComputation;
-import com.facebook.buck.core.parser.ImmutableBuildTargetPatternToBuildPackagePathKey;
+import com.facebook.buck.core.parser.BuildTargetPatternToBuildPackagePathKey;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
@@ -235,7 +235,7 @@ public class TargetSpecResolver implements AutoCloseable {
           BuildPackagePaths paths =
               graphEngineForRecursiveSpecPerRoot
                   .getUnchecked(cell.getRoot())
-                  .computeUnchecked(ImmutableBuildTargetPatternToBuildPackagePathKey.of(pattern));
+                  .computeUnchecked(BuildTargetPatternToBuildPackagePathKey.of(pattern));
 
           String buildFileName = cell.getBuckConfigView(ParserConfig.class).getBuildFileName();
           for (Path path : paths.getPackageRoots()) {

@@ -45,4 +45,8 @@ public abstract class TestRunnerSpec {
             || object instanceof Number
             || object instanceof Boolean);
   }
+
+  public static TestRunnerSpec of(Object data) {
+    return ImmutableTestRunnerSpec.of(data);
+  }
 }

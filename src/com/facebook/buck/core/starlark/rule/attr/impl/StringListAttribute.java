@@ -60,4 +60,12 @@ public abstract class StringListAttribute extends Attribute<ImmutableList<String
       throw new CoerceFailedException("List of strings may not be empty");
     }
   }
+
+  public static StringListAttribute of(
+      ImmutableList<String> preCoercionDefaultValue,
+      String doc,
+      boolean mandatory,
+      boolean allowEmpty) {
+    return ImmutableStringListAttribute.of(preCoercionDefaultValue, doc, mandatory, allowEmpty);
+  }
 }

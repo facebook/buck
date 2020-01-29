@@ -17,7 +17,6 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.apkmodule.APKModule;
-import com.facebook.buck.android.packageable.ImmutableNativeLinkableEnhancementResult;
 import com.facebook.buck.android.packageable.NativeLinkableEnhancementResult;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
@@ -262,7 +261,7 @@ class NativeLibraryMergeEnhancer {
 
       mergedLinkablesBuilder.put(
           cpuType,
-          ImmutableNativeLinkableEnhancementResult.of(
+          NativeLinkableEnhancementResult.of(
               moduleLinkablesBuilder.build(), moduleAssetLinkablesBuilder.build()));
     }
 

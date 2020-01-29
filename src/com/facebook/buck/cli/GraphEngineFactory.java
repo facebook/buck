@@ -52,8 +52,8 @@ import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.manifest.BuildPackagePathToBuildFileManifestComputation;
 import com.facebook.buck.parser.targetnode.BuildPackagePathToUnconfiguredTargetNodePackageComputation;
+import com.facebook.buck.parser.targetnode.BuildPackagePathToUnconfiguredTargetNodePackageKey;
 import com.facebook.buck.parser.targetnode.BuildTargetToUnconfiguredTargetNodeComputation;
-import com.facebook.buck.parser.targetnode.ImmutableBuildPackagePathToUnconfiguredTargetNodePackageKey;
 import com.facebook.buck.parser.targetnode.UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -206,10 +206,7 @@ public class GraphEngineFactory {
                 patternToPathComputation,
                 (key, result) ->
                     result.getPackageRoots().stream()
-                        .map(
-                            path ->
-                                ImmutableBuildPackagePathToUnconfiguredTargetNodePackageKey.of(
-                                    path))
+                        .map(path -> BuildPackagePathToUnconfiguredTargetNodePackageKey.of(path))
                         .collect(ImmutableSet.toImmutableSet()));
 
     // ENGINE: bind computations to caches and feed them to Graph Engine

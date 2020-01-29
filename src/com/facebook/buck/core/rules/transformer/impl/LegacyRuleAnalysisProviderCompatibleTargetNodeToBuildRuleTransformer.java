@@ -28,7 +28,7 @@ import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ProviderCreationContext;
-import com.facebook.buck.core.rules.analysis.ImmutableRuleAnalysisKey;
+import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
 import com.facebook.buck.core.rules.analysis.computation.RuleAnalysisGraph;
 import com.facebook.buck.core.rules.analysis.impl.LegacyProviderRuleAnalysisResult;
@@ -72,7 +72,7 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
 
     if (description instanceof DescriptionWithTargetGraph) {
       RuleAnalysisResult result =
-          ruleAnalysisComputation.get(ImmutableRuleAnalysisKey.of(targetNode.getBuildTarget()));
+          ruleAnalysisComputation.get(RuleAnalysisKey.of(targetNode.getBuildTarget()));
       // check that we are getting legacy providers. More or a sanity check than a necessary check
       Verify.verify(result instanceof LegacyProviderRuleAnalysisResult);
       providerInfos = result.getProviderInfos();

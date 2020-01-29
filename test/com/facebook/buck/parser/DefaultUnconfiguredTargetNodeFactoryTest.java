@@ -36,9 +36,9 @@ import com.facebook.buck.core.select.SelectorKey;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.impl.SelectorFactory;
 import com.facebook.buck.core.select.impl.SelectorListFactory;
-import com.facebook.buck.parser.api.ImmutablePackageMetadata;
-import com.facebook.buck.parser.syntax.ImmutableListWithSelects;
-import com.facebook.buck.parser.syntax.ImmutableSelectorValue;
+import com.facebook.buck.parser.api.PackageMetadata;
+import com.facebook.buck.parser.syntax.ListWithSelects;
+import com.facebook.buck.parser.syntax.SelectorValue;
 import com.facebook.buck.rules.coercer.JsonTypeConcatenatingCoercerFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -87,9 +87,9 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
             .put("deps", ImmutableList.of("//a/b:d", "//a/b:e"))
             .put(
                 "resources",
-                ImmutableListWithSelects.of(
+                ListWithSelects.of(
                     ImmutableList.of(
-                        ImmutableSelectorValue.of(
+                        SelectorValue.of(
                             ImmutableMap.of(
                                 "//c:a",
                                 ImmutableList.of("//a/b:file1", "//a/b:file2"),
@@ -152,8 +152,8 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
   }
 
   Package getPackage() {
-    ImmutablePackageMetadata pkg =
-        ImmutablePackageMetadata.of(ImmutableList.of("//a/..."), ImmutableList.of("//d/..."));
+    PackageMetadata pkg =
+        PackageMetadata.of(ImmutableList.of("//a/..."), ImmutableList.of("//d/..."));
 
     return PackageFactory.create(cell, cell.getRoot().resolve("a/b/BUCK"), pkg, Optional.empty());
   }

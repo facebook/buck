@@ -23,7 +23,6 @@ import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
-import com.facebook.buck.infer.ImmutableInferPlatform;
 import com.facebook.buck.infer.InferConfig;
 import com.facebook.buck.infer.InferPlatform;
 import com.facebook.buck.infer.UnresolvedInferPlatform;
@@ -53,7 +52,7 @@ class DefaultUnresolvedInferPlatform implements UnresolvedInferPlatform {
         inferConfig.getNullsafeThirdPartySignatures(configuration);
     Boolean executeRemotely = inferConfig.executeRemotely();
 
-    return ImmutableInferPlatform.of(
+    return InferPlatform.of(
         tool, version, configFile, nullsafeThirdPartySignatures, executeRemotely);
   }
 

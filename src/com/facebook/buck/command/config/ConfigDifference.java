@@ -115,6 +115,10 @@ public class ConfigDifference {
 
     @Nullable
     String getNewValue();
+
+    static ConfigChange of(@Nullable String prevValue, @Nullable String newValue) {
+      return ImmutableConfigChange.of(prevValue, newValue);
+    }
   }
 
   /** Format a set of changes between configs for the console */

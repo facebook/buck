@@ -21,10 +21,8 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.graph.transformation.impl.ChildrenAdder.LongNode;
 import com.facebook.buck.core.graph.transformation.impl.ChildrenSumMultiplier.LongMultNode;
 import com.facebook.buck.core.graph.transformation.impl.FakeComputationEnvironment;
-import com.facebook.buck.core.graph.transformation.impl.ImmutableLongMultNode;
-import com.facebook.buck.core.graph.transformation.impl.ImmutableLongNode;
-import com.facebook.buck.core.graph.transformation.model.ImmutableComposedKey;
-import com.facebook.buck.core.graph.transformation.model.ImmutableComposedResult;
+import com.facebook.buck.core.graph.transformation.model.ComposedKey;
+import com.facebook.buck.core.graph.transformation.model.ComposedResult;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import org.junit.Test;
@@ -37,9 +35,8 @@ public class ComposedWrapperComputationTest {
         new ComposedWrapperComputation<>(LongNode.class, LongNode.IDENTIFIER);
 
     assertEquals(
-        ImmutableSet.of(ImmutableLongNode.of(1)),
-        computation.discoverPreliminaryDeps(
-            ImmutableComposedKey.of(ImmutableLongNode.of(1), LongNode.class)));
+        ImmutableSet.of(LongNode.of(1)),
+        computation.discoverPreliminaryDeps(ComposedKey.of(LongNode.of(1), LongNode.class)));
   }
 
   @Test
@@ -52,22 +49,19 @@ public class ComposedWrapperComputationTest {
     assertEquals(
         ImmutableSet.of(),
         computation.discoverDeps(
-            ImmutableComposedKey.of(ImmutableLongMultNode.of(2), LongMultNode.class), environment));
+            ComposedKey.of(LongMultNode.of(2), LongMultNode.class), environment));
   }
 
   @Test
   public void composedComputationTransformsProperly() throws Exception {
     FakeComputationEnvironment environment =
-        new FakeComputationEnvironment(
-            ImmutableMap.of(ImmutableLongNode.of(1), ImmutableLongNode.of(1)));
+        new FakeComputationEnvironment(ImmutableMap.of(LongNode.of(1), LongNode.of(1)));
 
     ComposedComputation<LongNode, LongNode> computation =
         new ComposedWrapperComputation<>(LongNode.class, LongNode.IDENTIFIER);
 
     assertEquals(
-        ImmutableComposedResult.of(
-            ImmutableMap.of(ImmutableLongNode.of(1), ImmutableLongNode.of(1))),
-        computation.transform(
-            ImmutableComposedKey.of(ImmutableLongNode.of(1), LongNode.class), environment));
+        ComposedResult.of(ImmutableMap.of(LongNode.of(1), LongNode.of(1))),
+        computation.transform(ComposedKey.of(LongNode.of(1), LongNode.class), environment));
   }
 }

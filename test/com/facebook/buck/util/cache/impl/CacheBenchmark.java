@@ -17,8 +17,8 @@
 package com.facebook.buck.util.cache.impl;
 
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.io.watchman.ImmutableWatchmanPathEvent;
 import com.facebook.buck.io.watchman.WatchmanEvent.Kind;
+import com.facebook.buck.io.watchman.WatchmanPathEvent;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.google.caliper.BeforeExperiment;
 import com.google.caliper.Benchmark;
@@ -106,6 +106,6 @@ public class CacheBenchmark {
     leaves.forEach(
         leaf ->
             cache.onFileSystemChange(
-                ImmutableWatchmanPathEvent.of(Paths.get(leaf), Kind.CREATE, Paths.get(leaf))));
+                WatchmanPathEvent.of(Paths.get(leaf), Kind.CREATE, Paths.get(leaf))));
   }
 }

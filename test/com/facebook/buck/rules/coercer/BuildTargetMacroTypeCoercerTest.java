@@ -20,8 +20,8 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
-import com.facebook.buck.core.model.ImmutableRuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.OutputLabel;
+import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -58,11 +58,9 @@ public class BuildTargetMacroTypeCoercerTest {
   }
 
   private TargetConfiguration hostConfiguration =
-      ImmutableRuleBasedTargetConfiguration.of(
-          ConfigurationBuildTargetFactoryForTests.newInstance("//:h"));
+      RuleBasedTargetConfiguration.of(ConfigurationBuildTargetFactoryForTests.newInstance("//:h"));
   private TargetConfiguration targetConfiguration =
-      ImmutableRuleBasedTargetConfiguration.of(
-          ConfigurationBuildTargetFactoryForTests.newInstance("//:t"));
+      RuleBasedTargetConfiguration.of(ConfigurationBuildTargetFactoryForTests.newInstance("//:t"));
 
   TypeCoercer<BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer =
       new BuildTargetWithOutputsTypeCoercer(

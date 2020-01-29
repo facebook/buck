@@ -17,7 +17,6 @@
 package com.facebook.buck.parser.cache.json;
 
 import com.facebook.buck.parser.api.BuildFileManifest;
-import com.facebook.buck.parser.api.ImmutableBuildFileManifest;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.io.IOException;
@@ -38,7 +37,9 @@ public class BuildFileManifestSerializer {
    * @throws JsonProcessingException
    */
   public static byte[] serialize(BuildFileManifest buildFileManifest) throws IOException {
-    return ObjectMappers.WRITER_WITH_TYPE.writeValueAsBytes(buildFileManifest);
+    return ObjectMappers.WRITER_WITH_TYPE
+        .forType(BuildFileManifest.class)
+        .writeValueAsBytes(buildFileManifest);
   }
 
   /**
@@ -51,7 +52,7 @@ public class BuildFileManifestSerializer {
    */
   public static BuildFileManifest deserialize(byte[] buildFileManifestBytes) throws IOException {
     return ObjectMappers.READER_WITH_TYPE
-        .forType(ImmutableBuildFileManifest.class)
+        .forType(BuildFileManifest.class)
         .readValue(buildFileManifestBytes);
   }
 }

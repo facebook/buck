@@ -28,4 +28,9 @@ public interface DoctorEndpointResponse {
   Optional<String> getErrorMessage();
 
   ImmutableList<DoctorSuggestion> getSuggestions();
+
+  static DoctorEndpointResponse of(
+      Optional<String> errorMessage, ImmutableList<DoctorSuggestion> suggestions) {
+    return ImmutableDoctorEndpointResponse.of(errorMessage, suggestions);
+  }
 }

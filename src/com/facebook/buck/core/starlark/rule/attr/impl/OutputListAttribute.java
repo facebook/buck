@@ -75,6 +75,11 @@ public abstract class OutputListAttribute extends Attribute<ImmutableList<String
     return this::postCoercionTransform;
   }
 
+  public static OutputListAttribute of(
+      Object preCoercionDefaultValue, String doc, boolean mandatory, boolean allowEmpty) {
+    return ImmutableOutputListAttribute.of(preCoercionDefaultValue, doc, mandatory, allowEmpty);
+  }
+
   ImmutableList<Artifact> postCoercionTransform(
       Object coercedValue, RuleAnalysisContext analysisContext) {
     if (!(coercedValue instanceof List<?>)) {

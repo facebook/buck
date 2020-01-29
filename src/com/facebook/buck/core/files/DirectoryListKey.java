@@ -37,6 +37,10 @@ public abstract class DirectoryListKey implements ComputeKey<DirectoryList> {
     return IDENTIFIER;
   }
 
+  public static DirectoryListKey of(Path path) {
+    return ImmutableDirectoryListKey.of(path);
+  }
+
   // sergeyb: do we need cell identifier?
   // sergeyb: do we need filesystem identifier?
 }

@@ -25,7 +25,6 @@ import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwar
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
@@ -266,7 +265,7 @@ public class VersionedTargetGraphCacheTest {
             .setDeps(ImmutableSortedSet.of(alias.getBuildTarget()))
             .build();
     TargetGraph graph = TargetGraphFactory.newInstance(root, pythonTest, alias, v1, v2);
-    return ImmutableTargetGraphCreationResult.of(
+    return TargetGraphCreationResult.of(
         graph,
         ImmutableSet.of(
             root.getBuildTarget(),

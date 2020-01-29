@@ -19,8 +19,8 @@ package com.facebook.buck.core.starlark.rule.attr.impl;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.artifact.Artifact;
-import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
 import com.facebook.buck.core.artifact.SourceArtifact;
+import com.facebook.buck.core.artifact.SourceArtifactImpl;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
@@ -246,7 +246,7 @@ public class SourceAttributeTest {
     ActionRegistryForTests registry = new ActionRegistryForTests(target, filesystem);
     Artifact buildArtifact1 = registry.declareArtifact(Paths.get("baz1"));
     SourceArtifact sourceArtifact =
-        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("src", "main.cpp")));
+        SourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("src", "main.cpp")));
     ImmutableDefaultInfo defaultInfo =
         new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of(buildArtifact1));
 

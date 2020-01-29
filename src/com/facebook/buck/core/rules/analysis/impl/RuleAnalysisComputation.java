@@ -26,7 +26,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
-import com.facebook.buck.core.rules.analysis.ImmutableRuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisException;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
@@ -113,7 +112,7 @@ public class RuleAnalysisComputation
   public ImmutableSet<RuleAnalysisKey> discoverPreliminaryDeps(RuleAnalysisKey key) {
     return ImmutableSet.copyOf(
         Iterables.transform(
-            targetGraph.get(key.getBuildTarget()).getParseDeps(), ImmutableRuleAnalysisKey::of));
+            targetGraph.get(key.getBuildTarget()).getParseDeps(), RuleAnalysisKey::of));
   }
 
   @Override

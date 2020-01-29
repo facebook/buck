@@ -37,7 +37,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.DaemonicCellState.Cache;
 import com.facebook.buck.parser.api.BuildFileManifestFactory;
-import com.facebook.buck.parser.api.ImmutablePackageFileManifest;
 import com.facebook.buck.parser.api.PackageFileManifest;
 import com.facebook.buck.parser.api.PackageMetadata;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
@@ -190,7 +189,7 @@ public class DaemonicCellStateTest {
     assertSame(cachedManifest, manifest);
 
     PackageFileManifest secondaryManifest =
-        ImmutablePackageFileManifest.of(
+        PackageFileManifest.of(
             PackageMetadata.EMPTY_SINGLETON,
             ImmutableSortedSet.of(),
             ImmutableMap.of(),

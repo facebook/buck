@@ -21,11 +21,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.io.watchman.ImmutableWatchmanPathEvent;
 import com.facebook.buck.io.watchman.WatchmanEvent.Kind;
 import com.facebook.buck.io.watchman.WatchmanPathEvent;
 import com.facebook.buck.parser.api.BuildFileManifest;
-import com.facebook.buck.parser.api.ImmutableBuildFileManifest;
 import com.facebook.buck.skylark.io.GlobSpec;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -106,14 +104,14 @@ public class BuildFileManifestCacheTest {
     ImmutableSortedSet<String> includes =
         ImmutableSortedSet.of(includesFolder.resolve("include1.bzl").toString());
     ImmutableMap<String, Object> configs = ImmutableMap.of("config1", "cval1");
-    Iterable<GlobSpecWithResult> globManifest =
+    ImmutableList<GlobSpecWithResult> globManifest =
         ImmutableList.of(
             GlobSpecWithResult.of(
                 GlobSpec.of(ImmutableList.of("*.java"), ImmutableList.of("*.cpp"), false),
                 ImmutableSet.of("1.java", "2.java")));
 
     manifestCell1Root =
-        ImmutableBuildFileManifest.of(
+        BuildFileManifest.of(
             targets, includes, configs, Optional.empty(), globManifest, ImmutableList.of());
 
     cache.put(ImmutableBuildPackagePathToBuildFileManifestKey.of(Paths.get("")), manifestCell1Root);
@@ -123,7 +121,7 @@ public class BuildFileManifestCacheTest {
             includesFolder.resolve("include2.bzl").toString(),
             cell2IncludesFolder.resolve("include2.bzl").toString());
     manifestCell1Folder =
-        ImmutableBuildFileManifest.of(
+        BuildFileManifest.of(
             targets, includes, configs, Optional.empty(), globManifest, ImmutableList.of());
 
     cache.put(
@@ -155,8 +153,7 @@ public class BuildFileManifestCacheTest {
 
   @Test
   public void whenRootBuildFileIsModifiedThenInvalidateOnlyRootPackage() {
-    WatchmanPathEvent event =
-        ImmutableWatchmanPathEvent.of(cell1Path, Kind.MODIFY, Paths.get("BUCK"));
+    WatchmanPathEvent event = WatchmanPathEvent.of(cell1Path, Kind.MODIFY, Paths.get("BUCK"));
     cache.getInvalidator().onFileSystemChange(event);
 
     assertPackages(false, true);
@@ -165,7 +162,7 @@ public class BuildFileManifestCacheTest {
   @Test
   public void whenNonRootBuildFileIsModifiedThenInvalidateOnlyNonRootPackage() {
     WatchmanPathEvent event =
-        ImmutableWatchmanPathEvent.of(cell1Path, Kind.MODIFY, Paths.get("folder1/folder2/BUCK"));
+        WatchmanPathEvent.of(cell1Path, Kind.MODIFY, Paths.get("folder1/folder2/BUCK"));
     cache.getInvalidator().onFileSystemChange(event);
 
     assertPackages(true, false);
@@ -173,8 +170,7 @@ public class BuildFileManifestCacheTest {
 
   @Test
   public void whenBuildFileIsModifiedInAnotherCellThenDoNotInvalidate() {
-    WatchmanPathEvent event =
-        ImmutableWatchmanPathEvent.of(cell2Path, Kind.MODIFY, Paths.get("BUCK"));
+    WatchmanPathEvent event = WatchmanPathEvent.of(cell2Path, Kind.MODIFY, Paths.get("BUCK"));
     cache.getInvalidator().onFileSystemChange(event);
 
     assertPackages(true, true);
@@ -185,7 +181,7 @@ public class BuildFileManifestCacheTest {
     Path buckFilePath = Paths.get("BUCK");
     Files.delete(cell1Path.resolve(buckFilePath));
 
-    WatchmanPathEvent event = ImmutableWatchmanPathEvent.of(cell1Path, Kind.DELETE, buckFilePath);
+    WatchmanPathEvent event = WatchmanPathEvent.of(cell1Path, Kind.DELETE, buckFilePath);
     cache.getInvalidator().onFileSystemChange(event);
 
     assertPackages(false, true);
@@ -197,7 +193,7 @@ public class BuildFileManifestCacheTest {
     Path buckFilePath = Paths.get("folder1/folder2/BUCK");
     Files.delete(cell1Path.resolve(buckFilePath));
 
-    WatchmanPathEvent event = ImmutableWatchmanPathEvent.of(cell1Path, Kind.DELETE, buckFilePath);
+    WatchmanPathEvent event = WatchmanPathEvent.of(cell1Path, Kind.DELETE, buckFilePath);
     cache.getInvalidator().onFileSystemChange(event);
 
     assertPackages(false, false);
@@ -207,8 +203,7 @@ public class BuildFileManifestCacheTest {
   public void whenRegularFileIsModifiedThenNoPackagesAreInvalidated() {
     Path modifiedFilePath = Paths.get("folder1/folder2/1.java");
 
-    WatchmanPathEvent event =
-        ImmutableWatchmanPathEvent.of(cell1Path, Kind.MODIFY, modifiedFilePath);
+    WatchmanPathEvent event = WatchmanPathEvent.of(cell1Path, Kind.MODIFY, modifiedFilePath);
     cache.getInvalidator().onFileSystemChange(event);
 
     assertPackages(true, true);
@@ -219,7 +214,7 @@ public class BuildFileManifestCacheTest {
     Path buckFilePath = Paths.get("folder1/folder2/1.java");
     Files.delete(cell1Path.resolve(buckFilePath));
 
-    WatchmanPathEvent event = ImmutableWatchmanPathEvent.of(cell1Path, Kind.DELETE, buckFilePath);
+    WatchmanPathEvent event = WatchmanPathEvent.of(cell1Path, Kind.DELETE, buckFilePath);
     cache.getInvalidator().onFileSystemChange(event);
 
     assertPackages(true, false);
@@ -230,7 +225,7 @@ public class BuildFileManifestCacheTest {
     Path newFilePath = Paths.get("folder1/folder2/3.java");
     Files.createFile(cell1Path.resolve(newFilePath));
 
-    WatchmanPathEvent event = ImmutableWatchmanPathEvent.of(cell1Path, Kind.CREATE, newFilePath);
+    WatchmanPathEvent event = WatchmanPathEvent.of(cell1Path, Kind.CREATE, newFilePath);
     cache.getInvalidator().onFileSystemChange(event);
 
     assertPackages(true, false);
@@ -242,7 +237,7 @@ public class BuildFileManifestCacheTest {
     Path newFilePath = Paths.get("folder1/3.java");
     Files.createFile(cell1Path.resolve(newFilePath));
 
-    WatchmanPathEvent event = ImmutableWatchmanPathEvent.of(cell1Path, Kind.CREATE, newFilePath);
+    WatchmanPathEvent event = WatchmanPathEvent.of(cell1Path, Kind.CREATE, newFilePath);
     cache.getInvalidator().onFileSystemChange(event);
 
     assertPackages(false, true);
@@ -254,7 +249,7 @@ public class BuildFileManifestCacheTest {
     Path filePath = Paths.get("folder1/1.java");
     Files.delete(cell1Path.resolve(filePath));
 
-    WatchmanPathEvent event = ImmutableWatchmanPathEvent.of(cell1Path, Kind.DELETE, filePath);
+    WatchmanPathEvent event = WatchmanPathEvent.of(cell1Path, Kind.DELETE, filePath);
     cache.getInvalidator().onFileSystemChange(event);
 
     assertPackages(false, true);
@@ -264,7 +259,7 @@ public class BuildFileManifestCacheTest {
   public void whenBzlFileIsModifiedThenReferencingPackageIsInvalidated() {
     Path filePath = Paths.get("includes/include2.bzl");
 
-    WatchmanPathEvent event = ImmutableWatchmanPathEvent.of(cell1Path, Kind.MODIFY, filePath);
+    WatchmanPathEvent event = WatchmanPathEvent.of(cell1Path, Kind.MODIFY, filePath);
     cache.getInvalidator().onFileSystemChange(event);
 
     assertPackages(true, false);
@@ -274,7 +269,7 @@ public class BuildFileManifestCacheTest {
   public void whenBzlFileIsModifiedAndPackageIsRootThenReferencingPackageIsInvalidated() {
     Path filePath = Paths.get("includes/include1.bzl");
 
-    WatchmanPathEvent event = ImmutableWatchmanPathEvent.of(cell1Path, Kind.MODIFY, filePath);
+    WatchmanPathEvent event = WatchmanPathEvent.of(cell1Path, Kind.MODIFY, filePath);
     cache.getInvalidator().onFileSystemChange(event);
 
     assertPackages(false, true);
@@ -285,7 +280,7 @@ public class BuildFileManifestCacheTest {
     Path filePath = Paths.get("includes/include2.bzl");
     Files.delete(cell1Path.resolve(filePath));
 
-    WatchmanPathEvent event = ImmutableWatchmanPathEvent.of(cell1Path, Kind.DELETE, filePath);
+    WatchmanPathEvent event = WatchmanPathEvent.of(cell1Path, Kind.DELETE, filePath);
     cache.getInvalidator().onFileSystemChange(event);
 
     assertPackages(true, false);
@@ -296,7 +291,7 @@ public class BuildFileManifestCacheTest {
     Path filePath = Paths.get("includes/include3.bzl");
     Files.createFile(cell1Path.resolve(filePath));
 
-    WatchmanPathEvent event = ImmutableWatchmanPathEvent.of(cell1Path, Kind.CREATE, filePath);
+    WatchmanPathEvent event = WatchmanPathEvent.of(cell1Path, Kind.CREATE, filePath);
     cache.getInvalidator().onFileSystemChange(event);
 
     assertPackages(true, true);
@@ -306,7 +301,7 @@ public class BuildFileManifestCacheTest {
   public void whenBzlFileIsNotReferencedAndModifiedThenNothingHappens() {
     Path filePath = Paths.get("includes/noninclude.bzl");
 
-    WatchmanPathEvent event = ImmutableWatchmanPathEvent.of(cell1Path, Kind.MODIFY, filePath);
+    WatchmanPathEvent event = WatchmanPathEvent.of(cell1Path, Kind.MODIFY, filePath);
     cache.getInvalidator().onFileSystemChange(event);
 
     assertPackages(true, true);
@@ -316,7 +311,7 @@ public class BuildFileManifestCacheTest {
   public void whenBzlFileFromAnotherCellIsModifiedThenPackageIsInvalidated() {
     Path filePath = Paths.get("includes/include2.bzl");
 
-    WatchmanPathEvent event = ImmutableWatchmanPathEvent.of(cell2Path, Kind.MODIFY, filePath);
+    WatchmanPathEvent event = WatchmanPathEvent.of(cell2Path, Kind.MODIFY, filePath);
     cache.getInvalidator().onFileSystemChange(event);
 
     assertPackages(true, false);
@@ -327,7 +322,7 @@ public class BuildFileManifestCacheTest {
     Path filePath = Paths.get("includes/somefile.java");
     Files.createFile(cell1Path.resolve(filePath));
 
-    WatchmanPathEvent event = ImmutableWatchmanPathEvent.of(cell1Path, Kind.CREATE, filePath);
+    WatchmanPathEvent event = WatchmanPathEvent.of(cell1Path, Kind.CREATE, filePath);
     cache.getInvalidator().onFileSystemChange(event);
 
     assertPackages(true, true);

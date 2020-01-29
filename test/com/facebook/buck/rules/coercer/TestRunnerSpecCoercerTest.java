@@ -22,7 +22,6 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
-import com.facebook.buck.core.test.rule.ImmutableTestRunnerSpec;
 import com.facebook.buck.core.test.rule.TestRunnerSpec;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -61,11 +60,11 @@ public class TestRunnerSpecCoercerTest {
             ImmutableMap.of("$(test arg)", "foo"));
 
     assertEquals(
-        ImmutableTestRunnerSpec.of(
+        TestRunnerSpec.of(
             ImmutableMap.of(
                 StringWithMacrosUtils.format(
                     "%s", new StringWithMacrosTypeCoercerTest.TestMacro(ImmutableList.of("arg"))),
-                ImmutableTestRunnerSpec.of(StringWithMacrosUtils.format("foo")))),
+                TestRunnerSpec.of(StringWithMacrosUtils.format("foo")))),
         spec);
   }
 
@@ -81,13 +80,13 @@ public class TestRunnerSpecCoercerTest {
             ImmutableList.of("$(test arg)", "foo"));
 
     assertEquals(
-        ImmutableTestRunnerSpec.of(
+        TestRunnerSpec.of(
             ImmutableList.of(
-                ImmutableTestRunnerSpec.of(
+                TestRunnerSpec.of(
                     StringWithMacrosUtils.format(
                         "%s",
                         new StringWithMacrosTypeCoercerTest.TestMacro(ImmutableList.of("arg")))),
-                ImmutableTestRunnerSpec.of(StringWithMacrosUtils.format("foo")))),
+                TestRunnerSpec.of(StringWithMacrosUtils.format("foo")))),
         spec);
   }
 
@@ -103,13 +102,13 @@ public class TestRunnerSpecCoercerTest {
             ImmutableMap.of("a", ImmutableList.of("foo", "some $(test arg2)")));
 
     assertEquals(
-        ImmutableTestRunnerSpec.of(
+        TestRunnerSpec.of(
             ImmutableMap.of(
                 StringWithMacrosUtils.format("a"),
-                ImmutableTestRunnerSpec.of(
+                TestRunnerSpec.of(
                     ImmutableList.of(
-                        ImmutableTestRunnerSpec.of(StringWithMacrosUtils.format("foo")),
-                        ImmutableTestRunnerSpec.of(
+                        TestRunnerSpec.of(StringWithMacrosUtils.format("foo")),
+                        TestRunnerSpec.of(
                             StringWithMacrosUtils.format(
                                 "some %s",
                                 new StringWithMacrosTypeCoercerTest.TestMacro(
@@ -129,12 +128,12 @@ public class TestRunnerSpecCoercerTest {
             ImmutableMap.of("a", 1.0, "b", 2));
 
     assertEquals(
-        ImmutableTestRunnerSpec.of(
+        TestRunnerSpec.of(
             ImmutableMap.of(
                 StringWithMacrosUtils.format("a"),
-                ImmutableTestRunnerSpec.of(1.0),
+                TestRunnerSpec.of(1.0),
                 StringWithMacrosUtils.format("b"),
-                ImmutableTestRunnerSpec.of(2))),
+                TestRunnerSpec.of(2))),
         spec);
   }
 
@@ -150,12 +149,12 @@ public class TestRunnerSpecCoercerTest {
             ImmutableMap.of("bb", true, "bby", false));
 
     assertEquals(
-        ImmutableTestRunnerSpec.of(
+        TestRunnerSpec.of(
             ImmutableMap.of(
                 StringWithMacrosUtils.format("bb"),
-                ImmutableTestRunnerSpec.of(true),
+                TestRunnerSpec.of(true),
                 StringWithMacrosUtils.format("bby"),
-                ImmutableTestRunnerSpec.of(false))),
+                TestRunnerSpec.of(false))),
         spec);
   }
 

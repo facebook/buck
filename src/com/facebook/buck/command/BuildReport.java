@@ -23,7 +23,6 @@ import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
-import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.attr.HasMultipleOutputs;
@@ -100,8 +99,7 @@ public class BuildReport {
       if (outputPathsByLabels == null) {
         report.append(
             getTargetReport(
-                ImmutableBuildTargetWithOutputs.of(
-                    rule.getBuildTarget(), OutputLabel.defaultLabel()),
+                BuildTargetWithOutputs.of(rule.getBuildTarget(), OutputLabel.defaultLabel()),
                 successIndicator,
                 successType,
                 null));
@@ -112,7 +110,7 @@ public class BuildReport {
           for (Path path : labelToPaths.getValue()) {
             report.append(
                 getTargetReport(
-                    ImmutableBuildTargetWithOutputs.of(rule.getBuildTarget(), label),
+                    BuildTargetWithOutputs.of(rule.getBuildTarget(), label),
                     successIndicator,
                     successType,
                     path));

@@ -53,7 +53,7 @@ import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.spec.BuildFileSpec;
-import com.facebook.buck.parser.spec.ImmutableTargetNodePredicateSpec;
+import com.facebook.buck.parser.spec.TargetNodePredicateSpec;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
@@ -491,7 +491,7 @@ public class TestCommand extends BuildCommand {
                   .buildTargetGraphWithoutTopLevelConfigurationTargets(
                       parsingContext,
                       ImmutableList.of(
-                          ImmutableTargetNodePredicateSpec.of(
+                          TargetNodePredicateSpec.of(
                               BuildFileSpec.fromRecursivePath(
                                   CellRelativePath.of(
                                       params.getCell().getCanonicalName(),

@@ -21,8 +21,8 @@ import com.facebook.buck.core.cell.exception.UnknownCellException;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.CellRelativePath;
-import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
@@ -93,8 +93,7 @@ public abstract class BuildTargetMatcherParser<T> {
       }
 
       return createForSingleton(
-          ImmutableUnconfiguredBuildTargetWithOutputs.of(
-              target, targetWithOutputLabel.getOutputLabel()));
+          UnconfiguredBuildTargetWithOutputs.of(target, targetWithOutputLabel.getOutputLabel()));
     }
   }
 
@@ -157,8 +156,7 @@ public abstract class BuildTargetMatcherParser<T> {
 
   protected abstract T createForChildren(CellRelativePath cellRelativePath);
 
-  protected abstract T createForSingleton(
-      ImmutableUnconfiguredBuildTargetWithOutputs targetWithOutputs);
+  protected abstract T createForSingleton(UnconfiguredBuildTargetWithOutputs targetWithOutputs);
 
   private BuildTargetParseException createOutputLabelParseException(
       BuildTargetOutputLabelParser.TargetWithOutputLabel targetWithOutputs) {
@@ -182,7 +180,7 @@ public abstract class BuildTargetMatcherParser<T> {
 
     @Override
     public BuildTargetMatcher createForSingleton(
-        ImmutableUnconfiguredBuildTargetWithOutputs targetWithOutputs) {
+        UnconfiguredBuildTargetWithOutputs targetWithOutputs) {
       return ImmutableSingletonBuildTargetMatcher.of(targetWithOutputs.getBuildTarget().getData());
     }
   }

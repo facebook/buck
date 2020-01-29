@@ -39,8 +39,8 @@ import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
-import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.TestTargetGraphCreationResultFactory;
@@ -383,7 +383,7 @@ public class IncrementalActionGraphScenarioTest {
         AsyncVersionedTargetGraphBuilder.transform(
                 new VersionUniverseVersionSelector(
                     unversionedTargetGraph, ImmutableMap.of("1", universe1, "2", universe2)),
-                ImmutableTargetGraphCreationResult.of(
+                TargetGraphCreationResult.of(
                     unversionedTargetGraph, ImmutableSet.of(binaryTarget, binaryTarget2)),
                 executor.get(),
                 new DefaultTypeCoercerFactory(),
@@ -558,7 +558,7 @@ public class IncrementalActionGraphScenarioTest {
         AsyncVersionedTargetGraphBuilder.transform(
                 new VersionUniverseVersionSelector(
                     unversionedTargetGraph, ImmutableMap.of("1", universe1, "2", universe2)),
-                ImmutableTargetGraphCreationResult.of(
+                TargetGraphCreationResult.of(
                     unversionedTargetGraph, ImmutableSet.of(compilationDatabaseTarget)),
                 executor.get(),
                 new DefaultTypeCoercerFactory(),
@@ -584,7 +584,7 @@ public class IncrementalActionGraphScenarioTest {
         AsyncVersionedTargetGraphBuilder.transform(
                 new VersionUniverseVersionSelector(
                     newUnversionedTargetGraph, ImmutableMap.of("1", universe1, "2", universe2)),
-                ImmutableTargetGraphCreationResult.of(
+                TargetGraphCreationResult.of(
                     newUnversionedTargetGraph, ImmutableSet.of(binaryTarget)),
                 executor.get(),
                 new DefaultTypeCoercerFactory(),

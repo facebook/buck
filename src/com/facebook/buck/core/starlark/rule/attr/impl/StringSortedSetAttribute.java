@@ -60,4 +60,13 @@ public abstract class StringSortedSetAttribute extends Attribute<ImmutableSorted
       throw new CoerceFailedException("List of strings may not be empty");
     }
   }
+
+  public static StringSortedSetAttribute of(
+      ImmutableSortedSet<String> preCoercionDefaultValue,
+      String doc,
+      boolean mandatory,
+      boolean allowEmpty) {
+    return ImmutableStringSortedSetAttribute.of(
+        preCoercionDefaultValue, doc, mandatory, allowEmpty);
+  }
 }

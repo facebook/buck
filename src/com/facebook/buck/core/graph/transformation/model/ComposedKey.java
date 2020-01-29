@@ -45,4 +45,10 @@ public abstract class ComposedKey<KeyType1 extends ComputeKey<?>, ResultType2 ex
   protected void check() {
     Preconditions.checkState(!(getOriginKey() instanceof ComposedKey));
   }
+
+  public static <KeyType1 extends ComputeKey<?>, ResultType2 extends ComputeResult>
+      ComposedKey<KeyType1, ResultType2> of(
+          KeyType1 originKey, Class<ResultType2> targetResultClass) {
+    return ImmutableComposedKey.of(originKey, targetResultClass);
+  }
 }

@@ -22,15 +22,12 @@ import com.facebook.buck.core.graph.transformation.impl.ChildrenAdder;
 import com.facebook.buck.core.graph.transformation.impl.ChildrenAdder.LongNode;
 import com.facebook.buck.core.graph.transformation.impl.ChildrenSumMultiplier.LongMultNode;
 import com.facebook.buck.core.graph.transformation.impl.FakeComputationEnvironment;
-import com.facebook.buck.core.graph.transformation.impl.ImmutableLongMultNode;
-import com.facebook.buck.core.graph.transformation.impl.ImmutableLongNode;
 import com.facebook.buck.core.graph.transformation.impl.NoOpComputation;
 import com.facebook.buck.core.graph.transformation.model.ComposedComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComposedKey;
+import com.facebook.buck.core.graph.transformation.model.ComposedResult;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
-import com.facebook.buck.core.graph.transformation.model.ImmutableComposedKey;
-import com.facebook.buck.core.graph.transformation.model.ImmutableComposedResult;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.graph.GraphBuilder;
@@ -54,21 +51,20 @@ public class CompositionTest {
         Composition.composeLeft(LongMultNode.class, baseComputation, (ignored1, ignored2) -> null);
 
     assertEquals(
-        ImmutableSet.of(ImmutableComposedKey.of(ImmutableLongNode.of(1), LongNode.class)),
+        ImmutableSet.of(ComposedKey.of(LongNode.of(1), LongNode.class)),
         composedComputation.discoverPreliminaryDeps(
-            ImmutableComposedKey.of(ImmutableLongNode.of(1), LongMultNode.class)));
+            ComposedKey.of(LongNode.of(1), LongMultNode.class)));
   }
 
   @Test
   public void leftComposedComputationReturnsCorrectDeps() throws Exception {
 
-    LongNode originKey = ImmutableLongNode.of(1);
-    LongNode originResult = ImmutableLongNode.of(2);
-    ComposedKey<LongNode, LongNode> originComposedKey =
-        ImmutableComposedKey.of(originKey, LongNode.class);
+    LongNode originKey = LongNode.of(1);
+    LongNode originResult = LongNode.of(2);
+    ComposedKey<LongNode, LongNode> originComposedKey = ComposedKey.of(originKey, LongNode.class);
 
     ImmutableSet<LongMultNode> expectedDeps =
-        ImmutableSet.of(ImmutableLongMultNode.of(1), ImmutableLongMultNode.of(2));
+        ImmutableSet.of(LongMultNode.of(1), LongMultNode.of(2));
 
     ComposedComputation<LongNode, LongNode> baseComputation =
         new LeftComposingComputation<>(
@@ -92,13 +88,12 @@ public class CompositionTest {
     FakeComputationEnvironment environment =
         new FakeComputationEnvironment(
             ImmutableMap.of(
-                originComposedKey,
-                ImmutableComposedResult.of(ImmutableMap.of(originKey, originResult))));
+                originComposedKey, ComposedResult.of(ImmutableMap.of(originKey, originResult))));
 
     assertEquals(
         expectedDeps,
         composedComputation.discoverDeps(
-            ImmutableComposedKey.of(ImmutableLongNode.of(1), LongMultNode.class), environment));
+            ComposedKey.of(LongNode.of(1), LongMultNode.class), environment));
   }
 
   @Test
@@ -106,20 +101,17 @@ public class CompositionTest {
     FakeComputationEnvironment environment =
         new FakeComputationEnvironment(
             ImmutableMap.of(
-                ImmutableComposedKey.of(ImmutableLongNode.of(1), LongNode.class),
-                ImmutableComposedResult.of(
+                ComposedKey.of(LongNode.of(1), LongNode.class),
+                ComposedResult.of(
                     ImmutableMap.of(
-                        ImmutableLongNode.of(1),
-                        ImmutableLongNode.of(1),
-                        ImmutableLongNode.of(2),
-                        ImmutableLongNode.of(2))),
-                ImmutableLongMultNode.of(1),
-                ImmutableLongMultNode.of(1),
-                ImmutableLongMultNode.of(2),
-                ImmutableLongMultNode.of(2)));
+                        LongNode.of(1), LongNode.of(1), LongNode.of(2), LongNode.of(2))),
+                LongMultNode.of(1),
+                LongMultNode.of(1),
+                LongMultNode.of(2),
+                LongMultNode.of(2)));
 
     KeyComposer<LongNode, LongNode, LongMultNode> composer =
-        (key, result) -> ImmutableSet.of(ImmutableLongMultNode.of(result.get()));
+        (key, result) -> ImmutableSet.of(LongMultNode.of(result.get()));
 
     ComposedComputation<LongNode, LongNode> baseComputation =
         new LeftComposingComputation<>(
@@ -134,41 +126,33 @@ public class CompositionTest {
         Composition.composeLeft(LongMultNode.class, baseComputation, composer);
 
     assertEquals(
-        ImmutableComposedResult.of(
+        ComposedResult.of(
             ImmutableMap.of(
-                ImmutableLongMultNode.of(1),
-                ImmutableLongMultNode.of(1),
-                ImmutableLongMultNode.of(2),
-                ImmutableLongMultNode.of(2))),
+                LongMultNode.of(1), LongMultNode.of(1), LongMultNode.of(2), LongMultNode.of(2))),
         composedComputation.transform(
-            ImmutableComposedKey.of(ImmutableLongNode.of(1), LongMultNode.class), environment));
+            ComposedKey.of(LongNode.of(1), LongMultNode.class), environment));
   }
 
   @Test
   public void asCompositionCreatesComposedThatDelegatesToStandardComputation() throws Exception {
     FakeComputationEnvironment environment =
-        new FakeComputationEnvironment(
-            ImmutableMap.of(ImmutableLongNode.of(1), ImmutableLongNode.of(1)));
+        new FakeComputationEnvironment(ImmutableMap.of(LongNode.of(1), LongNode.of(1)));
 
     ComposedComputation<LongNode, LongNode> baseComputation =
         Composition.asComposition(
             LongNode.class, new ChildrenAdder(GraphBuilder.directed().build()));
 
     assertEquals(
-        ImmutableSet.of(ImmutableLongNode.of(1)),
-        baseComputation.discoverPreliminaryDeps(
-            ImmutableComposedKey.of(ImmutableLongNode.of(1), LongNode.class)));
+        ImmutableSet.of(LongNode.of(1)),
+        baseComputation.discoverPreliminaryDeps(ComposedKey.of(LongNode.of(1), LongNode.class)));
 
     assertEquals(
         ImmutableSet.of(),
-        baseComputation.discoverDeps(
-            ImmutableComposedKey.of(ImmutableLongNode.of(1), LongNode.class), environment));
+        baseComputation.discoverDeps(ComposedKey.of(LongNode.of(1), LongNode.class), environment));
 
     assertEquals(
-        ImmutableComposedResult.of(
-            ImmutableMap.of(ImmutableLongNode.of(1), ImmutableLongNode.of(1))),
-        baseComputation.transform(
-            ImmutableComposedKey.of(ImmutableLongNode.of(1), LongNode.class), environment));
+        ComposedResult.of(ImmutableMap.of(LongNode.of(1), LongNode.of(1))),
+        baseComputation.transform(ComposedKey.of(LongNode.of(1), LongNode.class), environment));
   }
 
   @Test
@@ -181,19 +165,19 @@ public class CompositionTest {
             (ignored1, ignored2) -> null);
 
     assertEquals(
-        ImmutableSet.of(ImmutableLongNode.of(1)),
+        ImmutableSet.of(LongNode.of(1)),
         composedComputation.discoverPreliminaryDeps(
-            ImmutableComposedKey.of(ImmutableLongNode.of(1), LongMultNode.class)));
+            ComposedKey.of(LongNode.of(1), LongMultNode.class)));
   }
 
   @Test
   public void rightComposedComputationReturnsCorrectDeps() throws Exception {
 
-    LongNode originKey = ImmutableLongNode.of(1);
-    LongNode originResult = ImmutableLongNode.of(2);
+    LongNode originKey = LongNode.of(1);
+    LongNode originResult = LongNode.of(2);
 
     ImmutableSet<LongMultNode> expectedDeps =
-        ImmutableSet.of(ImmutableLongMultNode.of(1), ImmutableLongMultNode.of(2));
+        ImmutableSet.of(LongMultNode.of(1), LongMultNode.of(2));
 
     KeyComposer<LongNode, LongNode, LongMultNode> composer =
         (key, result) -> {
@@ -211,10 +195,10 @@ public class CompositionTest {
 
     assertEquals(
         ImmutableSet.of(
-            ImmutableComposedKey.of(ImmutableLongMultNode.of(1), LongMultNode.class),
-            ImmutableComposedKey.of(ImmutableLongMultNode.of(2), LongMultNode.class)),
+            ComposedKey.of(LongMultNode.of(1), LongMultNode.class),
+            ComposedKey.of(LongMultNode.of(2), LongMultNode.class)),
         composedComputation.discoverDeps(
-            ImmutableComposedKey.of(ImmutableLongNode.of(1), LongMultNode.class), environment));
+            ComposedKey.of(LongNode.of(1), LongMultNode.class), environment));
   }
 
   @Test
@@ -222,31 +206,24 @@ public class CompositionTest {
     FakeComputationEnvironment environment =
         new FakeComputationEnvironment(
             ImmutableMap.of(
-                ImmutableComposedKey.of(ImmutableLongNode.of(1), LongNode.class),
-                ImmutableComposedResult.of(
+                ComposedKey.of(LongNode.of(1), LongNode.class),
+                ComposedResult.of(
                     ImmutableMap.of(
-                        ImmutableLongNode.of(1),
-                        ImmutableLongNode.of(1),
-                        ImmutableLongNode.of(2),
-                        ImmutableLongNode.of(2))),
-                ImmutableLongMultNode.of(1),
-                ImmutableLongMultNode.of(1)));
+                        LongNode.of(1), LongNode.of(1), LongNode.of(2), LongNode.of(2))),
+                LongMultNode.of(1),
+                LongMultNode.of(1)));
 
     KeyComposer<LongMultNode, LongMultNode, LongNode> composer =
-        (key, result) -> ImmutableSet.of(ImmutableLongNode.of(result.get()));
+        (key, result) -> ImmutableSet.of(LongNode.of(result.get()));
 
     ComposedComputation<LongMultNode, LongNode> composedComputation =
         Composition.composeRight(
             LongNode.class, new NoOpComputation<>(LongMultNode.IDENTIFIER), composer);
 
     assertEquals(
-        ImmutableComposedResult.of(
-            ImmutableMap.of(
-                ImmutableLongNode.of(1),
-                ImmutableLongNode.of(1),
-                ImmutableLongNode.of(2),
-                ImmutableLongNode.of(2))),
+        ComposedResult.of(
+            ImmutableMap.of(LongNode.of(1), LongNode.of(1), LongNode.of(2), LongNode.of(2))),
         composedComputation.transform(
-            ImmutableComposedKey.of(ImmutableLongMultNode.of(1), LongNode.class), environment));
+            ComposedKey.of(LongMultNode.of(1), LongNode.class), environment));
   }
 }

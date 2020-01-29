@@ -22,8 +22,8 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.core.artifact.BuildArtifactFactoryForTests;
-import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
 import com.facebook.buck.core.artifact.OutputArtifact;
+import com.facebook.buck.core.artifact.SourceArtifactImpl;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -76,7 +76,7 @@ public class CommandLineArgsFactoryTest {
                 1,
                 "foo",
                 Label.parseAbsolute("//foo:bar", ImmutableMap.of()),
-                ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, source))));
+                SourceArtifactImpl.of(PathSourcePath.of(filesystem, source))));
 
     assertTrue(args instanceof ListCommandLineArgs);
     assertEquals(ImmutableList.of("1", "foo", "//foo:bar", source.toString()), stringify(args));
@@ -104,7 +104,7 @@ public class CommandLineArgsFactoryTest {
                 1,
                 "foo",
                 Label.parseAbsolute("//foo:bar", ImmutableMap.of()),
-                ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, source)),
+                SourceArtifactImpl.of(PathSourcePath.of(filesystem, source)),
                 CommandLineArgsFactory.from(ImmutableList.of(2, "bar"))));
 
     assertTrue(args instanceof AggregateCommandLineArgs);

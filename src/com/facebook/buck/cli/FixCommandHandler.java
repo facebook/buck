@@ -27,7 +27,6 @@ import com.facebook.buck.support.fix.BuckFixSpecParser;
 import com.facebook.buck.support.fix.BuckFixSpecWriter;
 import com.facebook.buck.support.fix.BuckRunSpec;
 import com.facebook.buck.support.fix.FixBuckConfig;
-import com.facebook.buck.support.fix.ImmutableBuckRunSpec;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
@@ -185,7 +184,7 @@ public class FixCommandHandler {
     ImmutableList<String> fixScript =
         fixConfig.getInterpolatedFixScript(fixConfig.getFixScript().get(), repositoryRoot, fixPath);
 
-    BuckRunSpec runSpec = ImmutableBuckRunSpec.of(fixScript, environment, repositoryRoot, true);
+    BuckRunSpec runSpec = BuckRunSpec.of(fixScript, environment, repositoryRoot, true);
 
     // If the fix command was invoked automatically, make sure to tell users how they can
     // run buck fix on this specific build id manually with the `buck fix` command

@@ -20,8 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.doctor.config.DoctorConfig;
-import com.facebook.buck.doctor.config.ImmutableSourceControlInfo;
-import com.facebook.buck.doctor.config.ImmutableUserLocalConfiguration;
+import com.facebook.buck.doctor.config.SourceControlInfo;
 import com.facebook.buck.doctor.config.UserLocalConfiguration;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -79,7 +78,7 @@ public class DefectReporterTest {
             filesystem, config, BuckEventBusForTests.newInstance(clock), clock);
 
     UserLocalConfiguration testUserLocalConfiguration =
-        ImmutableUserLocalConfiguration.of(
+        UserLocalConfiguration.of(
             true,
             ImmutableMap.of(
                 Paths.get(".buckconfig.local"),
@@ -156,7 +155,7 @@ public class DefectReporterTest {
         reporter.submitReport(
             defectReportBuilder
                 .setSourceControlInfo(
-                    ImmutableSourceControlInfo.of(
+                    SourceControlInfo.of(
                         "commitid",
                         ImmutableSet.of("base"),
                         Optional.empty(),

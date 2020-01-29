@@ -33,17 +33,15 @@ import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
-import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
-import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.graph.ActionAndTargetGraphs;
 import com.facebook.buck.core.model.targetgraph.FakeTargetNodeArg;
 import com.facebook.buck.core.model.targetgraph.FakeTargetNodeBuilder;
-import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
@@ -154,7 +152,7 @@ public class BuildCommandTest {
     assertThat(
         result,
         Matchers.contains(
-            ImmutableBuildTargetWithOutputs.of(
+            BuildTargetWithOutputs.of(
                 BuildTargetFactory.newInstance(buildTargetName), OutputLabel.of("label"))));
   }
 
@@ -190,7 +188,7 @@ public class BuildCommandTest {
     assertThat(
         result,
         Matchers.contains(
-            ImmutableBuildTargetWithOutputs.of(
+            BuildTargetWithOutputs.of(
                 BuildTargetFactory.newInstance(buildTargetName), OutputLabel.of("label1"))));
   }
 
@@ -229,9 +227,9 @@ public class BuildCommandTest {
     assertThat(
         result,
         Matchers.contains(
-            ImmutableBuildTargetWithOutputs.of(
+            BuildTargetWithOutputs.of(
                 BuildTargetFactory.newInstance(buildTargetName1), OutputLabel.of("label1")),
-            ImmutableBuildTargetWithOutputs.of(
+            BuildTargetWithOutputs.of(
                 BuildTargetFactory.newInstance(buildTargetName2), OutputLabel.of("label2"))));
   }
 
@@ -269,7 +267,7 @@ public class BuildCommandTest {
     assertThat(
         result,
         Matchers.contains(
-            ImmutableBuildTargetWithOutputs.of(
+            BuildTargetWithOutputs.of(
                 BuildTargetFactory.newInstance(buildTargetName), OutputLabel.defaultLabel())));
   }
 
@@ -563,7 +561,7 @@ public class BuildCommandTest {
         knownRuleTypesProvider,
         new TestParser(
             TestParserFactory.create(executor.get(), cell, knownRuleTypesProvider),
-            ImmutableTargetGraphCreationResult.of(
+            TargetGraphCreationResult.of(
                 TargetGraph.EMPTY,
                 buildTargetNames.stream()
                     .map(BuildTargetFactory::newInstance)
@@ -572,7 +570,7 @@ public class BuildCommandTest {
 
   private BuildTargetSpec getBuildTargetSpec(String buildTargetName, String label) {
     return BuildTargetSpec.from(
-        ImmutableUnconfiguredBuildTargetWithOutputs.of(
+        UnconfiguredBuildTargetWithOutputs.of(
             UnconfiguredBuildTargetFactoryForTests.newInstance(projectFilesystem, buildTargetName),
             OutputLabel.of(label)));
   }
@@ -589,15 +587,15 @@ public class BuildCommandTest {
 
   private ActionAndTargetGraphs getActionAndTargetGraphs(
       TargetGraph targetGraph,
-      ImmutableSet<ImmutableBuildTargetWithOutputs> buildTargetsWithOutputs,
+      ImmutableSet<BuildTargetWithOutputs> buildTargetsWithOutputs,
       Path defaultPath,
       ImmutableMap<String, ImmutableMap<OutputLabel, ImmutableSet<Path>>> pathsByLabelsForTargets,
       boolean useMultipleOutputsRule) {
     TargetGraphCreationResult targetGraphCreationResult =
-        ImmutableTargetGraphCreationResult.of(
+        TargetGraphCreationResult.of(
             targetGraph,
             buildTargetsWithOutputs.stream()
-                .map(ImmutableBuildTargetWithOutputs::getBuildTarget)
+                .map(BuildTargetWithOutputs::getBuildTarget)
                 .collect(ImmutableSet.toImmutableSet()));
     ActionGraphAndBuilder actionGraphAndBuilder =
         createActionGraph(
@@ -611,12 +609,12 @@ public class BuildCommandTest {
       Path defaultPath,
       ImmutableMap<String, ImmutableMap<OutputLabel, ImmutableSet<Path>>> pathsByLabelsForTargets,
       boolean useMultipleOutputsRule) {
-    ImmutableMap.Builder<ImmutableBuildTargetWithOutputs, BuildTarget> builder =
+    ImmutableMap.Builder<BuildTargetWithOutputs, BuildTarget> builder =
         new ImmutableMap.Builder<>();
     for (Pair<String, String> targetNameWithLabel : targetNamesWithLabels) {
       BuildTarget target = BuildTargetFactory.newInstance(targetNameWithLabel.getFirst());
       builder.put(
-          ImmutableBuildTargetWithOutputs.of(
+          BuildTargetWithOutputs.of(
               target,
               targetNameWithLabel.getSecond().isEmpty()
                   ? OutputLabel.defaultLabel()
@@ -624,8 +622,7 @@ public class BuildCommandTest {
           target);
     }
 
-    ImmutableMap<ImmutableBuildTargetWithOutputs, BuildTarget> targetsByTargetsWithOutputs =
-        builder.build();
+    ImmutableMap<BuildTargetWithOutputs, BuildTarget> targetsByTargetsWithOutputs = builder.build();
     TargetGraph targetGraph =
         getTargetGraph(ImmutableSet.copyOf(targetsByTargetsWithOutputs.values()));
     ActionAndTargetGraphs actionAndTargetGraphs =

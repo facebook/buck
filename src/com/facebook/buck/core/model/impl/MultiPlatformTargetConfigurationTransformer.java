@@ -17,7 +17,7 @@
 package com.facebook.buck.core.model.impl;
 
 import com.facebook.buck.core.exceptions.DependencyStack;
-import com.facebook.buck.core.model.ImmutableRuleBasedTargetConfiguration;
+import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationTransformer;
 import com.facebook.buck.core.model.platform.MultiPlatform;
@@ -58,8 +58,7 @@ public class MultiPlatformTargetConfigurationTransformer implements TargetConfig
 
     ImmutableList.Builder<TargetConfiguration> targetConfigurations =
         ImmutableList.builderWithExpectedSize(multiPlatform.getNestedPlatforms().size() + 1);
-    targetConfigurations.add(
-        ImmutableRuleBasedTargetConfiguration.of(multiPlatform.getBuildTarget()));
+    targetConfigurations.add(RuleBasedTargetConfiguration.of(multiPlatform.getBuildTarget()));
 
     multiPlatform.getNestedPlatforms().stream()
         .map(this::createDefaultTargetConfiguration)
@@ -72,7 +71,7 @@ public class MultiPlatformTargetConfigurationTransformer implements TargetConfig
     Preconditions.checkState(
         platform instanceof ConstraintBasedPlatform, "Wrong platform type: %s", platform);
     ConstraintBasedPlatform constraintBasedPlatform = (ConstraintBasedPlatform) platform;
-    return ImmutableRuleBasedTargetConfiguration.of(constraintBasedPlatform.getBuildTarget());
+    return RuleBasedTargetConfiguration.of(constraintBasedPlatform.getBuildTarget());
   }
 
   @Override

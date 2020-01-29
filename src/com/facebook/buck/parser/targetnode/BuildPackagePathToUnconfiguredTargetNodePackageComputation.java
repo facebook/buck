@@ -29,8 +29,6 @@ import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.model.targetgraph.raw.ImmutableUnconfiguredTargetNodeWithDeps;
-import com.facebook.buck.core.model.targetgraph.raw.ImmutableUnconfiguredTargetNodeWithDepsPackage;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDeps;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDepsPackage;
@@ -40,7 +38,7 @@ import com.facebook.buck.parser.UnconfiguredTargetNodeToTargetNodeFactory;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.ParsingError;
-import com.facebook.buck.parser.manifest.ImmutableBuildPackagePathToBuildFileManifestKey;
+import com.facebook.buck.parser.manifest.BuildPackagePathToBuildFileManifestKey;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -125,7 +123,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputation
         ImmutableSet<UnconfiguredBuildTarget> deps =
             getTargetDeps(unconfiguredTargetNode, dependencyStack, buildFileAbsolutePath);
         UnconfiguredTargetNodeWithDeps unconfiguredTargetNodeWithDeps =
-            ImmutableUnconfiguredTargetNodeWithDeps.of(unconfiguredTargetNode, deps);
+            UnconfiguredTargetNodeWithDeps.of(unconfiguredTargetNode, deps);
         builder.put(unconfiguredBuildTarget.getName(), unconfiguredTargetNodeWithDeps);
       } catch (Exception ex) {
         if (throwOnValidationError) {
@@ -137,7 +135,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputation
     }
 
     BuildFileManifest buildFileManifest =
-        env.getDep(ImmutableBuildPackagePathToBuildFileManifestKey.of(packagePath));
+        env.getDep(BuildPackagePathToBuildFileManifestKey.of(packagePath));
     FileSystem fileSystem = superRootPath.getFileSystem();
     ImmutableMap<String, UnconfiguredTargetNodeWithDeps> rawTargetNodesWithDeps = builder.build();
     ImmutableList<ParsingError> errors =
@@ -150,7 +148,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputation
         buildFileManifest.getIncludes().stream()
             .map(include -> superRootPath.relativize(fileSystem.getPath(include)))
             .collect(ImmutableSet.toImmutableSet());
-    return ImmutableUnconfiguredTargetNodeWithDepsPackage.of(
+    return UnconfiguredTargetNodeWithDepsPackage.of(
         packagePath, rawTargetNodesWithDeps, errors, includes);
   }
 
@@ -207,7 +205,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputation
       BuildPackagePathToUnconfiguredTargetNodePackageKey key, ComputationEnvironment env) {
 
     BuildFileManifest buildFileManifest =
-        env.getDep(ImmutableBuildPackagePathToBuildFileManifestKey.of(key.getPath()));
+        env.getDep(BuildPackagePathToBuildFileManifestKey.of(key.getPath()));
     ForwardRelativePath basePath = ForwardRelativePath.ofPath(key.getPath());
 
     ImmutableSet.Builder<BuildTargetToUnconfiguredTargetNodeKey> builder =
@@ -233,6 +231,6 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputation
     // To construct raw target node, we first need to parse a build file and obtain
     // corresponding
     // manifest, so require it as a dependency
-    return ImmutableSet.of(ImmutableBuildPackagePathToBuildFileManifestKey.of(key.getPath()));
+    return ImmutableSet.of(BuildPackagePathToBuildFileManifestKey.of(key.getPath()));
   }
 }

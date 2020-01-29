@@ -38,4 +38,8 @@ public abstract class ListWithSelects {
   public String toString() {
     return getElements().stream().map(p -> p.toString()).collect(Collectors.joining(" + "));
   }
+
+  public static ListWithSelects of(ImmutableList<Object> elements, Class<?> type) {
+    return ImmutableListWithSelects.of(elements, type);
+  }
 }

@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
-import com.facebook.buck.core.model.ImmutableRuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -59,7 +58,7 @@ public class JsonTargetConfigurationSerializerTest {
         "{\"targetPlatform\":\"//platform:platform\"}",
         new JsonTargetConfigurationSerializer(buildTargetProvider)
             .serialize(
-                ImmutableRuleBasedTargetConfiguration.of(
+                RuleBasedTargetConfiguration.of(
                     ConfigurationBuildTargetFactoryForTests.newInstance("//platform:platform"))));
   }
 

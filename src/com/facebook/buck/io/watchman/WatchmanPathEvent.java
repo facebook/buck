@@ -34,4 +34,8 @@ public abstract class WatchmanPathEvent implements WatchmanEvent {
    * returned by {@link #getCellPath()}.
    */
   public abstract Path getPath();
+
+  public static WatchmanPathEvent of(Path cellPath, WatchmanEvent.Kind kind, Path path) {
+    return ImmutableWatchmanPathEvent.of(cellPath, kind, path);
+  }
 }

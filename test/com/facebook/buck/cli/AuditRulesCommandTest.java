@@ -18,8 +18,8 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.parser.syntax.ImmutableListWithSelects;
-import com.facebook.buck.parser.syntax.ImmutableSelectorValue;
+import com.facebook.buck.parser.syntax.ListWithSelects;
+import com.facebook.buck.parser.syntax.SelectorValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
@@ -49,15 +49,14 @@ public class AuditRulesCommandTest {
     assertEquals(
         "select({\"one\": \"two\"})",
         AuditRulesCommand.createDisplayString(
-            ImmutableListWithSelects.of(
-                ImmutableList.of(ImmutableSelectorValue.of(testDict, "")), String.class)));
+            ListWithSelects.of(ImmutableList.of(SelectorValue.of(testDict, "")), String.class)));
     SkylarkDict<String, String> testDict2 = SkylarkDict.of(null, "three", "four");
     SkylarkDict<String, String> twoEntryDict = SkylarkDict.plus(testDict, testDict2, null);
     assertEquals(
         "select({\"one\": \"two\", \"three\": \"four\"})",
         AuditRulesCommand.createDisplayString(
-            ImmutableListWithSelects.of(
-                ImmutableList.of(ImmutableSelectorValue.of(twoEntryDict, "")), String.class)));
+            ListWithSelects.of(
+                ImmutableList.of(SelectorValue.of(twoEntryDict, "")), String.class)));
   }
 
   @Test(expected = IllegalStateException.class)

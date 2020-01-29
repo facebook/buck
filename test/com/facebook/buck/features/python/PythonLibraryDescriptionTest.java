@@ -25,8 +25,8 @@ import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwar
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -221,7 +221,7 @@ public class PythonLibraryDescriptionTest {
                     ImmutableMap.of(
                         builder.getTarget(),
                         ImmutableMap.of(depBuilder.getTarget(), Version.of("1.0")))),
-                ImmutableTargetGraphCreationResult.of(
+                TargetGraphCreationResult.of(
                     TargetGraphFactory.newInstance(
                         transitiveDepBuilder.build(), depBuilder.build(), builder.build()),
                     ImmutableSet.of(builder.getTarget())),
@@ -271,7 +271,7 @@ public class PythonLibraryDescriptionTest {
                     ImmutableMap.of(
                         builder.getTarget(),
                         ImmutableMap.of(depBuilder.getTarget(), Version.of("1.0")))),
-                ImmutableTargetGraphCreationResult.of(
+                TargetGraphCreationResult.of(
                     TargetGraphFactory.newInstance(
                         transitiveDepBuilder.build(), depBuilder.build(), builder.build()),
                     ImmutableSet.of(builder.getTarget())),

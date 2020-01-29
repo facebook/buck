@@ -47,9 +47,9 @@ import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.analysis.computation.RuleAnalysisGraph;
 import com.facebook.buck.core.rules.analysis.impl.FakeBuiltInProvider;
 import com.facebook.buck.core.rules.analysis.impl.FakeInfo;
+import com.facebook.buck.core.rules.analysis.impl.FakeLegacyProviderRuleAnalysisResultImpl;
 import com.facebook.buck.core.rules.analysis.impl.FakeRuleAnalysisGraph;
-import com.facebook.buck.core.rules.analysis.impl.ImmutableFakeLegacyProviderRuleAnalysisResultImpl;
-import com.facebook.buck.core.rules.analysis.impl.ImmutableFakeRuleAnalysisResultImpl;
+import com.facebook.buck.core.rules.analysis.impl.FakeRuleAnalysisResultImpl;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.config.registry.impl.ConfigurationRuleRegistryFactory;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
@@ -101,7 +101,7 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
         new FakeRuleAnalysisGraph(
             key -> {
               if (key.getBuildTarget().equals(target)) {
-                return ImmutableFakeLegacyProviderRuleAnalysisResultImpl.of(
+                return FakeLegacyProviderRuleAnalysisResultImpl.of(
                     target, expectedProviderInfoCollection);
               }
               fail();
@@ -199,7 +199,7 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
             ruleAnalysisKey -> {
               ruleAnalysisCalled.set(true);
               assertSame(target, ruleAnalysisKey.getBuildTarget());
-              return ImmutableFakeRuleAnalysisResultImpl.of(
+              return FakeRuleAnalysisResultImpl.of(
                   target,
                   TestProviderInfoCollectionImpl.builder()
                       .build(

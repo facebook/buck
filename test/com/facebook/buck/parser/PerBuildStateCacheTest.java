@@ -25,7 +25,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.parser.api.ImmutablePackageMetadata;
 import com.facebook.buck.parser.api.PackageMetadata;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
@@ -73,10 +72,10 @@ public class PerBuildStateCacheTest {
       Path packageFile,
       ImmutableList<String> visibility,
       ImmutableList<String> within_view) {
-    return createPackage(cell, packageFile, ImmutablePackageMetadata.of(visibility, within_view));
+    return createPackage(cell, packageFile, PackageMetadata.of(visibility, within_view));
   }
 
-  Package createPackage(Cell cell, Path packageFile, ImmutablePackageMetadata packageMetadata) {
+  Package createPackage(Cell cell, Path packageFile, PackageMetadata packageMetadata) {
     return PackageFactory.create(cell, packageFile, packageMetadata, Optional.empty());
   }
 

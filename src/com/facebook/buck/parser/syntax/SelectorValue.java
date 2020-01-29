@@ -20,6 +20,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /** The value of a select statement. Buck API equivalent of Bazel's Skylark SelectorValue */
@@ -40,5 +41,9 @@ public abstract class SelectorValue {
     return getDictionary().entrySet().stream()
         .map(e -> "\"" + e.getKey() + "\": \"" + e.getValue() + "\"")
         .collect(Collectors.joining(", ", "select({", "})"));
+  }
+
+  public static SelectorValue of(Map<String, ? extends Object> dictionary, String noMatchError) {
+    return ImmutableSelectorValue.of(dictionary, noMatchError);
   }
 }

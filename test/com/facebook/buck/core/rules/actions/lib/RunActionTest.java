@@ -21,8 +21,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.artifact.Artifact;
-import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
 import com.facebook.buck.core.artifact.OutputArtifact;
+import com.facebook.buck.core.artifact.SourceArtifactImpl;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgException;
@@ -146,8 +146,7 @@ public class RunActionTest {
   @Test
   public void canRunBinariesAtWorkingDirRoot() throws CommandLineArgException, IOException {
     Path sourceScriptPath = Platform.isWindows() ? Paths.get("script.bat") : Paths.get("script.sh");
-    Artifact sourceScript =
-        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, sourceScriptPath));
+    Artifact sourceScript = SourceArtifactImpl.of(PathSourcePath.of(filesystem, sourceScriptPath));
 
     ImmutableList<String> expectedStderr =
         ImmutableList.of(

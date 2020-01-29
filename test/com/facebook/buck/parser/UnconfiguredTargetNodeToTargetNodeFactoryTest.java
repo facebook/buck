@@ -23,7 +23,7 @@ import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
-import com.facebook.buck.core.model.ImmutableRuleBasedTargetConfiguration;
+import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
@@ -69,8 +69,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactoryTest {
   public void testTargetNodeCreatedWithAttributes() {
     BuildTarget targetPlatform =
         ConfigurationBuildTargetFactoryForTests.newInstance("//config:platform");
-    TargetConfiguration targetConfiguration =
-        ImmutableRuleBasedTargetConfiguration.of(targetPlatform);
+    TargetConfiguration targetConfiguration = RuleBasedTargetConfiguration.of(targetPlatform);
     BuildTarget buildTarget =
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c")
             .configure(targetConfiguration);

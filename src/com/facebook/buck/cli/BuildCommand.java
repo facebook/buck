@@ -28,7 +28,6 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
-import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -446,7 +445,7 @@ public class BuildCommand extends AbstractCommand {
           "Targets specified via `--just-build` must be a subset of action graph.");
     }
     return ImmutableSet.of(
-        ImmutableBuildTargetWithOutputs.of(explicitTarget, targetWithOutputLabel.getOutputLabel()));
+        BuildTargetWithOutputs.of(explicitTarget, targetWithOutputLabel.getOutputLabel()));
   }
 
   private void checkSingleBuildTargetSpecifiedForOutBuildMode(

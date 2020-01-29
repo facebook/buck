@@ -24,7 +24,6 @@ import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.parser.api.BuildFileManifest;
-import com.facebook.buck.parser.api.ImmutableBuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.util.concurrent.AssertScopeExclusiveAccess;
 import com.google.common.base.Preconditions;
@@ -59,7 +58,7 @@ import org.junit.Test;
 public class ProjectBuildFileParserPoolTest {
 
   public static final BuildFileManifest EMPTY_BUILD_FILE_MANIFEST =
-      ImmutableBuildFileManifest.of(
+      BuildFileManifest.of(
           ImmutableMap.of(),
           ImmutableSortedSet.of(),
           ImmutableMap.of(),

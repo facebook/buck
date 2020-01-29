@@ -57,4 +57,13 @@ public abstract class UnconfiguredTargetNodeWithDepsPackage implements ComputeRe
   /** Set of extension files read during parsing. */
   @JsonProperty("includes")
   public abstract ImmutableSet<Path> getIncludes();
+
+  public static UnconfiguredTargetNodeWithDepsPackage of(
+      Path packagePath,
+      ImmutableMap<String, UnconfiguredTargetNodeWithDeps> unconfiguredTargetNodesWithDeps,
+      ImmutableList<ParsingError> errors,
+      ImmutableSet<Path> includes) {
+    return ImmutableUnconfiguredTargetNodeWithDepsPackage.of(
+        packagePath, unconfiguredTargetNodesWithDeps, errors, includes);
+  }
 }

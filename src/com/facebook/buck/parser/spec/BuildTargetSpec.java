@@ -19,13 +19,11 @@ package com.facebook.buck.parser.spec;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CellRelativePath;
-import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
-import com.facebook.buck.core.parser.buildtargetpattern.ImmutableBuildTargetPattern;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.base.Preconditions;
@@ -47,7 +45,7 @@ public abstract class BuildTargetSpec implements TargetNodeSpec {
   public static BuildTargetSpec of(
       UnconfiguredBuildTargetView unconfiguredBuildTargetView, BuildFileSpec buildFileSpec) {
     return ImmutableBuildTargetSpec.of(
-        ImmutableUnconfiguredBuildTargetWithOutputs.of(
+        UnconfiguredBuildTargetWithOutputs.of(
             unconfiguredBuildTargetView, OutputLabel.defaultLabel()),
         buildFileSpec);
   }
@@ -134,7 +132,7 @@ public abstract class BuildTargetSpec implements TargetNodeSpec {
       throw new IllegalStateException(String.format("%s should be non-recursive", toString()));
     }
 
-    return ImmutableBuildTargetPattern.of(
+    return BuildTargetPattern.of(
         CellRelativePath.of(cell.getCanonicalName(), basePath),
         BuildTargetPattern.Kind.SINGLE,
         getUnconfiguredBuildTargetView().getShortNameAndFlavorPostfix());

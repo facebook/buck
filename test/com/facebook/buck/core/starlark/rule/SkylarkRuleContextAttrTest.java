@@ -30,7 +30,6 @@ import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.collect.impl.TestProviderInfoCollectionImpl;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.PostCoercionTransform;
-import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableStringAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.StringAttribute;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystemFactory;
@@ -50,7 +49,7 @@ import org.junit.Test;
 public class SkylarkRuleContextAttrTest {
 
   private final StringAttribute placeholderStringAttr =
-      ImmutableStringAttribute.of("", "", true, ImmutableList.of());
+      StringAttribute.of("", "", true, ImmutableList.of());
   private TestActionExecutionRunner runner;
 
   static class TestAttribute extends Attribute<BuildTarget> {

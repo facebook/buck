@@ -17,7 +17,6 @@
 package com.facebook.buck.core.test.rule.coercer;
 
 import com.facebook.buck.core.test.rule.CoercedTestRunnerSpec;
-import com.facebook.buck.core.test.rule.ImmutableCoercedTestRunnerSpec;
 import com.facebook.buck.core.test.rule.TestRunnerSpec;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.StringWithMacros;
@@ -47,21 +46,20 @@ public class TestRunnerSpecCoercer {
           ((Map<StringWithMacros, TestRunnerSpec>) spec.getData()).entrySet()) {
         map.put(converter.convert(entry.getKey()), coerce(entry.getValue(), converter));
       }
-      return ImmutableCoercedTestRunnerSpec.of(map.build());
+      return CoercedTestRunnerSpec.of(map.build());
     }
     if (spec.getData() instanceof Iterable) {
       ImmutableList.Builder<CoercedTestRunnerSpec> list = ImmutableList.builder();
       for (TestRunnerSpec item : (Iterable<TestRunnerSpec>) spec.getData()) {
         list.add(coerce(item, converter));
       }
-      return ImmutableCoercedTestRunnerSpec.of(list.build());
+      return CoercedTestRunnerSpec.of(list.build());
     }
     if (spec.getData() instanceof StringWithMacros) {
-      return ImmutableCoercedTestRunnerSpec.of(
-          converter.convert((StringWithMacros) spec.getData()));
+      return CoercedTestRunnerSpec.of(converter.convert((StringWithMacros) spec.getData()));
     }
     if (spec.getData() instanceof Number || spec.getData() instanceof Boolean) {
-      return ImmutableCoercedTestRunnerSpec.of(spec.getData());
+      return CoercedTestRunnerSpec.of(spec.getData());
     }
     throw new IllegalStateException();
   }

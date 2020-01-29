@@ -30,4 +30,8 @@ public abstract class WatchmanOverflowEvent implements WatchmanEvent {
 
   /** Human-readable message why overflow event is sent */
   public abstract String getReason();
+
+  public static WatchmanOverflowEvent of(Path cellPath, String reason) {
+    return ImmutableWatchmanOverflowEvent.of(cellPath, reason);
+  }
 }

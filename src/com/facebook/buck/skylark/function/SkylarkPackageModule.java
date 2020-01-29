@@ -16,9 +16,10 @@
 
 package com.facebook.buck.skylark.function;
 
-import com.facebook.buck.parser.api.ImmutablePackageMetadata;
+import com.facebook.buck.parser.api.PackageMetadata;
 import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.skylark.parser.context.ParseContext;
+import com.google.common.collect.ImmutableList;
 import com.google.devtools.build.lib.skylarkinterface.Param;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkModule;
@@ -76,7 +77,9 @@ public class SkylarkPackageModule extends AbstractSkylarkFunctions
       Environment env)
       throws EvalException {
     ParseContext.getParseContext(env, ast)
-        .recordPackage(ImmutablePackageMetadata.of(visibility, within_view), ast);
+        .recordPackage(
+            PackageMetadata.of(ImmutableList.copyOf(visibility), ImmutableList.copyOf(within_view)),
+            ast);
   }
 
   public static final SkylarkPackageModule PACKAGE_MODULE = new SkylarkPackageModule();

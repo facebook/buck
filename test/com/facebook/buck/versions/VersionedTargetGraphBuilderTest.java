@@ -22,7 +22,6 @@ import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
@@ -132,7 +131,7 @@ public class VersionedTargetGraphBuilderTest {
         factory.create(
             executor,
             new NaiveVersionSelector(),
-            ImmutableTargetGraphCreationResult.of(graph, ImmutableSet.of(root.getBuildTarget())),
+            TargetGraphCreationResult.of(graph, ImmutableSet.of(root.getBuildTarget())),
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory);
     TargetGraph versionedGraph = builder.build();
@@ -149,7 +148,7 @@ public class VersionedTargetGraphBuilderTest {
         factory.create(
             executor,
             new NaiveVersionSelector(),
-            ImmutableTargetGraphCreationResult.of(
+            TargetGraphCreationResult.of(
                 graph,
                 ImmutableSet.of(
                     BuildTargetFactory.newInstance("//:root1"),
@@ -171,7 +170,7 @@ public class VersionedTargetGraphBuilderTest {
         factory.create(
             executor,
             new NaiveVersionSelector(),
-            ImmutableTargetGraphCreationResult.of(
+            TargetGraphCreationResult.of(
                 graph, ImmutableSet.of(BuildTargetFactory.newInstance("//:root"))),
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory);
@@ -195,7 +194,7 @@ public class VersionedTargetGraphBuilderTest {
         factory.create(
             executor,
             new NaiveVersionSelector(),
-            ImmutableTargetGraphCreationResult.of(
+            TargetGraphCreationResult.of(
                 graph, ImmutableSet.of(BuildTargetFactory.newInstance("//:root"))),
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory);
@@ -222,7 +221,7 @@ public class VersionedTargetGraphBuilderTest {
         factory.create(
             executor,
             new NaiveVersionSelector(),
-            ImmutableTargetGraphCreationResult.of(
+            TargetGraphCreationResult.of(
                 graph, ImmutableSet.of(BuildTargetFactory.newInstance("//:root1"))),
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory);
@@ -248,7 +247,7 @@ public class VersionedTargetGraphBuilderTest {
         factory.create(
             executor,
             new NaiveVersionSelector(),
-            ImmutableTargetGraphCreationResult.of(
+            TargetGraphCreationResult.of(
                 graph, ImmutableSet.of(BuildTargetFactory.newInstance("//:root"))),
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory);
@@ -291,7 +290,7 @@ public class VersionedTargetGraphBuilderTest {
                 ImmutableMap.of(
                     a, ImmutableMap.of(dep, Version.of("1.0")),
                     b, ImmutableMap.of(dep, Version.of("2.0")))),
-            ImmutableTargetGraphCreationResult.of(
+            TargetGraphCreationResult.of(
                 graph,
                 ImmutableSet.of(
                     BuildTargetFactory.newInstance("//:a"),
@@ -331,7 +330,7 @@ public class VersionedTargetGraphBuilderTest {
         factory.create(
             executor,
             new NaiveVersionSelector(),
-            ImmutableTargetGraphCreationResult.of(
+            TargetGraphCreationResult.of(
                 graph, ImmutableSet.of(BuildTargetFactory.newInstance("//:root"))),
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory);
@@ -355,7 +354,7 @@ public class VersionedTargetGraphBuilderTest {
         factory.create(
             executor,
             new NaiveVersionSelector(),
-            ImmutableTargetGraphCreationResult.of(
+            TargetGraphCreationResult.of(
                 graph,
                 ImmutableSet.of(
                     BuildTargetFactory.newInstance("//:root1"),

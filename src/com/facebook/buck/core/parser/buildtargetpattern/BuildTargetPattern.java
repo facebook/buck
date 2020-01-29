@@ -107,4 +107,9 @@ public abstract class BuildTargetPattern {
     }
     throw new IllegalStateException();
   }
+
+  public static BuildTargetPattern of(
+      CellRelativePath cellRelativeBasePath, Kind kind, String localNameAndFlavors) {
+    return ImmutableBuildTargetPattern.of(cellRelativeBasePath, kind, localNameAndFlavors);
+  }
 }

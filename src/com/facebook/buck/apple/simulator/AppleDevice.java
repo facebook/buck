@@ -23,7 +23,7 @@ import org.immutables.value.Value;
 /** Object that represents an Apple simulator or a physical device. Used with idb. */
 @BuckStyleValue
 @JsonDeserialize(as = ImmutableAppleDevice.class)
-public interface AbstractAppleDevice {
+public interface AppleDevice {
 
   /** String that represents the name of the device (i.e., "iPhone X", "iPad Air", etc) */
   String getName();
@@ -59,5 +59,10 @@ public interface AbstractAppleDevice {
   @Value.Derived
   default boolean getIs_local() {
     return true;
+  }
+
+  static AppleDevice of(
+      String name, String udid, String state, String type, String os_version, String architecture) {
+    return ImmutableAppleDevice.of(name, udid, state, type, os_version, architecture);
   }
 }

@@ -29,11 +29,11 @@ import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleInfoPlistParsing;
 import com.facebook.buck.apple.device.AppleDeviceHelper;
 import com.facebook.buck.apple.simulator.AppleCoreSimulatorServiceController;
+import com.facebook.buck.apple.simulator.AppleDevice;
 import com.facebook.buck.apple.simulator.AppleDeviceController;
 import com.facebook.buck.apple.simulator.AppleSimulator;
 import com.facebook.buck.apple.simulator.AppleSimulatorController;
 import com.facebook.buck.apple.simulator.AppleSimulatorDiscovery;
-import com.facebook.buck.apple.simulator.ImmutableAppleDevice;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.cli.UninstallCommand.UninstallOptions;
 import com.facebook.buck.command.Build;
@@ -514,17 +514,17 @@ public class InstallCommand extends BuildCommand {
     Console console = params.getConsole();
 
     // Choose the physical device
-    ImmutableSet<ImmutableAppleDevice> physicalDevices = appleDeviceController.getPhysicalDevices();
+    ImmutableSet<AppleDevice> physicalDevices = appleDeviceController.getPhysicalDevices();
     if (physicalDevices.isEmpty()) {
       console.printBuildFailure("Could not find any physical devices connected");
       return FAILURE;
     }
 
-    ImmutableAppleDevice chosenDevice = null;
+    AppleDevice chosenDevice = null;
     if (targetDeviceOptions().getSerialNumber().isPresent()) {
       String udidPrefix =
           Assertions.assertNotNull(targetDeviceOptions().getSerialNumber().get()).toLowerCase();
-      for (ImmutableAppleDevice physicalDevice : physicalDevices) {
+      for (AppleDevice physicalDevice : physicalDevices) {
         if (physicalDevice.getUdid().startsWith(udidPrefix)) {
           chosenDevice = physicalDevice;
           break;
@@ -802,7 +802,7 @@ public class InstallCommand extends BuildCommand {
         new AppleDeviceController(processExecutor, appleConfig.getIdbPath());
 
     // Choose the simulator
-    Optional<ImmutableAppleDevice> simulator =
+    Optional<AppleDevice> simulator =
         getAppleSimulatorForBundleIdb(appleBundle, processExecutor, appleConfig.getIdbPath());
     if (!simulator.isPresent()) {
       params
@@ -1166,14 +1166,14 @@ public class InstallCommand extends BuildCommand {
    *
    * @return the chosen simulator
    */
-  private Optional<ImmutableAppleDevice> getAppleSimulatorForBundleIdb(
+  private Optional<AppleDevice> getAppleSimulatorForBundleIdb(
       AppleBundle appleBundle, ProcessExecutor processExecutor, Path idbPath) {
     LOG.debug("Choosing simulator for %s", appleBundle);
 
-    Optional<ImmutableAppleDevice> simulatorByUdid = Optional.empty();
-    Optional<ImmutableAppleDevice> simulatorByName = Optional.empty();
-    Optional<ImmutableAppleDevice> bootedSimulator = Optional.empty();
-    Optional<ImmutableAppleDevice> defaultSimulator = Optional.empty();
+    Optional<AppleDevice> simulatorByUdid = Optional.empty();
+    Optional<AppleDevice> simulatorByName = Optional.empty();
+    Optional<AppleDevice> bootedSimulator = Optional.empty();
+    Optional<AppleDevice> defaultSimulator = Optional.empty();
 
     boolean wantUdid = deviceOptions.getSerialNumber().isPresent();
     boolean wantName = deviceOptions.getSimulatorName().isPresent();
@@ -1181,7 +1181,7 @@ public class InstallCommand extends BuildCommand {
     AppleDeviceController appleDeviceController =
         new AppleDeviceController(processExecutor, idbPath);
 
-    for (ImmutableAppleDevice simulator : appleDeviceController.getSimulators()) {
+    for (AppleDevice simulator : appleDeviceController.getSimulators()) {
       if (wantUdid
           && deviceOptions
               .getSerialNumber()

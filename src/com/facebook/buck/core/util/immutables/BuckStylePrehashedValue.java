@@ -26,7 +26,7 @@ import org.immutables.value.Value;
 /**
  * This is similar to {@link BuckStyleValue} but with prehash.
  *
- * <p>Value-style objects conforming to {@link RuleArg} naming style.
+ * <p>Value-style objects with prehashing.
  *
  * <p>Value-style objects have all attributes as "of" constructor parameters, do not have builders,
  * "with" methods, "copy" methods.
@@ -42,7 +42,7 @@ import org.immutables.value.Value;
     get = {"is*", "get*"},
     init = "set*",
     of = "of",
-    visibility = Value.Style.ImplementationVisibility.SAME,
+    visibility = Value.Style.ImplementationVisibility.PACKAGE,
     allParameters = true,
     defaults = @Value.Immutable(builder = false, copy = false, prehash = true),
     forceJacksonPropertyNames = false,

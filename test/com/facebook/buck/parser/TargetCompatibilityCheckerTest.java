@@ -42,7 +42,6 @@ import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
-import com.facebook.buck.core.rules.config.registry.ImmutableConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.configsetting.ConfigSettingRule;
 import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.core.rules.platform.ConstraintSettingRule;
@@ -144,7 +143,7 @@ public class TargetCompatibilityCheckerTest {
           }
         };
     configurationRuleRegistry =
-        ImmutableConfigurationRuleRegistry.of(
+        ConfigurationRuleRegistry.of(
             configurationRuleResolver,
             constraintResolver,
             (configuration, dependencyStack) -> UnconfiguredPlatform.INSTANCE);

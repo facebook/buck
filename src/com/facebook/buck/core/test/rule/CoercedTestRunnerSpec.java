@@ -33,6 +33,10 @@ import org.immutables.value.Value;
 @BuckStyleValue
 public abstract class CoercedTestRunnerSpec {
 
+  public static CoercedTestRunnerSpec of(Object data) {
+    return ImmutableCoercedTestRunnerSpec.of(data);
+  }
+
   protected abstract Object getData();
 
   @Value.Check

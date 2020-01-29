@@ -33,7 +33,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -375,7 +375,7 @@ public class GenruleTest {
             StringWithMacrosUtils.format(
                 "%s abc",
                 WorkerMacro.of(
-                    ImmutableBuildTargetWithOutputs.of(
+                    BuildTargetWithOutputs.of(
                         workerToolRule.getBuildTarget(), OutputLabel.defaultLabel()))))
         .setOut("output.txt");
   }
@@ -465,7 +465,7 @@ public class GenruleTest {
                 StringWithMacrosUtils.format(
                     "%s abs",
                     WorkerMacro.of(
-                        ImmutableBuildTargetWithOutputs.of(
+                        BuildTargetWithOutputs.of(
                             workerToolRule.getBuildTarget(), OutputLabel.defaultLabel()))))
             .setOut("output.txt")
             .build(graphBuilder);
@@ -742,7 +742,7 @@ public class GenruleTest {
                 StringWithMacrosUtils.format(
                     "run %s",
                     ExecutableMacro.of(
-                        ImmutableBuildTargetWithOutputs.of(
+                        BuildTargetWithOutputs.of(
                             BuildTargetFactory.newInstance("//:dep"), OutputLabel.defaultLabel()))))
             .setOut("output");
 
@@ -825,7 +825,7 @@ public class GenruleTest {
                 StringWithMacrosUtils.format(
                     "run %s",
                     ClasspathMacro.of(
-                        ImmutableBuildTargetWithOutputs.of(
+                        BuildTargetWithOutputs.of(
                             BuildTargetFactory.newInstance("//:dep"), OutputLabel.defaultLabel()))))
             .setOut("output");
 

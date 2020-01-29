@@ -29,7 +29,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
-import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
@@ -230,8 +229,7 @@ public class CxxGenruleDescriptionTest {
     TargetGraphCreationResult transformed =
         AsyncVersionedTargetGraphBuilder.transform(
             new NaiveVersionSelector(),
-            ImmutableTargetGraphCreationResult.of(
-                graph, ImmutableSet.of(genruleBuilder.getTarget())),
+            TargetGraphCreationResult.of(graph, ImmutableSet.of(genruleBuilder.getTarget())),
             executor.get(),
             new DefaultTypeCoercerFactory(),
             new ParsingUnconfiguredBuildTargetViewFactory(),
@@ -268,8 +266,7 @@ public class CxxGenruleDescriptionTest {
     TargetGraphCreationResult transformed =
         AsyncVersionedTargetGraphBuilder.transform(
             new NaiveVersionSelector(),
-            ImmutableTargetGraphCreationResult.of(
-                graph, ImmutableSet.of(genruleBuilder.getTarget())),
+            TargetGraphCreationResult.of(graph, ImmutableSet.of(genruleBuilder.getTarget())),
             executor.get(),
             new DefaultTypeCoercerFactory(),
             new ParsingUnconfiguredBuildTargetViewFactory(),

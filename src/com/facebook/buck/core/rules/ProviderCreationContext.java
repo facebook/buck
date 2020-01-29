@@ -22,6 +22,7 @@ import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
+import java.util.Map;
 
 /**
  * The context given to {@link
@@ -39,4 +40,10 @@ public interface ProviderCreationContext {
 
   /** @return the {@link ProjectFilesystem} for the rule */
   ProjectFilesystem getProjectFilesystem();
+
+  static ProviderCreationContext of(
+      Map<? extends BuildTarget, ? extends ProviderInfoCollection> dependencies,
+      ProjectFilesystem projectFilesystem) {
+    return ImmutableProviderCreationContext.of(dependencies, projectFilesystem);
+  }
 }

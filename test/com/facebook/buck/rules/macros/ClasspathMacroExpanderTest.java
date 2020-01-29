@@ -22,7 +22,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
@@ -116,7 +116,7 @@ public class ClasspathMacroExpanderTest {
     expander.expand(
         graphBuilder.getSourcePathResolver(),
         ClasspathMacro.of(
-            ImmutableBuildTargetWithOutputs.of(rule.getBuildTarget(), OutputLabel.defaultLabel())),
+            BuildTargetWithOutputs.of(rule.getBuildTarget(), OutputLabel.defaultLabel())),
         rule);
   }
 
@@ -142,8 +142,7 @@ public class ClasspathMacroExpanderTest {
             forTarget,
             graphBuilder,
             ClasspathMacro.of(
-                ImmutableBuildTargetWithOutputs.of(
-                    rule.getBuildTarget(), OutputLabel.defaultLabel())));
+                BuildTargetWithOutputs.of(rule.getBuildTarget(), OutputLabel.defaultLabel())));
 
     ImmutableList<BuildRule> deps =
         BuildableSupport.deriveDeps(ruleKeyAppendables, graphBuilder)
@@ -161,8 +160,7 @@ public class ClasspathMacroExpanderTest {
             expander.expand(
                 pathResolver,
                 ClasspathMacro.of(
-                    ImmutableBuildTargetWithOutputs.of(
-                        rule.getBuildTarget(), OutputLabel.defaultLabel())),
+                    BuildTargetWithOutputs.of(rule.getBuildTarget(), OutputLabel.defaultLabel())),
                 rule),
             pathResolver);
     assertEquals(expectedClasspath, classpath);

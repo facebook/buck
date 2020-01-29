@@ -19,7 +19,7 @@ package com.facebook.buck.core.artifact;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
-import com.facebook.buck.core.rules.analysis.action.ImmutableActionAnalysisDataKey;
+import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.devtools.build.lib.events.Location;
 import java.nio.file.Path;
@@ -43,7 +43,6 @@ public class BuildArtifactFactoryForTests {
 
   public BuildArtifact createBuildArtifact(Path output, Location location) {
     ArtifactImpl declared = ArtifactImpl.of(target, genDir, basePath, output, location);
-    return declared.materialize(
-        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a")));
+    return declared.materialize(ActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a")));
   }
 }

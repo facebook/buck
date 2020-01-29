@@ -41,12 +41,6 @@ public abstract class UnconfiguredTargetNodeWithDeps implements ComputeResult {
   @JsonProperty("deps")
   public abstract ImmutableSet<UnconfiguredBuildTarget> getDeps();
 
-  public static UnconfiguredTargetNodeWithDeps of(
-      UnconfiguredTargetNode unconfiguredTargetNode,
-      Iterable<? extends UnconfiguredBuildTarget> deps) {
-    return ImmutableUnconfiguredTargetNodeWithDeps.of(unconfiguredTargetNode, deps);
-  }
-
   /**
    * This mixin is used by JSON serializer to flatten {@link UnconfiguredTargetNode} properties We
    * cannot use {@link JsonUnwrapped} directly on {@link
@@ -56,5 +50,10 @@ public abstract class UnconfiguredTargetNodeWithDeps implements ComputeResult {
   public interface UnconfiguredTargetNodeWithDepsUnwrappedMixin {
     @JsonUnwrapped
     UnconfiguredTargetNode getUnconfiguredTargetNode();
+  }
+
+  public static UnconfiguredTargetNodeWithDeps of(
+      UnconfiguredTargetNode unconfiguredTargetNode, ImmutableSet<UnconfiguredBuildTarget> deps) {
+    return ImmutableUnconfiguredTargetNodeWithDeps.of(unconfiguredTargetNode, deps);
   }
 }
