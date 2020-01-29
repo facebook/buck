@@ -368,7 +368,7 @@ public class CxxSourceRuleFactoryTest {
           cxxSourceRuleFactory.requirePreprocessAndCompileBuildRule(objcSourceName, objcSource);
 
       ImmutableList<String> explicitPrefixHeaderRelatedFlags =
-          ImmutableList.of("-include", filesystem.resolve(prefixHeaderName).toString());
+          ImmutableList.of("-include", prefixHeaderName);
 
       CxxPreprocessAndCompileStep step = objcPreprocessAndCompile.makeMainStep(context, false);
       assertContains(step.getCommand(), explicitPrefixHeaderRelatedFlags);

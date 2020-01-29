@@ -343,7 +343,9 @@ public class PrecompiledHeaderFeatureTest {
         // For GCC we'd use: "-include sometargetname#someflavor-cxx-hexdigitsofhash.h",
         // i.e., it's the "-include" flag like in the prefix header case, but auto-gen-filename.
         for (int i = 0; i + 1 < flags.size(); i++) {
-          if (flags.get(i).equals("-include") && !flags.get(i + 1).endsWith("/" + headerFilename)) {
+          if (flags.get(i).equals("-include")
+              && !flags.get(i + 1).endsWith("/" + headerFilename)
+              && !flags.get(i + 1).equals(headerFilename)) {
             return true;
           }
         }
@@ -374,7 +376,9 @@ public class PrecompiledHeaderFeatureTest {
         // pass a PCH filename that's auto-generated from a target name + flavors + hash chars
         // and other weird stuff.  Here we'll be expecting the original header filename.
         for (int i = 0; i + 1 < flags.size(); i++) {
-          if (flags.get(i).equals("-include") && flags.get(i + 1).endsWith("/" + headerFilename)) {
+          if (flags.get(i).equals("-include")
+              && (flags.get(i + 1).endsWith("/" + headerFilename)
+                  || flags.get(i + 1).equals(headerFilename))) {
             return true;
           }
         }

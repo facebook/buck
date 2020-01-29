@@ -32,6 +32,7 @@ import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -112,15 +113,18 @@ public abstract class PreprocessorFlags implements AddsToRuleKey {
 
   public CxxToolFlags getNonIncludePathFlags(
       SourcePathResolverAdapter resolver,
-      Optional<PrecompiledHeaderData> pch,
+      Optional<Pair<PrecompiledHeaderData, PathShortener>> pchAndShortener,
       Preprocessor preprocessor) {
     ExplicitCxxToolFlags.Builder builder = CxxToolFlags.explicitBuilder();
     ExplicitCxxToolFlags.addCxxToolFlags(builder, getOtherFlags());
-    if (pch.isPresent()) {
+    if (pchAndShortener.isPresent()) {
+      PrecompiledHeaderData pch = pchAndShortener.get().getFirst();
+      PathShortener shortener = pchAndShortener.get().getSecond();
       builder.addAllRuleFlags(
           StringArg.from(
               preprocessor.prefixOrPCHArgs(
-                  pch.get().isPrecompiled(), resolver.getAbsolutePath(pch.get().getHeader()))));
+                  pch.isPrecompiled(),
+                  shortener.shorten(resolver.getAbsolutePath(pch.getHeader())))));
     }
     return builder.build();
   }
@@ -132,7 +136,8 @@ public abstract class PreprocessorFlags implements AddsToRuleKey {
       Preprocessor preprocessor,
       Optional<PrecompiledHeaderData> precompiledHeader) {
     return CxxToolFlags.concat(
-        getNonIncludePathFlags(resolver, precompiledHeader, preprocessor),
+        getNonIncludePathFlags(
+            resolver, precompiledHeader.map(pch -> new Pair<>(pch, pathShortener)), preprocessor),
         getIncludePathFlags(resolver, pathShortener, frameworkPathTransformer, preprocessor));
   }
 
