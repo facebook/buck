@@ -325,7 +325,10 @@ public class PythonBinaryDescription
     CellPathResolver cellRoots = context.getCellPathResolver();
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.of(
-            buildTarget, cellRoots, graphBuilder, PythonUtil.MACRO_EXPANDERS);
+            buildTarget,
+            cellRoots,
+            graphBuilder,
+            PythonUtil.macroExpanders(context.getTargetGraph()));
     PythonPackageComponents allPackageComponents =
         PythonUtil.getAllComponents(
             cellRoots,

@@ -1,0 +1,20 @@
+python_test(
+    name = "t",
+    srcs = [
+        "t.py",
+    ],
+    env = {
+        "TTAARRGGEETTSS": "$(query_targets 'deps(:bar)')",
+    },
+)
+
+cxx_library(
+    name = "bar",
+    deps = [
+        ":foo",
+    ],
+)
+
+cxx_library(
+    name = "foo",
+)

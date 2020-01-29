@@ -367,4 +367,10 @@ public class PythonTestIntegrationTest {
     return processExecutor.launchAndExecute(
         ProcessExecutorParams.builder().addCommand(script.toString()).build());
   }
+
+  @Test
+  public void queryTargets() {
+    ProcessResult result = workspace.runBuckCommand("test", "//query_targets:t");
+    result.assertSuccess();
+  }
 }
