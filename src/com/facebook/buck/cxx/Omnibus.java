@@ -222,18 +222,15 @@ public class Omnibus {
     // Also add any excluded nodes that are also root dependencies.
     deps.addAll(Sets.intersection(rootDeps.keySet(), excluded));
 
-    return ImmutableOmnibusSpec.builder()
-        .graph(graph)
-        .roots(roots)
-        .body(
-            graph.getNodes().stream()
-                .filter(n -> !roots.containsKey(n))
-                .collect(ImmutableMap.toImmutableMap(k -> k, Functions.forMap(nativeLinkables))))
-        .deps(Maps.asMap(deps, Functions.forMap(nativeLinkables)))
-        .excluded(Maps.asMap(excluded, Functions.forMap(nativeLinkables)))
-        .excludedRoots(
-            RichStream.from(excludedRoots).map(NativeLinkable::getBuildTarget).toImmutableSet())
-        .build();
+    return ImmutableOmnibusSpec.of(
+        graph,
+        roots,
+        graph.getNodes().stream()
+            .filter(n -> !roots.containsKey(n))
+            .collect(ImmutableMap.toImmutableMap(k -> k, Functions.forMap(nativeLinkables))),
+        RichStream.from(excludedRoots).map(NativeLinkable::getBuildTarget).toImmutableSet(),
+        Maps.asMap(excluded, Functions.forMap(nativeLinkables)),
+        Maps.asMap(deps, Functions.forMap(nativeLinkables)));
   }
 
   // Build a dummy library with the omnibus SONAME.  We'll need this to break any dep cycle between
@@ -743,7 +740,7 @@ public class Omnibus {
     return libs.build();
   }
 
-  @Value.Immutable
+  @BuckStyleValue
   abstract static class OmnibusSpec {
 
     // The graph containing all root and body nodes that are to be included in the omnibus link.

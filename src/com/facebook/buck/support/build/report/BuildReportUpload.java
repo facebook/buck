@@ -21,7 +21,6 @@ import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.support.bgtasks.BackgroundTask;
-import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskAction;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.util.config.Config;
@@ -82,7 +81,7 @@ public class BuildReportUpload {
         ImmutableBuildReportUploadActionArgs.of(config, buildReportUploader, vcStatsFuture);
 
     BackgroundTask<BuildReportUploadActionArgs> task =
-        ImmutableBackgroundTask.of("BuildReportUpload", new BuildReportUploadAction(), args);
+        BackgroundTask.of("BuildReportUpload", new BuildReportUploadAction(), args);
 
     managerScope.schedule(task);
   }

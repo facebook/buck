@@ -37,7 +37,7 @@ import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
-import com.facebook.buck.util.timing.AbstractFakeClock;
+import com.facebook.buck.util.timing.FakeClock;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableMap;
@@ -403,7 +403,7 @@ public class IjProjectWriterTest {
   }
 
   // Mutable FakeClock, to provide distinct timestamps to a single FakeProjectFileSystem
-  class FakeDynamicClock extends AbstractFakeClock {
+  class FakeDynamicClock extends FakeClock {
     long currentTime;
 
     public FakeDynamicClock(long currentTime) {

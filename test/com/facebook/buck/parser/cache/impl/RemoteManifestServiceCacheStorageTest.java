@@ -188,11 +188,7 @@ public class RemoteManifestServiceCacheStorageTest {
   }
 
   ManifestService createManifestService(BuckConfig buckConfig) {
-    Clock fakeClock =
-        FakeClock.builder()
-            .currentTimeMillis(System.currentTimeMillis())
-            .nanoTime(System.nanoTime())
-            .build();
+    Clock fakeClock = FakeClock.of(System.currentTimeMillis(), System.nanoTime());
     ManifestServiceConfig config = new ManifestServiceConfig(buckConfig);
     // Make sure we can create the real manifest service.
     config.createManifestService(fakeClock, eventBus, MoreExecutors.newDirectExecutorService());

@@ -26,17 +26,13 @@ import org.immutables.value.Value;
  * action (e.g. close an event listener) and the arguments for that action. Tasks should be run by a
  * {@link BackgroundTaskManager}.
  */
-@Value.Immutable
-@Value.Style(init = "set*", deepImmutablesDetection = true)
+@BuckStyleValue
 public abstract class BackgroundTask<T> {
 
-  @Value.Parameter
   abstract String getName();
 
-  @Value.Parameter
   abstract TaskAction<T> getAction();
 
-  @Value.Parameter
   abstract T getActionArgs();
 
   abstract Optional<Timeout> getTimeout();
@@ -44,6 +40,24 @@ public abstract class BackgroundTask<T> {
   @Value.Default
   boolean getShouldCancelOnRepeat() {
     return false;
+  }
+
+  public static <T> BackgroundTask<T> of(String name, TaskAction<T> action, T actionArgs) {
+    return of(name, action, actionArgs, Optional.empty(), false);
+  }
+
+  public static <T> BackgroundTask<T> of(
+      String name, TaskAction<T> action, T actionArgs, Timeout timeout) {
+    return of(name, action, actionArgs, Optional.of(timeout), false);
+  }
+
+  public static <T> BackgroundTask<T> of(
+      String name,
+      TaskAction<T> action,
+      T actionArgs,
+      Optional<? extends BackgroundTask.Timeout> timeout,
+      boolean shouldCancelOnRepeat) {
+    return ImmutableBackgroundTask.of(name, action, actionArgs, timeout, shouldCancelOnRepeat);
   }
 
   /** Timeout object for {@link BackgroundTask}. */

@@ -25,10 +25,13 @@ package com.facebook.buck.core.config;
  * <p>ConfigViews should be defined following this pattern.
  *
  * <pre>
- * {@literal @}Value.Immutable(builder=false, copy=false)
- * {@literal @}BuckStyleImmutable
- *  abstract class AbstractFooConfigView implements ConfigView<FooConfig> {
+ * {@literal @}BuckStyleValue
+ *  abstract class FooConfigView implements ConfigView<FooConfig> {
  *    // Additional accessors.
+ *
+ *    static FooConfigView of(T delegate) {
+ *      return ImmutableFooConfigView.of(delegate);
+ *    }
  *  }
  * </pre>
  *

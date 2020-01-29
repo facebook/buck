@@ -36,8 +36,8 @@ import com.facebook.buck.skylark.io.GlobSpec;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.util.environment.Platform;
-import com.facebook.buck.util.timing.AbstractFakeClock;
 import com.facebook.buck.util.timing.Clock;
+import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -89,7 +89,7 @@ public class HybridCacheStorageTest {
   }
 
   ManifestService createManifestService(BuckConfig buckConfig) {
-    Clock fakeClock = AbstractFakeClock.doNotCare();
+    Clock fakeClock = FakeClock.doNotCare();
     ManifestServiceConfig config = new ManifestServiceConfig(buckConfig);
     // Make sure we can create the real manifest service.
     config.createManifestService(fakeClock, eventBus, MoreExecutors.newDirectExecutorService());

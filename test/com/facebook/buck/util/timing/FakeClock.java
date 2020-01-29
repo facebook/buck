@@ -16,20 +16,17 @@
 
 package com.facebook.buck.util.timing;
 
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.base.Preconditions;
 import java.util.concurrent.TimeUnit;
 import org.immutables.value.Value;
 
 /** Provides a fake implementation of a {@link Clock} which always returns a constant time. */
-@Value.Immutable
-@Value.Style(typeImmutable = "*")
-public abstract class AbstractFakeClock implements Clock {
+@BuckStyleValue
+public abstract class FakeClock implements Clock {
   /** FakeClock instance for tests that don't require specific timestamp values. */
   public static FakeClock doNotCare() {
-    return FakeClock.builder()
-        .currentTimeMillis(1337)
-        .nanoTime(TimeUnit.MILLISECONDS.toNanos(4242))
-        .build();
+    return of(1337, TimeUnit.MILLISECONDS.toNanos(4242));
   }
 
   @Override
@@ -49,5 +46,23 @@ public abstract class AbstractFakeClock implements Clock {
   @Override
   public long threadUserNanoTime(long threadId) {
     return -1;
+  }
+
+  public static FakeClock of(long currentTimeMillis, long nanoTime) {
+    return ImmutableFakeClock.of(currentTimeMillis, nanoTime);
+  }
+
+  public FakeClock withCurrentTimeMillis(long millis) {
+    if (currentTimeMillis() == millis) {
+      return this;
+    }
+    return of(millis, nanoTime());
+  }
+
+  public FakeClock withNanoTime(long nanoTime) {
+    if (nanoTime() == nanoTime) {
+      return this;
+    }
+    return of(currentTimeMillis(), nanoTime);
   }
 }

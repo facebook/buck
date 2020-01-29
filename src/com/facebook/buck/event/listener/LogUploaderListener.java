@@ -22,7 +22,6 @@ import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.chrome_trace.ChromeTraceBuckConfig;
 import com.facebook.buck.support.bgtasks.BackgroundTask;
-import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskAction;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.util.ExitCode;
@@ -81,11 +80,8 @@ public class LogUploaderListener implements BuckEventListener {
         ImmutableLogUploaderListenerCloseArgs.of(
             traceUploadUri.get(), logDirectoryPath, logFilePath, buildId);
     BackgroundTask<LogUploaderListenerCloseArgs> task =
-        ImmutableBackgroundTask.<LogUploaderListenerCloseArgs>builder()
-            .setAction(new LogUploaderListenerCloseAction(traceKindFile))
-            .setActionArgs(args)
-            .setName("LogUploaderListener_close")
-            .build();
+        BackgroundTask.of(
+            "LogUploaderListener_close", new LogUploaderListenerCloseAction(traceKindFile), args);
     managerScope.schedule(task);
   }
 
