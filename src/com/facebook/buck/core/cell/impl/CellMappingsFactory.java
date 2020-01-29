@@ -19,7 +19,6 @@ package com.facebook.buck.core.cell.impl;
 import com.facebook.buck.core.cell.DefaultNewCellPathResolver;
 import com.facebook.buck.core.cell.NewCellPathResolver;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
-import com.facebook.buck.core.cell.name.ImmutableCanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.cell.nameresolver.DefaultCellNameResolver;
 import com.facebook.buck.util.config.Config;
@@ -52,7 +51,7 @@ public class CellMappingsFactory {
     cellMapping.forEach(
         (name, path) ->
             canonicalNameMap.computeIfAbsent(
-                path, ignored -> ImmutableCanonicalCellName.of(Optional.of(name))));
+                path, ignored -> CanonicalCellName.of(Optional.of(name))));
 
     return DefaultNewCellPathResolver.of(ImmutableMap.copyOf(canonicalNameMap));
   }

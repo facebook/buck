@@ -107,15 +107,13 @@ public interface AbstractBaz {
   ]]>
     </example>
   </rule>
-  <rule name="BuckStyleValueMustNotHaveDefaultsImplicitlyOverridden"
+  <rule name="BuckImmutablesMustNotHaveValueImmutableAnnotation"
     message="
-Value types decorated with @BuckStyleValue and @Value.Immutable must have explicit values
-for 'builder', 'copy' and 'prehash', preferably set to the default false.
-Ex: @Value.Immutable(prehash = true, builder = false, copy = false)"
+Value types decorated with @RuleArg or @ImmutableInfo should not use @Value.Immutable
+in any way"
         class="net.sourceforge.pmd.lang.rule.XPathRule"
         language="java">
-        <description> Using @Value.Immutable overrides the defaults set in @BuckStyleValue,
-          and that shouldn't be done unintentionally.</description>
+        <description> Using @Value.Immutable is forbidden when using @RuleArg or @ImmutableInfo.</description>
     <priority>1</priority>
     <properties>
       <property name="xpath">
@@ -123,13 +121,11 @@ Ex: @Value.Immutable(prehash = true, builder = false, copy = false)"
           <![CDATA[
 //Annotation[
     following-sibling::ClassOrInterfaceDeclaration[
-      preceding-sibling::Annotation//Name/@Image='BuckStyleValue'
+      preceding-sibling::Annotation//Name
+      [@Image='ImmutableInfo' or @Image='RuleArg']
     ]
   ]/*[
     Name/@Image='Value.Immutable'
-    and (not(MemberValuePairs/MemberValuePair/@Image="builder")
-         or not(MemberValuePairs/MemberValuePair/@Image="copy")
-         or not(MemberValuePairs/MemberValuePair/@Image="prehash"))
   ]
           ]]>
         </value>
@@ -138,109 +134,27 @@ Ex: @Value.Immutable(prehash = true, builder = false, copy = false)"
     <example>
       <![CDATA[
 // OK: No @Value.Immutable
-@BuckStyleValue
-abstract class Ok1 {
+@RuleArg
+abstract class AbstractOk1 {
 }
 
-// OK: Not @BuckStyleValue
-@Value.Immutable(prehash = true)
-@BuckStyleValue
+// OK: No @Value.Immutable
+@ImmutableInfo
 abstract class Ok2 {
 }
 
-// OK: builder and copy explicitly set to normal
-@Value.Immutable(prehash = true, builder = false, copy = false)
-@BuckStyleValue
-abstract class Ok3 {
-}
-
-// OK: builder and copy explicitly overridden
-@Value.Immutable(prehash = true, builder = true, copy = true)
-@BuckStyleValue
-abstract class Ok4 {
-}
-
-// Bad: builder and copy not specified
+// Bad: using @Value.Immutable
 @Value.Immutable
-@BuckStyleValue
-abstract class Bad1 {
+@RuleArg
+abstract class AbstractBad1 {
 }
 
-// Bad: builder and copy not specified
-@Value.Immutable(prehash = true)
-@BuckStyleValue
+// Bad: using @Value.Immutable
+@Value.Immutable
+@ImmutableInfo
 abstract class Bad2 {
 }
-
-// Bad: copy not specified
-@Value.Immutable(prehash = true, builder = true)
-@BuckStyleValue
-abstract class Bad3 {
-}
-
-// Bad: builder not specified
-@Value.Immutable(copy = true, prehash = true)
-@BuckStyleValue
-abstract class Bad3 {
-}
-
-// Bad: prehash not specified
-@Value.Immutable(copy = true, builder = true)
-@BuckStyleValue
-abstract class Bad3 {
-}
-
-// Bad: builder and copy not specified, order reversed
-@BuckStyleValue
-@Value.Immutable(prehash = true)
-abstract class Bad4 {
-}
       ]]>
-    </example>
-  </rule>
-  <rule name="RuleArgsMustNotHaveDefaultsOverridden"
-    message="
-Value types decorated with @RuleArg must not specify @Value.Immutable"
-    class="net.sourceforge.pmd.lang.rule.XPathRule"
-    language="java">
-    <description> Using @RuleArg does not require the use of @Value.Immutable, nor allow defaults
-      to be overriden via @Value.Immutable(xxx).</description>
-    <priority>1</priority>
-    <properties>
-      <property name="xpath">
-        <value>
-          <![CDATA[
-//Annotation[
-following-sibling::ClassOrInterfaceDeclaration[
-  preceding-sibling::Annotation//Name/@Image='RuleArg'
-]
-]/*[
-Name/@Image='Value.Immutable'
-]
-      ]]>
-        </value>
-      </property>
-    </properties>
-    <example>
-        <![CDATA[
-// OK: No @Value.Immutable
-@RuleArg
-abstract class AbstractOk {
-}
-
-// Bad: No @Value.Immutable allowed
-@Value.Immutable
-@RuleArg
-abstract class AbstractNotOk1 {
-}
-
-// Bad: overriding defaults are not allowed
-@Value.Immutable(prehash = true, builder = false, copy = false)
-@RuleArg
-abstract class AbstractNotOk2 {
-}
-
-  ]]>
     </example>
   </rule>
   <rule name="RuleArgNameMustStartWithAbstract"
@@ -277,6 +191,114 @@ interface Bar {
 }
       ]]>
     </example>
+  </rule>
+  <rule name="BuckStyleImmutablesMustNotHaveDefaultsImplicitlyOverridden"
+        message="
+Value types decorated with @BuckStyleValue variants must specify all of 'builder', 'copy', 'prehash'
+ and 'intern' when overriding defaults"
+        class="net.sourceforge.pmd.lang.rule.XPathRule"
+        language="java">
+    <description>Using @Value.Immutable with @BuckStyleValue variants must specify all of 'builder',
+        'copy', 'prehash' and 'intern' when overriding defaults</description>
+    <priority>1</priority>
+    <properties>
+        <property name="xpath">
+            <value>
+                <![CDATA[
+//Annotation[
+    following-sibling::ClassOrInterfaceDeclaration[
+      preceding-sibling::Annotation//Name
+      [@Image='BuckStyleValue' or @Image='BuckStylePrehashedValue' or @Image='BuckStyleValueWithBuilder']
+    ]
+  ]/*[
+    Name/@Image='Value.Immutable'
+    and (not(MemberValuePairs/MemberValuePair/@Image="builder")
+         or not(MemberValuePairs/MemberValuePair/@Image="copy")
+         or not(MemberValuePairs/MemberValuePair/@Image="prehash")
+         or not(MemberValuePairs/MemberValuePair/@Image="intern"))
+  ]
+          ]]>
+            </value>
+        </property>
+    </properties>
+    <example>
+        <![CDATA[
+// OK: No @Value.Immutable
+@BuckStyleValue
+abstract class Ok1 {
+}
+
+// OK: all overriden
+@BuckStylePrehashedValue
+@Value.Immutable(builder = false, copy = false, prehash = true, intern = true)
+abstract class Ok2 {
+}
+
+// OK: No @Value.Immutable
+@BuckStyleValueWithBuilder
+abstract class Ok3 {
+}
+
+// Bad: using @Value.Immutable
+@Value.Immutable
+@BuckStyleValue
+abstract class Bad1 {
+}
+
+// Bad: using @Value.Immutable
+@Value.Immutable
+@BuckStylePrehashedValue
+abstract class Bad2 {
+}
+
+// Bad: using @Value.Immutable partially overriden
+@Value.Immutable(intern = true)
+@BuckStyleValueWithBuilder
+abstract class Bad3 {
+}
+      ]]>
+    </example>
+  </rule>
+  <rule name="NoRawUseofValueImmutable"
+        message="Direct use of @Value.Immutable without being adjacent to a @BuckStyleValue variant is forbidden"
+        class="net.sourceforge.pmd.lang.rule.XPathRule"
+        language="java">
+        <description>Use of @Value.Immutable without overriding defaults 'builder', 'copy',
+            and 'intern' is forbidden. Either use one of existing BuckStyleValues, or override
+            these defaults.</description>
+        <priority>1</priority>
+        <properties>
+          <property name="xpath">
+            <value>
+                <![CDATA[
+//Annotation[
+    following-sibling::ClassOrInterfaceDeclaration[
+      not (preceding-sibling::Annotation//Name
+      [@Image='BuckStyleValue' or @Image='BuckStylePrehashedValue' or @Image='BuckStyleValueWithBuilder'])
+    ]
+  ]/*[
+    Name/@Image='Value.Immutable'
+  ]
+          ]]>
+            </value>
+          </property>
+        </properties>
+        <example>
+          <![CDATA[
+// OK
+@Value.Immutable(builder = false, copy = false, prehash = true, intern = true)
+@BuckStyleValue
+interface Foo {
+
+}
+
+// Bad: does not belong beside buck style immutables
+@Value.Immutable(copy=false, builder=false, prehash=true)
+interface Bar {
+
+}
+      ]]>
+      </example>
   </rule>
   <!-- Blacklist docs: http://liveramp.com/engineering/using-pmd-to-blacklist-unsafe-methods/ -->
   <rule name="BlacklistedDefaultCharsetMethods"

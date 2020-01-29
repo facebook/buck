@@ -17,6 +17,7 @@
 package com.facebook.buck.core.cell.name;
 
 import com.facebook.buck.core.util.Optionals;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.Optional;
@@ -31,6 +32,7 @@ import org.immutables.value.Value;
  * com.facebook.buck.core.cell.nameresolver.CellNameResolver}.
  */
 @Value.Immutable(prehash = true, builder = false, copy = false, intern = true)
+@BuckStylePrehashedValue
 @JsonDeserialize
 public abstract class CanonicalCellName implements Comparable<CanonicalCellName> {
   // This little class is to avoid referencing the subclass in our static initializer.
@@ -65,7 +67,6 @@ public abstract class CanonicalCellName implements Comparable<CanonicalCellName>
   // reverse.
   /** Returns the underlying name in the legacy {@code Optional<String>} format. */
   @JsonProperty("name")
-  @Value.Parameter
   public abstract Optional<String> getLegacyName();
 
   /** Returns the name in a human-readable form. */
@@ -81,6 +82,10 @@ public abstract class CanonicalCellName implements Comparable<CanonicalCellName>
   @Override
   public String toString() {
     return getName();
+  }
+
+  public static CanonicalCellName of(Optional<String> name) {
+    return ImmutableCanonicalCellName.of(name);
   }
 
   /**

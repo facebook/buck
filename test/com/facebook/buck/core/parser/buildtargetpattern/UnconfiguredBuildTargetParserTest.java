@@ -19,7 +19,6 @@ package com.facebook.buck.core.parser.buildtargetpattern;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
-import com.facebook.buck.core.cell.name.ImmutableCanonicalCellName;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -45,7 +44,7 @@ public class UnconfiguredBuildTargetParserTest {
       new Object[] {
         "cell//path/to:target",
         UnconfiguredBuildTarget.of(
-            ImmutableCanonicalCellName.of(Optional.of("cell")),
+            CanonicalCellName.of(Optional.of("cell")),
             BaseName.of("//path/to"),
             "target",
             UnconfiguredBuildTarget.NO_FLAVORS)
@@ -53,7 +52,7 @@ public class UnconfiguredBuildTargetParserTest {
       new Object[] {
         "cell//path/to:target#flavor1,flavor2",
         UnconfiguredBuildTarget.of(
-            ImmutableCanonicalCellName.of(Optional.of("cell")),
+            CanonicalCellName.of(Optional.of("cell")),
             BaseName.of("//path/to"),
             "target",
             ImmutableSortedSet.of(InternalFlavor.of("flavor1"), InternalFlavor.of("flavor2")))
@@ -85,7 +84,7 @@ public class UnconfiguredBuildTargetParserTest {
       new Object[] {
         "cell//:target",
         UnconfiguredBuildTarget.of(
-            ImmutableCanonicalCellName.of(Optional.of("cell")),
+            CanonicalCellName.of(Optional.of("cell")),
             BaseName.of("//"),
             "target",
             UnconfiguredBuildTarget.NO_FLAVORS)
@@ -93,7 +92,7 @@ public class UnconfiguredBuildTargetParserTest {
       new Object[] {
         "cell//path:target",
         UnconfiguredBuildTarget.of(
-            ImmutableCanonicalCellName.of(Optional.of("cell")),
+            CanonicalCellName.of(Optional.of("cell")),
             BaseName.of("//path"),
             "target",
             UnconfiguredBuildTarget.NO_FLAVORS)
