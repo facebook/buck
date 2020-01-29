@@ -190,6 +190,7 @@ jobs:
             export GROOVY_HOME=$HOME/.sdkman/candidates/groovy/current
             set -eux
             ./new_buck.pex test --num-threads=${BUCK_NUM_THREADS} --all --test-selectors '!.*[Ii]ntegration.*'
+          no_output_timeout: 15m
 
   linux_build_ant:
     environment:
@@ -772,7 +773,7 @@ jobs:
             ./new_buck.pex build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
             ./new_buck.pex test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
           # There is a long running test needs more time to compltete, //test/com/facebook/buck/android:binary-integration-2
-          no_output_timeout: 2h
+          no_output_timeout: 5h
 
   macos_test_android_ndk_18:
     environment:
