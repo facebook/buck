@@ -103,8 +103,8 @@ run_ant_build: &run_ant_build
     fi
     cd ${BUCKROOT}
     set -eux
-    export TERM=dumb
     export ANT_OPTS='-Xmx1000m'
+    export PATH="$(pyenv root)/shims:$PATH"
     ant
 
 run_buck_build: &run_buck_build
@@ -115,7 +115,6 @@ run_buck_build: &run_buck_build
     export PATH=${ANDROID_SDK}/tools/bin:$PATH
     export PATH="$(pyenv root)/shims:$PATH"
     set -eux
-    export TERM=dumb
     ./bin/buck build buck --out ./new_buck.pex || { cat buck-out/log/buck-0.log; exit 1; }
 
 jobs:
@@ -578,7 +577,7 @@ jobs:
       BUCK_NUM_THREADS: 3
     working_directory: "/Users/distiller/buck"
     macos:
-      xcode: "10.3.0"
+      xcode: "10.0.0"
     steps:
       - checkout
       - run:
