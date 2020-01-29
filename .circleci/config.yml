@@ -578,7 +578,7 @@ jobs:
       BUCK_NUM_THREADS: 3
     working_directory: "/Users/distiller/buck"
     macos:
-      xcode: "11.3.1"
+      xcode: "10.3.0"
     steps:
       - checkout
       - run:
