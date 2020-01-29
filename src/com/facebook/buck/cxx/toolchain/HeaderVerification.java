@@ -23,6 +23,7 @@ import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import org.immutables.value.Value;
 
@@ -52,9 +53,9 @@ public abstract class HeaderVerification implements AddsToRuleKey {
 
   @Value.Derived
   @CustomFieldBehavior(DefaultFieldSerialization.class)
-  protected ImmutableList<FasterPattern> getWhitelistPatterns() {
+  protected ImmutableList<Pattern> getWhitelistPatterns() {
     return Stream.concat(getWhitelist().stream(), getPlatformWhitelist().stream())
-        .map(FasterPattern::compile)
+        .map(Pattern::compile)
         .collect(ImmutableList.toImmutableList());
   }
 
@@ -71,8 +72,8 @@ public abstract class HeaderVerification implements AddsToRuleKey {
 
   /** @return whether the given header has been whitelisted. */
   public boolean isWhitelisted(String header) {
-    for (FasterPattern pattern : getWhitelistPatterns()) {
-      if (pattern.matches(header)) {
+    for (Pattern pattern : getWhitelistPatterns()) {
+      if (pattern.matcher(header).matches()) {
         return true;
       }
     }
