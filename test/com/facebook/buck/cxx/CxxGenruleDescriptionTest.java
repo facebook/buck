@@ -18,7 +18,9 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
@@ -39,6 +41,7 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.impl.StaticUnresolvedCxxPlatform;
+import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.macros.CcFlagsMacro;
@@ -59,6 +62,7 @@ import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.testutil.CloseableResource;
 import com.facebook.buck.testutil.OptionalMatchers;
+import com.facebook.buck.util.config.RawConfig;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.versions.AsyncVersionedTargetGraphBuilder;
 import com.facebook.buck.versions.NaiveVersionSelector;
@@ -328,6 +332,35 @@ public class CxxGenruleDescriptionTest {
                 .getRule(rule.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder))
                 .orElseThrow(AssertionError::new);
     assertFalse(genrule.isCacheable());
+  }
+
+  @Test
+  public void testCxxGenrulesAreExecutableWithConfig() {
+    CxxGenruleBuilder builder =
+        new CxxGenruleBuilder(
+                BuildTargetFactory.newInstance("//:rule"),
+                FakeBuckConfig.builder()
+                    .setSections(
+                        RawConfig.builder()
+                            .put(
+                                RemoteExecutionConfig.SECTION,
+                                RemoteExecutionConfig
+                                    .getUseRemoteExecutionForGenruleIfRequestedField("cxx_genrule"),
+                                "true")
+                            .build())
+                    .build())
+            .setOut("out")
+            .setCmd(StringWithMacrosUtils.format("touch $OUT"))
+            .setRemote(true);
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    CxxGenrule rule = (CxxGenrule) graphBuilder.requireRule(builder.getTarget());
+    Genrule genrule =
+        (Genrule)
+            graphBuilder
+                .getRule(rule.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder))
+                .orElseThrow(AssertionError::new);
+    assertTrue(genrule.getBuildable().shouldExecuteRemotely());
   }
 
   private static <U extends ConstructorArg> U extractArg(TargetNode<?> node, Class<U> clazz) {

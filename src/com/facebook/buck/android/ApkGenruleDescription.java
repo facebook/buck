@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.toolchain.AndroidTools;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -34,8 +35,10 @@ import org.immutables.value.Value;
 public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenruleDescriptionArg> {
 
   public ApkGenruleDescription(
-      ToolchainProvider toolchainProvider, SandboxExecutionStrategy sandboxExecutionStrategy) {
-    super(toolchainProvider, sandboxExecutionStrategy, false);
+      ToolchainProvider toolchainProvider,
+      BuckConfig config,
+      SandboxExecutionStrategy sandboxExecutionStrategy) {
+    super(toolchainProvider, config, sandboxExecutionStrategy, false);
   }
 
   @Override

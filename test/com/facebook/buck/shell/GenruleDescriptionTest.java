@@ -233,7 +233,9 @@ public class GenruleDescriptionTest {
                 "remoteexecution",
                 ImmutableMap.<String, String>builder()
                     .put(
-                        RemoteExecutionConfig.USE_REMOTE_EXECUTION_FOR_GENRULE_IF_REQUESTED, "true")
+                        RemoteExecutionConfig.getUseRemoteExecutionForGenruleIfRequestedField(
+                            "genrule"),
+                        "true")
                     .build())
             .build();
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(config).build();

@@ -19,6 +19,7 @@ package com.facebook.buck.features.js;
 import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.apple.AppleBundleResources;
 import com.facebook.buck.apple.HasAppleBundleResourcesDescription;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -54,8 +55,10 @@ public class JsBundleGenruleDescription
         JsBundleOutputsDescription<JsBundleGenruleDescriptionArg> {
 
   public JsBundleGenruleDescription(
-      ToolchainProvider toolchainProvider, SandboxExecutionStrategy sandboxExecutionStrategy) {
-    super(toolchainProvider, sandboxExecutionStrategy, false);
+      ToolchainProvider toolchainProvider,
+      BuckConfig config,
+      SandboxExecutionStrategy sandboxExecutionStrategy) {
+    super(toolchainProvider, config, sandboxExecutionStrategy, false);
   }
 
   @Override

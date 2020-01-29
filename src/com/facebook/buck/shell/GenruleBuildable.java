@@ -653,7 +653,7 @@ public class GenruleBuildable implements Buildable {
   }
 
   @VisibleForTesting
-  final boolean shouldExecuteRemotely() {
+  public final boolean shouldExecuteRemotely() {
     return executeRemotely;
   }
 

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.features.js;
 
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
@@ -35,7 +36,10 @@ public class JsBundleGenruleBuilder
         JsBundleGenruleDescription,
         JsBundleGenrule> {
   private static final JsBundleGenruleDescription genruleDescription =
-      new JsBundleGenruleDescription(createToolchainProvider(), new NoSandboxExecutionStrategy());
+      new JsBundleGenruleDescription(
+          createToolchainProvider(),
+          FakeBuckConfig.builder().build(),
+          new NoSandboxExecutionStrategy());
 
   private static ToolchainProvider createToolchainProvider() {
     return new ToolchainProviderBuilder().build();

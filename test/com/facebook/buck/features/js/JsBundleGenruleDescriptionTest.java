@@ -35,6 +35,7 @@ import com.facebook.buck.apple.SourcePathWithAppleBundleDestination;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -331,7 +332,9 @@ public class JsBundleGenruleDescriptionTest {
   public void addAppleBundleResourcesIsDelegatedToUnderlyingBundle() {
     AppleBundleResources.Builder genruleBuilder = AppleBundleResources.builder();
     new JsBundleGenruleDescription(
-            new ToolchainProviderBuilder().build(), new NoSandboxExecutionStrategy())
+            new ToolchainProviderBuilder().build(),
+            FakeBuckConfig.builder().build(),
+            new NoSandboxExecutionStrategy())
         .addAppleBundleResources(
             genruleBuilder,
             setup.targetNode(),
@@ -355,7 +358,9 @@ public class JsBundleGenruleDescriptionTest {
 
     AppleBundleResources.Builder resourcesBuilder = AppleBundleResources.builder();
     new JsBundleGenruleDescription(
-            new ToolchainProviderBuilder().build(), new NoSandboxExecutionStrategy())
+            new ToolchainProviderBuilder().build(),
+            FakeBuckConfig.builder().build(),
+            new NoSandboxExecutionStrategy())
         .addAppleBundleResources(
             resourcesBuilder,
             setup.targetNode(),
