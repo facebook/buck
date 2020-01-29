@@ -170,6 +170,11 @@ public class DefaultTargetPlatformResolverTest {
           public Optional<BuildTarget> getConfigurationTarget() {
             return Optional.empty();
           }
+
+          @Override
+          public String toString() {
+            return "DTPRT";
+          }
         },
         DependencyStack.root());
   }
