@@ -34,7 +34,7 @@ public class TestTargetSpecResolverFactory {
       DepsAwareExecutor<? super ComputeResult, ?> executor,
       CellProvider cellProvider,
       BuckEventBus eventBus) {
-    return new TargetSpecResolver(
+    return TargetSpecResolver.createWithFileSystemCrawler(
         eventBus,
         executor,
         cellProvider,

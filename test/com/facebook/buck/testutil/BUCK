@@ -31,6 +31,7 @@ java_library(
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/io/watchman:transport",
         "//src/com/facebook/buck/jvm/core:core",
+        "//src/com/facebook/buck/parser/config:config",
         "//src/com/facebook/buck/rules/coercer:interface",
         "//src/com/facebook/buck/rules/keys/config/impl:impl",
         "//src/com/facebook/buck/shell:steps",

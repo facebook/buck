@@ -20,10 +20,12 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
+import com.facebook.buck.io.watchman.Capability;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -67,6 +69,13 @@ public class DefaultProjectFilesystemView implements ProjectFilesystemView {
     this.projectRoot = projectRoot;
     this.ignoredPaths = ignoredPaths;
     this.resolvedProjectRoot = resolvedProjectRoot;
+  }
+
+  @Override
+  public ImmutableList<String> toWatchmanQuery(Set<Capability> capabilities) {
+    return ignoredPaths.keySet().stream()
+        .map(PathMatcher::getPathOrGlob)
+        .collect(ImmutableList.toImmutableList());
   }
 
   @Override

@@ -22,8 +22,10 @@ import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
+import com.facebook.buck.io.watchman.Capability;
 import com.facebook.buck.io.watchman.FileSystemNotWatchedException;
 import com.facebook.buck.io.watchman.ProjectWatch;
 import com.facebook.buck.io.watchman.Watchman;
@@ -54,12 +56,14 @@ import java.util.Optional;
  * <p>See {@link BuildTargetPatternToBuildPackagePathComputation} for an equivalent computation
  * which does not use Watchman.
  */
-class WatchmanBuildPackageComputation
+public class WatchmanBuildPackageComputation
     implements GraphComputation<BuildTargetPatternToBuildPackagePathKey, BuildPackagePaths> {
   private final String buildFileName;
   private final ProjectFilesystemView filesystemView;
   private final ProjectWatch watch;
   private final Watchman watchman;
+
+  private static final Logger LOG = Logger.get(WatchmanBuildPackageComputation.class);
 
   /**
    * @param buildFileName Name of the build file to search for, for example 'BUCK'
@@ -98,8 +102,11 @@ class WatchmanBuildPackageComputation
             .getPath()
             .toPath(filesystemView.getRootPath().getFileSystem());
     try {
+      LOG.info("Starting fetch of basepath %s", basePath);
       ImmutableSet<String> buildFiles = findBuildFiles(basePath, targetPattern.isRecursive());
-      return getPackagePathsOfBuildFiles(basePath, buildFiles);
+      BuildPackagePaths ret = getPackagePathsOfNonIgnoredBuildFiles(basePath, buildFiles);
+      LOG.info("Ending fetch of basepath %s, ret: %s", basePath, ret.getPackageRoots());
+      return ret;
     } catch (WatchmanQueryFailedException e) {
       validateBasePath(basePath, e);
       throw e;
@@ -110,6 +117,7 @@ class WatchmanBuildPackageComputation
 
   private ImmutableSet<String> findBuildFiles(Path basePath, boolean recursive)
       throws IOException, InterruptedException {
+    LOG.info("Finding build files for %s, recursive: %s", basePath, recursive);
     String pattern = escapeGlobPattern(buildFileName);
     if (recursive) {
       pattern = "**/" + pattern;
@@ -128,13 +136,19 @@ class WatchmanBuildPackageComputation
               new SyncCookieState(),
               getWatchRelativePath(basePath).toString(),
               watch.getWatchRoot());
+      LOG.info("Globber with basepath %s, pattern: %s", basePath, pattern);
+
       paths =
           globber.run(
               ImmutableList.of(pattern),
-              ImmutableList.of(),
+              filesystemView.toWatchmanQuery(ImmutableSet.copyOf(Capability.values())).stream()
+                  .filter(ps -> ps.startsWith(basePath.toString()))
+                  .map(ps -> ps.substring(basePath.toString().length()))
+                  .collect(ImmutableSet.toImmutableSet()),
               EnumSet.of(
                   WatchmanGlobber.Option.EXCLUDE_DIRECTORIES,
                   WatchmanGlobber.Option.FORCE_CASE_SENSITIVE));
+      LOG.info("Globber with basepath %s, pattern: %s result: %s", basePath, pattern, paths);
     }
     if (!paths.isPresent()) {
       // TODO: If globber.run returns null, it will first write an error to the console claiming
@@ -145,11 +159,16 @@ class WatchmanBuildPackageComputation
     return paths.get();
   }
 
-  private BuildPackagePaths getPackagePathsOfBuildFiles(
+  /**
+   * Get the full relative build packages for the given build files. Filter out any packages that
+   * should be ignored
+   */
+  private BuildPackagePaths getPackagePathsOfNonIgnoredBuildFiles(
       Path basePath, ImmutableSet<String> buildFilePaths) {
     ImmutableSortedSet<Path> relativeBuildFiles =
         buildFilePaths.stream()
             .map((String buildFilePath) -> getPackagePathOfBuildFile(basePath, buildFilePath))
+            .filter(p -> !filesystemView.isIgnored(p))
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
     return ImmutableBuildPackagePaths.of(relativeBuildFiles);
   }

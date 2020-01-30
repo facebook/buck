@@ -36,10 +36,12 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.parser.BuildPackagePaths;
 import com.facebook.buck.core.parser.BuildTargetPatternToBuildPackagePathComputation;
 import com.facebook.buck.core.parser.BuildTargetPatternToBuildPackagePathKey;
+import com.facebook.buck.core.parser.WatchmanBuildPackageComputation;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
+import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.MissingBuildFileException;
@@ -83,8 +85,38 @@ public class TargetSpecResolver implements AutoCloseable {
   // in a scope of a Cell only
   private final LoadingCache<Path, GraphTransformationEngine> graphEngineForRecursiveSpecPerRoot;
 
+  @FunctionalInterface
+  private interface EngineFactory {
+    GraphTransformationEngine makeEngine(
+        Path cellPath, String buildFileName, ProjectFilesystemView fileSystemView);
+  }
+
+  private TargetSpecResolver(
+      BuckEventBus eventBus,
+      LoadingCache<Path, GraphTransformationEngine> graphEngineForRecursiveSpecPerRoot) {
+    this.eventBus = eventBus;
+    this.graphEngineForRecursiveSpecPerRoot = graphEngineForRecursiveSpecPerRoot;
+  }
+
+  private TargetSpecResolver(
+      BuckEventBus eventBus, CellProvider cellProvider, EngineFactory engineFactory) {
+    this(
+        eventBus,
+        CacheBuilder.newBuilder()
+            .build(
+                CacheLoader.from(
+                    path -> {
+                      Cell cell = cellProvider.getCellByPath(path);
+                      String buildFileName =
+                          cell.getBuckConfigView(ParserConfig.class).getBuildFileName();
+                      ProjectFilesystemView fileSystemView = cell.getFilesystemViewForSourceFiles();
+                      return engineFactory.makeEngine(path, buildFileName, fileSystemView);
+                    })));
+  }
+
   /**
-   * Create {@link TargetSpecResolver instance}
+   * Create {@link TargetSpecResolver instance} using {@link
+   * BuildTargetPatternToBuildPackagePathComputation}
    *
    * @param eventBus Event bus to send performance events to
    * @param executor The executor for the {@link GraphTransformationEngine}
@@ -96,14 +128,12 @@ public class TargetSpecResolver implements AutoCloseable {
    * @param fileTreeCachePerRoot Global cache that stores a mapping of cell root path to a cache of
    *     all file tree structures under that cell
    */
-  public TargetSpecResolver(
+  public static TargetSpecResolver createWithFileSystemCrawler(
       BuckEventBus eventBus,
       DepsAwareExecutor<? super ComputeResult, ?> executor,
       CellProvider cellProvider,
       LoadingCache<Path, DirectoryListCache> dirListCachePerRoot,
       LoadingCache<Path, FileTreeCache> fileTreeCachePerRoot) {
-    this.eventBus = eventBus;
-
     // For each cell we create a separate graph engine. The purpose of graph engine is to
     // recursively build a file tree with all files in appropriate cell for appropriate path.
     // This file tree will later be used to resolve target pattern to a list of build files
@@ -113,39 +143,60 @@ public class TargetSpecResolver implements AutoCloseable {
     // under [cellroot]/project/folder recursively as FileTree object. We then traverse FileTree
     // object looking for a build file name in all subfolders recursively.
     // Graph Engines automatically ensures right amount of parallelism and does caching of the data.
-    graphEngineForRecursiveSpecPerRoot =
-        CacheBuilder.newBuilder()
-            .build(
-                CacheLoader.from(
-                    path -> {
-                      Cell cell = cellProvider.getCellByPath(path);
-                      String buildFileName =
-                          cell.getBuckConfigView(ParserConfig.class).getBuildFileName();
-                      ProjectFilesystemView fileSystemView = cell.getFilesystemViewForSourceFiles();
+    return new TargetSpecResolver(
+        eventBus,
+        cellProvider,
+        (Path cellPath, String buildFileName, ProjectFilesystemView fileSystemView) -> {
+          DirectoryListCache dirListCache = dirListCachePerRoot.getUnchecked(cellPath);
+          Verify.verifyNotNull(
+              dirListCache,
+              "Injected directory list cache map does not have cell %s",
+              fileSystemView.getRootPath());
 
-                      DirectoryListCache dirListCache = dirListCachePerRoot.getUnchecked(path);
-                      Verify.verifyNotNull(
-                          dirListCache,
-                          "Injected directory list cache map does not have cell %s",
-                          fileSystemView.getRootPath());
+          FileTreeCache fileTreeCache = fileTreeCachePerRoot.getUnchecked(cellPath);
+          Verify.verifyNotNull(
+              fileTreeCache,
+              "Injected file tree cache map does not have cell %s",
+              fileSystemView.getRootPath());
 
-                      FileTreeCache fileTreeCache = fileTreeCachePerRoot.getUnchecked(path);
-                      Verify.verifyNotNull(
-                          fileTreeCache,
-                          "Injected file tree cache map does not have cell %s",
-                          fileSystemView.getRootPath());
+          return new DefaultGraphTransformationEngine(
+              ImmutableList.of(
+                  new GraphComputationStage<>(
+                      BuildTargetPatternToBuildPackagePathComputation.of(
+                          buildFileName, fileSystemView)),
+                  new GraphComputationStage<>(
+                      DirectoryListComputation.of(fileSystemView), dirListCache),
+                  new GraphComputationStage<>(FileTreeComputation.of(), fileTreeCache)),
+              16,
+              executor);
+        });
+  }
 
-                      return new DefaultGraphTransformationEngine(
-                          ImmutableList.of(
-                              new GraphComputationStage<>(
-                                  BuildTargetPatternToBuildPackagePathComputation.of(
-                                      buildFileName, cell.getFilesystem())),
-                              new GraphComputationStage<>(
-                                  DirectoryListComputation.of(fileSystemView), dirListCache),
-                              new GraphComputationStage<>(FileTreeComputation.of(), fileTreeCache)),
-                          16,
-                          executor);
-                    }));
+  /**
+   * Create {@link TargetSpecResolver instance} using {@link WatchmanBuildPackageComputation}
+   *
+   * @param eventBus Event bus to send performance events to
+   * @param executor The executor for the {@link GraphTransformationEngine}
+   * @param cellProvider Provider to get a cell by path; this is a workaround for the state that
+   *     cell itself is not really hashable so we use cell path instead as a key for appropriate
+   *     caches
+   */
+  public static TargetSpecResolver createWithWatchmanCrawler(
+      BuckEventBus eventBus,
+      Watchman watchman,
+      DepsAwareExecutor<? super ComputeResult, ?> executor,
+      CellProvider cellProvider) {
+    return new TargetSpecResolver(
+        eventBus,
+        cellProvider,
+        (Path cellPath, String buildFileName, ProjectFilesystemView fileSystemView) ->
+            new DefaultGraphTransformationEngine(
+                ImmutableList.of(
+                    new GraphComputationStage<>(
+                        new WatchmanBuildPackageComputation(
+                            buildFileName, fileSystemView, watchman))),
+                1,
+                executor));
   }
 
   /**

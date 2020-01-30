@@ -1380,12 +1380,13 @@ public final class MainRunner {
           buildEventBus.post(startedEvent);
 
           TargetSpecResolver targetSpecResolver =
-              new TargetSpecResolver(
+              getTargetSpecResolver(
+                  parserConfig,
+                  watchman,
+                  rootCell,
+                  buckGlobalState,
                   buildEventBus,
-                  depsAwareExecutorSupplier.get(),
-                  rootCell.getCellProvider(),
-                  buckGlobalState.getDirectoryListCaches(),
-                  buckGlobalState.getFileTreeCaches());
+                  depsAwareExecutorSupplier);
 
           // This also queries watchman, posts events to global and local event buses and
           // invalidates all related caches
@@ -1549,6 +1550,31 @@ public final class MainRunner {
       }
     }
     return exitCode;
+  }
+
+  private TargetSpecResolver getTargetSpecResolver(
+      ParserConfig parserConfig,
+      Watchman watchman,
+      Cell rootCell,
+      BuckGlobalState buckGlobalState,
+      DefaultBuckEventBus buildEventBus,
+      CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>>
+          depsAwareExecutorSupplier) {
+
+    ParserConfig.BuildFileSearchMethod searchMethod = parserConfig.getBuildFileSearchMethod();
+    switch (searchMethod) {
+      case FILESYSTEM_CRAWL:
+        return TargetSpecResolver.createWithFileSystemCrawler(
+            buildEventBus,
+            depsAwareExecutorSupplier.get(),
+            rootCell.getCellProvider(),
+            buckGlobalState.getDirectoryListCaches(),
+            buckGlobalState.getFileTreeCaches());
+      case WATCHMAN:
+        return TargetSpecResolver.createWithWatchmanCrawler(
+            buildEventBus, watchman, depsAwareExecutorSupplier.get(), rootCell.getCellProvider());
+    }
+    throw new IllegalStateException("Unexpected build file search method: " + searchMethod);
   }
 
   private Path getClientPwd(Cell rootCell, ImmutableMap<String, String> clientEnvironment) {

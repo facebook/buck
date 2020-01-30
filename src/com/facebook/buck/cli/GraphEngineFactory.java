@@ -88,7 +88,7 @@ public class GraphEngineFactory {
     // patterns
     BuildTargetPatternToBuildPackagePathComputation patternToPackagePathComputation =
         BuildTargetPatternToBuildPackagePathComputation.of(
-            parserConfig.getBuildFileName(), cell.getFilesystem());
+            parserConfig.getBuildFileName(), cell.getFilesystem().asView());
 
     // -- DEP COMPUTATION: listing of a specific directory to search for build file
     DirectoryListComputation directoryListComputation =
