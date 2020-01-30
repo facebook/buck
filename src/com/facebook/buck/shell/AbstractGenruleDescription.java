@@ -181,7 +181,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
             new ExecutableMacroExpander<>(ExecutableMacro.class),
             new ExecutableMacroExpander<>(ExecutableTargetMacro.class),
             new WorkerMacroExpander(),
-            new LocationMacroExpander(),
+            LocationMacroExpander.INSTANCE,
             new MavenCoordinatesMacroExpander(),
             new QueryTargetsMacroExpander(Optional.of(targetGraph)),
             new QueryOutputsMacroExpander(Optional.of(targetGraph)),

@@ -82,8 +82,8 @@ public class PythonUtil {
 
   static ImmutableList<MacroExpander<? extends Macro, ?>> macroExpanders(TargetGraph targetGraph) {
     return ImmutableList.of(
-        new LocationMacroExpander(),
-        new AbsoluteOutputMacroExpander(),
+        LocationMacroExpander.INSTANCE,
+        AbsoluteOutputMacroExpander.INSTANCE,
         new QueryTargetsMacroExpander(Optional.of(targetGraph)),
         new QueryTargetsAndOutputsMacroExpander(Optional.of(targetGraph)));
   }

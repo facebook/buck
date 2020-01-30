@@ -53,7 +53,7 @@ public class TestRunnerSpecCoercionSerializationTest {
         rule.getBuildTarget(),
         cellPathResolver,
         graphBuilder,
-        ImmutableList.of(new AbsoluteOutputMacroExpander()));
+        ImmutableList.of(AbsoluteOutputMacroExpander.INSTANCE));
   }
 
   @Test

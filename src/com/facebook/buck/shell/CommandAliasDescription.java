@@ -49,7 +49,7 @@ public class CommandAliasDescription
       ImmutableList.of(
           new ExecutableMacroExpander<>(ExecutableMacro.class),
           new ExecutableMacroExpander<>(ExecutableTargetMacro.class),
-          new LocationMacroExpander());
+          LocationMacroExpander.INSTANCE);
   private final Platform platform;
 
   public CommandAliasDescription(Platform platform) {

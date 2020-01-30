@@ -44,7 +44,7 @@ public class OcamlDescriptionEnhancer {
             cellPathResolver,
             graphBuilder,
             ImmutableList.of(
-                new LocationMacroExpander(),
+                LocationMacroExpander.INSTANCE,
                 new ExecutableMacroExpander<>(ExecutableMacro.class),
                 new ExecutableMacroExpander<>(ExecutableTargetMacro.class)));
     for (StringWithMacros flag : flags) {

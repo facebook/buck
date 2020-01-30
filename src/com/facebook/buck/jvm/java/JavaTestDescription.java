@@ -77,7 +77,7 @@ public class JavaTestDescription
         VersionRoot<JavaTestDescriptionArg> {
 
   public static final ImmutableList<MacroExpander<? extends Macro, ?>> MACRO_EXPANDERS =
-      ImmutableList.of(new LocationMacroExpander(), new AbsoluteOutputMacroExpander());
+      ImmutableList.of(LocationMacroExpander.INSTANCE, AbsoluteOutputMacroExpander.INSTANCE);
 
   private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;

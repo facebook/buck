@@ -19,7 +19,9 @@ package com.facebook.buck.rules.macros;
 /** Expands to the path of a build rules output. */
 public class LocationMacroExpander extends AbstractLocationMacroExpander<LocationMacro> {
 
-  public LocationMacroExpander() {
+  public static final LocationMacroExpander INSTANCE = new LocationMacroExpander();
+
+  protected LocationMacroExpander() {
     super(LocationMacro.class);
   }
 

@@ -45,7 +45,7 @@ public class StringWithMacrosConverterTest {
   private static final CellPathResolver CELL_ROOTS =
       TestCellPathResolver.get(new FakeProjectFilesystem());
   private static final ImmutableList<MacroExpander<? extends Macro, ?>> MACRO_EXPANDERS =
-      ImmutableList.of(new LocationMacroExpander());
+      ImmutableList.of(LocationMacroExpander.INSTANCE);
 
   @Test
   public void noMacros() {

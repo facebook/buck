@@ -59,7 +59,7 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
 
   public static final ImmutableList<MacroExpander<? extends Macro, ?>> MACRO_EXPANDERS =
       ImmutableList.of(
-          new LocationMacroExpander(),
+          LocationMacroExpander.INSTANCE,
           new ClasspathMacroExpander(),
           new ExecutableMacroExpander<>(ExecutableMacro.class),
           new ExecutableMacroExpander<>(ExecutableTargetMacro.class));

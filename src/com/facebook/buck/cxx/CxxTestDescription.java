@@ -233,7 +233,7 @@ public class CxxTestDescription
 
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.of(
-            buildTarget, cellRoots, graphBuilder, ImmutableList.of(new LocationMacroExpander()));
+            buildTarget, cellRoots, graphBuilder, ImmutableList.of(LocationMacroExpander.INSTANCE));
 
     // Supplier which expands macros in the passed in test environment.
     ImmutableMap<String, Arg> testEnv =

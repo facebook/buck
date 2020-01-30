@@ -80,7 +80,7 @@ public class GoTestDescription
 
   private static final Flavor TEST_LIBRARY_FLAVOR = InternalFlavor.of("test-library");
   public static final ImmutableList<MacroExpander<? extends Macro, ?>> MACRO_EXPANDERS =
-      ImmutableList.of(new LocationMacroExpander(), new AbsoluteOutputMacroExpander());
+      ImmutableList.of(LocationMacroExpander.INSTANCE, AbsoluteOutputMacroExpander.INSTANCE);
 
   private final GoBuckConfig goBuckConfig;
   private final ToolchainProvider toolchainProvider;

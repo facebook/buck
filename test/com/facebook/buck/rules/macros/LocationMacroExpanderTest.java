@@ -67,7 +67,7 @@ public class LocationMacroExpanderTest {
             buildTarget,
             cellPathResolver,
             graphBuilder,
-            ImmutableList.of(new LocationMacroExpander()));
+            ImmutableList.of(LocationMacroExpander.INSTANCE));
     return graphBuilder;
   }
 

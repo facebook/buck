@@ -57,7 +57,7 @@ public class AbsoluteOutputMacroExpanderTest {
             buildTarget,
             cellPathResolver,
             graphBuilder,
-            ImmutableList.of(new AbsoluteOutputMacroExpander()));
+            ImmutableList.of(AbsoluteOutputMacroExpander.INSTANCE));
     return graphBuilder;
   }
 

@@ -393,7 +393,8 @@ public class AppleTestDescription
               buildTarget,
               context.getCellPathResolver(),
               graphBuilder,
-              ImmutableList.of(new LocationMacroExpander(), new AbsoluteOutputMacroExpander()));
+              ImmutableList.of(
+                  LocationMacroExpander.INSTANCE, AbsoluteOutputMacroExpander.INSTANCE));
 
       return new AppleTestX(
           runner.getBinary(),
