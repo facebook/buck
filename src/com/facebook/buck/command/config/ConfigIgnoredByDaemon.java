@@ -19,6 +19,7 @@ package com.facebook.buck.command.config;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.support.cli.config.CliConfig;
 import com.facebook.buck.util.MoreMaps;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
@@ -86,6 +87,7 @@ public abstract class ConfigIgnoredByDaemon implements ConfigView<BuckConfig> {
             "superconsole",
             "thread_line_limit",
             "thread_line_output_max_columns",
+            CliConfig.TRUNCATE_FAILING_COMMAND_CONFIG,
             "warn_on_config_file_overrides",
             "warn_on_config_file_overrides_ignored_files"));
     ignoreFieldsForDaemonRestartBuilder.put("color", ImmutableSet.of("ui"));

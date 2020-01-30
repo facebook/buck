@@ -5173,6 +5173,17 @@ buck = .
 
 {call buckconfig.entry}
   {param section: 'ui' /}
+  {param name: 'truncate_failing_command' /}
+  {param example_value: 'true' /}
+  {param description}
+    Determines whether a failing executed command is truncated in error messages.
+
+    This defaults to true.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'ui' /}
   {param name: 'superconsole' /}
   {param example_value: 'ENABLED' /}
   {param description}

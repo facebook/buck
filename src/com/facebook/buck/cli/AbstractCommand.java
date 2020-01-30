@@ -400,7 +400,10 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
   }
 
   protected ExecutionContext.Builder getExecutionContextBuilder(CommandRunnerParams params) {
-    TestBuckConfig testBuckConfig = params.getBuckConfig().getView(TestBuckConfig.class);
+    BuckConfig buckConfig = params.getBuckConfig();
+    TestBuckConfig testBuckConfig = buckConfig.getView(TestBuckConfig.class);
+    CliConfig cliConfig = buckConfig.getView(CliConfig.class);
+
     ExecutionContext.Builder builder =
         ExecutionContext.builder()
             .setConsole(params.getConsole())
@@ -415,10 +418,11 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
             .setDefaultTestTimeoutMillis(testBuckConfig.getDefaultTestTimeoutMillis())
             .setInclNoLocationClassesEnabled(testBuckConfig.isInclNoLocationClassesEnabled())
             .setRuleKeyDiagnosticsMode(
-                params.getBuckConfig().getView(RuleKeyConfig.class).getRuleKeyDiagnosticsMode())
+                buckConfig.getView(RuleKeyConfig.class).getRuleKeyDiagnosticsMode())
             .setConcurrencyLimit(getConcurrencyLimit(params.getBuckConfig()))
             .setPersistentWorkerPools(params.getPersistentWorkerPools())
-            .setProjectFilesystemFactory(params.getProjectFilesystemFactory());
+            .setProjectFilesystemFactory(params.getProjectFilesystemFactory())
+            .setTruncateFailingCommandEnabled(cliConfig.getEnableFailingCommandTruncation());
     return builder;
   }
 

@@ -115,6 +115,11 @@ public abstract class ExecutionContext implements Closeable {
     return RuleKeyDiagnosticsMode.NEVER;
   }
 
+  @Value.Default
+  public boolean isTruncateFailingCommandEnabled() {
+    return true;
+  }
+
   /**
    * Worker process pools that you can populate as needed. These will be destroyed as soon as buck
    * invocation finishes, thus, these pools are not persisted across buck invocations.

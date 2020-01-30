@@ -46,6 +46,7 @@ import com.facebook.buck.io.watchman.FakeWatchmanClient;
 import com.facebook.buck.io.watchman.FakeWatchmanFactory;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanClient;
+import com.facebook.buck.support.cli.config.CliConfig;
 import com.facebook.buck.support.state.BuckGlobalStateLifecycleManager.LifecycleStatus;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.Console;
@@ -697,5 +698,56 @@ public class BuckGlobalStateLifecycleManagerTest {
     assertEquals(buckGlobalState.getUptime(), 0);
     clock.setCurrentTimeMillis(2000);
     assertEquals(buckGlobalState.getUptime(), 1000);
+  }
+
+  @Test
+  public void whenBuckWhitelistedConfigChangesDaemonNotRestarted() {
+    buckGlobalStateLifecycleManager.resetBuckGlobalState();
+    Pair<BuckGlobalState, LifecycleStatus> buckStateResultFirstRun =
+        buckGlobalStateLifecycleManager.getBuckGlobalState(
+            new TestCellBuilder()
+                .setBuckConfig(
+                    FakeBuckConfig.builder()
+                        .setSections(
+                            ImmutableMap.of(
+                                "ui",
+                                ImmutableMap.of(CliConfig.TRUNCATE_FAILING_COMMAND_CONFIG, "true")))
+                        .build())
+                .setFilesystem(filesystem)
+                .build(),
+            knownRuleTypesProvider,
+            watchman,
+            Console.createNullConsole(),
+            clock,
+            unconfiguredBuildTargetFactory,
+            targetConfigurationSerializer);
+
+    Pair<BuckGlobalState, LifecycleStatus> buckStateResultSecondRun =
+        buckGlobalStateLifecycleManager.getBuckGlobalState(
+            new TestCellBuilder()
+                .setBuckConfig(
+                    FakeBuckConfig.builder()
+                        .setSections(
+                            ImmutableMap.of(
+                                "ui",
+                                ImmutableMap.of(
+                                    CliConfig.TRUNCATE_FAILING_COMMAND_CONFIG, "false")))
+                        .build())
+                .setFilesystem(filesystem)
+                .build(),
+            knownRuleTypesProvider,
+            watchman,
+            Console.createNullConsole(),
+            clock,
+            unconfiguredBuildTargetFactory,
+            targetConfigurationSerializer);
+
+    assertEquals(
+        "Daemon should not be replaced when whitelisted config changes.",
+        buckStateResultFirstRun.getFirst(),
+        buckStateResultSecondRun.getFirst());
+
+    assertEquals(LifecycleStatus.NEW, buckStateResultFirstRun.getSecond());
+    assertEquals(LifecycleStatus.REUSED, buckStateResultSecondRun.getSecond());
   }
 }
