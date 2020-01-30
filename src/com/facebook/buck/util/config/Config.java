@@ -528,7 +528,7 @@ public class Config {
           section, field, input.substring(quoteIndex, lastIndex));
     }
 
-    listBuilder.add(stringBuilder.toString());
+    if (seenChar) listBuilder.add(stringBuilder.toString());
     return listBuilder.build();
   }
 

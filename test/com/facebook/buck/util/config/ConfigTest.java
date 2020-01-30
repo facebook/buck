@@ -162,6 +162,11 @@ public class ConfigTest {
         ImmutableList.of("foo bar", ",,,", ";", "\n"),
         ConfigBuilder.createFromText("[foo]", "bar=\"foo bar\" ,,, ; \"\\n\"")
             .getListWithoutComments("foo", "bar", ' '));
+    assertEquals(
+        "lists with quoted parts are decoded",
+        ImmutableList.of(),
+        new Config(RawConfig.of(ImmutableMap.of("foo", ImmutableMap.of("bar", " "))))
+            .getListWithoutComments("foo", "bar", ' '));
   }
 
   @Test
