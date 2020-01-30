@@ -983,6 +983,12 @@
     </exec>
   </target>
 
+  <target name="java-version-test" depends="default">
+    <exec dir="${user.dir}/scripts" executable="python" failonerror="true">
+      <arg line="java_version_test.py" />
+    </exec>
+  </target>
+
   <!--
   Copy classpath jars to a directory buck_repo.py can use, so that buck built with ant continues
   to work after checking out a different revision or making changes to classpaths file.
@@ -1155,7 +1161,7 @@
     </sequential>
   </macrodef>
 
-  <target name="lint" depends="pmd, missing-test-files-check" />
+  <target name="lint" depends="pmd, missing-test-files-check, java-version-test" />
 
   <macrodef name="buck-javadoc" description="generates HTML documentation for Java code">
     <attribute name="destdir" />

@@ -129,16 +129,3 @@ python_test(
         "//src/com/facebook/buck/testrunner:testrunner-bin-fixed",
     ],
 )
-
-python_test(
-    name = "java_version_test",
-    srcs = [
-        "java_version_test.py",
-    ],
-    env = {
-        "TEST_BUCK": "$(location //programs:buck)",
-    },
-    deps = [
-        "//test/com/facebook/buck/testutil/integration:integration-py",
-    ],
-)

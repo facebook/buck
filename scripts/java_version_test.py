@@ -12,11 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import json
 import os
+import platform
+import subprocess
 import unittest
 
-from project_workspace import run_buck_process
+
+def findRepoRoot(cwd):
+    while os.path.exists(cwd):
+        if os.path.exists(os.path.join(cwd, ".buckconfig")):
+            return cwd
+        cwd = os.path.dirname(cwd)
+    raise Exception("Could not locate buck repo root.")
 
 
 class JavaVersionTest(unittest.TestCase):
@@ -38,14 +48,26 @@ class JavaVersionTest(unittest.TestCase):
     def verify_java_version_for_transitive_deps(
         self, targets_to_check, expected_java_version
     ):
-        proc = run_buck_process(
-            [
+        repo_root = findRepoRoot(os.getcwd())
+
+        env = dict(os.environ.items())
+        env["NO_BUCKD"] = "1"
+        if platform.system() == "Windows":
+            buck_path = os.path.join(repo_root, "bin", "buck.bat")
+            cmd_prefix = ["cmd.exe", "/C", buck_path]
+        else:
+            buck_path = os.path.join(repo_root, "bin", "buck")
+            cmd_prefix = [buck_path]
+        proc = subprocess.Popen(
+            cmd_prefix
+            + [
                 "query",
                 "kind(java_library, deps({}))".format(targets_to_check),
                 "--output-attributes",
                 "source",
                 "target",
-            ]
+            ],
+            stdout=subprocess.PIPE,
         )
         stdout, stderr = proc.communicate()
 
@@ -82,3 +104,7 @@ class JavaVersionTest(unittest.TestCase):
                     target_name, target, targets_to_check, expected_java_version
                 ),
             )
+
+
+if __name__ == "__main__":
+    unittest.main()
