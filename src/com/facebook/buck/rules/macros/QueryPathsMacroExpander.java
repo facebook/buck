@@ -37,7 +37,7 @@ import java.util.stream.Stream;
 
 public class QueryPathsMacroExpander extends QueryMacroExpander<QueryPathsMacro> {
 
-  public QueryPathsMacroExpander(Optional<TargetGraph> targetGraph) {
+  public QueryPathsMacroExpander(TargetGraph targetGraph) {
     super(targetGraph);
   }
 

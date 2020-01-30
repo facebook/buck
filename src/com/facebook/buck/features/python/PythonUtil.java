@@ -84,8 +84,8 @@ public class PythonUtil {
     return ImmutableList.of(
         LocationMacroExpander.INSTANCE,
         AbsoluteOutputMacroExpander.INSTANCE,
-        new QueryTargetsMacroExpander(Optional.of(targetGraph)),
-        new QueryTargetsAndOutputsMacroExpander(Optional.of(targetGraph)));
+        new QueryTargetsMacroExpander(targetGraph),
+        new QueryTargetsAndOutputsMacroExpander(targetGraph));
   }
 
   private PythonUtil() {}

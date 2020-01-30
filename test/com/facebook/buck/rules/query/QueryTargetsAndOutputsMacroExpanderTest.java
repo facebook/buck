@@ -98,7 +98,7 @@ public class QueryTargetsAndOutputsMacroExpanderTest {
             ruleNode.getBuildTarget(),
             cellNames,
             graphBuilder,
-            ImmutableList.of(new QueryTargetsAndOutputsMacroExpander(Optional.of(targetGraph))),
+            ImmutableList.of(new QueryTargetsAndOutputsMacroExpander(targetGraph)),
             Optional.empty(),
             cache);
   }

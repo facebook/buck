@@ -183,10 +183,10 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
             new WorkerMacroExpander(),
             LocationMacroExpander.INSTANCE,
             new MavenCoordinatesMacroExpander(),
-            new QueryTargetsMacroExpander(Optional.of(targetGraph)),
-            new QueryOutputsMacroExpander(Optional.of(targetGraph)),
-            new QueryPathsMacroExpander(Optional.of(targetGraph)),
-            new QueryTargetsAndOutputsMacroExpander(Optional.of(targetGraph))));
+            new QueryTargetsMacroExpander(targetGraph),
+            new QueryOutputsMacroExpander(targetGraph),
+            new QueryPathsMacroExpander(targetGraph),
+            new QueryTargetsAndOutputsMacroExpander(targetGraph)));
   }
 
   @Override

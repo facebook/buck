@@ -45,9 +45,9 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
   private static final UnconfiguredBuildTargetViewFactory UNCONFIGURED_BUILD_TARGET_FACTORY =
       new ParsingUnconfiguredBuildTargetViewFactory();
 
-  private Optional<TargetGraph> targetGraph;
+  private TargetGraph targetGraph;
 
-  public QueryMacroExpander(Optional<TargetGraph> targetGraph) {
+  public QueryMacroExpander(TargetGraph targetGraph) {
     this.targetGraph = targetGraph;
   }
 
@@ -60,7 +60,7 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
     GraphEnhancementQueryEnvironment env =
         new GraphEnhancementQueryEnvironment(
             Optional.of(graphBuilder),
-            targetGraph,
+            Optional.of(targetGraph),
             TYPE_COERCER_FACTORY,
             cellNames,
             UNCONFIGURED_BUILD_TARGET_FACTORY,

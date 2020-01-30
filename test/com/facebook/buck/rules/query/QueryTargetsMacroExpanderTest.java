@@ -68,7 +68,7 @@ public class QueryTargetsMacroExpanderTest {
   @Before
   public void setUp() {
     cache = new HashMapWithStats<>();
-    expander = new QueryTargetsMacroExpander(Optional.empty());
+    expander = new QueryTargetsMacroExpander(TargetGraph.EMPTY);
     filesystem = new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp.getRoot());
     cellNames = TestCellBuilder.createCellRoots(filesystem);
     TargetNode<?> depNode =

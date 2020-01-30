@@ -29,7 +29,6 @@ import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -55,7 +54,7 @@ import java.util.stream.Stream;
 public class QueryTargetsAndOutputsMacroExpander
     extends QueryMacroExpander<QueryTargetsAndOutputsMacro> {
 
-  public QueryTargetsAndOutputsMacroExpander(Optional<TargetGraph> targetGraph) {
+  public QueryTargetsAndOutputsMacroExpander(TargetGraph targetGraph) {
     super(targetGraph);
   }
 
