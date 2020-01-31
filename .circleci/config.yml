@@ -9,7 +9,6 @@ install_openjdk8: &install_openjdk8
       sudo update-java-alternatives -s java-1.8.0-openjdk-amd64
     elif [ "x${PLATFORM}" == "xmacos" ]
     then
-      #brew tap homebrew/cask-versions
       brew cask install adoptopenjdk8
     fi
     java -version
@@ -30,7 +29,6 @@ install_android_sdk: &install_android_sdk
     export PATH=${ANDROID_SDK}/tools/bin:$PATH
     echo 'y' |sdkmanager --install tools
     echo 'y' |sdkmanager --install platform-tools
-    # Old version build-tools;23.0.2
     echo 'y' |sdkmanager --install "build-tools;28.0.0"
     echo 'y' |sdkmanager --install "platforms;android-23"
 
@@ -64,7 +62,6 @@ install_python: &install_python
   command: |
     if [ "x${PLATFORM}" == "xmacos" ]
     then
-      # sudo chown -R $(whoami) /usr/local/bin /usr/local/lib /usr/local/sbin
       brew update
       brew install pyenv
     fi
@@ -596,7 +593,7 @@ jobs:
       - run:
           <<: *install_groovy
       - run:
-          # There is an issue with python in macos 10.14.x. A work around can be found at
+          # There is an issue with python in macos 10.14.x. this step is a work around and should be removed later.
           # https://stackoverflow.com/questions/59269208/errorrootcode-for-hash-md5-was-not-found-not-able-to-use-any-hg-mercurial-co
           name: Make Python work with Xcode 10.3.0
           command: |
@@ -618,7 +615,7 @@ jobs:
             set -ex
             # Should run this:
             #./new_buck.pex test --num-threads=$BUCK_NUM_THREADS --all --filter '^(?!(com.facebook.buck.android|com.facebook.buck.jvm.java)).*[Ii]ntegration.*'
-            # But there some tests will be fixed later, exclude them for now.
+            # But there are some test failures, exclude them for now and fix them later.
             ./new_buck.pex test --num-threads=$BUCK_NUM_THREADS --all --filter '^(?!(com.facebook.buck.android|com.facebook.buck.jvm.java|com.facebook.buck.features.haskell.HaskellBinary|com.facebook.buck.swift.SwiftTestIO|com.facebook.buck.apple.AppleTest)).*[Ii]ntegration.*'
 
   macos_test_heavy_integration:
