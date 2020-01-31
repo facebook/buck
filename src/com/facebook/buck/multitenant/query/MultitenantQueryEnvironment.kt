@@ -46,6 +46,10 @@ import com.google.common.base.Suppliers
 import com.google.common.collect.ImmutableList
 import java.util.function.Predicate
 import java.util.function.Supplier
+import java.util.logging.Level
+import java.util.logging.Logger
+
+private val LOG = Logger.getLogger(MultitenantQueryEnvironment::class.java.canonicalName)
 
 val QUERY_FUNCTIONS: List<QueryEnvironment.QueryFunction<out QueryTarget, UnconfiguredBuildTarget>> =
     listOf(AllPathsFunction<UnconfiguredBuildTarget>(),
@@ -76,9 +80,14 @@ class MultitenantQueryEnvironment(
      * [UnconfiguredBuildTarget]
      */
     fun evaluateQuery(query: String): Set<QueryTarget> {
-        val expr = QueryExpression.parse<UnconfiguredBuildTarget>(query, this)
-        val evaluator = NoopQueryEvaluator<UnconfiguredBuildTarget>()
-        return evaluator.eval<QueryTarget>(expr, this)
+        try {
+            val expr = QueryExpression.parse<UnconfiguredBuildTarget>(query, this)
+            val evaluator = NoopQueryEvaluator<UnconfiguredBuildTarget>()
+            return evaluator.eval<QueryTarget>(expr, this)
+        } catch (e: Exception) {
+            LOG.log(Level.SEVERE, "Exception during query evaluation", e)
+            throw e
+        }
     }
 
     override fun getFunctions(): Iterable<QueryEnvironment.QueryFunction<out QueryTarget, UnconfiguredBuildTarget>> {
