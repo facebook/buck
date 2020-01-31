@@ -52,6 +52,7 @@ import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -337,6 +338,7 @@ public class BuildCommandErrorsIntegrationTest {
         Matchers.stringContainsInOrder(
             "BUILD FAILED: The rule //missing_target:bar could not be found.",
             "Please check the spelling and whether it is one of the 23 targets in ",
+            Paths.get("missing_target", "BUCK").toString() + ". (915 bytes)",
             "3 similar targets in ",
             "  //missing_target:barWithSomeLongSuffix",
             "  //missing_target:baz",

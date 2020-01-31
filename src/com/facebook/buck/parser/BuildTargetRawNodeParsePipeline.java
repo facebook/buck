@@ -28,7 +28,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import java.io.IOException;
 import java.util.Map;
+import java.util.OptionalLong;
 
 /** A pipeline that provides access to a raw node by its {@link BuildTarget}. */
 public class BuildTargetRawNodeParsePipeline
@@ -91,6 +93,13 @@ public class BuildTargetRawNodeParsePipeline
                 buildTarget,
                 similarTargets,
                 input.getTargets().size(),
+                (buildFilePath) -> {
+                  try {
+                    return OptionalLong.of(cell.getFilesystem().getFileSize(buildFilePath));
+                  } catch (IOException e) {
+                    return OptionalLong.empty();
+                  }
+                },
                 parserConfig.getAbsolutePathToBuildFile(cell, buildTarget));
           }
           return Futures.immediateFuture(input.getTargets().get(buildTarget.getShortName()));

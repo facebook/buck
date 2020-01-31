@@ -21,6 +21,9 @@ import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
+import java.util.Optional;
+import java.util.OptionalLong;
+import java.util.function.Function;
 
 /** Thrown when build target definition is missing in corresponding build file */
 public class NoSuchBuildTargetException extends BuildTargetException {
@@ -43,21 +46,33 @@ public class NoSuchBuildTargetException extends BuildTargetException {
    * @param buildTarget the failing {@link BuildTarget}
    * @param similarTargets targets that are similar to {@code buildTarget} to suggest to users
    * @param totalTargets the total number of targets that were found in the build file
+   * @param fileSizeFetcher a function that takes a path and returns its filesize, or {@link
+   *     Optional#empty()} if the file couldn't be read
+   * @param buildFilePath the absolute path to the build file
    */
   public static NoSuchBuildTargetException createForMissingBuildRule(
       UnconfiguredBuildTargetView buildTarget,
       ImmutableList<UnconfiguredBuildTargetView> similarTargets,
       int totalTargets,
-      Path buckFilePath) {
+      Function<Path, OptionalLong> fileSizeFetcher,
+      Path buildFilePath) {
+
     StringBuilder builder =
         new StringBuilder(
             String.format(
                 "The rule %s could not be found.\nPlease check the spelling and whether it is one of the %s targets in %s.",
-                buildTarget.getFullyQualifiedName(), totalTargets, buckFilePath));
+                buildTarget.getFullyQualifiedName(), totalTargets, buildFilePath));
+
+    OptionalLong optionalBytes = fileSizeFetcher.apply(buildFilePath);
+    if (optionalBytes.isPresent()) {
+      builder.append(String.format(" (%d bytes)", optionalBytes.getAsLong()));
+    } else {
+      builder.append(" (unknown size)");
+    }
 
     if (!similarTargets.isEmpty()) {
       int displayed = Math.min(MAX_SIMILAR_TARGETS_TO_DISPLAY, similarTargets.size());
-      builder.append(String.format("\n%s similar targets in %s are:\n", displayed, buckFilePath));
+      builder.append(String.format("\n%s similar targets in %s are:\n", displayed, buildFilePath));
       int i = 0;
       for (UnconfiguredBuildTargetView target : similarTargets) {
         if (i >= MAX_SIMILAR_TARGETS_TO_DISPLAY) {
