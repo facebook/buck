@@ -277,8 +277,12 @@ public class Config {
       if (value.isEmpty()) {
         return Optional.empty();
       } else {
-        return Optional.of(
-            decodeQuotedParts(value, Optional.empty(), sectionName, propertyName).get(0));
+        ImmutableList<String> decoded =
+            decodeQuotedParts(value, Optional.empty(), sectionName, propertyName);
+        if (decoded.isEmpty()) {
+          return Optional.empty();
+        }
+        return Optional.of(decoded.get(0));
       }
     } else {
       return rawValue;
