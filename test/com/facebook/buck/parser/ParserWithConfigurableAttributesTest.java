@@ -405,7 +405,8 @@ public class ParserWithConfigurableAttributesTest {
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fooTarget, razTarget);
 
     thrown.expectMessage(
-        "The rule //java/com/facebook:raz could not be found.\nPlease check the spelling and whether it exists in "
+        "The rule //java/com/facebook:raz could not be found.\n"
+            + "Please check the spelling and whether it is one of the 3 targets in "
             + filesystem
                 .resolve(razTarget.getCellRelativeBasePath().getPath())
                 .resolve(DEFAULT_BUILD_FILE_NAME));

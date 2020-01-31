@@ -441,4 +441,9 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
   public boolean getEnablePackageFiles() {
     return getDelegate().getBooleanValue("parser", "enable_package_files", false);
   }
+
+  @Value.Lazy
+  public int getMissingTargetLevenshteinDistance() {
+    return getDelegate().getInteger("parser", "missing_target_levenshtein_distance").orElse(5);
+  }
 }

@@ -78,7 +78,7 @@ public class CommandLineTargetNodeSpecParserIntegrationTest {
         processResult.getStderr(),
         Matchers.allOf(
             Matchers.containsString("The rule //simple:... could not be found."),
-            Matchers.containsString("check the spelling and whether it exists in"),
+            Matchers.containsString("check the spelling and whether"),
             Matchers.containsString("BUCK")));
 
     processResult = workspace.runBuckCommand("targets", "//simple/....");

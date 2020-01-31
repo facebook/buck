@@ -166,7 +166,7 @@ public class ParsePipelineTest {
       Cell cell = fixture.getCell();
       expectedException.expect(NoSuchBuildTargetException.class);
       expectedException.expectMessage(
-          "The rule //:notthere could not be found.\nPlease check the spelling and whether it exists in");
+          "The rule //:notthere could not be found.\nPlease check the spelling and whether");
       fixture
           .getTargetNodeParsePipeline()
           .getNode(cell, BuildTargetFactory.newInstance("//:notthere"), DependencyStack.root());

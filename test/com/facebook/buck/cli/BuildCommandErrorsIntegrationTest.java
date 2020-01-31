@@ -326,6 +326,81 @@ public class BuildCommandErrorsIntegrationTest {
             "Not all rules succeeded."));
   }
 
+  @Test
+  public void suggestionsWhenBuildTargetDoesntExist() {
+    ProcessResult result =
+        workspace
+            .runBuckBuild("--keep-going", "//missing_target:bar")
+            .assertExitCode(ExitCode.PARSE_ERROR);
+    assertThat(
+        result.getStderr(),
+        Matchers.stringContainsInOrder(
+            "BUILD FAILED: The rule //missing_target:bar could not be found.",
+            "Please check the spelling and whether it is one of the 23 targets in ",
+            "3 similar targets in ",
+            "  //missing_target:barWithSomeLongSuffix",
+            "  //missing_target:baz",
+            "  //missing_target:foo"));
+
+    assertThat(
+        result.getStderr(), Matchers.not(Matchers.containsString("some_long_prefix_string_00")));
+
+    result =
+        workspace
+            .runBuckBuild("--keep-going", "//missing_target:bazWithSomeLongSuffix")
+            .assertExitCode(ExitCode.PARSE_ERROR);
+    assertThat(
+        result.getStderr(),
+        Matchers.stringContainsInOrder(
+            "BUILD FAILED: The rule //missing_target:bazWithSomeLongSuffix could not be found.",
+            "Please check the spelling and whether it is one of the 23 targets in ",
+            "2 similar targets in ",
+            "  //missing_target:barWithSomeLongSuffix",
+            "  //missing_target:baz"));
+
+    assertThat(result.getStderr(), Matchers.not(Matchers.containsString("  //missing_target:foo")));
+
+    result =
+        workspace
+            .runBuckBuild("--keep-going", "//missing_target:some_long_prefix_string")
+            .assertExitCode(ExitCode.PARSE_ERROR);
+    assertThat(
+        result.getStderr(),
+        Matchers.stringContainsInOrder(
+            "BUILD FAILED: The rule //missing_target:some_long_prefix_string could not be found.",
+            "Please check the spelling and whether it is one of the 23 targets in ",
+            "15 similar targets in ",
+            "some_long_prefix_string_00",
+            "some_long_prefix_string_01",
+            "some_long_prefix_string_02",
+            "some_long_prefix_string_03",
+            "some_long_prefix_string_04",
+            "some_long_prefix_string_05",
+            "some_long_prefix_string_06",
+            "some_long_prefix_string_07",
+            "some_long_prefix_string_08",
+            "some_long_prefix_string_09",
+            "some_long_prefix_string_10",
+            "some_long_prefix_string_11",
+            "some_long_prefix_string_12",
+            "some_long_prefix_string_13",
+            "some_long_prefix_string_14"));
+
+    assertThat(
+        result.getStderr(), Matchers.not(Matchers.containsString("some_long_prefix_string_15")));
+
+    result =
+        workspace
+            .runBuckBuild("--keep-going", "//missing_target:really_long_string_that_doesnt_match")
+            .assertExitCode(ExitCode.PARSE_ERROR);
+    assertThat(
+        result.getStderr(),
+        Matchers.stringContainsInOrder(
+            "BUILD FAILED: The rule //missing_target:really_long_string_that_doesnt_match could not be found.",
+            "Please check the spelling and whether it is one of the 23 targets in "));
+    assertThat(result.getStderr(), Matchers.not(Matchers.containsString("Similar targets in")));
+  }
+
   private String getError(String stderr) {
     String[] lines = stderr.split(System.lineSeparator());
     int start = 0;

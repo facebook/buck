@@ -19,10 +19,13 @@ package com.facebook.buck.parser.exceptions;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 
 /** Thrown when build target definition is missing in corresponding build file */
 public class NoSuchBuildTargetException extends BuildTargetException {
+
+  private static int MAX_SIMILAR_TARGETS_TO_DISPLAY = 15;
 
   public NoSuchBuildTargetException(BuildTarget target) {
     this(String.format("No such target: '%s'", target));
@@ -36,14 +39,37 @@ public class NoSuchBuildTargetException extends BuildTargetException {
     super(message);
   }
 
-  /** @param buildTarget the failing {@link BuildTarget} */
+  /**
+   * @param buildTarget the failing {@link BuildTarget}
+   * @param similarTargets targets that are similar to {@code buildTarget} to suggest to users
+   * @param totalTargets the total number of targets that were found in the build file
+   */
   public static NoSuchBuildTargetException createForMissingBuildRule(
-      UnconfiguredBuildTargetView buildTarget, Path buckFilePath) {
-    String message =
-        String.format(
-            "The rule %s could not be found.\nPlease check the spelling and whether it exists in %s.",
-            buildTarget.getFullyQualifiedName(), buckFilePath);
-    return new NoSuchBuildTargetException(message);
+      UnconfiguredBuildTargetView buildTarget,
+      ImmutableList<UnconfiguredBuildTargetView> similarTargets,
+      int totalTargets,
+      Path buckFilePath) {
+    StringBuilder builder =
+        new StringBuilder(
+            String.format(
+                "The rule %s could not be found.\nPlease check the spelling and whether it is one of the %s targets in %s.",
+                buildTarget.getFullyQualifiedName(), totalTargets, buckFilePath));
+
+    if (!similarTargets.isEmpty()) {
+      int displayed = Math.min(MAX_SIMILAR_TARGETS_TO_DISPLAY, similarTargets.size());
+      builder.append(String.format("\n%s similar targets in %s are:\n", displayed, buckFilePath));
+      int i = 0;
+      for (UnconfiguredBuildTargetView target : similarTargets) {
+        if (i >= MAX_SIMILAR_TARGETS_TO_DISPLAY) {
+          break;
+        }
+        i++;
+        builder.append("  ");
+        builder.append(target.getFullyQualifiedName());
+        builder.append(System.lineSeparator());
+      }
+    }
+    return new NoSuchBuildTargetException(builder.toString());
   }
 
   @Override
