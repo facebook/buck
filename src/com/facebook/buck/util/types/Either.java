@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util.types;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
@@ -89,6 +90,7 @@ public abstract class Either<LEFT, RIGHT> {
     }
 
     @Override
+    @JsonIgnore
     public RIGHT getRight() {
       throw new IllegalStateException("Cannot get Right value of a Left either.");
     }
@@ -146,6 +148,7 @@ public abstract class Either<LEFT, RIGHT> {
     }
 
     @Override
+    @JsonIgnore
     public LEFT getLeft() {
       throw new IllegalStateException("Cannot get Left value of a Right either.");
     }

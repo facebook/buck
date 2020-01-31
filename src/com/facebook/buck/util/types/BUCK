@@ -4,6 +4,7 @@ java_library(
     visibility = ["PUBLIC"],
     deps = [
         "//third-party/java/guava:guava",
+        "//third-party/java/jackson:jackson-annotations",
         "//third-party/java/jsr:jsr305",
     ],
 )
