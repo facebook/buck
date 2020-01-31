@@ -785,7 +785,8 @@ jobs:
             ./new_buck.pex build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
             # Exclude some long running tests, otherwise CircleCI will timeout after 5 hours.
             #./new_buck.pex test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
-            ./new_buck.pex test --num-threads=1 //test/com/facebook/buck/android/... --filter '^(?!(com.facebook.buck.android.AndroidBinary)).*[Ii]ntegration.*'
+            ./new_buck.pex test --num-threads=1 //test/com/facebook/buck/android/... --filter '^(?!(com.facebook.buck.android.AndroidExopackageBinary|com.facebook.buck.android.AndroidBinaryInstall|com.facebook.buck.android.AndroidBinaryExopackageSymlinkTree)).*[Ii]ntegration.*'
+            #./new_buck.pex test --num-threads=1 //test/com/facebook/buck/android/... --filter '^(?!(com.facebook.buck.android.AndroidBinary)).*[Ii]ntegration.*'
 
           # There are tests that take too long to complete.
           no_output_timeout: 5h
