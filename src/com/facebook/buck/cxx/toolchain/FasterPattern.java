@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cxx.toolchain;
 
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -23,7 +25,7 @@ import java.util.regex.Pattern;
  * Pattern-like object which is compatible with Pattern but faster at handling simpler patterns like
  * {@code .*foo.*}.
  */
-public abstract class FasterPattern {
+public abstract class FasterPattern implements AddsToRuleKey {
 
   private FasterPattern() {}
 
@@ -62,7 +64,7 @@ public abstract class FasterPattern {
 
   /** Startswith pattern. */
   private static class StartsWith extends FasterPattern {
-    private final String prefix;
+    @AddToRuleKey private final String prefix;
 
     private StartsWith(String prefix) {
       this.prefix = prefix;
@@ -76,7 +78,7 @@ public abstract class FasterPattern {
 
   /** Contains substring pattern. */
   private static class Contains extends FasterPattern {
-    private final String needle;
+    @AddToRuleKey private final String needle;
 
     public Contains(String needle) {
       this.needle = needle;
@@ -91,7 +93,7 @@ public abstract class FasterPattern {
 
   /** Delegate to {@link java.util.regex.Pattern}. */
   private static class PatternPattern extends FasterPattern {
-    private final Pattern pattern;
+    @AddToRuleKey private final Pattern pattern;
 
     public PatternPattern(Pattern pattern) {
       this.pattern = pattern;
