@@ -323,9 +323,11 @@ public class ThriftRuleKeyHasherTest {
   public void canHandleForwardingBuildTargetSourcePathsWithDifferentFilesystems()
       throws TException {
     ProjectFilesystem filesystem1 =
-        new FakeProjectFilesystem(CanonicalCellName.rootCell(), Paths.get("first", "root"));
+        new FakeProjectFilesystem(
+            CanonicalCellName.rootCell(), Paths.get("first", "root").toAbsolutePath());
     ProjectFilesystem filesystem2 =
-        new FakeProjectFilesystem(CanonicalCellName.rootCell(), Paths.get("other", "root"));
+        new FakeProjectFilesystem(
+            CanonicalCellName.rootCell(), Paths.get("other", "root").toAbsolutePath());
     Path relativePath = Paths.get("arbitrary", "path");
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
 
