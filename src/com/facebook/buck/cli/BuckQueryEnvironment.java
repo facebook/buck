@@ -195,7 +195,11 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
     return from(
         params.getCell(),
         OwnersReport.builder(
-            params.getCell(), params.getParser(), parserState, params.getTargetConfiguration()),
+            params.getCell(),
+            params.getClientWorkingDir(),
+            params.getParser(),
+            parserState,
+            params.getTargetConfiguration()),
         params.getParser(),
         parserState,
         new TargetPatternEvaluator(

@@ -57,6 +57,9 @@ public class OwnerFunction<ENV_NODE_TYPE extends QueryTarget>
       QueryEnvironment<ENV_NODE_TYPE> env,
       ImmutableList<Argument<ENV_NODE_TYPE>> args)
       throws QueryException {
+    // NOTE: If we ever decide to make this work with nested expressions, we need to handle
+    //       CWD relative paths. (e.g. `owner(inputs(//foo:bar))` would not work properly from
+    //       a subdirectory)
     return env.getFileOwners(ImmutableList.of(args.get(0).getWord()));
   }
 }

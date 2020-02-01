@@ -143,7 +143,11 @@ public class QueryCommandTest {
         new FakeBuckQueryEnvironment(
             cell,
             OwnersReport.builder(
-                params.getCell(), params.getParser(), perBuildState, Optional.empty()),
+                params.getCell(),
+                params.getClientWorkingDir(),
+                params.getParser(),
+                perBuildState,
+                Optional.empty()),
             params.getParser(),
             perBuildState,
             new TargetPatternEvaluator(

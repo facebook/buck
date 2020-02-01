@@ -156,7 +156,7 @@ public class BuckQueryEnvironmentTest {
             ParsingContext.builder(cell, executor).build(),
             Optional.empty());
     OwnersReport.Builder ownersReportBuilder =
-        OwnersReport.builder(cell, parser, parserState, Optional.empty());
+        OwnersReport.builder(cell, cell.getRoot(), parser, parserState, Optional.empty());
     buckQueryEnvironment =
         BuckQueryEnvironment.from(
             cell,

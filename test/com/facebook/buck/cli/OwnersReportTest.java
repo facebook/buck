@@ -41,6 +41,7 @@ import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.TestParserFactory;
@@ -53,9 +54,12 @@ import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import org.junit.Before;
@@ -271,6 +275,7 @@ public class OwnersReportTest {
     OwnersReport report =
         OwnersReport.builder(
                 cell,
+                cell.getRoot(),
                 TestParserFactory.create(executor.get(), cell),
                 TestPerBuildStateFactory.create(parser, cell),
                 Optional.empty())
@@ -278,6 +283,58 @@ public class OwnersReportTest {
 
     assertEquals(1, report.nonExistentInputs.size());
     assertTrue(report.nonExistentInputs.contains(MorePaths.pathWithPlatformSeparators(input)));
+  }
+
+  @Test
+  public void relativePathsAreResolvedAgainstClientWorkingDir() throws IOException {
+    filesystem = FakeProjectFilesystem.createRealTempFilesystem();
+    filesystem =
+        TestProjectFilesystems.createProjectFilesystem(filesystem.getRootPath().toRealPath());
+    Path workingDir = filesystem.resolve(Paths.get("dir1", "dir2"));
+
+    ImmutableSet<String> inputs = ImmutableSet.of("file2.txt", "../file1.txt");
+    ImmutableSet<Path> inputPaths =
+        RichStream.from(inputs).map(s -> workingDir.resolve(s).normalize()).toImmutableSet();
+
+    for (Path path : inputPaths) {
+      filesystem.mkdirs(path.getParent());
+      filesystem.writeContentsToPath("", path);
+    }
+    filesystem.writeContentsToPath(
+        "filegroup(name=\"owner1\", srcs=glob([\"**/*.txt\"]))",
+        filesystem.resolve("dir1").resolve("BUCK"));
+
+    BuildTarget target = BuildTargetFactory.newInstance("//dir1:owner1");
+
+    Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
+    Parser parser = TestParserFactory.create(executor.get(), cell);
+
+    OwnersReport report =
+        OwnersReport.builder(
+                cell,
+                workingDir,
+                parser,
+                TestPerBuildStateFactory.create(parser, cell),
+                Optional.empty())
+            .build(getBuildFileTrees(cell), inputs);
+
+    assertTrue(report.nonFileInputs.isEmpty());
+    assertTrue(report.nonExistentInputs.isEmpty());
+    assertTrue(report.inputsWithNoOwners.isEmpty());
+
+    ImmutableSetMultimap<BuildTarget, Path> targetsToInputs =
+        report.owners.entries().stream()
+            .collect(
+                ImmutableSetMultimap.toImmutableSetMultimap(
+                    e -> e.getKey().getBuildTarget(), Map.Entry::getValue));
+
+    assertEquals(inputs.size(), report.owners.size());
+    assertTrue(targetsToInputs.containsKey(target));
+    assertEquals(
+        inputPaths.stream()
+            .map(p -> filesystem.getPathRelativeToProjectRoot(p).get())
+            .collect(ImmutableSet.toImmutableSet()),
+        targetsToInputs.get(target));
   }
 
   private ImmutableMap<Cell, BuildFileTree> getBuildFileTrees(Cell rootCell) {
