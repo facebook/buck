@@ -362,6 +362,7 @@ public class PythonTestDescription
     buildTarget.assertUnflavored();
     PythonBinary binary =
         binaryDescription.createPackageRule(
+            cellRoots,
             buildTarget.withAppendedFlavors(BINARY_FLAVOR),
             projectFilesystem,
             params,
@@ -535,7 +536,7 @@ public class PythonTestDescription
 
     ImmutableList<NeededCoverageSpec> getNeededCoverage();
 
-    ImmutableList<String> getBuildArgs();
+    ImmutableList<StringWithMacros> getBuildArgs();
 
     ImmutableMap<String, StringWithMacros> getEnv();
 

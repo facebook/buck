@@ -48,6 +48,10 @@ import com.facebook.buck.features.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.rules.macros.ExecutableMacro;
+import com.facebook.buck.rules.macros.ExecutableMacroExpander;
+import com.facebook.buck.rules.macros.ExecutableTargetMacro;
+import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.versions.HasVersionUniverse;
@@ -175,6 +179,7 @@ public class PythonBinaryDescription
   }
 
   PythonBinary createPackageRule(
+      CellPathResolver cellRoots,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
@@ -184,7 +189,7 @@ public class PythonBinaryDescription
       String mainModule,
       Optional<String> extension,
       PythonPackageComponents components,
-      ImmutableList<String> buildArgs,
+      ImmutableList<StringWithMacros> buildArgs,
       PythonBuckConfig.PackageStyle packageStyle,
       ImmutableSet<String> preloadLibraries) {
 
@@ -205,6 +210,16 @@ public class PythonBinaryDescription
             packageStyle);
 
       case STANDALONE:
+        StringWithMacrosConverter macrosConverter =
+            StringWithMacrosConverter.of(
+                buildTarget,
+                cellRoots,
+                graphBuilder,
+                ImmutableList.of(
+                    LocationMacroExpander.INSTANCE,
+                    new ExecutableMacroExpander<>(ExecutableMacro.class),
+                    new ExecutableMacroExpander<>(ExecutableTargetMacro.class)),
+                Optional.empty());
         return new PythonPackagedBinary(
             buildTarget,
             projectFilesystem,
@@ -217,7 +232,9 @@ public class PythonBinaryDescription
                     buildTarget.getTargetConfiguration(),
                     PexToolProvider.class)
                 .getPexTool(graphBuilder, buildTarget.getTargetConfiguration()),
-            buildArgs,
+            buildArgs.stream()
+                .map(macrosConverter::convert)
+                .collect(ImmutableList.toImmutableList()),
             pythonBuckConfig
                 .getPexExecutor(graphBuilder, buildTarget.getTargetConfiguration())
                 .orElse(pythonPlatform.getEnvironment()),
@@ -347,6 +364,7 @@ public class PythonBinaryDescription
             args.getPreloadDeps(),
             args.getCompile().orElse(false));
     return createPackageRule(
+        cellRoots,
         buildTarget,
         projectFilesystem,
         params,
@@ -405,7 +423,7 @@ public class PythonBinaryDescription
 
     Optional<Boolean> getZipSafe();
 
-    ImmutableList<String> getBuildArgs();
+    ImmutableList<StringWithMacros> getBuildArgs();
 
     Optional<String> getPlatform();
 

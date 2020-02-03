@@ -38,6 +38,7 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.versions.Version;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -146,7 +147,7 @@ public class PythonTestBuilder
     return this;
   }
 
-  public PythonTestBuilder setBuildArgs(ImmutableList<String> buildArgs) {
+  public PythonTestBuilder setBuildArgs(ImmutableList<StringWithMacros> buildArgs) {
     getArgForPopulating().setBuildArgs(buildArgs);
     return this;
   }
