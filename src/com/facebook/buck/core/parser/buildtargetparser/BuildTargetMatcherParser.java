@@ -19,13 +19,13 @@ package com.facebook.buck.core.parser.buildtargetparser;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.exception.UnknownCellException;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.google.common.base.Preconditions;
-import java.nio.file.Path;
 import java.util.Optional;
 
 /**
@@ -75,7 +75,7 @@ public abstract class BuildTargetMatcherParser<T> {
         throw new BuildTargetParseException(
             String.format("The %s pattern must occur at the end of the command", wildcardSuffix));
       }
-      return createWildCardPattern(cellNames, buildTargetPattern);
+      return createWildCardPattern(cellNames.getCellNameResolver(), buildTargetPattern);
     }
 
     UnconfiguredBuildTargetView target =
@@ -97,15 +97,13 @@ public abstract class BuildTargetMatcherParser<T> {
     }
   }
 
-  private T createWildCardPattern(CellPathResolver cellNames, String buildTargetPatternWithCell) {
-    Path cellPath;
+  private T createWildCardPattern(CellNameResolver cellNames, String buildTargetPatternWithCell) {
+    CanonicalCellName cellName;
     String buildTargetPattern;
     int index = buildTargetPatternWithCell.indexOf(BUILD_RULE_PREFIX);
     if (index > 0) {
       try {
-        cellPath =
-            cellNames.getCellPathOrThrow(
-                Optional.of(buildTargetPatternWithCell.substring(0, index)));
+        cellName = cellNames.getName(Optional.of(buildTargetPatternWithCell.substring(0, index)));
       } catch (UnknownCellException e) {
         throw new BuildTargetParseException(
             String.format(
@@ -114,7 +112,7 @@ public abstract class BuildTargetMatcherParser<T> {
       }
       buildTargetPattern = buildTargetPatternWithCell.substring(index);
     } else {
-      cellPath = cellNames.getCellPathOrThrow(Optional.empty());
+      cellName = cellNames.getName(Optional.empty());
       buildTargetPattern = buildTargetPatternWithCell;
     }
 
@@ -138,7 +136,6 @@ public abstract class BuildTargetMatcherParser<T> {
       basePath = basePath.substring(0, basePath.length() - "/".length());
     }
     ForwardRelativePath forwardRelativePath = ForwardRelativePath.of(basePath);
-    CanonicalCellName cellName = cellNames.getNewCellPathResolver().getCanonicalCellName(cellPath);
     return createForDescendants(CellRelativePath.of(cellName, forwardRelativePath));
   }
 
