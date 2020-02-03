@@ -84,8 +84,10 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -649,7 +651,16 @@ public class BuildCommand extends AbstractCommand {
         Files.createSymbolicLink(absolutePathWithoutHash, absolutePathWithHash);
         break;
       case HARDLINK:
-        if (Files.isDirectory(absolutePathWithHash)) {
+        boolean isDirectory;
+        try {
+          isDirectory =
+              Files.readAttributes(absolutePathWithHash, BasicFileAttributes.class).isDirectory();
+        } catch (NoSuchFileException e) {
+          // Rule did not produce a file.
+          // It should not be possible, but it happens.
+          return;
+        }
+        if (isDirectory) {
           Files.createSymbolicLink(absolutePathWithoutHash, absolutePathWithHash);
         } else {
           Files.createLink(absolutePathWithoutHash, absolutePathWithHash);
