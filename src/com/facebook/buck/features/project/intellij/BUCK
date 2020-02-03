@@ -43,6 +43,7 @@ buck_module(
         "//src/com/facebook/buck/jvm/java:config",
         "//src/com/facebook/buck/jvm/java:packagefinder",
         "//src/com/facebook/buck/jvm/java:rules",
+        "//src/com/facebook/buck/jvm/java:steps",
         "//src/com/facebook/buck/jvm/java:support",
         "//src/com/facebook/buck/jvm/kotlin:kotlin",
         "//src/com/facebook/buck/jvm/scala:scala",

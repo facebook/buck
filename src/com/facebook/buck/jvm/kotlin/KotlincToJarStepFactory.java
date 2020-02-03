@@ -169,8 +169,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       Path kaptGeneratedOutput =
           BuildTargetPaths.getAnnotationPath(
               projectFilesystem, invokingRule, "__%s_kapt_generated__");
-      Path annotationGenFolder =
-          BuildPaths.getGenDir(projectFilesystem, invokingRule).resolve("__generated__");
+      Path annotationGenFolder = getKaptAnnotationGenPath(projectFilesystem, invokingRule);
       Path genOutputFolder =
           BuildTargetPaths.getGenPath(projectFilesystem, invokingRule, "__%s_gen_sources__");
       Path genOutput =
@@ -457,5 +456,10 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   @Override
   public boolean hasAnnotationProcessing() {
     return !javacOptions.getJavaAnnotationProcessorParams().isEmpty();
+  }
+
+  public static Path getKaptAnnotationGenPath(
+      ProjectFilesystem projectFilesystem, BuildTarget buildTarget) {
+    return BuildPaths.getGenDir(projectFilesystem, buildTarget).resolve("__generated__");
   }
 }

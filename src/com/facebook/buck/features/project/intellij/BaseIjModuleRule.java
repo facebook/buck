@@ -279,6 +279,13 @@ public abstract class BaseIjModuleRule<T extends BuildRuleArg> implements IjModu
     context.addGeneratedSourceCodeFolder(
         folderFactory.create(
             annotationOutputPath, false, ImmutableSortedSet.of(annotationOutputPath)));
+
+    moduleFactoryResolver
+        .getKaptAnnotationOutputPath(jvmLibraryTargetNode)
+        .ifPresent(
+            path ->
+                context.addGeneratedSourceCodeFolder(
+                    folderFactory.create(path, false, ImmutableSortedSet.of(path))));
   }
 
   private void addGeneratedOutputIfNeeded(
