@@ -55,6 +55,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.nio.file.Path;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -63,6 +64,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.immutables.value.Value;
 
 public class Omnibus {
@@ -546,6 +548,30 @@ public class Omnibus {
             cxxPlatform,
             undefinedSymbolsOnlyRoots));
 
+    // Resolve all `NativeLinkableInput`s in parallel, before using them below.
+    ImmutableList<? extends NativeLinkable> deps =
+        NativeLinkables.getNativeLinkables(
+            graphBuilder, spec.getDeps().values(), Linker.LinkableDepType.SHARED);
+    ImmutableMap<BuildTarget, NativeLinkableInput> inputs =
+        ImmutableMap.copyOf(
+            graphBuilder
+                .getParallelizer()
+                .maybeParallelizeTransform(
+                    ImmutableList.<NativeLinkable>builder()
+                        .addAll(spec.getBody().values())
+                        .addAll(deps)
+                        .build(),
+                    nativeLinkable ->
+                        new AbstractMap.SimpleEntry<>(
+                            Objects.requireNonNull(nativeLinkable).getBuildTarget(),
+                            NativeLinkables.getNativeLinkableInput(
+                                spec.getBody().containsKey(nativeLinkable.getBuildTarget())
+                                    ? Linker.LinkableDepType.STATIC_PIC
+                                    : Linker.LinkableDepType.SHARED,
+                                nativeLinkable,
+                                graphBuilder,
+                                buildTarget.getTargetConfiguration()))));
+
     // Walk the graph in topological order, appending each nodes contributions to the link.
     ImmutableList<BuildTarget> targets = TopologicalSort.sort(spec.getGraph()).reverse();
     for (BuildTarget target : targets) {
@@ -565,29 +591,13 @@ public class Omnibus {
 
       // Otherwise, this is a body node, and we need to add its static library to the link line,
       // so that the linker can discard unused object files from it.
-      NativeLinkable nativeLinkable = Objects.requireNonNull(spec.getBody().get(target));
-      NativeLinkableInput input =
-          NativeLinkables.getNativeLinkableInput(
-              Linker.LinkableDepType.STATIC_PIC,
-              nativeLinkable,
-              graphBuilder,
-              buildTarget.getTargetConfiguration());
-      argsBuilder.addAll(input.getArgs());
+      argsBuilder.addAll(inputs.get(target).getArgs());
     }
 
     // We process all excluded omnibus deps last, and just add their components as if this were a
     // normal shared link.
-    ImmutableList<? extends NativeLinkable> deps =
-        NativeLinkables.getNativeLinkables(
-            graphBuilder, spec.getDeps().values(), Linker.LinkableDepType.SHARED);
     for (NativeLinkable nativeLinkable : deps) {
-      NativeLinkableInput input =
-          NativeLinkables.getNativeLinkableInput(
-              Linker.LinkableDepType.SHARED,
-              nativeLinkable,
-              graphBuilder,
-              buildTarget.getTargetConfiguration());
-      argsBuilder.addAll(input.getArgs());
+      argsBuilder.addAll(inputs.get(nativeLinkable.getBuildTarget()).getArgs());
     }
 
     // Create the merged omnibus library using the arguments assembled above.
@@ -653,11 +663,33 @@ public class Omnibus {
             extraLdflags);
 
     // Create rule for each of the root nodes, linking against the dummy omnibus library above.
-    for (NativeLinkTarget target : spec.getRoots().values()) {
+    graphBuilder
+        .getParallelizer()
+        .maybeParallelizeTransform(
+            spec.getRoots().values().stream()
+                .filter(target -> !shouldCreateDummyRoot(target))
+                .collect(Collectors.toList()),
+            target -> {
+              OmnibusRoot root =
+                  createRoot(
+                      buildTarget,
+                      projectFilesystem,
+                      cellPathResolver,
+                      graphBuilder,
+                      cxxBuckConfig,
+                      cxxPlatform,
+                      extraLdflags,
+                      spec,
+                      dummyOmnibus,
+                      target);
+              return new AbstractMap.SimpleEntry<>(target.getBuildTarget(), root);
+            })
+        .forEach(libs::putRoots);
 
-      // For executable roots, some platforms can't properly build them when there are any
-      // unresolved symbols, so we initially link a dummy root just to provide a way to grab the
-      // undefined symbol list we need to build the real omnibus library.
+    // For executable roots, some platforms can't properly build them when there are any
+    // unresolved symbols, so we initially link a dummy root just to provide a way to grab the
+    // undefined symbol list we need to build the real omnibus library.
+    for (NativeLinkTarget target : spec.getRoots().values()) {
       if (shouldCreateDummyRoot(target)) {
         createDummyRoot(
             buildTarget,
@@ -670,20 +702,6 @@ public class Omnibus {
             spec,
             dummyOmnibus,
             target);
-      } else {
-        OmnibusRoot root =
-            createRoot(
-                buildTarget,
-                projectFilesystem,
-                cellPathResolver,
-                graphBuilder,
-                cxxBuckConfig,
-                cxxPlatform,
-                extraLdflags,
-                spec,
-                dummyOmnibus,
-                target);
-        libs.putRoots(target.getBuildTarget(), root);
       }
     }
 
