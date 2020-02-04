@@ -25,9 +25,11 @@ import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.SortedSet;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -47,19 +49,17 @@ import javax.annotation.Nullable;
  */
 public final class DependencyAggregation extends AbstractBuildRule implements HasRuntimeDeps {
 
-  private final ImmutableSortedSet<BuildRule> deps;
+  private final Supplier<ImmutableSortedSet<BuildRule>> deps;
 
   public DependencyAggregation(
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
-      ImmutableSortedSet<BuildRule> deps) {
+      BuildTarget buildTarget, ProjectFilesystem projectFilesystem, Iterable<BuildRule> deps) {
     super(buildTarget, projectFilesystem);
-    this.deps = deps;
+    this.deps = Suppliers.memoize(() -> ImmutableSortedSet.copyOf(deps));
   }
 
   @Override
   public SortedSet<BuildRule> getBuildDeps() {
-    return deps;
+    return deps.get();
   }
 
   @Override
@@ -84,6 +84,6 @@ public final class DependencyAggregation extends AbstractBuildRule implements Ha
   // change).
   @Override
   public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
-    return deps.stream().map(BuildRule::getBuildTarget);
+    return deps.get().stream().map(BuildRule::getBuildTarget);
   }
 }
