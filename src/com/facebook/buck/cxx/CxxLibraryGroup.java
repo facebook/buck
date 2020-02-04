@@ -38,6 +38,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableCacheKey;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.PlatformLockedNativeLinkableGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -61,6 +62,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -248,61 +250,108 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
     return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform, graphBuilder);
   }
 
+  private void forEachNativeLinkableDep(
+      BuildRuleResolver ruleResolver, Consumer<? super NativeLinkableGroup> consumer) {
+    if (!propagateLinkables) {
+      return;
+    }
+    deps.forEachForAllPlatforms(NativeLinkableGroups.filterConsumer(ruleResolver, consumer));
+  }
+
   @Override
   public Iterable<NativeLinkableGroup> getNativeLinkableDeps(BuildRuleResolver ruleResolver) {
+    // Repeated from `consume*` to avoid allocation.  Remove once relevant callers have been
+    // migrated.
     if (!propagateLinkables) {
       return ImmutableList.of();
     }
-    return RichStream.from(deps.getForAllPlatforms(ruleResolver))
-        .filter(NativeLinkableGroup.class)
-        .toImmutableList();
+    ImmutableList.Builder<NativeLinkableGroup> builder = ImmutableList.builder();
+    forEachNativeLinkableDep(ruleResolver, builder::add);
+    return builder.build();
+  }
+
+  private void forEachNativeLinkableDepForPlatform(
+      CxxPlatform cxxPlatform,
+      BuildRuleResolver ruleResolver,
+      Consumer<? super NativeLinkableGroup> consumer) {
+    if (!propagateLinkables) {
+      return;
+    }
+    if (!isPlatformSupported(cxxPlatform)) {
+      return;
+    }
+    deps.forEach(cxxPlatform, NativeLinkableGroups.filterConsumer(ruleResolver, consumer));
   }
 
   @Override
   public Iterable<NativeLinkableGroup> getNativeLinkableDepsForPlatform(
       CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+    // Repeated from `consume*` to avoid allocation.  Remove once relevant callers have been
+    // migrated.
     if (!propagateLinkables) {
       return ImmutableList.of();
     }
     if (!isPlatformSupported(cxxPlatform)) {
       return ImmutableList.of();
     }
-    return RichStream.from(deps.get(ruleResolver, cxxPlatform))
-        .filter(NativeLinkableGroup.class)
-        .toImmutableList();
+    ImmutableList.Builder<NativeLinkableGroup> builder = ImmutableList.builder();
+    forEachNativeLinkableDepForPlatform(cxxPlatform, ruleResolver, builder::add);
+    return builder.build();
+  }
+
+  private void forEachNativeLinkableExportedDep(
+      BuildRuleResolver ruleResolver, Consumer<? super NativeLinkableGroup> consumer) {
+    if (!propagateLinkables) {
+      return;
+    }
+    exportedDeps.forEachForAllPlatforms(
+        NativeLinkableGroups.filterConsumer(ruleResolver, consumer));
   }
 
   @Override
   public Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDeps(
       BuildRuleResolver ruleResolver) {
+    // Repeated from `consume*` to avoid allocation.  Remove once relevant callers have been
+    // migrated.
     if (!propagateLinkables) {
       return ImmutableList.of();
     }
-    return RichStream.from(exportedDeps.getForAllPlatforms(ruleResolver))
-        .filter(NativeLinkableGroup.class)
-        .toImmutableList();
+    ImmutableList.Builder<NativeLinkableGroup> builder = ImmutableList.builder();
+    forEachNativeLinkableExportedDep(ruleResolver, builder::add);
+    return builder.build();
+  }
+
+  private void forEachNativeLinkableExportedDepForPlatform(
+      CxxPlatform cxxPlatform,
+      ActionGraphBuilder graphBuilder,
+      Consumer<? super NativeLinkableGroup> consumer) {
+    if (!propagateLinkables) {
+      return;
+    }
+    if (!isPlatformSupported(cxxPlatform)) {
+      return;
+    }
+    exportedDeps.forEach(cxxPlatform, NativeLinkableGroups.filterConsumer(graphBuilder, consumer));
+    delegate
+        .requireDelegate(getBuildTarget(), cxxPlatform, graphBuilder)
+        .ifPresent(
+            d -> d.getNativeLinkableExportedDeps().ifPresent(deps -> deps.forEach(consumer)));
   }
 
   @Override
   public Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDepsForPlatform(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    // Repeated from `consume*` to avoid allocation.  Remove once relevant callers have been
+    // migrated.
     if (!propagateLinkables) {
       return ImmutableList.of();
     }
     if (!isPlatformSupported(cxxPlatform)) {
       return ImmutableList.of();
     }
-
-    ImmutableList<NativeLinkableGroup> delegateLinkables =
-        delegate
-            .requireDelegate(getBuildTarget(), cxxPlatform, graphBuilder)
-            .flatMap(d -> d.getNativeLinkableExportedDeps())
-            .orElse(ImmutableList.of());
-
-    return RichStream.from(exportedDeps.get(graphBuilder, cxxPlatform))
-        .filter(NativeLinkableGroup.class)
-        .concat(RichStream.from(delegateLinkables))
-        .toImmutableList();
+    ImmutableList.Builder<NativeLinkableGroup> builder = ImmutableList.builder();
+    forEachNativeLinkableExportedDepForPlatform(cxxPlatform, graphBuilder, builder::add);
+    return builder.build();
   }
 
   private NativeLinkableInput computeNativeLinkableInputUncached(
