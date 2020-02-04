@@ -25,6 +25,7 @@ import select
 import socket
 import struct
 import sys
+from io import BytesIO
 from threading import Condition, Event, Thread, RLock
 
 is_py2 = sys.version_info[0] == 2
@@ -50,11 +51,6 @@ if sys.platform == "win32":
 
     msvcrt.setmode(sys.stdout.fileno(), os.O_BINARY)
     msvcrt.setmode(sys.stderr.fileno(), os.O_BINARY)
-
-
-def bytes_to_str(bytes_to_convert):
-    """Version independent way of converting bytes to string."""
-    return bytes_to_convert if is_py2 else bytes_to_convert.decode("utf-8")
 
 
 # @author <a href="http://www.martiansoftware.com/contact.html">Marty Lamb</a>
@@ -605,7 +601,7 @@ class NailgunConnection(object):
         """
         Sends a NAILGUN_TTY_# environment variable.
         """
-        if not f or not hasattr(f, "fileno"):
+        if not f or not hasattr(f, "fileno") or isinstance(f, BytesIO):
             return
         try:
             fileno = f.fileno()
@@ -631,12 +627,21 @@ class NailgunConnection(object):
         object. Used to route data to stdout or stderr on the client.
         """
         bytes_read = 0
+        dest_fd = dest_file
+        flush = False
+        if dest_file and hasattr(dest_file, 'buffer'):
+            dest_fd = dest_file.buffer
+            flush = True
+            # Make sure we've written anything that already existed in the buffer
+            dest_fd.flush()
 
         while bytes_read < num_bytes:
             bytes_to_read = min(len(self.buf), num_bytes - bytes_read)
             bytes_received = self.transport.recv_into(self.buf, bytes_to_read)
-            if dest_file:
-                dest_file.write(bytes_to_str(self.buf[:bytes_received]))
+            if dest_fd:
+                dest_fd.write(self.buf[:bytes_received])
+                if flush:
+                    dest_fd.flush()
             bytes_read += bytes_received
 
     def _recv_to_buffer(self, num_bytes, buf):
