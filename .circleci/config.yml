@@ -73,6 +73,16 @@ install_groovy: &install_groovy
     sdk install groovy 2.4.18
     groovy -version
 
+install_common_languages: &install_common_languages
+  - run:
+      <<: *install_openjdk8
+  - run:
+      <<: *install_android_sdk
+  - run:
+      <<: *install_golang
+  - run:
+      <<: *install_python
+
 install_ghc: &install_ghc
   name: Install Ghc
   command: |
@@ -116,6 +126,13 @@ linux_environment: &linux_environment
   TERM: "dumb"
   BUCK_NUM_THREADS: 3
 
+macos_environment: &macos_environment
+  PLATFORM: "macos"
+  BUCKROOT: "/Users/distiller/buck"
+  ANDROID_SDK: "/Users/distiller/android-sdk"
+  TERM: "dumb"
+  BUCK_NUM_THREADS: 3
+
 jobs:
   linux_build_openjdk8:
     environment:
@@ -127,14 +144,15 @@ jobs:
     steps:
       # Steps run sequentially in separate shells
       - checkout
-      - run:
-          <<: *install_openjdk8
-      - run:
-          <<: *install_android_sdk
-      - run:
-          <<: *install_golang
-      - run:
-          <<: *install_python
+      <<: *install_common_languages
+      #- run:
+      #    <<: *install_openjdk8
+      #- run:
+      #    <<: *install_android_sdk
+      #- run:
+      #    <<: *install_golang
+      #- run:
+      #    <<: *install_python
       - run:
           <<: *run_ant_build
       - run:
@@ -183,11 +201,7 @@ jobs:
 
   linux_build_ant:
     environment:
-      PLATFORM: "linux"
-      BUCKROOT: "/home/circleci/buck"
-      ANDROID_SDK: "/home/circleci/android-sdk"
-      TERM: "dumb"
-      BUCK_NUM_THREADS: 3
+      <<: *linux_environment
     working_directory: "/home/circleci/buck"
     machine:
       image: ubuntu-1604:201903-01
@@ -217,11 +231,7 @@ jobs:
 
   linux_test_integration:
     environment:
-      PLATFORM: "linux"
-      BUCKROOT: "/home/circleci/buck"
-      ANDROID_SDK: "/home/circleci/android-sdk"
-      TERM: "dumb"
-      BUCK_NUM_THREADS: 3
+      <<: *linux_environment
     working_directory: "/home/circleci/buck"
     machine:
       image: ubuntu-1604:201903-01
@@ -255,11 +265,7 @@ jobs:
 
   linux_test_heavy_integration:
     environment:
-      PLATFORM: "linux"
-      BUCKROOT: "/home/circleci/buck"
-      ANDROID_SDK: "/home/circleci/android-sdk"
-      TERM: "dumb"
-      BUCK_NUM_THREADS: 3
+      <<: *linux_environment
     working_directory: "/home/circleci/buck"
     machine:
       image: ubuntu-1604:201903-01
@@ -294,11 +300,7 @@ jobs:
 
   linux_test_android_ndk_15:
     environment:
-      PLATFORM: "linux"
-      BUCKROOT: "/home/circleci/buck"
-      ANDROID_SDK: "/home/circleci/android-sdk"
-      TERM: "dumb"
-      BUCK_NUM_THREADS: 3
+      <<: *linux_environment
     working_directory: "/home/circleci/buck"
     machine:
       image: ubuntu-1604:201903-01
@@ -333,11 +335,7 @@ jobs:
 
   linux_test_android_ndk_16:
     environment:
-      PLATFORM: "linux"
-      BUCKROOT: "/home/circleci/buck"
-      ANDROID_SDK: "/home/circleci/android-sdk"
-      TERM: "dumb"
-      BUCK_NUM_THREADS: 3
+      <<: *linux_environment
     working_directory: "/home/circleci/buck"
     machine:
       image: ubuntu-1604:201903-01
@@ -372,11 +370,7 @@ jobs:
 
   linux_test_android_ndk_17:
     environment:
-      PLATFORM: "linux"
-      BUCKROOT: "/home/circleci/buck"
-      ANDROID_SDK: "/home/circleci/android-sdk"
-      TERM: "dumb"
-      BUCK_NUM_THREADS: 3
+      <<: *linux_environment
     working_directory: "/home/circleci/buck"
     machine:
       image: ubuntu-1604:201903-01
@@ -418,11 +412,7 @@ jobs:
 
   linux_test_android_ndk_18:
     environment:
-      PLATFORM: "linux"
-      BUCKROOT: "/home/circleci/buck"
-      ANDROID_SDK: "/home/circleci/android-sdk"
-      TERM: "dumb"
-      BUCK_NUM_THREADS: 3
+      <<: *linux_environment
     working_directory: "/home/circleci/buck"
     machine:
       image: ubuntu-1604:201903-01
@@ -457,11 +447,7 @@ jobs:
 
   mac_build_openjdk8:
     environment:
-      PLATFORM: "macos"
-      BUCKROOT: "/Users/distiller/buck"
-      ANDROID_SDK: "/Users/distiller/android-sdk"
-      TERM: "dumb"
-      BUCK_NUM_THREADS: 3
+      <<: *macos_environment
     working_directory: "/Users/distiller/buck"
     macos:
       xcode: "11.3.1"
@@ -491,11 +477,7 @@ jobs:
 
   macos_unit_groovy:
     environment:
-      PLATFORM: "macos"
-      BUCKROOT: "/Users/distiller/buck"
-      ANDROID_SDK: "/Users/distiller/android-sdk"
-      TERM: "dumb"
-      BUCK_NUM_THREADS: 3
+      <<: *macos_environment
     working_directory: "/Users/distiller/buck"
     macos:
       xcode: "11.3.1"
@@ -527,11 +509,7 @@ jobs:
 
   macos_build_ant:
     environment:
-      PLATFORM: "macos"
-      BUCKROOT: "/Users/distiller/buck"
-      ANDROID_SDK: "/Users/distiller/android-sdk"
-      TERM: "dumb"
-      BUCK_NUM_THREADS: 3
+      <<: *macos_environment
     working_directory: "/Users/distiller/buck"
     macos:
       xcode: "11.3.1"
@@ -561,11 +539,7 @@ jobs:
 
   macos_test_integration:
     environment:
-      PLATFORM: "macos"
-      BUCKROOT: "/Users/distiller/buck"
-      ANDROID_SDK: "/Users/distiller/android-sdk"
-      TERM: "dumb"
-      BUCK_NUM_THREADS: 3
+      <<: *macos_environment
     working_directory: "/Users/distiller/buck"
     macos:
       # The tests do not support xcode 11.x.x yet.
@@ -612,11 +586,7 @@ jobs:
 
   macos_test_heavy_integration:
     environment:
-      PLATFORM: "macos"
-      BUCKROOT: "/Users/distiller/buck"
-      ANDROID_SDK: "/Users/distiller/android-sdk"
-      TERM: "dumb"
-      BUCK_NUM_THREADS: 3
+      <<: *macos_environment
     working_directory: "/Users/distiller/buck"
     macos:
       xcode: "11.3.1"
@@ -653,11 +623,7 @@ jobs:
 
   macos_test_android_ndk_15:
     environment:
-      PLATFORM: "macos"
-      BUCKROOT: "/Users/distiller/buck"
-      ANDROID_SDK: "/Users/distiller/android-sdk"
-      TERM: "dumb"
-      BUCK_NUM_THREADS: 3
+      <<: *macos_environment
     working_directory: "/Users/distiller/buck"
     macos:
       xcode: "11.3.1"
@@ -692,11 +658,7 @@ jobs:
 
   macos_test_android_ndk_16:
     environment:
-      PLATFORM: "macos"
-      BUCKROOT: "/Users/distiller/buck"
-      ANDROID_SDK: "/Users/distiller/android-sdk"
-      TERM: "dumb"
-      BUCK_NUM_THREADS: 3
+      <<: *macos_environment
     working_directory: "/Users/distiller/buck"
     macos:
       xcode: "11.3.1"
@@ -731,11 +693,7 @@ jobs:
 
   macos_test_android_ndk_17:
     environment:
-      PLATFORM: "macos"
-      BUCKROOT: "/Users/distiller/buck"
-      ANDROID_SDK: "/Users/distiller/android-sdk"
-      TERM: "dumb"
-      BUCK_NUM_THREADS: 3
+      <<: *macos_environment
     working_directory: "/Users/distiller/buck"
     macos:
       xcode: "11.3.1"
@@ -781,11 +739,7 @@ jobs:
 
   macos_test_android_ndk_18:
     environment:
-      PLATFORM: "macos"
-      BUCKROOT: "/Users/distiller/buck"
-      ANDROID_SDK: "/Users/distiller/android-sdk"
-      TERM: "dumb"
-      BUCK_NUM_THREADS: 3
+      <<: *macos_environment
     working_directory: "/Users/distiller/buck"
     macos:
       xcode: "11.3.1"
