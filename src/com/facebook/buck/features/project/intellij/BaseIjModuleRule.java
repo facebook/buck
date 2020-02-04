@@ -277,6 +277,7 @@ public abstract class BaseIjModuleRule<T extends BuildRuleArg> implements IjModu
 
     Path annotationOutputPath = annotationOutput.get();
     context.addGeneratedSourceCodeFolder(
+        targetNode.getBuildTarget(),
         folderFactory.create(
             annotationOutputPath, false, ImmutableSortedSet.of(annotationOutputPath)));
 
@@ -285,6 +286,7 @@ public abstract class BaseIjModuleRule<T extends BuildRuleArg> implements IjModu
         .ifPresent(
             path ->
                 context.addGeneratedSourceCodeFolder(
+                    targetNode.getBuildTarget(),
                     folderFactory.create(path, false, ImmutableSortedSet.of(path))));
   }
 
@@ -295,6 +297,7 @@ public abstract class BaseIjModuleRule<T extends BuildRuleArg> implements IjModu
 
     for (Path generatedSourcePath : generatedSourcePaths) {
       context.addGeneratedSourceCodeFolder(
+          targetNode.getBuildTarget(),
           folderFactory.create(
               generatedSourcePath, false, ImmutableSortedSet.of(generatedSourcePath)));
     }

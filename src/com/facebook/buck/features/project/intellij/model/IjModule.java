@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -46,6 +47,8 @@ public abstract class IjModule implements IjProjectElement {
   public abstract ImmutableSet<BuildTarget> getTargets();
 
   public abstract ImmutableSet<BuildTarget> getNonSourceBuildTargets();
+
+  public abstract Map<BuildTarget, List<IjFolder>> getTargetsToGeneratedSourcesMap();
 
   /** @return path to the top-most directory the module is responsible for. */
   public abstract Path getModuleBasePath();

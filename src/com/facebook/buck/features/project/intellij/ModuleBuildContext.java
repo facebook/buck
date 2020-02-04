@@ -37,7 +37,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Multimap;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -51,6 +53,7 @@ public class ModuleBuildContext {
   private ImmutableSet.Builder<IjLibrary> extraLibraryDependenciesBuilder;
   private ImmutableSet.Builder<Path> extraModuleDependenciesBuilder;
   private ImmutableSet.Builder<BuildTarget> nonSourceBuildTargets;
+  private Map<BuildTarget, List<IjFolder>> targetsToGeneratedSourcesMap;
   private Map<Path, IjFolder> generatedSourceCodeFoldersMap = new HashMap<>();
   private Map<Path, IjFolder> sourceFoldersMergeMap;
   // See comment in getDependencies for these two member variables.
@@ -67,6 +70,7 @@ public class ModuleBuildContext {
     this.extraLibraryDependenciesBuilder = new ImmutableSet.Builder<>();
     this.extraModuleDependenciesBuilder = new ImmutableSet.Builder<>();
     this.nonSourceBuildTargets = new ImmutableSet.Builder<>();
+    this.targetsToGeneratedSourcesMap = new HashMap<>();
     this.sourceFoldersMergeMap = new HashMap<>();
     this.dependencyTypeMap = new HashMap<>();
     this.dependencyOriginMap = HashMultimap.create();
@@ -123,9 +127,17 @@ public class ModuleBuildContext {
     return nonSourceBuildTargets.build();
   }
 
-  public void addGeneratedSourceCodeFolder(IjFolder generatedFolder) {
+  public Map<BuildTarget, List<IjFolder>> getTargetsToGeneratedSourcesMap() {
+    return targetsToGeneratedSourcesMap;
+  }
+
+  /** Add BuildTarget and its associated IjFolder */
+  public void addGeneratedSourceCodeFolder(BuildTarget buildTarget, IjFolder generatedFolder) {
     Preconditions.checkState(
         generatedSourceCodeFoldersMap.put(generatedFolder.getPath(), generatedFolder) == null);
+    targetsToGeneratedSourcesMap
+        .computeIfAbsent(buildTarget, target -> new ArrayList<>())
+        .add(generatedFolder);
   }
 
   public ImmutableCollection<IjFolder> getGeneratedSourceCodeFolders() {

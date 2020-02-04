@@ -27,6 +27,7 @@ import com.facebook.buck.features.project.intellij.model.IjLibrary;
 import com.facebook.buck.features.project.intellij.model.IjModule;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 import com.facebook.buck.features.project.intellij.model.ModuleIndexEntry;
+import com.facebook.buck.features.project.intellij.model.folders.IjFolder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.util.json.ObjectMappers;
@@ -41,10 +42,12 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 import org.stringtemplate.v4.ST;
 
 /** Writes the serialized representations of IntelliJ project components to disk. */
@@ -53,6 +56,7 @@ public class IjProjectWriter {
   static final String INTELLIJ_TYPE = "intellij.type";
   static final String INTELLIJ_NAME = "intellij.name";
   static final String INTELLIJ_FILE_PATH = "intellij.file_path";
+  static final String GENERATED_SOURCES = "generated_sources";
   static final String MODULE_LANG = "module.lang";
   static final String MODULE_TYPE = "module";
   static final String BUCK_TYPE = "buck.type";
@@ -122,7 +126,7 @@ public class IjProjectWriter {
     }
   }
 
-  private Map<String, Map<String, String>> readTargetInfoMap() throws IOException {
+  private Map<String, Map<String, Object>> readTargetInfoMap() throws IOException {
     Path targetInfoMapPath = getTargetInfoMapPath();
     return outFilesystem.exists(targetInfoMapPath)
         ? ObjectMappers.createParser(outFilesystem.newFileInputStream(targetInfoMapPath))
@@ -132,23 +136,32 @@ public class IjProjectWriter {
 
   private void writeTargetInfoMap(IjProjectTemplateDataPreparer projectDataPreparer, boolean update)
       throws IOException {
-    Map<String, Map<String, String>> targetInfoMap =
+    Map<String, Map<String, Object>> targetInfoMap =
         update ? readTargetInfoMap() : Maps.newTreeMap();
     projectDataPreparer
         .getModulesToBeWritten()
         .forEach(
             module -> {
+              Map<BuildTarget, List<IjFolder>> targetsToGeneratedSourcesMap =
+                  module.getTargetsToGeneratedSourcesMap();
               module
                   .getTargets()
                   .forEach(
                       target -> {
-                        Map<String, String> targetInfo = Maps.newTreeMap();
+                        Map<String, Object> targetInfo = Maps.newTreeMap();
                         targetInfo.put(INTELLIJ_TYPE, MODULE_TYPE);
                         targetInfo.put(INTELLIJ_NAME, module.getName());
                         targetInfo.put(
                             INTELLIJ_FILE_PATH,
                             projectPaths.getModuleImlFilePath(module).toString());
                         targetInfo.put(BUCK_TYPE, getRuleNameForBuildTarget(target));
+                        if (targetsToGeneratedSourcesMap.containsKey(target)) {
+                          targetInfo.put(
+                              GENERATED_SOURCES,
+                              targetsToGeneratedSourcesMap.get(target).stream()
+                                  .map(IjFolder::getPath)
+                                  .collect(Collectors.toList()));
+                        }
                         getModuleLang(target)
                             .ifPresent(
                                 moduleLang -> targetInfo.put(MODULE_LANG, moduleLang.toString()));
@@ -163,7 +176,7 @@ public class IjProjectWriter {
                   .getTargets()
                   .forEach(
                       target -> {
-                        Map<String, String> targetInfo = Maps.newTreeMap();
+                        Map<String, Object> targetInfo = Maps.newTreeMap();
                         targetInfo.put(INTELLIJ_TYPE, LIBRARY_TYPE);
                         targetInfo.put(INTELLIJ_NAME, library.getName());
                         targetInfo.put(
