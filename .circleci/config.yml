@@ -73,16 +73,6 @@ install_groovy: &install_groovy
     sdk install groovy 2.4.18
     groovy -version
 
-install_common_languages: &install_common_languages
-  - run:
-      <<: *install_openjdk8
-  - run:
-      <<: *install_android_sdk
-  - run:
-      <<: *install_golang
-  - run:
-      <<: *install_python
-
 install_ghc: &install_ghc
   name: Install Ghc
   command: |
@@ -144,15 +134,14 @@ jobs:
     steps:
       # Steps run sequentially in separate shells
       - checkout
-      <<: *install_common_languages
-      #- run:
-      #    <<: *install_openjdk8
-      #- run:
-      #    <<: *install_android_sdk
-      #- run:
-      #    <<: *install_golang
-      #- run:
-      #    <<: *install_python
+      - run:
+          <<: *install_openjdk8
+      - run:
+          <<: *install_android_sdk
+      - run:
+          <<: *install_golang
+      - run:
+          <<: *install_python
       - run:
           <<: *run_ant_build
       - run:
