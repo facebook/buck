@@ -108,15 +108,18 @@ run_buck_build: &run_buck_build
     set -ex
     ./bin/buck build buck --out "./new_buck.pex" || { cat "buck-out/log/buck-0.log"; exit 1; }
 
+linux_environment: &linux_environment
+  # Use string constant for values, no environment variables 
+  PLATFORM: "linux"
+  BUCKROOT: "/home/circleci/buck"
+  ANDROID_SDK: "/home/circleci/android-sdk"
+  TERM: "dumb"
+  BUCK_NUM_THREADS: 3
+
 jobs:
   linux_build_openjdk8:
     environment:
-      # Use string constant for values, no environment variables 
-      PLATFORM: "linux"
-      BUCKROOT: "/home/circleci/buck"
-      ANDROID_SDK: "/home/circleci/android-sdk"
-      TERM: "dumb"
-      BUCK_NUM_THREADS: 3
+      <<: *linux_environment
     working_directory: "/home/circleci/buck"
     machine:
       # linux VM
@@ -147,11 +150,7 @@ jobs:
 
   linux_unit_groovy:
     environment:
-      PLATFORM: "linux"
-      BUCKROOT: "/home/circleci/buck"
-      ANDROID_SDK: "/home/circleci/android-sdk"
-      TERM: "dumb"
-      BUCK_NUM_THREADS: 3
+      <<: *linux_environment
     working_directory: "/home/circleci/buck"
     machine:
       image: ubuntu-1604:201903-01
