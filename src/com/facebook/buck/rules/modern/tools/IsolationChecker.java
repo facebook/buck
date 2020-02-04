@@ -343,30 +343,26 @@ public class IsolationChecker {
     }
 
     void handlePath(Path path, Consumer<Path> consumer) {
-      inputsCache
-          .computeIfAbsent(
-              path,
-              ignored -> {
-                ImmutableList.Builder<Path> builder = ImmutableList.builder();
-                if (isInRepo(path)) {
-                  try {
-                    if (Files.isSymbolicLink(path)) {
-                      handlePath(
-                          path.getParent().resolve(Files.readSymbolicLink(path)), builder::add);
-                    } else if (Files.isDirectory(path)) {
-                      try (Stream<Path> list = Files.list(path)) {
-                        list.forEach(child -> handlePath(child, consumer));
-                      }
-                    }
-                  } catch (IOException e) {
-                    throw new RuntimeException(e);
-                  }
-                } else {
-                  builder.add(path);
-                }
-                return builder.build();
-              })
-          .forEach(consumer::accept);
+      if (!inputsCache.containsKey(path)) {
+        ImmutableList.Builder<Path> builder = ImmutableList.builder();
+        if (isInRepo(path)) {
+          try {
+            if (Files.isSymbolicLink(path)) {
+              handlePath(path.getParent().resolve(Files.readSymbolicLink(path)), builder::add);
+            } else if (Files.isDirectory(path)) {
+              try (Stream<Path> list = Files.list(path)) {
+                list.forEach(child -> handlePath(child, consumer));
+              }
+            }
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }
+        } else {
+          builder.add(path);
+        }
+        inputsCache.put(path, builder.build());
+      }
+      inputsCache.get(path).forEach(consumer::accept);
     }
   }
 
