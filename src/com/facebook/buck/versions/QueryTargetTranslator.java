@@ -81,7 +81,8 @@ public class QueryTargetTranslator implements TargetTranslator<Query> {
       builder.append(queryString, lastEnd, matcher.start());
       BuildTarget target =
           unconfiguredBuildTargetFactory
-              .createForBaseName(cellPathResolver, targetBaseName, matcher.group())
+              .createForBaseName(
+                  targetBaseName, matcher.group(), cellPathResolver.getCellNameResolver())
               .configure(query.getTargetConfiguration());
       Optional<BuildTarget> translated =
           translator.translate(cellPathResolver, targetBaseName, target);

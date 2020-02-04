@@ -437,7 +437,7 @@ public class BuildCommand extends AbstractCommand {
     BuildTarget explicitTarget =
         params
             .getUnconfiguredBuildTargetFactory()
-            .create(params.getCell().getCellPathResolver(), targetWithOutputLabel.getTargetName())
+            .create(targetWithOutputLabel.getTargetName(), params.getCell().getCellNameResolver())
             // TODO(nga): ignores default_target_platform and configuration detector
             .configure(targetConfiguration.orElse(UnconfiguredTargetConfiguration.INSTANCE));
     Iterable<BuildRule> actionGraphRules =

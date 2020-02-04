@@ -428,7 +428,7 @@ public class IjProjectCommandHelper {
       CellPathResolver cellPathResolver,
       ImmutableSet<String> patterns) {
     return RichStream.from(patterns)
-        .map(pattern -> parser.parse(cellPathResolver, pattern))
+        .map(pattern -> parser.parse(pattern, cellPathResolver.getCellNameResolver()))
         .toImmutableSet();
   }
 }

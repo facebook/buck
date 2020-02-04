@@ -34,7 +34,9 @@ public class TargetConfigurationSerializerForTests implements TargetConfiguratio
     UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory =
         new ParsingUnconfiguredBuildTargetViewFactory();
     return new JsonTargetConfigurationSerializer(
-            targetName -> unconfiguredBuildTargetFactory.create(cellPathResolver, targetName))
+            targetName ->
+                unconfiguredBuildTargetFactory.create(
+                    targetName, cellPathResolver.getCellNameResolver()))
         .serialize(targetConfiguration);
   }
 

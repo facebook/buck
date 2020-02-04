@@ -731,7 +731,9 @@ public final class MainRunner {
                 architecture,
                 platform,
                 clientEnvironment,
-                buildTargetName -> buildTargetFactory.create(cellPathResolver, buildTargetName));
+                buildTargetName ->
+                    buildTargetFactory.create(
+                        buildTargetName, cellPathResolver.getCellNameResolver()));
       }
 
       // Set so that we can use some settings when we print out messages to users
@@ -869,7 +871,7 @@ public final class MainRunner {
 
       TargetConfigurationSerializer targetConfigurationSerializer =
           new JsonTargetConfigurationSerializer(
-              targetName -> buildTargetFactory.create(rootCell.getCellPathResolver(), targetName));
+              targetName -> buildTargetFactory.create(targetName, rootCell.getCellNameResolver()));
 
       Pair<BuckGlobalState, LifecycleStatus> buckGlobalStateRequest =
           buckGlobalStateLifecycleManager.getBuckGlobalState(
@@ -1169,7 +1171,8 @@ public final class MainRunner {
                 new ArtifactCaches(
                     cacheBuckConfig,
                     buildEventBus,
-                    target -> buildTargetFactory.create(cellPathResolver, target),
+                    target ->
+                        buildTargetFactory.create(target, cellPathResolver.getCellNameResolver()),
                     targetConfigurationSerializer,
                     filesystem,
                     executionEnvironment.getWifiSsid(),

@@ -73,7 +73,7 @@ public class SelectorFactory {
             new SelectorKey(
                 ConfigurationBuildTargets.convert(
                     unconfiguredBuildTargetViewFactory.createForPathRelativeToProjectRoot(
-                        cellPathResolver, pathRelativeToProjectRoot, key)));
+                        pathRelativeToProjectRoot, key, cellPathResolver.getCellNameResolver())));
       }
       if (entry.getValue() == Runtime.NONE) {
         result.remove(selectorKey);

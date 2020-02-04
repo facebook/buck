@@ -101,7 +101,9 @@ public class BuckGlobalStateLifecycleManagerTest {
     CellPathResolver cellPathResolver = TestCellPathResolver.get(filesystem);
     targetConfigurationSerializer =
         new JsonTargetConfigurationSerializer(
-            buildTarget -> unconfiguredBuildTargetFactory.create(cellPathResolver, buildTarget));
+            buildTarget ->
+                unconfiguredBuildTargetFactory.create(
+                    buildTarget, cellPathResolver.getCellNameResolver()));
   }
 
   @Test

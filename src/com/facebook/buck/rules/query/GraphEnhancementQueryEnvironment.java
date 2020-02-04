@@ -299,7 +299,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment<QueryB
       try {
         BuildTarget buildTarget =
             unconfiguredBuildTargetFactory
-                .createForBaseName(cellNames, targetBaseName, target)
+                .createForBaseName(targetBaseName, target, cellNames.getCellNameResolver())
                 .configure(targetConfiguration);
         return ImmutableSet.of(QueryBuildTarget.of(buildTarget));
       } catch (BuildTargetParseException e) {

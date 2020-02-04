@@ -16,7 +16,6 @@
 
 package com.facebook.buck.core.parser.buildtargetparser;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.exception.UnknownCellException;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
@@ -57,7 +56,7 @@ public abstract class BuildTargetMatcherParser<T> {
    * For cases 2 and 3, parseContext is expected to be {@link
    * BuildTargetMatcherParser#forVisibilityArgument()}.
    */
-  public final T parse(CellPathResolver cellNames, String buildTargetPattern) {
+  public final T parse(String buildTargetPattern, CellNameResolver cellNameResolver) {
     Preconditions.checkArgument(
         buildTargetPattern.contains(BUILD_RULE_PREFIX),
         "'%s' must start with '//' or a cell followed by '//'",
@@ -75,12 +74,12 @@ public abstract class BuildTargetMatcherParser<T> {
         throw new BuildTargetParseException(
             String.format("The %s pattern must occur at the end of the command", wildcardSuffix));
       }
-      return createWildCardPattern(cellNames.getCellNameResolver(), buildTargetPattern);
+      return createWildCardPattern(cellNameResolver, buildTargetPattern);
     }
 
     UnconfiguredBuildTargetView target =
         unconfiguredBuildTargetFactory.createWithWildcard(
-            cellNames, targetWithOutputLabel.getTargetName());
+            targetWithOutputLabel.getTargetName(), cellNameResolver);
     if (target.getShortNameAndFlavorPostfix().isEmpty()) {
       if (!targetWithOutputLabel.getOutputLabel().isDefault()) {
         throw createOutputLabelParseException(targetWithOutputLabel);

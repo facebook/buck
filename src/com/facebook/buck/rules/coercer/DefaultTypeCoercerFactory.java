@@ -120,7 +120,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
             // TODO(csarbora): make this work for all types of BuildTargetPatterns
             // probably differentiate them by inheritance
             return BuildTargetMatcherParser.forVisibilityArgument()
-                .parse(cellRoots, (String) object);
+                .parse((String) object, cellRoots.getCellNameResolver());
           }
         };
     unconfiguredBuildTargetFactory = new ParsingUnconfiguredBuildTargetViewFactory();

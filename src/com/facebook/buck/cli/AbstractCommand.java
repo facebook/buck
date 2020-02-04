@@ -512,7 +512,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
         .map(
             input ->
                 unconfiguredBuildTargetFactory.create(
-                    params.getCell().getCellPathResolver(), input))
+                    input, params.getCell().getCellNameResolver()))
         .map(
             unconfiguredBuildTarget ->
                 // TODO(nga): ignores default_target_platform and configuration detectors

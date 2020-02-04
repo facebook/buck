@@ -369,7 +369,9 @@ public class SuperConsoleEventBusListenerTest {
         new ParsingUnconfiguredBuildTargetViewFactory();
     DirArtifactCacheEvent.DirArtifactCacheEventFactory dirArtifactCacheEventFactory =
         new DirArtifactCacheEvent.DirArtifactCacheEventFactory(
-            target -> unconfiguredBuildTargetFactory.create(cellPathResolver, target),
+            target ->
+                unconfiguredBuildTargetFactory.create(
+                    target, cellPathResolver.getCellNameResolver()),
             TargetConfigurationSerializerForTests.create(cellPathResolver));
 
     ArtifactCacheEvent.Started dirFetchStarted =

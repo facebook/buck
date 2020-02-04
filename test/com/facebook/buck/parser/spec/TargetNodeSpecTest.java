@@ -160,6 +160,6 @@ public class TargetNodeSpecTest {
 
   private TargetNodeSpec parseTargetNodeSpec(Cell cell, String targetPattern) {
     return (new BuildTargetMatcherTargetNodeParser())
-        .parse(cell.getCellPathResolver(), targetPattern);
+        .parse(targetPattern, cell.getCellNameResolver());
   }
 }

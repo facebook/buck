@@ -57,7 +57,8 @@ public class TargetConfigurationFactory {
     }
 
     UnconfiguredBuildTargetView buildTarget =
-        unconfiguredBuildTargetViewFactory.create(cellPathResolver, targetConfiguration);
+        unconfiguredBuildTargetViewFactory.create(
+            targetConfiguration, cellPathResolver.getCellNameResolver());
     return RuleBasedTargetConfiguration.of(ConfigurationBuildTargets.convert(buildTarget));
   }
 
@@ -70,7 +71,7 @@ public class TargetConfigurationFactory {
 
     UnconfiguredBuildTargetView buildTarget =
         unconfiguredBuildTargetViewFactory.createForBaseName(
-            cellPathResolver, baseName, targetConfiguration);
+            baseName, targetConfiguration, cellPathResolver.getCellNameResolver());
     return RuleBasedTargetConfiguration.of(ConfigurationBuildTargets.convert(buildTarget));
   }
 }
