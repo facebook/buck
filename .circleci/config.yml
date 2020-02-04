@@ -3,12 +3,10 @@ version: 2.1
 install_openjdk8: &install_openjdk8
   name: Install OpenJDK8
   command: |
-    if [ "x${PLATFORM}" == "xlinux" ]
-    then
+    if [ "${PLATFORM}" == "linux" ]; then
       sudo apt-get update && sudo apt-get install openjdk-8-jdk
       sudo update-java-alternatives -s java-1.8.0-openjdk-amd64
-    elif [ "x${PLATFORM}" == "xmacos" ]
-    then
+    elif [ "${PLATFORM}" == "macos" ]; then
       brew cask install adoptopenjdk8
     fi
     java -version
@@ -17,16 +15,15 @@ install_android_sdk: &install_android_sdk
   name: Install Android SDK
   command: |
     sdk_os="linux"
-    if [ "x${PLATFORM}" == "xmacos" ]
-    then
+    if [ "${PLATFORM}" == "macos" ]; then
       sdk_os="darwin"
     fi
     sdk_zip_filename="sdk-tools-${sdk_os}-4333796.zip"
-    mkdir -p ${ANDROID_SDK}
-    cd ${ANDROID_SDK}
-    curl -O https://dl.google.com/android/repository/${sdk_zip_filename}
-    unzip ${sdk_zip_filename}
-    export PATH=${ANDROID_SDK}/tools/bin:$PATH
+    mkdir -p "${ANDROID_SDK}"
+    cd "${ANDROID_SDK}"
+    curl -O "https://dl.google.com/android/repository/${sdk_zip_filename}"
+    unzip "${sdk_zip_filename}"
+    export PATH="${ANDROID_SDK}/tools/bin:${PATH}"
     echo 'y' |sdkmanager --install tools
     echo 'y' |sdkmanager --install platform-tools
     echo 'y' |sdkmanager --install "build-tools;28.0.0"
@@ -35,7 +32,7 @@ install_android_sdk: &install_android_sdk
     # Install 32 bit libraries
     # https://stackoverflow.com/questions/36911709/cannot-run-program-aapt
     # Needed to run Android build-tools
-    if [ "x${PLATFORM}" == "xlinux" ]
+    if [ "${PLATFORM}" == "linux" ]
     then
       sudo apt-get install gcc-multilib lib32z1 lib32stdc++6
     fi
@@ -43,31 +40,29 @@ install_android_sdk: &install_android_sdk
 install_golang: &install_golang
   name: Install GoLang 1.10.1
   command: |
-    golang_versin=1.10.1
+    golang_versin="1.10.1"
     golang_os="linux"
-    if [ "x${PLATFORM}" == "xmacos" ]
-    then
+    if [ "${PLATFORM}" == "macos" ]; then
       golang_os="darwin"
     fi
     golang_binary_filename="go${golang_versin}.${golang_os}-amd64.tar.gz"
     cd ~
-    curl -O https://storage.googleapis.com/golang/${golang_binary_filename}
-    sudo tar -xzf ${golang_binary_filename} -C /usr/local
-    rm ${golang_binary_filename}
-    export PATH=$PATH:/usr/local/go/bin
+    curl -O "https://storage.googleapis.com/golang/${golang_binary_filename}"
+    sudo tar -xzf "${golang_binary_filename}" -C /usr/local
+    rm "${golang_binary_filename}"
+    export PATH="${PATH}:/usr/local/go/bin"
     go version
 
 install_python: &install_python
   name: Install Python 3.6.2
   command: |
-    if [ "x${PLATFORM}" == "xmacos" ]
-    then
+    if [ "${PLATFORM}" == "macos" ]; then
       brew update
       brew install pyenv
     fi
     pyenv install -s 3.6.2
     pyenv global 3.6.2 system
-    export PATH="$(pyenv root)/shims:$PATH"
+    export PATH="$(pyenv root)/shims:${PATH}"
     python --version
 
 install_groovy: &install_groovy
@@ -81,8 +76,7 @@ install_groovy: &install_groovy
 install_ghc: &install_ghc
   name: Install Ghc
   command: |
-    if [ "x${PLATFORM}" == "xmacos" ]
-    then
+    if [ "${PLATFORM}" == "macos" ]; then
       brew install ghc
     else
       sudo apt-get update
@@ -95,25 +89,24 @@ install_ghc: &install_ghc
 run_ant_build: &run_ant_build
   name: Run Ant Build
   command: |
-    if [ "x${PLATFORM}" == "xmacos" ]
-    then
+    if [ "${PLATFORM}" == "macos" ]; then
       brew install ant
     fi
-    cd ${BUCKROOT}
+    cd "${BUCKROOT}"
     set -ex
     export ANT_OPTS='-Xmx1000m'
-    export PATH="$(pyenv root)/shims:$PATH"
+    export PATH="$(pyenv root)/shims:${PATH}"
     ant
 
 run_buck_build: &run_buck_build
   name: Run Buck Build
   command: |
-    cd ${BUCKROOT}
+    cd "${BUCKROOT}"
     echo '-Xmx1024m' > .buckjavaargs.local
-    export PATH=${ANDROID_SDK}/tools/bin:$PATH
-    export PATH="$(pyenv root)/shims:$PATH"
+    export PATH="${ANDROID_SDK}/tools/bin:${PATH}"
+    export PATH="$(pyenv root)/shims:${PATH}"
     set -ex
-    ./bin/buck build buck --out ./new_buck.pex || { cat buck-out/log/buck-0.log; exit 1; }
+    ./bin/buck build buck --out "./new_buck.pex" || { cat "buck-out/log/buck-0.log"; exit 1; }
 
 jobs:
   linux_build_openjdk8:
@@ -146,9 +139,9 @@ jobs:
       - run:
           name: Run Build Tests
           command: |
-            cd ${BUCKROOT}
-            export PATH=${ANDROID_SDK}/tools/bin:$PATH
-            export PATH="$(pyenv root)/shims:$PATH"
+            cd "${BUCKROOT}"
+            export PATH="${ANDROID_SDK}/tools/bin:${PATH}"
+            export PATH="$(pyenv root)/shims:${PATH}"
             set -eux
             ./new_buck.pex build --num-threads=${BUCK_NUM_THREADS} src/... test/...
 
@@ -181,10 +174,10 @@ jobs:
       - run:
           name: Run Unit Tests
           command: |
-            cd ${BUCKROOT}
-            export PATH=${ANDROID_SDK}/tools/bin:$PATH
-            export PATH="$(pyenv root)/shims:$PATH"
-            export GROOVY_HOME=$HOME/.sdkman/candidates/groovy/current
+            cd "${BUCKROOT}"
+            export PATH="${ANDROID_SDK}/tools/bin:${PATH}"
+            export PATH="$(pyenv root)/shims:${PATH}"
+            export GROOVY_HOME="$HOME/.sdkman/candidates/groovy/current"
             set -eux
             ./new_buck.pex test --num-threads=${BUCK_NUM_THREADS} --all --test-selectors '!.*[Ii]ntegration.*'
           no_output_timeout: 20m
@@ -216,9 +209,9 @@ jobs:
       - run:
           name: Run Ant Tests
           command: |
-            cd ${BUCKROOT}
-            export PATH=${ANDROID_SDK}/tools/bin:$PATH
-            export ANDROID_HOME=${ANDROID_SDK}
+            cd "${BUCKROOT}"
+            export PATH="${ANDROID_SDK}/tools/bin:${PATH}"
+            export ANDROID_HOME="${ANDROID_SDK}"
             set -eux
             ant travis
             ./scripts/travisci_test_java_file_format
@@ -254,9 +247,9 @@ jobs:
       - run:
           name: Run Integration Tests
           command: |
-            cd ${BUCKROOT}
-            export PATH=${ANDROID_SDK}/tools/bin:$PATH
-            export PATH="$(pyenv root)/shims:$PATH"
+            cd "${BUCKROOT}"
+            export PATH="${ANDROID_SDK}/tools/bin:${PATH}"
+            export PATH="$(pyenv root)/shims:${PATH}"
             export GROOVY_HOME=$HOME/.sdkman/candidates/groovy/current
             set -eux
             ./new_buck.pex test --num-threads=$BUCK_NUM_THREADS --all --filter '^(?!(com.facebook.buck.android|com.facebook.buck.jvm.java)).*[Ii]ntegration.*'
@@ -280,7 +273,7 @@ jobs:
       - run:
           name: Install Android NDK
           command: |
-            cd ${BUCKROOT}
+            cd "${BUCKROOT}"
             export NDK_HOME="${HOME}/android-ndk-linux"
             ./scripts/travisci_install_android_ndk.sh
       - run:
@@ -295,7 +288,7 @@ jobs:
           name: Run Heavy Integration Tests
           command: |
             export NDK_HOME="${HOME}/android-ndk-linux"
-            export ANDROID_HOME=${ANDROID_SDK}
+            export ANDROID_HOME="${ANDROID_SDK}"
             set -eux
             ./new_buck.pex build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/... //test/com/facebook/buck/jvm/java/...
             ./new_buck.pex test --num-threads=1 //test/com/facebook/buck/android/... //test/com/facebook/buck/jvm/java/... --filter '.*[Ii]ntegration.*'
@@ -319,7 +312,7 @@ jobs:
       - run:
           name: Install Android NDK 15
           command: |
-            cd ${BUCKROOT}
+            cd "${BUCKROOT}"
             export NDK_HOME="${HOME}/android-ndk-linux"
             ./scripts/travisci_unzip_android_ndk.sh android-ndk-r15c
       - run:
@@ -334,7 +327,7 @@ jobs:
           name: Run Android NDK 15 Tests
           command: |
             export NDK_HOME="${HOME}/android-ndk-linux"
-            export ANDROID_HOME=${ANDROID_SDK}
+            export ANDROID_HOME="${ANDROID_SDK}"
             set -eux
             ./new_buck.pex build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
             ./new_buck.pex test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
@@ -358,7 +351,7 @@ jobs:
       - run:
           name: Install Android NDK 16
           command: |
-            cd ${BUCKROOT}
+            cd "${BUCKROOT}"
             export NDK_HOME="${HOME}/android-ndk-linux"
             ./scripts/travisci_unzip_android_ndk.sh android-ndk-r16b
       - run:
@@ -373,7 +366,7 @@ jobs:
           name: Run Android NDK 16 Tests
           command: |
             export NDK_HOME="${HOME}/android-ndk-linux"
-            export ANDROID_HOME=${ANDROID_SDK}
+            export ANDROID_HOME="${ANDROID_SDK}"
             set -eux
             ./new_buck.pex build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
             ./new_buck.pex test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
@@ -397,7 +390,7 @@ jobs:
       - run:
           name: Install Android NDK 17
           command: |
-            cd ${BUCKROOT}
+            cd "${BUCKROOT}"
             export NDK_HOME="${HOME}/android-ndk-linux"
             ./scripts/travisci_unzip_android_ndk.sh android-ndk-r17b
       - run:
@@ -411,14 +404,14 @@ jobs:
       - run:
           name: Need android-27 and android-28 to run the tests, install them. 
           command: |
-            export PATH=${ANDROID_SDK}/tools/bin:$PATH
+            export PATH="${ANDROID_SDK}/tools/bin:${PATH}"
             echo 'y' |sdkmanager --install "platforms;android-27"
             echo 'y' |sdkmanager --install "platforms;android-28"
       - run:
           name: Run Android NDK 17 Tests
           command: |
             export NDK_HOME="${HOME}/android-ndk-linux"
-            export ANDROID_HOME=${ANDROID_SDK}
+            export ANDROID_HOME="${ANDROID_SDK}"
             set -eux
             ./new_buck.pex build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
             ./new_buck.pex test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
@@ -443,7 +436,7 @@ jobs:
       - run:
           name: Install Android NDK 18
           command: |
-            cd ${BUCKROOT}
+            cd "${BUCKROOT}"
             export NDK_HOME="${HOME}/android-ndk-linux"
             ./scripts/travisci_unzip_android_ndk.sh android-ndk-r18b
       - run:
@@ -458,7 +451,7 @@ jobs:
           name: Run Android NDK 18 Tests
           command: |
             export NDK_HOME="${HOME}/android-ndk-linux"
-            export ANDROID_HOME=${ANDROID_SDK}
+            export ANDROID_HOME="${ANDROID_SDK}"
             set -eux
             ./new_buck.pex build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
             ./new_buck.pex test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
@@ -491,9 +484,9 @@ jobs:
       - run:
           name: Run Build Tests
           command: |
-            cd ${BUCKROOT}
-            export PATH=${ANDROID_SDK}/tools/bin:$PATH
-            export PATH="$(pyenv root)/shims:$PATH"
+            cd "${BUCKROOT}"
+            export PATH="${ANDROID_SDK}/tools/bin:${PATH}"
+            export PATH="$(pyenv root)/shims:${PATH}"
             set -eux
             ./new_buck.pex build --num-threads=${BUCK_NUM_THREADS} src/... test/...
 
@@ -526,10 +519,10 @@ jobs:
       - run:
           name: Run Unit Tests
           command: |
-            cd ${BUCKROOT}
-            export PATH=${ANDROID_SDK}/tools/bin:$PATH
-            export PATH="$(pyenv root)/shims:$PATH"
-            export GROOVY_HOME=$HOME/.sdkman/candidates/groovy/current
+            cd "${BUCKROOT}"
+            export PATH="${ANDROID_SDK}/tools/bin:${PATH}"
+            export PATH="$(pyenv root)/shims:${PATH}"
+            export GROOVY_HOME="$HOME/.sdkman/candidates/groovy/current"
             set -eux
             ./new_buck.pex test --num-threads=${BUCK_NUM_THREADS} --all --test-selectors '!.*[Ii]ntegration.*'
 
@@ -560,9 +553,9 @@ jobs:
       - run:
           name: Run Ant Tests
           command: |
-            cd ${BUCKROOT}
-            export PATH=${ANDROID_SDK}/tools/bin:$PATH
-            export ANDROID_HOME=${ANDROID_SDK}
+            cd "${BUCKROOT}"
+            export PATH="${ANDROID_SDK}/tools/bin:${PATH}"
+            export ANDROID_HOME="${ANDROID_SDK}"
             set -eux
             ant travis
             ./scripts/travisci_test_java_file_format
@@ -606,10 +599,10 @@ jobs:
       - run:
           name: Run Integration Tests
           command: |
-            cd ${BUCKROOT}
-            export PATH=${ANDROID_SDK}/tools/bin:$PATH
-            export PATH="$(pyenv root)/shims:$PATH"
-            export GROOVY_HOME=$HOME/.sdkman/candidates/groovy/current
+            cd "${BUCKROOT}"
+            export PATH="${ANDROID_SDK}/tools/bin:${PATH}"
+            export PATH="$(pyenv root)/shims:${PATH}"
+            export "GROOVY_HOME=$HOME/.sdkman/candidates/groovy/current"
             export JAVA_HOME=`/usr/libexec/java_home`
             export PATH="${JAVA_HOME}/bin:${PATH}"
             set -ex
@@ -637,7 +630,7 @@ jobs:
       - run:
           name: Install Android NDK
           command: |
-            cd ${BUCKROOT}
+            cd "${BUCKROOT}"
             export NDK_HOME="${HOME}/android-ndk-${PLATFORM}"
             ./scripts/travisci_install_android_ndk.sh "${PLATFORM}"
       - run:
@@ -652,7 +645,7 @@ jobs:
           name: Run Heavy Integration Tests
           command: |
             export NDK_HOME="${HOME}/android-ndk-${PLATFORM}"
-            export ANDROID_HOME=${ANDROID_SDK}
+            export ANDROID_HOME="${ANDROID_SDK}"
             export JAVA_HOME=`/usr/libexec/java_home`
             export PATH="${JAVA_HOME}/bin:${PATH}"
             set -eux
@@ -678,7 +671,7 @@ jobs:
       - run:
           name: Install Android NDK 15
           command: |
-            cd ${BUCKROOT}
+            cd "${BUCKROOT}"
             export NDK_HOME="${HOME}/android-ndk-${PLATFORM}"
             ./scripts/travisci_unzip_android_ndk.sh android-ndk-r15c "${PLATFORM}"
       - run:
@@ -693,7 +686,7 @@ jobs:
           name: Run Android NDK 15 Tests
           command: |
             export NDK_HOME="${HOME}/android-ndk-${PLATFORM}"
-            export ANDROID_HOME=${ANDROID_SDK}
+            export ANDROID_HOME="${ANDROID_SDK}"
             set -eux
             ./new_buck.pex build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
             ./new_buck.pex test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
@@ -732,7 +725,7 @@ jobs:
           name: Run Android NDK 16 Tests
           command: |
             export NDK_HOME="${HOME}/android-ndk-${PLATFORM}"
-            export ANDROID_HOME=${ANDROID_SDK}
+            export ANDROID_HOME="${ANDROID_SDK}"
             set -eux
             ./new_buck.pex build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
             ./new_buck.pex test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
@@ -770,20 +763,19 @@ jobs:
       - run:
           name: Need android-27 and android-28 to run the tests, install them.
           command: |
-            export PATH=${ANDROID_SDK}/tools/bin:$PATH
+            export PATH="${ANDROID_SDK}/tools/bin:${PATH}"
             echo 'y' |sdkmanager --install "platforms;android-27"
             echo 'y' |sdkmanager --install "platforms;android-28"
       - run:
           name: Run Android NDK 17 Tests
           command: |
             export NDK_HOME="${HOME}/android-ndk-${PLATFORM}"
-            export ANDROID_HOME=${ANDROID_SDK}
+            export ANDROID_HOME="${ANDROID_SDK}"
             set -eux
             ./new_buck.pex build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
             # Exclude some long running tests, otherwise CircleCI will timeout after 5 hours.
             #./new_buck.pex test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
             ./new_buck.pex test --num-threads=1 //test/com/facebook/buck/android/... --filter '^(?!(com.facebook.buck.android.AndroidExopackageBinary)).*[Ii]ntegration.*'
-            #./new_buck.pex test --num-threads=1 //test/com/facebook/buck/android/... --filter '^(?!(com.facebook.buck.android.AndroidExopackageBinary|com.facebook.buck.android.AndroidBinaryInstall)).*[Ii]ntegration.*'
 
           # There are tests that take too long to complete.
           no_output_timeout: 5h
@@ -807,7 +799,7 @@ jobs:
       - run:
           name: Install Android NDK 18
           command: |
-            cd ${BUCKROOT}
+            cd "${BUCKROOT}"
             export NDK_HOME="${HOME}/android-ndk-${PLATFORM}"
             ./scripts/travisci_unzip_android_ndk.sh android-ndk-r18b "${PLATFORM}"
       - run:
@@ -822,7 +814,7 @@ jobs:
           name: Run Android NDK 18 Tests
           command: |
             export NDK_HOME="${HOME}/android-ndk-${PLATFORM}"
-            export ANDROID_HOME=${ANDROID_SDK}
+            export ANDROID_HOME="${ANDROID_SDK}"
             set -eux
             ./new_buck.pex build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
             ./new_buck.pex test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
