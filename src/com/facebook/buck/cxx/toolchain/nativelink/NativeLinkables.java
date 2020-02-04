@@ -33,12 +33,14 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Iterables;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /** Utility functions for interacting with {@link NativeLinkable} objects. */
 public class NativeLinkables {
@@ -271,12 +273,14 @@ public class NativeLinkables {
         getTransitiveNativeLinkables(graphBuilder, roots);
 
     SharedLibrariesBuilder builder = new SharedLibrariesBuilder();
-    nativeLinkables.stream()
-        .filter(
-            e ->
-                e.getPreferredLinkage() != NativeLinkableGroup.Linkage.STATIC
-                    || (alwaysIncludeRoots && rootTargets.contains(e.getBuildTarget())))
-        .forEach(e -> builder.add(e, graphBuilder));
+    builder.addAll(
+        graphBuilder,
+        nativeLinkables.stream()
+            .filter(
+                e ->
+                    e.getPreferredLinkage() != NativeLinkableGroup.Linkage.STATIC
+                        || (alwaysIncludeRoots && rootTargets.contains(e.getBuildTarget())))
+            .collect(Collectors.toList()));
     return builder.build();
   }
 
@@ -288,9 +292,7 @@ public class NativeLinkables {
 
     private final Map<String, SourcePath> libraries = new LinkedHashMap<>();
 
-    /** Adds libraries from the given {@link NativeLinkableGroup}. */
-    public SharedLibrariesBuilder add(NativeLinkable linkable, ActionGraphBuilder graphBuilder) {
-      ImmutableMap<String, SourcePath> libs = linkable.getSharedLibraries(graphBuilder);
+    private SharedLibrariesBuilder add(ImmutableMap<String, SourcePath> libs) {
       for (Map.Entry<String, SourcePath> lib : libs.entrySet()) {
         SourcePath prev = libraries.put(lib.getKey(), lib.getValue());
         if (prev != null && !prev.equals(lib.getValue())) {
@@ -310,6 +312,17 @@ public class NativeLinkables {
               lib.getKey(), libTargetString, prevTargetString);
         }
       }
+      return this;
+    }
+
+    /** Adds libraries from the given {@link NativeLinkableGroup}s, potentially in parallel. */
+    public SharedLibrariesBuilder addAll(
+        ActionGraphBuilder graphBuilder, Collection<NativeLinkable> linkables) {
+      graphBuilder
+          .getParallelizer()
+          .maybeParallelizeTransform(
+              linkables, nativeLinkable -> nativeLinkable.getSharedLibraries(graphBuilder))
+          .forEach(this::add);
       return this;
     }
 
