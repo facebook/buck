@@ -65,6 +65,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -72,6 +73,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 public class PythonUtil {
 
@@ -452,18 +454,25 @@ public class PythonUtil {
           NativeLinkables.getTransitiveNativeLinkables(
               graphBuilder,
               Iterables.concat(nativeLinkableRoots.values(), extensionNativeDeps.values()));
-      for (NativeLinkable nativeLinkable : nativeLinkables) {
-        NativeLinkableGroup.Linkage linkage = nativeLinkable.getPreferredLinkage();
-        if (nativeLinkableRoots.containsKey(nativeLinkable.getBuildTarget())
-            || linkage != NativeLinkableGroup.Linkage.STATIC) {
-          allComponents.putNativeLibraries(
-              nativeLinkable.getBuildTarget(),
-              PythonMappedComponents.of(
-                  ImmutableSortedMap.copyOf(
-                      MoreMaps.transformKeys(
-                          nativeLinkable.getSharedLibraries(graphBuilder), Paths::get))));
-        }
-      }
+      graphBuilder
+          .getParallelizer()
+          .maybeParallelizeTransform(
+              nativeLinkables.stream()
+                  .filter(
+                      nativeLinkable -> {
+                        NativeLinkableGroup.Linkage linkage = nativeLinkable.getPreferredLinkage();
+                        return nativeLinkableRoots.containsKey(nativeLinkable.getBuildTarget())
+                            || linkage != NativeLinkableGroup.Linkage.STATIC;
+                      })
+                  .collect(Collectors.toList()),
+              linkable ->
+                  new AbstractMap.SimpleEntry<BuildTarget, PythonComponents>(
+                      linkable.getBuildTarget(),
+                      PythonMappedComponents.of(
+                          ImmutableSortedMap.copyOf(
+                              MoreMaps.transformKeys(
+                                  linkable.getSharedLibraries(graphBuilder), Paths::get)))))
+          .forEach(e -> allComponents.putNativeLibraries(e.getKey(), e.getValue()));
     }
 
     return allComponents.build();
