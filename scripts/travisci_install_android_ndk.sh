@@ -44,4 +44,3 @@ rm "$NDK_FILENAME";
 # Move ndk into the proper place.
 rm -rf ${NDK_HOME}
 mv android-ndk-r10e ${NDK_HOME}
-

@@ -47,4 +47,3 @@ rm "$NDK_FILENAME"
 # Move ndk into the proper place.
 rm -rf "${NDK_HOME}"
 mv "${NDK_VERSION_STRING}" "${NDK_HOME}"
-
