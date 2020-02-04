@@ -26,6 +26,11 @@ import java.util.Optional;
 
 public interface CellPathResolver {
 
+  /** Cell name resolver works in context of some cell. This function returns current cell. */
+  default CanonicalCellName getCurrentCellName() {
+    return getCellNameResolver().getCurrentCellName();
+  }
+
   /**
    * Provides access to the {@link CellNameResolver} for this cell. This is to assist in migration
    * to the new name/path resolvers.

@@ -35,6 +35,11 @@ import java.util.Optional;
  */
 public interface CellNameResolver {
 
+  /** Cell name resolver works in context of some cell. This function returns current cell. */
+  default CanonicalCellName getCurrentCellName() {
+    return getName(Optional.empty());
+  }
+
   /** Returns the {@link CanonicalCellName} for this local name if it can be resolved. */
   Optional<CanonicalCellName> getNameIfResolvable(Optional<String> localName);
 
