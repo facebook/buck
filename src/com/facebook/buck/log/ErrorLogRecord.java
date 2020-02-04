@@ -76,7 +76,7 @@ public abstract class ErrorLogRecord {
         .put("hostname", hostname)
         .put("isConsoleEnabled", getIsSuperConsoleEnabled().map(Object::toString).orElse("null"))
         .put("isDaemon", getIsDaemon().map(Object::toString).orElse("null"))
-        .put("commandId", getBuildUuid().orElse("null"))
+        .put("commandId", getBuildUuid())
         .put("isRemoteExecution", getIsRemoteExecution().map(Object::toString).orElse("null"))
         .put("initialError", initialError.orElse("null"))
         .put("repository", GlobalStateManager.singleton().getRepository())
@@ -155,10 +155,10 @@ public abstract class ErrorLogRecord {
     return Optional.ofNullable(getRecord().getLoggerName());
   }
 
-  @Value.Derived
-  public Optional<String> getBuildUuid() {
+  @Value.Default
+  public String getBuildUuid() {
     String buildUuid = MAPPER.threadIdToCommandId(getRecord().getThreadID());
-    return Optional.ofNullable(buildUuid);
+    return buildUuid == null ? "null" : buildUuid;
   }
 
   @Value.Derived
