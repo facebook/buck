@@ -54,6 +54,7 @@ import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
@@ -811,12 +812,16 @@ public class RealAndroidDevice implements AndroidDevice {
     byte[] done_msg = createAdbdReq(ID_DONE, (int) time);
     writeAllToChannel(chan, ByteBuffer.wrap(done_msg));
 
-    byte[] result =
-        readResp(chan, 8); // Response has 8 bits; last four bits are length but can be ignored
+    byte[] result = readResp(chan, 8); // 4-byte ID + 4-byte length
 
     if (!isOkay(result)) {
       throw new HumanReadableException(
-          "Failed when sending file " + localPath + " --> " + remotePath);
+          "Encountered \""
+              + readErrorMessage(chan, result)
+              + "\" when sending file "
+              + localPath
+              + " --> "
+              + remotePath);
     }
   }
 
@@ -825,6 +830,12 @@ public class RealAndroidDevice implements AndroidDevice {
         && reply[1] == (byte) 'K'
         && reply[2] == (byte) 'A'
         && reply[3] == (byte) 'Y';
+  }
+
+  private String readErrorMessage(SocketChannel chann, byte[] reply) throws Exception {
+    // Read the 4-byte length at the end of the reply
+    int length = ByteBuffer.wrap(reply, 4, 4).order(ByteOrder.LITTLE_ENDIAN).getInt();
+    return new String(readResp(chann, length));
   }
 
   private static byte[] formAdbRequest(String req) {
