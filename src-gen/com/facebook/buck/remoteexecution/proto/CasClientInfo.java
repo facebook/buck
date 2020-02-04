@@ -19,6 +19,8 @@ private static final long serialVersionUID = 0L;
   }
   private CasClientInfo() {
     name_ = "";
+    jobId_ = "";
+    streamingMode_ = 0;
   }
 
   @java.lang.Override
@@ -51,8 +53,33 @@ private static final long serialVersionUID = 0L;
             name_ = s;
             break;
           }
+          case 18: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            jobId_ = s;
+            break;
+          }
+          case 24: {
+            int rawValue = input.readEnum();
+
+            streamingMode_ = rawValue;
+            break;
+          }
+          case 34: {
+            com.facebook.buck.remoteexecution.proto.ManifoldBucket.Builder subBuilder = null;
+            if (manifoldBucket_ != null) {
+              subBuilder = manifoldBucket_.toBuilder();
+            }
+            manifoldBucket_ = input.readMessage(com.facebook.buck.remoteexecution.proto.ManifoldBucket.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom(manifoldBucket_);
+              manifoldBucket_ = subBuilder.buildPartial();
+            }
+
+            break;
+          }
           default: {
-            if (!parseUnknownFieldProto3(
+            if (!parseUnknownField(
                 input, unknownFields, extensionRegistry, tag)) {
               done = true;
             }
@@ -81,6 +108,104 @@ private static final long serialVersionUID = 0L;
     return com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadataProto.internal_static_facebook_remote_execution_CasClientInfo_fieldAccessorTable
         .ensureFieldAccessorsInitialized(
             com.facebook.buck.remoteexecution.proto.CasClientInfo.class, com.facebook.buck.remoteexecution.proto.CasClientInfo.Builder.class);
+  }
+
+  /**
+   * Protobuf enum {@code facebook.remote_execution.CasClientInfo.CasStreamingMode}
+   */
+  public enum CasStreamingMode
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <code>BUCKETS = 0;</code>
+     */
+    BUCKETS(0),
+    /**
+     * <code>HTTP = 1;</code>
+     */
+    HTTP(1),
+    UNRECOGNIZED(-1),
+    ;
+
+    /**
+     * <code>BUCKETS = 0;</code>
+     */
+    public static final int BUCKETS_VALUE = 0;
+    /**
+     * <code>HTTP = 1;</code>
+     */
+    public static final int HTTP_VALUE = 1;
+
+
+    public final int getNumber() {
+      if (this == UNRECOGNIZED) {
+        throw new java.lang.IllegalArgumentException(
+            "Can't get the number of an unknown enum value.");
+      }
+      return value;
+    }
+
+    /**
+     * @deprecated Use {@link #forNumber(int)} instead.
+     */
+    @java.lang.Deprecated
+    public static CasStreamingMode valueOf(int value) {
+      return forNumber(value);
+    }
+
+    public static CasStreamingMode forNumber(int value) {
+      switch (value) {
+        case 0: return BUCKETS;
+        case 1: return HTTP;
+        default: return null;
+      }
+    }
+
+    public static com.google.protobuf.Internal.EnumLiteMap<CasStreamingMode>
+        internalGetValueMap() {
+      return internalValueMap;
+    }
+    private static final com.google.protobuf.Internal.EnumLiteMap<
+        CasStreamingMode> internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<CasStreamingMode>() {
+            public CasStreamingMode findValueByNumber(int number) {
+              return CasStreamingMode.forNumber(number);
+            }
+          };
+
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
+      return getDescriptor().getValues().get(ordinal());
+    }
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
+      return getDescriptor();
+    }
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
+      return com.facebook.buck.remoteexecution.proto.CasClientInfo.getDescriptor().getEnumTypes().get(0);
+    }
+
+    private static final CasStreamingMode[] VALUES = values();
+
+    public static CasStreamingMode valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      if (desc.getType() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
+      }
+      if (desc.getIndex() == -1) {
+        return UNRECOGNIZED;
+      }
+      return VALUES[desc.getIndex()];
+    }
+
+    private final int value;
+
+    private CasStreamingMode(int value) {
+      this.value = value;
+    }
+
+    // @@protoc_insertion_point(enum_scope:facebook.remote_execution.CasClientInfo.CasStreamingMode)
   }
 
   public static final int NAME_FIELD_NUMBER = 1;
@@ -125,6 +250,106 @@ private static final long serialVersionUID = 0L;
     }
   }
 
+  public static final int JOB_ID_FIELD_NUMBER = 2;
+  private volatile java.lang.Object jobId_;
+  /**
+   * <pre>
+   * This is the execution id from the worker or sandcastle id
+   * </pre>
+   *
+   * <code>string job_id = 2;</code>
+   */
+  public java.lang.String getJobId() {
+    java.lang.Object ref = jobId_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = 
+          (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      jobId_ = s;
+      return s;
+    }
+  }
+  /**
+   * <pre>
+   * This is the execution id from the worker or sandcastle id
+   * </pre>
+   *
+   * <code>string job_id = 2;</code>
+   */
+  public com.google.protobuf.ByteString
+      getJobIdBytes() {
+    java.lang.Object ref = jobId_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString.copyFromUtf8(
+              (java.lang.String) ref);
+      jobId_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
+  public static final int STREAMING_MODE_FIELD_NUMBER = 3;
+  private int streamingMode_;
+  /**
+   * <pre>
+   * Passed from the client to decide which streaming mode to use
+   * </pre>
+   *
+   * <code>.facebook.remote_execution.CasClientInfo.CasStreamingMode streaming_mode = 3;</code>
+   */
+  public int getStreamingModeValue() {
+    return streamingMode_;
+  }
+  /**
+   * <pre>
+   * Passed from the client to decide which streaming mode to use
+   * </pre>
+   *
+   * <code>.facebook.remote_execution.CasClientInfo.CasStreamingMode streaming_mode = 3;</code>
+   */
+  public com.facebook.buck.remoteexecution.proto.CasClientInfo.CasStreamingMode getStreamingMode() {
+    @SuppressWarnings("deprecation")
+    com.facebook.buck.remoteexecution.proto.CasClientInfo.CasStreamingMode result = com.facebook.buck.remoteexecution.proto.CasClientInfo.CasStreamingMode.valueOf(streamingMode_);
+    return result == null ? com.facebook.buck.remoteexecution.proto.CasClientInfo.CasStreamingMode.UNRECOGNIZED : result;
+  }
+
+  public static final int MANIFOLD_BUCKET_FIELD_NUMBER = 4;
+  private com.facebook.buck.remoteexecution.proto.ManifoldBucket manifoldBucket_;
+  /**
+   * <pre>
+   * This allows overriding the manifold bucket
+   * </pre>
+   *
+   * <code>.facebook.remote_execution.ManifoldBucket manifold_bucket = 4;</code>
+   */
+  public boolean hasManifoldBucket() {
+    return manifoldBucket_ != null;
+  }
+  /**
+   * <pre>
+   * This allows overriding the manifold bucket
+   * </pre>
+   *
+   * <code>.facebook.remote_execution.ManifoldBucket manifold_bucket = 4;</code>
+   */
+  public com.facebook.buck.remoteexecution.proto.ManifoldBucket getManifoldBucket() {
+    return manifoldBucket_ == null ? com.facebook.buck.remoteexecution.proto.ManifoldBucket.getDefaultInstance() : manifoldBucket_;
+  }
+  /**
+   * <pre>
+   * This allows overriding the manifold bucket
+   * </pre>
+   *
+   * <code>.facebook.remote_execution.ManifoldBucket manifold_bucket = 4;</code>
+   */
+  public com.facebook.buck.remoteexecution.proto.ManifoldBucketOrBuilder getManifoldBucketOrBuilder() {
+    return getManifoldBucket();
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -142,6 +367,15 @@ private static final long serialVersionUID = 0L;
     if (!getNameBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 1, name_);
     }
+    if (!getJobIdBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 2, jobId_);
+    }
+    if (streamingMode_ != com.facebook.buck.remoteexecution.proto.CasClientInfo.CasStreamingMode.BUCKETS.getNumber()) {
+      output.writeEnum(3, streamingMode_);
+    }
+    if (manifoldBucket_ != null) {
+      output.writeMessage(4, getManifoldBucket());
+    }
     unknownFields.writeTo(output);
   }
 
@@ -153,6 +387,17 @@ private static final long serialVersionUID = 0L;
     size = 0;
     if (!getNameBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, name_);
+    }
+    if (!getJobIdBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, jobId_);
+    }
+    if (streamingMode_ != com.facebook.buck.remoteexecution.proto.CasClientInfo.CasStreamingMode.BUCKETS.getNumber()) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeEnumSize(3, streamingMode_);
+    }
+    if (manifoldBucket_ != null) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeMessageSize(4, getManifoldBucket());
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -169,11 +414,18 @@ private static final long serialVersionUID = 0L;
     }
     com.facebook.buck.remoteexecution.proto.CasClientInfo other = (com.facebook.buck.remoteexecution.proto.CasClientInfo) obj;
 
-    boolean result = true;
-    result = result && getName()
-        .equals(other.getName());
-    result = result && unknownFields.equals(other.unknownFields);
-    return result;
+    if (!getName()
+        .equals(other.getName())) return false;
+    if (!getJobId()
+        .equals(other.getJobId())) return false;
+    if (streamingMode_ != other.streamingMode_) return false;
+    if (hasManifoldBucket() != other.hasManifoldBucket()) return false;
+    if (hasManifoldBucket()) {
+      if (!getManifoldBucket()
+          .equals(other.getManifoldBucket())) return false;
+    }
+    if (!unknownFields.equals(other.unknownFields)) return false;
+    return true;
   }
 
   @java.lang.Override
@@ -185,6 +437,14 @@ private static final long serialVersionUID = 0L;
     hash = (19 * hash) + getDescriptor().hashCode();
     hash = (37 * hash) + NAME_FIELD_NUMBER;
     hash = (53 * hash) + getName().hashCode();
+    hash = (37 * hash) + JOB_ID_FIELD_NUMBER;
+    hash = (53 * hash) + getJobId().hashCode();
+    hash = (37 * hash) + STREAMING_MODE_FIELD_NUMBER;
+    hash = (53 * hash) + streamingMode_;
+    if (hasManifoldBucket()) {
+      hash = (37 * hash) + MANIFOLD_BUCKET_FIELD_NUMBER;
+      hash = (53 * hash) + getManifoldBucket().hashCode();
+    }
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -320,6 +580,16 @@ private static final long serialVersionUID = 0L;
       super.clear();
       name_ = "";
 
+      jobId_ = "";
+
+      streamingMode_ = 0;
+
+      if (manifoldBucketBuilder_ == null) {
+        manifoldBucket_ = null;
+      } else {
+        manifoldBucket_ = null;
+        manifoldBucketBuilder_ = null;
+      }
       return this;
     }
 
@@ -347,41 +617,48 @@ private static final long serialVersionUID = 0L;
     public com.facebook.buck.remoteexecution.proto.CasClientInfo buildPartial() {
       com.facebook.buck.remoteexecution.proto.CasClientInfo result = new com.facebook.buck.remoteexecution.proto.CasClientInfo(this);
       result.name_ = name_;
+      result.jobId_ = jobId_;
+      result.streamingMode_ = streamingMode_;
+      if (manifoldBucketBuilder_ == null) {
+        result.manifoldBucket_ = manifoldBucket_;
+      } else {
+        result.manifoldBucket_ = manifoldBucketBuilder_.build();
+      }
       onBuilt();
       return result;
     }
 
     @java.lang.Override
     public Builder clone() {
-      return (Builder) super.clone();
+      return super.clone();
     }
     @java.lang.Override
     public Builder setField(
         com.google.protobuf.Descriptors.FieldDescriptor field,
         java.lang.Object value) {
-      return (Builder) super.setField(field, value);
+      return super.setField(field, value);
     }
     @java.lang.Override
     public Builder clearField(
         com.google.protobuf.Descriptors.FieldDescriptor field) {
-      return (Builder) super.clearField(field);
+      return super.clearField(field);
     }
     @java.lang.Override
     public Builder clearOneof(
         com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-      return (Builder) super.clearOneof(oneof);
+      return super.clearOneof(oneof);
     }
     @java.lang.Override
     public Builder setRepeatedField(
         com.google.protobuf.Descriptors.FieldDescriptor field,
         int index, java.lang.Object value) {
-      return (Builder) super.setRepeatedField(field, index, value);
+      return super.setRepeatedField(field, index, value);
     }
     @java.lang.Override
     public Builder addRepeatedField(
         com.google.protobuf.Descriptors.FieldDescriptor field,
         java.lang.Object value) {
-      return (Builder) super.addRepeatedField(field, value);
+      return super.addRepeatedField(field, value);
     }
     @java.lang.Override
     public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -398,6 +675,16 @@ private static final long serialVersionUID = 0L;
       if (!other.getName().isEmpty()) {
         name_ = other.name_;
         onChanged();
+      }
+      if (!other.getJobId().isEmpty()) {
+        jobId_ = other.jobId_;
+        onChanged();
+      }
+      if (other.streamingMode_ != 0) {
+        setStreamingModeValue(other.getStreamingModeValue());
+      }
+      if (other.hasManifoldBucket()) {
+        mergeManifoldBucket(other.getManifoldBucket());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -516,10 +803,317 @@ private static final long serialVersionUID = 0L;
       onChanged();
       return this;
     }
+
+    private java.lang.Object jobId_ = "";
+    /**
+     * <pre>
+     * This is the execution id from the worker or sandcastle id
+     * </pre>
+     *
+     * <code>string job_id = 2;</code>
+     */
+    public java.lang.String getJobId() {
+      java.lang.Object ref = jobId_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        jobId_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <pre>
+     * This is the execution id from the worker or sandcastle id
+     * </pre>
+     *
+     * <code>string job_id = 2;</code>
+     */
+    public com.google.protobuf.ByteString
+        getJobIdBytes() {
+      java.lang.Object ref = jobId_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        jobId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <pre>
+     * This is the execution id from the worker or sandcastle id
+     * </pre>
+     *
+     * <code>string job_id = 2;</code>
+     */
+    public Builder setJobId(
+        java.lang.String value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  
+      jobId_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * This is the execution id from the worker or sandcastle id
+     * </pre>
+     *
+     * <code>string job_id = 2;</code>
+     */
+    public Builder clearJobId() {
+      
+      jobId_ = getDefaultInstance().getJobId();
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * This is the execution id from the worker or sandcastle id
+     * </pre>
+     *
+     * <code>string job_id = 2;</code>
+     */
+    public Builder setJobIdBytes(
+        com.google.protobuf.ByteString value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+      
+      jobId_ = value;
+      onChanged();
+      return this;
+    }
+
+    private int streamingMode_ = 0;
+    /**
+     * <pre>
+     * Passed from the client to decide which streaming mode to use
+     * </pre>
+     *
+     * <code>.facebook.remote_execution.CasClientInfo.CasStreamingMode streaming_mode = 3;</code>
+     */
+    public int getStreamingModeValue() {
+      return streamingMode_;
+    }
+    /**
+     * <pre>
+     * Passed from the client to decide which streaming mode to use
+     * </pre>
+     *
+     * <code>.facebook.remote_execution.CasClientInfo.CasStreamingMode streaming_mode = 3;</code>
+     */
+    public Builder setStreamingModeValue(int value) {
+      streamingMode_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * Passed from the client to decide which streaming mode to use
+     * </pre>
+     *
+     * <code>.facebook.remote_execution.CasClientInfo.CasStreamingMode streaming_mode = 3;</code>
+     */
+    public com.facebook.buck.remoteexecution.proto.CasClientInfo.CasStreamingMode getStreamingMode() {
+      @SuppressWarnings("deprecation")
+      com.facebook.buck.remoteexecution.proto.CasClientInfo.CasStreamingMode result = com.facebook.buck.remoteexecution.proto.CasClientInfo.CasStreamingMode.valueOf(streamingMode_);
+      return result == null ? com.facebook.buck.remoteexecution.proto.CasClientInfo.CasStreamingMode.UNRECOGNIZED : result;
+    }
+    /**
+     * <pre>
+     * Passed from the client to decide which streaming mode to use
+     * </pre>
+     *
+     * <code>.facebook.remote_execution.CasClientInfo.CasStreamingMode streaming_mode = 3;</code>
+     */
+    public Builder setStreamingMode(com.facebook.buck.remoteexecution.proto.CasClientInfo.CasStreamingMode value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+      
+      streamingMode_ = value.getNumber();
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * Passed from the client to decide which streaming mode to use
+     * </pre>
+     *
+     * <code>.facebook.remote_execution.CasClientInfo.CasStreamingMode streaming_mode = 3;</code>
+     */
+    public Builder clearStreamingMode() {
+      
+      streamingMode_ = 0;
+      onChanged();
+      return this;
+    }
+
+    private com.facebook.buck.remoteexecution.proto.ManifoldBucket manifoldBucket_;
+    private com.google.protobuf.SingleFieldBuilderV3<
+        com.facebook.buck.remoteexecution.proto.ManifoldBucket, com.facebook.buck.remoteexecution.proto.ManifoldBucket.Builder, com.facebook.buck.remoteexecution.proto.ManifoldBucketOrBuilder> manifoldBucketBuilder_;
+    /**
+     * <pre>
+     * This allows overriding the manifold bucket
+     * </pre>
+     *
+     * <code>.facebook.remote_execution.ManifoldBucket manifold_bucket = 4;</code>
+     */
+    public boolean hasManifoldBucket() {
+      return manifoldBucketBuilder_ != null || manifoldBucket_ != null;
+    }
+    /**
+     * <pre>
+     * This allows overriding the manifold bucket
+     * </pre>
+     *
+     * <code>.facebook.remote_execution.ManifoldBucket manifold_bucket = 4;</code>
+     */
+    public com.facebook.buck.remoteexecution.proto.ManifoldBucket getManifoldBucket() {
+      if (manifoldBucketBuilder_ == null) {
+        return manifoldBucket_ == null ? com.facebook.buck.remoteexecution.proto.ManifoldBucket.getDefaultInstance() : manifoldBucket_;
+      } else {
+        return manifoldBucketBuilder_.getMessage();
+      }
+    }
+    /**
+     * <pre>
+     * This allows overriding the manifold bucket
+     * </pre>
+     *
+     * <code>.facebook.remote_execution.ManifoldBucket manifold_bucket = 4;</code>
+     */
+    public Builder setManifoldBucket(com.facebook.buck.remoteexecution.proto.ManifoldBucket value) {
+      if (manifoldBucketBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        manifoldBucket_ = value;
+        onChanged();
+      } else {
+        manifoldBucketBuilder_.setMessage(value);
+      }
+
+      return this;
+    }
+    /**
+     * <pre>
+     * This allows overriding the manifold bucket
+     * </pre>
+     *
+     * <code>.facebook.remote_execution.ManifoldBucket manifold_bucket = 4;</code>
+     */
+    public Builder setManifoldBucket(
+        com.facebook.buck.remoteexecution.proto.ManifoldBucket.Builder builderForValue) {
+      if (manifoldBucketBuilder_ == null) {
+        manifoldBucket_ = builderForValue.build();
+        onChanged();
+      } else {
+        manifoldBucketBuilder_.setMessage(builderForValue.build());
+      }
+
+      return this;
+    }
+    /**
+     * <pre>
+     * This allows overriding the manifold bucket
+     * </pre>
+     *
+     * <code>.facebook.remote_execution.ManifoldBucket manifold_bucket = 4;</code>
+     */
+    public Builder mergeManifoldBucket(com.facebook.buck.remoteexecution.proto.ManifoldBucket value) {
+      if (manifoldBucketBuilder_ == null) {
+        if (manifoldBucket_ != null) {
+          manifoldBucket_ =
+            com.facebook.buck.remoteexecution.proto.ManifoldBucket.newBuilder(manifoldBucket_).mergeFrom(value).buildPartial();
+        } else {
+          manifoldBucket_ = value;
+        }
+        onChanged();
+      } else {
+        manifoldBucketBuilder_.mergeFrom(value);
+      }
+
+      return this;
+    }
+    /**
+     * <pre>
+     * This allows overriding the manifold bucket
+     * </pre>
+     *
+     * <code>.facebook.remote_execution.ManifoldBucket manifold_bucket = 4;</code>
+     */
+    public Builder clearManifoldBucket() {
+      if (manifoldBucketBuilder_ == null) {
+        manifoldBucket_ = null;
+        onChanged();
+      } else {
+        manifoldBucket_ = null;
+        manifoldBucketBuilder_ = null;
+      }
+
+      return this;
+    }
+    /**
+     * <pre>
+     * This allows overriding the manifold bucket
+     * </pre>
+     *
+     * <code>.facebook.remote_execution.ManifoldBucket manifold_bucket = 4;</code>
+     */
+    public com.facebook.buck.remoteexecution.proto.ManifoldBucket.Builder getManifoldBucketBuilder() {
+      
+      onChanged();
+      return getManifoldBucketFieldBuilder().getBuilder();
+    }
+    /**
+     * <pre>
+     * This allows overriding the manifold bucket
+     * </pre>
+     *
+     * <code>.facebook.remote_execution.ManifoldBucket manifold_bucket = 4;</code>
+     */
+    public com.facebook.buck.remoteexecution.proto.ManifoldBucketOrBuilder getManifoldBucketOrBuilder() {
+      if (manifoldBucketBuilder_ != null) {
+        return manifoldBucketBuilder_.getMessageOrBuilder();
+      } else {
+        return manifoldBucket_ == null ?
+            com.facebook.buck.remoteexecution.proto.ManifoldBucket.getDefaultInstance() : manifoldBucket_;
+      }
+    }
+    /**
+     * <pre>
+     * This allows overriding the manifold bucket
+     * </pre>
+     *
+     * <code>.facebook.remote_execution.ManifoldBucket manifold_bucket = 4;</code>
+     */
+    private com.google.protobuf.SingleFieldBuilderV3<
+        com.facebook.buck.remoteexecution.proto.ManifoldBucket, com.facebook.buck.remoteexecution.proto.ManifoldBucket.Builder, com.facebook.buck.remoteexecution.proto.ManifoldBucketOrBuilder> 
+        getManifoldBucketFieldBuilder() {
+      if (manifoldBucketBuilder_ == null) {
+        manifoldBucketBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+            com.facebook.buck.remoteexecution.proto.ManifoldBucket, com.facebook.buck.remoteexecution.proto.ManifoldBucket.Builder, com.facebook.buck.remoteexecution.proto.ManifoldBucketOrBuilder>(
+                getManifoldBucket(),
+                getParentForChildren(),
+                isClean());
+        manifoldBucket_ = null;
+      }
+      return manifoldBucketBuilder_;
+    }
     @java.lang.Override
     public final Builder setUnknownFields(
         final com.google.protobuf.UnknownFieldSet unknownFields) {
-      return super.setUnknownFieldsProto3(unknownFields);
+      return super.setUnknownFields(unknownFields);
     }
 
     @java.lang.Override

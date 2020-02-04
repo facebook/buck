@@ -5,20 +5,19 @@
 package com.facebook.buck.remoteexecution.proto;
 
 /**
- * Protobuf type {@code facebook.remote_execution.CapabilityValue}
+ * Protobuf type {@code facebook.remote_execution.DebugInfo}
  */
-@javax.annotation.Generated(value="protoc", comments="annotations:CapabilityValue.java.pb.meta")
-public  final class CapabilityValue extends
+@javax.annotation.Generated(value="protoc", comments="annotations:DebugInfo.java.pb.meta")
+public  final class DebugInfo extends
     com.google.protobuf.GeneratedMessageV3 implements
-    // @@protoc_insertion_point(message_implements:facebook.remote_execution.CapabilityValue)
-    CapabilityValueOrBuilder {
+    // @@protoc_insertion_point(message_implements:facebook.remote_execution.DebugInfo)
+    DebugInfoOrBuilder {
 private static final long serialVersionUID = 0L;
-  // Use CapabilityValue.newBuilder() to construct.
-  private CapabilityValue(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+  // Use DebugInfo.newBuilder() to construct.
+  private DebugInfo(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
   }
-  private CapabilityValue() {
-    value_ = "";
+  private DebugInfo() {
   }
 
   @java.lang.Override
@@ -26,7 +25,7 @@ private static final long serialVersionUID = 0L;
   getUnknownFields() {
     return this.unknownFields;
   }
-  private CapabilityValue(
+  private DebugInfo(
       com.google.protobuf.CodedInputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
@@ -45,10 +44,9 @@ private static final long serialVersionUID = 0L;
           case 0:
             done = true;
             break;
-          case 10: {
-            java.lang.String s = input.readStringRequireUtf8();
+          case 8: {
 
-            value_ = s;
+            pauseBeforeCleanTimeout_ = input.readUInt32();
             break;
           }
           default: {
@@ -72,49 +70,24 @@ private static final long serialVersionUID = 0L;
   }
   public static final com.google.protobuf.Descriptors.Descriptor
       getDescriptor() {
-    return com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadataProto.internal_static_facebook_remote_execution_CapabilityValue_descriptor;
+    return com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadataProto.internal_static_facebook_remote_execution_DebugInfo_descriptor;
   }
 
   @java.lang.Override
   protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internalGetFieldAccessorTable() {
-    return com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadataProto.internal_static_facebook_remote_execution_CapabilityValue_fieldAccessorTable
+    return com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadataProto.internal_static_facebook_remote_execution_DebugInfo_fieldAccessorTable
         .ensureFieldAccessorsInitialized(
-            com.facebook.buck.remoteexecution.proto.CapabilityValue.class, com.facebook.buck.remoteexecution.proto.CapabilityValue.Builder.class);
+            com.facebook.buck.remoteexecution.proto.DebugInfo.class, com.facebook.buck.remoteexecution.proto.DebugInfo.Builder.class);
   }
 
-  public static final int VALUE_FIELD_NUMBER = 1;
-  private volatile java.lang.Object value_;
+  public static final int PAUSE_BEFORE_CLEAN_TIMEOUT_FIELD_NUMBER = 1;
+  private int pauseBeforeCleanTimeout_;
   /**
-   * <code>string value = 1;</code>
+   * <code>uint32 pause_before_clean_timeout = 1;</code>
    */
-  public java.lang.String getValue() {
-    java.lang.Object ref = value_;
-    if (ref instanceof java.lang.String) {
-      return (java.lang.String) ref;
-    } else {
-      com.google.protobuf.ByteString bs = 
-          (com.google.protobuf.ByteString) ref;
-      java.lang.String s = bs.toStringUtf8();
-      value_ = s;
-      return s;
-    }
-  }
-  /**
-   * <code>string value = 1;</code>
-   */
-  public com.google.protobuf.ByteString
-      getValueBytes() {
-    java.lang.Object ref = value_;
-    if (ref instanceof java.lang.String) {
-      com.google.protobuf.ByteString b = 
-          com.google.protobuf.ByteString.copyFromUtf8(
-              (java.lang.String) ref);
-      value_ = b;
-      return b;
-    } else {
-      return (com.google.protobuf.ByteString) ref;
-    }
+  public int getPauseBeforeCleanTimeout() {
+    return pauseBeforeCleanTimeout_;
   }
 
   private byte memoizedIsInitialized = -1;
@@ -131,8 +104,8 @@ private static final long serialVersionUID = 0L;
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output)
                       throws java.io.IOException {
-    if (!getValueBytes().isEmpty()) {
-      com.google.protobuf.GeneratedMessageV3.writeString(output, 1, value_);
+    if (pauseBeforeCleanTimeout_ != 0) {
+      output.writeUInt32(1, pauseBeforeCleanTimeout_);
     }
     unknownFields.writeTo(output);
   }
@@ -143,8 +116,9 @@ private static final long serialVersionUID = 0L;
     if (size != -1) return size;
 
     size = 0;
-    if (!getValueBytes().isEmpty()) {
-      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, value_);
+    if (pauseBeforeCleanTimeout_ != 0) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeUInt32Size(1, pauseBeforeCleanTimeout_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -156,13 +130,13 @@ private static final long serialVersionUID = 0L;
     if (obj == this) {
      return true;
     }
-    if (!(obj instanceof com.facebook.buck.remoteexecution.proto.CapabilityValue)) {
+    if (!(obj instanceof com.facebook.buck.remoteexecution.proto.DebugInfo)) {
       return super.equals(obj);
     }
-    com.facebook.buck.remoteexecution.proto.CapabilityValue other = (com.facebook.buck.remoteexecution.proto.CapabilityValue) obj;
+    com.facebook.buck.remoteexecution.proto.DebugInfo other = (com.facebook.buck.remoteexecution.proto.DebugInfo) obj;
 
-    if (!getValue()
-        .equals(other.getValue())) return false;
+    if (getPauseBeforeCleanTimeout()
+        != other.getPauseBeforeCleanTimeout()) return false;
     if (!unknownFields.equals(other.unknownFields)) return false;
     return true;
   }
@@ -174,76 +148,76 @@ private static final long serialVersionUID = 0L;
     }
     int hash = 41;
     hash = (19 * hash) + getDescriptor().hashCode();
-    hash = (37 * hash) + VALUE_FIELD_NUMBER;
-    hash = (53 * hash) + getValue().hashCode();
+    hash = (37 * hash) + PAUSE_BEFORE_CLEAN_TIMEOUT_FIELD_NUMBER;
+    hash = (53 * hash) + getPauseBeforeCleanTimeout();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
   }
 
-  public static com.facebook.buck.remoteexecution.proto.CapabilityValue parseFrom(
+  public static com.facebook.buck.remoteexecution.proto.DebugInfo parseFrom(
       java.nio.ByteBuffer data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static com.facebook.buck.remoteexecution.proto.CapabilityValue parseFrom(
+  public static com.facebook.buck.remoteexecution.proto.DebugInfo parseFrom(
       java.nio.ByteBuffer data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static com.facebook.buck.remoteexecution.proto.CapabilityValue parseFrom(
+  public static com.facebook.buck.remoteexecution.proto.DebugInfo parseFrom(
       com.google.protobuf.ByteString data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static com.facebook.buck.remoteexecution.proto.CapabilityValue parseFrom(
+  public static com.facebook.buck.remoteexecution.proto.DebugInfo parseFrom(
       com.google.protobuf.ByteString data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static com.facebook.buck.remoteexecution.proto.CapabilityValue parseFrom(byte[] data)
+  public static com.facebook.buck.remoteexecution.proto.DebugInfo parseFrom(byte[] data)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data);
   }
-  public static com.facebook.buck.remoteexecution.proto.CapabilityValue parseFrom(
+  public static com.facebook.buck.remoteexecution.proto.DebugInfo parseFrom(
       byte[] data,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
     return PARSER.parseFrom(data, extensionRegistry);
   }
-  public static com.facebook.buck.remoteexecution.proto.CapabilityValue parseFrom(java.io.InputStream input)
+  public static com.facebook.buck.remoteexecution.proto.DebugInfo parseFrom(java.io.InputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseWithIOException(PARSER, input);
   }
-  public static com.facebook.buck.remoteexecution.proto.CapabilityValue parseFrom(
+  public static com.facebook.buck.remoteexecution.proto.DebugInfo parseFrom(
       java.io.InputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseWithIOException(PARSER, input, extensionRegistry);
   }
-  public static com.facebook.buck.remoteexecution.proto.CapabilityValue parseDelimitedFrom(java.io.InputStream input)
+  public static com.facebook.buck.remoteexecution.proto.DebugInfo parseDelimitedFrom(java.io.InputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseDelimitedWithIOException(PARSER, input);
   }
-  public static com.facebook.buck.remoteexecution.proto.CapabilityValue parseDelimitedFrom(
+  public static com.facebook.buck.remoteexecution.proto.DebugInfo parseDelimitedFrom(
       java.io.InputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
   }
-  public static com.facebook.buck.remoteexecution.proto.CapabilityValue parseFrom(
+  public static com.facebook.buck.remoteexecution.proto.DebugInfo parseFrom(
       com.google.protobuf.CodedInputStream input)
       throws java.io.IOException {
     return com.google.protobuf.GeneratedMessageV3
         .parseWithIOException(PARSER, input);
   }
-  public static com.facebook.buck.remoteexecution.proto.CapabilityValue parseFrom(
+  public static com.facebook.buck.remoteexecution.proto.DebugInfo parseFrom(
       com.google.protobuf.CodedInputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
@@ -256,7 +230,7 @@ private static final long serialVersionUID = 0L;
   public static Builder newBuilder() {
     return DEFAULT_INSTANCE.toBuilder();
   }
-  public static Builder newBuilder(com.facebook.buck.remoteexecution.proto.CapabilityValue prototype) {
+  public static Builder newBuilder(com.facebook.buck.remoteexecution.proto.DebugInfo prototype) {
     return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
   }
   @java.lang.Override
@@ -272,26 +246,26 @@ private static final long serialVersionUID = 0L;
     return builder;
   }
   /**
-   * Protobuf type {@code facebook.remote_execution.CapabilityValue}
+   * Protobuf type {@code facebook.remote_execution.DebugInfo}
    */
   public static final class Builder extends
       com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-      // @@protoc_insertion_point(builder_implements:facebook.remote_execution.CapabilityValue)
-      com.facebook.buck.remoteexecution.proto.CapabilityValueOrBuilder {
+      // @@protoc_insertion_point(builder_implements:facebook.remote_execution.DebugInfo)
+      com.facebook.buck.remoteexecution.proto.DebugInfoOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadataProto.internal_static_facebook_remote_execution_CapabilityValue_descriptor;
+      return com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadataProto.internal_static_facebook_remote_execution_DebugInfo_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadataProto.internal_static_facebook_remote_execution_CapabilityValue_fieldAccessorTable
+      return com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadataProto.internal_static_facebook_remote_execution_DebugInfo_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              com.facebook.buck.remoteexecution.proto.CapabilityValue.class, com.facebook.buck.remoteexecution.proto.CapabilityValue.Builder.class);
+              com.facebook.buck.remoteexecution.proto.DebugInfo.class, com.facebook.buck.remoteexecution.proto.DebugInfo.Builder.class);
     }
 
-    // Construct using com.facebook.buck.remoteexecution.proto.CapabilityValue.newBuilder()
+    // Construct using com.facebook.buck.remoteexecution.proto.DebugInfo.newBuilder()
     private Builder() {
       maybeForceBuilderInitialization();
     }
@@ -309,7 +283,7 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public Builder clear() {
       super.clear();
-      value_ = "";
+      pauseBeforeCleanTimeout_ = 0;
 
       return this;
     }
@@ -317,17 +291,17 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public com.google.protobuf.Descriptors.Descriptor
         getDescriptorForType() {
-      return com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadataProto.internal_static_facebook_remote_execution_CapabilityValue_descriptor;
+      return com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadataProto.internal_static_facebook_remote_execution_DebugInfo_descriptor;
     }
 
     @java.lang.Override
-    public com.facebook.buck.remoteexecution.proto.CapabilityValue getDefaultInstanceForType() {
-      return com.facebook.buck.remoteexecution.proto.CapabilityValue.getDefaultInstance();
+    public com.facebook.buck.remoteexecution.proto.DebugInfo getDefaultInstanceForType() {
+      return com.facebook.buck.remoteexecution.proto.DebugInfo.getDefaultInstance();
     }
 
     @java.lang.Override
-    public com.facebook.buck.remoteexecution.proto.CapabilityValue build() {
-      com.facebook.buck.remoteexecution.proto.CapabilityValue result = buildPartial();
+    public com.facebook.buck.remoteexecution.proto.DebugInfo build() {
+      com.facebook.buck.remoteexecution.proto.DebugInfo result = buildPartial();
       if (!result.isInitialized()) {
         throw newUninitializedMessageException(result);
       }
@@ -335,9 +309,9 @@ private static final long serialVersionUID = 0L;
     }
 
     @java.lang.Override
-    public com.facebook.buck.remoteexecution.proto.CapabilityValue buildPartial() {
-      com.facebook.buck.remoteexecution.proto.CapabilityValue result = new com.facebook.buck.remoteexecution.proto.CapabilityValue(this);
-      result.value_ = value_;
+    public com.facebook.buck.remoteexecution.proto.DebugInfo buildPartial() {
+      com.facebook.buck.remoteexecution.proto.DebugInfo result = new com.facebook.buck.remoteexecution.proto.DebugInfo(this);
+      result.pauseBeforeCleanTimeout_ = pauseBeforeCleanTimeout_;
       onBuilt();
       return result;
     }
@@ -376,19 +350,18 @@ private static final long serialVersionUID = 0L;
     }
     @java.lang.Override
     public Builder mergeFrom(com.google.protobuf.Message other) {
-      if (other instanceof com.facebook.buck.remoteexecution.proto.CapabilityValue) {
-        return mergeFrom((com.facebook.buck.remoteexecution.proto.CapabilityValue)other);
+      if (other instanceof com.facebook.buck.remoteexecution.proto.DebugInfo) {
+        return mergeFrom((com.facebook.buck.remoteexecution.proto.DebugInfo)other);
       } else {
         super.mergeFrom(other);
         return this;
       }
     }
 
-    public Builder mergeFrom(com.facebook.buck.remoteexecution.proto.CapabilityValue other) {
-      if (other == com.facebook.buck.remoteexecution.proto.CapabilityValue.getDefaultInstance()) return this;
-      if (!other.getValue().isEmpty()) {
-        value_ = other.value_;
-        onChanged();
+    public Builder mergeFrom(com.facebook.buck.remoteexecution.proto.DebugInfo other) {
+      if (other == com.facebook.buck.remoteexecution.proto.DebugInfo.getDefaultInstance()) return this;
+      if (other.getPauseBeforeCleanTimeout() != 0) {
+        setPauseBeforeCleanTimeout(other.getPauseBeforeCleanTimeout());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -405,11 +378,11 @@ private static final long serialVersionUID = 0L;
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
-      com.facebook.buck.remoteexecution.proto.CapabilityValue parsedMessage = null;
+      com.facebook.buck.remoteexecution.proto.DebugInfo parsedMessage = null;
       try {
         parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        parsedMessage = (com.facebook.buck.remoteexecution.proto.CapabilityValue) e.getUnfinishedMessage();
+        parsedMessage = (com.facebook.buck.remoteexecution.proto.DebugInfo) e.getUnfinishedMessage();
         throw e.unwrapIOException();
       } finally {
         if (parsedMessage != null) {
@@ -419,71 +392,28 @@ private static final long serialVersionUID = 0L;
       return this;
     }
 
-    private java.lang.Object value_ = "";
+    private int pauseBeforeCleanTimeout_ ;
     /**
-     * <code>string value = 1;</code>
+     * <code>uint32 pause_before_clean_timeout = 1;</code>
      */
-    public java.lang.String getValue() {
-      java.lang.Object ref = value_;
-      if (!(ref instanceof java.lang.String)) {
-        com.google.protobuf.ByteString bs =
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        value_ = s;
-        return s;
-      } else {
-        return (java.lang.String) ref;
-      }
+    public int getPauseBeforeCleanTimeout() {
+      return pauseBeforeCleanTimeout_;
     }
     /**
-     * <code>string value = 1;</code>
+     * <code>uint32 pause_before_clean_timeout = 1;</code>
      */
-    public com.google.protobuf.ByteString
-        getValueBytes() {
-      java.lang.Object ref = value_;
-      if (ref instanceof String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        value_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-    /**
-     * <code>string value = 1;</code>
-     */
-    public Builder setValue(
-        java.lang.String value) {
-      if (value == null) {
-    throw new NullPointerException();
-  }
-  
-      value_ = value;
+    public Builder setPauseBeforeCleanTimeout(int value) {
+      
+      pauseBeforeCleanTimeout_ = value;
       onChanged();
       return this;
     }
     /**
-     * <code>string value = 1;</code>
+     * <code>uint32 pause_before_clean_timeout = 1;</code>
      */
-    public Builder clearValue() {
+    public Builder clearPauseBeforeCleanTimeout() {
       
-      value_ = getDefaultInstance().getValue();
-      onChanged();
-      return this;
-    }
-    /**
-     * <code>string value = 1;</code>
-     */
-    public Builder setValueBytes(
-        com.google.protobuf.ByteString value) {
-      if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-      
-      value_ = value;
+      pauseBeforeCleanTimeout_ = 0;
       onChanged();
       return this;
     }
@@ -500,41 +430,41 @@ private static final long serialVersionUID = 0L;
     }
 
 
-    // @@protoc_insertion_point(builder_scope:facebook.remote_execution.CapabilityValue)
+    // @@protoc_insertion_point(builder_scope:facebook.remote_execution.DebugInfo)
   }
 
-  // @@protoc_insertion_point(class_scope:facebook.remote_execution.CapabilityValue)
-  private static final com.facebook.buck.remoteexecution.proto.CapabilityValue DEFAULT_INSTANCE;
+  // @@protoc_insertion_point(class_scope:facebook.remote_execution.DebugInfo)
+  private static final com.facebook.buck.remoteexecution.proto.DebugInfo DEFAULT_INSTANCE;
   static {
-    DEFAULT_INSTANCE = new com.facebook.buck.remoteexecution.proto.CapabilityValue();
+    DEFAULT_INSTANCE = new com.facebook.buck.remoteexecution.proto.DebugInfo();
   }
 
-  public static com.facebook.buck.remoteexecution.proto.CapabilityValue getDefaultInstance() {
+  public static com.facebook.buck.remoteexecution.proto.DebugInfo getDefaultInstance() {
     return DEFAULT_INSTANCE;
   }
 
-  private static final com.google.protobuf.Parser<CapabilityValue>
-      PARSER = new com.google.protobuf.AbstractParser<CapabilityValue>() {
+  private static final com.google.protobuf.Parser<DebugInfo>
+      PARSER = new com.google.protobuf.AbstractParser<DebugInfo>() {
     @java.lang.Override
-    public CapabilityValue parsePartialFrom(
+    public DebugInfo parsePartialFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
-      return new CapabilityValue(input, extensionRegistry);
+      return new DebugInfo(input, extensionRegistry);
     }
   };
 
-  public static com.google.protobuf.Parser<CapabilityValue> parser() {
+  public static com.google.protobuf.Parser<DebugInfo> parser() {
     return PARSER;
   }
 
   @java.lang.Override
-  public com.google.protobuf.Parser<CapabilityValue> getParserForType() {
+  public com.google.protobuf.Parser<DebugInfo> getParserForType() {
     return PARSER;
   }
 
   @java.lang.Override
-  public com.facebook.buck.remoteexecution.proto.CapabilityValue getDefaultInstanceForType() {
+  public com.facebook.buck.remoteexecution.proto.DebugInfo getDefaultInstanceForType() {
     return DEFAULT_INSTANCE;
   }
 

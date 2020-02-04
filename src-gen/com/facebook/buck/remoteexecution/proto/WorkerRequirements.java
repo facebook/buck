@@ -24,7 +24,6 @@ private static final long serialVersionUID = 0L;
   private WorkerRequirements() {
     workerSize_ = 0;
     platformType_ = 0;
-    shouldTryLargerWorkerOnOom_ = false;
   }
 
   @java.lang.Override
@@ -81,8 +80,21 @@ private static final long serialVersionUID = 0L;
 
             break;
           }
+          case 42: {
+            com.facebook.buck.remoteexecution.proto.CapabilityValue.Builder subBuilder = null;
+            if (taskName_ != null) {
+              subBuilder = taskName_.toBuilder();
+            }
+            taskName_ = input.readMessage(com.facebook.buck.remoteexecution.proto.CapabilityValue.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom(taskName_);
+              taskName_ = subBuilder.buildPartial();
+            }
+
+            break;
+          }
           default: {
-            if (!parseUnknownFieldProto3(
+            if (!parseUnknownField(
                 input, unknownFields, extensionRegistry, tag)) {
               done = true;
             }
@@ -387,7 +399,8 @@ private static final long serialVersionUID = 0L;
   private com.facebook.buck.remoteexecution.proto.CapabilityValue testing_;
   /**
    * <pre>
-   * Needed when aiming for a testing/canaried worker
+   * Canaried workers have a "testing" capability (with a random value). This
+   * should be set when we want the request to go to a specific canaried worker.
    * </pre>
    *
    * <code>.facebook.remote_execution.CapabilityValue testing = 4;</code>
@@ -397,7 +410,8 @@ private static final long serialVersionUID = 0L;
   }
   /**
    * <pre>
-   * Needed when aiming for a testing/canaried worker
+   * Canaried workers have a "testing" capability (with a random value). This
+   * should be set when we want the request to go to a specific canaried worker.
    * </pre>
    *
    * <code>.facebook.remote_execution.CapabilityValue testing = 4;</code>
@@ -407,13 +421,35 @@ private static final long serialVersionUID = 0L;
   }
   /**
    * <pre>
-   * Needed when aiming for a testing/canaried worker
+   * Canaried workers have a "testing" capability (with a random value). This
+   * should be set when we want the request to go to a specific canaried worker.
    * </pre>
    *
    * <code>.facebook.remote_execution.CapabilityValue testing = 4;</code>
    */
   public com.facebook.buck.remoteexecution.proto.CapabilityValueOrBuilder getTestingOrBuilder() {
     return getTesting();
+  }
+
+  public static final int TASK_NAME_FIELD_NUMBER = 5;
+  private com.facebook.buck.remoteexecution.proto.CapabilityValue taskName_;
+  /**
+   * <code>.facebook.remote_execution.CapabilityValue task_name = 5;</code>
+   */
+  public boolean hasTaskName() {
+    return taskName_ != null;
+  }
+  /**
+   * <code>.facebook.remote_execution.CapabilityValue task_name = 5;</code>
+   */
+  public com.facebook.buck.remoteexecution.proto.CapabilityValue getTaskName() {
+    return taskName_ == null ? com.facebook.buck.remoteexecution.proto.CapabilityValue.getDefaultInstance() : taskName_;
+  }
+  /**
+   * <code>.facebook.remote_execution.CapabilityValue task_name = 5;</code>
+   */
+  public com.facebook.buck.remoteexecution.proto.CapabilityValueOrBuilder getTaskNameOrBuilder() {
+    return getTaskName();
   }
 
   private byte memoizedIsInitialized = -1;
@@ -442,6 +478,9 @@ private static final long serialVersionUID = 0L;
     if (testing_ != null) {
       output.writeMessage(4, getTesting());
     }
+    if (taskName_ != null) {
+      output.writeMessage(5, getTaskName());
+    }
     unknownFields.writeTo(output);
   }
 
@@ -467,6 +506,10 @@ private static final long serialVersionUID = 0L;
       size += com.google.protobuf.CodedOutputStream
         .computeMessageSize(4, getTesting());
     }
+    if (taskName_ != null) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeMessageSize(5, getTaskName());
+    }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
     return size;
@@ -482,18 +525,22 @@ private static final long serialVersionUID = 0L;
     }
     com.facebook.buck.remoteexecution.proto.WorkerRequirements other = (com.facebook.buck.remoteexecution.proto.WorkerRequirements) obj;
 
-    boolean result = true;
-    result = result && workerSize_ == other.workerSize_;
-    result = result && platformType_ == other.platformType_;
-    result = result && (getShouldTryLargerWorkerOnOom()
-        == other.getShouldTryLargerWorkerOnOom());
-    result = result && (hasTesting() == other.hasTesting());
+    if (workerSize_ != other.workerSize_) return false;
+    if (platformType_ != other.platformType_) return false;
+    if (getShouldTryLargerWorkerOnOom()
+        != other.getShouldTryLargerWorkerOnOom()) return false;
+    if (hasTesting() != other.hasTesting()) return false;
     if (hasTesting()) {
-      result = result && getTesting()
-          .equals(other.getTesting());
+      if (!getTesting()
+          .equals(other.getTesting())) return false;
     }
-    result = result && unknownFields.equals(other.unknownFields);
-    return result;
+    if (hasTaskName() != other.hasTaskName()) return false;
+    if (hasTaskName()) {
+      if (!getTaskName()
+          .equals(other.getTaskName())) return false;
+    }
+    if (!unknownFields.equals(other.unknownFields)) return false;
+    return true;
   }
 
   @java.lang.Override
@@ -513,6 +560,10 @@ private static final long serialVersionUID = 0L;
     if (hasTesting()) {
       hash = (37 * hash) + TESTING_FIELD_NUMBER;
       hash = (53 * hash) + getTesting().hashCode();
+    }
+    if (hasTaskName()) {
+      hash = (37 * hash) + TASK_NAME_FIELD_NUMBER;
+      hash = (53 * hash) + getTaskName().hashCode();
     }
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
@@ -663,6 +714,12 @@ private static final long serialVersionUID = 0L;
         testing_ = null;
         testingBuilder_ = null;
       }
+      if (taskNameBuilder_ == null) {
+        taskName_ = null;
+      } else {
+        taskName_ = null;
+        taskNameBuilder_ = null;
+      }
       return this;
     }
 
@@ -697,41 +754,46 @@ private static final long serialVersionUID = 0L;
       } else {
         result.testing_ = testingBuilder_.build();
       }
+      if (taskNameBuilder_ == null) {
+        result.taskName_ = taskName_;
+      } else {
+        result.taskName_ = taskNameBuilder_.build();
+      }
       onBuilt();
       return result;
     }
 
     @java.lang.Override
     public Builder clone() {
-      return (Builder) super.clone();
+      return super.clone();
     }
     @java.lang.Override
     public Builder setField(
         com.google.protobuf.Descriptors.FieldDescriptor field,
         java.lang.Object value) {
-      return (Builder) super.setField(field, value);
+      return super.setField(field, value);
     }
     @java.lang.Override
     public Builder clearField(
         com.google.protobuf.Descriptors.FieldDescriptor field) {
-      return (Builder) super.clearField(field);
+      return super.clearField(field);
     }
     @java.lang.Override
     public Builder clearOneof(
         com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-      return (Builder) super.clearOneof(oneof);
+      return super.clearOneof(oneof);
     }
     @java.lang.Override
     public Builder setRepeatedField(
         com.google.protobuf.Descriptors.FieldDescriptor field,
         int index, java.lang.Object value) {
-      return (Builder) super.setRepeatedField(field, index, value);
+      return super.setRepeatedField(field, index, value);
     }
     @java.lang.Override
     public Builder addRepeatedField(
         com.google.protobuf.Descriptors.FieldDescriptor field,
         java.lang.Object value) {
-      return (Builder) super.addRepeatedField(field, value);
+      return super.addRepeatedField(field, value);
     }
     @java.lang.Override
     public Builder mergeFrom(com.google.protobuf.Message other) {
@@ -756,6 +818,9 @@ private static final long serialVersionUID = 0L;
       }
       if (other.hasTesting()) {
         mergeTesting(other.getTesting());
+      }
+      if (other.hasTaskName()) {
+        mergeTaskName(other.getTaskName());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -914,12 +979,13 @@ private static final long serialVersionUID = 0L;
       return this;
     }
 
-    private com.facebook.buck.remoteexecution.proto.CapabilityValue testing_ = null;
+    private com.facebook.buck.remoteexecution.proto.CapabilityValue testing_;
     private com.google.protobuf.SingleFieldBuilderV3<
         com.facebook.buck.remoteexecution.proto.CapabilityValue, com.facebook.buck.remoteexecution.proto.CapabilityValue.Builder, com.facebook.buck.remoteexecution.proto.CapabilityValueOrBuilder> testingBuilder_;
     /**
      * <pre>
-     * Needed when aiming for a testing/canaried worker
+     * Canaried workers have a "testing" capability (with a random value). This
+     * should be set when we want the request to go to a specific canaried worker.
      * </pre>
      *
      * <code>.facebook.remote_execution.CapabilityValue testing = 4;</code>
@@ -929,7 +995,8 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <pre>
-     * Needed when aiming for a testing/canaried worker
+     * Canaried workers have a "testing" capability (with a random value). This
+     * should be set when we want the request to go to a specific canaried worker.
      * </pre>
      *
      * <code>.facebook.remote_execution.CapabilityValue testing = 4;</code>
@@ -943,7 +1010,8 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <pre>
-     * Needed when aiming for a testing/canaried worker
+     * Canaried workers have a "testing" capability (with a random value). This
+     * should be set when we want the request to go to a specific canaried worker.
      * </pre>
      *
      * <code>.facebook.remote_execution.CapabilityValue testing = 4;</code>
@@ -963,7 +1031,8 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <pre>
-     * Needed when aiming for a testing/canaried worker
+     * Canaried workers have a "testing" capability (with a random value). This
+     * should be set when we want the request to go to a specific canaried worker.
      * </pre>
      *
      * <code>.facebook.remote_execution.CapabilityValue testing = 4;</code>
@@ -981,7 +1050,8 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <pre>
-     * Needed when aiming for a testing/canaried worker
+     * Canaried workers have a "testing" capability (with a random value). This
+     * should be set when we want the request to go to a specific canaried worker.
      * </pre>
      *
      * <code>.facebook.remote_execution.CapabilityValue testing = 4;</code>
@@ -1003,7 +1073,8 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <pre>
-     * Needed when aiming for a testing/canaried worker
+     * Canaried workers have a "testing" capability (with a random value). This
+     * should be set when we want the request to go to a specific canaried worker.
      * </pre>
      *
      * <code>.facebook.remote_execution.CapabilityValue testing = 4;</code>
@@ -1021,7 +1092,8 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <pre>
-     * Needed when aiming for a testing/canaried worker
+     * Canaried workers have a "testing" capability (with a random value). This
+     * should be set when we want the request to go to a specific canaried worker.
      * </pre>
      *
      * <code>.facebook.remote_execution.CapabilityValue testing = 4;</code>
@@ -1033,7 +1105,8 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <pre>
-     * Needed when aiming for a testing/canaried worker
+     * Canaried workers have a "testing" capability (with a random value). This
+     * should be set when we want the request to go to a specific canaried worker.
      * </pre>
      *
      * <code>.facebook.remote_execution.CapabilityValue testing = 4;</code>
@@ -1048,7 +1121,8 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <pre>
-     * Needed when aiming for a testing/canaried worker
+     * Canaried workers have a "testing" capability (with a random value). This
+     * should be set when we want the request to go to a specific canaried worker.
      * </pre>
      *
      * <code>.facebook.remote_execution.CapabilityValue testing = 4;</code>
@@ -1066,10 +1140,127 @@ private static final long serialVersionUID = 0L;
       }
       return testingBuilder_;
     }
+
+    private com.facebook.buck.remoteexecution.proto.CapabilityValue taskName_;
+    private com.google.protobuf.SingleFieldBuilderV3<
+        com.facebook.buck.remoteexecution.proto.CapabilityValue, com.facebook.buck.remoteexecution.proto.CapabilityValue.Builder, com.facebook.buck.remoteexecution.proto.CapabilityValueOrBuilder> taskNameBuilder_;
+    /**
+     * <code>.facebook.remote_execution.CapabilityValue task_name = 5;</code>
+     */
+    public boolean hasTaskName() {
+      return taskNameBuilder_ != null || taskName_ != null;
+    }
+    /**
+     * <code>.facebook.remote_execution.CapabilityValue task_name = 5;</code>
+     */
+    public com.facebook.buck.remoteexecution.proto.CapabilityValue getTaskName() {
+      if (taskNameBuilder_ == null) {
+        return taskName_ == null ? com.facebook.buck.remoteexecution.proto.CapabilityValue.getDefaultInstance() : taskName_;
+      } else {
+        return taskNameBuilder_.getMessage();
+      }
+    }
+    /**
+     * <code>.facebook.remote_execution.CapabilityValue task_name = 5;</code>
+     */
+    public Builder setTaskName(com.facebook.buck.remoteexecution.proto.CapabilityValue value) {
+      if (taskNameBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        taskName_ = value;
+        onChanged();
+      } else {
+        taskNameBuilder_.setMessage(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.facebook.remote_execution.CapabilityValue task_name = 5;</code>
+     */
+    public Builder setTaskName(
+        com.facebook.buck.remoteexecution.proto.CapabilityValue.Builder builderForValue) {
+      if (taskNameBuilder_ == null) {
+        taskName_ = builderForValue.build();
+        onChanged();
+      } else {
+        taskNameBuilder_.setMessage(builderForValue.build());
+      }
+
+      return this;
+    }
+    /**
+     * <code>.facebook.remote_execution.CapabilityValue task_name = 5;</code>
+     */
+    public Builder mergeTaskName(com.facebook.buck.remoteexecution.proto.CapabilityValue value) {
+      if (taskNameBuilder_ == null) {
+        if (taskName_ != null) {
+          taskName_ =
+            com.facebook.buck.remoteexecution.proto.CapabilityValue.newBuilder(taskName_).mergeFrom(value).buildPartial();
+        } else {
+          taskName_ = value;
+        }
+        onChanged();
+      } else {
+        taskNameBuilder_.mergeFrom(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.facebook.remote_execution.CapabilityValue task_name = 5;</code>
+     */
+    public Builder clearTaskName() {
+      if (taskNameBuilder_ == null) {
+        taskName_ = null;
+        onChanged();
+      } else {
+        taskName_ = null;
+        taskNameBuilder_ = null;
+      }
+
+      return this;
+    }
+    /**
+     * <code>.facebook.remote_execution.CapabilityValue task_name = 5;</code>
+     */
+    public com.facebook.buck.remoteexecution.proto.CapabilityValue.Builder getTaskNameBuilder() {
+      
+      onChanged();
+      return getTaskNameFieldBuilder().getBuilder();
+    }
+    /**
+     * <code>.facebook.remote_execution.CapabilityValue task_name = 5;</code>
+     */
+    public com.facebook.buck.remoteexecution.proto.CapabilityValueOrBuilder getTaskNameOrBuilder() {
+      if (taskNameBuilder_ != null) {
+        return taskNameBuilder_.getMessageOrBuilder();
+      } else {
+        return taskName_ == null ?
+            com.facebook.buck.remoteexecution.proto.CapabilityValue.getDefaultInstance() : taskName_;
+      }
+    }
+    /**
+     * <code>.facebook.remote_execution.CapabilityValue task_name = 5;</code>
+     */
+    private com.google.protobuf.SingleFieldBuilderV3<
+        com.facebook.buck.remoteexecution.proto.CapabilityValue, com.facebook.buck.remoteexecution.proto.CapabilityValue.Builder, com.facebook.buck.remoteexecution.proto.CapabilityValueOrBuilder> 
+        getTaskNameFieldBuilder() {
+      if (taskNameBuilder_ == null) {
+        taskNameBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+            com.facebook.buck.remoteexecution.proto.CapabilityValue, com.facebook.buck.remoteexecution.proto.CapabilityValue.Builder, com.facebook.buck.remoteexecution.proto.CapabilityValueOrBuilder>(
+                getTaskName(),
+                getParentForChildren(),
+                isClean());
+        taskName_ = null;
+      }
+      return taskNameBuilder_;
+    }
     @java.lang.Override
     public final Builder setUnknownFields(
         final com.google.protobuf.UnknownFieldSet unknownFields) {
-      return super.setUnknownFieldsProto3(unknownFields);
+      return super.setUnknownFields(unknownFields);
     }
 
     @java.lang.Override

@@ -72,9 +72,24 @@ message WorkerInfo {
   string execution_path = 2;
 }
 
+message ManifoldBucket {
+  string name = 1;
+}
+
 message CasClientInfo {
+  enum CasStreamingMode {
+    BUCKETS = 0;
+    HTTP = 1;
+  }
+
   // Name of the tool reaching the CAS, eg, buck, worker, engine, ...
   string name = 1;
+  // This is the execution id from the worker or sandcastle id
+  string job_id = 2;
+  // Passed from the client to decide which streaming mode to use
+  CasStreamingMode streaming_mode = 3;
+  // This allows overriding the manifold bucket
+  ManifoldBucket manifold_bucket = 4;
 }
 
 message CapabilityValue {
@@ -101,8 +116,22 @@ message WorkerRequirements {
   // Indicates if execution engine should try to execute current action with more powerful requirements
   bool should_try_larger_worker_on_oom = 3;
 
-  // Needed when aiming for a testing/canaried worker
+  // Canaried workers have a "testing" capability (with a random value). This
+  // should be set when we want the request to go to a specific canaried worker.
   CapabilityValue testing = 4;
+  CapabilityValue task_name = 5;
+}
+
+// Information about the job that generated an action. Unknown fields can simply be left empty.
+message ClientJobInfo {
+  // Deployment stage of the job producing this action (e.g. prod).
+  string deployment_stage = 1;
+
+  // Job identifier.
+  string instance_id = 2;
+
+  // Job group identifier (aka nonce), if it's part of group of jobs.
+  string group_id = 3;
 }
 
 // Optional context for an Action. May change between Actions from same RE Session if multiple jobs
@@ -127,6 +156,10 @@ message ExecutedActionInfo {
   int64 cpu_stat_system_usec = 3;
 }
 
+message DebugInfo {
+  uint32 pause_before_clean_timeout = 1;
+}
+
 // This is propagated in GRPC header "re-metadata-bin".
 message RemoteExecutionMetadata {
   RESessionID re_session_id = 1;
@@ -137,7 +170,11 @@ message RemoteExecutionMetadata {
   WorkerInfo worker_info = 6;
   CasClientInfo cas_client_info = 7;
   WorkerRequirements worker_requirements = 8;
-  // Do not use index 9 - reserved for server side.
+  // 9 - Do not use, deprecated field.
   ClientActionInfo client_action_info = 10;
   ExecutedActionInfo executed_action_info = 11;
+  DebugInfo debug_info = 12;
+  ClientJobInfo client_job_info = 13;
+
+  // 1000-2000 reserved for RE internal protobufs.
 }

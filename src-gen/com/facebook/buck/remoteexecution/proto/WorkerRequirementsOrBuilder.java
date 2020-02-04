@@ -38,7 +38,8 @@ public interface WorkerRequirementsOrBuilder extends
 
   /**
    * <pre>
-   * Needed when aiming for a testing/canaried worker
+   * Canaried workers have a "testing" capability (with a random value). This
+   * should be set when we want the request to go to a specific canaried worker.
    * </pre>
    *
    * <code>.facebook.remote_execution.CapabilityValue testing = 4;</code>
@@ -46,7 +47,8 @@ public interface WorkerRequirementsOrBuilder extends
   boolean hasTesting();
   /**
    * <pre>
-   * Needed when aiming for a testing/canaried worker
+   * Canaried workers have a "testing" capability (with a random value). This
+   * should be set when we want the request to go to a specific canaried worker.
    * </pre>
    *
    * <code>.facebook.remote_execution.CapabilityValue testing = 4;</code>
@@ -54,10 +56,24 @@ public interface WorkerRequirementsOrBuilder extends
   com.facebook.buck.remoteexecution.proto.CapabilityValue getTesting();
   /**
    * <pre>
-   * Needed when aiming for a testing/canaried worker
+   * Canaried workers have a "testing" capability (with a random value). This
+   * should be set when we want the request to go to a specific canaried worker.
    * </pre>
    *
    * <code>.facebook.remote_execution.CapabilityValue testing = 4;</code>
    */
   com.facebook.buck.remoteexecution.proto.CapabilityValueOrBuilder getTestingOrBuilder();
+
+  /**
+   * <code>.facebook.remote_execution.CapabilityValue task_name = 5;</code>
+   */
+  boolean hasTaskName();
+  /**
+   * <code>.facebook.remote_execution.CapabilityValue task_name = 5;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.CapabilityValue getTaskName();
+  /**
+   * <code>.facebook.remote_execution.CapabilityValue task_name = 5;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.CapabilityValueOrBuilder getTaskNameOrBuilder();
 }
