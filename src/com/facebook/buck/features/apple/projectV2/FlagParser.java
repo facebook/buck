@@ -408,7 +408,7 @@ class FlagParser {
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.of(
             node.getBuildTarget(),
-            node.getCellNames(),
+            node.getCellNames().getCellNameResolver(),
             emptyGraphBuilder,
             ImmutableList.of(locationMacroExpander));
     for (StringWithMacros flag : flags) {

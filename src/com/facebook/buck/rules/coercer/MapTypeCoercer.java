@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -48,7 +49,7 @@ public class MapTypeCoercer<K, V> implements TypeCoercer<ImmutableMap<K, V>> {
   }
 
   @Override
-  public void traverse(CellPathResolver cellRoots, ImmutableMap<K, V> object, Traversal traversal) {
+  public void traverse(CellNameResolver cellRoots, ImmutableMap<K, V> object, Traversal traversal) {
     traversal.traverse(object);
     for (Map.Entry<K, V> element : object.entrySet()) {
       keyTypeCoercer.traverse(cellRoots, element.getKey(), traversal);

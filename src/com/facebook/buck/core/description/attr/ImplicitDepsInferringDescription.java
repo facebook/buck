@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.description.attr;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.google.common.collect.ImmutableCollection;
 
@@ -33,7 +33,7 @@ public interface ImplicitDepsInferringDescription<T> {
 
   void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       T constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder);

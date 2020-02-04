@@ -82,7 +82,10 @@ public class ShTestDescription implements DescriptionWithTargetGraph<ShTestDescr
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.of(
-            buildTarget, context.getCellPathResolver(), graphBuilder, MACRO_EXPANDERS);
+            buildTarget,
+            context.getCellPathResolver().getCellNameResolver(),
+            graphBuilder,
+            MACRO_EXPANDERS);
     ImmutableList<Arg> testArgs =
         Stream.concat(
                 RichStream.from(args.getTest()).map(SourcePathArg::of),

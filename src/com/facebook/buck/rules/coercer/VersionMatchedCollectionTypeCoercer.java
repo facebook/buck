@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -54,7 +55,7 @@ public class VersionMatchedCollectionTypeCoercer<T>
 
   @Override
   public void traverse(
-      CellPathResolver cellRoots, VersionMatchedCollection<T> object, Traversal traversal) {
+      CellNameResolver cellRoots, VersionMatchedCollection<T> object, Traversal traversal) {
     for (Pair<ImmutableMap<BuildTarget, Version>, T> pair : object.getValuePairs()) {
       versionsTypeCoercer.traverse(cellRoots, pair.getFirst(), traversal);
       valueTypeCoercer.traverse(cellRoots, pair.getSecond(), traversal);

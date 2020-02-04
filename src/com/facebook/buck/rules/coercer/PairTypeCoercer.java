@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -48,7 +49,7 @@ public class PairTypeCoercer<FIRST, SECOND> implements TypeCoercer<Pair<FIRST, S
 
   @Override
   public void traverse(
-      CellPathResolver cellRoots, Pair<FIRST, SECOND> object, Traversal traversal) {
+      CellNameResolver cellRoots, Pair<FIRST, SECOND> object, Traversal traversal) {
     firstTypeCoercer.traverse(cellRoots, object.getFirst(), traversal);
     secondTypeCoercer.traverse(cellRoots, object.getSecond(), traversal);
   }

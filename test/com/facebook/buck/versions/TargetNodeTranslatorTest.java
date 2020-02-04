@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -151,7 +152,8 @@ public class TargetNodeTranslatorTest {
           }
         };
     assertThat(
-        translator.translatePair(CELL_PATH_RESOLVER, BaseName.ROOT, new Pair<>("hello", a)),
+        translator.translatePair(
+            CELL_PATH_RESOLVER.getCellNameResolver(), BaseName.ROOT, new Pair<>("hello", a)),
         Matchers.equalTo(Optional.of(new Pair<>("hello", b))));
   }
 
@@ -174,7 +176,9 @@ public class TargetNodeTranslatorTest {
         };
     assertThat(
         translator.translateBuildTargetSourcePath(
-            CELL_PATH_RESOLVER, BaseName.ROOT, DefaultBuildTargetSourcePath.of(a)),
+            CELL_PATH_RESOLVER.getCellNameResolver(),
+            BaseName.ROOT,
+            DefaultBuildTargetSourcePath.of(a)),
         Matchers.equalTo(Optional.of(DefaultBuildTargetSourcePath.of(b))));
   }
 
@@ -197,7 +201,7 @@ public class TargetNodeTranslatorTest {
         };
     assertThat(
         translator.translateSourceWithFlags(
-            CELL_PATH_RESOLVER,
+            CELL_PATH_RESOLVER.getCellNameResolver(),
             BaseName.ROOT,
             SourceWithFlags.of(DefaultBuildTargetSourcePath.of(a), ImmutableList.of("-flag"))),
         Matchers.equalTo(
@@ -217,7 +221,7 @@ public class TargetNodeTranslatorTest {
 
           @Override
           public Optional<Integer> translateTargets(
-              CellPathResolver cellPathResolver,
+              CellNameResolver cellPathResolver,
               BaseName targetBaseName,
               TargetNodeTranslator translator,
               Integer val) {
@@ -230,7 +234,7 @@ public class TargetNodeTranslatorTest {
             ImmutableList.of(integerTranslator),
             ImmutableMap.of());
     assertThat(
-        translator.translate(CELL_PATH_RESOLVER, BaseName.ROOT, 12),
+        translator.translate(CELL_PATH_RESOLVER.getCellNameResolver(), BaseName.ROOT, 12),
         Matchers.equalTo(Optional.of(0)));
   }
 }

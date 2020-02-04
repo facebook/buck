@@ -47,7 +47,7 @@ public class NeededCoverageSpecTest {
             new DefaultTypeCoercerFactory(), ImmutableMap.of(target, newTarget));
     NeededCoverageSpec spec = NeededCoverageSpec.of(100, target, Optional.empty());
     assertThat(
-        translator.translate(CELL_PATH_RESOLVER, BaseName.ROOT, spec),
+        translator.translate(CELL_PATH_RESOLVER.getCellNameResolver(), BaseName.ROOT, spec),
         Matchers.equalTo(Optional.of(spec.withBuildTarget(newTarget))));
   }
 
@@ -58,7 +58,7 @@ public class NeededCoverageSpecTest {
         new FixedTargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableMap.of());
     NeededCoverageSpec spec = NeededCoverageSpec.of(100, target, Optional.empty());
     assertThat(
-        translator.translate(CELL_PATH_RESOLVER, BaseName.ROOT, spec),
+        translator.translate(CELL_PATH_RESOLVER.getCellNameResolver(), BaseName.ROOT, spec),
         Matchers.equalTo(Optional.empty()));
   }
 }

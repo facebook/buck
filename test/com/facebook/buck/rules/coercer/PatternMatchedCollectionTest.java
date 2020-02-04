@@ -51,7 +51,7 @@ public class PatternMatchedCollectionTest {
             .build();
     assertThat(
         translator
-            .translate(CELL_PATH_RESOLVER, BaseName.ROOT, collection)
+            .translate(CELL_PATH_RESOLVER.getCellNameResolver(), BaseName.ROOT, collection)
             .map(PatternMatchedCollection::getValues),
         Matchers.equalTo(Optional.of(ImmutableList.of(newTarget))));
   }
@@ -66,7 +66,7 @@ public class PatternMatchedCollectionTest {
             .add(Pattern.compile("something"), target)
             .build();
     assertThat(
-        translator.translate(CELL_PATH_RESOLVER, BaseName.ROOT, collection),
+        translator.translate(CELL_PATH_RESOLVER.getCellNameResolver(), BaseName.ROOT, collection),
         Matchers.equalTo(Optional.empty()));
   }
 }

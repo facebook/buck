@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -37,7 +38,7 @@ public abstract class CollectionTypeCoercer<C extends ImmutableCollection<T>, T>
   }
 
   @Override
-  public void traverse(CellPathResolver cellRoots, C object, Traversal traversal) {
+  public void traverse(CellNameResolver cellRoots, C object, Traversal traversal) {
     traversal.traverse(object);
     for (T element : object) {
       elementTypeCoercer.traverse(cellRoots, element, traversal);

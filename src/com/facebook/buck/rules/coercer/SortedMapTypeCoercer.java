@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -46,7 +47,7 @@ public class SortedMapTypeCoercer<K extends Comparable<K>, V>
 
   @Override
   public void traverse(
-      CellPathResolver cellRoots, ImmutableSortedMap<K, V> object, Traversal traversal) {
+      CellNameResolver cellRoots, ImmutableSortedMap<K, V> object, Traversal traversal) {
     traversal.traverse(object);
     for (Map.Entry<K, V> element : object.entrySet()) {
       keyTypeCoercer.traverse(cellRoots, element.getKey(), traversal);

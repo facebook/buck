@@ -49,11 +49,13 @@ public class StringWithMacrosTest {
             new DefaultTypeCoercerFactory(), ImmutableMap.of(target, newTarget));
     assertThat(
         translator.translate(
-            CELL_PATH_RESOLVER, BaseName.ROOT, StringWithMacrosUtils.format("--flag")),
+            CELL_PATH_RESOLVER.getCellNameResolver(),
+            BaseName.ROOT,
+            StringWithMacrosUtils.format("--flag")),
         Matchers.equalTo(Optional.empty()));
     assertThat(
         translator.translate(
-            CELL_PATH_RESOLVER,
+            CELL_PATH_RESOLVER.getCellNameResolver(),
             BaseName.ROOT,
             StringWithMacrosUtils.format("--flag=%s", LocationMacro.of(target))),
         Matchers.equalTo(

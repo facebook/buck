@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -40,7 +41,7 @@ abstract class AbstractLocationMacroTypeCoercer<T extends BaseLocationMacro>
   }
 
   @Override
-  public void traverse(CellPathResolver cellRoots, T macro, TypeCoercer.Traversal traversal) {
+  public void traverse(CellNameResolver cellRoots, T macro, TypeCoercer.Traversal traversal) {
     buildTargetWithOutputsTypeCoercer.traverse(cellRoots, macro.getTargetWithOutputs(), traversal);
   }
 

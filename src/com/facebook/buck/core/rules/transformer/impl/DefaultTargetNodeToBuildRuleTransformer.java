@@ -70,7 +70,7 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
               targetNode.getBuildTarget(),
               cache,
               graphBuilder,
-              targetNode.getCellNames(),
+              targetNode.getCellNames().getCellNameResolver(),
               targetGraph);
       arg =
           QueryUtils.withProvidedDepsQuery(
@@ -78,7 +78,7 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
               targetNode.getBuildTarget(),
               cache,
               graphBuilder,
-              targetNode.getCellNames(),
+              targetNode.getCellNames().getCellNameResolver(),
               targetGraph);
       arg =
           QueryUtils.withModuleBlacklistQuery(
@@ -86,7 +86,7 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
               targetNode.getBuildTarget(),
               cache,
               graphBuilder,
-              targetNode.getCellNames(),
+              targetNode.getCellNames().getCellNameResolver(),
               targetGraph);
 
       // The params used for the Buildable only contain the declared parameters. However, the deps

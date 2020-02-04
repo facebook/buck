@@ -81,7 +81,7 @@ public class ApplePackageDescriptionTest {
     ImmutableSortedSet.Builder<BuildTarget> implicitDeps = ImmutableSortedSet.naturalOrder();
     description.findDepsForTargetFromConstructorArgs(
         packageBuildTarget,
-        TestCellPathResolver.get(projectFilesystem),
+        TestCellPathResolver.get(projectFilesystem).getCellNameResolver(),
         arg,
         implicitDeps,
         ImmutableSortedSet.naturalOrder());

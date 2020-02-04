@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -60,7 +61,7 @@ public class CxxLinkGroupMappingTargetCoercer implements TypeCoercer<CxxLinkGrou
 
   @Override
   public void traverse(
-      CellPathResolver cellRoots, CxxLinkGroupMappingTarget object, Traversal traversal) {
+      CellNameResolver cellRoots, CxxLinkGroupMappingTarget object, Traversal traversal) {
     buildTargetTypeCoercer.traverse(cellRoots, object.getBuildTarget(), traversal);
     traversalCoercer.traverse(cellRoots, object.getTraversal(), traversal);
   }

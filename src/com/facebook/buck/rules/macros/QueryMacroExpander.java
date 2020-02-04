@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.QueryTarget;
@@ -53,7 +53,7 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
 
   Stream<QueryTarget> resolveQuery(
       BuildTarget target,
-      CellPathResolver cellNames,
+      CellNameResolver cellNames,
       ActionGraphBuilder graphBuilder,
       String queryExpression)
       throws MacroException {
@@ -79,7 +79,7 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
 
   @Override
   public QueryResults precomputeWorkFrom(
-      BuildTarget target, CellPathResolver cellNames, ActionGraphBuilder graphBuilder, T input)
+      BuildTarget target, CellNameResolver cellNames, ActionGraphBuilder graphBuilder, T input)
       throws MacroException {
     return new QueryResults(
         resolveQuery(target, cellNames, graphBuilder, input.getQuery().getQuery()));

@@ -46,10 +46,12 @@ public class LocationMacroTest {
         new FixedTargetNodeTranslator(
             new DefaultTypeCoercerFactory(), ImmutableMap.of(target, newTarget));
     assertThat(
-        translator.translate(CELL_PATH_RESOLVER, BaseName.ROOT, LocationMacro.of(otherTarget)),
+        translator.translate(
+            CELL_PATH_RESOLVER.getCellNameResolver(), BaseName.ROOT, LocationMacro.of(otherTarget)),
         Matchers.equalTo(Optional.empty()));
     assertThat(
-        translator.translate(CELL_PATH_RESOLVER, BaseName.ROOT, LocationMacro.of(target)),
+        translator.translate(
+            CELL_PATH_RESOLVER.getCellNameResolver(), BaseName.ROOT, LocationMacro.of(target)),
         Matchers.equalTo(Optional.of(LocationMacro.of(newTarget))));
   }
 }

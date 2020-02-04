@@ -98,7 +98,7 @@ public class SelectorListCoercerTest {
                 Selector.onlyDefault(ImmutableList.of(InternalFlavor.of("test3")))));
 
     List<Object> traversedObjects = Lists.newArrayList();
-    coercer.traverse(cellPathResolver, selectors, traversedObjects::add);
+    coercer.traverse(cellPathResolver.getCellNameResolver(), selectors, traversedObjects::add);
 
     assertThat(traversedObjects, hasItem(selectors));
     assertThat(

@@ -17,7 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.android.toolchain.AndroidTools;
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasTests;
@@ -207,7 +207,10 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       ImmutableList<MacroExpander<? extends Macro, ?>> expanders = maybeExpanders.get();
       StringWithMacrosConverter converter =
           StringWithMacrosConverter.of(
-              buildTarget, context.getCellPathResolver(), graphBuilder, expanders);
+              buildTarget,
+              context.getCellPathResolver().getCellNameResolver(),
+              graphBuilder,
+              expanders);
       Function<StringWithMacros, Arg> toArg =
           str -> {
             Arg arg = converter.convert(str);
@@ -251,7 +254,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       T constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {

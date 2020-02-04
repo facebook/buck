@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.model.targetgraph;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
@@ -139,7 +139,7 @@ public class FakeTargetNodeBuilder
     @Override
     public void findDepsForTargetFromConstructorArgs(
         BuildTarget buildTarget,
-        CellPathResolver cellRoots,
+        CellNameResolver cellRoots,
         FakeTargetNodeArg constructorArg,
         ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
         ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {

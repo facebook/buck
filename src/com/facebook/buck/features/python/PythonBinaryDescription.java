@@ -17,6 +17,7 @@
 package com.facebook.buck.features.python;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasTests;
@@ -213,7 +214,7 @@ public class PythonBinaryDescription
         StringWithMacrosConverter macrosConverter =
             StringWithMacrosConverter.of(
                 buildTarget,
-                cellRoots,
+                cellRoots.getCellNameResolver(),
                 graphBuilder,
                 ImmutableList.of(
                     LocationMacroExpander.INSTANCE,
@@ -343,7 +344,7 @@ public class PythonBinaryDescription
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.of(
             buildTarget,
-            cellRoots,
+            cellRoots.getCellNameResolver(),
             graphBuilder,
             PythonUtil.macroExpanders(context.getTargetGraph()));
     PythonPackageComponents allPackageComponents =
@@ -382,7 +383,7 @@ public class PythonBinaryDescription
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       AbstractPythonBinaryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {

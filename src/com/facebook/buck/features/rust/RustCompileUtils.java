@@ -841,7 +841,7 @@ public class RustCompileUtils {
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.of(
             buildTarget,
-            context.getCellPathResolver(),
+            context.getCellPathResolver().getCellNameResolver(),
             context.getActionGraphBuilder(),
             expanders,
             Optional.of(cxxPlatform.getCompilerDebugPathSanitizer().sanitizer(Optional.empty())));

@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -47,7 +48,7 @@ public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Either<Left, 
 
   @Override
   public void traverse(
-      CellPathResolver cellRoots, Either<Left, Right> object, Traversal traversal) {
+      CellNameResolver cellRoots, Either<Left, Right> object, Traversal traversal) {
     if (object.isLeft()) {
       leftTypeCoercer.traverse(cellRoots, object.getLeft(), traversal);
     } else {

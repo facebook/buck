@@ -179,7 +179,11 @@ public class TargetNodeFactory implements NodeCopier {
     if (description instanceof ImplicitDepsInferringDescription) {
       ((ImplicitDepsInferringDescription<T>) description)
           .findDepsForTargetFromConstructorArgs(
-              buildTarget, cellRoots, constructorArg, extraDepsBuilder, targetGraphOnlyDepsBuilder);
+              buildTarget,
+              cellRoots.getCellNameResolver(),
+              constructorArg,
+              extraDepsBuilder,
+              targetGraphOnlyDepsBuilder);
     }
 
     if (description instanceof ImplicitInputsInferringDescription) {
@@ -237,7 +241,7 @@ public class TargetNodeFactory implements NodeCopier {
 
     try {
       info.traverse(
-          cellRoots,
+          cellRoots.getCellNameResolver(),
           object -> {
             if (object instanceof PathSourcePath) {
               pathsBuilder.add(((PathSourcePath) object).getRelativePath());

@@ -132,13 +132,14 @@ public abstract class AbstractNodeBuilder<
 
     QueryCache cache = new QueryCache();
     builtArg =
-        QueryUtils.withDepsQuery(builtArg, target, cache, graphBuilder, cellRoots, targetGraph);
+        QueryUtils.withDepsQuery(
+            builtArg, target, cache, graphBuilder, cellRoots.getCellNameResolver(), targetGraph);
     builtArg =
         QueryUtils.withProvidedDepsQuery(
-            builtArg, target, cache, graphBuilder, cellRoots, targetGraph);
+            builtArg, target, cache, graphBuilder, cellRoots.getCellNameResolver(), targetGraph);
     builtArg =
         QueryUtils.withModuleBlacklistQuery(
-            builtArg, target, cache, graphBuilder, cellRoots, targetGraph);
+            builtArg, target, cache, graphBuilder, cellRoots.getCellNameResolver(), targetGraph);
 
     @SuppressWarnings("unchecked")
     TBuildRule rule =
@@ -203,7 +204,11 @@ public abstract class AbstractNodeBuilder<
         (ImplicitDepsInferringDescription<TArg>) description;
     ImmutableSortedSet.Builder<BuildTarget> builder = ImmutableSortedSet.naturalOrder();
     desc.findDepsForTargetFromConstructorArgs(
-        target, cellRoots, getPopulatedArg(), builder, ImmutableSortedSet.naturalOrder());
+        target,
+        cellRoots.getCellNameResolver(),
+        getPopulatedArg(),
+        builder,
+        ImmutableSortedSet.naturalOrder());
     return builder.build();
   }
 

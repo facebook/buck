@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.HasContacts;
 import com.facebook.buck.core.description.arg.HasTestTimeout;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
@@ -171,7 +172,8 @@ public class JavaTestDescription
     params = params.copyAppendingExtraDeps(testsLibrary);
 
     StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.of(buildTarget, cellRoots, graphBuilder, MACRO_EXPANDERS);
+        StringWithMacrosConverter.of(
+            buildTarget, cellRoots.getCellNameResolver(), graphBuilder, MACRO_EXPANDERS);
     List<Arg> vmArgs = Lists.transform(args.getVmArgs(), macrosConverter::convert);
 
     Optional<BuildTarget> runner = args.getRunner();
@@ -267,7 +269,7 @@ public class JavaTestDescription
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       AbstractJavaTestDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {

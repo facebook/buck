@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.query;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
@@ -89,7 +89,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment<QueryB
       Optional<ActionGraphBuilder> graphBuilder,
       Optional<TargetGraph> targetGraph,
       TypeCoercerFactory typeCoercerFactory,
-      CellPathResolver cellNames,
+      CellNameResolver cellNames,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       BaseName targetBaseName,
       Set<BuildTarget> declaredDeps,
@@ -270,14 +270,14 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment<QueryB
   }
 
   private static class TargetEvaluator implements QueryEnvironment.TargetEvaluator {
-    private final CellPathResolver cellNames;
+    private final CellNameResolver cellNames;
     private final BaseName targetBaseName;
     private final ImmutableSet<BuildTarget> declaredDeps;
     private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
     private final TargetConfiguration targetConfiguration;
 
     private TargetEvaluator(
-        CellPathResolver cellNames,
+        CellNameResolver cellNames,
         UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
         BaseName targetBaseName,
         Set<BuildTarget> declaredDeps,
@@ -299,7 +299,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment<QueryB
       try {
         BuildTarget buildTarget =
             unconfiguredBuildTargetFactory
-                .createForBaseName(targetBaseName, target, cellNames.getCellNameResolver())
+                .createForBaseName(targetBaseName, target, cellNames)
                 .configure(targetConfiguration);
         return ImmutableSet.of(QueryBuildTarget.of(buildTarget));
       } catch (BuildTargetParseException e) {

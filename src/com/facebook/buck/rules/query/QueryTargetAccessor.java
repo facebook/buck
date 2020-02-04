@@ -53,7 +53,7 @@ public class QueryTargetAccessor {
     ImmutableSet.Builder<QueryTarget> builder =
         new ImmutableSortedSet.Builder<>(QueryTarget::compare);
     info.traverse(
-        node.getCellNames(),
+        node.getCellNames().getCellNameResolver(),
         value -> {
           if (value instanceof Path) {
             builder.add(QueryFileTarget.of(PathSourcePath.of(node.getFilesystem(), (Path) value)));
@@ -94,7 +94,7 @@ public class QueryTargetAccessor {
     }
     ImmutableSet.Builder<Object> builder = ImmutableSet.builder();
     info.traverse(
-        node.getCellNames(),
+        node.getCellNames().getCellNameResolver(),
         value -> {
           if (predicate.test(value)) {
             builder.add(value);

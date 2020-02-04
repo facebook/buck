@@ -65,7 +65,7 @@ public class LocationMacroExpanderTest {
     converter =
         StringWithMacrosConverter.of(
             buildTarget,
-            cellPathResolver,
+            cellPathResolver.getCellNameResolver(),
             graphBuilder,
             ImmutableList.of(LocationMacroExpander.INSTANCE));
     return graphBuilder;

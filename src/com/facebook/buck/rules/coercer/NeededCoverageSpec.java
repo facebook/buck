@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
@@ -46,7 +46,7 @@ public abstract class NeededCoverageSpec implements TargetTranslatable<NeededCov
 
   @Override
   public Optional<NeededCoverageSpec> translateTargets(
-      CellPathResolver cellPathResolver, BaseName targetBaseName, TargetNodeTranslator translator) {
+      CellNameResolver cellPathResolver, BaseName targetBaseName, TargetNodeTranslator translator) {
     Optional<BuildTarget> newBuildTarget =
         translator.translate(cellPathResolver, targetBaseName, getBuildTarget());
     return newBuildTarget.map(

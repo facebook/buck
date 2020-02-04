@@ -120,7 +120,10 @@ public class MavenCoordinatesMacroExpanderTest {
     CellPathResolver cellPathResolver = TestCellBuilder.createCellRoots(filesystem);
     StringWithMacrosConverter converter =
         StringWithMacrosConverter.of(
-            target, cellPathResolver, graphBuilder, ImmutableList.of(expander));
+            target,
+            cellPathResolver.getCellNameResolver(),
+            graphBuilder,
+            ImmutableList.of(expander));
 
     String input = "$(maven_coords //:java)";
 
@@ -138,7 +141,10 @@ public class MavenCoordinatesMacroExpanderTest {
     CellPathResolver cellPathResolver = TestCellBuilder.createCellRoots(filesystem);
     StringWithMacrosConverter converter =
         StringWithMacrosConverter.of(
-            target, cellPathResolver, graphBuilder, ImmutableList.of(expander));
+            target,
+            cellPathResolver.getCellNameResolver(),
+            graphBuilder,
+            ImmutableList.of(expander));
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage("no rule //:foo");

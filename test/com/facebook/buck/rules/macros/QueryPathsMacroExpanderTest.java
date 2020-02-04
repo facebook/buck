@@ -84,7 +84,7 @@ public class QueryPathsMacroExpanderTest {
     StringWithMacrosConverter converter =
         StringWithMacrosConverter.of(
             targetNode.getBuildTarget(),
-            cellPathResolver,
+            cellPathResolver.getCellNameResolver(),
             graphBuilder,
             ImmutableList.of(expander));
 

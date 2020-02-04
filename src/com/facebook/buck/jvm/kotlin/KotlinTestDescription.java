@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.kotlin;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -134,7 +134,7 @@ public class KotlinTestDescription
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.of(
             buildTarget,
-            context.getCellPathResolver(),
+            context.getCellPathResolver().getCellNameResolver(),
             graphBuilder,
             JavaTestDescription.MACRO_EXPANDERS);
     return new JavaTest(
@@ -172,7 +172,7 @@ public class KotlinTestDescription
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       KotlinTestDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {

@@ -51,7 +51,8 @@ public class StringWithMacrosConverterTest {
   public void noMacros() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     StringWithMacrosConverter converter =
-        StringWithMacrosConverter.of(TARGET, CELL_ROOTS, graphBuilder, MACRO_EXPANDERS);
+        StringWithMacrosConverter.of(
+            TARGET, CELL_ROOTS.getCellNameResolver(), graphBuilder, MACRO_EXPANDERS);
     assertThat(
         converter.convert(StringWithMacrosUtils.format("something")),
         Matchers.equalTo(StringArg.of("something")));
@@ -65,7 +66,8 @@ public class StringWithMacrosConverterTest {
             .setOut("out")
             .build(graphBuilder);
     StringWithMacrosConverter converter =
-        StringWithMacrosConverter.of(TARGET, CELL_ROOTS, graphBuilder, MACRO_EXPANDERS);
+        StringWithMacrosConverter.of(
+            TARGET, CELL_ROOTS.getCellNameResolver(), graphBuilder, MACRO_EXPANDERS);
     assertThat(
         converter.convert(
             StringWithMacrosUtils.format("%s", LocationMacro.of(genrule.getBuildTarget()))),
@@ -81,7 +83,8 @@ public class StringWithMacrosConverterTest {
             .setOut("out")
             .build(graphBuilder);
     StringWithMacrosConverter converter =
-        StringWithMacrosConverter.of(TARGET, CELL_ROOTS, graphBuilder, MACRO_EXPANDERS);
+        StringWithMacrosConverter.of(
+            TARGET, CELL_ROOTS.getCellNameResolver(), graphBuilder, MACRO_EXPANDERS);
     assertThat(
         converter.convert(
             StringWithMacrosUtils.format("--foo=%s", LocationMacro.of(genrule.getBuildTarget()))),
@@ -98,7 +101,11 @@ public class StringWithMacrosConverterTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     StringWithMacrosConverter converter =
         StringWithMacrosConverter.of(
-            TARGET, CELL_ROOTS, graphBuilder, MACRO_EXPANDERS, Optional.of(s -> "something else"));
+            TARGET,
+            CELL_ROOTS.getCellNameResolver(),
+            graphBuilder,
+            MACRO_EXPANDERS,
+            Optional.of(s -> "something else"));
     assertThat(
         converter.convert(StringWithMacrosUtils.format("something")),
         Matchers.equalTo(SanitizedArg.create(s -> "something else", "something")));
@@ -112,7 +119,8 @@ public class StringWithMacrosConverterTest {
             .setOut("out")
             .build(graphBuilder);
     StringWithMacrosConverter converter =
-        StringWithMacrosConverter.of(TARGET, CELL_ROOTS, graphBuilder, MACRO_EXPANDERS);
+        StringWithMacrosConverter.of(
+            TARGET, CELL_ROOTS.getCellNameResolver(), graphBuilder, MACRO_EXPANDERS);
     Arg result =
         converter.convert(
             StringWithMacrosUtils.format(

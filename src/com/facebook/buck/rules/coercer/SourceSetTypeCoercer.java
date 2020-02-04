@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -47,7 +48,7 @@ public class SourceSetTypeCoercer extends SourceSetConcatable implements TypeCoe
   }
 
   @Override
-  public void traverse(CellPathResolver cellRoots, SourceSet object, Traversal traversal) {
+  public void traverse(CellNameResolver cellRoots, SourceSet object, Traversal traversal) {
     switch (object.getType()) {
       case UNNAMED:
         unnamedHeadersTypeCoercer.traverse(cellRoots, object.getUnnamedSources().get(), traversal);

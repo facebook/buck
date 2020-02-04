@@ -48,7 +48,7 @@ public class QueryTargetTranslatorTest {
         new QueryTargetTranslator(new ParsingUnconfiguredBuildTargetViewFactory());
     assertThat(
         queryTranslator.translateTargets(
-            CELL_PATH_RESOLVER,
+            CELL_PATH_RESOLVER.getCellNameResolver(),
             BaseName.ROOT,
             translator,
             Query.of("deps(//:a)", UnconfiguredTargetConfiguration.INSTANCE, BaseName.ROOT)),
@@ -65,7 +65,7 @@ public class QueryTargetTranslatorTest {
         new QueryTargetTranslator(new ParsingUnconfiguredBuildTargetViewFactory());
     assertThat(
         queryTranslator.translateTargets(
-            CELL_PATH_RESOLVER,
+            CELL_PATH_RESOLVER.getCellNameResolver(),
             BaseName.ROOT,
             translator,
             Query.of("$declared_deps", UnconfiguredTargetConfiguration.INSTANCE, BaseName.ROOT)),

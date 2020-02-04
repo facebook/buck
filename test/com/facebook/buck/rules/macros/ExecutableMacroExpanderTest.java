@@ -71,7 +71,7 @@ public class ExecutableMacroExpanderTest {
     converter =
         StringWithMacrosConverter.of(
             buildTarget,
-            cellPathResolver,
+            cellPathResolver.getCellNameResolver(),
             graphBuilder,
             ImmutableList.of(new ExecutableMacroExpander<>(ExecutableMacro.class)));
   }

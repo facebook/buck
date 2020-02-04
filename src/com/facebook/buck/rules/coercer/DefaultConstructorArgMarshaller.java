@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -52,13 +53,13 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
   }
 
   private void collectDeclaredDeps(
-      CellPathResolver cellPathResolver,
+      CellNameResolver cellNameResolver,
       @Nullable ParamInfo deps,
       ImmutableSet.Builder<BuildTarget> declaredDeps,
       Object dto) {
     if (deps != null && deps.isDep()) {
       deps.traverse(
-          cellPathResolver,
+          cellNameResolver,
           object -> {
             if (!(object instanceof BuildTarget)) {
               return;
@@ -155,7 +156,8 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       }
     }
     T dto = constructorArgDescriptor.build(builder, buildTarget);
-    collectDeclaredDeps(cellPathResolver, allParamInfo.get("deps"), declaredDeps, dto);
+    collectDeclaredDeps(
+        cellPathResolver.getCellNameResolver(), allParamInfo.get("deps"), declaredDeps, dto);
     return dto;
   }
 

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.versions;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
@@ -44,7 +44,7 @@ public class QueryTargetTranslator implements TargetTranslator<Query> {
 
   @Override
   public Optional<Query> translateTargets(
-      CellPathResolver cellPathResolver,
+      CellNameResolver cellNameResolver,
       BaseName targetBaseName,
       TargetNodeTranslator translator,
       Query query) {
@@ -53,7 +53,7 @@ public class QueryTargetTranslator implements TargetTranslator<Query> {
     ImmutableList<BuildTarget> targets;
     try {
       targets =
-          QueryUtils.extractBuildTargets(cellPathResolver, targetBaseName, query)
+          QueryUtils.extractBuildTargets(cellNameResolver, targetBaseName, query)
               .collect(ImmutableList.toImmutableList());
     } catch (QueryException e) {
       throw new RuntimeException("Error parsing/executing query from deps", e);
@@ -81,11 +81,10 @@ public class QueryTargetTranslator implements TargetTranslator<Query> {
       builder.append(queryString, lastEnd, matcher.start());
       BuildTarget target =
           unconfiguredBuildTargetFactory
-              .createForBaseName(
-                  targetBaseName, matcher.group(), cellPathResolver.getCellNameResolver())
+              .createForBaseName(targetBaseName, matcher.group(), cellNameResolver)
               .configure(query.getTargetConfiguration());
       Optional<BuildTarget> translated =
-          translator.translate(cellPathResolver, targetBaseName, target);
+          translator.translate(cellNameResolver, targetBaseName, target);
       builder.append(translated.orElse(target).getFullyQualifiedName());
       lastEnd = matcher.end();
     }

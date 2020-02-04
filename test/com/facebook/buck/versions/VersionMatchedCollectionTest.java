@@ -108,7 +108,7 @@ public class VersionMatchedCollectionTest {
         VersionMatchedCollection.<BuildTarget>builder().add(ImmutableMap.of(), target).build();
     assertThat(
         translator
-            .translate(CELL_PATH_RESOLVER, BaseName.ROOT, collection)
+            .translate(CELL_PATH_RESOLVER.getCellNameResolver(), BaseName.ROOT, collection)
             .map(VersionMatchedCollection::getValues),
         Matchers.equalTo(Optional.of(ImmutableList.of(newTarget))));
   }
@@ -126,7 +126,7 @@ public class VersionMatchedCollectionTest {
             .build();
     assertThat(
         translator
-            .translate(CELL_PATH_RESOLVER, BaseName.ROOT, collection)
+            .translate(CELL_PATH_RESOLVER.getCellNameResolver(), BaseName.ROOT, collection)
             .map(VersionMatchedCollection::getValuePairs),
         Matchers.equalTo(
             Optional.of(ImmutableList.of(new Pair<>(ImmutableMap.of(target, V1), newTarget)))));
@@ -140,7 +140,7 @@ public class VersionMatchedCollectionTest {
     VersionMatchedCollection<BuildTarget> collection =
         VersionMatchedCollection.<BuildTarget>builder().add(ImmutableMap.of(), target).build();
     assertThat(
-        translator.translate(CELL_PATH_RESOLVER, BaseName.ROOT, collection),
+        translator.translate(CELL_PATH_RESOLVER.getCellNameResolver(), BaseName.ROOT, collection),
         Matchers.equalTo(Optional.empty()));
   }
 }

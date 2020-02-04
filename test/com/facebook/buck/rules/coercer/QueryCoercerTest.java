@@ -41,7 +41,7 @@ public class QueryCoercerTest {
             new DefaultTypeCoercerFactory(), new ParsingUnconfiguredBuildTargetViewFactory());
     Query query = Query.of("deps(//:a)", UnconfiguredTargetConfiguration.INSTANCE, BaseName.ROOT);
     List<Object> traversed = new ArrayList<>();
-    coercer.traverse(createCellRoots(filesystem), query, traversed::add);
+    coercer.traverse(createCellRoots(filesystem).getCellNameResolver(), query, traversed::add);
     assertThat(traversed, Matchers.contains(BuildTargetFactory.newInstance("//:a")));
   }
 }

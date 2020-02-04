@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -48,7 +49,7 @@ public class JsonTypeConcatenatingCoercer implements TypeCoercer<Object> {
   }
 
   @Override
-  public void traverse(CellPathResolver cellRoots, Object object, Traversal traversal) {}
+  public void traverse(CellNameResolver cellRoots, Object object, Traversal traversal) {}
 
   @Override
   public Object coerce(

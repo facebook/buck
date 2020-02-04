@@ -41,7 +41,7 @@ public class OcamlDescriptionEnhancer {
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.of(
             target,
-            cellPathResolver,
+            cellPathResolver.getCellNameResolver(),
             graphBuilder,
             ImmutableList.of(
                 LocationMacroExpander.INSTANCE,

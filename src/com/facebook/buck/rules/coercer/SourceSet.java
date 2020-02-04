@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -142,7 +142,7 @@ public abstract class SourceSet implements TargetTranslatable<SourceSet>, AddsTo
 
   @Override
   public Optional<SourceSet> translateTargets(
-      CellPathResolver cellPathResolver, BaseName targetBaseName, TargetNodeTranslator translator) {
+      CellNameResolver cellPathResolver, BaseName targetBaseName, TargetNodeTranslator translator) {
     Optional<Optional<ImmutableMap<String, SourcePath>>> namedSources =
         translator.translate(cellPathResolver, targetBaseName, getNamedSources());
     Optional<Optional<ImmutableSet<SourcePath>>> unNamedSources =

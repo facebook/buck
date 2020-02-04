@@ -108,7 +108,10 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
 
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.of(
-            buildTarget, context.getCellPathResolver(), graphBuilder, MACRO_EXPANDERS);
+            buildTarget,
+            context.getCellPathResolver().getCellNameResolver(),
+            graphBuilder,
+            MACRO_EXPANDERS);
 
     if (args.getArgs().isLeft()) {
       builder.addArg(new SingleStringMacroArg(macrosConverter.convert(args.getArgs().getLeft())));

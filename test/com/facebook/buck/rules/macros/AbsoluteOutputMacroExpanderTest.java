@@ -55,7 +55,7 @@ public class AbsoluteOutputMacroExpanderTest {
     converter =
         StringWithMacrosConverter.of(
             buildTarget,
-            cellPathResolver,
+            cellPathResolver.getCellNameResolver(),
             graphBuilder,
             ImmutableList.of(AbsoluteOutputMacroExpander.INSTANCE));
     return graphBuilder;

@@ -92,7 +92,7 @@ public class QueryTargetsMacroExpanderTest {
     converter =
         StringWithMacrosConverter.of(
             ruleNode.getBuildTarget(),
-            cellNames,
+            cellNames.getCellNameResolver(),
             graphBuilder,
             ImmutableList.of(expander),
             Optional.empty(),

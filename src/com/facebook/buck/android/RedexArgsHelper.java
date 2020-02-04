@@ -47,7 +47,10 @@ public class RedexArgsHelper {
 
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.of(
-            buildTarget, cellRoots, graphBuilder, MacroExpandersForAndroidRules.MACRO_EXPANDERS);
+            buildTarget,
+            cellRoots.getCellNameResolver(),
+            graphBuilder,
+            MacroExpandersForAndroidRules.MACRO_EXPANDERS);
     ImmutableList<Arg> redexExtraArgsList =
         redexExtraArgs.stream()
             .map(macrosConverter::convert)

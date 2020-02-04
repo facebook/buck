@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -46,13 +47,13 @@ public class QueryCoercer implements TypeCoercer<Query> {
     this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
   }
 
-  private Stream<BuildTarget> extractBuildTargets(CellPathResolver cellPathResolver, Query query) {
+  private Stream<BuildTarget> extractBuildTargets(CellNameResolver cellNameResolver, Query query) {
     GraphEnhancementQueryEnvironment env =
         new GraphEnhancementQueryEnvironment(
             Optional.empty(),
             Optional.empty(),
             typeCoercerFactory,
-            cellPathResolver,
+            cellNameResolver,
             unconfiguredBuildTargetFactory,
             query.getBaseName(),
             ImmutableSet.of(),
@@ -82,7 +83,7 @@ public class QueryCoercer implements TypeCoercer<Query> {
   }
 
   @Override
-  public void traverse(CellPathResolver cellRoots, Query query, Traversal traversal) {
+  public void traverse(CellNameResolver cellRoots, Query query, Traversal traversal) {
     extractBuildTargets(cellRoots, query).forEach(traversal::traverse);
   }
 

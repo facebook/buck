@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.macros.MacroFinderAutomaton;
 import com.facebook.buck.core.macros.MacroMatchResult;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -75,13 +76,13 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
   }
 
   private <M extends Macro> void traverse(
-      CellPathResolver cellRoots, MacroTypeCoercer<M> coercer, Macro macro, Traversal traversal) {
+      CellNameResolver cellRoots, MacroTypeCoercer<M> coercer, Macro macro, Traversal traversal) {
     coercer.traverse(cellRoots, coercer.getOutputClass().cast(macro), traversal);
   }
 
   @Override
   public void traverse(
-      CellPathResolver cellRoots, StringWithMacros stringWithMacros, Traversal traversal) {
+      CellNameResolver cellRoots, StringWithMacros stringWithMacros, Traversal traversal) {
     for (MacroContainer macroContainer : stringWithMacros.getMacros()) {
       MacroTypeCoercer<? extends Macro> coercer =
           Objects.requireNonNull(coercers.get(macroContainer.getMacro().getMacroClass()));

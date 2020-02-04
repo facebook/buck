@@ -53,7 +53,7 @@ public class SourceSortedSetTest {
             new DefaultTypeCoercerFactory(), ImmutableMap.of(target, newTarget));
     assertThat(
         translator.translate(
-            CELL_PATH_RESOLVER,
+            CELL_PATH_RESOLVER.getCellNameResolver(),
             BaseName.ROOT,
             SourceSortedSet.ofNamedSources(
                 ImmutableSortedMap.of("name", DefaultBuildTargetSourcePath.of(target)))),
@@ -72,7 +72,7 @@ public class SourceSortedSetTest {
         SourceSortedSet.ofNamedSources(
             ImmutableSortedMap.of("name", DefaultBuildTargetSourcePath.of(target)));
     assertThat(
-        translator.translate(CELL_PATH_RESOLVER, BaseName.ROOT, list),
+        translator.translate(CELL_PATH_RESOLVER.getCellNameResolver(), BaseName.ROOT, list),
         Matchers.equalTo(Optional.empty()));
   }
 
@@ -85,7 +85,7 @@ public class SourceSortedSetTest {
             new DefaultTypeCoercerFactory(), ImmutableMap.of(target, newTarget));
     assertThat(
         translator.translate(
-            CELL_PATH_RESOLVER,
+            CELL_PATH_RESOLVER.getCellNameResolver(),
             BaseName.ROOT,
             SourceSortedSet.ofUnnamedSources(
                 ImmutableSortedSet.of(DefaultBuildTargetSourcePath.of(target)))),
@@ -104,7 +104,7 @@ public class SourceSortedSetTest {
         SourceSortedSet.ofUnnamedSources(
             ImmutableSortedSet.of(DefaultBuildTargetSourcePath.of(target)));
     assertThat(
-        translator.translate(CELL_PATH_RESOLVER, BaseName.ROOT, list),
+        translator.translate(CELL_PATH_RESOLVER.getCellNameResolver(), BaseName.ROOT, list),
         Matchers.equalTo(Optional.empty()));
   }
 
