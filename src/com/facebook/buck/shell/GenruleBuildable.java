@@ -24,7 +24,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.rulekey.DefaultFieldInputs;
 import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -169,8 +168,10 @@ public class GenruleBuildable implements Buildable {
   @AddToRuleKey protected final boolean isCacheable;
 
   /** Whether or not this genrule can be executed remotely. Fails serialization if false. */
-  @AddToRuleKey
-  @CustomFieldBehavior(RemoteExecutionEnabled.class)
+  @ExcludeFromRuleKey(
+      reason = "Genrule execution is not relevant to artifact caching",
+      serialization = RemoteExecutionEnabled.class,
+      inputs = DefaultFieldInputs.class)
   private final boolean executeRemotely;
 
   /** Type for this genrule, if one was provided. */
