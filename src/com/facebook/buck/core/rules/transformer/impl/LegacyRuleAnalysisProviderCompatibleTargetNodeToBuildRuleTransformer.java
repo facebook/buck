@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.rules.transformer.impl;
 
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.RuleDescription;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
@@ -38,6 +39,7 @@ import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.collect.impl.LegacyProviderInfoCollectionImpl;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 
 /**
@@ -65,7 +67,11 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
       TargetGraph targetGraph,
       ConfigurationRuleRegistry configurationRuleRegistry,
       ActionGraphBuilder graphBuilder,
-      TargetNode<T> targetNode) {
+      TargetNode<T> targetNode,
+      CellPathResolver cellPathResolver) {
+    Preconditions.checkArgument(
+        targetNode.getBuildTarget().getCell() == cellPathResolver.getCurrentCellName());
+
     BaseDescription<T> description = targetNode.getDescription();
 
     ProviderInfoCollection providerInfos;
@@ -86,6 +92,7 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
         configurationRuleRegistry,
         graphBuilder,
         targetNode,
-        providerInfos);
+        providerInfos,
+        cellPathResolver);
   }
 }

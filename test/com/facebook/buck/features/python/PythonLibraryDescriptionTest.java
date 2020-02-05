@@ -19,6 +19,7 @@ package com.facebook.buck.features.python;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
@@ -228,7 +229,8 @@ public class PythonLibraryDescriptionTest {
                 executor.get(),
                 new DefaultTypeCoercerFactory(),
                 new ParsingUnconfiguredBuildTargetViewFactory(),
-                20)
+                20,
+                new TestCellBuilder().build())
             .getTargetGraph();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     PythonLibrary library = (PythonLibrary) graphBuilder.requireRule(builder.getTarget());
@@ -278,7 +280,8 @@ public class PythonLibraryDescriptionTest {
                 executor.get(),
                 new DefaultTypeCoercerFactory(),
                 new ParsingUnconfiguredBuildTargetViewFactory(),
-                20)
+                20,
+                new TestCellBuilder().build())
             .getTargetGraph();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     PythonLibrary library = (PythonLibrary) graphBuilder.requireRule(builder.getTarget());

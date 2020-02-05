@@ -20,6 +20,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
@@ -233,7 +234,8 @@ public class CxxGenruleDescriptionTest {
             executor.get(),
             new DefaultTypeCoercerFactory(),
             new ParsingUnconfiguredBuildTargetViewFactory(),
-            20);
+            20,
+            new TestCellBuilder().build());
     CxxGenruleDescriptionArg arg =
         extractArg(
             transformed.getTargetGraph().get(genruleBuilder.getTarget()),
@@ -270,7 +272,8 @@ public class CxxGenruleDescriptionTest {
             executor.get(),
             new DefaultTypeCoercerFactory(),
             new ParsingUnconfiguredBuildTargetViewFactory(),
-            20);
+            20,
+            new TestCellBuilder().build());
     CxxGenruleDescriptionArg arg =
         extractArg(
             transformed.getTargetGraph().get(genruleBuilder.getTarget()),

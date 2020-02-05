@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
@@ -445,7 +446,8 @@ public class CxxBinaryDescriptionTest {
                 executor.get(),
                 new DefaultTypeCoercerFactory(),
                 new ParsingUnconfiguredBuildTargetViewFactory(),
-                20)
+                20,
+                new TestCellBuilder().build())
             .getTargetGraph();
 
     assertThat(

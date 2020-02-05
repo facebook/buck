@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.description.RuleDescription;
 import com.facebook.buck.core.description.RuleDescriptionWithInstanceName;
@@ -146,7 +147,8 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
               ConfigurationRuleRegistry configurationRuleRegistry,
               ActionGraphBuilder graphBuilder,
               TargetNode<T> node,
-              ProviderInfoCollection providerInfoCollection) {
+              ProviderInfoCollection providerInfoCollection,
+              CellPathResolver cellPathResolver) {
             assertSame(targetNode, node);
             return rule;
           }
@@ -163,7 +165,8 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
             targetGraph,
             ConfigurationRuleRegistryFactory.createRegistry(targetGraph),
             actionGraphBuilder,
-            targetNode));
+            targetNode,
+            TestCellPathResolver.get(fakeFilesystem)));
   }
 
   @Test
@@ -247,7 +250,8 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
               ConfigurationRuleRegistry configurationRuleRegistry,
               ActionGraphBuilder graphBuilder,
               TargetNode<T> node,
-              ProviderInfoCollection providerInfoCollection) {
+              ProviderInfoCollection providerInfoCollection,
+              CellPathResolver cellPathResolver) {
             fail();
             return null;
           }
@@ -262,7 +266,8 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
             targetGraph,
             ConfigurationRuleRegistryFactory.createRegistry(targetGraph),
             actionGraphBuilder,
-            targetNode);
+            targetNode,
+            TestCellPathResolver.get(projectFilesystem));
 
     assertTrue(ruleAnalysisCalled.get());
     assertSame(target, rule.getBuildTarget());
@@ -333,7 +338,8 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
               ConfigurationRuleRegistry configurationRuleRegistry,
               ActionGraphBuilder graphBuilder,
               TargetNode<T> node,
-              ProviderInfoCollection providerInfoCollection) {
+              ProviderInfoCollection providerInfoCollection,
+              CellPathResolver cellPathResolver) {
             fail();
             return null;
           }
@@ -348,7 +354,8 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
             targetGraph,
             ConfigurationRuleRegistryFactory.createRegistry(targetGraph),
             actionGraphBuilder,
-            targetNode);
+            targetNode,
+            TestCellPathResolver.get(projectFilesystem));
 
     assertEquals("fake_rule", rule.getType());
     assertTrue(ruleAnalysisCalled.get());
@@ -429,7 +436,8 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
               ConfigurationRuleRegistry configurationRuleRegistry,
               ActionGraphBuilder graphBuilder,
               TargetNode<T> node,
-              ProviderInfoCollection providerInfoCollection) {
+              ProviderInfoCollection providerInfoCollection,
+              CellPathResolver cellPathResolver) {
             fail();
             return null;
           }
@@ -444,14 +452,16 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
             targetGraph,
             ConfigurationRuleRegistryFactory.createRegistry(targetGraph),
             actionGraphBuilder,
-            fakeRuleTargetNode);
+            fakeRuleTargetNode,
+            TestCellPathResolver.get(projectFilesystem));
     BuildRule fakeUdrRule =
         transformer.transform(
             toolchainProvider,
             targetGraph,
             ConfigurationRuleRegistryFactory.createRegistry(targetGraph),
             actionGraphBuilder,
-            fakeUdrTargetNode);
+            fakeUdrTargetNode,
+            TestCellPathResolver.get(projectFilesystem));
 
     assertEquals("fake_rule", fakeRule.getType());
     assertEquals("fake_udr_rule_bar", fakeUdrRule.getType());

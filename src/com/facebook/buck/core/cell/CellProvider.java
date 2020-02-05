@@ -79,6 +79,10 @@ public final class CellProvider {
     return getCellByPath(newCellPathResolver.getCellPath(canonicalCellName));
   }
 
+  public Cells getRootCell() {
+    return new Cells(getCellByCanonicalCellName(CanonicalCellName.rootCell()));
+  }
+
   public ImmutableMap<Path, Cell> getLoadedCells() {
     return ImmutableMap.copyOf(cells.asMap());
   }

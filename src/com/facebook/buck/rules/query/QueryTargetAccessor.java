@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.query;
 
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -39,7 +40,10 @@ public class QueryTargetAccessor {
 
   /** Get targets in attribute. */
   public static <T extends ConstructorArg> ImmutableSet<QueryTarget> getTargetsInAttribute(
-      TypeCoercerFactory typeCoercerFactory, TargetNode<T> node, String attribute) {
+      TypeCoercerFactory typeCoercerFactory,
+      TargetNode<T> node,
+      String attribute,
+      CellNameResolver cellPathResolver) {
     Class<? extends ConstructorArg> constructorArgClass = node.getConstructorArg().getClass();
     ParamInfo info =
         typeCoercerFactory
@@ -53,7 +57,7 @@ public class QueryTargetAccessor {
     ImmutableSet.Builder<QueryTarget> builder =
         new ImmutableSortedSet.Builder<>(QueryTarget::compare);
     info.traverse(
-        node.getCellNames().getCellNameResolver(),
+        cellPathResolver,
         value -> {
           if (value instanceof Path) {
             builder.add(QueryFileTarget.of(PathSourcePath.of(node.getFilesystem(), (Path) value)));
@@ -81,7 +85,8 @@ public class QueryTargetAccessor {
       TypeCoercerFactory typeCoercerFactory,
       TargetNode<T> node,
       String attribute,
-      Predicate<Object> predicate) {
+      Predicate<Object> predicate,
+      CellNameResolver cellNameResolver) {
     Class<? extends ConstructorArg> constructorArgClass = node.getConstructorArg().getClass();
     ParamInfo info =
         typeCoercerFactory
@@ -94,7 +99,7 @@ public class QueryTargetAccessor {
     }
     ImmutableSet.Builder<Object> builder = ImmutableSet.builder();
     info.traverse(
-        node.getCellNames().getCellNameResolver(),
+        cellNameResolver,
         value -> {
           if (predicate.test(value)) {
             builder.add(value);

@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
@@ -46,7 +47,9 @@ public class StringWithMacrosTest {
     BuildTarget newTarget = BuildTargetFactory.newInstance("//something:else");
     TargetNodeTranslator translator =
         new FixedTargetNodeTranslator(
-            new DefaultTypeCoercerFactory(), ImmutableMap.of(target, newTarget));
+            new DefaultTypeCoercerFactory(),
+            ImmutableMap.of(target, newTarget),
+            new TestCellBuilder().build());
     assertThat(
         translator.translate(
             CELL_PATH_RESOLVER.getCellNameResolver(),

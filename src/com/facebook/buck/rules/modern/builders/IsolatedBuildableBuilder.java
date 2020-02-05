@@ -208,6 +208,7 @@ public abstract class IsolatedBuildableBuilder {
             .setJavaPackageFinder(javaPackageFinder)
             .setExecutors(ImmutableMap.of())
             .setCellPathResolver(cellPathResolver)
+            .setCells(cellProvider.getRootCell())
             .setBuildCellRootPath(canonicalProjectRoot)
             .setProcessExecutor(processExecutor)
             .setProjectFilesystemFactory(projectFilesystemFactory)

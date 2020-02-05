@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.description.RuleDescription;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
@@ -117,7 +118,8 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
               ConfigurationRuleRegistry configurationRuleRegistry,
               ActionGraphBuilder graphBuilder,
               TargetNode<T> node,
-              ProviderInfoCollection providerInfoCollection) {
+              ProviderInfoCollection providerInfoCollection,
+              CellPathResolver cellPathResolver) {
             assertSame(expectedProviderInfoCollection, providerInfoCollection);
             assertSame(targetNode, node);
             return rule;
@@ -135,7 +137,8 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
             targetGraph,
             ConfigurationRuleRegistryFactory.createRegistry(targetGraph),
             actionGraphBuilder,
-            targetNode));
+            targetNode,
+            TestCellPathResolver.get(fakeFilesystem)));
   }
 
   private static class FakeTargetNodeRuleDescription implements RuleDescription<FakeTargetNodeArg> {
@@ -219,7 +222,8 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
               ConfigurationRuleRegistry configurationRuleRegistry,
               ActionGraphBuilder graphBuilder,
               TargetNode<T> node,
-              ProviderInfoCollection providerInfoCollection) {
+              ProviderInfoCollection providerInfoCollection,
+              CellPathResolver cellPathResolver) {
             fail();
             return null;
           }
@@ -234,7 +238,8 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
             targetGraph,
             ConfigurationRuleRegistryFactory.createRegistry(targetGraph),
             actionGraphBuilder,
-            targetNode);
+            targetNode,
+            TestCellPathResolver.get(projectFilesystem));
 
     assertTrue(ruleAnalysisCalled.get());
     assertSame(target, rule.getBuildTarget());

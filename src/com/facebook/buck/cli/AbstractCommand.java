@@ -414,6 +414,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
             .setExecutors(params.getExecutors())
             .setCellPathResolver(params.getCells().getRootCell().getCellPathResolver())
             .setBuildCellRootPath(params.getCells().getRootCell().getRoot())
+            .setCells(params.getCells())
             .setProcessExecutor(new DefaultProcessExecutor(params.getConsole()))
             .setDefaultTestTimeoutMillis(testBuckConfig.getDefaultTestTimeoutMillis())
             .setInclNoLocationClassesEnabled(testBuckConfig.isInclNoLocationClassesEnabled())
@@ -447,7 +448,8 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
             params.getUnconfiguredBuildTargetFactory(),
             targetGraphCreationResult,
             params.getTargetConfiguration(),
-            params.getBuckEventBus());
+            params.getBuckEventBus(),
+            params.getCells());
   }
 
   @Override

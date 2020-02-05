@@ -84,6 +84,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment<QueryB
   private final Optional<TargetGraph> targetGraph;
   private final TypeCoercerFactory typeCoercerFactory;
   private final QueryEnvironment.TargetEvaluator targetEvaluator;
+  private final CellNameResolver cellNameResolver;
 
   public GraphEnhancementQueryEnvironment(
       Optional<ActionGraphBuilder> graphBuilder,
@@ -97,6 +98,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment<QueryB
     this.graphBuilder = graphBuilder;
     this.targetGraph = targetGraph;
     this.typeCoercerFactory = typeCoercerFactory;
+    this.cellNameResolver = cellNames;
     this.targetEvaluator =
         new TargetEvaluator(
             cellNames,
@@ -187,14 +189,14 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment<QueryB
   public ImmutableSet<? extends QueryTarget> getTargetsInAttribute(
       QueryBuildTarget target, String attribute) {
     return QueryTargetAccessor.getTargetsInAttribute(
-        typeCoercerFactory, getNode(target), attribute);
+        typeCoercerFactory, getNode(target), attribute, cellNameResolver);
   }
 
   @Override
   public ImmutableSet<Object> filterAttributeContents(
       QueryBuildTarget target, String attribute, Predicate<Object> predicate) {
     return QueryTargetAccessor.filterAttributeContents(
-        typeCoercerFactory, getNode(target), attribute, predicate);
+        typeCoercerFactory, getNode(target), attribute, predicate, cellNameResolver);
   }
 
   private TargetNode<?> getNode(QueryTarget target) {

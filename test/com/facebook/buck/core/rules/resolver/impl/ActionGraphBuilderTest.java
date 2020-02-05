@@ -25,6 +25,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -219,7 +220,8 @@ public class ActionGraphBuilderTest {
                   ConfigurationRuleRegistry configurationRuleRegistry,
                   ActionGraphBuilder graphBuilder,
                   TargetNode<T> targetNode,
-                  ProviderInfoCollection providerInfoCollection) {
+                  ProviderInfoCollection providerInfoCollection,
+                  CellPathResolver cellPathResolver) {
                 Assert.assertFalse(graphBuilder.getRuleOptional(target).isPresent());
                 return graphBuilder.computeIfAbsent(target, FakeBuildRule::new);
               }
@@ -252,7 +254,8 @@ public class ActionGraphBuilderTest {
                   ConfigurationRuleRegistry configurationRuleRegistry,
                   ActionGraphBuilder graphBuilder,
                   TargetNode<T> targetNode,
-                  ProviderInfoCollection providerInfoCollection) {
+                  ProviderInfoCollection providerInfoCollection,
+                  CellPathResolver cellPathResolver) {
                 Boolean existing = transformCalls.put(targetNode.getBuildTarget(), true);
                 assertNull("Should only be called once for each build target", existing);
                 try {

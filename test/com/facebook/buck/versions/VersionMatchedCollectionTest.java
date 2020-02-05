@@ -19,6 +19,7 @@ package com.facebook.buck.versions;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BaseName;
@@ -103,7 +104,9 @@ public class VersionMatchedCollectionTest {
     BuildTarget newTarget = BuildTargetFactory.newInstance("//something:else");
     TargetNodeTranslator translator =
         new FixedTargetNodeTranslator(
-            new DefaultTypeCoercerFactory(), ImmutableMap.of(target, newTarget));
+            new DefaultTypeCoercerFactory(),
+            ImmutableMap.of(target, newTarget),
+            new TestCellBuilder().build());
     VersionMatchedCollection<BuildTarget> collection =
         VersionMatchedCollection.<BuildTarget>builder().add(ImmutableMap.of(), target).build();
     assertThat(
@@ -119,7 +122,9 @@ public class VersionMatchedCollectionTest {
     BuildTarget newTarget = BuildTargetFactory.newInstance("//something:else");
     TargetNodeTranslator translator =
         new FixedTargetNodeTranslator(
-            new DefaultTypeCoercerFactory(), ImmutableMap.of(target, newTarget));
+            new DefaultTypeCoercerFactory(),
+            ImmutableMap.of(target, newTarget),
+            new TestCellBuilder().build());
     VersionMatchedCollection<BuildTarget> collection =
         VersionMatchedCollection.<BuildTarget>builder()
             .add(ImmutableMap.of(target, V1), target)
@@ -136,7 +141,8 @@ public class VersionMatchedCollectionTest {
   public void untranslatedTargets() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     TargetNodeTranslator translator =
-        new FixedTargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableMap.of());
+        new FixedTargetNodeTranslator(
+            new DefaultTypeCoercerFactory(), ImmutableMap.of(), new TestCellBuilder().build());
     VersionMatchedCollection<BuildTarget> collection =
         VersionMatchedCollection.<BuildTarget>builder().add(ImmutableMap.of(), target).build();
     assertThat(

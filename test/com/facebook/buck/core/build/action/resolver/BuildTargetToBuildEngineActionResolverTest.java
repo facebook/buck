@@ -18,6 +18,7 @@ package com.facebook.buck.core.build.action.resolver;
 
 import static org.junit.Assert.assertSame;
 
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -52,7 +53,8 @@ public class BuildTargetToBuildEngineActionResolverTest {
                   ConfigurationRuleRegistry configurationRuleRegistry,
                   ActionGraphBuilder graphBuilder,
                   TargetNode<T> targetNode,
-                  ProviderInfoCollection providerInfoCollection) {
+                  ProviderInfoCollection providerInfoCollection,
+                  CellPathResolver cellPathResolver) {
                 return rule;
               }
             });

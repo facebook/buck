@@ -17,6 +17,7 @@
 package com.facebook.buck.core.rules.resolver.impl;
 
 import com.facebook.buck.core.cell.CellProvider;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -87,6 +88,7 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
   private final ActionGraphBuilderMetadataCache metadataCache;
   private final ConcurrentHashMap<BuildTarget, Task<BuildRule>> buildRuleIndex;
   private final Parallelizer parallelizer;
+  private final Cells cells;
 
   public MultiThreadedActionGraphBuilder(
       ListeningExecutorService executor,
@@ -97,13 +99,14 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
     this.targetGraph = targetGraph;
     this.configurationRuleRegistry = configurationRuleRegistry;
     this.buildRuleGenerator = buildRuleGenerator;
+    this.cells = cellProvider.getRootCell();
 
     this.executor = executor;
 
     int initialCapacity = (int) (targetGraph.getNodes().size() * 5 * 1.1);
     this.buildRuleIndex = new ConcurrentHashMap<>(initialCapacity);
     this.metadataCache =
-        new ActionGraphBuilderMetadataCache(this, this.targetGraph, initialCapacity);
+        new ActionGraphBuilderMetadataCache(this, this.targetGraph, initialCapacity, cells);
     this.toolchainProviderResolver =
         target -> cellProvider.getCellByCanonicalCellName(target.getCell()).getToolchainProvider();
     this.parallelizer =
@@ -243,7 +246,8 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
                                     targetGraph,
                                     configurationRuleRegistry,
                                     this,
-                                    targetGraph.get(target).cast(BuildRuleArg.class)))
+                                    targetGraph.get(target).cast(BuildRuleArg.class),
+                                    cells.getCell(target.getCell()).getCellPathResolver()))
                         .apply(target)));
   }
 

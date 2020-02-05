@@ -19,6 +19,7 @@ package com.facebook.buck.rules.coercer;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
@@ -44,7 +45,9 @@ public class SourceSetTest {
     BuildTarget newTarget = BuildTargetFactory.newInstance("//something:else");
     TargetNodeTranslator translator =
         new FixedTargetNodeTranslator(
-            new DefaultTypeCoercerFactory(), ImmutableMap.of(target, newTarget));
+            new DefaultTypeCoercerFactory(),
+            ImmutableMap.of(target, newTarget),
+            new TestCellBuilder().build());
     assertThat(
         translator.translate(
             CELL_PATH_RESOLVER.getCellNameResolver(),
@@ -61,7 +64,8 @@ public class SourceSetTest {
   public void untranslatedNamedSourcesTargets() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     TargetNodeTranslator translator =
-        new FixedTargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableMap.of());
+        new FixedTargetNodeTranslator(
+            new DefaultTypeCoercerFactory(), ImmutableMap.of(), new TestCellBuilder().build());
     SourceSet list =
         SourceSet.ofNamedSources(ImmutableMap.of("name", DefaultBuildTargetSourcePath.of(target)));
     assertThat(
@@ -75,7 +79,9 @@ public class SourceSetTest {
     BuildTarget newTarget = BuildTargetFactory.newInstance("//something:else");
     TargetNodeTranslator translator =
         new FixedTargetNodeTranslator(
-            new DefaultTypeCoercerFactory(), ImmutableMap.of(target, newTarget));
+            new DefaultTypeCoercerFactory(),
+            ImmutableMap.of(target, newTarget),
+            new TestCellBuilder().build());
     assertThat(
         translator.translate(
             CELL_PATH_RESOLVER.getCellNameResolver(),
@@ -91,7 +97,8 @@ public class SourceSetTest {
   public void untranslatedUnnamedSourcesTargets() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     TargetNodeTranslator translator =
-        new FixedTargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableMap.of());
+        new FixedTargetNodeTranslator(
+            new DefaultTypeCoercerFactory(), ImmutableMap.of(), new TestCellBuilder().build());
     SourceSet list =
         SourceSet.ofUnnamedSources(ImmutableSet.of(DefaultBuildTargetSourcePath.of(target)));
     assertThat(

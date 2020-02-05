@@ -16,6 +16,7 @@
 
 package com.facebook.buck.versions;
 
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.graph.transformation.GraphTransformationEngine;
@@ -79,13 +80,15 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
       TargetGraphCreationResult unversionedTargetGraphCreationResult,
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
-      long timeoutSeconds) {
+      long timeoutSeconds,
+      Cells cells) {
     super(
         typeCoercerFactory,
         unconfiguredBuildTargetFactory,
         unversionedTargetGraphCreationResult,
         timeoutSeconds,
-        TimeUnit.SECONDS);
+        TimeUnit.SECONDS,
+        cells);
 
     this.versionedTargetGraphTransformer =
         new VersionedTargetGraphComputation(
@@ -165,7 +168,8 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
       DepsAwareExecutor<? super ComputeResult, ?> executor,
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
-      long timeoutSeconds)
+      long timeoutSeconds,
+      Cells cells)
       throws VersionException, TimeoutException, InterruptedException {
     return unversionedTargetGraphCreationResult.withTargetGraph(
         new AsyncVersionedTargetGraphBuilder(
@@ -174,7 +178,8 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
                 unversionedTargetGraphCreationResult,
                 typeCoercerFactory,
                 unconfiguredBuildTargetFactory,
-                timeoutSeconds)
+                timeoutSeconds,
+                cells)
             .build());
   }
 

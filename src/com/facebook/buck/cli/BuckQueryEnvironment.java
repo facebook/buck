@@ -562,7 +562,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
   public ImmutableSet<? extends QueryTarget> getTargetsInAttribute(
       QueryBuildTarget target, String attribute) throws QueryException {
     return QueryTargetAccessor.getTargetsInAttribute(
-        typeCoercerFactory, getNode(target), attribute);
+        typeCoercerFactory, getNode(target), attribute, rootCell.getCellNameResolver());
   }
 
   @Override
@@ -570,7 +570,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
       QueryBuildTarget target, String attribute, Predicate<Object> predicate)
       throws QueryException {
     return QueryTargetAccessor.filterAttributeContents(
-        typeCoercerFactory, getNode(target), attribute, predicate);
+        typeCoercerFactory, getNode(target), attribute, predicate, rootCell.getCellNameResolver());
   }
 
   @Override

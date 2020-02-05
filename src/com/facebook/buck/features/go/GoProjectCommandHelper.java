@@ -21,7 +21,7 @@ import com.facebook.buck.cli.CommandRunnerParams;
 import com.facebook.buck.cli.ProjectGeneratorParameters;
 import com.facebook.buck.cli.ProjectTestsMode;
 import com.facebook.buck.command.config.BuildBuckConfig;
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
@@ -80,7 +80,7 @@ public class GoProjectCommandHelper {
   private final Parser parser;
   private final GoBuckConfig goBuckConfig;
   private final BuckConfig buckConfig;
-  private final Cell cell;
+  private final Cells cells;
   private final Optional<TargetConfiguration> targetConfiguration;
   private final Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser;
   private final ParsingContext parsingContext;
@@ -100,12 +100,12 @@ public class GoProjectCommandHelper {
     this.parser = projectGeneratorParameters.getParser();
     this.goBuckConfig = new GoBuckConfig(params.getBuckConfig());
     this.buckConfig = params.getBuckConfig();
-    this.cell = params.getCells().getRootCell();
+    this.cells = params.getCells();
     this.argsParser = argsParser;
     this.projectGeneratorParameters = projectGeneratorParameters;
     this.targetConfiguration = targetConfiguration;
     this.parsingContext =
-        ParsingContext.builder(cell, executor)
+        ParsingContext.builder(cells.getRootCell(), executor)
             .setProfilingEnabled(enableParserProfiling)
             .setSpeculativeParsing(SpeculativeParsing.ENABLED)
             .setApplyDefaultFlavorsMode(
@@ -203,7 +203,7 @@ public class GoProjectCommandHelper {
       Map<BuildTargetSourcePath, Path> generatedPackages)
       throws IOException {
     Path vendorPath;
-    ProjectFilesystem projectFilesystem = cell.getFilesystem();
+    ProjectFilesystem projectFilesystem = cells.getRootCell().getFilesystem();
 
     Optional<Path> projectPath = goBuckConfig.getProjectPath();
     if (projectPath.isPresent()) {
@@ -368,7 +368,8 @@ public class GoProjectCommandHelper {
                   params.getUnconfiguredBuildTargetFactory(),
                   targetGraphCreationResult,
                   targetConfiguration,
-                  buckEventBus);
+                  buckEventBus,
+                  cells);
     }
     return targetGraphCreationResult;
   }

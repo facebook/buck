@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.rules.transformer.impl;
 
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -51,7 +52,11 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
       ConfigurationRuleRegistry configurationRuleRegistry,
       ActionGraphBuilder graphBuilder,
       TargetNode<T> targetNode,
-      ProviderInfoCollection providerInfoCollection) {
+      ProviderInfoCollection providerInfoCollection,
+      CellPathResolver cellPathResolver) {
+    Preconditions.checkArgument(
+        targetNode.getBuildTarget().getCell() == cellPathResolver.getCurrentCellName());
+
     try {
       Preconditions.checkState(
           targetNode.getDescription() instanceof DescriptionWithTargetGraph,
@@ -70,7 +75,7 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
               targetNode.getBuildTarget(),
               cache,
               graphBuilder,
-              targetNode.getCellNames().getCellNameResolver(),
+              cellPathResolver.getCellNameResolver(),
               targetGraph);
       arg =
           QueryUtils.withProvidedDepsQuery(
@@ -78,7 +83,7 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
               targetNode.getBuildTarget(),
               cache,
               graphBuilder,
-              targetNode.getCellNames().getCellNameResolver(),
+              cellPathResolver.getCellNameResolver(),
               targetGraph);
       arg =
           QueryUtils.withModuleBlacklistQuery(
@@ -86,7 +91,7 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
               targetNode.getBuildTarget(),
               cache,
               graphBuilder,
-              targetNode.getCellNames().getCellNameResolver(),
+              cellPathResolver.getCellNameResolver(),
               targetGraph);
 
       // The params used for the Buildable only contain the declared parameters. However, the deps
@@ -103,7 +108,7 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
               targetGraph,
               graphBuilder,
               targetNode.getFilesystem(),
-              targetNode.getCellNames(),
+              cellPathResolver,
               toolchainProvider,
               configurationRuleRegistry,
               providerInfoCollection);
