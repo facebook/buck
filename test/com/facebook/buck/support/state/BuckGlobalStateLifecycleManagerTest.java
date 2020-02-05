@@ -26,8 +26,8 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
-import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
@@ -119,7 +119,8 @@ public class BuckGlobalStateLifecycleManagerTest {
                                 "somesection", ImmutableMap.of("somename", "somevalue")))
                         .build())
                 .setFilesystem(filesystem)
-                .build(),
+                .build()
+                .getRootCell(),
             knownRuleTypesProvider,
             watchman,
             Console.createNullConsole(),
@@ -137,7 +138,8 @@ public class BuckGlobalStateLifecycleManagerTest {
                                 "somesection", ImmutableMap.of("somename", "somevalue")))
                         .build())
                 .setFilesystem(filesystem)
-                .build(),
+                .build()
+                .getRootCell(),
             knownRuleTypesProvider,
             watchman,
             Console.createNullConsole(),
@@ -155,7 +157,8 @@ public class BuckGlobalStateLifecycleManagerTest {
                                 "somesection", ImmutableMap.of("somename", "someothervalue")))
                         .build())
                 .setFilesystem(filesystem)
-                .build(),
+                .build()
+                .getRootCell(),
             knownRuleTypesProvider,
             watchman,
             Console.createNullConsole(),
@@ -193,7 +196,11 @@ public class BuckGlobalStateLifecycleManagerTest {
 
     Object buckGlobalState =
         buckGlobalStateLifecycleManager.getBuckGlobalState(
-            new TestCellBuilder().setBuckConfig(buckConfig1).setFilesystem(filesystem).build(),
+            new TestCellBuilder()
+                .setBuckConfig(buckConfig1)
+                .setFilesystem(filesystem)
+                .build()
+                .getRootCell(),
             knownRuleTypesProvider,
             watchman,
             Console.createNullConsole(),
@@ -205,7 +212,11 @@ public class BuckGlobalStateLifecycleManagerTest {
         "Daemon state should be replaced when not equal.",
         buckGlobalState,
         buckGlobalStateLifecycleManager.getBuckGlobalState(
-            new TestCellBuilder().setBuckConfig(buckConfig2).setFilesystem(filesystem).build(),
+            new TestCellBuilder()
+                .setBuckConfig(buckConfig2)
+                .setFilesystem(filesystem)
+                .build()
+                .getRootCell(),
             knownRuleTypesProvider,
             watchman,
             Console.createNullConsole(),
@@ -224,7 +235,11 @@ public class BuckGlobalStateLifecycleManagerTest {
     Object buckGlobalState1 =
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
-                new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build(),
+                new TestCellBuilder()
+                    .setBuckConfig(buckConfig)
+                    .setFilesystem(filesystem)
+                    .build()
+                    .getRootCell(),
                 knownRuleTypesProvider,
                 watchman,
                 Console.createNullConsole(),
@@ -236,7 +251,11 @@ public class BuckGlobalStateLifecycleManagerTest {
     Object buckGlobalState2 =
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
-                new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build(),
+                new TestCellBuilder()
+                    .setBuckConfig(buckConfig)
+                    .setFilesystem(filesystem)
+                    .build()
+                    .getRootCell(),
                 knownRuleTypesProvider,
                 watchman,
                 Console.createNullConsole(),
@@ -260,7 +279,8 @@ public class BuckGlobalStateLifecycleManagerTest {
                 new TestCellBuilder()
                     .setBuckConfig(buckConfigWithDeveloperDirectory)
                     .setFilesystem(filesystem)
-                    .build(),
+                    .build()
+                    .getRootCell(),
                 knownRuleTypesProvider,
                 watchman,
                 Console.createNullConsole(),
@@ -276,7 +296,8 @@ public class BuckGlobalStateLifecycleManagerTest {
                 new TestCellBuilder()
                     .setBuckConfig(buckConfigWithDeveloperDirectory)
                     .setFilesystem(filesystem)
-                    .build(),
+                    .build()
+                    .getRootCell(),
                 knownRuleTypesProvider,
                 watchman,
                 Console.createNullConsole(),
@@ -318,7 +339,11 @@ public class BuckGlobalStateLifecycleManagerTest {
     Object buckGlobalState1 =
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
-                new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build(),
+                new TestCellBuilder()
+                    .setBuckConfig(buckConfig)
+                    .setFilesystem(filesystem)
+                    .build()
+                    .getRootCell(),
                 knownRuleTypesProvider,
                 watchman,
                 Console.createNullConsole(),
@@ -329,7 +354,11 @@ public class BuckGlobalStateLifecycleManagerTest {
     Object buckGlobalState2 =
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
-                new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build(),
+                new TestCellBuilder()
+                    .setBuckConfig(buckConfig)
+                    .setFilesystem(filesystem)
+                    .build()
+                    .getRootCell(),
                 knownRuleTypesProvider,
                 watchman,
                 Console.createNullConsole(),
@@ -342,12 +371,12 @@ public class BuckGlobalStateLifecycleManagerTest {
 
     Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
 
-    Cell cell = createCellWithAndroidSdk(androidSdkPath);
+    Cells cell = createCellWithAndroidSdk(androidSdkPath);
 
     Object buckGlobalState3 =
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
-                cell,
+                cell.getRootCell(),
                 knownRuleTypesProvider,
                 watchman,
                 Console.createNullConsole(),
@@ -360,7 +389,7 @@ public class BuckGlobalStateLifecycleManagerTest {
     Object buckGlobalState4 =
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
-                cell,
+                cell.getRootCell(),
                 knownRuleTypesProvider,
                 watchman,
                 Console.createNullConsole(),
@@ -404,7 +433,11 @@ public class BuckGlobalStateLifecycleManagerTest {
     Object buckGlobalState1 =
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
-                new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build(),
+                new TestCellBuilder()
+                    .setBuckConfig(buckConfig)
+                    .setFilesystem(filesystem)
+                    .build()
+                    .getRootCell(),
                 knownRuleTypesProvider,
                 watchman,
                 Console.createNullConsole(),
@@ -415,7 +448,11 @@ public class BuckGlobalStateLifecycleManagerTest {
     Object buckGlobalState2 =
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
-                new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build(),
+                new TestCellBuilder()
+                    .setBuckConfig(buckConfig)
+                    .setFilesystem(filesystem)
+                    .build()
+                    .getRootCell(),
                 knownRuleTypesProvider,
                 watchman,
                 Console.createNullConsole(),
@@ -428,14 +465,15 @@ public class BuckGlobalStateLifecycleManagerTest {
 
     Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
 
-    Cell cell = createCellWithAndroidSdk(androidSdkPath);
-    cell.getToolchainProvider()
+    Cells cell = createCellWithAndroidSdk(androidSdkPath);
+    cell.getRootCell()
+        .getToolchainProvider()
         .getByName(AndroidSdkLocation.DEFAULT_NAME, UnconfiguredTargetConfiguration.INSTANCE);
 
     Object buckGlobalState3 =
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
-                cell,
+                cell.getRootCell(),
                 knownRuleTypesProvider,
                 watchman,
                 Console.createNullConsole(),
@@ -448,7 +486,7 @@ public class BuckGlobalStateLifecycleManagerTest {
     Object buckGlobalState4 =
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
-                cell,
+                cell.getRootCell(),
                 knownRuleTypesProvider,
                 watchman,
                 Console.createNullConsole(),
@@ -461,7 +499,7 @@ public class BuckGlobalStateLifecycleManagerTest {
         "Android SDK should be the same other location", buckGlobalState3, buckGlobalState4);
   }
 
-  private Cell createCellWithAndroidSdk(Path androidSdkPath) {
+  private Cells createCellWithAndroidSdk(Path androidSdkPath) {
     return new TestCellBuilder()
         .setBuckConfig(buckConfig)
         .setFilesystem(filesystem)
@@ -477,8 +515,9 @@ public class BuckGlobalStateLifecycleManagerTest {
     Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
     Files.deleteIfExists(androidSdkPath);
 
-    Cell cell = createCellWithAndroidSdk(androidSdkPath);
-    cell.getToolchainProvider()
+    Cells cell = createCellWithAndroidSdk(androidSdkPath);
+    cell.getRootCell()
+        .getToolchainProvider()
         .getByNameIfPresent(
             AndroidSdkLocation.DEFAULT_NAME,
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -486,7 +525,7 @@ public class BuckGlobalStateLifecycleManagerTest {
     BuckGlobalState buckGlobalStateWithBrokenAndroidSdk =
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
-                cell,
+                cell.getRootCell(),
                 knownRuleTypesProvider,
                 watchman,
                 Console.createNullConsole(),
@@ -501,7 +540,7 @@ public class BuckGlobalStateLifecycleManagerTest {
     BuckGlobalState buckGlobalStateWithWorkingAndroidSdk =
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
-                cell,
+                cell.getRootCell(),
                 knownRuleTypesProvider,
                 watchman,
                 Console.createNullConsole(),
@@ -520,8 +559,9 @@ public class BuckGlobalStateLifecycleManagerTest {
 
     Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
 
-    Cell cell = createCellWithAndroidSdk(androidSdkPath);
-    cell.getToolchainProvider()
+    Cells cell = createCellWithAndroidSdk(androidSdkPath);
+    cell.getRootCell()
+        .getToolchainProvider()
         .getByNameIfPresent(
             AndroidSdkLocation.DEFAULT_NAME,
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -529,7 +569,7 @@ public class BuckGlobalStateLifecycleManagerTest {
     BuckGlobalState buckGlobalStateWithWorkingAndroidSdk =
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
-                cell,
+                cell.getRootCell(),
                 knownRuleTypesProvider,
                 watchman,
                 Console.createNullConsole(),
@@ -544,7 +584,7 @@ public class BuckGlobalStateLifecycleManagerTest {
     BuckGlobalState buckGlobalStateWithBrokenAndroidSdk =
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
-                cell,
+                cell.getRootCell(),
                 knownRuleTypesProvider,
                 watchman,
                 Console.createNullConsole(),
@@ -563,8 +603,9 @@ public class BuckGlobalStateLifecycleManagerTest {
     Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
     Files.deleteIfExists(androidSdkPath);
 
-    Cell cell = createCellWithAndroidSdk(androidSdkPath);
-    cell.getToolchainProvider()
+    Cells cell = createCellWithAndroidSdk(androidSdkPath);
+    cell.getRootCell()
+        .getToolchainProvider()
         .getByNameIfPresent(
             AndroidSdkLocation.DEFAULT_NAME,
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -572,7 +613,7 @@ public class BuckGlobalStateLifecycleManagerTest {
     BuckGlobalState buckGlobalStateWithBrokenAndroidSdk1 =
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
-                cell,
+                cell.getRootCell(),
                 knownRuleTypesProvider,
                 watchman,
                 Console.createNullConsole(),
@@ -582,7 +623,8 @@ public class BuckGlobalStateLifecycleManagerTest {
             .getFirst();
 
     cell = createCellWithAndroidSdk(androidSdkPath);
-    cell.getToolchainProvider()
+    cell.getRootCell()
+        .getToolchainProvider()
         .getByNameIfPresent(
             AndroidSdkLocation.DEFAULT_NAME,
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -590,7 +632,7 @@ public class BuckGlobalStateLifecycleManagerTest {
     BuckGlobalState buckGlobalStateWithBrokenAndroidSdk2 =
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
-                cell,
+                cell.getRootCell(),
                 knownRuleTypesProvider,
                 watchman,
                 Console.createNullConsole(),
@@ -610,8 +652,9 @@ public class BuckGlobalStateLifecycleManagerTest {
     Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
     Files.deleteIfExists(androidSdkPath);
 
-    Cell cell = createCellWithAndroidSdk(androidSdkPath);
-    cell.getToolchainProvider()
+    Cells cell = createCellWithAndroidSdk(androidSdkPath);
+    cell.getRootCell()
+        .getToolchainProvider()
         .getByNameIfPresent(
             AndroidSdkLocation.DEFAULT_NAME,
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -619,7 +662,7 @@ public class BuckGlobalStateLifecycleManagerTest {
     BuckGlobalState buckGlobalStateWithBrokenAndroidSdk1 =
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
-                cell,
+                cell.getRootCell(),
                 knownRuleTypesProvider,
                 watchman,
                 Console.createNullConsole(),
@@ -632,7 +675,7 @@ public class BuckGlobalStateLifecycleManagerTest {
     BuckGlobalState buckGlobalStateWithBrokenAndroidSdk2 =
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
-                cell,
+                cell.getRootCell(),
                 knownRuleTypesProvider,
                 watchman,
                 Console.createNullConsole(),
@@ -651,15 +694,16 @@ public class BuckGlobalStateLifecycleManagerTest {
     Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
     Files.deleteIfExists(androidSdkPath);
 
-    Cell cell = createCellWithAndroidSdk(androidSdkPath);
-    cell.getToolchainProvider()
+    Cells cell = createCellWithAndroidSdk(androidSdkPath);
+    cell.getRootCell()
+        .getToolchainProvider()
         .getByNameIfPresent(
             AndroidSdkLocation.DEFAULT_NAME,
             UnconfiguredTargetConfiguration.INSTANCE,
             AndroidSdkLocation.class);
     Object buckGlobalStateWithBrokenAndroidSdk1 =
         buckGlobalStateLifecycleManager.getBuckGlobalState(
-            cell,
+            cell.getRootCell(),
             knownRuleTypesProvider,
             watchman,
             Console.createNullConsole(),
@@ -670,7 +714,7 @@ public class BuckGlobalStateLifecycleManagerTest {
     cell = createCellWithAndroidSdk(androidSdkPath.resolve("some-other-dir"));
     Object buckGlobalStateWithBrokenAndroidSdk2 =
         buckGlobalStateLifecycleManager.getBuckGlobalState(
-            cell,
+            cell.getRootCell(),
             knownRuleTypesProvider,
             watchman,
             Console.createNullConsole(),
@@ -683,12 +727,12 @@ public class BuckGlobalStateLifecycleManagerTest {
 
   @Test
   public void testBuckGlobalStateUptime() {
-    Cell cell = new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build();
+    Cells cell = new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build();
     SettableFakeClock clock = new SettableFakeClock(1000, 0);
     BuckGlobalState buckGlobalState =
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
-                cell,
+                cell.getRootCell(),
                 knownRuleTypesProvider,
                 watchman,
                 Console.createNullConsole(),
@@ -716,7 +760,8 @@ public class BuckGlobalStateLifecycleManagerTest {
                                 ImmutableMap.of(CliConfig.TRUNCATE_FAILING_COMMAND_CONFIG, "true")))
                         .build())
                 .setFilesystem(filesystem)
-                .build(),
+                .build()
+                .getRootCell(),
             knownRuleTypesProvider,
             watchman,
             Console.createNullConsole(),
@@ -736,7 +781,8 @@ public class BuckGlobalStateLifecycleManagerTest {
                                     CliConfig.TRUNCATE_FAILING_COMMAND_CONFIG, "false")))
                         .build())
                 .setFilesystem(filesystem)
-                .build(),
+                .build()
+                .getRootCell(),
             knownRuleTypesProvider,
             watchman,
             Console.createNullConsole(),

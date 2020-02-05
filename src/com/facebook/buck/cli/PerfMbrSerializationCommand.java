@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -68,11 +68,11 @@ public class PerfMbrSerializationCommand
 
   @Override
   void runPerfTest(CommandRunnerParams params, PreparedState state) {
-    Cell rootCell = params.getCell();
+    Cells cells = params.getCells();
     Serializer serializer =
         new Serializer(
             state.graphBuilder,
-            rootCell.getCellPathResolver(),
+            cells.getRootCell().getCellPathResolver(),
             (instance, data, children) -> Hashing.md5().newHasher().putBytes(data).hash());
     for (BuildRule buildRule : state.rulesInGraph) {
       if (buildRule instanceof ModernBuildRule) {

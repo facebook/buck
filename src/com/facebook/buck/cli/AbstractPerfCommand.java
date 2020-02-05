@@ -175,7 +175,8 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
           params
               .getParser()
               .buildTargetGraph(
-                  createParsingContext(params.getCell(), pool.getListeningExecutorService()),
+                  createParsingContext(
+                      params.getCells().getRootCell(), pool.getListeningExecutorService()),
                   targets);
     } catch (BuildFileParseException e) {
       throw new BuckUncheckedExecutionException(e);
@@ -231,12 +232,17 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
   protected StackedFileHashCache createStackedFileHashCache(CommandRunnerParams params)
       throws InterruptedException {
     FileHashCacheMode cacheMode =
-        params.getCell().getBuckConfig().getView(BuildBuckConfig.class).getFileHashCacheMode();
+        params
+            .getCells()
+            .getRootCell()
+            .getBuckConfig()
+            .getView(BuildBuckConfig.class)
+            .getFileHashCacheMode();
 
     return new StackedFileHashCache(
         ImmutableList.<ProjectFileHashCache>builder()
             .addAll(
-                params.getCell().getAllCells().stream()
+                params.getCells().getRootCell().getAllCells().stream()
                     .flatMap(this::createFileHashCaches)
                     .collect(Collectors.toList()))
             .addAll(

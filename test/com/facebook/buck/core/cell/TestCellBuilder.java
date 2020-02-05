@@ -76,7 +76,7 @@ public class TestCellBuilder {
     return this;
   }
 
-  public Cell build() {
+  public Cells build() {
     ProjectFilesystem filesystem =
         this.filesystem != null ? this.filesystem : new FakeProjectFilesystem();
 
@@ -100,17 +100,18 @@ public class TestCellBuilder {
     DefaultCellPathResolver rootCellCellPathResolver =
         DefaultCellPathResolver.create(filesystem.getRootPath(), config.getConfig());
 
-    return LocalCellProviderFactory.create(
-            filesystem,
-            config,
-            cellConfig,
-            rootCellCellPathResolver.getPathMapping(),
-            rootCellCellPathResolver,
-            TestBuckModuleManagerFactory.create(pluginManager),
-            toolchainProviderFactory,
-            new DefaultProjectFilesystemFactory(),
-            new ParsingUnconfiguredBuildTargetViewFactory())
-        .getCellByPath(filesystem.getRootPath());
+    return new Cells(
+        LocalCellProviderFactory.create(
+                filesystem,
+                config,
+                cellConfig,
+                rootCellCellPathResolver.getPathMapping(),
+                rootCellCellPathResolver,
+                TestBuckModuleManagerFactory.create(pluginManager),
+                toolchainProviderFactory,
+                new DefaultProjectFilesystemFactory(),
+                new ParsingUnconfiguredBuildTargetViewFactory())
+            .getCellByPath(filesystem.getRootPath()));
   }
 
   public static CellPathResolver createCellRoots(@Nullable ProjectFilesystem filesystem) {

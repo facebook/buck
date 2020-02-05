@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.support.cli.args.BuckCellArg;
@@ -77,7 +78,7 @@ public class AuditConfigCommand extends AbstractCommand {
   }
 
   private ImmutableSortedSet<ConfigValue> readConfig(CommandRunnerParams params) {
-    Cell rootCell = params.getCell();
+    Cells cells = params.getCells();
 
     ImmutableSortedSet.Builder<ConfigValue> builder;
     builder =
@@ -85,7 +86,7 @@ public class AuditConfigCommand extends AbstractCommand {
             Comparator.comparing(ConfigValue::getSection).thenComparing(ConfigValue::getKey));
     if (getArguments().isEmpty()) {
       // Dump entire config.
-      BuckConfig buckConfig = rootCell.getBuckConfig();
+      BuckConfig buckConfig = cells.getRootCell().getBuckConfig();
       buckConfig
           .getConfig()
           .getSectionToEntries()
@@ -105,7 +106,7 @@ public class AuditConfigCommand extends AbstractCommand {
           .forEach(
               input -> {
                 BuckCellArg arg = BuckCellArg.of(input);
-                BuckConfig buckConfig = getCellBuckConfig(rootCell, arg.getCellName());
+                BuckConfig buckConfig = getCellBuckConfig(cells.getRootCell(), arg.getCellName());
                 String[] parts = arg.getArg().split("\\.", 2);
 
                 DirtyPrintStreamDecorator stdErr = params.getConsole().getStdErr();

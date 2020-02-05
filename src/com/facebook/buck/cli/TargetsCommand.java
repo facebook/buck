@@ -353,7 +353,8 @@ public class TargetsCommand extends AbstractCommand {
                 .getParser()
                 .getPerBuildStateFactory()
                 .create(
-                    createParsingContext(params.getCell(), pool.getListeningExecutorService())
+                    createParsingContext(
+                            params.getCells().getRootCell(), pool.getListeningExecutorService())
                         .withExcludeUnsupportedTargets(false)
                         .withSpeculativeParsing(SpeculativeParsing.ENABLED),
                     params.getParser().getPermState())) {
@@ -395,7 +396,7 @@ public class TargetsCommand extends AbstractCommand {
             .map(
                 (String pattern1) ->
                     BuildTargetPatternParser.parse(
-                        pattern1, params.getCell().getCellNameResolver()))
+                        pattern1, params.getCells().getRootCell().getCellNameResolver()))
             .collect(ImmutableSet.toImmutableSet());
 
     // Group all specs by cell
@@ -468,7 +469,7 @@ public class TargetsCommand extends AbstractCommand {
       // of cells so this is probably fine for now.
       // TODO(buck_team): add a method to resolve cell by name from the context
       Cell cell =
-          params.getCell().getAllCells().stream()
+          params.getCells().getRootCell().getAllCells().stream()
               .filter(name -> name.getCanonicalName().equals(cellName))
               .findFirst()
               .orElseThrow(() -> new BuckUncheckedExecutionException("Unknown cell " + cellName));
@@ -635,10 +636,14 @@ public class TargetsCommand extends AbstractCommand {
           TargetNodePredicateSpec.of(
               BuildFileSpec.fromRecursivePath(
                   CellRelativePath.of(
-                      params.getCell().getCanonicalName(), ForwardRelativePath.of("")))));
+                      params.getCells().getRootCell().getCanonicalName(),
+                      ForwardRelativePath.of("")))));
     }
     return parseArgumentsAsTargetNodeSpecs(
-        params.getCell(), params.getClientWorkingDir(), arguments, params.getBuckConfig());
+        params.getCells().getRootCell(),
+        params.getClientWorkingDir(),
+        arguments,
+        params.getBuckConfig());
   }
 
   private TargetGraphCreationResult buildTargetGraphAndTargetsForShowRules(
@@ -649,7 +654,7 @@ public class TargetsCommand extends AbstractCommand {
       throws InterruptedException, BuildFileParseException, IOException {
     ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
     ParsingContext parsingContext =
-        createParsingContext(params.getCell(), executor)
+        createParsingContext(params.getCells().getRootCell(), executor)
             .withApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode())
             .withSpeculativeParsing(SpeculativeParsing.ENABLED);
     if (arguments.isEmpty()) {
@@ -730,7 +735,7 @@ public class TargetsCommand extends AbstractCommand {
       Optional<ImmutableSet<Class<? extends BaseDescription<?>>>> descriptionClasses)
       throws IOException {
     PathArguments.ReferencedFiles referencedFiles =
-        getReferencedFiles(params.getCell().getFilesystem().getRootPath());
+        getReferencedFiles(params.getCells().getRootCell().getFilesystem().getRootPath());
     SortedMap<String, TargetNode<?>> matchingNodes;
     // If all of the referenced files are paths outside the project root, then print nothing.
     if (!referencedFiles.absolutePathsOutsideProjectRootOrNonExistingPaths.isEmpty()
@@ -750,7 +755,7 @@ public class TargetsCommand extends AbstractCommand {
               descriptionClasses.get().isEmpty() ? Optional.empty() : descriptionClasses,
               isDetectTestChanges,
               parserConfig.getBuildFileName(),
-              params.getCell().getFilesystem());
+              params.getCells().getRootCell().getFilesystem());
     }
     return matchingNodes;
   }
@@ -760,7 +765,7 @@ public class TargetsCommand extends AbstractCommand {
       throws IOException, InterruptedException, BuildFileParseException, VersionException {
     ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
     ParsingContext parsingContext =
-        createParsingContext(params.getCell(), executor)
+        createParsingContext(params.getCells().getRootCell(), executor)
             .withApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode())
             .withSpeculativeParsing(SpeculativeParsing.ENABLED);
     // Parse the entire action graph, or (if targets are specified), only the specified targets and
@@ -778,7 +783,7 @@ public class TargetsCommand extends AbstractCommand {
                           TargetNodePredicateSpec.of(
                               BuildFileSpec.fromRecursivePath(
                                   CellRelativePath.of(
-                                      params.getCell().getCanonicalName(),
+                                      params.getCells().getRootCell().getCanonicalName(),
                                       ForwardRelativePath.of(""))))),
                       params.getTargetConfiguration())
                   .getTargetGraph(),
@@ -790,7 +795,7 @@ public class TargetsCommand extends AbstractCommand {
               .buildTargetGraphWithTopLevelConfigurationTargets(
                   parsingContext,
                   parseArgumentsAsTargetNodeSpecs(
-                      params.getCell(),
+                      params.getCells().getRootCell(),
                       params.getClientWorkingDir(),
                       arguments,
                       params.getBuckConfig()),
@@ -809,7 +814,8 @@ public class TargetsCommand extends AbstractCommand {
         ImmutableSet.builder();
     for (String name : types) {
       try {
-        KnownRuleTypes knownRuleTypes = params.getKnownRuleTypesProvider().get(params.getCell());
+        KnownRuleTypes knownRuleTypes =
+            params.getKnownRuleTypesProvider().get(params.getCells().getRootCell());
         RuleType type = knownRuleTypes.getRuleType(name);
         BaseDescription<?> description = knownRuleTypes.getDescription(type);
         descriptionClassesBuilder.add((Class<? extends BaseDescription<?>>) description.getClass());
@@ -832,7 +838,8 @@ public class TargetsCommand extends AbstractCommand {
       if (isShowCellPath) {
         Path cellPath =
             params
-                .getCell()
+                .getCells()
+                .getRootCell()
                 .getNewCellPathResolver()
                 .getCellPath(entry.getKey().getBuildTarget().getCell());
         builder.add(cellPath.toString());
@@ -983,7 +990,7 @@ public class TargetsCommand extends AbstractCommand {
                 new DefaultConstructorArgMarshaller(params.getTypeCoercerFactory()),
                 params.getKnownRuleTypesProvider(),
                 new ParserPythonInterpreterProvider(
-                    params.getCell().getBuckConfig(), params.getExecutableFinder()),
+                    params.getCells().getRootCell().getBuckConfig(), params.getExecutableFinder()),
                 params.getWatchman(),
                 params.getBuckEventBus(),
                 params.getManifestServiceSupplier(),
@@ -991,7 +998,7 @@ public class TargetsCommand extends AbstractCommand {
                 params.getUnconfiguredBuildTargetFactory(),
                 params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))
             .create(
-                createParsingContext(params.getCell(), executor)
+                createParsingContext(params.getCells().getRootCell(), executor)
                     .withExcludeUnsupportedTargets(false),
                 params.getParser().getPermState())) {
 
@@ -1006,7 +1013,7 @@ public class TargetsCommand extends AbstractCommand {
                 .getParser()
                 .getTargetNodeRawAttributes(
                     state,
-                    params.getCell(),
+                    params.getCells().getRootCell(),
                     targetNode,
                     DependencyStack.top(targetNode.getBuildTarget()));
         if (targetNodeAttributes == null) {
@@ -1031,7 +1038,8 @@ public class TargetsCommand extends AbstractCommand {
         if (isShowCellPath) {
           Path cellPath =
               params
-                  .getCell()
+                  .getCells()
+                  .getRootCell()
                   .getNewCellPathResolver()
                   .getCellPath(targetNode.getBuildTarget().getCell());
           targetNodeAttributes.put("buck.cell_path", cellPath);
@@ -1283,7 +1291,7 @@ public class TargetsCommand extends AbstractCommand {
 
   private String pathToString(Path path, CommandRunnerParams params) {
     Path formattedPath =
-        isShowFullOutput ? path : params.getCell().getFilesystem().relativize(path);
+        isShowFullOutput ? path : params.getCells().getRootCell().getFilesystem().relativize(path);
     return formattedPath.toString();
   }
 
@@ -1311,7 +1319,7 @@ public class TargetsCommand extends AbstractCommand {
           params
               .getParser()
               .buildTargetGraph(
-                  createParsingContext(params.getCell(), executor)
+                  createParsingContext(params.getCells().getRootCell(), executor)
                       .withSpeculativeParsing(SpeculativeParsing.ENABLED)
                       .withExcludeUnsupportedTargets(false),
                   matchingBuildTargetsWithTests)
@@ -1359,9 +1367,14 @@ public class TargetsCommand extends AbstractCommand {
         return params.getFileHashCache();
       case PATHS_ONLY:
         return new FilePathHashLoader(
-            params.getCell().getRoot(),
+            params.getCells().getRootCell().getRoot(),
             getTargetHashModifiedPaths(),
-            params.getCell().getBuckConfig().getView(ParserConfig.class).getAllowSymlinks()
+            params
+                    .getCells()
+                    .getRootCell()
+                    .getBuckConfig()
+                    .getView(ParserConfig.class)
+                    .getAllowSymlinks()
                 != ParserConfig.AllowSymlinks.FORBID);
     }
     throw new IllegalStateException(
@@ -1392,7 +1405,7 @@ public class TargetsCommand extends AbstractCommand {
                 new DefaultConstructorArgMarshaller(params.getTypeCoercerFactory()),
                 params.getKnownRuleTypesProvider(),
                 new ParserPythonInterpreterProvider(
-                    params.getCell().getBuckConfig(), params.getExecutableFinder()),
+                    params.getCells().getRootCell().getBuckConfig(), params.getExecutableFinder()),
                 params.getWatchman(),
                 params.getBuckEventBus(),
                 params.getManifestServiceSupplier(),
@@ -1400,7 +1413,7 @@ public class TargetsCommand extends AbstractCommand {
                 params.getUnconfiguredBuildTargetFactory(),
                 params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))
             .create(
-                createParsingContext(params.getCell(), executor)
+                createParsingContext(params.getCells().getRootCell(), executor)
                     .withExcludeUnsupportedTargets(false),
                 params.getParser().getPermState())) {
       buildTargetHashes =
@@ -1416,7 +1429,7 @@ public class TargetsCommand extends AbstractCommand {
                           .getParser()
                           .getTargetNodeRawAttributesJob(
                               state,
-                              params.getCell(),
+                              params.getCells().getRootCell(),
                               node,
                               DependencyStack.top(node.getBuildTarget())),
                   getHashFunction())

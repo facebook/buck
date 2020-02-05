@@ -22,7 +22,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleLibraryBuilder;
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -50,7 +50,7 @@ import org.junit.Test;
 public class BuildConfigurationTest {
 
   private ProjectFilesystem projectFilesystem;
-  private Cell cell;
+  private Cells cell;
   private BuildTarget fooBuildTarget;
 
   @Before

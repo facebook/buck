@@ -52,7 +52,7 @@ public abstract class ProjectGeneratorParameters {
   }
 
   public Path getPath() {
-    return getCommandRunnerParams().getCell().getRoot();
+    return getCommandRunnerParams().getCells().getRootCell().getRoot();
   }
 
   public abstract boolean isDryRun();

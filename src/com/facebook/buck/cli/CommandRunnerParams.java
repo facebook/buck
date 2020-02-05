@@ -20,7 +20,7 @@ import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
 import com.facebook.buck.command.BuildExecutorArgs;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.build.engine.config.CachingBuildEngineBuckConfig;
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
@@ -76,7 +76,7 @@ public abstract class CommandRunnerParams {
 
   public abstract InputStream getStdIn();
 
-  public abstract Cell getCell();
+  public abstract Cells getCells();
 
   public abstract Watchman getWatchman();
 
@@ -183,7 +183,7 @@ public abstract class CommandRunnerParams {
         getBuckEventBus(),
         getPlatform(),
         getClock(),
-        getCell(),
+        getCells(),
         getExecutors(),
         getProjectFilesystemFactory(),
         getBuildInfoStoreManager(),
@@ -199,7 +199,7 @@ public abstract class CommandRunnerParams {
     return ImmutableCommandRunnerParams.of(
         getConsole(),
         getStdIn(),
-        getCell(),
+        getCells(),
         getWatchman(),
         getVersionedTargetGraphCache(),
         artifactCacheFactory,
@@ -248,7 +248,7 @@ public abstract class CommandRunnerParams {
     return ImmutableCommandRunnerParams.of(
         getConsole(),
         getStdIn(),
-        getCell(),
+        getCells(),
         getWatchman(),
         getVersionedTargetGraphCache(),
         getArtifactCacheFactory(),

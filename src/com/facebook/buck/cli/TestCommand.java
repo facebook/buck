@@ -390,9 +390,10 @@ public class TestCommand extends BuildCommand {
     // Serialize the specs to a file to pass into the test runner.
     Path infoFile =
         params
-            .getCell()
+            .getCells()
+            .getRootCell()
             .getFilesystem()
-            .resolve(params.getCell().getFilesystem().getBuckPaths().getScratchDir())
+            .resolve(params.getCells().getRootCell().getFilesystem().getBuckPaths().getScratchDir())
             .resolve("external_runner_specs.json");
     Files.createDirectories(infoFile.getParent());
     Files.deleteIfExists(infoFile);
@@ -407,7 +408,7 @@ public class TestCommand extends BuildCommand {
             .addAllCommand(command)
             .addAllCommand(withDashArguments)
             .setEnvironment(params.getEnvironment())
-            .setDirectory(params.getCell().getFilesystem().getRootPath());
+            .setDirectory(params.getCells().getRootCell().getFilesystem().getRootPath());
     if (!withDashArguments.contains("--buck-test-info")) {
       builder = builder.addCommand("--buck-test-info", infoFile.toString());
     }
@@ -475,7 +476,7 @@ public class TestCommand extends BuildCommand {
       TargetGraphCreationResult targetGraphCreationResult;
       ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
       ParsingContext parsingContext =
-          createParsingContext(params.getCell(), pool.getListeningExecutorService())
+          createParsingContext(params.getCells().getRootCell(), pool.getListeningExecutorService())
               .withApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode())
               .withSpeculativeParsing(SpeculativeParsing.ENABLED);
 
@@ -494,7 +495,7 @@ public class TestCommand extends BuildCommand {
                           TargetNodePredicateSpec.of(
                               BuildFileSpec.fromRecursivePath(
                                   CellRelativePath.of(
-                                      params.getCell().getCanonicalName(),
+                                      params.getCells().getRootCell().getCanonicalName(),
                                       ForwardRelativePath.of(""))),
                               true)),
                       params.getTargetConfiguration());
@@ -510,7 +511,7 @@ public class TestCommand extends BuildCommand {
                   .buildTargetGraphWithoutTopLevelConfigurationTargets(
                       parsingContext,
                       parseArgumentsAsTargetNodeSpecs(
-                          params.getCell(),
+                          params.getCells().getRootCell(),
                           params.getClientWorkingDir(),
                           getArguments(),
                           params.getBuckConfig()),
@@ -601,8 +602,8 @@ public class TestCommand extends BuildCommand {
                         params.getBuckConfig().getView(ModernBuildRuleConfig.class),
                         params.getBuckConfig().getView(RemoteExecutionConfig.class),
                         actionGraphAndBuilder.getActionGraphBuilder(),
-                        params.getCell(),
-                        params.getCell().getCellPathResolver(),
+                        params.getCells().getRootCell(),
+                        params.getCells().getRootCell().getCellPathResolver(),
                         localCachingBuildEngineDelegate.getFileHashCache(),
                         params.getBuckEventBus(),
                         params.getMetadataProvider(),
@@ -633,7 +634,7 @@ public class TestCommand extends BuildCommand {
             Build build =
                 new Build(
                     actionGraphAndBuilder.getActionGraphBuilder(),
-                    params.getCell(),
+                    params.getCells().getRootCell(),
                     cachingBuildEngine,
                     params.getArtifactCacheFactory().newInstance(),
                     params
@@ -674,7 +675,7 @@ public class TestCommand extends BuildCommand {
           BuildContext buildContext =
               BuildContext.of(
                   actionGraphAndBuilder.getActionGraphBuilder().getSourcePathResolver(),
-                  params.getCell().getRoot(),
+                  params.getCells().getRootCell().getRoot(),
                   params.getJavaPackageFinder(),
                   params.getBuckEventBus(),
                   params
@@ -707,7 +708,7 @@ public class TestCommand extends BuildCommand {
         .setTargetDevice(getTargetDeviceOptional())
         .setAndroidDevicesHelper(
             AndroidDevicesHelperFactory.get(
-                params.getCell().getToolchainProvider(),
+                params.getCells().getRootCell().getToolchainProvider(),
                 this::getExecutionContext,
                 params.getBuckConfig(),
                 getAdbOptions(params.getBuckConfig()),

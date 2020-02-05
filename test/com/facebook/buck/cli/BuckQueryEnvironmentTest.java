@@ -21,7 +21,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
@@ -114,7 +114,7 @@ public class BuckQueryEnvironmentTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
-    Cell cell =
+    Cells cell =
         new TestCellBuilder()
             .setFilesystem(TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath()))
             .build();
@@ -125,7 +125,7 @@ public class BuckQueryEnvironmentTest {
 
     ExecutableFinder executableFinder = new ExecutableFinder();
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-    ParserConfig parserConfig = cell.getBuckConfig().getView(ParserConfig.class);
+    ParserConfig parserConfig = cell.getRootCell().getBuckConfig().getView(ParserConfig.class);
     PerBuildStateFactory perBuildStateFactory =
         new PerBuildStateFactory(
             typeCoercerFactory,
@@ -139,27 +139,33 @@ public class BuckQueryEnvironmentTest {
             new ParsingUnconfiguredBuildTargetViewFactory(),
             UnconfiguredTargetConfiguration.INSTANCE);
     Parser parser =
-        TestParserFactory.create(depsAwareExecutor.get(), cell, perBuildStateFactory, eventBus);
+        TestParserFactory.create(
+            depsAwareExecutor.get(), cell.getRootCell(), perBuildStateFactory, eventBus);
     parserState =
         perBuildStateFactory.create(
-            ParsingContext.builder(cell, executor)
+            ParsingContext.builder(cell.getRootCell(), executor)
                 .setSpeculativeParsing(SpeculativeParsing.ENABLED)
                 .build(),
             parser.getPermState());
 
     TargetPatternEvaluator targetPatternEvaluator =
         new TargetPatternEvaluator(
-            cell,
-            cell.getRoot(),
+            cell.getRootCell(),
+            cell.getRootCell().getRoot(),
             FakeBuckConfig.builder().build(),
             parser,
-            ParsingContext.builder(cell, executor).build(),
+            ParsingContext.builder(cell.getRootCell(), executor).build(),
             Optional.empty());
     OwnersReport.Builder ownersReportBuilder =
-        OwnersReport.builder(cell, cell.getRoot(), parser, parserState, Optional.empty());
+        OwnersReport.builder(
+            cell.getRootCell(),
+            cell.getRootCell().getRoot(),
+            parser,
+            parserState,
+            Optional.empty());
     buckQueryEnvironment =
         BuckQueryEnvironment.from(
-            cell,
+            cell.getRootCell(),
             ownersReportBuilder,
             parser,
             parserState,

@@ -100,7 +100,7 @@ public class GoProjectCommandHelper {
     this.parser = projectGeneratorParameters.getParser();
     this.goBuckConfig = new GoBuckConfig(params.getBuckConfig());
     this.buckConfig = params.getBuckConfig();
-    this.cell = params.getCell();
+    this.cell = params.getCells().getRootCell();
     this.argsParser = argsParser;
     this.projectGeneratorParameters = projectGeneratorParameters;
     this.targetConfiguration = targetConfiguration;

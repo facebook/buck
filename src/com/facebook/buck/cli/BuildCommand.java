@@ -309,14 +309,14 @@ public class BuildCommand extends AbstractCommand {
   private Path getLogDirectoryPath(CommandRunnerParams params) {
     InvocationInfo invocationInfo = params.getInvocationInfo().get();
     Path logDirectoryPath = invocationInfo.getLogDirectoryPath();
-    ProjectFilesystem filesystem = params.getCell().getFilesystem();
+    ProjectFilesystem filesystem = params.getCells().getRootCell().getFilesystem();
     return filesystem.resolve(logDirectoryPath);
   }
 
   BuildPrehook getPrehook(ListeningProcessExecutor processExecutor, CommandRunnerParams params) {
     return new BuildPrehook(
         processExecutor,
-        params.getCell(),
+        params.getCells().getRootCell(),
         params.getBuckEventBus(),
         params.getBuckConfig(),
         params.getEnvironment(),
@@ -388,7 +388,7 @@ public class BuildCommand extends AbstractCommand {
       specs =
           targetNodeSpecEnhancer.apply(
               parseArgumentsAsTargetNodeSpecs(
-                  params.getCell(),
+                  params.getCells().getRootCell(),
                   params.getClientWorkingDir(),
                   getArguments(),
                   params.getBuckConfig()));
@@ -437,7 +437,9 @@ public class BuildCommand extends AbstractCommand {
     BuildTarget explicitTarget =
         params
             .getUnconfiguredBuildTargetFactory()
-            .create(targetWithOutputLabel.getTargetName(), params.getCell().getCellNameResolver())
+            .create(
+                targetWithOutputLabel.getTargetName(),
+                params.getCells().getRootCell().getCellNameResolver())
             // TODO(nga): ignores default_target_platform and configuration detector
             .configure(targetConfiguration.orElse(UnconfiguredTargetConfiguration.INSTANCE));
     Iterable<BuildRule> actionGraphRules =
@@ -561,7 +563,7 @@ public class BuildCommand extends AbstractCommand {
                 OUT_LONG_ARG,
                 loneTarget);
 
-        ProjectFilesystem projectFilesystem = params.getCell().getFilesystem();
+        ProjectFilesystem projectFilesystem = params.getCells().getRootCell().getFilesystem();
         SourcePathResolverAdapter pathResolver =
             graphs.getActionGraphAndBuilder().getActionGraphBuilder().getSourcePathResolver();
 
@@ -711,7 +713,13 @@ public class BuildCommand extends AbstractCommand {
       CommandRunnerParams params, GraphsAndBuildTargets graphsAndBuildTargets) throws IOException {
     // Clean up last buck-out/last.
     Path lastOutputDirPath =
-        params.getCell().getFilesystem().getBuckPaths().getLastOutputDir().toAbsolutePath();
+        params
+            .getCells()
+            .getRootCell()
+            .getFilesystem()
+            .getBuckPaths()
+            .getLastOutputDir()
+            .toAbsolutePath();
     MostFiles.deleteRecursivelyIfExists(lastOutputDirPath);
     Files.createDirectories(lastOutputDirPath);
 
@@ -778,7 +786,7 @@ public class BuildCommand extends AbstractCommand {
                   path ->
                       showFullOutput || showFullJsonOutput
                           ? path
-                          : params.getCell().getFilesystem().relativize(path));
+                          : params.getCells().getRootCell().getFilesystem().relativize(path));
 
       params.getConsole().getStdOut().flush();
       if (showJsonOutput || showFullJsonOutput) {
@@ -820,7 +828,7 @@ public class BuildCommand extends AbstractCommand {
       return params
           .getParser()
           .buildTargetGraphWithoutTopLevelConfigurationTargets(
-              createParsingContext(params.getCell(), executor)
+              createParsingContext(params.getCells().getRootCell(), executor)
                   .withSpeculativeParsing(SpeculativeParsing.ENABLED)
                   .withApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode()),
               specs,

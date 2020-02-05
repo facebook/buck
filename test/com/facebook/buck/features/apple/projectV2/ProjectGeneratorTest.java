@@ -72,7 +72,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
@@ -166,7 +166,7 @@ public class ProjectGeneratorTest {
   private static final Path PUBLIC_HEADER_MAP_PATH = Paths.get("buck-out/gen/_p/pub-hmap");
   private SettableFakeClock clock;
   private ProjectFilesystem projectFilesystem;
-  private Cell projectCell;
+  private Cells projectCell;
   private HalideBuckConfig halideBuckConfig;
   private CxxBuckConfig cxxBuckConfig;
   private AppleConfig appleConfig;
@@ -4401,7 +4401,7 @@ public class ProjectGeneratorTest {
             cache,
             projStateCache,
             ImmutableSet.of(lib1Target, testTarget), /* lib3Target not included on purpose */
-            projectCell,
+            projectCell.getRootCell(),
             "BUCK",
             ProjectGeneratorOptions.builder().build(),
             TestRuleKeyConfigurationFactory.create(),
@@ -4529,7 +4529,7 @@ public class ProjectGeneratorTest {
             cache,
             projStateCache,
             ImmutableSet.of(lib1Target, testTarget), /* lib3Target not included on purpose */
-            projectCell,
+            projectCell.getRootCell(),
             "BUCK",
             ProjectGeneratorOptions.builder().build(),
             TestRuleKeyConfigurationFactory.create(),
@@ -4692,7 +4692,7 @@ public class ProjectGeneratorTest {
         cache,
         projStateCache,
         initialBuildTargets,
-        projectCell,
+        projectCell.getRootCell(),
         "BUCK",
         projectGeneratorOptions,
         TestRuleKeyConfigurationFactory.create(),

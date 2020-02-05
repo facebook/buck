@@ -28,7 +28,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
@@ -88,7 +88,7 @@ public class SkylarkProjectBuildFileParserTest {
   private KnownRuleTypesProvider knownRuleTypesProvider;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
-  private Cell cell;
+  private Cells cell;
 
   @Before
   public void setUp() {
@@ -102,13 +102,13 @@ public class SkylarkProjectBuildFileParserTest {
 
   private ProjectBuildFileParserOptions.Builder getDefaultParserOptions() {
     return SkylarkProjectBuildFileParserTestUtils.getDefaultParserOptions(
-        cell, knownRuleTypesProvider);
+        cell.getRootCell(), knownRuleTypesProvider);
   }
 
   private SkylarkProjectBuildFileParser createParserWithOptions(
       EventHandler eventHandler, ProjectBuildFileParserOptions options) {
     return SkylarkProjectBuildFileParserTestUtils.createParserWithOptions(
-        skylarkFilesystem, eventHandler, options, knownRuleTypesProvider, cell);
+        skylarkFilesystem, eventHandler, options, knownRuleTypesProvider, cell.getRootCell());
   }
 
   private SkylarkProjectBuildFileParser createParser(EventHandler eventHandler) {
@@ -736,12 +736,12 @@ public class SkylarkProjectBuildFileParserTest {
 
     ProjectBuildFileParserOptions options =
         getDefaultParserOptions().setUserDefinedRulesState(UserDefinedRulesState.ENABLED).build();
-    knownRuleTypesProvider.getNativeRuleTypes(cell).getDescriptions();
+    knownRuleTypesProvider.getNativeRuleTypes(cell.getRootCell()).getDescriptions();
     System.err.println(
         String.format(
             "Got %s descriptions\n%s providers\n%s from PM\n",
-            knownRuleTypesProvider.getNativeRuleTypes(cell).getDescriptions(),
-            knownRuleTypesProvider.getNativeRuleTypes(cell).getPerFeatureProviders(),
+            knownRuleTypesProvider.getNativeRuleTypes(cell.getRootCell()).getDescriptions(),
+            knownRuleTypesProvider.getNativeRuleTypes(cell.getRootCell()).getPerFeatureProviders(),
             BuckPluginManagerFactory.createPluginManager()
                 .getExtensions(DescriptionProvider.class)));
     parser = createParserWithOptions(parser.eventHandler, options);
@@ -1003,7 +1003,7 @@ public class SkylarkProjectBuildFileParserTest {
 
   @Test
   public void canImportExtensionFromAnotherCell() throws Exception {
-    Cell cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
+    Cells cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
 
     Path directory = projectFilesystem.resolve("src").resolve("test");
     Files.createDirectories(directory);
@@ -1015,13 +1015,16 @@ public class SkylarkProjectBuildFileParserTest {
 
     ProjectBuildFileParserOptions options =
         ProjectBuildFileParserOptions.builder()
-            .setProjectRoot(cell.getRoot())
+            .setProjectRoot(cell.getRootCell().getRoot())
             .setAllowEmptyGlobs(ParserConfig.DEFAULT_ALLOW_EMPTY_GLOBS)
             .setIgnorePaths(ImmutableSet.of())
             .setBuildFileName("BUCK")
-            .setDescriptions(knownRuleTypesProvider.getNativeRuleTypes(cell).getDescriptions())
+            .setDescriptions(
+                knownRuleTypesProvider.getNativeRuleTypes(cell.getRootCell()).getDescriptions())
             .setPerFeatureProviders(
-                knownRuleTypesProvider.getNativeRuleTypes(cell).getPerFeatureProviders())
+                knownRuleTypesProvider
+                    .getNativeRuleTypes(cell.getRootCell())
+                    .getPerFeatureProviders())
             .setBuildFileImportWhitelist(ImmutableList.of())
             .setPythonInterpreter("skylark")
             .setCellRoots(ImmutableMap.of("tp2", anotherCell))
@@ -1038,7 +1041,7 @@ public class SkylarkProjectBuildFileParserTest {
                 options.getImplicitNativeRulesState(),
                 new RuleFunctionFactory(new DefaultTypeCoercerFactory()),
                 LabelCache.newLabelCache(),
-                knownRuleTypesProvider.getUserDefinedRuleTypes(cell),
+                knownRuleTypesProvider.getUserDefinedRuleTypes(cell.getRootCell()),
                 options.getPerFeatureProviders()),
             new PrintingEventHandler(EnumSet.allOf(EventKind.class)),
             NativeGlobber::create);

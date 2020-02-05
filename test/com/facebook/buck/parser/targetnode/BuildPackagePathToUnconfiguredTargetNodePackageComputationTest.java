@@ -19,7 +19,7 @@ package com.facebook.buck.parser.targetnode;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.graph.transformation.impl.FakeComputationEnvironment;
 import com.facebook.buck.core.model.BaseName;
@@ -57,7 +57,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
 
   @Test
   public void canParseDeps() {
-    Cell cell = new TestCellBuilder().build();
+    Cells cell = new TestCellBuilder().build();
 
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     TargetPlatformResolver targetPlatformResolver =
@@ -87,7 +87,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
             ImmutableSortedSet.of(":target2"));
     UnconfiguredBuildTarget unconfiguredBuildTarget1 =
         UnconfiguredBuildTarget.of(
-            cell.getCanonicalName(),
+            cell.getRootCell().getCanonicalName(),
             BaseName.of("//"),
             "target1",
             UnconfiguredBuildTarget.NO_FLAVORS);
@@ -103,7 +103,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
         ImmutableMap.of("name", "target2", "buck.type", "java_library", "buck.base_path", "");
     UnconfiguredBuildTarget unconfiguredBuildTarget2 =
         UnconfiguredBuildTarget.of(
-            cell.getCanonicalName(),
+            cell.getRootCell().getCanonicalName(),
             BaseName.of("//"),
             "target2",
             UnconfiguredBuildTarget.NO_FLAVORS);
@@ -126,7 +126,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
 
     BuildPackagePathToUnconfiguredTargetNodePackageComputation transformer =
         BuildPackagePathToUnconfiguredTargetNodePackageComputation.of(
-            unconfiguredTargetNodeToTargetNodeFactory, cell, false);
+            unconfiguredTargetNodeToTargetNodeFactory, cell.getRootCell(), false);
     UnconfiguredTargetNodeWithDepsPackage unconfiguredTargetNodeWithDepsPackage =
         transformer.transform(
             ImmutableBuildPackagePathToUnconfiguredTargetNodePackageKey.of(Paths.get("")),

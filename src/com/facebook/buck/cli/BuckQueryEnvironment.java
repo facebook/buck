@@ -193,9 +193,9 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
   public static BuckQueryEnvironment from(
       CommandRunnerParams params, PerBuildState parserState, ParsingContext parsingContext) {
     return from(
-        params.getCell(),
+        params.getCells().getRootCell(),
         OwnersReport.builder(
-            params.getCell(),
+            params.getCells().getRootCell(),
             params.getClientWorkingDir(),
             params.getParser(),
             parserState,
@@ -203,7 +203,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
         params.getParser(),
         parserState,
         new TargetPatternEvaluator(
-            params.getCell(),
+            params.getCells().getRootCell(),
             params.getClientWorkingDir(),
             params.getBuckConfig(),
             params.getParser(),

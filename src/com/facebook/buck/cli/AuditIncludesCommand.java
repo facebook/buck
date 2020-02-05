@@ -56,18 +56,21 @@ public class AuditIncludesCommand extends AbstractCommand {
 
   @Override
   public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
-    ProjectFilesystem projectFilesystem = params.getCell().getFilesystem();
+    ProjectFilesystem projectFilesystem = params.getCells().getRootCell().getFilesystem();
     try (ProjectBuildFileParser parser =
         new DefaultProjectBuildFileParserFactory(
                 new DefaultTypeCoercerFactory(),
                 params.getConsole(),
                 new ParserPythonInterpreterProvider(
-                    params.getCell().getBuckConfig(), params.getExecutableFinder()),
+                    params.getCells().getRootCell().getBuckConfig(), params.getExecutableFinder()),
                 params.getKnownRuleTypesProvider(),
                 params.getManifestServiceSupplier(),
                 params.getFileHashCache())
             .createFileParser(
-                params.getBuckEventBus(), params.getCell(), params.getWatchman(), false)) {
+                params.getBuckEventBus(),
+                params.getCells().getRootCell(),
+                params.getWatchman(),
+                false)) {
       PrintStream out = params.getConsole().getStdOut();
       for (String pathToBuildFile : getArguments()) {
         if (!json) {

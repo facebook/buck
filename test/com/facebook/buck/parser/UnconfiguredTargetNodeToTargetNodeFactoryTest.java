@@ -18,7 +18,7 @@ package com.facebook.buck.parser;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
@@ -74,7 +74,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactoryTest {
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c")
             .configure(targetConfiguration);
     Path basepath = Paths.get("a").resolve("b");
-    Cell cell =
+    Cells cell =
         new TestCellBuilder()
             .setFilesystem(
                 new FakeProjectFilesystem(
@@ -139,7 +139,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactoryTest {
 
     TargetNode<?> targetNode =
         factory.createTargetNode(
-            cell,
+            cell.getRootCell(),
             Paths.get("a/b/BUCK"),
             buildTarget,
             DependencyStack.root(),
@@ -150,8 +150,8 @@ public class UnconfiguredTargetNodeToTargetNodeFactoryTest {
     JavaLibraryDescriptionArg arg = (JavaLibraryDescriptionArg) targetNode.getConstructorArg();
     assertEquals(
         ImmutableSortedSet.of(
-            PathSourcePath.of(cell.getFilesystem(), basepath.resolve("src1")),
-            PathSourcePath.of(cell.getFilesystem(), basepath.resolve("src2"))),
+            PathSourcePath.of(cell.getRootCell().getFilesystem(), basepath.resolve("src1")),
+            PathSourcePath.of(cell.getRootCell().getFilesystem(), basepath.resolve("src2"))),
         arg.getSrcs());
     assertEquals(
         ImmutableSet.of(targetPlatform, selectableTarget), targetNode.getConfigurationDeps());

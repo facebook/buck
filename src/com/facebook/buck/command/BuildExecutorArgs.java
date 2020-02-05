@@ -18,7 +18,7 @@ package com.facebook.buck.command;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.event.BuckEventBus;
@@ -45,7 +45,7 @@ public abstract class BuildExecutorArgs {
 
   public abstract Clock getClock();
 
-  public abstract Cell getRootCell();
+  public abstract Cells getCells();
 
   public abstract ImmutableMap<ExecutorPool, ListeningExecutorService> getExecutors();
 
@@ -60,7 +60,7 @@ public abstract class BuildExecutorArgs {
   public abstract Optional<ManifestService> getManifestService();
 
   public BuckConfig getBuckConfig() {
-    return getRootCell().getBuckConfig();
+    return getCells().getRootCell().getBuckConfig();
   }
 
   public static BuildExecutorArgs of(
@@ -68,7 +68,7 @@ public abstract class BuildExecutorArgs {
       BuckEventBus buckEventBus,
       Platform platform,
       Clock clock,
-      Cell rootCell,
+      Cells cells,
       Map<ExecutorPool, ? extends ListeningExecutorService> executors,
       ProjectFilesystemFactory projectFilesystemFactory,
       BuildInfoStoreManager buildInfoStoreManager,
@@ -80,7 +80,7 @@ public abstract class BuildExecutorArgs {
         buckEventBus,
         platform,
         clock,
-        rootCell,
+        cells,
         executors,
         projectFilesystemFactory,
         buildInfoStoreManager,

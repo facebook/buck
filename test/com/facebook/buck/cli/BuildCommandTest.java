@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.containsString;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
@@ -539,7 +540,7 @@ public class BuildCommandTest {
   private CommandRunnerParams createTestParams(ImmutableSet<String> buildTargetNames) {
     CloseableResource<DepsAwareExecutor<? super ComputeResult, ?>> executor =
         CloseableResource.of(() -> DefaultDepsAwareExecutor.of(4));
-    Cell cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
+    Cells cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusForTests.newInstance();
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
@@ -549,7 +550,7 @@ public class BuildCommandTest {
     return CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
         executor.get(),
         console,
-        cell,
+        cell.getRootCell(),
         artifactCache,
         eventBus,
         FakeBuckConfig.builder().build(),
@@ -560,7 +561,7 @@ public class BuildCommandTest {
         pluginManager,
         knownRuleTypesProvider,
         new TestParser(
-            TestParserFactory.create(executor.get(), cell, knownRuleTypesProvider),
+            TestParserFactory.create(executor.get(), cell.getRootCell(), knownRuleTypesProvider),
             TargetGraphCreationResult.of(
                 TargetGraph.EMPTY,
                 buildTargetNames.stream()

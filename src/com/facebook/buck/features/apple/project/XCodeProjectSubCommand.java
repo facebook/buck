@@ -103,7 +103,8 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
     ListeningExecutorService executor = threadManager.getListeningExecutorService();
     AppleCxxPlatformsProvider appleCxxPlatformsProvider =
         params
-            .getCell()
+            .getCells()
+            .getRootCell()
             .getToolchainProvider()
             .getByName(
                 AppleCxxPlatformsProvider.DEFAULT_NAME,
@@ -119,7 +120,7 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
               params.getVersionedTargetGraphCache(),
               params.getTypeCoercerFactory(),
               params.getUnconfiguredBuildTargetFactory(),
-              params.getCell(),
+              params.getCells().getRootCell(),
               params.getRuleKeyConfiguration(),
               params.getTargetConfiguration(),
               params.getConsole(),
@@ -141,7 +142,9 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
               projectGeneratorParameters.isDryRun(),
               getReadOnly(params.getBuckConfig()),
               new PrintStreamPathOutputPresenter(
-                  params.getConsole().getStdOut(), getOutputMode(), params.getCell().getRoot()),
+                  params.getConsole().getStdOut(),
+                  getOutputMode(),
+                  params.getCells().getRootCell().getRoot()),
               projectGeneratorParameters.getArgsParser(),
               arguments -> {
                 try {
@@ -163,7 +166,7 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
                   params.getVersionedTargetGraphCache(),
                   params.getTypeCoercerFactory(),
                   params.getUnconfiguredBuildTargetFactory(),
-                  params.getCell(),
+                  params.getCells().getRootCell(),
                   params.getRuleKeyConfiguration(),
                   params.getTargetConfiguration(),
                   params.getConsole(),
@@ -183,7 +186,9 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
                   projectGeneratorParameters.isDryRun(),
                   getReadOnly(params.getBuckConfig()),
                   new PrintStreamPathOutputPresenter(
-                      params.getConsole().getStdOut(), getOutputMode(), params.getCell().getRoot()),
+                      params.getConsole().getStdOut(),
+                      getOutputMode(),
+                      params.getCells().getRootCell().getRoot()),
                   projectGeneratorParameters.getArgsParser(),
                   arguments -> {
                     try {

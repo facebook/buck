@@ -59,7 +59,7 @@ public class KnownRuleTypesProviderTest {
                     ImmutableMap.of(
                         "user_defined_rules", enableUserDefinedRules ? "enabled" : "disabled")))
             .build();
-    return new TestCellBuilder().setBuckConfig(config).build();
+    return new TestCellBuilder().setBuckConfig(config).build().getRootCell();
   }
 
   @Test

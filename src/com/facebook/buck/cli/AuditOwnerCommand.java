@@ -67,7 +67,8 @@ public class AuditOwnerCommand extends AbstractCommand {
                     new DefaultConstructorArgMarshaller(params.getTypeCoercerFactory()),
                     params.getKnownRuleTypesProvider(),
                     new ParserPythonInterpreterProvider(
-                        params.getCell().getBuckConfig(), params.getExecutableFinder()),
+                        params.getCells().getRootCell().getBuckConfig(),
+                        params.getExecutableFinder()),
                     params.getWatchman(),
                     params.getBuckEventBus(),
                     params.getManifestServiceSupplier(),
@@ -75,7 +76,8 @@ public class AuditOwnerCommand extends AbstractCommand {
                     params.getUnconfiguredBuildTargetFactory(),
                     params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))
                 .create(
-                    createParsingContext(params.getCell(), pool.getListeningExecutorService())
+                    createParsingContext(
+                            params.getCells().getRootCell(), pool.getListeningExecutorService())
                         .withSpeculativeParsing(SpeculativeParsing.ENABLED)
                         .withExcludeUnsupportedTargets(false),
                     params.getParser().getPermState())) {
@@ -83,7 +85,8 @@ public class AuditOwnerCommand extends AbstractCommand {
           BuckQueryEnvironment.from(
               params,
               parserState,
-              createParsingContext(params.getCell(), pool.getListeningExecutorService()));
+              createParsingContext(
+                  params.getCells().getRootCell(), pool.getListeningExecutorService()));
       QueryCommand.runMultipleQuery(
           params,
           env,

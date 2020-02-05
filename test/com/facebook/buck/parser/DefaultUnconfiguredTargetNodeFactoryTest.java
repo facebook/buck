@@ -18,7 +18,7 @@ package com.facebook.buck.parser;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
@@ -54,7 +54,7 @@ import org.junit.rules.ExpectedException;
 public class DefaultUnconfiguredTargetNodeFactoryTest {
 
   private DefaultUnconfiguredTargetNodeFactory factory;
-  private Cell cell;
+  private Cells cell;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
@@ -69,7 +69,7 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
         new DefaultUnconfiguredTargetNodeFactory(
             knownRuleTypesProvider,
             new BuiltTargetVerifier(),
-            cell.getCellPathResolver(),
+            cell.getRootCell().getCellPathResolver(),
             new SelectorListFactory(
                 new SelectorFactory(new ParsingUnconfiguredBuildTargetViewFactory())));
   }
@@ -128,8 +128,8 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
 
     UnconfiguredTargetNode unconfiguredTargetNode =
         factory.create(
-            cell,
-            cell.getRoot().resolve("a/b/BUCK"),
+            cell.getRootCell(),
+            cell.getRootCell().getRoot().resolve("a/b/BUCK"),
             buildTarget,
             DependencyStack.root(),
             inputAttributes,
@@ -155,6 +155,10 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
     PackageMetadata pkg =
         PackageMetadata.of(ImmutableList.of("//a/..."), ImmutableList.of("//d/..."));
 
-    return PackageFactory.create(cell, cell.getRoot().resolve("a/b/BUCK"), pkg, Optional.empty());
+    return PackageFactory.create(
+        cell.getRootCell(),
+        cell.getRootCell().getRoot().resolve("a/b/BUCK"),
+        pkg,
+        Optional.empty());
   }
 }

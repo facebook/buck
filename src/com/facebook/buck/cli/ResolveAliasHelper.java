@@ -75,7 +75,7 @@ public class ResolveAliasHelper {
     UnconfiguredBuildTargetView buildTarget =
         params.getBuckConfig().getUnconfiguredBuildTargetForFullyQualifiedTarget(target);
 
-    Cell owningCell = params.getCell().getCell(buildTarget.getCell());
+    Cell owningCell = params.getCells().getCell(buildTarget.getCell());
     Path buildFile;
     try {
       buildFile =

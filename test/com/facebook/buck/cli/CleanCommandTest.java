@@ -26,6 +26,7 @@ import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.config.DirCacheEntry;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellName;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
@@ -258,9 +259,9 @@ public class CleanCommandTest {
           command.getConfigOverrides(ImmutableMap.of()).getForCell(CellName.ROOT_CELL_NAME));
     }
     BuckConfig buckConfig = buckConfigBuilder.build();
-    Cell cell =
+    Cells cell =
         new TestCellBuilder().setFilesystem(projectFilesystem).setBuckConfig(buckConfig).build();
-    return createCommandRunnerParams(buckConfig, cell);
+    return createCommandRunnerParams(buckConfig, cell.getRootCell());
   }
 
   private CommandRunnerParams createCommandRunnerParams(BuckConfig buckConfig, Cell cell) {

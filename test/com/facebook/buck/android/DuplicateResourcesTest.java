@@ -260,6 +260,7 @@ public class DuplicateResourcesTest {
                         AndroidBinaryBuilder.createToolchainProviderForAndroidBinary())
                     .setFilesystem(filesystem)
                     .build()
+                    .getRootCell()
                     .getCellProvider())
             .build()
             .getFreshActionGraph(

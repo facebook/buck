@@ -25,7 +25,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.core.build.engine.BuildResult;
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.OutputLabel;
@@ -62,7 +62,7 @@ public class BuildReportTest {
 
   private Build.BuildExecutionResult buildExecutionResult;
   private SourcePathResolverAdapter resolver;
-  private Cell rootCell;
+  private Cells cells;
   private ActionGraphBuilder graphBuilder;
   private Map<BuildRule, Optional<BuildResult>> ruleToResult;
 
@@ -70,7 +70,7 @@ public class BuildReportTest {
   public void setUp() {
     graphBuilder = new TestActionGraphBuilder();
     resolver = graphBuilder.getSourcePathResolver();
-    rootCell = new TestCellBuilder().build();
+    cells = new TestCellBuilder().build();
     ruleToResult = new LinkedHashMap<>();
 
     FakeBuildRule rule1 = new FakeBuildRule(BuildTargetFactory.newInstance("//fake:rule1"));
@@ -173,7 +173,7 @@ public class BuildReportTest {
             "Rule //fake:rule2 FAILED because java.lang.RuntimeException: some",
             "\tat .*");
     String observedReport =
-        new BuildReport(buildExecutionResult, resolver, rootCell)
+        new BuildReport(buildExecutionResult, resolver, cells.getRootCell())
             .generateForConsole(
                 new Console(
                     Verbosity.STANDARD_INFORMATION,
@@ -205,7 +205,7 @@ public class BuildReportTest {
             "Rule //fake:rule2 FAILED because java.lang.RuntimeException: some",
             "\tat .*");
     String observedReport =
-        new BuildReport(buildExecutionResult, resolver, rootCell)
+        new BuildReport(buildExecutionResult, resolver, cells.getRootCell())
             .generateForConsole(new TestConsole(Verbosity.COMMANDS));
     assertThat(observedReport, Matchers.matchesPattern(expectedReport));
   }
@@ -264,7 +264,8 @@ public class BuildReportTest {
             "  }",
             "}");
     String observedReport =
-        new BuildReport(buildExecutionResult, resolver, rootCell).generateJsonBuildReport();
+        new BuildReport(buildExecutionResult, resolver, cells.getRootCell())
+            .generateJsonBuildReport();
     assertEquals(expectedReport, observedReport);
   }
 }

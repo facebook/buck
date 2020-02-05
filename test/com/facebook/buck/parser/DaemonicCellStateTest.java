@@ -23,6 +23,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
@@ -54,15 +55,15 @@ import org.junit.Test;
 public class DaemonicCellStateTest {
 
   private ProjectFilesystem filesystem;
-  private Cell rootCell;
+  private Cells cells;
   private Cell childCell;
   private DaemonicCellState state;
   private DaemonicCellState childState;
 
   private void populateDummyRawNode(DaemonicCellState state, BuildTarget target) {
     Cell targetCell;
-    if (target.getCell().equals(rootCell.getCanonicalName())) {
-      targetCell = rootCell;
+    if (target.getCell().equals(cells.getRootCell().getCanonicalName())) {
+      targetCell = cells.getRootCell();
     } else if (target.getCell().equals(childCell.getCanonicalName())) {
       targetCell = childCell;
     } else {
@@ -97,9 +98,9 @@ public class DaemonicCellStateTest {
             .setFilesystem(filesystem)
             .setSections(ImmutableMap.of("repositories", ImmutableMap.of("xplat", "../xplat")))
             .build();
-    rootCell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
-    childCell = rootCell.getCell(filesystem.resolve("../xplat").toAbsolutePath());
-    state = new DaemonicCellState(rootCell, 1);
+    cells = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
+    childCell = cells.getRootCell().getCell(filesystem.resolve("../xplat").toAbsolutePath());
+    state = new DaemonicCellState(cells.getRootCell(), 1);
     childState = new DaemonicCellState(childCell, 1);
   }
 

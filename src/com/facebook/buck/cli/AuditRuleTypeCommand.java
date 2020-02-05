@@ -43,7 +43,8 @@ public class AuditRuleTypeCommand extends AbstractCommand {
       throw new CommandLineException("Must specify the rule name");
     }
 
-    KnownRuleTypes knownRuleTypes = params.getKnownRuleTypesProvider().get(params.getCell());
+    KnownRuleTypes knownRuleTypes =
+        params.getKnownRuleTypesProvider().get(params.getCells().getRootCell());
     RuleType buildRuleType = knownRuleTypes.getRuleType(ruleName);
     BaseDescription<?> description = knownRuleTypes.getDescription(buildRuleType);
     printPythonFunction(params.getConsole(), description, params.getTypeCoercerFactory());

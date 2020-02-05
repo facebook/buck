@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.QueryTarget;
@@ -557,16 +558,17 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
   private Map<String, Object> getAllUnconfiguredAttributesForTarget(
       CommandRunnerParams params, BuckQueryEnvironment env, QueryTarget target)
       throws QueryException {
-    Cell cell = params.getCell();
+    Cells cell = params.getCells();
     BuildTarget buildTarget = env.getNode((QueryBuildTarget) target).getBuildTarget();
     Cell owningCell = cell.getCell(buildTarget.getCell());
     BuildFileManifest buildFileManifest =
         env.getParserState()
             .getBuildFileManifest(
                 owningCell,
-                cell.getBuckConfigView(ParserConfig.class)
+                cell.getRootCell()
+                    .getBuckConfigView(ParserConfig.class)
                     .getAbsolutePathToBuildFile(
-                        cell, buildTarget.getUnconfiguredBuildTargetView()));
+                        cell.getRootCell(), buildTarget.getUnconfiguredBuildTargetView()));
 
     String shortName = buildTarget.getShortName();
     if (!buildFileManifest.getTargets().containsKey(shortName)) {
@@ -839,7 +841,10 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
         params
             .getParser()
             .getTargetNodeRawAttributes(
-                env.getParserState(), params.getCell(), node.getAnyNode(), dependencyStack);
+                env.getParserState(),
+                params.getCells().getRootCell(),
+                node.getAnyNode(),
+                dependencyStack);
     if (targetNodeAttributes == null) {
       params
           .getConsole()

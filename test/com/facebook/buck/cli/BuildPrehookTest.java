@@ -19,7 +19,7 @@ package com.facebook.buck.cli;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
@@ -51,7 +51,7 @@ public class BuildPrehookTest {
 
   private Collection<FakeListeningProcessState> processStates;
   private FakeListeningProcessExecutor processExecutor;
-  private Cell cell;
+  private Cells cell;
   private BuckEventBus eventBus;
   private BuckConfig buckConfig;
   private FakeBuckEventListener eventListener;
@@ -62,7 +62,11 @@ public class BuildPrehookTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     cell = new TestCellBuilder().setFilesystem(filesystem).build();
     String pathToScript =
-        cell.getFilesystem().getPathForRelativePath("script.sh").toAbsolutePath().toString();
+        cell.getRootCell()
+            .getFilesystem()
+            .getPathForRelativePath("script.sh")
+            .toAbsolutePath()
+            .toString();
     buckConfig =
         FakeBuckConfig.builder()
             .setSections(ImmutableMap.of("build", ImmutableMap.of("prehook_script", pathToScript)))
@@ -123,7 +127,8 @@ public class BuildPrehookTest {
 
   @Test
   public void interpreterAndArgsArePassed() throws IOException, InterruptedException {
-    String pathToScript = cell.getFilesystem().getPathForRelativePath("script.py").toString();
+    String pathToScript =
+        cell.getRootCell().getFilesystem().getPathForRelativePath("script.py").toString();
     String interpreterAndArgs = "python3 -B";
 
     processStates = Collections.singleton(FakeListeningProcessState.ofExit(0));
@@ -149,7 +154,7 @@ public class BuildPrehookTest {
           ImmutableList.of(
               "python3",
               "-B",
-              cell.getFilesystem().resolve(pathToScript).toAbsolutePath().toString()),
+              cell.getRootCell().getFilesystem().resolve(pathToScript).toAbsolutePath().toString()),
           params.getCommand());
     }
   }
@@ -160,6 +165,7 @@ public class BuildPrehookTest {
 
   private BuildPrehook newBuildHook(ImmutableList<String> arguments) {
     ImmutableMap<String, String> env = ImmutableMap.of();
-    return new BuildPrehook(processExecutor, cell, eventBus, buckConfig, env, arguments);
+    return new BuildPrehook(
+        processExecutor, cell.getRootCell(), eventBus, buckConfig, env, arguments);
   }
 }

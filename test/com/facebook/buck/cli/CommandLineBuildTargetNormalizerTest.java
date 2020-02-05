@@ -18,7 +18,7 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
@@ -36,7 +36,7 @@ public class CommandLineBuildTargetNormalizerTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
   private ProjectFilesystem filesystem;
-  private Cell rootCell;
+  private Cells cells;
   private BuckConfig config;
 
   @Before
@@ -54,7 +54,7 @@ public class CommandLineBuildTargetNormalizerTest {
 
     config = FakeBuckConfig.builder().setSections(rawConfig).build();
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot(), config.getConfig());
-    rootCell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
+    cells = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
   }
 
   @Test
@@ -149,7 +149,9 @@ public class CommandLineBuildTargetNormalizerTest {
 
   private String normalize(Path relativeWorkingDirectory, String buildTargetFromCommandLine) {
     return new CommandLineBuildTargetNormalizer(
-            rootCell, rootCell.getRoot().resolve(relativeWorkingDirectory), config)
+            cells.getRootCell(),
+            cells.getRootCell().getRoot().resolve(relativeWorkingDirectory),
+            config)
         .normalizeBuildTargetIdentifier(buildTargetFromCommandLine);
   }
 }

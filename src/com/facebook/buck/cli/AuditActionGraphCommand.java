@@ -92,14 +92,15 @@ public class AuditActionGraphCommand extends AbstractCommand {
           params
               .getParser()
               .buildTargetGraphWithoutTopLevelConfigurationTargets(
-                  createParsingContext(params.getCell(), pool.getListeningExecutorService())
+                  createParsingContext(
+                          params.getCells().getRootCell(), pool.getListeningExecutorService())
                       .withApplyDefaultFlavorsMode(
                           params
                               .getBuckConfig()
                               .getView(ParserConfig.class)
                               .getDefaultFlavorsMode()),
                   parseArgumentsAsTargetNodeSpecs(
-                      params.getCell(),
+                      params.getCells().getRootCell(),
                       params.getClientWorkingDir(),
                       targetSpecs,
                       params.getBuckConfig()),

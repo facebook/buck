@@ -412,8 +412,8 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
             .setEnvironment(params.getEnvironment())
             .setJavaPackageFinder(params.getJavaPackageFinder())
             .setExecutors(params.getExecutors())
-            .setCellPathResolver(params.getCell().getCellPathResolver())
-            .setBuildCellRootPath(params.getCell().getRoot())
+            .setCellPathResolver(params.getCells().getRootCell().getCellPathResolver())
+            .setBuildCellRootPath(params.getCells().getRootCell().getRoot())
             .setProcessExecutor(new DefaultProcessExecutor(params.getConsole()))
             .setDefaultTestTimeoutMillis(testBuckConfig.getDefaultTestTimeoutMillis())
             .setInclNoLocationClassesEnabled(testBuckConfig.isInclNoLocationClassesEnabled())
@@ -507,12 +507,12 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
     UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory =
         params.getUnconfiguredBuildTargetFactory();
     return getCommandLineBuildTargetNormalizer(
-            params.getCell(), params.getClientWorkingDir(), params.getBuckConfig())
+            params.getCells().getRootCell(), params.getClientWorkingDir(), params.getBuckConfig())
         .normalizeAll(arguments).stream()
         .map(
             input ->
                 unconfiguredBuildTargetFactory.create(
-                    input, params.getCell().getCellNameResolver()))
+                    input, params.getCells().getRootCell().getCellNameResolver()))
         .map(
             unconfiguredBuildTarget ->
                 // TODO(nga): ignores default_target_platform and configuration detectors

@@ -20,6 +20,7 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.cli.OwnersReport.Builder;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
@@ -101,7 +102,7 @@ public class QueryCommandTest {
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(
             workspace.getDestPath().toRealPath().normalize());
-    Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
+    Cells cell = new TestCellBuilder().setFilesystem(filesystem).build();
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusForTests.newInstance();
 
@@ -111,7 +112,7 @@ public class QueryCommandTest {
         CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
             executor.get(),
             console,
-            cell,
+            cell.getRootCell(),
             artifactCache,
             eventBus,
             FakeBuckConfig.builder().build(),
@@ -127,7 +128,8 @@ public class QueryCommandTest {
                 typeCoercerFactory,
                 new DefaultConstructorArgMarshaller(typeCoercerFactory),
                 params.getKnownRuleTypesProvider(),
-                new ParserPythonInterpreterProvider(cell.getBuckConfig(), new ExecutableFinder()),
+                new ParserPythonInterpreterProvider(
+                    cell.getRootCell().getBuckConfig(), new ExecutableFinder()),
                 WatchmanFactory.NULL_WATCHMAN,
                 eventBus,
                 getManifestSupplier(),
@@ -135,15 +137,15 @@ public class QueryCommandTest {
                 new ParsingUnconfiguredBuildTargetViewFactory(),
                 params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))
             .create(
-                ParsingContext.builder(cell, executorService)
+                ParsingContext.builder(cell.getRootCell(), executorService)
                     .setSpeculativeParsing(SpeculativeParsing.ENABLED)
                     .build(),
                 params.getParser().getPermState());
     env =
         new FakeBuckQueryEnvironment(
-            cell,
+            cell.getRootCell(),
             OwnersReport.builder(
-                params.getCell(),
+                params.getCells().getRootCell(),
                 params.getClientWorkingDir(),
                 params.getParser(),
                 perBuildState,
@@ -151,11 +153,11 @@ public class QueryCommandTest {
             params.getParser(),
             perBuildState,
             new TargetPatternEvaluator(
-                params.getCell(),
+                params.getCells().getRootCell(),
                 params.getClientWorkingDir(),
                 params.getBuckConfig(),
                 params.getParser(),
-                ParsingContext.builder(params.getCell(), executorService).build(),
+                ParsingContext.builder(params.getCells().getRootCell(), executorService).build(),
                 Optional.empty()),
             eventBus,
             typeCoercerFactory);

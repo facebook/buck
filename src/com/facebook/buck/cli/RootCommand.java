@@ -23,7 +23,14 @@ public final class RootCommand extends AbstractCommand {
   @Override
   public ExitCode runWithoutHelp(CommandRunnerParams params) {
     String path =
-        params.getCell().getFilesystem().getRootPath().normalize().toAbsolutePath().toString();
+        params
+            .getCells()
+            .getRootCell()
+            .getFilesystem()
+            .getRootPath()
+            .normalize()
+            .toAbsolutePath()
+            .toString();
 
     params.getConsole().getStdOut().println(path);
     return ExitCode.SUCCESS;

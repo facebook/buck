@@ -18,7 +18,7 @@ package com.facebook.buck.parser;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.targetgraph.impl.Package;
 import com.facebook.buck.parser.api.PackageMetadata;
@@ -31,7 +31,7 @@ import org.junit.Test;
 
 public class PackageFactoryTest {
 
-  private Cell cell = new TestCellBuilder().build();
+  private Cells cell = new TestCellBuilder().build();
 
   private Package createGenericPackage() {
     Path packageFile = Paths.get("foo/PACKAGE");
@@ -39,7 +39,8 @@ public class PackageFactoryTest {
     PackageMetadata rawPackage =
         PackageMetadata.of(ImmutableList.of("//a/..."), ImmutableList.of("//b/..."));
 
-    Package pkg = PackageFactory.create(cell, packageFile, rawPackage, Optional.empty());
+    Package pkg =
+        PackageFactory.create(cell.getRootCell(), packageFile, rawPackage, Optional.empty());
     return pkg;
   }
 
@@ -62,7 +63,8 @@ public class PackageFactoryTest {
     PackageMetadata rawPackage =
         PackageMetadata.of(ImmutableList.of("//c/..."), ImmutableList.of("//d/..."));
 
-    Package pkg = PackageFactory.create(cell, packageFile, rawPackage, Optional.of(parentPkg));
+    Package pkg =
+        PackageFactory.create(cell.getRootCell(), packageFile, rawPackage, Optional.of(parentPkg));
 
     assertEquals(2, pkg.getVisibilityPatterns().size());
     assertEquals("//a/...", pkg.getVisibilityPatterns().asList().get(0).getRepresentation());

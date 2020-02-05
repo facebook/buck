@@ -16,7 +16,7 @@
 
 package com.facebook.buck.skylark.function;
 
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.starlark.knowntypes.KnownUserDefinedRuleTypes;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -241,11 +241,12 @@ public class HostInfoTest {
   private void evaluateProject(String macroFile, String buildFile, EventHandler eventHandler)
       throws IOException, InterruptedException {
     ProjectFilesystem fs = FakeProjectFilesystem.createRealTempFilesystem();
-    Cell cell = new TestCellBuilder().setFilesystem(fs).build();
+    Cells cell = new TestCellBuilder().setFilesystem(fs).build();
     Files.write(fs.resolve("BUCK"), buildFile.getBytes(Charsets.UTF_8));
     Files.write(fs.resolve("file.bzl"), macroFile.getBytes(Charsets.UTF_8));
 
-    SkylarkProjectBuildFileParser parser = createParser(cell.getFilesystem(), eventHandler);
+    SkylarkProjectBuildFileParser parser =
+        createParser(cell.getRootCell().getFilesystem(), eventHandler);
     parser.getManifest(fs.resolve("BUCK"));
   }
 
