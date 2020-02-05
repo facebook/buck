@@ -1218,8 +1218,7 @@ public class TargetsCommand extends AbstractCommand {
       }
 
       ImmutableSet<BuildTargetWithOutputs> buildTargetsWithOutputs =
-          matchBuildTargetsWithLabelsFromSpecs(
-              targetNodeSpecs, ImmutableSet.copyOf(targetResultBuilders.map.keySet()));
+          matchBuildTargetsWithLabelsFromSpecs(targetNodeSpecs, targetResultBuilders.map.keySet());
       TargetGraph targetGraph = targetGraphAndTargetNodes.getFirst();
       graphBuilder.ifPresent(
           actionGraphBuilder ->
