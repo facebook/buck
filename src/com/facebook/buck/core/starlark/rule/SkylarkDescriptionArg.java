@@ -96,13 +96,6 @@ public class SkylarkDescriptionArg implements SkylarkDescriptionArgBuilder, Buil
         (ImmutableList<UnconfiguredBuildTargetView>)
             Preconditions.checkNotNull(
                 coercedAttrValues.getOrDefault("compatible_with", ImmutableList.of()));
-    ImmutableList<?> targetCompatibleWith =
-        (ImmutableList<?>)
-            coercedAttrValues.getOrDefault("target_compatible_with", ImmutableList.of());
-    if (!targetCompatibleWith.isEmpty()) {
-      // and likely won't be implemented, because `target_compatible_with` attribute is deprecated
-      throw new IllegalStateException("target_compatible_with is not implemented for UDR");
-    }
     defaultTargetPlatform =
         (Optional<UnconfiguredBuildTargetView>)
             coercedAttrValues.getOrDefault("default_target_platform", Optional.empty());
@@ -174,11 +167,6 @@ public class SkylarkDescriptionArg implements SkylarkDescriptionArgBuilder, Buil
     } else {
       return (ImmutableSortedSet<String>) rawValue;
     }
-  }
-
-  @Override
-  public ImmutableList<UnconfiguredBuildTargetView> getTargetCompatibleWith() {
-    return ImmutableList.of();
   }
 
   @Override

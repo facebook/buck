@@ -47,29 +47,6 @@ public class ConfigurationsIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
-  public void targetsInFileFilteredByConstraints() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_target_filtering", tmp);
-    workspace.setUp();
-
-    workspace
-        .runBuckCommand(
-            "build", "--target-platforms", "//config:osx_x86_64", "//target_compatible_with:")
-        .assertSuccess();
-
-    workspace.getBuildLog().assertTargetBuiltLocally("//target_compatible_with:cat_on_osx");
-    workspace.getBuildLog().assertTargetIsAbsent("//target_compatible_with:cat_on_linux");
-
-    workspace
-        .runBuckCommand(
-            "build", "--target-platforms", "//config:linux_x86_64", "//target_compatible_with:")
-        .assertSuccess();
-
-    workspace.getBuildLog().assertTargetBuiltLocally("//target_compatible_with:cat_on_linux");
-    workspace.getBuildLog().assertTargetIsAbsent("//target_compatible_with:cat_on_osx");
-  }
-
-  @Test
   public void targetsInFileFilteredByConfigs() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_target_filtering", tmp);
@@ -124,24 +101,6 @@ public class ConfigurationsIntegrationTest {
   }
 
   @Test
-  public void buildFailsWhenDepDoesNotMatchTargetPlatform() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_constraints", tmp);
-    workspace.setUp();
-
-    ProcessResult result =
-        workspace.runBuckCommand("build", "--target-platforms", "//config:osx_x86-64", "//:lib");
-    result.assertFailure();
-    MatcherAssert.assertThat(
-        result.getStderr(),
-        MoreStringsForTests.containsIgnoringPlatformNewlines(
-            "Build target //:dep is restricted to constraints "
-                + "in \"target_compatible_with\" and \"compatible_with\" "
-                + "that do not match the target platform //config:osx_x86-64.\n"
-                + "Target constraints:\nbuck//config/constraints:linux"));
-  }
-
-  @Test
   public void buildFailsWhenDepCompatiblePlatformDoesNotMatchTargetPlatform() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_constraints", tmp);
@@ -155,7 +114,7 @@ public class ConfigurationsIntegrationTest {
         result.getStderr(),
         MoreStringsForTests.containsIgnoringPlatformNewlines(
             "Build target //:dep_with_compatible_with is restricted to constraints "
-                + "in \"target_compatible_with\" and \"compatible_with\" "
+                + "in \"compatible_with\" "
                 + "that do not match the target platform //config:osx_x86-64.\n"
                 + "Target compatible with configurations:\n//config:linux_config"));
   }
@@ -301,6 +260,7 @@ public class ConfigurationsIntegrationTest {
         result.getStderr(),
         MoreStringsForTests.containsIgnoringPlatformNewlines(
             "Cannot use select() expression when target platform is not specified\n"
+                + "    At //config:linux_config\n"
                 + "    At //default_platform_only_leaf:dep\n"
                 + "    At //default_platform_only_leaf:intermediate\n"
                 + "    At //default_platform_only_leaf:leaf"));

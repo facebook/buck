@@ -395,16 +395,6 @@ class ParserWithConfigurableAttributes extends AbstractParser {
       BuildRuleArg argWithTargetCompatible = (BuildRuleArg) targetNode.getConstructorArg();
 
       StringBuilder diagnostics = new StringBuilder();
-      if (!argWithTargetCompatible.getTargetCompatibleWith().isEmpty()) {
-        diagnostics.append("%nTarget constraints:%n");
-        argWithTargetCompatible
-            .getTargetCompatibleWith()
-            .forEach(
-                target ->
-                    diagnostics
-                        .append(target.getFullyQualifiedName())
-                        .append(System.lineSeparator()));
-      }
       if (!argWithTargetCompatible.getCompatibleWith().isEmpty()) {
         diagnostics.append("%nTarget compatible with configurations:%n");
         argWithTargetCompatible
@@ -418,8 +408,8 @@ class ParserWithConfigurableAttributes extends AbstractParser {
 
       throw new HumanReadableException(
           dependencyStack,
-          "Build target %s is restricted to constraints in \"target_compatible_with\""
-              + " and \"compatible_with\" that do not match the target platform %s."
+          "Build target %s is restricted to constraints in \"compatible_with\""
+              + " that do not match the target platform %s."
               + diagnostics,
           targetNode.getBuildTarget(),
           targetPlatform);
