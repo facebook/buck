@@ -83,7 +83,7 @@ public class RuleAnalysisComputationTest {
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
-            cellPathResolver);
+            cellPathResolver.getCellNameResolver());
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     graph.addNode(targetNode);
     ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex =
@@ -125,7 +125,7 @@ public class RuleAnalysisComputationTest {
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
-            cellPathResolver);
+            cellPathResolver.getCellNameResolver());
     TargetNode<?> targetNode2 =
         targetNodeFactory.createFromObject(
             ruleDescription,
@@ -137,7 +137,7 @@ public class RuleAnalysisComputationTest {
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
-            cellPathResolver);
+            cellPathResolver.getCellNameResolver());
     TargetNode<?> targetNode3 =
         targetNodeFactory.createFromObject(
             ruleDescription,
@@ -149,7 +149,7 @@ public class RuleAnalysisComputationTest {
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
-            cellPathResolver);
+            cellPathResolver.getCellNameResolver());
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     graph.addNode(targetNode1);
     graph.addNode(targetNode2);
@@ -201,7 +201,7 @@ public class RuleAnalysisComputationTest {
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
-            cellPathResolver);
+            cellPathResolver.getCellNameResolver());
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     graph.addNode(targetNode);
     ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex =
@@ -271,7 +271,7 @@ public class RuleAnalysisComputationTest {
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
-            cellPathResolver);
+            cellPathResolver.getCellNameResolver());
     TargetNode<?> targetNode2 =
         targetNodeFactory.createFromObject(
             ruleDescription2,
@@ -283,7 +283,7 @@ public class RuleAnalysisComputationTest {
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
-            cellPathResolver);
+            cellPathResolver.getCellNameResolver());
 
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     graph.addNode(targetNode);

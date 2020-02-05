@@ -199,7 +199,7 @@ public class LegacyCompatibleRuleAnalysisComputationTest {
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
-            cellPathResolver);
+            cellPathResolver.getCellNameResolver());
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     graph.addNode(targetNode);
     ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex =
@@ -263,7 +263,7 @@ public class LegacyCompatibleRuleAnalysisComputationTest {
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
-            cellPathResolver);
+            cellPathResolver.getCellNameResolver());
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     graph.addNode(targetNode);
     ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex =

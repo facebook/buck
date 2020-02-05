@@ -180,7 +180,7 @@ public abstract class AbstractNodeBuilder<
                       filesystem.getRootPath().resolve("BUCK"),
                       VisibilityPatternParser.VISIBILITY_PUBLIC)),
               ImmutableSet.of(),
-              cellRoots)
+              cellRoots.getCellNameResolver())
           .withSelectedVersions(selectedVersions);
     } catch (NoSuchBuildTargetException e) {
       throw new RuntimeException(e);

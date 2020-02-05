@@ -130,7 +130,7 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilderTest {
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
-            cellPathResolver);
+            cellPathResolver.getCellNameResolver());
 
     MutableDirectedGraph<TargetNode<?>> mutableDirectedGraph =
         MutableDirectedGraph.createConcurrent();

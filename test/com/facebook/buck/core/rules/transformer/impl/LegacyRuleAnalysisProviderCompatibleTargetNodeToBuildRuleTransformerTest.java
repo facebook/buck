@@ -174,7 +174,7 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
-            TestCellPathResolver.create(Paths.get("")));
+            TestCellPathResolver.create(Paths.get("")).getCellNameResolver());
 
     ToolchainProvider toolchainProvider = new ToolchainProviderBuilder().build();
     ActionGraphBuilder actionGraphBuilder = new TestActionGraphBuilder();

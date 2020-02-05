@@ -116,7 +116,7 @@ public class OwnersReportTest {
               ImmutableSortedSet.of(),
               ImmutableSet.of(),
               ImmutableSet.of(),
-              createCellRoots(filesystem));
+              createCellRoots(filesystem).getCellNameResolver());
     } catch (NoSuchBuildTargetException e) {
       throw new RuntimeException(e);
     }

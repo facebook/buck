@@ -175,7 +175,7 @@ public class TargetNodeTest {
                 ImmutableSortedSet.of(configurationBuildTarget),
                 ImmutableSet.of(),
                 ImmutableSet.of(),
-                createCellRoots(filesystem));
+                createCellRoots(filesystem).getCellNameResolver());
 
     assertEquals(ImmutableSet.of(configurationBuildTarget), targetNode.getConfigurationDeps());
   }
@@ -254,7 +254,7 @@ public class TargetNodeTest {
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
-            createCellRoots(filesystem));
+            createCellRoots(filesystem).getCellNameResolver());
   }
 
   private static ExampleDescriptionArg createPopulatedConstructorArg(

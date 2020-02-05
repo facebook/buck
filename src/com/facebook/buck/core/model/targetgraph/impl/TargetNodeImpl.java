@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.model.targetgraph.impl;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.impl.DescriptionCache;
@@ -105,7 +105,7 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
   public abstract ImmutableSortedSet<BuildTarget> getConfigurationDeps();
 
   @Override
-  public abstract CellPathResolver getCellNames();
+  public abstract CellNameResolver getCellNames();
 
   @Override
   public abstract ImmutableSet<VisibilityPattern> getVisibilityPatterns();
@@ -322,7 +322,7 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
       ImmutableSortedSet<BuildTarget> extraDeps,
       ImmutableSortedSet<BuildTarget> targetGraphOnlyDeps,
       ImmutableSortedSet<BuildTarget> configurationDeps,
-      CellPathResolver cellNames,
+      CellNameResolver cellNames,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
       ImmutableSet<VisibilityPattern> withinViewPatterns,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions) {

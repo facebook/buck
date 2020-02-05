@@ -202,7 +202,7 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of(),
-            TestCellPathResolver.create(Paths.get("")));
+            TestCellPathResolver.create(Paths.get("")).getCellNameResolver());
 
     ToolchainProvider toolchainProvider = new ToolchainProviderBuilder().build();
     ActionGraphBuilder actionGraphBuilder = new TestActionGraphBuilder();
@@ -313,7 +313,7 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of(),
-            TestCellPathResolver.create(Paths.get("")));
+            TestCellPathResolver.create(Paths.get("")).getCellNameResolver());
 
     ToolchainProvider toolchainProvider = new ToolchainProviderBuilder().build();
     ActionGraphBuilder actionGraphBuilder = new TestActionGraphBuilder();
@@ -401,7 +401,7 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of(),
-            TestCellPathResolver.create(Paths.get("")));
+            TestCellPathResolver.create(Paths.get("")).getCellNameResolver());
     TargetNode<? extends BuildRuleArg> fakeUdrTargetNode =
         nodeCopier.createFromObject(
             fakeUdrDescription,
@@ -413,7 +413,7 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of(),
-            TestCellPathResolver.create(Paths.get("")));
+            TestCellPathResolver.create(Paths.get("")).getCellNameResolver());
 
     ToolchainProvider toolchainProvider = new ToolchainProviderBuilder().build();
     ActionGraphBuilder actionGraphBuilder = new TestActionGraphBuilder();

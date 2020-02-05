@@ -126,7 +126,7 @@ public class GenruleDescriptionTest {
                 ImmutableSortedSet.of(),
                 visibilityPatterns.build(),
                 withinViewPatterns.build(),
-                createCellRoots(projectFilesystem));
+                createCellRoots(projectFilesystem).getCellNameResolver());
     assertEquals(
         "SourcePaths and targets from cmd string should be extracted as extra deps.",
         ImmutableSet.of("//foo:baz", "//biz:baz", "//bin:executable", "//foo:arg"),
