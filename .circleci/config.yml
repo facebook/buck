@@ -32,8 +32,7 @@ install_android_sdk: &install_android_sdk
     # Install 32 bit libraries
     # https://stackoverflow.com/questions/36911709/cannot-run-program-aapt
     # Needed to run Android build-tools
-    if [ "${PLATFORM}" == "linux" ]
-    then
+    if [ "${PLATFORM}" == "linux" ]; then
       sudo apt-get install gcc-multilib lib32z1 lib32stdc++6
     fi
 
