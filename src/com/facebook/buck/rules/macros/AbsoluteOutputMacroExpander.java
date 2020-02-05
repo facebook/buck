@@ -28,6 +28,10 @@ import java.nio.file.Path;
 public class AbsoluteOutputMacroExpander
     extends AbstractMacroExpanderWithoutPrecomputedWork<AbsoluteOutputMacro> {
 
+  public static final AbsoluteOutputMacroExpander INSTANCE = new AbsoluteOutputMacroExpander();
+
+  private AbsoluteOutputMacroExpander() {}
+
   @Override
   public Class<AbsoluteOutputMacro> getInputClass() {
     return AbsoluteOutputMacro.class;

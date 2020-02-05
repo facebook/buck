@@ -56,7 +56,7 @@ public class PathSourcePathTest {
 
   @Test
   public void testComparisonAndHashcode() {
-    Path root = Paths.get("/root/");
+    Path root = Paths.get("root").toAbsolutePath();
     ProjectFilesystem projectFilesystem =
         new FakeProjectFilesystem(CanonicalCellName.rootCell(), root);
     Path relativePath1 = Paths.get("some/relative/path1");

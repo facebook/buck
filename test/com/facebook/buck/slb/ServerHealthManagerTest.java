@@ -35,8 +35,7 @@ public class ServerHealthManagerTest {
 
   private static final long NOW_MILLIS = 1409702151000L;
   private static final long NOW_NANO_TIME = 3000000;
-  private static final FakeClock NOW_FAKE_CLOCK =
-      FakeClock.builder().currentTimeMillis(NOW_MILLIS).nanoTime(NOW_NANO_TIME).build();
+  private static final FakeClock NOW_FAKE_CLOCK = FakeClock.of(NOW_MILLIS, NOW_NANO_TIME);
   private static final int RANGE_MILLIS = 42;
   private static final float MAX_ERROR_PERCENTAGE = 0.1f;
   private static final int MAX_ACCEPTABLE_LATENCY_MILLIS = 42;

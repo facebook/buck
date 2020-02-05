@@ -33,9 +33,6 @@ import com.facebook.buck.doctor.config.DoctorEndpointResponse;
 import com.facebook.buck.doctor.config.DoctorJsonResponse;
 import com.facebook.buck.doctor.config.DoctorProtocolVersion;
 import com.facebook.buck.doctor.config.DoctorSuggestion;
-import com.facebook.buck.doctor.config.ImmutableDoctorEndpointResponse;
-import com.facebook.buck.doctor.config.ImmutableDoctorJsonResponse;
-import com.facebook.buck.doctor.config.ImmutableDoctorSuggestion;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -117,12 +114,12 @@ public class DoctorCommandIntegrationTest {
             .build();
 
     doctorResponse =
-        ImmutableDoctorEndpointResponse.of(
+        DoctorEndpointResponse.of(
             Optional.empty(),
             ImmutableList.of(
-                ImmutableDoctorSuggestion.of(
+                DoctorSuggestion.of(
                     DoctorSuggestion.StepStatus.ERROR, Optional.empty(), "Suggestion no1"),
-                ImmutableDoctorSuggestion.of(
+                DoctorSuggestion.of(
                     DoctorSuggestion.StepStatus.WARNING, Optional.of("Area"), "Suggestion no2")));
 
     httpd = new HttpdForTests();
@@ -285,7 +282,7 @@ public class DoctorCommandIntegrationTest {
               }
 
               DoctorJsonResponse json =
-                  ImmutableDoctorJsonResponse.of(
+                  DoctorJsonResponse.of(
                       /* isRequestSuccessful */ true,
                       /* errorMessage */ Optional.empty(),
                       /* rageUrl */ Optional.of(rageUrl),

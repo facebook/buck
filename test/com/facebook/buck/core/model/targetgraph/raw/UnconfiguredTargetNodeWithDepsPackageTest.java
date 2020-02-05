@@ -24,7 +24,6 @@ import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableUnconfiguredTargetNode;
-import com.facebook.buck.parser.exceptions.ImmutableParsingError;
 import com.facebook.buck.parser.exceptions.ParsingError;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -82,12 +81,12 @@ public class UnconfiguredTargetNodeWithDepsPackageTest {
             ImmutableSet.of());
 
     UnconfiguredTargetNodeWithDeps unconfiguredTargetNodeWithDeps1 =
-        ImmutableUnconfiguredTargetNodeWithDeps.of(
+        UnconfiguredTargetNodeWithDeps.of(
             unconfiguredTargetNode1, ImmutableSet.of(unconfiguredBuildTarget2));
     UnconfiguredTargetNodeWithDeps unconfiguredTargetNodeWithDeps2 =
-        ImmutableUnconfiguredTargetNodeWithDeps.of(unconfiguredTargetNode2, ImmutableSet.of());
+        UnconfiguredTargetNodeWithDeps.of(unconfiguredTargetNode2, ImmutableSet.of());
 
-    ParsingError error = ImmutableParsingError.of("error1", ImmutableList.of("stacktrace1"));
+    ParsingError error = ParsingError.of("error1", ImmutableList.of("stacktrace1"));
 
     return ImmutableUnconfiguredTargetNodeWithDepsPackage.of(
         Paths.get("base"),

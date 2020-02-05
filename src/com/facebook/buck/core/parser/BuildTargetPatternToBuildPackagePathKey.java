@@ -41,4 +41,8 @@ public abstract class BuildTargetPatternToBuildPackagePathKey
   public ComputationIdentifier<BuildPackagePaths> getIdentifier() {
     return IDENTIFIER;
   }
+
+  public static BuildTargetPatternToBuildPackagePathKey of(BuildTargetPattern pattern) {
+    return ImmutableBuildTargetPatternToBuildPackagePathKey.of(pattern);
+  }
 }

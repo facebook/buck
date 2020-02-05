@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.cell.NewCellPathResolver;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
-import com.facebook.buck.core.cell.name.ImmutableCanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
@@ -84,10 +83,10 @@ public class CellMappingsFactoryTest {
     assertEquals(root, newCellPathResolver.getCellPath(CanonicalCellName.rootCell()));
     assertEquals(
         root.resolve("repo1"),
-        newCellPathResolver.getCellPath(ImmutableCanonicalCellName.of(Optional.of("cell1"))));
+        newCellPathResolver.getCellPath(CanonicalCellName.of(Optional.of("cell1"))));
     assertEquals(
         root.resolve("repo2"),
-        newCellPathResolver.getCellPath(ImmutableCanonicalCellName.of(Optional.of("cell2"))));
+        newCellPathResolver.getCellPath(CanonicalCellName.of(Optional.of("cell2"))));
   }
 
   @Test
@@ -110,14 +109,12 @@ public class CellMappingsFactoryTest {
 
     assertEquals(CanonicalCellName.rootCell(), rootNameResolver.getName(Optional.empty()));
     assertEquals(
-        ImmutableCanonicalCellName.of(Optional.of("cell1")),
-        rootNameResolver.getName(Optional.of("cell1")));
+        CanonicalCellName.of(Optional.of("cell1")), rootNameResolver.getName(Optional.of("cell1")));
     assertEquals(
-        ImmutableCanonicalCellName.of(Optional.of("cell2")),
-        rootNameResolver.getName(Optional.of("cell2")));
+        CanonicalCellName.of(Optional.of("cell2")), rootNameResolver.getName(Optional.of("cell2")));
     assertEquals(CanonicalCellName.rootCell(), rootNameResolver.getName(Optional.of("self")));
     assertEquals(
-        ImmutableCanonicalCellName.of(Optional.of("cell2")),
+        CanonicalCellName.of(Optional.of("cell2")),
         rootNameResolver.getName(Optional.of("cell2_alias")));
   }
 
@@ -148,17 +145,15 @@ public class CellMappingsFactoryTest {
             root.resolve("repo1"), otherConfig.getConfig(), newCellPathResolver);
 
     assertEquals(
-        ImmutableCanonicalCellName.of(Optional.of("cell1")),
-        otherNameResolver.getName(Optional.empty()));
+        CanonicalCellName.of(Optional.of("cell1")), otherNameResolver.getName(Optional.empty()));
     assertEquals(CanonicalCellName.rootCell(), otherNameResolver.getName(Optional.of("root")));
     assertEquals(
-        ImmutableCanonicalCellName.of(Optional.of("cell2")),
+        CanonicalCellName.of(Optional.of("cell2")),
         otherNameResolver.getName(Optional.of("cell2")));
     assertEquals(
-        ImmutableCanonicalCellName.of(Optional.of("cell1")),
-        otherNameResolver.getName(Optional.of("self")));
+        CanonicalCellName.of(Optional.of("cell1")), otherNameResolver.getName(Optional.of("self")));
     assertEquals(
-        ImmutableCanonicalCellName.of(Optional.of("cell1")),
+        CanonicalCellName.of(Optional.of("cell1")),
         otherNameResolver.getName(Optional.of("other_self")));
   }
 }

@@ -62,6 +62,10 @@ public class ChildrenSumMultiplier implements GraphComputation<LongMultNode, Lon
     public ComputationIdentifier<LongMultNode> getIdentifier() {
       return IDENTIFIER;
     }
+
+    public static LongMultNode of(long get) {
+      return ImmutableLongMultNode.of(get);
+    }
   }
 
   private final MutableGraph<LongNode> input;

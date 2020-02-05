@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.model.targetgraph.impl;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
@@ -95,7 +95,7 @@ public class TargetNodeFactory implements NodeCopier {
       ImmutableSortedSet<BuildTarget> configurationDeps,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
       ImmutableSet<VisibilityPattern> withinViewPatterns,
-      CellPathResolver cellRoots)
+      CellNameResolver cellRoots)
       throws NoSuchBuildTargetException {
     return create(
         description,
@@ -121,7 +121,7 @@ public class TargetNodeFactory implements NodeCopier {
       ImmutableSortedSet<BuildTarget> configurationDeps,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
       ImmutableSet<VisibilityPattern> withinViewPatterns,
-      CellPathResolver cellRoots)
+      CellNameResolver cellRoots)
       throws NoSuchBuildTargetException {
 
     boolean isConfigurationRule = description instanceof ConfigurationRuleDescription<?, ?>;
@@ -227,7 +227,7 @@ public class TargetNodeFactory implements NodeCopier {
 
   private static void detectBuildTargetsAndPathsForConstructorArg(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       ImmutableSet.Builder<BuildTarget> depsBuilder,
       ImmutableSet.Builder<Path> pathsBuilder,
       ParamInfo info,

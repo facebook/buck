@@ -36,4 +36,8 @@ public abstract class FileTreeKey implements ComputeKey<FileTree> {
   public ComputationIdentifier<FileTree> getIdentifier() {
     return IDENTIFIER;
   }
+
+  public static FileTreeKey of(Path path) {
+    return ImmutableFileTreeKey.of(path);
+  }
 }

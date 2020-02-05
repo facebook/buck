@@ -16,6 +16,8 @@
 
 package com.facebook.buck.multitenant.collect
 
+import java.util.concurrent.CopyOnWriteArrayList
+
 typealias Generation = Int
 
 private data class GenerationValue<VALUE>(val generation: Generation, val value: VALUE?)
@@ -85,7 +87,7 @@ private class GenerationList<INFO, VALUE : Any> {
     }
 
     fun getAllInfoValuePairsForGeneration(generation: Generation): Sequence<Pair<INFO, VALUE>> {
-        return buckets.asSequence().map {
+        return CopyOnWriteArrayList(buckets).asSequence().map {
             val value = it.getVersion(generation)
             if (value != null) {
                 Pair(it.info, value)
@@ -96,7 +98,7 @@ private class GenerationList<INFO, VALUE : Any> {
     }
 
     fun filterEntriesByKeyInfo(generation: Generation, filter: (keyInfo: INFO) -> Boolean): Sequence<Pair<INFO, VALUE>> {
-        return buckets.asSequence().map {
+        return CopyOnWriteArrayList(buckets).asSequence().map {
             val value = it.getVersion(generation)
             if (value != null && filter(it.info)) {
                 Pair(it.info, value)

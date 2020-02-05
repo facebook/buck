@@ -102,6 +102,11 @@ public class BuildEndToEndTest {
     return getBaseEnvironment().addTemplates("nested_build");
   }
 
+  @EnvironmentFor(testNames = {"handlesNonUtf8OnStdFds"})
+  public static EndToEndEnvironment setupHandlesNonUtf8OnStdFds() {
+    return getBaseEnvironment().withBuckdToggled(ToggleState.ON).addTemplates("cli");
+  }
+
   @Test
   public void allowsRelativeBuildTargets(EndToEndTestDescriptor test, EndToEndWorkspace workspace)
       throws Throwable {
@@ -316,5 +321,18 @@ public class BuildEndToEndTest {
     assertTrue("Query command was not found in logs", queryCommand.isPresent());
     assertEquals(Optional.of(new BuildId("1234-5678")), buildCommand.get().getBuildId());
     assertNotEquals(Optional.of(new BuildId("1234-5678")), queryCommand.get().getBuildId());
+  }
+
+  @Test
+  public void handlesNonUtf8OnStdFds(EndToEndTestDescriptor test, EndToEndWorkspace workspace)
+      throws Throwable {
+    for (String template : test.getTemplateSet()) {
+      workspace.addPremadeTemplate(template);
+    }
+    workspace.setup();
+
+    ProcessResult res = workspace.runBuckCommand(true, "build", "//bad_utf8:").assertFailure();
+    assertThat(res.getStderr(), not(containsString("UnicodeDecodeError")));
+    assertThat(res.getStderr(), containsString("foo bar baz"));
   }
 }

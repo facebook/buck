@@ -208,9 +208,7 @@ public class UqueryCommandIntegrationTest {
             "uquery", "--target-platforms=//compatible/config:banana-platform", "//compatible:");
     processResult.assertSuccess();
 
-    sortOutputLinesAndCompare(
-        processResult.getStdout(),
-        "//compatible:incompatible_with_config\n//compatible:incompatible_with_constraints\n");
+    sortOutputLinesAndCompare(processResult.getStdout(), "//compatible:incompatible_with_config\n");
   }
 
   private void assertBehavesLikeConfiguredQuery(String target) {

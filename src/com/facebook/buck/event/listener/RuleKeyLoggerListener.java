@@ -29,7 +29,6 @@ import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.support.bgtasks.BackgroundTask;
-import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskAction;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.support.build.report.RuleKeyLogFileUploader;
@@ -195,7 +194,7 @@ public class RuleKeyLoggerListener implements BuckEventListener {
             info.getLogDirectoryPath().resolve(BuckConstant.RULE_KEY_LOGGER_FILE_NAME));
 
     BackgroundTask<RuleKeyLoggerListenerCloseArgs> task =
-        ImmutableBackgroundTask.of(
+        BackgroundTask.of(
             "RuleKeyLoggerListener_close", new RuleKeyLoggerListenerCloseAction(), args);
     managerScope.schedule(task);
   }

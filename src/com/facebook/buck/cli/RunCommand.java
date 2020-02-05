@@ -26,7 +26,6 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.support.fix.BuckRunSpec;
-import com.facebook.buck.support.fix.ImmutableBuckRunSpec;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ForwardingProcessListener;
@@ -156,7 +155,7 @@ public final class RunCommand extends AbstractCommand {
                       .putAll(params.getEnvironment())
                       .putAll(executable.getEnvironment(resolver))
                       .build())
-              .setDirectory(params.getCell().getFilesystem().getRootPath())
+              .setDirectory(params.getCells().getRootCell().getFilesystem().getRootPath())
               .build();
       ForwardingProcessListener processListener =
           new ForwardingProcessListener(
@@ -181,8 +180,8 @@ public final class RunCommand extends AbstractCommand {
               .putAll(executable.getEnvironment(resolver))
               .build();
       BuckRunSpec cmd =
-          ImmutableBuckRunSpec.of(
-              argv, envp, params.getCell().getFilesystem().getRootPath(), false);
+          BuckRunSpec.of(
+              argv, envp, params.getCells().getRootCell().getFilesystem().getRootPath(), false);
       Files.write(Paths.get(commandArgsFile), ObjectMappers.WRITER.writeValueAsBytes(cmd));
       return ExitCode.SUCCESS;
     }

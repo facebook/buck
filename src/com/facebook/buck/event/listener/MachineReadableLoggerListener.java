@@ -48,7 +48,6 @@ import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent;
 import com.facebook.buck.support.bgtasks.BackgroundTask;
-import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskAction;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.support.jvm.GCCollectionEvent;
@@ -403,7 +402,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
             buildId);
 
     BackgroundTask<MachineReadableLoggerListenerCloseArgs> task =
-        ImmutableBackgroundTask.of(
+        BackgroundTask.of(
             "MachineReadableLoggerListener_close",
             new MachineReadableLoggerListenerCloseAction(),
             args);

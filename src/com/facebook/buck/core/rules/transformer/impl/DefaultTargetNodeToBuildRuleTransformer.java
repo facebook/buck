@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.rules.transformer.impl;
 
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -26,7 +27,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.core.rules.ImmutableBuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
@@ -52,7 +52,11 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
       ConfigurationRuleRegistry configurationRuleRegistry,
       ActionGraphBuilder graphBuilder,
       TargetNode<T> targetNode,
-      ProviderInfoCollection providerInfoCollection) {
+      ProviderInfoCollection providerInfoCollection,
+      CellPathResolver cellPathResolver) {
+    Preconditions.checkArgument(
+        targetNode.getBuildTarget().getCell() == cellPathResolver.getCurrentCellName());
+
     try {
       Preconditions.checkState(
           targetNode.getDescription() instanceof DescriptionWithTargetGraph,
@@ -71,7 +75,7 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
               targetNode.getBuildTarget(),
               cache,
               graphBuilder,
-              targetNode.getCellNames(),
+              cellPathResolver.getCellNameResolver(),
               targetGraph);
       arg =
           QueryUtils.withProvidedDepsQuery(
@@ -79,7 +83,7 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
               targetNode.getBuildTarget(),
               cache,
               graphBuilder,
-              targetNode.getCellNames(),
+              cellPathResolver.getCellNameResolver(),
               targetGraph);
       arg =
           QueryUtils.withModuleBlacklistQuery(
@@ -87,7 +91,7 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
               targetNode.getBuildTarget(),
               cache,
               graphBuilder,
-              targetNode.getCellNames(),
+              cellPathResolver.getCellNameResolver(),
               targetGraph);
 
       // The params used for the Buildable only contain the declared parameters. However, the deps
@@ -100,11 +104,11 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
               graphBuilder.requireAllRules(targetGraphOnlyDeps));
 
       BuildRuleCreationContextWithTargetGraph context =
-          ImmutableBuildRuleCreationContextWithTargetGraph.of(
+          BuildRuleCreationContextWithTargetGraph.of(
               targetGraph,
               graphBuilder,
               targetNode.getFilesystem(),
-              targetNode.getCellNames(),
+              cellPathResolver,
               toolchainProvider,
               configurationRuleRegistry,
               providerInfoCollection);

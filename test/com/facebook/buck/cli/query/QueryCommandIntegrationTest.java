@@ -336,6 +336,20 @@ public class QueryCommandIntegrationTest {
   }
 
   @Test
+  public void testOwnersFromSubdirectory() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
+    workspace.setRelativeWorkingDirectory(Paths.get("example", "app"));
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("query", "owner('../1.txt') + owner('7.txt')");
+
+    result.assertSuccess();
+    assertThat(result.getStdout(), containsString("//example:one"));
+    assertThat(result.getStdout(), containsString("//example/app:seven"));
+  }
+
+  @Test
   public void testOwnersWithInvalidFilesPrintsErrors() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);

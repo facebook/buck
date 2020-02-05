@@ -17,6 +17,7 @@
 package com.facebook.buck.core.parser.buildtargetparser;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -34,10 +35,10 @@ public interface UnconfiguredBuildTargetViewFactory {
    * specified in the target name. The build target contains a {@link
    * CellPathResolver#getCanonicalCellName(Path) canonical cell name}.
    *
-   * @see #createForBaseName(CellPathResolver, BaseName, String) for more information about other
+   * @see #createForBaseName(BaseName, String, CellNameResolver) for more information about other
    *     types of target names.
    */
-  UnconfiguredBuildTargetView create(CellPathResolver cellPathResolver, String buildTargetName);
+  UnconfiguredBuildTargetView create(String buildTargetName, CellNameResolver cellNameResolver);
 
   /**
    * Given a target base name and a target name returns {@link UnconfiguredBuildTargetView}.
@@ -53,12 +54,12 @@ public interface UnconfiguredBuildTargetViewFactory {
    * CellPathResolver#getCanonicalCellName(Path) canonical cell name}.
    */
   UnconfiguredBuildTargetView createForBaseName(
-      CellPathResolver cellPathResolver, BaseName baseName, String buildTargetName);
+      BaseName baseName, String buildTargetName, CellNameResolver cellNameResolver);
 
   UnconfiguredBuildTargetView createForPathRelativeToProjectRoot(
-      CellPathResolver cellPathResolver,
       ForwardRelativePath pathRelativeToProjectRoot,
-      String buildTargetName);
+      String buildTargetName,
+      CellNameResolver cellNameResolver);
 
   /**
    * Given a target base name and a target name returns {@link UnconfiguredBuildTargetView} with
@@ -74,5 +75,5 @@ public interface UnconfiguredBuildTargetViewFactory {
    * CellPathResolver#getCanonicalCellName(Path) canonical cell name}.
    */
   UnconfiguredBuildTargetView createWithWildcard(
-      CellPathResolver cellPathResolver, String buildTargetName);
+      String buildTargetName, CellNameResolver cellNameResolver);
 }

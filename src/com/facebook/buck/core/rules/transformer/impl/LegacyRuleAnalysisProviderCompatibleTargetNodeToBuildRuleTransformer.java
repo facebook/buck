@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.rules.transformer.impl;
 
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.RuleDescription;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
@@ -28,7 +29,7 @@ import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ProviderCreationContext;
-import com.facebook.buck.core.rules.analysis.ImmutableRuleAnalysisKey;
+import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
 import com.facebook.buck.core.rules.analysis.computation.RuleAnalysisGraph;
 import com.facebook.buck.core.rules.analysis.impl.LegacyProviderRuleAnalysisResult;
@@ -38,6 +39,7 @@ import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.collect.impl.LegacyProviderInfoCollectionImpl;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 
 /**
@@ -65,14 +67,18 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
       TargetGraph targetGraph,
       ConfigurationRuleRegistry configurationRuleRegistry,
       ActionGraphBuilder graphBuilder,
-      TargetNode<T> targetNode) {
+      TargetNode<T> targetNode,
+      CellPathResolver cellPathResolver) {
+    Preconditions.checkArgument(
+        targetNode.getBuildTarget().getCell() == cellPathResolver.getCurrentCellName());
+
     BaseDescription<T> description = targetNode.getDescription();
 
     ProviderInfoCollection providerInfos;
 
     if (description instanceof DescriptionWithTargetGraph) {
       RuleAnalysisResult result =
-          ruleAnalysisComputation.get(ImmutableRuleAnalysisKey.of(targetNode.getBuildTarget()));
+          ruleAnalysisComputation.get(RuleAnalysisKey.of(targetNode.getBuildTarget()));
       // check that we are getting legacy providers. More or a sanity check than a necessary check
       Verify.verify(result instanceof LegacyProviderRuleAnalysisResult);
       providerInfos = result.getProviderInfos();
@@ -86,6 +92,7 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
         configurationRuleRegistry,
         graphBuilder,
         targetNode,
-        providerInfos);
+        providerInfos,
+        cellPathResolver);
   }
 }

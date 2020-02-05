@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
-import com.facebook.buck.core.cell.name.ImmutableCanonicalCellName;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -65,7 +64,7 @@ public class UnconfiguredBuildTargetTypeInfo implements ValueTypeInfo<Unconfigur
   public <E extends Exception> UnconfiguredBuildTargetView create(ValueCreator<E> creator)
       throws E {
     CanonicalCellName cellName =
-        ImmutableCanonicalCellName.of(Holder.cellNameTypeInfo.createNotNull(creator));
+        CanonicalCellName.of(Holder.cellNameTypeInfo.createNotNull(creator));
     String baseName = creator.createString();
     String shortName = creator.createString();
     ImmutableSortedSet<Flavor> flavors =

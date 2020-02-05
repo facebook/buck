@@ -25,6 +25,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.common.ResourceValidator;
 import com.facebook.buck.jvm.core.CalculateAbi;
@@ -45,11 +46,7 @@ import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
-@Value.Immutable
-@Value.Style(
-    overshadowImplementation = true,
-    init = "set*",
-    visibility = Value.Style.ImplementationVisibility.PACKAGE)
+@BuckStyleValueWithBuilder
 public abstract class DefaultJavaLibraryRules {
   public interface DefaultJavaLibraryConstructor {
     DefaultJavaLibrary newInstance(

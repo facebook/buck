@@ -25,7 +25,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
-import com.facebook.buck.core.rules.analysis.action.ImmutableActionAnalysisDataKey;
+import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.Label;
@@ -55,8 +55,7 @@ public class ArtifactImplTest {
         ArtifactImpl.of(target, genDir, packagePath, path, Location.BUILTIN);
     assertFalse(artifact.isBound());
 
-    ImmutableActionAnalysisDataKey key =
-        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
+    ActionAnalysisDataKey key = ActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
     BuildArtifact materialized = artifact.materialize(key);
 
     assertTrue(materialized.isBound());
@@ -201,8 +200,7 @@ public class ArtifactImplTest {
     assertEquals(artifact1, artifact2);
     assertEquals(artifact1.hashCode(), artifact2.hashCode());
 
-    ImmutableActionAnalysisDataKey key =
-        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
+    ActionAnalysisDataKey key = ActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
 
     artifact1 = (ArtifactImpl) artifact1.materialize(key);
     artifact2 = (ArtifactImpl) artifact2.materialize(key);
@@ -232,10 +230,8 @@ public class ArtifactImplTest {
     ArtifactImpl artifact2 =
         ArtifactImpl.of(target, genDir, packagePath, Paths.get("some/path"), Location.BUILTIN);
 
-    ImmutableActionAnalysisDataKey key1 =
-        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
-    ImmutableActionAnalysisDataKey key2 =
-        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
+    ActionAnalysisDataKey key1 = ActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
+    ActionAnalysisDataKey key2 = ActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
 
     artifact1 = (ArtifactImpl) artifact1.materialize(key1);
     artifact2 = (ArtifactImpl) artifact2.materialize(key2);
@@ -250,10 +246,8 @@ public class ArtifactImplTest {
     Location location =
         Location.fromPathAndStartColumn(
             PathFragment.create("foo").getChild("bar.bzl"), 0, 5, new Location.LineAndColumn(3, 4));
-    ImmutableActionAnalysisDataKey key1 =
-        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
-    ImmutableActionAnalysisDataKey key2 =
-        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
+    ActionAnalysisDataKey key1 = ActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
+    ActionAnalysisDataKey key2 = ActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
 
     ArtifactImpl declaredWithLocation =
         ArtifactImpl.of(target, genDir, packagePath, Paths.get("some/path"), location);
@@ -311,8 +305,7 @@ public class ArtifactImplTest {
     Path packagePath = Paths.get("my/foo__");
     Path path = Paths.get("bar");
     ArtifactImpl artifact = ArtifactImpl.of(target, genDir, packagePath, path, Location.BUILTIN);
-    ImmutableActionAnalysisDataKey key =
-        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
+    ActionAnalysisDataKey key = ActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
     BuildArtifact materialized = artifact.materialize(key);
 
     assertTrue(materialized.isBound());
@@ -328,8 +321,7 @@ public class ArtifactImplTest {
     Path packagePath = Paths.get("my/foo__");
     Path path = Paths.get("bar");
     ArtifactImpl artifact = ArtifactImpl.of(target, genDir, packagePath, path, Location.BUILTIN);
-    ImmutableActionAnalysisDataKey key =
-        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
+    ActionAnalysisDataKey key = ActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
     BuildArtifact materialized = artifact.materialize(key);
 
     assertTrue(materialized.isBound());
@@ -351,8 +343,7 @@ public class ArtifactImplTest {
 
     assertTrue(artifact.asSkylarkOutputArtifact(Location.BUILTIN).isImmutable());
 
-    ImmutableActionAnalysisDataKey key =
-        ImmutableActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
+    ActionAnalysisDataKey key = ActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
     BuildArtifact materialized = artifact.materialize(key);
 
     assertTrue(materialized.isBound());

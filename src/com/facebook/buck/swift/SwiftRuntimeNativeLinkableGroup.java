@@ -36,6 +36,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
+import java.util.Objects;
 
 /** Pseudo linkable for representing Swift runtime library's linker arguments. */
 public final class SwiftRuntimeNativeLinkableGroup implements NativeLinkableGroup {
@@ -90,7 +91,27 @@ public final class SwiftRuntimeNativeLinkableGroup implements NativeLinkableGrou
                     return ImmutableMap.of();
                   }
                 },
-                NativeLinkableInfo.defaults().setShouldBeLinkedInAppleTestAndHost(true)));
+                NativeLinkableInfo.defaults().setShouldBeLinkedInAppleTestAndHost(true)) {
+
+              // TODO: As we end up creating multiple instances of this same target per-platform,
+              // override the hashcode and equals so that this works properly in sets/maps.
+              @Override
+              public int hashCode() {
+                return Objects.hash(getBuildTarget());
+              }
+
+              @Override
+              public boolean equals(Object obj) {
+                if (this == obj) {
+                  return true;
+                }
+                if (getClass() != obj.getClass()) {
+                  return false;
+                }
+                NativeLinkableInfo other = (NativeLinkableInfo) obj;
+                return Objects.equals(getBuildTarget(), other.getBuildTarget());
+              }
+            });
   }
 
   private NativeLinkableInput getNativeLinkableInput(Linker.LinkableDepType type) {

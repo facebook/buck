@@ -66,11 +66,8 @@ public class AsyncBackgroundTaskManagerTest {
     ImmutableList.Builder<BackgroundTask<TestArgs>> taskList = ImmutableList.builder();
     for (int i = 0; i < nTasks; i++) {
       BackgroundTask<TestArgs> task =
-          ImmutableBackgroundTask.<TestArgs>builder()
-              .setAction(new TestAction())
-              .setActionArgs(new TestArgs(failure, taskBlocker, taskWaiter, null))
-              .setName(name)
-              .build();
+          BackgroundTask.of(
+              name, new TestAction(), new TestArgs(failure, taskBlocker, taskWaiter, null));
       taskList.add(task);
     }
     return taskList.build();
@@ -108,11 +105,10 @@ public class AsyncBackgroundTaskManagerTest {
   public void testTaskInterrupt() throws InterruptedException {
     manager = AsyncBackgroundTaskManager.of(1);
     BackgroundTask<TestArgs> task =
-        ImmutableBackgroundTask.<TestArgs>builder()
-            .setAction(new TestAction())
-            .setActionArgs(new TestArgs(Optional.empty(), new CountDownLatch(1), null, null))
-            .setName("interruptTask")
-            .build();
+        BackgroundTask.of(
+            "interruptTask",
+            new TestAction(),
+            new TestArgs(Optional.empty(), new CountDownLatch(1), null, null));
     Future<Unit> future = schedule(task);
     manager.shutdown(5, TimeUnit.SECONDS);
     manager.notify(Notification.COMMAND_END);
@@ -126,13 +122,11 @@ public class AsyncBackgroundTaskManagerTest {
     manager = AsyncBackgroundTaskManager.of(NTHREADS);
     CountDownLatch blocker = new CountDownLatch(1);
     BackgroundTask<TestArgs> task =
-        ImmutableBackgroundTask.<TestArgs>builder()
-            .setActionArgs(new TestArgs(Optional.empty(), blocker, null, null))
-            .setAction(new TestAction())
-            .setName("timeoutTask")
-            .setTimeout(
-                Optional.of(BackgroundTask.Timeout.of(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)))
-            .build();
+        BackgroundTask.of(
+            "timeoutTask",
+            new TestAction(),
+            new TestArgs(Optional.empty(), blocker, null, null),
+            BackgroundTask.Timeout.of(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS));
     manager.notify(Notification.COMMAND_START);
     Future<Unit> future = schedule(task);
     manager.notify(Notification.COMMAND_END);
@@ -271,11 +265,8 @@ public class AsyncBackgroundTaskManagerTest {
     CountDownLatch waiter = new CountDownLatch(1);
     CountDownLatch taskStarted = new CountDownLatch(1);
     BackgroundTask<TestArgs> task =
-        ImmutableBackgroundTask.<TestArgs>builder()
-            .setAction(new TestAction())
-            .setActionArgs(new TestArgs(Optional.empty(), blocker, waiter, taskStarted))
-            .setName("task")
-            .build();
+        BackgroundTask.of(
+            "task", new TestAction(), new TestArgs(Optional.empty(), blocker, waiter, taskStarted));
     manager.notify(Notification.COMMAND_START);
     Future<Unit> taskFuture = schedule(task);
     manager.notify(Notification.COMMAND_END);
@@ -288,11 +279,7 @@ public class AsyncBackgroundTaskManagerTest {
     assertTrue(manager.isShutDown());
 
     BackgroundTask<TestArgs> secondTask =
-        ImmutableBackgroundTask.<TestArgs>builder()
-            .setAction(new TestAction())
-            .setActionArgs(new TestArgs(Optional.empty()))
-            .setName("noRunTask")
-            .build();
+        BackgroundTask.of("noRunTask", new TestAction(), new TestArgs(Optional.empty()));
     Future<Unit> secondFuture = schedule(secondTask);
     assertEquals(0, manager.getScheduledTasks().size());
     assertTrue(secondFuture.isCancelled());
@@ -305,11 +292,8 @@ public class AsyncBackgroundTaskManagerTest {
     CountDownLatch waiter = new CountDownLatch(1);
     CountDownLatch taskStarted = new CountDownLatch(1);
     BackgroundTask<TestArgs> task =
-        ImmutableBackgroundTask.<TestArgs>builder()
-            .setAction(new TestAction())
-            .setActionArgs(new TestArgs(Optional.empty(), blocker, waiter, taskStarted))
-            .setName("task")
-            .build();
+        BackgroundTask.of(
+            "task", new TestAction(), new TestArgs(Optional.empty(), blocker, waiter, taskStarted));
     manager.notify(Notification.COMMAND_START);
     Future<Unit> firstTaskFuture = schedule(task);
     manager.notify(Notification.COMMAND_END);
@@ -321,11 +305,7 @@ public class AsyncBackgroundTaskManagerTest {
     assertTrue(manager.isShutDown());
 
     BackgroundTask<TestArgs> secondTask =
-        ImmutableBackgroundTask.<TestArgs>builder()
-            .setAction(new TestAction())
-            .setActionArgs(new TestArgs(Optional.empty()))
-            .setName("noRunTask")
-            .build();
+        BackgroundTask.of("noRunTask", new TestAction(), new TestArgs(Optional.empty()));
     Future<Unit> secondTaskFuture = schedule(secondTask);
     assertTrue(secondTaskFuture.isCancelled());
     assertEquals(0, manager.getScheduledTasks().size());
@@ -339,19 +319,16 @@ public class AsyncBackgroundTaskManagerTest {
     CountDownLatch secondBlocker = new CountDownLatch(1);
     CountDownLatch waiter = new CountDownLatch(2);
     BackgroundTask<TestArgs> task =
-        ImmutableBackgroundTask.<TestArgs>builder()
-            .setActionArgs(new TestArgs(Optional.empty(), firstBlocker, waiter, null))
-            .setAction(new TestAction())
-            .setName("timeoutTask")
-            .setTimeout(
-                Optional.of(BackgroundTask.Timeout.of(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)))
-            .build();
+        BackgroundTask.of(
+            "timeoutTask",
+            new TestAction(),
+            new TestArgs(Optional.empty(), firstBlocker, waiter, null),
+            BackgroundTask.Timeout.of(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS));
     BackgroundTask<TestArgs> secondTask =
-        ImmutableBackgroundTask.<TestArgs>builder()
-            .setActionArgs(new TestArgs(Optional.empty(), secondBlocker, waiter, null))
-            .setAction(new TestAction())
-            .setName("secondTask")
-            .build();
+        BackgroundTask.of(
+            "secondTask",
+            new TestAction(),
+            new TestArgs(Optional.empty(), secondBlocker, waiter, null));
     manager.notify(Notification.COMMAND_START);
     Future<Unit> firstTaskFuture = schedule(task);
     Future<Unit> secondTaskFuture = schedule(secondTask);
@@ -372,25 +349,22 @@ public class AsyncBackgroundTaskManagerTest {
     CountDownLatch waiter = new CountDownLatch(2);
     CountDownLatch started = new CountDownLatch(1);
     BackgroundTask<TestArgs> firstTask =
-        ImmutableBackgroundTask.<TestArgs>builder()
-            .setAction(new TestAction())
-            .setActionArgs(new TestArgs(Optional.empty(), blocker, waiter, null))
-            .setName("cancelled")
-            .setShouldCancelOnRepeat(true)
-            .build();
+        BackgroundTask.of(
+            "cancelled",
+            new TestAction(),
+            new TestArgs(Optional.empty(), blocker, waiter, null),
+            Optional.empty(),
+            true);
     BackgroundTask<TestArgs> secondTask =
-        ImmutableBackgroundTask.<TestArgs>builder()
-            .setAction(new TestAction())
-            .setActionArgs(new TestArgs(Optional.empty(), blocker, waiter, started))
-            .setName("cancellable but runs")
-            .setShouldCancelOnRepeat(true)
-            .build();
+        BackgroundTask.of(
+            "cancellable but runs",
+            new TestAction(),
+            new TestArgs(Optional.empty(), blocker, waiter, started),
+            Optional.empty(),
+            true);
     BackgroundTask<TestArgs> thirdTask =
-        ImmutableBackgroundTask.<TestArgs>builder()
-            .setAction(new TestAction())
-            .setActionArgs(new TestArgs(Optional.empty(), blocker, waiter, null))
-            .setName("thirdTask")
-            .build();
+        BackgroundTask.of(
+            "thirdTask", new TestAction(), new TestArgs(Optional.empty(), blocker, waiter, null));
     Future<Unit> firstTaskFuture = schedule(firstTask);
     Future<Unit> secondTaskFuture = schedule(secondTask);
     manager.notify(Notification.COMMAND_END);

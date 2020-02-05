@@ -18,7 +18,7 @@ package com.facebook.buck.parser.targetnode;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.graph.transformation.impl.FakeComputationEnvironment;
 import com.facebook.buck.core.model.BaseName;
@@ -51,7 +51,7 @@ public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputationTe
 
   @Test
   public void canParseDeps() {
-    Cell cell = new TestCellBuilder().build();
+    Cells cell = new TestCellBuilder().build();
 
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     TargetPlatformResolver targetPlatformResolver =
@@ -81,7 +81,7 @@ public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputationTe
             ImmutableSortedSet.of(":target2"));
     UnconfiguredBuildTarget unconfiguredBuildTarget1 =
         UnconfiguredBuildTarget.of(
-            cell.getCanonicalName(),
+            cell.getRootCell().getCanonicalName(),
             BaseName.of("//"),
             "target1",
             UnconfiguredBuildTarget.NO_FLAVORS);
@@ -95,7 +95,7 @@ public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputationTe
 
     UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation computation =
         UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation.of(
-            unconfiguredTargetNodeToTargetNodeFactory, cell);
+            unconfiguredTargetNodeToTargetNodeFactory, cell.getRootCell());
     UnconfiguredTargetNodeWithDeps rawTargetNode =
         computation.transform(
             ImmutableUnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsKey.of(

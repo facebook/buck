@@ -168,7 +168,13 @@ public class PublishCommand extends BuildCommand {
 
     Publisher publisher =
         new Publisher(
-            params.getCell().getFilesystem().getBuckPaths().getTmpDir().resolve(PUBLISH_GEN_PATH),
+            params
+                .getCells()
+                .getRootCell()
+                .getFilesystem()
+                .getBuckPaths()
+                .getTmpDir()
+                .resolve(PUBLISH_GEN_PATH),
             repoUrl,
             Optional.ofNullable(username),
             Optional.ofNullable(password),

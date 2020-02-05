@@ -69,4 +69,38 @@ public interface BuildLogEntry {
       Preconditions.checkState(!getTraceFile().get().isAbsolute());
     }
   }
+
+  static BuildLogEntry of(
+      Path relativePath,
+      Optional<? extends BuildId> buildId,
+      Optional<? extends List<String>> commandArgs,
+      Optional<? extends List<String>> expandedCommandArgs,
+      OptionalInt exitCode,
+      OptionalInt buildTimeMs,
+      Optional<? extends Path> ruleKeyLoggerLogFile,
+      Optional<? extends Path> machineReadableLogFile,
+      Optional<? extends Path> ruleKeyDiagKeysFile,
+      Optional<? extends Path> ruleKeyDiagGraphFile,
+      Optional<? extends Path> traceFile,
+      Optional<? extends Path> configJsonFile,
+      Optional<? extends Path> buckFixSpecFile,
+      long size,
+      Date lastModifiedTime) {
+    return ImmutableBuildLogEntry.of(
+        relativePath,
+        buildId,
+        commandArgs,
+        expandedCommandArgs,
+        exitCode,
+        buildTimeMs,
+        ruleKeyLoggerLogFile,
+        machineReadableLogFile,
+        ruleKeyDiagKeysFile,
+        ruleKeyDiagGraphFile,
+        traceFile,
+        configJsonFile,
+        buckFixSpecFile,
+        size,
+        lastModifiedTime);
+  }
 }

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.model;
 
-import com.facebook.buck.core.cell.name.ImmutableCanonicalCellName;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.support.cli.args.BuckCellArg;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Preconditions;
@@ -39,7 +39,7 @@ public class BuildTargetFactory {
   public static BuildTarget newInstance(
       String fullyQualifiedName, TargetConfiguration targetConfiguration) {
     BuckCellArg arg = BuckCellArg.of(fullyQualifiedName);
-    ImmutableCanonicalCellName cellName = ImmutableCanonicalCellName.of(arg.getCellName());
+    CanonicalCellName cellName = CanonicalCellName.of(arg.getCellName());
     String[] parts = arg.getBasePath().split(":");
     Preconditions.checkArgument(parts.length == 2);
     String[] nameAndFlavor = parts[1].split("#");
@@ -66,9 +66,7 @@ public class BuildTargetFactory {
     BuckCellArg arg = BuckCellArg.of(baseName);
     return UnconfiguredBuildTargetView.of(
             UnflavoredBuildTarget.of(
-                ImmutableCanonicalCellName.of(arg.getCellName()),
-                BaseName.of(arg.getBasePath()),
-                shortName),
+                CanonicalCellName.of(arg.getCellName()), BaseName.of(arg.getBasePath()), shortName),
             UnconfiguredBuildTarget.NO_FLAVORS)
         .configure(UnconfiguredTargetConfiguration.INSTANCE);
   }
@@ -77,9 +75,7 @@ public class BuildTargetFactory {
     BuckCellArg arg = BuckCellArg.of(baseName);
     return UnconfiguredBuildTargetView.of(
             UnflavoredBuildTarget.of(
-                ImmutableCanonicalCellName.of(arg.getCellName()),
-                BaseName.of(arg.getBasePath()),
-                shortName),
+                CanonicalCellName.of(arg.getCellName()), BaseName.of(arg.getBasePath()), shortName),
             RichStream.from(flavors)
                 .collect(
                     ImmutableSortedSet.toImmutableSortedSet(

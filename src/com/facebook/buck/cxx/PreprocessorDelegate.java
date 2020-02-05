@@ -398,6 +398,8 @@ final class PreprocessorDelegate implements AddsToRuleKey, HasCustomDepsLogic {
         ValueTypeInfoFactory.forTypeToken(new TypeToken<HeaderVerification>() {});
     static final ValueTypeInfo<PreprocessorFlags> PREPROCESSOR_FLAGS_TYPE_INFO =
         ValueTypeInfoFactory.forTypeToken(new TypeToken<PreprocessorFlags>() {});
+    static final ValueTypeInfo<CxxIncludePaths> CXX_INCLUDE_PATHS_VALUE_TYPE_INFO =
+        ValueTypeInfoFactory.forTypeToken(new TypeToken<CxxIncludePaths>() {});
 
     @Override
     public <E extends Exception> void serialize(
@@ -410,8 +412,7 @@ final class PreprocessorDelegate implements AddsToRuleKey, HasCustomDepsLogic {
       serializer.visitInteger(instance.conflictingHeadersBasenameWhitelist.size());
       RichStream.from(instance.conflictingHeadersBasenameWhitelist)
           .forEachThrowing(serializer::visitString);
-      Preconditions.checkState(
-          !instance.leadingIncludePaths.isPresent(), "leadingIncludePaths is not serializable.");
+      serializer.visitOptional(instance.leadingIncludePaths, CXX_INCLUDE_PATHS_VALUE_TYPE_INFO);
     }
 
     @Override
@@ -435,13 +436,15 @@ final class PreprocessorDelegate implements AddsToRuleKey, HasCustomDepsLogic {
       }
       ImmutableSortedSet<String> conflictingHeadersBasenameWhitelist =
           conflictingHeadersBasenameWhitelistBuilder.build();
+      Optional<CxxIncludePaths> leadingIncludePaths =
+          deserializer.createOptional(CXX_INCLUDE_PATHS_VALUE_TYPE_INFO);
       return new PreprocessorDelegate(
           headerVerification,
           workingDir,
           preprocessor,
           preprocessorFlags,
           frameworkPathSearchPathFunction,
-          Optional.empty(),
+          leadingIncludePaths,
           Optional.empty(),
           conflictingHeadersBasenameWhitelist);
     }

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.parser;
 
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -45,7 +45,7 @@ public class BuiltTargetVerifierTest {
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
-  private Cell cell;
+  private Cells cell;
 
   @Before
   public void setUp() {
@@ -64,7 +64,7 @@ public class BuiltTargetVerifierTest {
             + "- If the spelling is correct, please check that the related SDK has been installed.");
 
     builtTargetVerifier.verifyBuildTarget(
-        cell,
+        cell.getRootCell(),
         RuleType.of("build_rule", RuleType.Kind.BUILD),
         Paths.get("a/b/BUCK"),
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c#d"),
@@ -83,7 +83,7 @@ public class BuiltTargetVerifierTest {
             + "Please try to remove them when referencing this target.");
 
     builtTargetVerifier.verifyBuildTarget(
-        cell,
+        cell.getRootCell(),
         RuleType.of("build_rule", RuleType.Kind.BUILD),
         Paths.get("a/b/BUCK"),
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c#d"),
@@ -102,7 +102,7 @@ public class BuiltTargetVerifierTest {
             MorePaths.pathWithPlatformSeparators("a/b/BUCK")));
 
     builtTargetVerifier.verifyBuildTarget(
-        cell,
+        cell.getRootCell(),
         RuleType.of("build_rule", RuleType.Kind.BUILD),
         Paths.get("a/b/BUCK"),
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c"),
@@ -121,9 +121,9 @@ public class BuiltTargetVerifierTest {
             MorePaths.pathWithPlatformSeparators("a/b")));
 
     builtTargetVerifier.verifyBuildTarget(
-        cell,
+        cell.getRootCell(),
         RuleType.of("build_rule", RuleType.Kind.BUILD),
-        cell.getRoot().resolve("a/b/BUCK"),
+        cell.getRootCell().getRoot().resolve("a/b/BUCK"),
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c"),
         new NonFlavoredDescription(),
         ImmutableMap.of("name", "target_name", "buck.base_path", "z/y/z"));
@@ -139,9 +139,9 @@ public class BuiltTargetVerifierTest {
             + "expected: //a/b:c, raw data: name->target_name,buck.base_path->a/b");
 
     builtTargetVerifier.verifyBuildTarget(
-        cell,
+        cell.getRootCell(),
         RuleType.of("build_rule", RuleType.Kind.BUILD),
-        cell.getRoot().resolve("a/b/BUCK"),
+        cell.getRootCell().getRoot().resolve("a/b/BUCK"),
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c"),
         new NonFlavoredDescription(),
         ImmutableMap.of("name", "target_name", "buck.base_path", "a/b"));
@@ -152,9 +152,9 @@ public class BuiltTargetVerifierTest {
     BuiltTargetVerifier builtTargetVerifier = new BuiltTargetVerifier();
 
     builtTargetVerifier.verifyBuildTarget(
-        cell,
+        cell.getRootCell(),
         RuleType.of("build_rule", RuleType.Kind.BUILD),
-        cell.getRoot().resolve("a/b/BUCK"),
+        cell.getRootCell().getRoot().resolve("a/b/BUCK"),
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c#d"),
         new FlavoredDescription(
             new FlavorDomain<>("flavors", ImmutableMap.of(InternalFlavor.of("d"), "b"))),
@@ -166,9 +166,9 @@ public class BuiltTargetVerifierTest {
     BuiltTargetVerifier builtTargetVerifier = new BuiltTargetVerifier();
 
     builtTargetVerifier.verifyBuildTarget(
-        cell,
+        cell.getRootCell(),
         RuleType.of("build_rule", RuleType.Kind.BUILD),
-        cell.getRoot().resolve("a/b/BUCK"),
+        cell.getRootCell().getRoot().resolve("a/b/BUCK"),
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c"),
         new NonFlavoredDescription(),
         ImmutableMap.of("name", "c", "buck.base_path", "a/b"));

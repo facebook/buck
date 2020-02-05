@@ -97,10 +97,10 @@ import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.json.ObjectMappers;
+import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
@@ -581,7 +581,7 @@ class CachingBuildRuleBuilder {
     // output hashes from the build metadata.  Skip this if the output size is too big for
     // input-based rule keys.
     long outputSize =
-        Long.parseLong(onDiskBuildInfo.getValue(BuildInfo.MetadataKey.OUTPUT_SIZE).get());
+        Long.parseLong(onDiskBuildInfo.getValue(BuildInfo.MetadataKey.OUTPUT_SIZE).getLeft());
 
     if (shouldWriteOutputHashes(outputSize)) {
       Optional<ImmutableMap<String, String>> hashes =
@@ -790,19 +790,36 @@ class CachingBuildRuleBuilder {
         successType = Optional.of(success);
 
         // Try get the output size.
-        Optional<String> outputSizeString = onDiskBuildInfo.getValue(MetadataKey.OUTPUT_SIZE);
-        Verify.verify(
-            outputSizeString.isPresent(), "OUTPUT_SIZE should always be computed and present.");
-        outputSize = Optional.of(Long.parseLong(outputSizeString.get()));
+        Either<String, Exception> outputSizeString =
+            onDiskBuildInfo.getValue(MetadataKey.OUTPUT_SIZE);
+        long outputSizeValue =
+            outputSizeString.transform(
+                Long::parseLong,
+                right -> {
+                  throw new RuntimeException(
+                      "OUTPUT_SIZE should always be computed and present for rule "
+                          + rule.getFullyQualifiedName(),
+                      right);
+                });
+
+        outputSize = Optional.of(outputSizeValue);
 
         // All rules should have output_size/output_hash in their artifact metadata.
-        Optional<String> hashString = onDiskBuildInfo.getValue(BuildInfo.MetadataKey.OUTPUT_HASH);
-        if (!hashString.isPresent() && shouldWriteOutputHashes(outputSize.get())) {
-          // OUTPUT_HASH should only be missing if we exceed the hash size limit.
-          LOG.warn("OUTPUT_HASH is unexpectedly missing for %s.", rule.getFullyQualifiedName());
-        }
+        Either<String, Exception> hashString = onDiskBuildInfo.getValue(MetadataKey.OUTPUT_HASH);
+        hashString
+            .getRightOption()
+            .ifPresent(
+                right -> {
+                  if (shouldWriteOutputHashes(outputSizeValue)) {
+                    // OUTPUT_HASH should only be missing if we exceed the hash size limit.
+                    LOG.warn(
+                        hashString.getRight(),
+                        "OUTPUT_HASH is unexpectedly missing for %s",
+                        rule.getFullyQualifiedName());
+                  }
+                });
 
-        outputHash = hashString.map(HashCode::fromString);
+        outputHash = hashString.getLeftOption().map(HashCode::fromString);
 
         // Determine if this is rule is cacheable.
         if (outputSize.isPresent()) {

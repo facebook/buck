@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -54,7 +55,7 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverage
   }
 
   @Override
-  public void traverse(CellPathResolver cellRoots, NeededCoverageSpec object, Traversal traversal) {
+  public void traverse(CellNameResolver cellRoots, NeededCoverageSpec object, Traversal traversal) {
     intTypeCoercer.traverse(cellRoots, object.getNeededCoverageRatioPercentage(), traversal);
     buildTargetTypeCoercer.traverse(cellRoots, object.getBuildTarget(), traversal);
     Optional<String> pathName = object.getPathName();

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.FlavorDomain;
@@ -36,18 +37,28 @@ public class CxxGenruleBuilder
         CxxGenruleDescription,
         BuildRule> {
 
-  public CxxGenruleBuilder(BuildTarget target, FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms) {
+  public CxxGenruleBuilder(
+      BuildTarget target, FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms, BuckConfig config) {
     super(
         new CxxGenruleDescription(
-            new CxxBuckConfig(FakeBuckConfig.builder().build()),
             new ToolchainProviderBuilder()
                 .withToolchain(
                     CxxPlatformsProvider.DEFAULT_NAME,
                     CxxPlatformsProvider.of(
                         CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM, cxxPlatforms))
                 .build(),
+            config,
+            new CxxBuckConfig(FakeBuckConfig.builder().build()),
             new NoSandboxExecutionStrategy()),
         target);
+  }
+
+  public CxxGenruleBuilder(BuildTarget target, BuckConfig config) {
+    this(target, CxxPlatformUtils.DEFAULT_PLATFORMS, config);
+  }
+
+  public CxxGenruleBuilder(BuildTarget target, FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms) {
+    this(target, cxxPlatforms, FakeBuckConfig.builder().build());
   }
 
   public CxxGenruleBuilder(BuildTarget target) {
@@ -66,6 +77,11 @@ public class CxxGenruleBuilder
 
   public CxxGenruleBuilder setCacheable(boolean cacheable) {
     getArgForPopulating().setCacheable(cacheable);
+    return this;
+  }
+
+  public CxxGenruleBuilder setRemote(boolean remote) {
+    getArgForPopulating().setRemote(remote);
     return this;
   }
 }

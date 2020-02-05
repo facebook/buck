@@ -20,7 +20,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.BuildId;
@@ -76,13 +76,13 @@ public class ModernBuildRuleRemoteExecutionHelperTest {
         };
 
     filesystem = new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp.getRoot());
-    Cell root = new TestCellBuilder().setFilesystem(filesystem).build();
+    Cells root = new TestCellBuilder().setFilesystem(filesystem).build();
     mbrHelper =
         new ModernBuildRuleRemoteExecutionHelper(
             eventBus,
             new GrpcProtocol(),
             ruleFinder,
-            root,
+            root.getRootCell(),
             new FileHashCache() {
               @Override
               public HashCode get(Path path) {

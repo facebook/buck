@@ -58,8 +58,7 @@ public class ScribeEventListenerTest {
   private static final BuildId BUILD_ID = new BuildId("fake_build_id");
   private static final long NANO_TIME = TimeUnit.SECONDS.toNanos(300);
   private static final long CURRENT_TIME_MILLIS = 1409702151000L;
-  private static final FakeClock FAKE_CLOCK =
-      FakeClock.builder().currentTimeMillis(CURRENT_TIME_MILLIS).nanoTime(NANO_TIME).build();
+  private static final FakeClock FAKE_CLOCK = FakeClock.of(CURRENT_TIME_MILLIS, NANO_TIME);
 
   private BuckEventBus eventBus;
   private ScribeEventListener listener;

@@ -71,6 +71,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class HaskellDescriptionUtils {
@@ -535,24 +536,28 @@ public class HaskellDescriptionUtils {
         NativeLinkables.getTransitiveNativeLinkables(graphBuilder, omnibusSpec.getDeps());
     NativeLinkables.SharedLibrariesBuilder sharedLibsBuilder =
         new NativeLinkables.SharedLibrariesBuilder();
-    transitiveDeps.stream()
-        // Skip statically linked libraries.
-        .filter(l -> l.getPreferredLinkage() != Linkage.STATIC)
-        .forEach(l -> sharedLibsBuilder.add(l, graphBuilder));
+    sharedLibsBuilder.addAll(
+        graphBuilder,
+        transitiveDeps.stream()
+            // Skip statically linked libraries.
+            .filter(l -> l.getPreferredLinkage() != Linkage.STATIC)
+            .collect(Collectors.toList()));
     ImmutableSortedMap<String, SourcePath> sharedLibs = sharedLibsBuilder.build();
 
     // Build up a set of all transitive preload libs, which are the ones that have been "excluded"
     // from the omnibus link.  These are the ones we need to LD_PRELOAD.
     NativeLinkables.SharedLibrariesBuilder preloadLibsBuilder =
         new NativeLinkables.SharedLibrariesBuilder();
-    omnibusSpec.getExcludedTransitiveDeps().values().stream()
-        // Don't include shared libs for static libraries -- except for preload roots, which we
-        // always link dynamically.
-        .filter(
-            l ->
-                l.getPreferredLinkage() != Linkage.STATIC
-                    || omnibusSpec.getExcludedRoots().contains(l.getBuildTarget()))
-        .forEach(l -> preloadLibsBuilder.add(l, graphBuilder));
+    preloadLibsBuilder.addAll(
+        graphBuilder,
+        omnibusSpec.getExcludedTransitiveDeps().values().stream()
+            // Don't include shared libs for static libraries -- except for preload roots, which we
+            // always link dynamically.
+            .filter(
+                l ->
+                    l.getPreferredLinkage() != Linkage.STATIC
+                        || omnibusSpec.getExcludedRoots().contains(l.getBuildTarget()))
+            .collect(Collectors.toList()));
     ImmutableSortedMap<String, SourcePath> preloadLibs = preloadLibsBuilder.build();
 
     HaskellSources srcs = HaskellSources.from(buildTarget, graphBuilder, platform, "srcs", argSrcs);

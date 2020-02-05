@@ -29,6 +29,7 @@ import com.facebook.buck.android.AndroidManifestFactory;
 import com.facebook.buck.android.AndroidResourceBuilder;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.AndroidResourceDescriptionArg;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
@@ -113,6 +114,7 @@ public class IjProjectSourcePathResolverTest {
                 JarGenrule>(
                 new JarGenruleDescription(
                     JavaLibraryBuilder.createToolchainProviderForJavaLibrary(),
+                    FakeBuckConfig.builder().build(),
                     new NoSandboxExecutionStrategy()),
                 target) {};
     TargetNode<JarGenruleDescriptionArg> node = builder.build(filesystem);

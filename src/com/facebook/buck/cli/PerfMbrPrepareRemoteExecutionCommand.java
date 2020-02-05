@@ -18,7 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.cli.HeapDumper.DumpType;
 import com.facebook.buck.command.config.BuildBuckConfig;
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -109,7 +109,7 @@ public class PerfMbrPrepareRemoteExecutionCommand
 
   @Override
   void runPerfTest(CommandRunnerParams params, PreparedState state) throws Exception {
-    Cell rootCell = params.getCell();
+    Cells cells = params.getCells();
     Protocol protocol = new GrpcProtocol();
 
     // Use a service similar to a build. This helps with contention issues and really helps detect
@@ -127,7 +127,7 @@ public class PerfMbrPrepareRemoteExecutionCommand
             params.getBuckEventBus(),
             protocol,
             state.graphBuilder,
-            rootCell,
+            cells.getRootCell(),
             new FileHashCache() {
               @Override
               public HashCode get(Path path) {

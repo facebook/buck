@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidTools;
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
@@ -239,7 +239,7 @@ public class AndroidPrebuiltAarDescription
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       AndroidPrebuiltAarDescriptionArg constructorArg,
       Builder<BuildTarget> extraDepsBuilder,
       Builder<BuildTarget> targetGraphOnlyDepsBuilder) {

@@ -32,4 +32,9 @@ public abstract class PackageMetadata {
 
   /** @return the within_view defined in the package. */
   public abstract ImmutableList<String> getWithinView();
+
+  public static PackageMetadata of(
+      ImmutableList<String> visibility, ImmutableList<String> withinView) {
+    return ImmutablePackageMetadata.of(visibility, withinView);
+  }
 }

@@ -21,7 +21,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItems;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
@@ -69,7 +69,7 @@ public class PerBuildStateTest {
   private final int threads;
   private final boolean parallelParsing;
   private Path cellRoot;
-  private Cell cell;
+  private Cells cell;
   private PerBuildState perBuildState;
 
   public PerBuildStateTest(int threads, boolean parallelParsing) {
@@ -122,9 +122,12 @@ public class PerBuildStateTest {
         TestKnownRuleTypesProvider.create(pluginManager);
     Parser parser =
         TestParserFactory.create(
-            executor.get(), cell, knownRuleTypesProvider, BuckEventBusForTests.newInstance());
+            executor.get(),
+            cell.getRootCell(),
+            knownRuleTypesProvider,
+            BuckEventBusForTests.newInstance());
 
-    perBuildState = TestPerBuildStateFactory.create(parser, cell);
+    perBuildState = TestPerBuildStateFactory.create(parser, cell.getRootCell());
   }
 
   @Test
@@ -146,7 +149,7 @@ public class PerBuildStateTest {
 
     // Now, try to load the entire build file and get all TargetNodes.
     ImmutableList<TargetNode<?>> targetNodes =
-        perBuildState.getAllTargetNodes(cell, testFooBuckFile, Optional.empty());
+        perBuildState.getAllTargetNodes(cell.getRootCell(), testFooBuckFile, Optional.empty());
     assertThat(targetNodes.size(), equalTo(2));
     assertThat(
         targetNodes.stream()

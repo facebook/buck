@@ -16,13 +16,15 @@
 
 package com.facebook.buck.core.model;
 
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Preconditions;
 import org.immutables.value.Value;
 
-@Value.Immutable(builder = false, copy = false, intern = true)
+@Value.Immutable(builder = false, copy = false, prehash = false, intern = true)
+@BuckStyleValue
 @JsonDeserialize(as = ImmutableRuleType.class)
 public abstract class RuleType {
 
@@ -35,12 +37,10 @@ public abstract class RuleType {
   }
 
   /** @return the name as displayed in a build file, such as "java_library" */
-  @Value.Parameter
   @JsonProperty("name")
   public abstract String getName();
 
   /** @return the kind of this type. */
-  @Value.Parameter
   @JsonProperty("kind")
   public abstract Kind getKind();
 

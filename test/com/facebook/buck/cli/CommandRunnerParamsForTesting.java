@@ -22,6 +22,7 @@ import com.facebook.buck.artifact_cache.SingletonArtifactCacheFactory;
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
@@ -168,7 +169,7 @@ public class CommandRunnerParamsForTesting {
     return ImmutableCommandRunnerParams.of(
         console,
         new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)),
-        cell,
+        new Cells(cell),
         WatchmanFactory.NULL_WATCHMAN,
         new InstrumentedVersionedTargetGraphCache(
             new VersionedTargetGraphCache(), new NoOpCacheStatsTracker()),
@@ -237,16 +238,17 @@ public class CommandRunnerParamsForTesting {
       if (toolchainProvider != null) {
         cellBuilder.setToolchainProvider(toolchainProvider);
       }
-      Cell cell = cellBuilder.build();
+      Cells cell = cellBuilder.build();
       PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
       KnownRuleTypesProvider knownRuleTypesProvider =
           TestKnownRuleTypesProvider.create(pluginManager);
-      Parser parser = TestParserFactory.create(executor, cell, knownRuleTypesProvider);
+      Parser parser =
+          TestParserFactory.create(executor, cell.getRootCell(), knownRuleTypesProvider);
 
       return createCommandRunnerParamsForTesting(
           executor,
           console,
-          cell,
+          cell.getRootCell(),
           artifactCache,
           eventBus,
           config,

@@ -18,6 +18,7 @@ package com.facebook.buck.features.project.intellij;
 
 import com.facebook.buck.android.AndroidBinaryDescriptionArg;
 import com.facebook.buck.android.AndroidLibraryDescription;
+import com.facebook.buck.android.AndroidLibraryDescriptionArg;
 import com.facebook.buck.android.AndroidLibraryGraphEnhancer;
 import com.facebook.buck.android.AndroidPrebuiltAarDescriptionArg;
 import com.facebook.buck.android.AndroidResourceDescription;
@@ -39,6 +40,10 @@ import com.facebook.buck.features.project.intellij.model.IjModuleFactoryResolver
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
+import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription;
+import com.facebook.buck.jvm.kotlin.KotlinLibraryDescriptionArg;
+import com.facebook.buck.jvm.kotlin.KotlinTestDescriptionArg;
+import com.facebook.buck.jvm.kotlin.KotlincToJarStepFactory;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -181,6 +186,38 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
       return Optional.empty();
     }
     return CompilerOutputPaths.getAnnotationPath(projectFilesystem, targetNode.getBuildTarget());
+  }
+
+  @Override
+  public Optional<Path> getKaptAnnotationOutputPath(
+      TargetNode<? extends JvmLibraryArg> targetNode) {
+    if (isKotlinModule(targetNode.getConstructorArg())
+        && requiresKapt(targetNode.getConstructorArg())) {
+      return Optional.of(
+          KotlincToJarStepFactory.getKaptAnnotationGenPath(
+              projectFilesystem, targetNode.getBuildTarget()));
+    }
+    return Optional.empty();
+  }
+
+  private boolean isKotlinModule(JvmLibraryArg constructorArg) {
+    return constructorArg instanceof KotlinLibraryDescriptionArg
+        || constructorArg instanceof KotlinTestDescriptionArg
+        || constructorArg instanceof AndroidLibraryDescriptionArg
+            && ((AndroidLibraryDescriptionArg) constructorArg)
+                .getLanguage()
+                .map(AndroidLibraryDescription.JvmLanguage.KOTLIN::equals)
+                .orElse(false);
+  }
+
+  private boolean requiresKapt(JvmLibraryArg constructorArg) {
+    return (!constructorArg.getPlugins().isEmpty()
+            || !constructorArg.getAnnotationProcessors().isEmpty())
+        && constructorArg instanceof KotlinLibraryDescription.CoreArg
+        && ((KotlinLibraryDescription.CoreArg) constructorArg)
+            .getAnnotationProcessingTool()
+            .map(KotlinLibraryDescription.AnnotationProcessingTool.KAPT::equals)
+            .orElse(true);
   }
 
   @Override

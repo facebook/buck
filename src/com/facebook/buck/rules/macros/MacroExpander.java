@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -29,7 +29,7 @@ public interface MacroExpander<T, P> {
 
   /** @return the precomputed work that can be re-used between invocations */
   P precomputeWorkFrom(
-      BuildTarget target, CellPathResolver cellNames, ActionGraphBuilder graphBuilder, T input)
+      BuildTarget target, CellNameResolver cellNames, ActionGraphBuilder graphBuilder, T input)
       throws MacroException;
 
   Arg expandFrom(BuildTarget target, ActionGraphBuilder graphBuilder, T input, P precomputedWork)

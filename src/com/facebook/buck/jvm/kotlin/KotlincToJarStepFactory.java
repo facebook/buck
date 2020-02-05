@@ -21,6 +21,7 @@ import static com.facebook.buck.jvm.java.JavaPaths.SRC_ZIP;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
@@ -168,8 +169,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       Path kaptGeneratedOutput =
           BuildTargetPaths.getAnnotationPath(
               projectFilesystem, invokingRule, "__%s_kapt_generated__");
-      Path tmpFolder =
-          BuildTargetPaths.getScratchPath(projectFilesystem, invokingRule, "__%s_gen_sources__");
+      Path annotationGenFolder = getKaptAnnotationGenPath(projectFilesystem, invokingRule);
       Path genOutputFolder =
           BuildTargetPaths.getGenPath(projectFilesystem, invokingRule, "__%s_gen_sources__");
       Path genOutput =
@@ -181,7 +181,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       addCreateFolderStep(steps, projectFilesystem, buildContext, classesOutput);
       addCreateFolderStep(steps, projectFilesystem, buildContext, kaptGeneratedOutput);
       addCreateFolderStep(steps, projectFilesystem, buildContext, sourcesOutput);
-      addCreateFolderStep(steps, projectFilesystem, buildContext, tmpFolder);
+      addCreateFolderStep(steps, projectFilesystem, buildContext, annotationGenFolder);
       addCreateFolderStep(steps, projectFilesystem, buildContext, genOutputFolder);
 
       ImmutableSortedSet<Path> allClasspaths =
@@ -243,13 +243,22 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
         postKotlinCompilationSteps.add(
             CopyStep.forDirectory(
-                projectFilesystem, sourcesOutput, tmpFolder, DirectoryMode.CONTENTS_ONLY));
+                projectFilesystem,
+                sourcesOutput,
+                annotationGenFolder,
+                DirectoryMode.CONTENTS_ONLY));
         postKotlinCompilationSteps.add(
             CopyStep.forDirectory(
-                projectFilesystem, classesOutput, tmpFolder, DirectoryMode.CONTENTS_ONLY));
+                projectFilesystem,
+                classesOutput,
+                annotationGenFolder,
+                DirectoryMode.CONTENTS_ONLY));
         postKotlinCompilationSteps.add(
             CopyStep.forDirectory(
-                projectFilesystem, kaptGeneratedOutput, tmpFolder, DirectoryMode.CONTENTS_ONLY));
+                projectFilesystem,
+                kaptGeneratedOutput,
+                annotationGenFolder,
+                DirectoryMode.CONTENTS_ONLY));
 
         postKotlinCompilationSteps.add(
             new ZipStep(
@@ -258,7 +267,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                 ImmutableSet.of(),
                 false,
                 ZipCompressionLevel.DEFAULT,
-                tmpFolder));
+                annotationGenFolder));
 
         // Generated classes should be part of the output. This way generated files
         // such as META-INF dirs will also be added to the final jar.
@@ -447,5 +456,10 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   @Override
   public boolean hasAnnotationProcessing() {
     return !javacOptions.getJavaAnnotationProcessorParams().isEmpty();
+  }
+
+  public static Path getKaptAnnotationGenPath(
+      ProjectFilesystem projectFilesystem, BuildTarget buildTarget) {
+    return BuildPaths.getGenDir(projectFilesystem, buildTarget).resolve("__generated__");
   }
 }

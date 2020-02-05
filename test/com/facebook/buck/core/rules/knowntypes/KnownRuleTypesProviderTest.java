@@ -21,6 +21,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
@@ -42,7 +43,7 @@ public class KnownRuleTypesProviderTest {
     }
   }
 
-  Cell createCell(boolean enableUserDefinedRules) {
+  Cells createCell(boolean enableUserDefinedRules) {
     BuckConfig config =
         FakeBuckConfig.builder()
             .setSections(
@@ -57,10 +58,10 @@ public class KnownRuleTypesProviderTest {
   @Test
   public void returnsKnownNativeRuleTypesIfUserDefinedRulesDisabled() {
     KnownRuleTypesProvider provider = new KnownRuleTypesProvider(new TestFactory());
-    Cell cell = createCell(false);
+    Cells cell = createCell(false);
 
-    KnownRuleTypes knownRuleTypes = provider.get(cell);
-    KnownNativeRuleTypes knownNativeRuleTypes = provider.getNativeRuleTypes(cell);
+    KnownRuleTypes knownRuleTypes = provider.get(cell.getRootCell());
+    KnownNativeRuleTypes knownNativeRuleTypes = provider.getNativeRuleTypes(cell.getRootCell());
 
     assertSame(knownRuleTypes, knownNativeRuleTypes);
   }
@@ -68,10 +69,10 @@ public class KnownRuleTypesProviderTest {
   @Test
   public void returnsHybridKnownRuleTypesIfUserDefinedRulesEnabled() {
     KnownRuleTypesProvider provider = new KnownRuleTypesProvider(new TestFactory());
-    Cell cell = createCell(true);
+    Cells cell = createCell(true);
 
-    KnownRuleTypes knownRuleTypes = provider.get(cell);
-    KnownNativeRuleTypes knownNativeRuleTypes = provider.getNativeRuleTypes(cell);
+    KnownRuleTypes knownRuleTypes = provider.get(cell.getRootCell());
+    KnownNativeRuleTypes knownNativeRuleTypes = provider.getNativeRuleTypes(cell.getRootCell());
 
     assertNotNull(knownRuleTypes.getRuleType("fake"));
     assertTrue(knownRuleTypes instanceof HybridKnownRuleTypes);

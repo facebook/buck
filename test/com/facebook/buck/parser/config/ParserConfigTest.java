@@ -69,6 +69,22 @@ public class ParserConfigTest {
   }
 
   @Test
+  public void testGetBuildFileSearchMethod() throws IOException {
+    ParserConfig config;
+
+    config = getDefaultConfig();
+    assertEquals(
+        config.getBuildFileSearchMethod(), ParserConfig.BuildFileSearchMethod.FILESYSTEM_CRAWL);
+
+    config = parseConfig("[project]\nbuild_file_search_method = filesystem_crawl");
+    assertEquals(
+        config.getBuildFileSearchMethod(), ParserConfig.BuildFileSearchMethod.FILESYSTEM_CRAWL);
+
+    config = parseConfig("[project]\nbuild_file_search_method = watchman");
+    assertEquals(config.getBuildFileSearchMethod(), ParserConfig.BuildFileSearchMethod.WATCHMAN);
+  }
+
+  @Test
   public void testGetWatchCells() throws IOException {
     assertTrue("watch_cells defaults to true", getDefaultConfig().getWatchCells());
 

@@ -26,6 +26,7 @@ import com.facebook.buck.cli.ProjectTestsMode;
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellProvider;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.BaseDescription;
@@ -706,7 +707,8 @@ public class XCodeProjectCommandHelper {
               unconfiguredBuildTargetFactory,
               targetGraphCreationResult,
               targetConfiguration,
-              buckEventBus);
+              buckEventBus,
+              new Cells(cell));
     }
     return targetGraphCreationResult.withBuildTargets(originalBuildTargets);
   }

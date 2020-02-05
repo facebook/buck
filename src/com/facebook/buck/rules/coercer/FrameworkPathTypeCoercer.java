@@ -19,6 +19,7 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -56,7 +57,7 @@ public class FrameworkPathTypeCoercer implements TypeCoercer<FrameworkPath> {
   }
 
   @Override
-  public void traverse(CellPathResolver cellRoots, FrameworkPath object, Traversal traversal) {
+  public void traverse(CellNameResolver cellRoots, FrameworkPath object, Traversal traversal) {
     switch (object.getType()) {
       case SOURCE_TREE_PATH:
         traversal.traverse(object.getSourceTreePath().get());

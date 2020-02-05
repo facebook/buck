@@ -28,6 +28,7 @@ import com.facebook.buck.apple.toolchain.UnresolvedAppleCxxPlatform;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.HasContacts;
 import com.facebook.buck.core.description.arg.HasTestTimeout;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
@@ -391,9 +392,10 @@ public class AppleTestDescription
       StringWithMacrosConverter macrosConverter =
           StringWithMacrosConverter.of(
               buildTarget,
-              context.getCellPathResolver(),
+              context.getCellPathResolver().getCellNameResolver(),
               graphBuilder,
-              ImmutableList.of(new LocationMacroExpander(), new AbsoluteOutputMacroExpander()));
+              ImmutableList.of(
+                  LocationMacroExpander.INSTANCE, AbsoluteOutputMacroExpander.INSTANCE));
 
       return new AppleTestX(
           runner.getBinary(),
@@ -731,7 +733,7 @@ public class AppleTestDescription
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       AbstractAppleTestDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {

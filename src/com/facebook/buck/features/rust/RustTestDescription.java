@@ -16,7 +16,7 @@
 
 package com.facebook.buck.features.rust;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.FlavorDomain;
@@ -156,7 +156,7 @@ public class RustTestDescription
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       AbstractRustTestDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {

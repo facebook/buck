@@ -52,7 +52,7 @@ public class TaskManagerCommandScopeTest {
     TestBackgroundTaskManager testBackgroundTaskManager = TestBackgroundTaskManager.of();
     TaskManagerCommandScope scope =
         new TaskManagerCommandScope(testBackgroundTaskManager, new BuildId(), true);
-    BackgroundTask<?> task = ImmutableBackgroundTask.of("test", ignored -> fail(), new Object());
+    BackgroundTask<?> task = BackgroundTask.of("test", ignored -> fail(), new Object());
     scope.schedule(task);
 
     assertSame(
@@ -64,8 +64,8 @@ public class TaskManagerCommandScopeTest {
     TestBackgroundTaskManager testBackgroundTaskManager = TestBackgroundTaskManager.of();
     TaskManagerCommandScope scope =
         new TaskManagerCommandScope(testBackgroundTaskManager, new BuildId(), true);
-    BackgroundTask<?> task1 = ImmutableBackgroundTask.of("test1", ignored -> fail(), new Object());
-    BackgroundTask<?> task2 = ImmutableBackgroundTask.of("test2", ignored -> {}, new Object());
+    BackgroundTask<?> task1 = BackgroundTask.of("test1", ignored -> fail(), new Object());
+    BackgroundTask<?> task2 = BackgroundTask.of("test2", ignored -> {}, new Object());
     scope.schedule(task1);
     scope.schedule(task2);
 
@@ -84,7 +84,7 @@ public class TaskManagerCommandScopeTest {
     TaskManagerCommandScope scope =
         new TaskManagerCommandScope(testBackgroundTaskManager, new BuildId(), true);
     scope.close();
-    BackgroundTask<?> task = ImmutableBackgroundTask.of("test1", ignored -> fail(), new Object());
+    BackgroundTask<?> task = BackgroundTask.of("test1", ignored -> fail(), new Object());
     scope.schedule(task);
 
     ImmutableMap<BackgroundTask<?>, Future<Unit>> scheduledTasks = scope.getScheduledTasksResults();
@@ -97,8 +97,8 @@ public class TaskManagerCommandScopeTest {
     TestBackgroundTaskManager testBackgroundTaskManager = TestBackgroundTaskManager.of();
     TaskManagerCommandScope scope =
         new TaskManagerCommandScope(testBackgroundTaskManager, new BuildId(), true);
-    BackgroundTask<?> task1 = ImmutableBackgroundTask.of("test1", ignored -> {}, new Object());
-    BackgroundTask<?> task2 = ImmutableBackgroundTask.of("test2", ignored -> {}, new Object());
+    BackgroundTask<?> task1 = BackgroundTask.of("test1", ignored -> {}, new Object());
+    BackgroundTask<?> task2 = BackgroundTask.of("test2", ignored -> {}, new Object());
     scope.schedule(task1);
     scope.schedule(task2);
 
@@ -124,9 +124,9 @@ public class TaskManagerCommandScopeTest {
 
     Semaphore semaphore = new Semaphore(0);
 
-    BackgroundTask<?> task1 = ImmutableBackgroundTask.of("test1", ignored -> {}, new Object());
+    BackgroundTask<?> task1 = BackgroundTask.of("test1", ignored -> {}, new Object());
     BackgroundTask<?> task2 =
-        ImmutableBackgroundTask.of("test2", ignored -> semaphore.acquire(), new Object());
+        BackgroundTask.of("test2", ignored -> semaphore.acquire(), new Object());
     scope1.schedule(task1);
     scope2.schedule(task2);
 
@@ -155,9 +155,9 @@ public class TaskManagerCommandScopeTest {
     Semaphore blocker = new Semaphore(0);
 
     BackgroundTask<?> task1 =
-        ImmutableBackgroundTask.of("test1", ignored -> blocker.acquire(), new Object());
+        BackgroundTask.of("test1", ignored -> blocker.acquire(), new Object());
     BackgroundTask<?> task2 =
-        ImmutableBackgroundTask.of("test2", ignored -> blocker.acquire(), new Object());
+        BackgroundTask.of("test2", ignored -> blocker.acquire(), new Object());
     scope.schedule(task1);
     scope.schedule(task2);
 

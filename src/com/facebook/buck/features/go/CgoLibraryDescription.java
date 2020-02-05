@@ -17,6 +17,7 @@
 package com.facebook.buck.features.go;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.description.metadata.MetadataProvidingDescription;
 import com.facebook.buck.core.model.BuildTarget;
@@ -206,7 +207,7 @@ public class CgoLibraryDescription
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       CgoLibraryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {

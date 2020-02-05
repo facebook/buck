@@ -33,6 +33,7 @@ import com.facebook.buck.features.python.toolchain.PythonEnvironment;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -44,12 +45,13 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.SortedSet;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps {
 
   @AddToRuleKey private final Tool builder;
-  @AddToRuleKey private final ImmutableList<String> buildArgs;
+  @AddToRuleKey private final ImmutableList<Arg> buildArgs;
   private final Tool pathToPexExecuter;
   @AddToRuleKey private final String mainModule;
   @AddToRuleKey private final PythonEnvironment pythonEnvironment;
@@ -64,7 +66,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
       Supplier<? extends SortedSet<BuildRule>> originalDeclareDeps,
       PythonPlatform pythonPlatform,
       Tool builder,
-      ImmutableList<String> buildArgs,
+      ImmutableList<Arg> buildArgs,
       Tool pathToPexExecuter,
       String pexExtension,
       PythonEnvironment pythonEnvironment,
@@ -94,6 +96,10 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
         ImmutableSortedSet.<BuildRule>naturalOrder()
             .addAll(components.getDeps(ruleFinder))
             .addAll(BuildableSupport.getDepsCollection(builder, ruleFinder))
+            .addAll(
+                buildArgs.stream()
+                    .flatMap(a -> BuildableSupport.deriveDeps(a, ruleFinder))
+                    .collect(Collectors.toList()))
             .build();
   }
 
@@ -133,7 +139,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
             builder.getEnvironment(resolver),
             ImmutableList.<String>builder()
                 .addAll(builder.getCommandPrefix(resolver))
-                .addAll(buildArgs)
+                .addAll(Arg.stringify(buildArgs, resolver))
                 .build(),
             pythonEnvironment.getPythonPath(),
             pythonEnvironment.getPythonVersion(),

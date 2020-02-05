@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.rules.query.Query;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -33,11 +34,7 @@ import org.immutables.value.Value;
  * {@link BuildTarget}s to {@link BuildRule}s, including resolving queries and (TODO:jkeljo)
  * exports.
  */
-@Value.Immutable
-@Value.Style(
-    overshadowImplementation = true,
-    init = "set*",
-    visibility = Value.Style.ImplementationVisibility.PACKAGE)
+@BuckStyleValueWithBuilder
 public abstract class JavaLibraryDeps {
   public static JavaLibraryDeps newInstance(
       JavaLibraryDescription.CoreArg args,

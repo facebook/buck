@@ -37,7 +37,7 @@ import org.immutables.value.Value;
 @BuckStyleValueWithBuilder
 public interface AndroidPackageableCollection {
 
-  @Value.Immutable
+  @BuckStyleValueWithBuilder
   abstract class ResourceDetails {
 
     /**

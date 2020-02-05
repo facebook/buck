@@ -31,7 +31,7 @@ import com.facebook.buck.apple.AppleTestBuilder;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
@@ -125,7 +125,7 @@ public class TargetsCommandTest {
     filesystem =
         TestProjectFilesystems.createProjectFilesystem(
             workspace.getDestPath().toRealPath().normalize());
-    Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
+    Cells cell = new TestCellBuilder().setFilesystem(filesystem).build();
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusForTests.newInstance();
     capturingConsoleEventListener = new CapturingConsoleEventListener();
@@ -136,7 +136,7 @@ public class TargetsCommandTest {
         CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
             depsAwareExecutor.get(),
             console,
-            cell,
+            cell.getRootCell(),
             artifactCache,
             eventBus,
             FakeBuckConfig.builder().build(),

@@ -162,7 +162,8 @@ public abstract class IsolatedBuildableBuilder {
             architecture,
             platform,
             clientEnvironment,
-            buildTargetName -> buildTargetFactory.create(cellPathResolver, buildTargetName));
+            buildTargetName ->
+                buildTargetFactory.create(buildTargetName, cellPathResolver.getCellNameResolver()));
 
     BuckModuleManager moduleManager =
         new DefaultBuckModuleManager(pluginManager, new BuckModuleJarHashProvider());
@@ -207,6 +208,7 @@ public abstract class IsolatedBuildableBuilder {
             .setJavaPackageFinder(javaPackageFinder)
             .setExecutors(ImmutableMap.of())
             .setCellPathResolver(cellPathResolver)
+            .setCells(cellProvider.getRootCell())
             .setBuildCellRootPath(canonicalProjectRoot)
             .setProcessExecutor(processExecutor)
             .setProjectFilesystemFactory(projectFilesystemFactory)

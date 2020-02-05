@@ -45,4 +45,12 @@ public abstract class DefaultSelectableConfigurationContext
     return ImmutableDefaultSelectableConfigurationContext.of(
         getBuckConfig(), value, getPlatformProvider());
   }
+
+  public static DefaultSelectableConfigurationContext of(
+      BuckConfig buckConfig,
+      TargetConfiguration targetConfiguration,
+      TargetPlatformResolver platformProvider) {
+    return ImmutableDefaultSelectableConfigurationContext.of(
+        buckConfig, targetConfiguration, platformProvider);
+  }
 }

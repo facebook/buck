@@ -16,9 +16,17 @@
 
 package com.facebook.buck.core.rules.analysis.impl;
 
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /** Just here to provide test visibility */
 @BuckStyleValue
 public abstract class FakeLegacyProviderRuleAnalysisResultImpl
-    extends LegacyProviderRuleAnalysisResultImpl {}
+    extends LegacyProviderRuleAnalysisResult {
+
+  public static FakeLegacyProviderRuleAnalysisResultImpl of(
+      BuildTarget buildTarget, ProviderInfoCollection providerInfos) {
+    return ImmutableFakeLegacyProviderRuleAnalysisResultImpl.of(buildTarget, providerInfos);
+  }
+}

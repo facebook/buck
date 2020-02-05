@@ -30,6 +30,7 @@ import com.facebook.buck.command.config.ConfigDifference.ConfigChange;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellName;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.InvalidCellOverrideException;
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.cell.impl.LocalCellProviderFactory;
@@ -731,7 +732,9 @@ public final class MainRunner {
                 architecture,
                 platform,
                 clientEnvironment,
-                buildTargetName -> buildTargetFactory.create(cellPathResolver, buildTargetName));
+                buildTargetName ->
+                    buildTargetFactory.create(
+                        buildTargetName, cellPathResolver.getCellNameResolver()));
       }
 
       // Set so that we can use some settings when we print out messages to users
@@ -854,26 +857,28 @@ public final class MainRunner {
           new DefaultToolchainProviderFactory(
               pluginManager, clientEnvironment, processExecutor, executableFinder);
 
-      Cell rootCell =
-          LocalCellProviderFactory.create(
-                  filesystem,
-                  buckConfig,
-                  command.getConfigOverrides(rootCellMapping),
-                  rootCellCellPathResolver.getPathMapping(),
-                  rootCellCellPathResolver,
-                  moduleManager,
-                  toolchainProviderFactory,
-                  projectFilesystemFactory,
-                  buildTargetFactory)
-              .getCellByPath(filesystem.getRootPath());
+      Cells cells =
+          new Cells(
+              LocalCellProviderFactory.create(
+                      filesystem,
+                      buckConfig,
+                      command.getConfigOverrides(rootCellMapping),
+                      rootCellCellPathResolver.getPathMapping(),
+                      rootCellCellPathResolver,
+                      moduleManager,
+                      toolchainProviderFactory,
+                      projectFilesystemFactory,
+                      buildTargetFactory)
+                  .getCellByPath(filesystem.getRootPath()));
 
       TargetConfigurationSerializer targetConfigurationSerializer =
           new JsonTargetConfigurationSerializer(
-              targetName -> buildTargetFactory.create(rootCell.getCellPathResolver(), targetName));
+              targetName ->
+                  buildTargetFactory.create(targetName, cells.getRootCell().getCellNameResolver()));
 
       Pair<BuckGlobalState, LifecycleStatus> buckGlobalStateRequest =
           buckGlobalStateLifecycleManager.getBuckGlobalState(
-              rootCell,
+              cells.getRootCell(),
               knownRuleTypesProvider,
               watchman,
               printConsole,
@@ -908,16 +913,17 @@ public final class MainRunner {
       ProjectFilesystem rootCellProjectFilesystem =
           projectFilesystemFactory.createOrThrow(
               CanonicalCellName.rootCell(),
-              rootCell.getFilesystem().getRootPath(),
+              cells.getRootCell().getFilesystem().getRootPath(),
               BuckPaths.getBuckOutIncludeTargetConfigHashFromRootCellConfig(config));
-      BuildBuckConfig buildBuckConfig = rootCell.getBuckConfig().getView(BuildBuckConfig.class);
+      BuildBuckConfig buildBuckConfig =
+          cells.getRootCell().getBuckConfig().getView(BuildBuckConfig.class);
       allCaches.addAll(buckGlobalState.getFileHashCaches());
 
-      rootCell
+      cells
           .getAllCells()
           .forEach(
               cell -> {
-                if (!cell.equals(rootCell)) {
+                if (cell.getCanonicalName() != CanonicalCellName.rootCell()) {
                   allCaches.add(
                       DefaultFileHashCache.createBuckOutFileHashCache(
                           cell.getFilesystem(), buildBuckConfig.getFileHashCacheMode()));
@@ -988,7 +994,8 @@ public final class MainRunner {
               bgTaskManager.getNewScope(
                   buildId,
                   !context.isPresent()
-                      || rootCell
+                      || cells
+                          .getRootCell()
                           .getBuckConfig()
                           .getView(CliConfig.class)
                           .getFlushEventsBeforeExit());
@@ -1169,7 +1176,8 @@ public final class MainRunner {
                 new ArtifactCaches(
                     cacheBuckConfig,
                     buildEventBus,
-                    target -> buildTargetFactory.create(cellPathResolver, target),
+                    target ->
+                        buildTargetFactory.create(target, cellPathResolver.getCellNameResolver()),
                     targetConfigurationSerializer,
                     filesystem,
                     executionEnvironment.getWifiSsid(),
@@ -1271,9 +1279,9 @@ public final class MainRunner {
           eventListeners =
               addEventListeners(
                   buildEventBus,
-                  rootCell.getFilesystem(),
+                  cells.getRootCell().getFilesystem(),
                   invocationInfo,
-                  rootCell.getBuckConfig(),
+                  cells.getRootCell().getBuckConfig(),
                   webServer,
                   clock,
                   executionEnvironment,
@@ -1289,7 +1297,7 @@ public final class MainRunner {
           if (logBuckConfig.isBuckConfigLocalWarningEnabled()
               && !printConsole.getVerbosity().isSilent()) {
             ImmutableList<Path> localConfigFiles =
-                rootCell.getAllCells().stream()
+                cells.getAllCells().stream()
                     .map(
                         cell ->
                             cell.getRoot().resolve(Configs.DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME))
@@ -1332,7 +1340,7 @@ public final class MainRunner {
           VersionControlStatsGenerator vcStatsGenerator =
               new VersionControlStatsGenerator(
                   new DelegatingVersionControlCmdLineInterface(
-                      rootCell.getFilesystem().getRootPath(),
+                      cells.getRootCell().getFilesystem().getRootPath(),
                       new PrintStreamProcessExecutorFactory(),
                       vcBuckConfig.getHgCmd(),
                       buckConfig.getEnvironment()),
@@ -1367,12 +1375,12 @@ public final class MainRunner {
                   : filteredUnexpandedArgsForLogging.subList(
                       1, filteredUnexpandedArgsForLogging.size());
 
-          Path absoluteClientPwd = getClientPwd(rootCell, clientEnvironment);
+          Path absoluteClientPwd = getClientPwd(cells.getRootCell(), clientEnvironment);
           CommandEvent.Started startedEvent =
               CommandEvent.started(
                   command.getDeclaredSubCommandName(),
                   remainingArgs,
-                  rootCell.getRoot().relativize(absoluteClientPwd).normalize(),
+                  cells.getRootCell().getRoot().relativize(absoluteClientPwd).normalize(),
                   context.isPresent()
                       ? OptionalLong.of(buckGlobalState.getUptime())
                       : OptionalLong.empty(),
@@ -1380,12 +1388,13 @@ public final class MainRunner {
           buildEventBus.post(startedEvent);
 
           TargetSpecResolver targetSpecResolver =
-              new TargetSpecResolver(
+              getTargetSpecResolver(
+                  parserConfig,
+                  watchman,
+                  cells.getRootCell(),
+                  buckGlobalState,
                   buildEventBus,
-                  depsAwareExecutorSupplier.get(),
-                  rootCell.getCellProvider(),
-                  buckGlobalState.getDirectoryListCaches(),
-                  buckGlobalState.getFileTreeCaches());
+                  depsAwareExecutorSupplier);
 
           // This also queries watchman, posts events to global and local event buses and
           // invalidates all related caches
@@ -1398,7 +1407,7 @@ public final class MainRunner {
                   buckConfig,
                   watchman,
                   knownRuleTypesProvider,
-                  rootCell,
+                  cells.getRootCell(),
                   buckGlobalState,
                   buildEventBus,
                   executors,
@@ -1449,7 +1458,7 @@ public final class MainRunner {
                     ImmutableCommandRunnerParams.of(
                         printConsole,
                         stdIn,
-                        rootCell,
+                        cells,
                         watchman,
                         parserAndCaches.getVersionedTargetGraphCache(),
                         artifactCacheFactory,
@@ -1462,7 +1471,8 @@ public final class MainRunner {
                         buildEventBus,
                         platform,
                         clientEnvironment,
-                        rootCell
+                        cells
+                            .getRootCell()
                             .getBuckConfig()
                             .getView(JavaBuckConfig.class)
                             .createDefaultJavaPackageFinder(),
@@ -1549,6 +1559,31 @@ public final class MainRunner {
       }
     }
     return exitCode;
+  }
+
+  private TargetSpecResolver getTargetSpecResolver(
+      ParserConfig parserConfig,
+      Watchman watchman,
+      Cell rootCell,
+      BuckGlobalState buckGlobalState,
+      DefaultBuckEventBus buildEventBus,
+      CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>>
+          depsAwareExecutorSupplier) {
+
+    ParserConfig.BuildFileSearchMethod searchMethod = parserConfig.getBuildFileSearchMethod();
+    switch (searchMethod) {
+      case FILESYSTEM_CRAWL:
+        return TargetSpecResolver.createWithFileSystemCrawler(
+            buildEventBus,
+            depsAwareExecutorSupplier.get(),
+            rootCell.getCellProvider(),
+            buckGlobalState.getDirectoryListCaches(),
+            buckGlobalState.getFileTreeCaches());
+      case WATCHMAN:
+        return TargetSpecResolver.createWithWatchmanCrawler(
+            buildEventBus, watchman, depsAwareExecutorSupplier.get(), rootCell.getCellProvider());
+    }
+    throw new IllegalStateException("Unexpected build file search method: " + searchMethod);
   }
 
   private Path getClientPwd(Cell rootCell, ImmutableMap<String, String> clientEnvironment) {

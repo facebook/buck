@@ -19,6 +19,7 @@ package com.facebook.buck.testutil;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.facebook.buck.io.file.MostFiles;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.rules.keys.config.impl.BuckVersion;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.environment.Platform;
@@ -205,6 +206,18 @@ public abstract class AbstractWorkspace {
   public void removeBuckConfigLocalOption(String section, String key) throws IOException {
     getBuckConfigLocalSection(section).remove(key);
     saveBuckConfigLocal();
+  }
+
+  /**
+   * Overrides buckconfig options with the given project.build_file_search_method
+   *
+   * @throws IOException when saving the new BuckConfigLocal has an issue
+   * @see AbstractWorkspace#addBuckConfigLocalOption(String, String, String)
+   */
+  public void setBuildFileSearchMethodConfig(
+      ParserConfig.BuildFileSearchMethod buildFileSearchMethod) throws IOException {
+    addBuckConfigLocalOption(
+        "project", "build_file_search_method", buildFileSearchMethod.toString());
   }
 
   /** Stamp the buck-out directory if it exists and isn't stamped already */

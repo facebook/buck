@@ -20,8 +20,8 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
-import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
 import com.facebook.buck.core.artifact.OutputArtifact;
+import com.facebook.buck.core.artifact.SourceArtifactImpl;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildPaths;
@@ -69,9 +69,8 @@ public class CommandLineArgStringifierTest {
   public void convertsArtifactToString() {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     Artifact artifact =
-        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("foo", "bar.cpp")));
-    Artifact shortArtifact =
-        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("foo")));
+        SourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("foo", "bar.cpp")));
+    Artifact shortArtifact = SourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("foo")));
 
     assertEquals(
         Paths.get("foo", "bar.cpp").toString(),

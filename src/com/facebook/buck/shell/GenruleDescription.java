@@ -19,13 +19,13 @@ package com.facebook.buck.shell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.path.GenruleOutPath;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.sandbox.SandboxConfig;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
@@ -38,14 +38,11 @@ import org.immutables.value.Value;
 public class GenruleDescription extends AbstractGenruleDescription<GenruleDescriptionArg>
     implements VersionRoot<GenruleDescriptionArg> {
 
-  private final BuckConfig buckConfig;
-
   public GenruleDescription(
       ToolchainProvider toolchainProvider,
       BuckConfig buckConfig,
       SandboxExecutionStrategy sandboxExecutionStrategy) {
-    super(toolchainProvider, sandboxExecutionStrategy, false);
-    this.buckConfig = buckConfig;
+    super(toolchainProvider, buckConfig, sandboxExecutionStrategy, false);
   }
 
   @Override
@@ -63,11 +60,6 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
       Optional<Arg> cmd,
       Optional<Arg> bash,
       Optional<Arg> cmdExe) {
-    boolean executeRemotely = args.getRemote().orElse(false);
-    if (executeRemotely) {
-      RemoteExecutionConfig reConfig = buckConfig.getView(RemoteExecutionConfig.class);
-      executeRemotely = reConfig.shouldUseRemoteExecutionForGenruleIfRequested();
-    }
     if (!args.getExecutable().orElse(false)) {
       SandboxConfig sandboxConfig = buckConfig.getView(SandboxConfig.class);
       return new Genrule(
@@ -87,7 +79,7 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
           args.getCacheable().orElse(true),
           args.getEnvironmentExpansionSeparator(),
           getAndroidToolsOptional(args, buildTarget.getTargetConfiguration()),
-          executeRemotely);
+          canExecuteRemotely(args));
     } else {
       return new GenruleBinary(
           buildTarget,
@@ -104,7 +96,7 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
           args.getCacheable().orElse(true),
           args.getEnvironmentExpansionSeparator(),
           getAndroidToolsOptional(args, buildTarget.getTargetConfiguration()),
-          executeRemotely);
+          canExecuteRemotely(args));
     }
   }
 
@@ -128,6 +120,12 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
       if (!(getOut().isPresent() ^ getOuts().isPresent())) {
         throw new HumanReadableException(
             "One and only one of 'out' or 'outs' must be present in genrule.");
+      }
+      // Lets check if out fields are valid GenruleOutPath
+      if (getOut().isPresent()) {
+        GenruleOutPath.of(getOut().get());
+      } else if (getOuts().isPresent()) {
+        getOuts().get().forEach((key, paths) -> paths.forEach(path -> GenruleOutPath.of(path)));
       }
     }
   }

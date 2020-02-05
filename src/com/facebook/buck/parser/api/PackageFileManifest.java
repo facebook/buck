@@ -31,7 +31,7 @@ import java.util.Optional;
 public abstract class PackageFileManifest implements ComputeResult, FileManifest {
 
   /** A singleton instance of a manifest with an empty package metadata. */
-  public static final ImmutablePackageFileManifest EMPTY_SINGLETON =
+  public static final PackageFileManifest EMPTY_SINGLETON =
       ImmutablePackageFileManifest.of(
           PackageMetadata.EMPTY_SINGLETON,
           ImmutableSortedSet.of(),
@@ -40,7 +40,7 @@ public abstract class PackageFileManifest implements ComputeResult, FileManifest
           ImmutableList.of());
 
   /** Contains the package defined in the build file. */
-  public abstract ImmutablePackageMetadata getPackage();
+  public abstract PackageMetadata getPackage();
 
   @Override
   public abstract ImmutableSortedSet<String> getIncludes();
@@ -53,4 +53,13 @@ public abstract class PackageFileManifest implements ComputeResult, FileManifest
 
   @Override
   public abstract ImmutableList<ParsingError> getErrors();
+
+  public static PackageFileManifest of(
+      PackageMetadata getPackage,
+      ImmutableSortedSet<String> includes,
+      ImmutableMap<String, Object> configs,
+      Optional<ImmutableMap<String, Optional<String>>> env,
+      ImmutableList<ParsingError> errors) {
+    return ImmutablePackageFileManifest.of(getPackage, includes, configs, env, errors);
+  }
 }

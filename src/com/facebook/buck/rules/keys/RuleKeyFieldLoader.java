@@ -65,6 +65,8 @@ public class RuleKeyFieldLoader {
     // name and so the following fields will never collide with other stuff.
     builder.setReflectively(".cache_key_seed", ruleKeyConfiguration.getSeed());
     builder.setReflectively(".target_name", action.getBuildTarget().getFullyQualifiedName());
+    builder.setReflectively(
+        ".target_conf", action.getBuildTarget().getTargetConfiguration().toString());
     builder.setReflectively(".buck_core_key", ruleKeyConfiguration.getCoreKey());
     builder.setReflectively(".rule_key_type", ruleKeyType);
 

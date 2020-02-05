@@ -60,6 +60,10 @@ public abstract class OutputAttribute extends Attribute<String> {
     return this::postCoercionTransform;
   }
 
+  public static OutputAttribute of(Object preCoercionDefaultValue, String doc, boolean mandatory) {
+    return ImmutableOutputAttribute.of(preCoercionDefaultValue, doc, mandatory);
+  }
+
   Artifact postCoercionTransform(Object coercedValue, RuleAnalysisContext analysisContext) {
     return OutputAttributeValidator.validateAndRegisterArtifact(
         coercedValue, analysisContext.actionRegistry());

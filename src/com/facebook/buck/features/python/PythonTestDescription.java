@@ -19,6 +19,7 @@ package com.facebook.buck.features.python;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.HasContacts;
 import com.facebook.buck.core.description.arg.HasTestTimeout;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
@@ -336,7 +337,10 @@ public class PythonTestDescription
     CellPathResolver cellRoots = context.getCellPathResolver();
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.of(
-            buildTarget, cellRoots, graphBuilder, PythonUtil.MACRO_EXPANDERS);
+            buildTarget,
+            cellRoots.getCellNameResolver(),
+            graphBuilder,
+            PythonUtil.macroExpanders(context.getTargetGraph()));
     PythonPackageComponents allComponents =
         PythonUtil.getAllComponents(
             cellRoots,
@@ -359,6 +363,7 @@ public class PythonTestDescription
     buildTarget.assertUnflavored();
     PythonBinary binary =
         binaryDescription.createPackageRule(
+            cellRoots,
             buildTarget.withAppendedFlavors(BINARY_FLAVOR),
             projectFilesystem,
             params,
@@ -484,7 +489,7 @@ public class PythonTestDescription
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       AbstractPythonTestDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
@@ -532,7 +537,7 @@ public class PythonTestDescription
 
     ImmutableList<NeededCoverageSpec> getNeededCoverage();
 
-    ImmutableList<String> getBuildArgs();
+    ImmutableList<StringWithMacros> getBuildArgs();
 
     ImmutableMap<String, StringWithMacros> getEnv();
 

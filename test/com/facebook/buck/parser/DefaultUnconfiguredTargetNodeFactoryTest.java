@@ -18,7 +18,7 @@ package com.facebook.buck.parser;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
@@ -36,9 +36,9 @@ import com.facebook.buck.core.select.SelectorKey;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.impl.SelectorFactory;
 import com.facebook.buck.core.select.impl.SelectorListFactory;
-import com.facebook.buck.parser.api.ImmutablePackageMetadata;
-import com.facebook.buck.parser.syntax.ImmutableListWithSelects;
-import com.facebook.buck.parser.syntax.ImmutableSelectorValue;
+import com.facebook.buck.parser.api.PackageMetadata;
+import com.facebook.buck.parser.syntax.ListWithSelects;
+import com.facebook.buck.parser.syntax.SelectorValue;
 import com.facebook.buck.rules.coercer.JsonTypeConcatenatingCoercerFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -54,7 +54,7 @@ import org.junit.rules.ExpectedException;
 public class DefaultUnconfiguredTargetNodeFactoryTest {
 
   private DefaultUnconfiguredTargetNodeFactory factory;
-  private Cell cell;
+  private Cells cell;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
@@ -69,7 +69,7 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
         new DefaultUnconfiguredTargetNodeFactory(
             knownRuleTypesProvider,
             new BuiltTargetVerifier(),
-            cell.getCellPathResolver(),
+            cell.getRootCell().getCellPathResolver(),
             new SelectorListFactory(
                 new SelectorFactory(new ParsingUnconfiguredBuildTargetViewFactory())));
   }
@@ -87,9 +87,9 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
             .put("deps", ImmutableList.of("//a/b:d", "//a/b:e"))
             .put(
                 "resources",
-                ImmutableListWithSelects.of(
+                ListWithSelects.of(
                     ImmutableList.of(
-                        ImmutableSelectorValue.of(
+                        SelectorValue.of(
                             ImmutableMap.of(
                                 "//c:a",
                                 ImmutableList.of("//a/b:file1", "//a/b:file2"),
@@ -128,8 +128,8 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
 
     UnconfiguredTargetNode unconfiguredTargetNode =
         factory.create(
-            cell,
-            cell.getRoot().resolve("a/b/BUCK"),
+            cell.getRootCell(),
+            cell.getRootCell().getRoot().resolve("a/b/BUCK"),
             buildTarget,
             DependencyStack.root(),
             inputAttributes,
@@ -152,9 +152,13 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
   }
 
   Package getPackage() {
-    ImmutablePackageMetadata pkg =
-        ImmutablePackageMetadata.of(ImmutableList.of("//a/..."), ImmutableList.of("//d/..."));
+    PackageMetadata pkg =
+        PackageMetadata.of(ImmutableList.of("//a/..."), ImmutableList.of("//d/..."));
 
-    return PackageFactory.create(cell, cell.getRoot().resolve("a/b/BUCK"), pkg, Optional.empty());
+    return PackageFactory.create(
+        cell.getRootCell(),
+        cell.getRootCell().getRoot().resolve("a/b/BUCK"),
+        pkg,
+        Optional.empty());
   }
 }

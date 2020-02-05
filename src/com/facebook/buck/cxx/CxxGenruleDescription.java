@@ -16,7 +16,8 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -117,10 +118,11 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
   private final ImmutableSet<Flavor> declaredPlatforms;
 
   public CxxGenruleDescription(
-      CxxBuckConfig cxxBuckConfig,
       ToolchainProvider toolchainProvider,
+      BuckConfig buckConfig,
+      CxxBuckConfig cxxBuckConfig,
       SandboxExecutionStrategy sandboxExecutionStrategy) {
-    super(toolchainProvider, sandboxExecutionStrategy, false);
+    super(toolchainProvider, buckConfig, sandboxExecutionStrategy, false);
     this.declaredPlatforms = cxxBuckConfig.getDeclaredPlatforms();
   }
 
@@ -304,7 +306,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       CxxGenruleDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {

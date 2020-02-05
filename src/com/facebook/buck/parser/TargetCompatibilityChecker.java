@@ -23,17 +23,14 @@ import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
-import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.configsetting.ConfigSettingRule;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
- * Checks whether a list of constraints listed in {@code target_compatible_with} attribute of a
- * target is compatible with a given platform.
+ * Checks whether a list of constraints listed in {@code compatible_with} attribute of a target is
+ * compatible with a given platform.
  */
 class TargetCompatibilityChecker {
 
@@ -52,21 +49,6 @@ class TargetCompatibilityChecker {
     }
     BuildRuleArg argWithTargetCompatible = (BuildRuleArg) targetNodeArg;
     ConstraintResolver constraintResolver = configurationRuleRegistry.getConstraintResolver();
-
-    List<ConstraintValue> targetCompatibleWithConstraints =
-        argWithTargetCompatible.getTargetCompatibleWith().stream()
-            .map(ConfigurationBuildTargets::convert)
-            .map(
-                buildTarget ->
-                    constraintResolver.getConstraintValue(
-                        buildTarget, dependencyStack.child(buildTarget)))
-            .collect(Collectors.toList());
-    if (!targetCompatibleWithConstraints.isEmpty()) {
-      // Empty `target_compatible_with` means target is compatible.
-      if (!platform.matchesAll(targetCompatibleWithConstraints, dependencyStack)) {
-        return false;
-      }
-    }
 
     if (!argWithTargetCompatible.getCompatibleWith().isEmpty()) {
       ConfigurationRuleResolver configurationRuleResolver =

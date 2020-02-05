@@ -18,7 +18,7 @@ package com.facebook.buck.rules.macros;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -50,7 +50,7 @@ public abstract class StringWithMacrosConverter {
 
   public abstract BuildTarget getBuildTarget();
 
-  public abstract CellPathResolver getCellPathResolver();
+  protected abstract CellNameResolver getCellNameResolver();
 
   public abstract ActionGraphBuilder getActionGraphBuilder();
 
@@ -60,12 +60,12 @@ public abstract class StringWithMacrosConverter {
 
   public static StringWithMacrosConverter of(
       BuildTarget buildTarget,
-      CellPathResolver cellPathResolver,
+      CellNameResolver cellNameResolver,
       ActionGraphBuilder actionGraphBuilder,
       ImmutableList<MacroExpander<? extends Macro, ?>> expanders) {
     return of(
         buildTarget,
-        cellPathResolver,
+        cellNameResolver,
         actionGraphBuilder,
         expanders,
         Optional.empty(),
@@ -74,25 +74,25 @@ public abstract class StringWithMacrosConverter {
 
   public static StringWithMacrosConverter of(
       BuildTarget buildTarget,
-      CellPathResolver cellPathResolver,
+      CellNameResolver cellNameResolver,
       ActionGraphBuilder actionGraphBuilder,
       ImmutableList<MacroExpander<? extends Macro, ?>> expanders,
       Optional<Function<String, String>> sanitizer) {
     return of(
-        buildTarget, cellPathResolver, actionGraphBuilder, expanders, sanitizer, new HashMap<>());
+        buildTarget, cellNameResolver, actionGraphBuilder, expanders, sanitizer, new HashMap<>());
   }
 
   @SuppressWarnings("PMD.LooseCoupling")
   public static StringWithMacrosConverter of(
       BuildTarget buildTarget,
-      CellPathResolver cellPathResolver,
+      CellNameResolver cellNameResolver,
       ActionGraphBuilder actionGraphBuilder,
       ImmutableList<MacroExpander<? extends Macro, ?>> expanders,
       Optional<Function<String, String>> sanitizer,
       HashMap<Macro, Object> precomputedWorkCache) {
     return ImmutableStringWithMacrosConverter.of(
         buildTarget,
-        cellPathResolver,
+        cellNameResolver,
         actionGraphBuilder,
         expanders,
         sanitizer,
@@ -133,7 +133,7 @@ public abstract class StringWithMacrosConverter {
     if (precomputedWork == null) {
       precomputedWork =
           expander.precomputeWorkFrom(
-              getBuildTarget(), getCellPathResolver(), getActionGraphBuilder(), macro);
+              getBuildTarget(), getCellNameResolver(), getActionGraphBuilder(), macro);
       getPrecomputedWorkCache().put(macro, precomputedWork);
     }
 

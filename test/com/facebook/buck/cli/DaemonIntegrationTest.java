@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.io.watchman.WatchmanWatcher;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.TestBackgroundTaskManager;
 import com.facebook.buck.testutil.ProcessResult;
@@ -53,11 +54,15 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
+@RunWith(JUnitParamsRunner.class)
 public class DaemonIntegrationTest {
 
   private ScheduledExecutorService executorService;
@@ -224,6 +229,23 @@ public class DaemonIntegrationTest {
     workspace
         .runBuckdCommand("build", "//java/com/example/activity:activity")
         .assertExitCode(null, ExitCode.PARSE_ERROR);
+  }
+
+  @Parameters({"FILESYSTEM_CRAWL", "WATCHMAN"})
+  @Test
+  public void whenAppBuckFileRemovedThenFailingRecursiveRebuildSucceeds(
+      ParserConfig.BuildFileSearchMethod buildFileSearchMethod) throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "file_watching", tmp);
+    workspace.setUp();
+    workspace.setBuildFileSearchMethodConfig(buildFileSearchMethod);
+
+    String appBuckFile = "apps/myapp/BUCK";
+    Files.write(workspace.getPath(appBuckFile), "Some Illegal Python".getBytes(Charsets.UTF_8));
+    workspace.runBuckdCommand("build", "//apps/...").assertExitCode(null, ExitCode.PARSE_ERROR);
+
+    Files.delete(workspace.getPath(appBuckFile));
+    workspace.runBuckdCommand("build", "//apps/...").assertSuccess();
   }
 
   @Test

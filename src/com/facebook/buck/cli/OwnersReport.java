@@ -155,24 +155,28 @@ final class OwnersReport {
 
   static Builder builder(
       Cell rootCell,
+      Path clientWorkingDir,
       Parser parser,
       PerBuildState parserState,
       Optional<TargetConfiguration> targetConfiguration) {
-    return new Builder(rootCell, parser, parserState, targetConfiguration);
+    return new Builder(rootCell, clientWorkingDir, parser, parserState, targetConfiguration);
   }
 
   static final class Builder {
     private final Cell rootCell;
+    private final Path clientWorkingDir;
     private final Parser parser;
     private final PerBuildState parserState;
     private final Optional<TargetConfiguration> targetConfiguration;
 
     private Builder(
         Cell rootCell,
+        Path clientWorkingDir,
         Parser parser,
         PerBuildState parserState,
         Optional<TargetConfiguration> targetConfiguration) {
       this.rootCell = rootCell;
+      this.clientWorkingDir = clientWorkingDir;
       this.parser = parser;
       this.parserState = parserState;
       this.targetConfiguration = targetConfiguration;
@@ -241,8 +245,8 @@ final class OwnersReport {
 
       Map<Optional<Cell>, List<Path>> argumentsByCell =
           RichStream.from(arguments)
-              // Assume paths given are relative to root cell.
-              .map(rootCellFilesystem::getPathForRelativePath)
+              // Assume paths given are relative to client's working directory.
+              .map(clientWorkingDir::resolve)
               // Filter out any non-existent paths.
               .filter(Files::exists)
               // Resolve them all to absolute paths.
@@ -267,7 +271,7 @@ final class OwnersReport {
                       }));
       ImmutableSet<String> missingFiles =
           RichStream.from(arguments)
-              .filter(f -> !Files.exists(rootCellFilesystem.getPathForRelativePath(f)))
+              .filter(f -> !Files.exists(clientWorkingDir.resolve(f)))
               .map(MorePaths::pathWithPlatformSeparators)
               .toImmutableSet();
 

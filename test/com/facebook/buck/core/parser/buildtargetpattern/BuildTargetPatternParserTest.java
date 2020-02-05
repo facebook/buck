@@ -46,7 +46,7 @@ public class BuildTargetPatternParserTest {
     return new Object[] {
       new Object[] {
         "cell//path/to:target",
-        ImmutableBuildTargetPattern.of(
+        BuildTargetPattern.of(
             CellRelativePath.of(
                 CanonicalCellName.unsafeOf(Optional.of("cell")), ForwardRelativePath.of("path/to")),
             Kind.SINGLE,
@@ -54,21 +54,21 @@ public class BuildTargetPatternParserTest {
       },
       new Object[] {
         "//path/to:target",
-        ImmutableBuildTargetPattern.of(
+        BuildTargetPattern.of(
             CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelativePath.of("path/to")),
             Kind.SINGLE,
             "target")
       },
       new Object[] {
         "//path/to",
-        ImmutableBuildTargetPattern.of(
+        BuildTargetPattern.of(
             CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelativePath.of("path/to")),
             Kind.SINGLE,
             "to")
       },
       new Object[] {
         "cell//path/to",
-        ImmutableBuildTargetPattern.of(
+        BuildTargetPattern.of(
             CellRelativePath.of(
                 CanonicalCellName.unsafeOf(Optional.of("cell")), ForwardRelativePath.of("path/to")),
             Kind.SINGLE,
@@ -76,21 +76,21 @@ public class BuildTargetPatternParserTest {
       },
       new Object[] {
         "//root",
-        ImmutableBuildTargetPattern.of(
+        BuildTargetPattern.of(
             CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelativePath.of("root")),
             Kind.SINGLE,
             "root")
       },
       new Object[] {
         "//:target",
-        ImmutableBuildTargetPattern.of(
+        BuildTargetPattern.of(
             CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelativePath.of("")),
             Kind.SINGLE,
             "target")
       },
       new Object[] {
         "cell//path/to/...",
-        ImmutableBuildTargetPattern.of(
+        BuildTargetPattern.of(
             CellRelativePath.of(
                 CanonicalCellName.unsafeOf(Optional.of("cell")), ForwardRelativePath.of("path/to")),
             Kind.RECURSIVE,
@@ -98,21 +98,21 @@ public class BuildTargetPatternParserTest {
       },
       new Object[] {
         "//path/to/...",
-        ImmutableBuildTargetPattern.of(
+        BuildTargetPattern.of(
             CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelativePath.of("path/to")),
             Kind.RECURSIVE,
             "")
       },
       new Object[] {
         "//...",
-        ImmutableBuildTargetPattern.of(
+        BuildTargetPattern.of(
             CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelativePath.of("")),
             Kind.RECURSIVE,
             "")
       },
       new Object[] {
         "cell//...",
-        ImmutableBuildTargetPattern.of(
+        BuildTargetPattern.of(
             CellRelativePath.of(
                 CanonicalCellName.unsafeOf(Optional.of("cell")), ForwardRelativePath.of("")),
             Kind.RECURSIVE,
@@ -120,14 +120,14 @@ public class BuildTargetPatternParserTest {
       },
       new Object[] {
         "//path/to:",
-        ImmutableBuildTargetPattern.of(
+        BuildTargetPattern.of(
             CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelativePath.of("path/to")),
             Kind.PACKAGE,
             "")
       },
       new Object[] {
         "cell//path/to:",
-        ImmutableBuildTargetPattern.of(
+        BuildTargetPattern.of(
             CellRelativePath.of(
                 CanonicalCellName.unsafeOf(Optional.of("cell")), ForwardRelativePath.of("path/to")),
             Kind.PACKAGE,
@@ -135,14 +135,14 @@ public class BuildTargetPatternParserTest {
       },
       new Object[] {
         "//:",
-        ImmutableBuildTargetPattern.of(
+        BuildTargetPattern.of(
             CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelativePath.of("")),
             Kind.PACKAGE,
             "")
       },
       new Object[] {
         "a//b:c",
-        ImmutableBuildTargetPattern.of(
+        BuildTargetPattern.of(
             CellRelativePath.of(
                 CanonicalCellName.unsafeOf(Optional.of("a")), ForwardRelativePath.of("b")),
             Kind.SINGLE,
@@ -150,7 +150,7 @@ public class BuildTargetPatternParserTest {
       },
       new Object[] {
         "a//b",
-        ImmutableBuildTargetPattern.of(
+        BuildTargetPattern.of(
             CellRelativePath.of(
                 CanonicalCellName.unsafeOf(Optional.of("a")), ForwardRelativePath.of("b")),
             Kind.SINGLE,
@@ -158,7 +158,7 @@ public class BuildTargetPatternParserTest {
       },
       new Object[] {
         "//a",
-        ImmutableBuildTargetPattern.of(
+        BuildTargetPattern.of(
             CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelativePath.of("a")),
             Kind.SINGLE,
             "a")

@@ -19,7 +19,7 @@ package com.facebook.buck.rules.keys;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.artifact.Artifact;
-import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
+import com.facebook.buck.core.artifact.SourceArtifactImpl;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -137,7 +137,7 @@ public class ContentAgnosticRuleKeyFactoryTest {
         new FakeAction(
             actionRegistry,
             ImmutableSortedSet.of(),
-            ImmutableSortedSet.of(ImmutableSourceArtifactImpl.of(sourcePath)),
+            ImmutableSortedSet.of(SourceArtifactImpl.of(sourcePath)),
             ImmutableSortedSet.of(artifact),
             (ignored, ignored1, ignored2, ignored3) ->
                 ActionExecutionResult.success(

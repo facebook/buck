@@ -19,6 +19,7 @@ package com.facebook.buck.doctor.config;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
+import java.util.Map;
 
 @BuckStyleValue
 public interface UserLocalConfiguration {
@@ -28,4 +29,12 @@ public interface UserLocalConfiguration {
   ImmutableMap<Path, String> getLocalConfigsContents();
 
   ImmutableMap<String, String> getConfigOverrides();
+
+  static ImmutableUserLocalConfiguration of(
+      boolean noBuckCheckPresent,
+      Map<? extends Path, ? extends String> localConfigsContents,
+      Map<String, ? extends String> configOverrides) {
+    return ImmutableUserLocalConfiguration.of(
+        noBuckCheckPresent, localConfigsContents, configOverrides);
+  }
 }

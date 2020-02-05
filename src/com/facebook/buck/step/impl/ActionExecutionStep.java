@@ -21,7 +21,6 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.actions.ActionExecutionContext;
 import com.facebook.buck.core.rules.actions.ActionExecutionResult;
-import com.facebook.buck.core.rules.actions.ImmutableActionExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -45,7 +44,7 @@ public class ActionExecutionStep implements Step {
   public StepExecutionResult execute(ExecutionContext context) throws IOException {
 
     ActionExecutionContext executionContext =
-        ImmutableActionExecutionContext.of(
+        ActionExecutionContext.of(
             context.getBuckEventBus(),
             artifactFilesystem,
             context.getProcessExecutor(),

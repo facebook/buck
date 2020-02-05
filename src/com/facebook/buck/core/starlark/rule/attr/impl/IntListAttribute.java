@@ -60,4 +60,12 @@ public abstract class IntListAttribute extends Attribute<ImmutableList<Integer>>
       throw new CoerceFailedException("List of ints may not be empty");
     }
   }
+
+  public static IntListAttribute of(
+      ImmutableList<Integer> preCoercionDefaultValue,
+      String doc,
+      boolean mandatory,
+      boolean allowEmpty) {
+    return ImmutableIntListAttribute.of(preCoercionDefaultValue, doc, mandatory, allowEmpty);
+  }
 }

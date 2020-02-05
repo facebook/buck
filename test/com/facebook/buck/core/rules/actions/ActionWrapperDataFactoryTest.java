@@ -23,7 +23,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.BuildArtifact;
-import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
+import com.facebook.buck.core.artifact.SourceArtifactImpl;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildPaths;
@@ -68,7 +68,7 @@ public class ActionWrapperDataFactoryTest {
         new DefaultActionRegistry(target, actionAnalysisDataRegistry, filesystem);
     ImmutableSortedSet<Artifact> inputs =
         ImmutableSortedSet.of(
-            ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("myinput"))));
+            SourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("myinput"))));
 
     Artifact output = actionRegistry.declareArtifact(Paths.get("myoutput"));
     ImmutableSortedSet<Artifact> outputs = ImmutableSortedSet.of(output);

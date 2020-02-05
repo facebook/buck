@@ -31,7 +31,6 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
-import com.facebook.buck.core.model.ImmutableRuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.TargetConfigurationTransformer;
@@ -62,7 +61,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.parser.ImmutableDefaultSelectableConfigurationContext;
+import com.facebook.buck.parser.DefaultSelectableConfigurationContext;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -548,7 +547,7 @@ public class ConstructorArgMarshallerImmutableTest {
     TargetPlatformResolver targetPlatformResolver =
         (configuration, dependencyStack) -> UnconfiguredPlatform.INSTANCE;
     SelectableConfigurationContext selectableConfigurationContext =
-        ImmutableDefaultSelectableConfigurationContext.of(
+        DefaultSelectableConfigurationContext.of(
             FakeBuckConfig.builder().build(),
             UnconfiguredTargetConfiguration.INSTANCE,
             targetPlatformResolver);
@@ -677,9 +676,9 @@ public class ConstructorArgMarshallerImmutableTest {
     TargetConfigurationTransformer targetConfigurationTransformer =
         new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver);
     SelectableConfigurationContext selectableConfigurationContext =
-        ImmutableDefaultSelectableConfigurationContext.of(
+        DefaultSelectableConfigurationContext.of(
             FakeBuckConfig.builder().build(),
-            ImmutableRuleBasedTargetConfiguration.of(multiPlatformTarget),
+            RuleBasedTargetConfiguration.of(multiPlatformTarget),
             targetPlatformResolver);
 
     DtoWithSplit dto =
@@ -714,8 +713,8 @@ public class ConstructorArgMarshallerImmutableTest {
     TargetConfigurationTransformer targetConfigurationTransformer =
         new MultiPlatformTargetConfigurationTransformer(
             (configuration, dependencyStack) -> UnconfiguredPlatform.INSTANCE);
-    ImmutableRuleBasedTargetConfiguration execConfiguration =
-        ImmutableRuleBasedTargetConfiguration.of(
+    RuleBasedTargetConfiguration execConfiguration =
+        RuleBasedTargetConfiguration.of(
             ConfigurationBuildTargetFactoryForTests.newInstance("//:p"));
     DtoWithExec d =
         marshaller.populate(

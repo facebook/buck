@@ -17,8 +17,9 @@
 package com.facebook.buck.core.artifact.converter;
 
 import com.facebook.buck.core.artifact.Artifact;
-import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
+import com.facebook.buck.core.artifact.SourceArtifactImpl;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -26,7 +27,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import java.util.NoSuchElementException;
+import java.util.Set;
 
 /**
  * Utility class to resolve specified {@link com.facebook.buck.core.sourcepath.SourcePath} into
@@ -44,22 +45,23 @@ public class SourceArtifactConverter {
   public static Artifact getArtifactsFromSrc(
       SourcePath src, ImmutableMap<BuildTarget, ProviderInfoCollection> deps) {
     if (src instanceof BuildTargetSourcePath) {
-      BuildTarget target = ((BuildTargetSourcePath) src).getTarget();
-      ProviderInfoCollection providerInfos = deps.get(target);
+      BuildTargetWithOutputs targetWithOutputs =
+          ((BuildTargetSourcePath) src).getTargetWithOutputs();
+      ProviderInfoCollection providerInfos = deps.get(targetWithOutputs.getBuildTarget());
       if (providerInfos == null) {
         throw new IllegalStateException(String.format("Deps %s did not contain %s", deps, src));
       }
-
-      try {
-        return Iterables.getOnlyElement(providerInfos.getDefaultInfo().defaultOutputs());
-      } catch (NoSuchElementException | IllegalArgumentException e) {
+      Set<Artifact> artifacts =
+          DefaultInfoArtifactsRetriever.getArtifacts(
+              providerInfos.getDefaultInfo(), targetWithOutputs);
+      if (artifacts.size() != 1) {
         throw new IllegalStateException(
             String.format(
-                "%s must have exactly one output, but had %s outputs",
-                src, providerInfos.getDefaultInfo().defaultOutputs().size()));
+                "%s must have exactly one output, but had %s outputs", src, artifacts.size()));
       }
+      return Iterables.getOnlyElement(artifacts);
     } else if (src instanceof PathSourcePath) {
-      return ImmutableSourceArtifactImpl.of((PathSourcePath) src);
+      return SourceArtifactImpl.of((PathSourcePath) src);
     } else {
       throw new IllegalStateException(
           String.format("%s must either be a source file, or a BuildTarget", src));

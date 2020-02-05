@@ -17,8 +17,10 @@
 package com.facebook.buck.io.filesystem;
 
 import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.io.watchman.Capability;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.FileVisitOption;
@@ -145,4 +147,6 @@ public interface ProjectFilesystemView {
    */
   void writeLinesToPath(Iterable<String> lines, Path path, FileAttribute<?>... attrs)
       throws IOException;
+
+  ImmutableList<String> toWatchmanQuery(Set<Capability> capabilities);
 }

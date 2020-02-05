@@ -170,7 +170,7 @@ public class ActionGraphSerializer {
   /** Data object that is used to serialize action graph information into a file */
   @BuckStyleValue
   @JsonSerialize
-  @JsonDeserialize
+  @JsonDeserialize(as = ImmutableActionGraphData.class)
   public interface ActionGraphData {
 
     String getTargetId();

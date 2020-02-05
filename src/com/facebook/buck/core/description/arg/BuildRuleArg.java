@@ -45,15 +45,6 @@ public interface BuildRuleArg extends ConstructorArg {
   @Hint(isDep = false, isConfigurable = false)
   Optional<UnconfiguredBuildTargetView> getDefaultTargetPlatform();
 
-  /**
-   * A list of {@code constraint_value} rules a target is compatible with.
-   *
-   * <p>This parameter is deprecated, and will be removed as soon as last user migrates to {@link
-   * #getCompatibleWith()}.
-   */
-  @Hint(isDep = false)
-  ImmutableList<UnconfiguredBuildTargetView> getTargetCompatibleWith();
-
   /** A list of {@code config_setting} a target is compatible with. */
   @Hint(isDep = false, isConfigurable = false)
   ImmutableList<UnconfiguredBuildTargetView> getCompatibleWith();

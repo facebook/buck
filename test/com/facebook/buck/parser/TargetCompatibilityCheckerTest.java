@@ -42,7 +42,6 @@ import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
-import com.facebook.buck.core.rules.config.registry.ImmutableConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.configsetting.ConfigSettingRule;
 import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.core.rules.platform.ConstraintSettingRule;
@@ -144,7 +143,7 @@ public class TargetCompatibilityCheckerTest {
           }
         };
     configurationRuleRegistry =
-        ImmutableConfigurationRuleRegistry.of(
+        ConfigurationRuleRegistry.of(
             configurationRuleResolver,
             constraintResolver,
             (configuration, dependencyStack) -> UnconfiguredPlatform.INSTANCE);
@@ -154,95 +153,6 @@ public class TargetCompatibilityCheckerTest {
   public void testTargetNodeIsCompatibleWithEmptyConstraintList() throws Exception {
     ConstructorArg targetNodeArg = createTargetNodeArg(ImmutableMap.of());
     assertTrue(
-        TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
-            configurationRuleRegistry,
-            targetNodeArg,
-            platform,
-            DependencyStack.root(),
-            buckConfig));
-  }
-
-  @Test
-  public void testTargetNodeIsCompatibleWithMatchingConstraintList() throws Exception {
-    ConstructorArg targetNodeArg =
-        createTargetNodeArg(
-            ImmutableMap.of(
-                "targetCompatibleWith",
-                ImmutableList.of(cs1v1.getBuildTarget().getFullyQualifiedName())));
-    assertTrue(
-        TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
-            configurationRuleRegistry,
-            targetNodeArg,
-            platform,
-            DependencyStack.root(),
-            buckConfig));
-  }
-
-  @Test
-  public void testTargetNodeIsNotCompatibleWithNonMatchingConstraintList() throws Exception {
-    ConstructorArg targetNodeArg =
-        createTargetNodeArg(
-            ImmutableMap.of(
-                "targetCompatibleWith",
-                ImmutableList.of(cs1v2.getBuildTarget().getFullyQualifiedName())));
-    assertFalse(
-        TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
-            configurationRuleRegistry,
-            targetNodeArg,
-            platform,
-            DependencyStack.root(),
-            buckConfig));
-  }
-
-  @Test
-  public void testTargetNodeIsNotCompatibleWithNonMatchingPlatformAndNonMatchingConstraintList()
-      throws Exception {
-    ConstructorArg targetNodeArg =
-        createTargetNodeArg(
-            ImmutableMap.of(
-                "compatibleWith",
-                ImmutableList.of(nonCompatibleConfigSetting.getBuildTarget().toString()),
-                "targetCompatibleWith",
-                ImmutableList.of(cs1v2.getBuildTarget().getFullyQualifiedName())));
-    assertFalse(
-        TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
-            configurationRuleRegistry,
-            targetNodeArg,
-            platform,
-            DependencyStack.root(),
-            buckConfig));
-  }
-
-  @Test
-  public void testTargetNodeIsNotCompatibleWithNonMatchingPlatformListAndMatchingConstraintList()
-      throws Exception {
-    ConstructorArg targetNodeArg =
-        createTargetNodeArg(
-            ImmutableMap.of(
-                "compatibleWith",
-                ImmutableList.of(nonCompatibleConfigSetting.getBuildTarget().toString()),
-                "targetCompatibleWith",
-                ImmutableList.of(cs1v1.getBuildTarget().getFullyQualifiedName())));
-    assertFalse(
-        TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
-            configurationRuleRegistry,
-            targetNodeArg,
-            platform,
-            DependencyStack.root(),
-            buckConfig));
-  }
-
-  @Test
-  public void testTargetNodeIsNotCompatibleWithMatchingPlatformListAndNonMatchingConstraintList()
-      throws Exception {
-    ConstructorArg targetNodeArg =
-        createTargetNodeArg(
-            ImmutableMap.of(
-                "compatibleWith",
-                ImmutableList.of(compatibleConfigSetting.getBuildTarget().toString()),
-                "targetCompatibleWith",
-                ImmutableList.of(cs1v2.getBuildTarget().getFullyQualifiedName())));
-    assertFalse(
         TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
             configurationRuleRegistry,
             targetNodeArg,
@@ -276,25 +186,6 @@ public class TargetCompatibilityCheckerTest {
                 ImmutableList.of(
                     compatibleConfigSetting.getBuildTarget().toString(),
                     nonCompatibleConfigSetting.getBuildTarget().toString())));
-    assertTrue(
-        TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
-            configurationRuleRegistry,
-            targetNodeArg,
-            platform,
-            DependencyStack.root(),
-            buckConfig));
-  }
-
-  @Test
-  public void testTargetNodeIsCompatibleWithMatchingPlatformListAndMatchingConstraintList()
-      throws Exception {
-    ConstructorArg targetNodeArg =
-        createTargetNodeArg(
-            ImmutableMap.of(
-                "compatibleWith",
-                ImmutableList.of(compatibleConfigSetting.getBuildTarget().toString()),
-                "targetCompatibleWith",
-                ImmutableList.of(cs1v1.getBuildTarget().getFullyQualifiedName())));
     assertTrue(
         TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
             configurationRuleRegistry,

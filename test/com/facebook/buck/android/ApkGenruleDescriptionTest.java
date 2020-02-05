@@ -20,7 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.targetgraph.FakeTargetNodeBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -64,7 +64,7 @@ public class ApkGenruleDescriptionTest {
                 StringWithMacrosUtils.format(
                     "%s",
                     ClasspathMacro.of(
-                        ImmutableBuildTargetWithOutputs.of(
+                        BuildTargetWithOutputs.of(
                             depNode.getBuildTarget(), OutputLabel.defaultLabel()))))
             .setApk(installableApkTarget)
             .build();

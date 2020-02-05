@@ -147,7 +147,7 @@ public class BuildTargetPatternParser {
     CanonicalCellName canonicalCellName =
         cellNameResolver.getName(cellName.isEmpty() ? Optional.empty() : Optional.of(cellName));
 
-    return ImmutableBuildTargetPattern.of(
+    return BuildTargetPattern.of(
         CellRelativePath.of(canonicalCellName, basePath), kind, targetName);
   }
 

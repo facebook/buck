@@ -97,7 +97,8 @@ public class AuditClasspathCommand extends AbstractCommand {
           params
               .getParser()
               .buildTargetGraph(
-                  createParsingContext(params.getCell(), pool.getListeningExecutorService())
+                  createParsingContext(
+                          params.getCells().getRootCell(), pool.getListeningExecutorService())
                       .withSpeculativeParsing(SpeculativeParsing.ENABLED)
                       .withExcludeUnsupportedTargets(false),
                   targets);
@@ -156,7 +157,7 @@ public class AuditClasspathCommand extends AbstractCommand {
                         params.getBuckEventBus(),
                         ActionGraphFactory.create(
                             params.getBuckEventBus(),
-                            params.getCell().getCellProvider(),
+                            params.getCells().getRootCell().getCellProvider(),
                             params.getExecutors(),
                             params.getDepsAwareExecutorSupplier(),
                             params.getBuckConfig()),
@@ -207,7 +208,7 @@ public class AuditClasspathCommand extends AbstractCommand {
                         params.getBuckEventBus(),
                         ActionGraphFactory.create(
                             params.getBuckEventBus(),
-                            params.getCell().getCellProvider(),
+                            params.getCells().getRootCell().getCellProvider(),
                             params.getExecutors(),
                             params.getDepsAwareExecutorSupplier(),
                             params.getBuckConfig()),

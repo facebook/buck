@@ -58,7 +58,6 @@ import com.facebook.buck.remoteexecution.event.RemoteExecutionSessionEvent;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionStatsProvider;
 import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.support.bgtasks.BackgroundTask;
-import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.test.external.ExternalTestRunEvent;
 import com.facebook.buck.test.external.ExternalTestSpecCalculationEvent;
@@ -266,12 +265,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     ChromeTraceBuildListenerCloseAction closeAction = new ChromeTraceBuildListenerCloseAction();
 
     BackgroundTask<ChromeTraceBuildListenerCloseAction.ChromeTraceBuildListenerCloseArgs> task =
-        ImmutableBackgroundTask
-            .<ChromeTraceBuildListenerCloseAction.ChromeTraceBuildListenerCloseArgs>builder()
-            .setAction(closeAction)
-            .setActionArgs(args)
-            .setName("ChromeTraceBuildListener_close")
-            .build();
+        BackgroundTask.of("ChromeTraceBuildListener_close", closeAction, args);
 
     managerScope.schedule(task);
   }

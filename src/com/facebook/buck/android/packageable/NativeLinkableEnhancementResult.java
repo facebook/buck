@@ -20,6 +20,7 @@ import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Multimap;
 
 /**
  * A simple data object to hold mapping from {@link APKModule} to {@link NativeLinkable} for both
@@ -27,6 +28,13 @@ import com.google.common.collect.ImmutableMultimap;
  */
 @BuckStyleValue
 public interface NativeLinkableEnhancementResult {
+
+  static NativeLinkableEnhancementResult of(
+      Multimap<? extends APKModule, ? extends NativeLinkable> nativeLinkables,
+      Multimap<? extends APKModule, ? extends NativeLinkable> nativeLinkableAssets) {
+    return ImmutableNativeLinkableEnhancementResult.of(nativeLinkables, nativeLinkableAssets);
+  }
+
   /** Native libraries by platform. */
   ImmutableMultimap<APKModule, NativeLinkable> getNativeLinkables();
 

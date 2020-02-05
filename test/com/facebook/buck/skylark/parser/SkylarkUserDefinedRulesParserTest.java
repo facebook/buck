@@ -22,7 +22,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
@@ -68,7 +68,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
   @Rule public ExpectedException thrown = ExpectedException.none();
-  private Cell cell;
+  private Cells cell;
 
   private void setupWorkspace(String scenario) throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, scenario, tmp.getRoot());
@@ -85,11 +85,12 @@ public class SkylarkUserDefinedRulesParserTest {
     return SkylarkProjectBuildFileParserTestUtils.createParserWithOptions(
         skylarkFilesystem,
         eventHandler,
-        SkylarkProjectBuildFileParserTestUtils.getDefaultParserOptions(cell, knownRuleTypesProvider)
+        SkylarkProjectBuildFileParserTestUtils.getDefaultParserOptions(
+                cell.getRootCell(), knownRuleTypesProvider)
             .setUserDefinedRulesState(UserDefinedRulesState.of(true))
             .build(),
         knownRuleTypesProvider,
-        cell);
+        cell.getRootCell());
   }
 
   private Map<String, Object> getSingleRule(Path buildFile)
@@ -641,7 +642,6 @@ public class SkylarkUserDefinedRulesParserTest {
                 .put("licenses", ImmutableSortedSet.of())
                 .put("labels", ImmutableSortedSet.of())
                 .put("default_target_platform", Optional.empty())
-                .put("target_compatible_with", ImmutableList.of())
                 .put("compatible_with", ImmutableList.of())
                 .build());
 
@@ -672,7 +672,6 @@ public class SkylarkUserDefinedRulesParserTest {
                 .put("licenses", ImmutableSortedSet.of())
                 .put("labels", ImmutableSortedSet.of())
                 .put("default_target_platform", Optional.empty())
-                .put("target_compatible_with", ImmutableList.of())
                 .put("compatible_with", ImmutableList.of())
                 .build(),
             "target2",
@@ -685,7 +684,6 @@ public class SkylarkUserDefinedRulesParserTest {
                 .put("licenses", ImmutableSortedSet.of())
                 .put("labels", ImmutableSortedSet.of())
                 .put("default_target_platform", Optional.empty())
-                .put("target_compatible_with", ImmutableList.of())
                 .put("compatible_with", ImmutableList.of())
                 .build());
 
@@ -711,7 +709,7 @@ public class SkylarkUserDefinedRulesParserTest {
     String rule2Identifier = "//subdir:defs.bzl:some_other_rule";
 
     KnownUserDefinedRuleTypes knownUserDefinedRuleTypes =
-        knownRuleTypesProvider.getUserDefinedRuleTypes(cell);
+        knownRuleTypesProvider.getUserDefinedRuleTypes(cell.getRootCell());
 
     assertNull(knownUserDefinedRuleTypes.getRule(rule1Identifier));
     assertNull(knownUserDefinedRuleTypes.getRule(rule2Identifier));
@@ -755,7 +753,7 @@ public class SkylarkUserDefinedRulesParserTest {
     String rule2Identifier = "//subdir:defs.bzl:some_other_rule";
 
     KnownUserDefinedRuleTypes knownUserDefinedRuleTypes =
-        knownRuleTypesProvider.getUserDefinedRuleTypes(cell);
+        knownRuleTypesProvider.getUserDefinedRuleTypes(cell.getRootCell());
     assertNull(knownUserDefinedRuleTypes.getRule(rule1Identifier));
     assertNull(knownUserDefinedRuleTypes.getRule(rule2Identifier));
 

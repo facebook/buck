@@ -32,6 +32,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -39,6 +40,7 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
@@ -56,16 +58,26 @@ import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
+import com.facebook.buck.rules.modern.SerializationTestHelper;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.PathNormalizer;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreType;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.function.Supplier;
 import org.junit.Test;
 
 public class CxxPreprocessAndCompileTest {
@@ -675,5 +687,123 @@ public class CxxPreprocessAndCompileTest {
     ImmutableList<String> actualCompileCommand =
         buildRule.makeMainStep(context, false).getCommand();
     assertEquals(expectedCompileCommand, actualCompileCommand);
+  }
+
+  @JsonIgnoreType
+  abstract class FileSystemMixIn {}
+
+  abstract class MemoizingSupplierMixIn<T> {
+    @JsonIgnore Supplier<T> delegate;
+  }
+
+  abstract class PreprocessorDelegateMixIn {
+    @JsonIgnore Optional<BuildRule> aggregatedDeps;
+  }
+
+  @Test
+  public void testSerialization() throws IOException, ClassNotFoundException {
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    Path includePath = PathNormalizer.toWindowsPathIfNeeded(Paths.get("/foo/bar/zap"));
+    String includedPathStr = PathFormatter.pathWithUnixSeparators(includePath);
+    CxxToolFlags cxxToolFlags =
+        CxxToolFlags.explicitBuilder()
+            .addPlatformFlags(StringArg.of("-ffunction-sections"))
+            .addRuleFlags(StringArg.of("-O3"))
+            .addRuleFlags(StringArg.of("-I " + includedPathStr))
+            .build();
+    PreprocessorFlags preprocessorFlags =
+        PreprocessorFlags.builder()
+            .addIncludes(
+                CxxHeadersDir.of(
+                    CxxPreprocessables.IncludeType.SYSTEM, FakeSourcePath.of("foo/bar")),
+                CxxHeadersDir.of(CxxPreprocessables.IncludeType.SYSTEM, FakeSourcePath.of("test")))
+            .build()
+            .withFrameworkPaths(
+                ImmutableList.of(
+                    FrameworkPath.ofSourcePath(
+                        FakeSourcePath.of(
+                            PathNormalizer.toWindowsPathIfNeeded(Paths.get("root/different"))))));
+    Optional<CxxIncludePaths> leadingIncludePaths =
+        Optional.of(preprocessorFlags.getCxxIncludePaths());
+    PreprocessorDelegate preprocessorDelegate =
+        new PreprocessorDelegate(
+            CxxPlatformUtils.DEFAULT_PLATFORM.getHeaderVerification(),
+            FakeSourcePath.of("working/dir"),
+            new GccPreprocessor(
+                new HashedFileTool(
+                    () ->
+                        PathSourcePath.of(
+                            projectFilesystem,
+                            PathNormalizer.toWindowsPathIfNeeded(Paths.get("repo/preprocessor"))))),
+            preprocessorFlags,
+            DEFAULT_FRAMEWORK_PATH_SEARCH_PATH_FUNCTION,
+            leadingIncludePaths,
+            Optional.of(new FakeBuildRule(target.withFlavors(InternalFlavor.of("deps")))),
+            ImmutableSortedSet.of("white", "list"));
+    CompilerDelegate compilerDelegate =
+        new CompilerDelegate(
+            CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
+            new GccCompiler(
+                new HashedFileTool(
+                    () ->
+                        PathSourcePath.of(
+                            projectFilesystem,
+                            PathNormalizer.toWindowsPathIfNeeded(Paths.get("repo/compiler")))),
+                ToolType.CXX,
+                false,
+                false),
+            cxxToolFlags,
+            DEFAULT_USE_ARG_FILE);
+    CxxPrecompiledHeader precompiledHeader =
+        new CxxPrecompiledHeader(
+            /* canPrecompile */ false,
+            target,
+            new FakeProjectFilesystem(),
+            ImmutableSortedSet.of(),
+            Paths.get("dir/foo.hash1.hash2.hpp"),
+            preprocessorDelegate,
+            compilerDelegate,
+            CxxToolFlags.of(),
+            FakeSourcePath.of("foo.h"),
+            CxxSource.Type.C,
+            CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER);
+
+    CxxPreprocessAndCompile.Impl cxxPreprocessAndCompile =
+        new CxxPreprocessAndCompile.Impl(
+            target,
+            Optional.of(preprocessorDelegate),
+            compilerDelegate,
+            DEFAULT_OUTPUT,
+            DEFAULT_INPUT,
+            Optional.of(precompiledHeader),
+            DEFAULT_INPUT_TYPE,
+            CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER);
+
+    CxxPreprocessAndCompile.Impl reconstructed =
+        SerializationTestHelper.serializeAndDeserialize(
+            cxxPreprocessAndCompile,
+            CxxPreprocessAndCompile.Impl.class,
+            ruleFinder,
+            TestCellPathResolver.get(projectFilesystem),
+            ruleFinder.getSourcePathResolver(),
+            new ToolchainProviderBuilder().build(),
+            cellPath -> projectFilesystem);
+
+    ObjectMapper objectMapper = new ObjectMapper();
+    objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+    objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+    objectMapper.addMixIn(FileSystem.class, FileSystemMixIn.class);
+    objectMapper.addMixIn(
+        Class.forName("com.google.common.base.Suppliers$NonSerializableMemoizingSupplier"),
+        MemoizingSupplierMixIn.class);
+    objectMapper.addMixIn(PreprocessorDelegate.class, PreprocessorDelegateMixIn.class);
+
+    String originalStr =
+        objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(cxxPreprocessAndCompile);
+    String reconstructedSir =
+        objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(reconstructed);
+
+    assertEquals(originalStr, reconstructedSir);
   }
 }

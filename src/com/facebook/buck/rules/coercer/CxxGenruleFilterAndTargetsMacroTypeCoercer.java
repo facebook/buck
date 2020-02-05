@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -60,7 +61,7 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercer<M extends CxxGenruleFilt
   }
 
   @Override
-  public void traverse(CellPathResolver cellRoots, M macro, TypeCoercer.Traversal traversal) {
+  public void traverse(CellNameResolver cellRoots, M macro, TypeCoercer.Traversal traversal) {
     patternTypeCoercer.ifPresent(
         coercer ->
             macro.getFilter().ifPresent(filter -> coercer.traverse(cellRoots, filter, traversal)));

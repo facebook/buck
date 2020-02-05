@@ -28,7 +28,7 @@ import com.facebook.buck.core.rules.analysis.impl.RuleAnalysisContextImpl;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.util.timing.AbstractFakeClock;
+import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -55,7 +55,7 @@ public class SkylarkRuleContextActionsTest {
             target,
             ImmutableMap.of(),
             TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()),
-            new DefaultBuckEventBus(AbstractFakeClock.doNotCare(), new BuildId("1234-5678")));
+            new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId("1234-5678")));
   }
 
   @Test

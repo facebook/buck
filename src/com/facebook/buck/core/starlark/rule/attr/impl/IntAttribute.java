@@ -56,4 +56,9 @@ public abstract class IntAttribute extends Attribute<Integer> {
   protected void validateCoercedValue(Integer value) throws CoerceFailedException {
     validateValueInList(getValues(), value);
   }
+
+  public static IntAttribute of(
+      Integer preCoercionDefaultValue, String doc, boolean mandatory, List<Integer> values) {
+    return ImmutableIntAttribute.of(preCoercionDefaultValue, doc, mandatory, values);
+  }
 }

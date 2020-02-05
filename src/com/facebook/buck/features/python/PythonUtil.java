@@ -19,6 +19,7 @@ package com.facebook.buck.features.python;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -47,6 +48,8 @@ import com.facebook.buck.rules.macros.AbsoluteOutputMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroExpander;
+import com.facebook.buck.rules.macros.QueryTargetsAndOutputsMacroExpander;
+import com.facebook.buck.rules.macros.QueryTargetsMacroExpander;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.versions.Version;
@@ -62,6 +65,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -69,6 +73,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 public class PythonUtil {
 
@@ -77,8 +82,13 @@ public class PythonUtil {
 
   static final String INIT_PY = "__init__.py";
 
-  static final ImmutableList<MacroExpander<? extends Macro, ?>> MACRO_EXPANDERS =
-      ImmutableList.of(new LocationMacroExpander(), new AbsoluteOutputMacroExpander());
+  static ImmutableList<MacroExpander<? extends Macro, ?>> macroExpanders(TargetGraph targetGraph) {
+    return ImmutableList.of(
+        LocationMacroExpander.INSTANCE,
+        AbsoluteOutputMacroExpander.INSTANCE,
+        new QueryTargetsMacroExpander(targetGraph),
+        new QueryTargetsAndOutputsMacroExpander(targetGraph));
+  }
 
   private PythonUtil() {}
 
@@ -444,18 +454,25 @@ public class PythonUtil {
           NativeLinkables.getTransitiveNativeLinkables(
               graphBuilder,
               Iterables.concat(nativeLinkableRoots.values(), extensionNativeDeps.values()));
-      for (NativeLinkable nativeLinkable : nativeLinkables) {
-        NativeLinkableGroup.Linkage linkage = nativeLinkable.getPreferredLinkage();
-        if (nativeLinkableRoots.containsKey(nativeLinkable.getBuildTarget())
-            || linkage != NativeLinkableGroup.Linkage.STATIC) {
-          allComponents.putNativeLibraries(
-              nativeLinkable.getBuildTarget(),
-              PythonMappedComponents.of(
-                  ImmutableSortedMap.copyOf(
-                      MoreMaps.transformKeys(
-                          nativeLinkable.getSharedLibraries(graphBuilder), Paths::get))));
-        }
-      }
+      graphBuilder
+          .getParallelizer()
+          .maybeParallelizeTransform(
+              nativeLinkables.stream()
+                  .filter(
+                      nativeLinkable -> {
+                        NativeLinkableGroup.Linkage linkage = nativeLinkable.getPreferredLinkage();
+                        return nativeLinkableRoots.containsKey(nativeLinkable.getBuildTarget())
+                            || linkage != NativeLinkableGroup.Linkage.STATIC;
+                      })
+                  .collect(Collectors.toList()),
+              linkable ->
+                  new AbstractMap.SimpleEntry<BuildTarget, PythonComponents>(
+                      linkable.getBuildTarget(),
+                      PythonMappedComponents.of(
+                          ImmutableSortedMap.copyOf(
+                              MoreMaps.transformKeys(
+                                  linkable.getSharedLibraries(graphBuilder), Paths::get)))))
+          .forEach(e -> allComponents.putNativeLibraries(e.getKey(), e.getValue()));
     }
 
     return allComponents.build();

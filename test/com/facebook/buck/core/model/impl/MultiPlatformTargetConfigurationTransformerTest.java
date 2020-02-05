@@ -23,7 +23,6 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
-import com.facebook.buck.core.model.ImmutableRuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -51,7 +50,7 @@ public class MultiPlatformTargetConfigurationTransformerTest {
 
     assertFalse(
         transformer.needsTransformation(
-            ImmutableRuleBasedTargetConfiguration.of(platformBuildTarget), DependencyStack.root()));
+            RuleBasedTargetConfiguration.of(platformBuildTarget), DependencyStack.root()));
   }
 
   @Test
@@ -81,8 +80,7 @@ public class MultiPlatformTargetConfigurationTransformerTest {
 
     assertTrue(
         transformer.needsTransformation(
-            ImmutableRuleBasedTargetConfiguration.of(multiPlatformBuildTarget),
-            DependencyStack.root()));
+            RuleBasedTargetConfiguration.of(multiPlatformBuildTarget), DependencyStack.root()));
   }
 
   @Test
@@ -97,7 +95,7 @@ public class MultiPlatformTargetConfigurationTransformerTest {
     thrown.expectMessage("Not multi platform: //:platform");
 
     transformer.transform(
-        ImmutableRuleBasedTargetConfiguration.of(platformBuildTarget), DependencyStack.root());
+        RuleBasedTargetConfiguration.of(platformBuildTarget), DependencyStack.root());
   }
 
   @Test
@@ -123,7 +121,7 @@ public class MultiPlatformTargetConfigurationTransformerTest {
 
     ImmutableList<TargetConfiguration> configurations =
         transformer.transform(
-            ImmutableRuleBasedTargetConfiguration.of(multiPlatformTarget), DependencyStack.root());
+            RuleBasedTargetConfiguration.of(multiPlatformTarget), DependencyStack.root());
 
     assertEquals(
         ImmutableList.of(

@@ -72,7 +72,6 @@ public class AuditRuleTypeCommandTest {
                 + "    labels = None,\n"
                 + "    licenses = None,\n"
                 + "    optional_string = None,\n"
-                + "    target_compatible_with = None,\n"
                 + "):\n"
                 + "    ...\n"));
   }

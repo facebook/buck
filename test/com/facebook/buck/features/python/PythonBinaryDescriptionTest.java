@@ -71,6 +71,8 @@ import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
+import com.facebook.buck.rules.macros.LocationMacro;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -242,18 +244,33 @@ public class PythonBinaryDescriptionTest {
   public void buildArgs() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    ImmutableList<String> buildArgs = ImmutableList.of("--some", "--args");
+    GenruleBuilder genruleBuilder =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:gen"))
+            .setOut("out.txt");
+    Genrule genrule = genruleBuilder.build(graphBuilder);
     PythonBinary binary =
         PythonBinaryBuilder.create(target)
             .setMainModule("main")
-            .setBuildArgs(buildArgs)
+            .setBuildArgs(
+                ImmutableList.of(
+                    StringWithMacros.ofConstantString("--foo"),
+                    StringWithMacrosUtils.format(
+                        "--arg=%s", LocationMacro.of(genruleBuilder.getTarget()))))
             .build(graphBuilder);
+    assertThat(binary.getBuildDeps(), Matchers.hasItem(genrule));
     ImmutableList<? extends Step> buildSteps =
         binary.getBuildSteps(
             FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()),
             new FakeBuildableContext());
     PexStep pexStep = FluentIterable.from(buildSteps).filter(PexStep.class).get(0);
-    assertThat(pexStep.getCommandPrefix(), Matchers.hasItems(buildArgs.toArray(new String[0])));
+    assertThat(
+        pexStep.getCommandPrefix(),
+        Matchers.hasItems(
+            "--foo",
+            "--arg="
+                + graphBuilder
+                    .getSourcePathResolver()
+                    .getAbsolutePath(genrule.getSourcePathToOutput())));
   }
 
   @Test

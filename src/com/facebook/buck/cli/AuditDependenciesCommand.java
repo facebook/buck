@@ -83,7 +83,9 @@ public class AuditDependenciesCommand extends AbstractCommand {
     ImmutableSet<String> fullyQualifiedBuildTargets =
         ImmutableSet.copyOf(
             getArgumentsFormattedAsBuildTargets(
-                params.getCell(), params.getClientWorkingDir(), params.getBuckConfig()));
+                params.getCells().getRootCell(),
+                params.getClientWorkingDir(),
+                params.getBuckConfig()));
 
     if (fullyQualifiedBuildTargets.isEmpty()) {
       throw new CommandLineException("must specify at least one build target");
@@ -112,7 +114,8 @@ public class AuditDependenciesCommand extends AbstractCommand {
                     new DefaultConstructorArgMarshaller(params.getTypeCoercerFactory()),
                     params.getKnownRuleTypesProvider(),
                     new ParserPythonInterpreterProvider(
-                        params.getCell().getBuckConfig(), params.getExecutableFinder()),
+                        params.getCells().getRootCell().getBuckConfig(),
+                        params.getExecutableFinder()),
                     params.getWatchman(),
                     params.getBuckEventBus(),
                     params.getManifestServiceSupplier(),
@@ -120,7 +123,8 @@ public class AuditDependenciesCommand extends AbstractCommand {
                     params.getUnconfiguredBuildTargetFactory(),
                     params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))
                 .create(
-                    createParsingContext(params.getCell(), pool.getListeningExecutorService())
+                    createParsingContext(
+                            params.getCells().getRootCell(), pool.getListeningExecutorService())
                         .withSpeculativeParsing(SpeculativeParsing.ENABLED)
                         .withExcludeUnsupportedTargets(false),
                     params.getParser().getPermState())) {
@@ -128,14 +132,17 @@ public class AuditDependenciesCommand extends AbstractCommand {
           BuckQueryEnvironment.from(
               params,
               parserState,
-              createParsingContext(params.getCell(), pool.getListeningExecutorService()));
+              createParsingContext(
+                  params.getCells().getRootCell(), pool.getListeningExecutorService()));
       QueryCommand.runMultipleQuery(
           params,
           env,
           QueryCommand.getAuditDependenciesQueryFormat(
               shouldShowTransitiveDependencies(), shouldIncludeTests()),
           getArgumentsFormattedAsBuildTargets(
-              params.getCell(), params.getClientWorkingDir(), params.getBuckConfig()),
+              params.getCells().getRootCell(),
+              params.getClientWorkingDir(),
+              params.getBuckConfig()),
           shouldGenerateJsonOutput(),
           ImmutableSet.of(),
           params.getConsole().getStdOut(),

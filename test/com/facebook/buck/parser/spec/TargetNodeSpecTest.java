@@ -17,6 +17,7 @@
 package com.facebook.buck.parser.spec;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
@@ -86,15 +87,15 @@ public class TargetNodeSpecTest {
     Path nestedCellPath = defaultCellPath.resolve("nestedcell-dir");
     rootFileSystem.mkdirs(nestedCellPath);
 
-    Cell defaultCell =
+    Cells defaultCell =
         getDefaultCell(
             currentCellFileSystem,
             ImmutableMap.of("mycell", myCellPath, "nestedcell", nestedCellPath));
 
-    TargetNodeSpec spec = parseTargetNodeSpec(defaultCell, pattern);
+    TargetNodeSpec spec = parseTargetNodeSpec(defaultCell.getRootCell(), pattern);
     Assert.assertEquals(
-        BuildTargetPatternParser.parse(pattern, defaultCell.getCellNameResolver()),
-        spec.getBuildTargetPattern(getCellOfTargetNodeSpec(defaultCell, spec)));
+        BuildTargetPatternParser.parse(pattern, defaultCell.getRootCell().getCellNameResolver()),
+        spec.getBuildTargetPattern(getCellOfTargetNodeSpec(defaultCell.getRootCell(), spec)));
   }
 
   @SuppressWarnings("unused")
@@ -121,11 +122,11 @@ public class TargetNodeSpecTest {
     Path cellBPath = rootFileSystem.resolve("cell-b-dir");
     rootFileSystem.mkdirs(cellBPath);
 
-    Cell defaultCell =
+    Cells defaultCell =
         getDefaultCell(rootFileSystem, ImmutableMap.of("cell-a", cellAPath, "cell-b", cellBPath));
-    Cell cellB = defaultCell.getCell(cellBPath);
+    Cell cellB = defaultCell.getRootCell().getCell(cellBPath);
 
-    TargetNodeSpec spec = parseTargetNodeSpec(defaultCell, pattern);
+    TargetNodeSpec spec = parseTargetNodeSpec(defaultCell.getRootCell(), pattern);
     thrown.expectMessage(Matchers.containsString("cell-a"));
     thrown.expectMessage(Matchers.containsString("cell-b"));
     if (spec instanceof BuildTargetSpec) {
@@ -137,7 +138,7 @@ public class TargetNodeSpecTest {
     spec.getBuildTargetPattern(cellB);
   }
 
-  private Cell getDefaultCell(
+  private Cells getDefaultCell(
       ProjectFilesystem rootFileSystem, ImmutableMap<String, Path> otherCells) {
     ImmutableMap.Builder<String, String> repositories = ImmutableMap.builder();
     for (Map.Entry<String, Path> entry : otherCells.entrySet()) {
@@ -160,6 +161,6 @@ public class TargetNodeSpecTest {
 
   private TargetNodeSpec parseTargetNodeSpec(Cell cell, String targetPattern) {
     return (new BuildTargetMatcherTargetNodeParser())
-        .parse(cell.getCellPathResolver(), targetPattern);
+        .parse(targetPattern, cell.getCellNameResolver());
   }
 }

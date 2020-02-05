@@ -17,9 +17,9 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
-import com.facebook.buck.core.test.rule.ImmutableTestRunnerSpec;
 import com.facebook.buck.core.test.rule.TestRunnerSpec;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.StringWithMacros;
@@ -53,7 +53,7 @@ public class TestRunnerSpecCoercer implements TypeCoercer<TestRunnerSpec> {
   }
 
   @Override
-  public void traverse(CellPathResolver cellRoots, TestRunnerSpec object, Traversal traversal) {}
+  public void traverse(CellNameResolver cellRoots, TestRunnerSpec object, Traversal traversal) {}
 
   @Override
   public TestRunnerSpec coerce(
@@ -65,7 +65,7 @@ public class TestRunnerSpecCoercer implements TypeCoercer<TestRunnerSpec> {
       Object object)
       throws CoerceFailedException {
 
-    return ImmutableTestRunnerSpec.of(
+    return TestRunnerSpec.of(
         coerceRecursively(
             cellRoots,
             filesystem,

@@ -27,8 +27,8 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.parser.syntax.ImmutableListWithSelects;
-import com.facebook.buck.parser.syntax.ImmutableSelectorValue;
+import com.facebook.buck.parser.syntax.ListWithSelects;
+import com.facebook.buck.parser.syntax.SelectorValue;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -59,7 +59,7 @@ public class SelectorListFactoryTest {
       selectorListFactory.create(
           TestCellPathResolver.get(projectFilesystem),
           ForwardRelativePath.of(""),
-          ImmutableListWithSelects.of(ImmutableList.of(new Object(), new Object()), Method.class));
+          ListWithSelects.of(ImmutableList.of(new Object(), new Object()), Method.class));
       fail("SelectorListFactory.create should throw an exception");
     } catch (HumanReadableException e) {
       assertEquals(
@@ -76,7 +76,7 @@ public class SelectorListFactoryTest {
         selectorListFactory.create(
             TestCellPathResolver.get(projectFilesystem),
             ForwardRelativePath.of(""),
-            ImmutableListWithSelects.of(ImmutableList.of(flavorName), List.class));
+            ListWithSelects.of(ImmutableList.of(flavorName), List.class));
 
     assertEquals(flavorName, selectors.getSelectors().get(0).getDefaultConditionValue());
   }
@@ -87,7 +87,7 @@ public class SelectorListFactoryTest {
         selectorListFactory.create(
             TestCellPathResolver.get(projectFilesystem),
             ForwardRelativePath.of(""),
-            ImmutableListWithSelects.of(ImmutableList.of(), List.class));
+            ListWithSelects.of(ImmutableList.of(), List.class));
 
     assertTrue(selectors.getSelectors().isEmpty());
   }
@@ -100,7 +100,7 @@ public class SelectorListFactoryTest {
         selectorListFactory.create(
             TestCellPathResolver.get(projectFilesystem),
             ForwardRelativePath.of(""),
-            ImmutableListWithSelects.of(
+            ListWithSelects.of(
                 ImmutableList.of(ImmutableList.of(flavorName1), ImmutableList.of(flavorName2)),
                 List.class));
 
@@ -118,15 +118,14 @@ public class SelectorListFactoryTest {
     String flavorName1 = "test1";
     String flavorName2 = "test2";
     String message = "message about incorrect conditions";
-    ImmutableSelectorValue selectorValue =
-        ImmutableSelectorValue.of(
-            ImmutableMap.of("DEFAULT", Lists.newArrayList(flavorName1)), message);
+    SelectorValue selectorValue =
+        SelectorValue.of(ImmutableMap.of("DEFAULT", Lists.newArrayList(flavorName1)), message);
 
     SelectorList<Object> selectors =
         selectorListFactory.create(
             TestCellPathResolver.get(projectFilesystem),
             ForwardRelativePath.of(""),
-            ImmutableListWithSelects.of(
+            ListWithSelects.of(
                 ImmutableList.of(selectorValue, Lists.newArrayList(flavorName2)), List.class));
 
     assertEquals(

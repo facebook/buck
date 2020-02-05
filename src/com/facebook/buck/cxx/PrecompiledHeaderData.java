@@ -16,11 +16,16 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.rules.modern.CustomFieldSerialization;
+import com.facebook.buck.rules.modern.ValueCreator;
+import com.facebook.buck.rules.modern.ValueVisitor;
 
 /** Contains information needed to consume a possibly precompiled header. */
 @BuckStyleValue
@@ -35,6 +40,25 @@ interface PrecompiledHeaderData extends AddsToRuleKey {
   @AddToRuleKey
   SourcePath getInput();
 
+  @CustomFieldBehavior(PrecompiledHeaderSerialization.class)
   @AddToRuleKey
   boolean isPrecompiled();
+
+  /** Disable serialization of precompiled headers. */
+  class PrecompiledHeaderSerialization implements CustomFieldSerialization<Boolean> {
+
+    @Override
+    public <E extends Exception> void serialize(Boolean value, ValueVisitor<E> serializer)
+        throws E {
+      if (value) {
+        throw new HumanReadableException("Precompiled headers can't be used on different machine");
+      }
+      serializer.visitBoolean(false);
+    }
+
+    @Override
+    public <E extends Exception> Boolean deserialize(ValueCreator<E> deserializer) throws E {
+      return deserializer.createBoolean();
+    }
+  }
 }

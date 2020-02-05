@@ -162,19 +162,28 @@ class BuckProject:
         buck_javaargs_path_local = os.path.join(self.root, ".buckjavaargs.local")
         self.buck_javaargs_local = get_file_contents_if_exists(buck_javaargs_path_local)
 
-    def get_root_hash(self):
-        return hashlib.sha256(self.root.encode("utf-8")).hexdigest()
+    # A hash that uniquely identifies this instance of buck.
+    # Historically, this has meant 'one buck per repo' or 'one buck per root',
+    # but isolation mode means we can have multiple bucks coexisting.
+    # Useful for disambiguating identifiers in a global namespace.
+    def get_instance_hash(self):
+        return hashlib.sha256(
+            "{}{}".format(self.root, self.prefix).encode("utf-8")
+        ).hexdigest()
 
+    # keep in sync with get_buckd_transport_address
     def get_buckd_transport_file_path(self):
         if os.name == "nt":
-            return u"\\\\.\\pipe\\buckd_{0}".format(self.get_root_hash())
+            return u"\\\\.\\pipe\\buckd_{0}".format(self.get_instance_hash())
         else:
             return os.path.join(self.buckd_dir, "sock")
 
     def get_buckd_transport_address(self):
         if os.name == "nt":
-            return "local:buckd_{0}".format(self.get_root_hash())
+            # Nailgun prepends named pipe prefix by itself
+            return "local:buckd_{0}".format(self.get_instance_hash())
         else:
+            # Nailgun assumes path is relative to self.root
             return "local:{0}.buckd/sock".format(self.prefix)
 
     def get_running_buckd_version(self):

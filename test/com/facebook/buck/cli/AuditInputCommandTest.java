@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -73,7 +73,7 @@ public class AuditInputCommandTest {
     projectFilesystem.touch(Paths.get("src/com/facebook/AndroidLibraryTwo.java"));
     projectFilesystem.touch(Paths.get("src/com/facebook/TestAndroidLibrary.java"));
     projectFilesystem.touch(Paths.get("src/com/facebook/TestJavaLibrary.java"));
-    Cell cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
+    Cells cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusForTests.newInstance();
 
@@ -82,7 +82,7 @@ public class AuditInputCommandTest {
         CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
             executor.get(),
             console,
-            cell,
+            cell.getRootCell(),
             artifactCache,
             eventBus,
             FakeBuckConfig.builder().build(),

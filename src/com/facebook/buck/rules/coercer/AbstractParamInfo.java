@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -118,13 +119,13 @@ public abstract class AbstractParamInfo implements ParamInfo {
   }
 
   @Override
-  public void traverse(CellPathResolver cellPathResolver, Traversal traversal, Object dto) {
-    traverseHelper(cellPathResolver, typeCoercer, traversal, dto);
+  public void traverse(CellNameResolver cellNameResolver, Traversal traversal, Object dto) {
+    traverseHelper(cellNameResolver, typeCoercer, traversal, dto);
   }
 
   @SuppressWarnings("unchecked")
   private <U> void traverseHelper(
-      CellPathResolver cellPathResolver,
+      CellNameResolver cellPathResolver,
       TypeCoercer<U> typeCoercer,
       Traversal traversal,
       Object dto) {

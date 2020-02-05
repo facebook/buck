@@ -481,7 +481,7 @@ public class IjProjectTemplateDataPreparer {
       Set<String> relativeResourcePaths = new HashSet<>(resourcePaths.size());
       for (Path resourcePath : resourcePaths) {
         relativeResourcePaths.add(
-            IjProjectPaths.toRelativeString(resourcePath, module.getModuleBasePath()));
+            IjProjectPaths.toRelativeString(resourcePath, projectPaths.getModuleDir(module)));
       }
 
       androidProperties.put(

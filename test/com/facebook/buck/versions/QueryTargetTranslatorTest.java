@@ -19,6 +19,7 @@ package com.facebook.buck.versions;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
@@ -43,12 +44,13 @@ public class QueryTargetTranslatorTest {
     BuildTarget a = BuildTargetFactory.newInstance("//:a");
     BuildTarget b = BuildTargetFactory.newInstance("//:b");
     FixedTargetNodeTranslator translator =
-        new FixedTargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableMap.of(a, b));
+        new FixedTargetNodeTranslator(
+            new DefaultTypeCoercerFactory(), ImmutableMap.of(a, b), new TestCellBuilder().build());
     QueryTargetTranslator queryTranslator =
         new QueryTargetTranslator(new ParsingUnconfiguredBuildTargetViewFactory());
     assertThat(
         queryTranslator.translateTargets(
-            CELL_PATH_RESOLVER,
+            CELL_PATH_RESOLVER.getCellNameResolver(),
             BaseName.ROOT,
             translator,
             Query.of("deps(//:a)", UnconfiguredTargetConfiguration.INSTANCE, BaseName.ROOT)),
@@ -60,12 +62,13 @@ public class QueryTargetTranslatorTest {
   @Test
   public void noTargets() {
     FixedTargetNodeTranslator translator =
-        new FixedTargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableMap.of());
+        new FixedTargetNodeTranslator(
+            new DefaultTypeCoercerFactory(), ImmutableMap.of(), new TestCellBuilder().build());
     QueryTargetTranslator queryTranslator =
         new QueryTargetTranslator(new ParsingUnconfiguredBuildTargetViewFactory());
     assertThat(
         queryTranslator.translateTargets(
-            CELL_PATH_RESOLVER,
+            CELL_PATH_RESOLVER.getCellNameResolver(),
             BaseName.ROOT,
             translator,
             Query.of("$declared_deps", UnconfiguredTargetConfiguration.INSTANCE, BaseName.ROOT)),

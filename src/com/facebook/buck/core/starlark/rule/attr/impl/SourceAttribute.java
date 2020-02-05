@@ -72,6 +72,10 @@ public abstract class SourceAttribute extends Attribute<SourcePath> {
     return this::postCoercionTransform;
   }
 
+  public static SourceAttribute of(Object preCoercionDefaultValue, String doc, boolean mandatory) {
+    return ImmutableSourceAttribute.of(preCoercionDefaultValue, doc, mandatory);
+  }
+
   private Artifact postCoercionTransform(Object src, RuleAnalysisContext analysisContext) {
     if (!(src instanceof SourcePath)) {
       throw new IllegalStateException(String.format("%s needs to be a SourcePath", src));

@@ -76,7 +76,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
@@ -182,7 +182,7 @@ public class ProjectGeneratorTest {
       "com.apple.product-type.watchkit2-extension";
   private SettableFakeClock clock;
   private ProjectFilesystem projectFilesystem;
-  private Cell projectCell;
+  private Cells projectCell;
   private FakeProjectFilesystem fakeProjectFilesystem;
   private HalideBuckConfig halideBuckConfig;
   private CxxBuckConfig cxxBuckConfig;
@@ -198,7 +198,7 @@ public class ProjectGeneratorTest {
     clock = SettableFakeClock.DO_NOT_CARE;
     fakeProjectFilesystem = new FakeProjectFilesystem(clock);
     projectCell = (new TestCellBuilder()).setFilesystem(fakeProjectFilesystem).build();
-    projectFilesystem = projectCell.getFilesystem();
+    projectFilesystem = projectCell.getRootCell().getFilesystem();
     rootPath = projectFilesystem.getRootPath();
 
     // Add files and directories used to test resources.
@@ -6332,7 +6332,7 @@ public class ProjectGeneratorTest {
             cache,
             projStateCache,
             ImmutableSet.of(lib2Target),
-            projectCell,
+            projectCell.getRootCell(),
             OUTPUT_DIRECTORY,
             PROJECT_NAME,
             "BUCK",
@@ -6379,7 +6379,7 @@ public class ProjectGeneratorTest {
             cache,
             projStateCache,
             ImmutableSet.of(lib1Target, testTarget), /* lib3Target not included on purpose */
-            projectCell,
+            projectCell.getRootCell(),
             OUTPUT_DIRECTORY,
             PROJECT_NAME,
             "BUCK",
@@ -6502,7 +6502,7 @@ public class ProjectGeneratorTest {
             cache,
             projStateCache,
             ImmutableSet.of(lib2Target),
-            projectCell,
+            projectCell.getRootCell(),
             OUTPUT_DIRECTORY,
             PROJECT_NAME,
             "BUCK",
@@ -6557,7 +6557,7 @@ public class ProjectGeneratorTest {
             cache,
             projStateCache,
             ImmutableSet.of(lib1Target, testTarget), /* lib3Target not included on purpose */
-            projectCell,
+            projectCell.getRootCell(),
             OUTPUT_DIRECTORY,
             PROJECT_NAME,
             "BUCK",
@@ -6770,7 +6770,7 @@ public class ProjectGeneratorTest {
         cache,
         projStateCache,
         initialBuildTargets,
-        projectCell,
+        projectCell.getRootCell(),
         OUTPUT_DIRECTORY,
         PROJECT_NAME,
         "BUCK",

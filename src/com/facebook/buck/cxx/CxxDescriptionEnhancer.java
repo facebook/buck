@@ -1107,7 +1107,7 @@ public class CxxDescriptionEnhancer {
       StringWithMacrosConverter macrosConverter =
           StringWithMacrosConverter.of(
               target,
-              cellRoots,
+              cellRoots.getCellNameResolver(),
               graphBuilder,
               expanders,
               Optional.of(getStringWithMacrosArgSanitizer(cxxPlatform)));
@@ -1807,7 +1807,7 @@ public class CxxDescriptionEnhancer {
       CxxPlatform cxxPlatform) {
     return StringWithMacrosConverter.of(
         target,
-        cellPathResolver,
+        cellPathResolver.getCellNameResolver(),
         graphBuilder,
         ImmutableList.of(new CxxLocationMacroExpander(cxxPlatform), new OutputMacroExpander()),
         Optional.of(getStringWithMacrosArgSanitizer(cxxPlatform)));

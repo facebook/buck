@@ -40,7 +40,7 @@ public class QueryUtilsTest {
     assertThat(
         QueryUtils.extractParseTimeTargets(
                 TARGET,
-                CELL_NAMES,
+                CELL_NAMES.getCellNameResolver(),
                 Query.of(
                     "deps(//some:rule)", UnconfiguredTargetConfiguration.INSTANCE, BaseName.ROOT))
             .collect(Collectors.toList()),

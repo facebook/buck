@@ -21,8 +21,8 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.HasOutputName;
-import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
@@ -57,7 +57,7 @@ public class ResourcesParametersTest {
         ExplicitBuildTargetSourcePath.of(buildTarget, Paths.get("default"));
     SourcePath pathWithNamedOutputLabel =
         ExplicitBuildTargetSourcePath.of(
-            ImmutableBuildTargetWithOutputs.of(buildTarget, outputLabel),
+            BuildTargetWithOutputs.of(buildTarget, outputLabel),
             Paths.get("explicit_path_with_label"));
 
     ImmutableSortedMap<String, SourcePath> actual =

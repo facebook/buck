@@ -108,8 +108,7 @@ public class ChromeTraceBuildListenerTest {
   private static final BuildId BUILD_ID = new BuildId("BUILD_ID");
   private static final long CURRENT_TIME_MILLIS = 1409702151000L;
   private static final long NANO_TIME = TimeUnit.SECONDS.toNanos(300);
-  private static final FakeClock FAKE_CLOCK =
-      FakeClock.builder().currentTimeMillis(CURRENT_TIME_MILLIS).nanoTime(NANO_TIME).build();
+  private static final FakeClock FAKE_CLOCK = FakeClock.of(CURRENT_TIME_MILLIS, NANO_TIME);
   private static final String EXPECTED_DIR =
       "buck-out/log/2014-09-02_23h55m51s_no_sub_command_BUILD_ID/";
 

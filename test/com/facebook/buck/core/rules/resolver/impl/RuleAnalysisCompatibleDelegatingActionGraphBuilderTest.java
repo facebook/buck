@@ -38,13 +38,13 @@ import com.facebook.buck.core.rules.actions.ActionRegistry;
 import com.facebook.buck.core.rules.actions.DefaultActionRegistry;
 import com.facebook.buck.core.rules.actions.FakeAction;
 import com.facebook.buck.core.rules.actions.FakeActionAnalysisRegistry;
-import com.facebook.buck.core.rules.analysis.ImmutableRuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
+import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.core.rules.analysis.impl.FakeRuleAnalysisGraph;
+import com.facebook.buck.core.rules.analysis.impl.FakeRuleAnalysisResultImpl;
 import com.facebook.buck.core.rules.analysis.impl.FakeRuleDescriptionArg;
-import com.facebook.buck.core.rules.analysis.impl.ImmutableFakeRuleAnalysisResultImpl;
 import com.facebook.buck.core.rules.config.registry.impl.ConfigurationRuleRegistryFactory;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.impl.RuleAnalysisLegacyBuildRuleView;
@@ -95,7 +95,7 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilderTest {
             new FakeRuleAnalysisGraph(
                 key -> {
                   fail("should not call RuleAnalysisComputation");
-                  return ImmutableFakeRuleAnalysisResultImpl.of(
+                  return FakeRuleAnalysisResultImpl.of(
                       target, TestProviderInfoCollectionImpl.builder().build(), ImmutableMap.of());
                 }));
 
@@ -130,7 +130,7 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilderTest {
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
-            cellPathResolver);
+            cellPathResolver.getCellNameResolver());
 
     MutableDirectedGraph<TargetNode<?>> mutableDirectedGraph =
         MutableDirectedGraph.createConcurrent();
@@ -183,7 +183,7 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilderTest {
                       Iterables.getOnlyElement(actionAnalysisRegistry.getRegistered().entrySet())
                           .getValue();
 
-                  return ImmutableFakeRuleAnalysisResultImpl.of(
+                  return FakeRuleAnalysisResultImpl.of(
                       target,
                       TestProviderInfoCollectionImpl.builder().build(),
                       ImmutableMap.of(actionAnalysisData.getKey().getID(), actionAnalysisData));
@@ -201,7 +201,7 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilderTest {
     AtomicBoolean delegateRuleAnalysisComputationCalled = new AtomicBoolean();
 
     RuleAnalysisResult ruleAnalysisResult =
-        ImmutableFakeRuleAnalysisResultImpl.of(
+        FakeRuleAnalysisResultImpl.of(
             target, TestProviderInfoCollectionImpl.builder().build(), ImmutableMap.of());
 
     RuleAnalysisCompatibleDelegatingActionGraphBuilder builder =
@@ -221,7 +221,7 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilderTest {
                   return ruleAnalysisResult;
                 }));
 
-    assertSame(ruleAnalysisResult, builder.get(ImmutableRuleAnalysisKey.of(target)));
+    assertSame(ruleAnalysisResult, builder.get(RuleAnalysisKey.of(target)));
     assertTrue(delegateRuleAnalysisComputationCalled.get());
   }
 }

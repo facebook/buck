@@ -24,6 +24,7 @@ import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -108,7 +109,9 @@ public class ApkGenruleTest {
 
     ApkGenruleDescription description =
         new ApkGenruleDescription(
-            ApkGenruleBuilder.getToolchainProvider(), new NoSandboxExecutionStrategy());
+            ApkGenruleBuilder.getToolchainProvider(),
+            FakeBuckConfig.builder().build(),
+            new NoSandboxExecutionStrategy());
     ApkGenruleDescriptionArg arg =
         ApkGenruleDescriptionArg.builder()
             .setName(buildTarget.getShortName())

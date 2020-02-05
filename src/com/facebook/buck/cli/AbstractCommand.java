@@ -24,7 +24,6 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
-import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
@@ -353,7 +352,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
   }
 
   /**
-   * Returns a set of {@link ImmutableBuildTargetWithOutputs} instances by matching the given {@link
+   * Returns a set of {@link BuildTargetWithOutputs} instances by matching the given {@link
    * BuildTarget} instances with the given {@link TargetNodeSpec} instances, and applying any {@link
    * OutputLabel} instances to the matching {@link BuildTarget} instances. Applies the default label
    * if a given build target cannot find a matching spec.
@@ -376,7 +375,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
             .getUnconfiguredBuildTargetView()
             .equals(target.getUnconfiguredBuildTargetView())) {
           builder.add(
-              ImmutableBuildTargetWithOutputs.of(
+              BuildTargetWithOutputs.of(
                   target,
                   buildTargetSpec.getUnconfiguredBuildTargetViewWithOutputs().getOutputLabel()));
           mappedTarget = true;
@@ -386,7 +385,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
       // A target may not map to an output label if the build command wasn't invoked with a build
       // pattern that specifies a specific target
       if (!mappedTarget) {
-        builder.add(ImmutableBuildTargetWithOutputs.of(target, OutputLabel.defaultLabel()));
+        builder.add(BuildTargetWithOutputs.of(target, OutputLabel.defaultLabel()));
       }
     }
     return builder.build();
@@ -401,7 +400,10 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
   }
 
   protected ExecutionContext.Builder getExecutionContextBuilder(CommandRunnerParams params) {
-    TestBuckConfig testBuckConfig = params.getBuckConfig().getView(TestBuckConfig.class);
+    BuckConfig buckConfig = params.getBuckConfig();
+    TestBuckConfig testBuckConfig = buckConfig.getView(TestBuckConfig.class);
+    CliConfig cliConfig = buckConfig.getView(CliConfig.class);
+
     ExecutionContext.Builder builder =
         ExecutionContext.builder()
             .setConsole(params.getConsole())
@@ -410,16 +412,18 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
             .setEnvironment(params.getEnvironment())
             .setJavaPackageFinder(params.getJavaPackageFinder())
             .setExecutors(params.getExecutors())
-            .setCellPathResolver(params.getCell().getCellPathResolver())
-            .setBuildCellRootPath(params.getCell().getRoot())
+            .setCellPathResolver(params.getCells().getRootCell().getCellPathResolver())
+            .setBuildCellRootPath(params.getCells().getRootCell().getRoot())
+            .setCells(params.getCells())
             .setProcessExecutor(new DefaultProcessExecutor(params.getConsole()))
             .setDefaultTestTimeoutMillis(testBuckConfig.getDefaultTestTimeoutMillis())
             .setInclNoLocationClassesEnabled(testBuckConfig.isInclNoLocationClassesEnabled())
             .setRuleKeyDiagnosticsMode(
-                params.getBuckConfig().getView(RuleKeyConfig.class).getRuleKeyDiagnosticsMode())
+                buckConfig.getView(RuleKeyConfig.class).getRuleKeyDiagnosticsMode())
             .setConcurrencyLimit(getConcurrencyLimit(params.getBuckConfig()))
             .setPersistentWorkerPools(params.getPersistentWorkerPools())
-            .setProjectFilesystemFactory(params.getProjectFilesystemFactory());
+            .setProjectFilesystemFactory(params.getProjectFilesystemFactory())
+            .setTruncateFailingCommandEnabled(cliConfig.getEnableFailingCommandTruncation());
     return builder;
   }
 
@@ -444,7 +448,8 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
             params.getUnconfiguredBuildTargetFactory(),
             targetGraphCreationResult,
             params.getTargetConfiguration(),
-            params.getBuckEventBus());
+            params.getBuckEventBus(),
+            params.getCells());
   }
 
   @Override
@@ -504,12 +509,12 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
     UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory =
         params.getUnconfiguredBuildTargetFactory();
     return getCommandLineBuildTargetNormalizer(
-            params.getCell(), params.getClientWorkingDir(), params.getBuckConfig())
+            params.getCells().getRootCell(), params.getClientWorkingDir(), params.getBuckConfig())
         .normalizeAll(arguments).stream()
         .map(
             input ->
                 unconfiguredBuildTargetFactory.create(
-                    params.getCell().getCellPathResolver(), input))
+                    input, params.getCells().getRootCell().getCellNameResolver()))
         .map(
             unconfiguredBuildTarget ->
                 // TODO(nga): ignores default_target_platform and configuration detectors

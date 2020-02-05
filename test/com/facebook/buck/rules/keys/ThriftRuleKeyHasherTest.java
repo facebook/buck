@@ -20,7 +20,6 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
-import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -175,7 +174,7 @@ public class ThriftRuleKeyHasherTest {
         new DefaultBuildTargetSourcePath() {
           @Override
           public BuildTargetWithOutputs getTargetWithOutputs() {
-            return ImmutableBuildTargetWithOutputs.of(
+            return BuildTargetWithOutputs.of(
                 BuildTargetFactory.newInstance("//base_name_2", "rule_name_2"),
                 OutputLabel.defaultLabel());
           }
@@ -270,7 +269,7 @@ public class ThriftRuleKeyHasherTest {
                 ".build_target_source_path_value",
                 Value.targetPath(
                     new TargetPath(
-                        ImmutableBuildTargetWithOutputs.of(
+                        BuildTargetWithOutputs.of(
                                 BuildTargetFactory.newInstance("//base_name_2:rule_name_2"),
                                 OutputLabel.defaultLabel())
                             .toString())))
@@ -324,9 +323,11 @@ public class ThriftRuleKeyHasherTest {
   public void canHandleForwardingBuildTargetSourcePathsWithDifferentFilesystems()
       throws TException {
     ProjectFilesystem filesystem1 =
-        new FakeProjectFilesystem(CanonicalCellName.rootCell(), Paths.get("first", "root"));
+        new FakeProjectFilesystem(
+            CanonicalCellName.rootCell(), Paths.get("first", "root").toAbsolutePath());
     ProjectFilesystem filesystem2 =
-        new FakeProjectFilesystem(CanonicalCellName.rootCell(), Paths.get("other", "root"));
+        new FakeProjectFilesystem(
+            CanonicalCellName.rootCell(), Paths.get("other", "root").toAbsolutePath());
     Path relativePath = Paths.get("arbitrary", "path");
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
 

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.core.parser.buildtargetparser;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
@@ -76,12 +75,10 @@ class BuildTargetParser {
    *     parsing target name patterns.
    */
   UnconfiguredBuildTargetView parse(
-      CellPathResolver legacyCellPathResolver,
       String buildTargetName,
       @Nullable BaseName buildTargetBaseName,
-      boolean allowWildCards) {
-    CellNameResolver cellNameResolver = legacyCellPathResolver.getCellNameResolver();
-
+      boolean allowWildCards,
+      CellNameResolver cellNameResolver) {
     if (buildTargetName.endsWith(BUILD_RULE_SEPARATOR) && !allowWildCards) {
       throw new BuildTargetParseException(
           String.format("%s cannot end with a colon", buildTargetName));

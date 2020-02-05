@@ -69,7 +69,8 @@ public class UnconfiguredQueryCommand extends AbstractQueryCommand {
                     new DefaultConstructorArgMarshaller(params.getTypeCoercerFactory()),
                     params.getKnownRuleTypesProvider(),
                     new ParserPythonInterpreterProvider(
-                        params.getCell().getBuckConfig(), params.getExecutableFinder()),
+                        params.getCells().getRootCell().getBuckConfig(),
+                        params.getExecutableFinder()),
                     params.getWatchman(),
                     params.getBuckEventBus(),
                     params.getManifestServiceSupplier(),
@@ -77,7 +78,8 @@ public class UnconfiguredQueryCommand extends AbstractQueryCommand {
                     params.getUnconfiguredBuildTargetFactory(),
                     params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))
                 .create(
-                    createParsingContext(params.getCell(), pool.getListeningExecutorService())
+                    createParsingContext(
+                            params.getCells().getRootCell(), pool.getListeningExecutorService())
                         .withSpeculativeParsing(SpeculativeParsing.ENABLED)
                         .withUseUnconfiguredSelectorResolver(true),
                     params.getParser().getPermState())) {
@@ -85,7 +87,8 @@ public class UnconfiguredQueryCommand extends AbstractQueryCommand {
           BuckQueryEnvironment.from(
               params,
               parserState,
-              createParsingContext(params.getCell(), pool.getListeningExecutorService())
+              createParsingContext(
+                      params.getCells().getRootCell(), pool.getListeningExecutorService())
                   .withUseUnconfiguredSelectorResolver(true));
       formatAndRunQuery(params, env);
     } catch (QueryException e) {

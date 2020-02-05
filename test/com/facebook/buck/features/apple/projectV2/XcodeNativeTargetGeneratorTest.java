@@ -28,7 +28,7 @@ import com.facebook.buck.apple.AppleLibraryBuilder;
 import com.facebook.buck.apple.AppleTestBuilder;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -61,7 +61,7 @@ import org.junit.Test;
 
 public class XcodeNativeTargetGeneratorTest {
 
-  private Cell rootCell;
+  private Cells cells;
   private BuildTarget bazTestTarget;
   private BuildTarget bazLibTarget;
   private BuildTarget quxTestTarget;
@@ -84,7 +84,7 @@ public class XcodeNativeTargetGeneratorTest {
   public void setUp() {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
 
-    rootCell = (new TestCellBuilder()).build();
+    cells = (new TestCellBuilder()).build();
 
     // Create the following dep tree:
     //   FooAppBundle -has-extension-> BarExt -> BarBinary
@@ -205,12 +205,10 @@ public class XcodeNativeTargetGeneratorTest {
 
   @Test
   public void testPlatformSourcesAndHeaders() {
-    SourceWithFlags androidSource =
-        SourceWithFlags.of(FakeSourcePath.of("androidFile.cpp"));
+    SourceWithFlags androidSource = SourceWithFlags.of(FakeSourcePath.of("androidFile.cpp"));
     SourceWithFlags iOSAndSimulatorSource =
         SourceWithFlags.of(FakeSourcePath.of("iOSAndSimulatorFile.cpp"));
-    SourceWithFlags macOSSource =
-        SourceWithFlags.of(FakeSourcePath.of("macOSFile.cpp"));
+    SourceWithFlags macOSSource = SourceWithFlags.of(FakeSourcePath.of("macOSFile.cpp"));
 
     Pattern androidPattern = Pattern.compile("android");
     Pattern simulatorPattern = Pattern.compile("^iphonesim.*");

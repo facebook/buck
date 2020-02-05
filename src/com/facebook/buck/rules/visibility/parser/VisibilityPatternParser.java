@@ -47,7 +47,8 @@ public class VisibilityPatternParser {
       return ImmutablePublicVisibilityPattern.of(definingPath);
     } else {
       return ImmutableBuildTargetVisibilityPattern.of(
-          buildTargetPatternParser.parse(cellNames, buildTargetPattern), definingPath);
+          buildTargetPatternParser.parse(buildTargetPattern, cellNames.getCellNameResolver()),
+          definingPath);
     }
   }
 

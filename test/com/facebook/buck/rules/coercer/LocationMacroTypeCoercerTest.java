@@ -21,7 +21,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
@@ -65,7 +65,7 @@ public class LocationMacroTypeCoercerTest {
             ImmutableList.of("//:test")),
         Matchers.equalTo(
             LocationMacro.of(
-                ImmutableBuildTargetWithOutputs.of(
+                BuildTargetWithOutputs.of(
                     BuildTargetFactory.newInstance("//:test"), OutputLabel.defaultLabel()))));
 
     assertThat(
@@ -78,7 +78,7 @@ public class LocationMacroTypeCoercerTest {
             ImmutableList.of("//:test[foo]")),
         Matchers.equalTo(
             LocationMacro.of(
-                ImmutableBuildTargetWithOutputs.of(
+                BuildTargetWithOutputs.of(
                     BuildTargetFactory.newInstance("//:test"), OutputLabel.of("foo")))));
   }
 

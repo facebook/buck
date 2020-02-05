@@ -51,9 +51,9 @@ public class TestRunnerSpecCoercionSerializationTest {
   private StringWithMacrosConverter getConverter(ActionGraphBuilder graphBuilder, BuildRule rule) {
     return StringWithMacrosConverter.of(
         rule.getBuildTarget(),
-        cellPathResolver,
+        cellPathResolver.getCellNameResolver(),
         graphBuilder,
-        ImmutableList.of(new AbsoluteOutputMacroExpander()));
+        ImmutableList.of(AbsoluteOutputMacroExpander.INSTANCE));
   }
 
   @Test

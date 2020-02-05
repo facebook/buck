@@ -34,7 +34,7 @@ import com.facebook.buck.rules.coercer.SourceSet;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.sandbox.SandboxProperties;
-import com.facebook.buck.shell.Genrule;
+import com.facebook.buck.shell.BaseGenrule;
 import com.facebook.buck.shell.GenruleAndroidTools;
 import com.facebook.buck.shell.GenruleBuildable;
 import com.google.common.collect.ImmutableMap;
@@ -45,7 +45,8 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 /** Rule for generating an apple package via external script. */
-public class ExternallyBuiltApplePackage extends Genrule {
+public final class ExternallyBuiltApplePackage
+    extends BaseGenrule<ExternallyBuiltApplePackage.Buildable> {
 
   public ExternallyBuiltApplePackage(
       BuildTarget buildTarget,
@@ -86,7 +87,7 @@ public class ExternallyBuiltApplePackage extends Genrule {
             packageConfigAndPlatformInfo.getSdkPath()));
   }
 
-  private static class Buildable extends GenruleBuildable {
+  static class Buildable extends GenruleBuildable {
     @AddToRuleKey private final String sdkVersion;
     @AddToRuleKey private final Optional<String> platformBuildVersion;
 

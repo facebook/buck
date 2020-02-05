@@ -56,7 +56,7 @@ public class UnconfiguredBuildTargetTypeCoercer
 
     try {
       return unconfiguredBuildTargetFactory.createForPathRelativeToProjectRoot(
-          cellRoots, pathRelativeToProjectRoot, param);
+          pathRelativeToProjectRoot, param, cellRoots.getCellNameResolver());
     } catch (BuildTargetParseException e) {
       throw new CoerceFailedException(
           String.format(

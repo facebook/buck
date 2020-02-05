@@ -37,7 +37,7 @@ import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.sandbox.SandboxProperties;
-import com.facebook.buck.shell.Genrule;
+import com.facebook.buck.shell.BaseGenrule;
 import com.facebook.buck.shell.GenruleAndroidTools;
 import com.facebook.buck.shell.GenruleBuildable;
 import com.facebook.buck.step.Step;
@@ -74,7 +74,7 @@ import java.util.stream.Stream;
  * Doing so causes this genrule to create these files and folders in the output directory; otherwise
  * the outputs will be exported verbatim from the bundles that this bundle depends on.
  */
-public class JsBundleGenrule extends Genrule
+public final class JsBundleGenrule extends BaseGenrule<JsBundleGenrule.Buildable>
     implements AndroidPackageable, HasRuntimeDeps, JsBundleOutputs, JsDependenciesOutputs {
 
   /** Output label for the #source-map output. */
@@ -155,7 +155,7 @@ public class JsBundleGenrule extends Genrule
   }
 
   /** Buildable implementation for {@link JsBundleGenrule}. */
-  private static class Buildable extends GenruleBuildable {
+  static class Buildable extends GenruleBuildable {
 
     /** SourcePath to the dependent JS bundle's output. */
     @AddToRuleKey private final SourcePath jsBundleOutput;
@@ -403,7 +403,7 @@ public class JsBundleGenrule extends Genrule
 
   @Override
   public SourcePath getSourcePathToResources() {
-    return ((Buildable) getBuildable()).jsBundleResources;
+    return getBuildable().jsBundleResources;
   }
 
   @Override
@@ -428,7 +428,7 @@ public class JsBundleGenrule extends Genrule
 
   @Override
   public Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver) {
-    boolean skipResources = ((Buildable) getBuildable()).skipResources;
+    boolean skipResources = getBuildable().skipResources;
     return !skipResources && jsBundle instanceof AndroidPackageable
         ? ((AndroidPackageable) jsBundle).getRequiredPackageables(ruleResolver)
         : ImmutableList.of();
@@ -441,7 +441,7 @@ public class JsBundleGenrule extends Genrule
 
   @Override
   public String getBundleName() {
-    return ((Buildable) getBuildable()).jsBundleNameOut;
+    return getBuildable().jsBundleNameOut;
   }
 
   @Override

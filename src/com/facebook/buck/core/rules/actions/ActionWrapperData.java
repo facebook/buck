@@ -18,11 +18,13 @@ package com.facebook.buck.core.rules.actions;
 
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /**
  * Implementation of {@link ActionAnalysisData} that just holds an {@link Action}. This mimics the
  * effect of having a deferred
  */
+@BuckStyleValue
 public interface ActionWrapperData extends ActionAnalysisData {
 
   @Override

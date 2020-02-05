@@ -18,7 +18,6 @@ package com.facebook.buck.core.sourcepath;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
-import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.google.common.hash.HashCode;
@@ -36,7 +35,7 @@ public abstract class DefaultBuildTargetSourcePath implements BuildTargetSourceP
    * output label.
    */
   public static DefaultBuildTargetSourcePath of(BuildTarget target) {
-    return of(ImmutableBuildTargetWithOutputs.of(target, OutputLabel.defaultLabel()));
+    return of(BuildTargetWithOutputs.of(target, OutputLabel.defaultLabel()));
   }
 
   /**

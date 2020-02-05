@@ -85,6 +85,16 @@ public abstract class DepListAttribute extends Attribute<ImmutableList<BuildTarg
     return this::postCoercionTransform;
   }
 
+  public static DepListAttribute of(
+      ImmutableList<String> preCoercionDefaultValue,
+      String doc,
+      boolean mandatory,
+      boolean allowEmpty,
+      ImmutableList<Provider<?>> providers) {
+    return ImmutableDepListAttribute.of(
+        preCoercionDefaultValue, doc, mandatory, allowEmpty, providers);
+  }
+
   @SuppressWarnings("unused")
   private ImmutableList<SkylarkDependency> postCoercionTransform(
       Object coercedValue, RuleAnalysisContext analysisContext) {

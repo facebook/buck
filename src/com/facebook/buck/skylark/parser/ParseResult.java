@@ -17,7 +17,7 @@
 package com.facebook.buck.skylark.parser;
 
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
-import com.facebook.buck.parser.api.ImmutablePackageMetadata;
+import com.facebook.buck.parser.api.PackageMetadata;
 import com.facebook.buck.skylark.io.GlobSpec;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.google.common.collect.ImmutableList;
@@ -34,7 +34,7 @@ import java.util.Optional;
 public abstract class ParseResult {
 
   /** Contains the package defined in a package file. */
-  public abstract ImmutablePackageMetadata getPackage();
+  public abstract PackageMetadata getPackage();
 
   /**
    * Returns rules organized in a map where a key is a rule name and the value is a map with keys
@@ -62,7 +62,7 @@ public abstract class ParseResult {
   public abstract ImmutableList<GlobSpecWithResult> getGlobManifestWithResult();
 
   static ParseResult of(
-      ImmutablePackageMetadata getPackage,
+      PackageMetadata getPackage,
       Map<String, ? extends Map<String, Object>> rawRules,
       Iterable<String> loadedPaths,
       Map<String, ? extends ImmutableMap<String, Optional<String>>> readConfigurationOptions,

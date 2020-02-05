@@ -22,7 +22,7 @@ import static com.facebook.buck.skylark.function.SkylarkRuleFunctions.IMPLICIT_A
 import com.facebook.buck.core.starlark.rule.SkylarkRuleContext;
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
-import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableStringAttribute;
+import com.facebook.buck.core.starlark.rule.attr.impl.StringAttribute;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -49,7 +49,7 @@ public class FakeSkylarkUserDefinedRuleFactory {
   public static SkylarkUserDefinedRule createSimpleRule()
       throws EvalException, LabelSyntaxException {
     return createSingleArgRule(
-        "some_rule", "baz", ImmutableStringAttribute.of("default", "", false, ImmutableList.of()));
+        "some_rule", "baz", StringAttribute.of("default", "", false, ImmutableList.of()));
   }
 
   /** Create a single argument rule with the given argument name and attr to back it */
@@ -71,7 +71,7 @@ public class FakeSkylarkUserDefinedRuleFactory {
     return createRuleFromCallable(
         "some_rule",
         "baz",
-        ImmutableStringAttribute.of("default", "", false, ImmutableList.of()),
+        StringAttribute.of("default", "", false, ImmutableList.of()),
         "//foo:bar.bzl",
         callable);
   }

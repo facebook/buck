@@ -24,13 +24,14 @@ import com.facebook.buck.core.exceptions.WrapsException;
 import com.facebook.buck.util.json.CustomOptionalProtoSerializer;
 import com.facebook.buck.util.string.MoreStrings;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 import java.util.OptionalInt;
 
 public class StepFailedException extends Exception implements WrapsException, ExceptionWithContext {
 
-  private static final int KEEP_FIRST_CHARS = 4 * 80;
+  @VisibleForTesting protected static final int KEEP_FIRST_CHARS = 4 * 80;
 
   private final Step step;
   private final String description;
@@ -62,8 +63,13 @@ public class StepFailedException extends Exception implements WrapsException, Ex
     messageBuilder.append(String.format("Command failed with exit code %d.", exitCode));
     ImmutableList<String> executedCommand = executionResult.getExecutedCommand();
     if (!executedCommand.isEmpty()) {
-      appendToErrorMessage(messageBuilder, "command", executedCommand.toString(), true);
+      appendToErrorMessage(
+          messageBuilder,
+          "command",
+          executedCommand.toString(),
+          context.isTruncateFailingCommandEnabled());
     }
+
     executionResult
         .getStderr()
         .ifPresent(stderr -> appendToErrorMessage(messageBuilder, "stderr", stderr, false));

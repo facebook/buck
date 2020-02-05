@@ -62,7 +62,7 @@ public class ThrowingPackageBoundaryCheckerTest {
             + "' in '//a/b:c' refers to a parent directory.");
 
     boundaryChecker.enforceBuckPackageBoundaries(
-        new TestCellBuilder().build(),
+        new TestCellBuilder().build().getRootCell(),
         BuildTargetFactory.newInstance("//a/b:c"),
         ImmutableSet.of(Paths.get("a/Test.java")));
   }
@@ -87,7 +87,8 @@ public class ThrowingPackageBoundaryCheckerTest {
                 FakeBuckConfig.builder()
                     .setSections("[project]", "check_package_boundary = false")
                     .build())
-            .build(),
+            .build()
+            .getRootCell(),
         BuildTargetFactory.newInstance("//a/b:c"),
         ImmutableSet.of(Paths.get("a/Test.java")));
   }
@@ -118,7 +119,7 @@ public class ThrowingPackageBoundaryCheckerTest {
             + "', which doesn't belong to any package. "
             + "More info at:\nhttps://buck.build/about/overview.html\n");
     boundaryChecker.enforceBuckPackageBoundaries(
-        new TestCellBuilder().build(),
+        new TestCellBuilder().build().getRootCell(),
         BuildTargetFactory.newInstance("//a/b:c"),
         ImmutableSet.of(Paths.get("a/b/Test.java")));
   }
@@ -164,7 +165,7 @@ public class ThrowingPackageBoundaryCheckerTest {
             + "Please check whether using `buck kill` resolves it.");
 
     boundaryChecker.enforceBuckPackageBoundaries(
-        new TestCellBuilder().build(),
+        new TestCellBuilder().build().getRootCell(),
         BuildTargetFactory.newInstance("//a/b:c"),
         ImmutableSet.of(Paths.get("a/b/Test.java")));
   }
@@ -184,7 +185,7 @@ public class ThrowingPackageBoundaryCheckerTest {
         new ThrowingPackageBoundaryChecker(buildFileTrees);
 
     boundaryChecker.enforceBuckPackageBoundaries(
-        new TestCellBuilder().setFilesystem(new FakeProjectFilesystem()).build(),
+        new TestCellBuilder().setFilesystem(new FakeProjectFilesystem()).build().getRootCell(),
         BuildTargetFactory.newInstance("//a/b:c"),
         ImmutableSet.of(Paths.get("a/b/Test.java")));
   }

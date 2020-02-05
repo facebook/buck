@@ -22,6 +22,10 @@ import java.util.Optional;
 public abstract class TargetConfiguration implements Comparable<TargetConfiguration> {
   public abstract Optional<BuildTarget> getConfigurationTarget();
 
+  /** Build target for rule based build target or class name otherwise. */
+  @Override
+  public abstract String toString();
+
   @Override
   public final int compareTo(TargetConfiguration that) {
     if (this.getClass() != that.getClass()) {

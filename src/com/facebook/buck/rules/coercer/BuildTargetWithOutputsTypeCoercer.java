@@ -19,7 +19,6 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
-import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -47,7 +46,7 @@ public class BuildTargetWithOutputsTypeCoercer
       Object object)
       throws CoerceFailedException {
     return getTargetWithOutputLabel(
-        ImmutableBuildTargetWithOutputs::of,
+        BuildTargetWithOutputs::of,
         object,
         ImmutableCoerceParameters.of(
             cellRoots,

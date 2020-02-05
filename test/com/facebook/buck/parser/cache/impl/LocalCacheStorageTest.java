@@ -32,7 +32,6 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.api.BuildFileManifest;
-import com.facebook.buck.parser.api.ImmutableBuildFileManifest;
 import com.facebook.buck.parser.cache.ParserCacheException;
 import com.facebook.buck.parser.cache.json.BuildFileManifestSerializer;
 import com.facebook.buck.skylark.io.GlobSpec;
@@ -263,7 +262,7 @@ public class LocalCacheStorageTest {
     globSpecBuilder.add(GlobSpecWithResult.of(globSpec, ImmutableSet.of("FooBar.java")));
     ImmutableList<GlobSpecWithResult> globSpecMap = globSpecBuilder.build();
 
-    ImmutableMap<String, String> configs =
+    ImmutableMap<String, Object> configs =
         ImmutableMap.of("confKey1", "confVal1", "confKey2", "confVal2");
     Path include1 = filesystem.createNewFile(filesystem.getPath("Includes1"));
     Path include2 = filesystem.createNewFile(filesystem.getPath("includes2"));
@@ -274,7 +273,7 @@ public class LocalCacheStorageTest {
         ImmutableMap.of("tar1", target1Map, "tar2", target2Map);
 
     BuildFileManifest buildFileManifest =
-        ImmutableBuildFileManifest.of(
+        BuildFileManifest.of(
             targets,
             includes,
             configs,

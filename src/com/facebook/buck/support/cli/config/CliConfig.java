@@ -21,6 +21,7 @@ import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
@@ -32,6 +33,9 @@ import org.immutables.value.Value;
 public abstract class CliConfig implements ConfigView<BuckConfig> {
 
   private static final String UI_SECTION = "ui";
+
+  @VisibleForTesting
+  public static final String TRUNCATE_FAILING_COMMAND_CONFIG = "truncate_failing_command";
 
   @Override
   public abstract BuckConfig getDelegate();
@@ -113,5 +117,11 @@ public abstract class CliConfig implements ConfigView<BuckConfig> {
   @Value.Lazy
   public boolean getEnableShowOutputWarning() {
     return getDelegate().getBooleanValue(UI_SECTION, "enable_show_output_warning", false);
+  }
+
+  /** @return whether truncation of failing executed command is enabled. Defaults to true. */
+  @Value.Lazy
+  public boolean getEnableFailingCommandTruncation() {
+    return getDelegate().getBooleanValue(UI_SECTION, TRUNCATE_FAILING_COMMAND_CONFIG, true);
   }
 }

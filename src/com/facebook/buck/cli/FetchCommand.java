@@ -80,11 +80,12 @@ public class FetchCommand extends BuildCommand {
             params
                 .getParser()
                 .buildTargetGraphWithoutTopLevelConfigurationTargets(
-                    createParsingContext(params.getCell(), pool.getListeningExecutorService())
+                    createParsingContext(
+                            params.getCells().getRootCell(), pool.getListeningExecutorService())
                         .withApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode())
                         .withSpeculativeParsing(SpeculativeParsing.ENABLED),
                     parseArgumentsAsTargetNodeSpecs(
-                        params.getCell(),
+                        params.getCells().getRootCell(),
                         params.getClientWorkingDir(),
                         getArguments(),
                         params.getBuckConfig()),
@@ -98,7 +99,7 @@ public class FetchCommand extends BuildCommand {
                         params.getBuckEventBus(),
                         ActionGraphFactory.create(
                             params.getBuckEventBus(),
-                            params.getCell().getCellProvider(),
+                            params.getCells().getRootCell().getCellProvider(),
                             params.getExecutors(),
                             params.getDepsAwareExecutorSupplier(),
                             params.getBuckConfig()),
@@ -161,7 +162,7 @@ public class FetchCommand extends BuildCommand {
           Build build =
               new Build(
                   actionGraphAndBuilder.getActionGraphBuilder(),
-                  params.getCell(),
+                  params.getCells().getRootCell(),
                   buildEngine,
                   params.getArtifactCacheFactory().newInstance(),
                   params

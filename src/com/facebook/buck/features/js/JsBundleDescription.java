@@ -27,7 +27,7 @@ import com.facebook.buck.apple.AppleBundleResources;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.HasAppleBundleResourcesDescription;
 import com.facebook.buck.apple.SourcePathWithAppleBundleDestination;
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
@@ -357,7 +357,7 @@ public class JsBundleDescription
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       JsBundleDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {

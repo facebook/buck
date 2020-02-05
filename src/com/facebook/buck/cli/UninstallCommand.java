@@ -98,11 +98,12 @@ public class UninstallCommand extends AbstractCommand {
           params
               .getParser()
               .buildTargetGraphWithTopLevelConfigurationTargets(
-                  createParsingContext(params.getCell(), pool.getListeningExecutorService())
+                  createParsingContext(
+                          params.getCells().getRootCell(), pool.getListeningExecutorService())
                       .withExcludeUnsupportedTargets(false)
                       .withSpeculativeParsing(SpeculativeParsing.ENABLED),
                   parseArgumentsAsTargetNodeSpecs(
-                      params.getCell(),
+                      params.getCells().getRootCell(),
                       params.getClientWorkingDir(),
                       getArguments(),
                       params.getBuckConfig()),
@@ -151,7 +152,7 @@ public class UninstallCommand extends AbstractCommand {
     return super.getExecutionContextBuilder(params)
         .setAndroidDevicesHelper(
             AndroidDevicesHelperFactory.get(
-                params.getCell().getToolchainProvider(),
+                params.getCells().getRootCell().getToolchainProvider(),
                 this::getExecutionContext,
                 params.getBuckConfig(),
                 adbOptions(params.getBuckConfig()),

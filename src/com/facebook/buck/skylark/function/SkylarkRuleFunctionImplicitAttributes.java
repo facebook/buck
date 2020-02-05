@@ -22,12 +22,12 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
-import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableSourceSortedSetAttribute;
-import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableStringAttribute;
-import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableStringListAttribute;
-import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableStringSortedSetAttribute;
-import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableUnconfiguredDepListAttribute;
-import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableUnconfiguredOptionalDepAttribute;
+import com.facebook.buck.core.starlark.rule.attr.impl.SourceSortedSetAttribute;
+import com.facebook.buck.core.starlark.rule.attr.impl.StringAttribute;
+import com.facebook.buck.core.starlark.rule.attr.impl.StringListAttribute;
+import com.facebook.buck.core.starlark.rule.attr.impl.StringSortedSetAttribute;
+import com.facebook.buck.core.starlark.rule.attr.impl.UnconfiguredDepListAttribute;
+import com.facebook.buck.core.starlark.rule.attr.impl.UnconfiguredOptionalDepAttribute;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
@@ -102,23 +102,23 @@ class SkylarkRuleFunctionImplicitAttributes {
   private static Attribute<?> attributeFromMethodReturn(Method method) {
     // TODO(nga): obtain doc from `@Hint`
     if (method.getReturnType() == String.class) {
-      return ImmutableStringAttribute.of(
+      return StringAttribute.of(
           "", "The name of the target", !method.isDefault(), ImmutableList.of());
     } else if (new TypeToken<ImmutableSortedSet<String>>() {}.getType()
         .equals(method.getGenericReturnType())) {
-      return ImmutableStringSortedSetAttribute.of(ImmutableSortedSet.of(), "", false, true);
+      return StringSortedSetAttribute.of(ImmutableSortedSet.of(), "", false, true);
     } else if (new TypeToken<ImmutableSet<SourcePath>>() {}.getType()
         .equals(method.getGenericReturnType())) {
-      return ImmutableSourceSortedSetAttribute.of(ImmutableSortedSet.of(), "", false, true);
+      return SourceSortedSetAttribute.of(ImmutableSortedSet.of(), "", false, true);
     } else if (new TypeToken<ImmutableList<BuildTarget>>() {}.getType()
         .equals(method.getGenericReturnType())) {
-      return ImmutableStringListAttribute.of(ImmutableList.of(), "", false, true);
+      return StringListAttribute.of(ImmutableList.of(), "", false, true);
     } else if (new TypeToken<ImmutableList<UnconfiguredBuildTargetView>>() {}.getType()
         .equals(method.getGenericReturnType())) {
-      return ImmutableUnconfiguredDepListAttribute.of(ImmutableList.of(), "", false, true);
+      return UnconfiguredDepListAttribute.of(ImmutableList.of(), "", false, true);
     } else if (new TypeToken<Optional<UnconfiguredBuildTargetView>>() {}.getType()
         .equals(method.getGenericReturnType())) {
-      return ImmutableUnconfiguredOptionalDepAttribute.of(Optional.empty(), "", false, true);
+      return UnconfiguredOptionalDepAttribute.of(Optional.empty(), "", false, true);
     } else {
       throw new IllegalStateException("unknown type for method: " + method);
     }

@@ -30,7 +30,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.api.BuildFileManifest;
-import com.facebook.buck.parser.api.ImmutableBuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.cache.json.BuildFileManifestSerializer;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -278,7 +277,7 @@ public class ParserCacheTest {
     ImmutableMap targets = ImmutableMap.of("tar1", target1, "tar2", target2);
 
     BuildFileManifest buildFileManifest =
-        ImmutableBuildFileManifest.of(
+        BuildFileManifest.of(
             targets,
             includes,
             configs,

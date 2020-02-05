@@ -42,4 +42,8 @@ public abstract class ParsingError {
             .map(element -> element.toString())
             .collect(ImmutableList.toImmutableList()));
   }
+
+  public static ParsingError of(String message, ImmutableList<String> stackTrace) {
+    return ImmutableParsingError.of(message, stackTrace);
+  }
 }

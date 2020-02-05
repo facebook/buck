@@ -26,7 +26,6 @@ import com.facebook.buck.doctor.DefectReporter;
 import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.doctor.config.DoctorJsonResponse;
 import com.facebook.buck.doctor.config.DoctorProtocolVersion;
-import com.facebook.buck.doctor.config.ImmutableDoctorJsonResponse;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -125,8 +124,7 @@ public class RuleKeyLogFileUploaderTest {
       httpResponse.setCharacterEncoding("utf-8");
 
       DoctorJsonResponse json =
-          ImmutableDoctorJsonResponse.of(
-              true, Optional.empty(), Optional.of(rageUrl), Optional.of(rageMsg));
+          DoctorJsonResponse.of(true, Optional.empty(), Optional.of(rageUrl), Optional.of(rageMsg));
       try (DataOutputStream out = new DataOutputStream(httpResponse.getOutputStream())) {
         ObjectMappers.WRITER.writeValue((DataOutput) out, json);
       }

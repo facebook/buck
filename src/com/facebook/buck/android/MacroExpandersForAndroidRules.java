@@ -29,5 +29,5 @@ class MacroExpandersForAndroidRules {
       ImmutableList.of(
           new ExecutableMacroExpander<>(ExecutableMacro.class),
           new ExecutableMacroExpander<>(ExecutableTargetMacro.class),
-          new LocationMacroExpander());
+          LocationMacroExpander.INSTANCE);
 }

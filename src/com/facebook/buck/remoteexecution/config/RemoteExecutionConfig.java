@@ -155,8 +155,8 @@ public abstract class RemoteExecutionConfig implements ConfigView<BuckConfig> {
 
   public static final String DEFAULT_AUTO_RE_EXPERIMENT_PROPERTY = "remote_execution_beta_test";
 
-  public static final String USE_REMOTE_EXECUTION_FOR_GENRULE_IF_REQUESTED =
-      "use_remote_execution_for_genrule_if_requested";
+  public static final String USE_REMOTE_EXECUTION_FOR_GENRULE_IF_REQUESTED_FORMAT =
+      "use_remote_execution_for_%s_if_requested";
 
   // A non-exhaustive list of characters that might indicate that we're about to deal with a glob.
   private static final Pattern GLOB_CHARS = Pattern.compile("[*?{\\[]");
@@ -174,13 +174,18 @@ public abstract class RemoteExecutionConfig implements ConfigView<BuckConfig> {
     return getDelegate().getBooleanValue("experiments", getAutoReExperimentPropertyKey(), false);
   }
 
+  @VisibleForTesting
+  public static String getUseRemoteExecutionForGenruleIfRequestedField(String type) {
+    return String.format(USE_REMOTE_EXECUTION_FOR_GENRULE_IF_REQUESTED_FORMAT, type);
+  }
+
   /**
    * Returns whether or not we should honor the `remote` argument to `genrule`, which requests that
    * the genrule run remotely.
    */
-  public boolean shouldUseRemoteExecutionForGenruleIfRequested() {
+  public boolean shouldUseRemoteExecutionForGenruleIfRequested(String type) {
     return getDelegate()
-        .getBooleanValue(SECTION, USE_REMOTE_EXECUTION_FOR_GENRULE_IF_REQUESTED, false);
+        .getBooleanValue(SECTION, getUseRemoteExecutionForGenruleIfRequestedField(type), false);
   }
 
   public boolean isRemoteExecutionAutoEnabled(String username, List<String> commandArguments) {

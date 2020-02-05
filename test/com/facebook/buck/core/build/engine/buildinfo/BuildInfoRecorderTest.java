@@ -186,7 +186,7 @@ public class BuildInfoRecorderTest {
         String.format(
             "BuildInfoRecorder must record '%s:%s' to the artifact metadata.", key, value),
         value,
-        onDiskBuildInfo.getValue(key));
+        onDiskBuildInfo.getValue(key).getLeftOption());
   }
 
   private static void assertOnDiskBuildInfoHasBuildMetadata(
@@ -201,7 +201,7 @@ public class BuildInfoRecorderTest {
       OnDiskBuildInfo onDiskBuildInfo, String key) {
     assertFalse(
         String.format("BuildInfoRecorder should have cleared this metadata key: %s", key),
-        onDiskBuildInfo.getValue(key).isPresent());
+        onDiskBuildInfo.getValue(key).isLeft());
     assertFalse(
         String.format("BuildInfoRecorder should have cleared this metadata key: %s", key),
         onDiskBuildInfo.getBuildValue(key).isPresent());

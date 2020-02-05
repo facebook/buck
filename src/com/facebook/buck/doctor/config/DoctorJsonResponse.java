@@ -49,4 +49,12 @@ public interface DoctorJsonResponse {
   default Optional<String> getReportId() {
     return getRageUrl().map(url -> Iterables.getLast(Arrays.asList(url.split("/"))));
   }
+
+  static DoctorJsonResponse of(
+      boolean requestSuccessful,
+      Optional<String> errorMessage,
+      Optional<String> rageUrl,
+      Optional<String> message) {
+    return ImmutableDoctorJsonResponse.of(requestSuccessful, errorMessage, rageUrl, message);
+  }
 }

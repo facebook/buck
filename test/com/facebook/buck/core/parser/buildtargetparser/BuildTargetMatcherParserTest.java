@@ -29,10 +29,10 @@ import com.facebook.buck.core.cell.nameresolver.TestCellNameResolver;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.CellRelativePath;
-import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -73,7 +73,7 @@ public class BuildTargetMatcherParserTest {
                 CanonicalCellName.rootCell(),
                 ForwardRelativePath.of("test/com/facebook/buck/parser"))),
         buildTargetPatternParser.parse(
-            createCellRoots(filesystem), "//test/com/facebook/buck/parser:"));
+            "//test/com/facebook/buck/parser:", createCellRoots(filesystem).getCellNameResolver()));
 
     assertEquals(
         ImmutableSingletonBuildTargetMatcher.of(
@@ -81,7 +81,8 @@ public class BuildTargetMatcherParserTest {
                 .getUnconfiguredBuildTargetView()
                 .getData()),
         buildTargetPatternParser.parse(
-            createCellRoots(filesystem), "//test/com/facebook/buck/parser:parser"));
+            "//test/com/facebook/buck/parser:parser",
+            createCellRoots(filesystem).getCellNameResolver()));
 
     assertEquals(
         ImmutableSubdirectoryBuildTargetMatcher.of(
@@ -89,7 +90,8 @@ public class BuildTargetMatcherParserTest {
                 CanonicalCellName.unsafeRootCell(),
                 ForwardRelativePath.of("test/com/facebook/buck/parser"))),
         buildTargetPatternParser.parse(
-            createCellRoots(filesystem), "//test/com/facebook/buck/parser/..."));
+            "//test/com/facebook/buck/parser/...",
+            createCellRoots(filesystem).getCellNameResolver()));
   }
 
   @Test
@@ -100,17 +102,18 @@ public class BuildTargetMatcherParserTest {
     assertEquals(
         ImmutableImmediateDirectoryBuildTargetMatcher.of(
             CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelativePath.of(""))),
-        buildTargetPatternParser.parse(createCellRoots(filesystem), "//:"));
+        buildTargetPatternParser.parse("//:", createCellRoots(filesystem).getCellNameResolver()));
 
     assertEquals(
         ImmutableSingletonBuildTargetMatcher.of(
             BuildTargetFactory.newInstance("//:parser").getUnconfiguredBuildTargetView().getData()),
-        buildTargetPatternParser.parse(createCellRoots(filesystem), "//:parser"));
+        buildTargetPatternParser.parse(
+            "//:parser", createCellRoots(filesystem).getCellNameResolver()));
 
     assertEquals(
         ImmutableSubdirectoryBuildTargetMatcher.of(
             CellRelativePath.of(CanonicalCellName.unsafeRootCell(), ForwardRelativePath.of(""))),
-        buildTargetPatternParser.parse(createCellRoots(filesystem), "//..."));
+        buildTargetPatternParser.parse("//...", createCellRoots(filesystem).getCellNameResolver()));
   }
 
   @Test
@@ -128,12 +131,12 @@ public class BuildTargetMatcherParserTest {
             BuildTargetFactory.newInstance("other//:something")
                 .getUnconfiguredBuildTargetView()
                 .getData()),
-        buildTargetPatternParser.parse(cellNames, "other//:something"));
+        buildTargetPatternParser.parse("other//:something", cellNames.getCellNameResolver()));
     assertEquals(
         ImmutableSubdirectoryBuildTargetMatcher.of(
             CellRelativePath.of(
                 CanonicalCellName.unsafeOf(Optional.of("other")), ForwardRelativePath.of("sub"))),
-        buildTargetPatternParser.parse(cellNames, "other//sub/..."));
+        buildTargetPatternParser.parse("other//sub/...", cellNames.getCellNameResolver()));
   }
 
   @Test
@@ -162,18 +165,19 @@ public class BuildTargetMatcherParserTest {
         .forEach(
             patternString -> {
               BuildTargetMatcher pattern =
-                  buildTargetPatternParser.parse(rootCellPathResolver, patternString);
+                  buildTargetPatternParser.parse(
+                      patternString, rootCellPathResolver.getCellNameResolver());
               assertTrue(
                   "from root matching something in non-root: " + pattern,
                   pattern.matches(
                       unconfiguredBuildTargetFactory
-                          .create(otherCellPathResolver, "//lib:lib")
+                          .create("//lib:lib", otherCellPathResolver.getCellNameResolver())
                           .configure(UnconfiguredTargetConfiguration.INSTANCE)));
               assertFalse(
                   "from root failing to match something in root: " + pattern,
                   pattern.matches(
                       unconfiguredBuildTargetFactory
-                          .create(rootCellPathResolver, "//lib:lib")
+                          .create("//lib:lib", rootCellPathResolver.getCellNameResolver())
                           .configure(UnconfiguredTargetConfiguration.INSTANCE)));
             });
 
@@ -182,18 +186,19 @@ public class BuildTargetMatcherParserTest {
         .forEach(
             patternString -> {
               BuildTargetMatcher pattern =
-                  buildTargetPatternParser.parse(otherCellPathResolver, patternString);
+                  buildTargetPatternParser.parse(
+                      patternString, otherCellPathResolver.getCellNameResolver());
               assertTrue(
                   "from non-root matching something in root: " + pattern,
                   pattern.matches(
                       unconfiguredBuildTargetFactory
-                          .create(rootCellPathResolver, "//lib:lib")
+                          .create("//lib:lib", rootCellPathResolver.getCellNameResolver())
                           .configure(UnconfiguredTargetConfiguration.INSTANCE)));
               assertFalse(
                   "from non-root matching something in non-root: " + pattern,
                   pattern.matches(
                       unconfiguredBuildTargetFactory
-                          .create(otherCellPathResolver, "//lib:lib")
+                          .create("//lib:lib", otherCellPathResolver.getCellNameResolver())
                           .configure(UnconfiguredTargetConfiguration.INSTANCE)));
             });
   }
@@ -207,7 +212,8 @@ public class BuildTargetMatcherParserTest {
     exception.expect(BuildTargetParseException.class);
     exception.expectMessage("absolute");
     exception.expectMessage("(found ///facebookorca/...)");
-    buildTargetPatternParser.parse(createCellRoots(filesystem), "///facebookorca/...");
+    buildTargetPatternParser.parse(
+        "///facebookorca/...", createCellRoots(filesystem).getCellNameResolver());
   }
 
   @Test
@@ -228,7 +234,8 @@ public class BuildTargetMatcherParserTest {
     exception.expectMessage("Unknown cell: lclreponame");
     // And the suggestion
     exception.expectMessage("localreponame");
-    buildTargetPatternParser.parse(rootCellPathResolver, "lclreponame//facebook/...");
+    buildTargetPatternParser.parse(
+        "lclreponame//facebook/...", rootCellPathResolver.getCellNameResolver());
   }
 
   @Test
@@ -241,17 +248,19 @@ public class BuildTargetMatcherParserTest {
 
     assertEquals(
         BuildTargetSpec.from(
-            ImmutableUnconfiguredBuildTargetWithOutputs.of(
+            UnconfiguredBuildTargetWithOutputs.of(
                 unconfiguredBuildTargetView, OutputLabel.of("label"))),
         buildTargetPatternParser.parse(
-            createCellRoots(filesystem), "//test/com/facebook/buck/parser:parser[label]"));
+            "//test/com/facebook/buck/parser:parser[label]",
+            createCellRoots(filesystem).getCellNameResolver()));
 
     assertEquals(
         BuildTargetSpec.from(
-            ImmutableUnconfiguredBuildTargetWithOutputs.of(
+            UnconfiguredBuildTargetWithOutputs.of(
                 unconfiguredBuildTargetView, OutputLabel.defaultLabel())),
         buildTargetPatternParser.parse(
-            createCellRoots(filesystem), "//test/com/facebook/buck/parser:parser"));
+            "//test/com/facebook/buck/parser:parser",
+            createCellRoots(filesystem).getCellNameResolver()));
   }
 
   @Test
@@ -260,7 +269,9 @@ public class BuildTargetMatcherParserTest {
     exception.expectMessage("Output label cannot be empty");
 
     new BuildTargetMatcherTargetNodeParser()
-        .parse(createCellRoots(filesystem), "//test/com/facebook/buck/parser:parser[]");
+        .parse(
+            "//test/com/facebook/buck/parser:parser[]",
+            createCellRoots(filesystem).getCellNameResolver());
   }
 
   @Test
@@ -269,7 +280,9 @@ public class BuildTargetMatcherParserTest {
     exception.expectMessage("//test/com/facebook/buck/parser: should not have output label noms");
 
     new BuildTargetMatcherTargetNodeParser()
-        .parse(createCellRoots(filesystem), "//test/com/facebook/buck/parser:[noms]");
+        .parse(
+            "//test/com/facebook/buck/parser:[noms]",
+            createCellRoots(filesystem).getCellNameResolver());
   }
 
   @Test
@@ -279,7 +292,9 @@ public class BuildTargetMatcherParserTest {
         "//test/com/facebook/buck/parser/... should not have output label noms");
 
     new BuildTargetMatcherTargetNodeParser()
-        .parse(createCellRoots(filesystem), "//test/com/facebook/buck/parser/...[noms]");
+        .parse(
+            "//test/com/facebook/buck/parser/...[noms]",
+            createCellRoots(filesystem).getCellNameResolver());
   }
 
   @Test
@@ -287,6 +302,7 @@ public class BuildTargetMatcherParserTest {
     exception.expect(Matchers.instanceOf(BuildTargetParseException.class));
     exception.expectMessage("cannot specify flavors for package matcher");
 
-    new BuildTargetMatcherTargetNodeParser().parse(createCellRoots(filesystem), "//test:#fla");
+    new BuildTargetMatcherTargetNodeParser()
+        .parse("//test:#fla", createCellRoots(filesystem).getCellNameResolver());
   }
 }

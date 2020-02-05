@@ -21,7 +21,6 @@ import com.facebook.buck.core.graph.transformation.model.ComposedKey;
 import com.facebook.buck.core.graph.transformation.model.ComposedResult;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
-import com.facebook.buck.core.graph.transformation.model.ImmutableComposedKey;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Map;
@@ -124,7 +123,7 @@ public class Composition {
           ImmutableSet.Builder<ComposedKey<KeyIntermediate, Result2>> results =
               ImmutableSet.builder();
           for (KeyIntermediate key2 : composer.transitionWith(key1, result1)) {
-            results.add(ImmutableComposedKey.of(key2, resultClass));
+            results.add(ComposedKey.of(key2, resultClass));
           }
           return results.build();
         },

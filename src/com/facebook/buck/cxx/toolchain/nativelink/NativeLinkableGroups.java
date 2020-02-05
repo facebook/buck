@@ -17,16 +17,33 @@
 package com.facebook.buck.cxx.toolchain.nativelink;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class NativeLinkableGroups {
 
   private NativeLinkableGroups() {}
+
+  /**
+   * @return a {@link Consumer} which accepts {@link BuildTarget}s and filter-casts them {@link
+   *     NativeLinkableGroup}s.
+   */
+  public static Consumer<BuildTarget> filterConsumer(
+      BuildRuleResolver resolver, Consumer<? super NativeLinkableGroup> consumer) {
+    return target -> {
+      BuildRule rule = resolver.getRule(target);
+      if (rule instanceof NativeLinkableGroup) {
+        consumer.accept((NativeLinkableGroup) rule);
+      }
+    };
+  }
 
   /**
    * Find {@link NativeLinkableGroup} nodes transitively reachable from the given roots.

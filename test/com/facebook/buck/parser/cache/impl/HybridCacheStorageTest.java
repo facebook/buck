@@ -30,15 +30,14 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.manifestservice.ManifestServiceConfig;
 import com.facebook.buck.parser.api.BuildFileManifest;
-import com.facebook.buck.parser.api.ImmutableBuildFileManifest;
 import com.facebook.buck.parser.cache.ParserCacheStorage;
 import com.facebook.buck.parser.cache.json.BuildFileManifestSerializer;
 import com.facebook.buck.skylark.io.GlobSpec;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.util.environment.Platform;
-import com.facebook.buck.util.timing.AbstractFakeClock;
 import com.facebook.buck.util.timing.Clock;
+import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -48,7 +47,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
@@ -91,7 +89,7 @@ public class HybridCacheStorageTest {
   }
 
   ManifestService createManifestService(BuckConfig buckConfig) {
-    Clock fakeClock = AbstractFakeClock.doNotCare();
+    Clock fakeClock = FakeClock.doNotCare();
     ManifestServiceConfig config = new ManifestServiceConfig(buckConfig);
     // Make sure we can create the real manifest service.
     config.createManifestService(fakeClock, eventBus, MoreExecutors.newDirectExecutorService());
@@ -129,11 +127,11 @@ public class HybridCacheStorageTest {
     ImmutableSortedSet<String> includes = ImmutableSortedSet.of("/Includes1", "/includes2");
     ImmutableMap<String, Object> target1 = ImmutableMap.of("t1K1", "t1V1", "t1K2", "t1V2");
     ImmutableMap<String, Object> target2 = ImmutableMap.of("t2K1", "t2V1", "t2K2", "t2V2");
-    Map<String, ImmutableMap<String, Object>> targets =
+    ImmutableMap<String, ImmutableMap<String, Object>> targets =
         ImmutableMap.of("tar1", target1, "tar2", target2);
 
     BuildFileManifest buildFileManifest =
-        ImmutableBuildFileManifest.of(
+        BuildFileManifest.of(
             targets,
             includes,
             configs,

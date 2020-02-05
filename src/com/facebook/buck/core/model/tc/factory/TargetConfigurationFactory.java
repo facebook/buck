@@ -19,7 +19,7 @@ package com.facebook.buck.core.model.tc.factory;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
-import com.facebook.buck.core.model.ImmutableRuleBasedTargetConfiguration;
+import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -57,8 +57,9 @@ public class TargetConfigurationFactory {
     }
 
     UnconfiguredBuildTargetView buildTarget =
-        unconfiguredBuildTargetViewFactory.create(cellPathResolver, targetConfiguration);
-    return ImmutableRuleBasedTargetConfiguration.of(ConfigurationBuildTargets.convert(buildTarget));
+        unconfiguredBuildTargetViewFactory.create(
+            targetConfiguration, cellPathResolver.getCellNameResolver());
+    return RuleBasedTargetConfiguration.of(ConfigurationBuildTargets.convert(buildTarget));
   }
 
   /** Create a target configuration by absolute or relative buck target name */
@@ -70,7 +71,7 @@ public class TargetConfigurationFactory {
 
     UnconfiguredBuildTargetView buildTarget =
         unconfiguredBuildTargetViewFactory.createForBaseName(
-            cellPathResolver, baseName, targetConfiguration);
-    return ImmutableRuleBasedTargetConfiguration.of(ConfigurationBuildTargets.convert(buildTarget));
+            baseName, targetConfiguration, cellPathResolver.getCellNameResolver());
+    return RuleBasedTargetConfiguration.of(ConfigurationBuildTargets.convert(buildTarget));
   }
 }

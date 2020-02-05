@@ -61,4 +61,14 @@ public abstract class ActionExecutionContext {
 
   /** @return The working directory for the current context */
   public abstract Path getWorkingDirectory();
+
+  public static ActionExecutionContext of(
+      BuckEventBus buckEventBus,
+      ArtifactFilesystem artifactFilesystem,
+      ProcessExecutor processExecutor,
+      Map<String, ? extends String> environment,
+      Path workingDirectory) {
+    return ImmutableActionExecutionContext.of(
+        buckEventBus, artifactFilesystem, processExecutor, environment, workingDirectory);
+  }
 }

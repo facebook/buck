@@ -19,7 +19,7 @@ package com.facebook.buck.parser.targetnode;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.graph.transformation.impl.FakeComputationEnvironment;
 import com.facebook.buck.core.model.BaseName;
@@ -41,8 +41,7 @@ import com.facebook.buck.core.select.impl.DefaultSelectorListResolver;
 import com.facebook.buck.parser.NoopPackageBoundaryChecker;
 import com.facebook.buck.parser.UnconfiguredTargetNodeToTargetNodeFactory;
 import com.facebook.buck.parser.api.BuildFileManifest;
-import com.facebook.buck.parser.api.ImmutableBuildFileManifest;
-import com.facebook.buck.parser.manifest.ImmutableBuildPackagePathToBuildFileManifestKey;
+import com.facebook.buck.parser.manifest.BuildPackagePathToBuildFileManifestKey;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -58,7 +57,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
 
   @Test
   public void canParseDeps() {
-    Cell cell = new TestCellBuilder().build();
+    Cells cell = new TestCellBuilder().build();
 
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     TargetPlatformResolver targetPlatformResolver =
@@ -88,7 +87,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
             ImmutableSortedSet.of(":target2"));
     UnconfiguredBuildTarget unconfiguredBuildTarget1 =
         UnconfiguredBuildTarget.of(
-            cell.getCanonicalName(),
+            cell.getRootCell().getCanonicalName(),
             BaseName.of("//"),
             "target1",
             UnconfiguredBuildTarget.NO_FLAVORS);
@@ -104,7 +103,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
         ImmutableMap.of("name", "target2", "buck.type", "java_library", "buck.base_path", "");
     UnconfiguredBuildTarget unconfiguredBuildTarget2 =
         UnconfiguredBuildTarget.of(
-            cell.getCanonicalName(),
+            cell.getRootCell().getCanonicalName(),
             BaseName.of("//"),
             "target2",
             UnconfiguredBuildTarget.NO_FLAVORS);
@@ -117,7 +116,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
             ImmutableSet.of());
 
     BuildFileManifest buildFileManifest =
-        ImmutableBuildFileManifest.of(
+        BuildFileManifest.of(
             ImmutableMap.of("target1", rawAttributes1, "target2", rawAttributes2),
             ImmutableSortedSet.of(),
             ImmutableMap.of(),
@@ -127,13 +126,13 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
 
     BuildPackagePathToUnconfiguredTargetNodePackageComputation transformer =
         BuildPackagePathToUnconfiguredTargetNodePackageComputation.of(
-            unconfiguredTargetNodeToTargetNodeFactory, cell, false);
+            unconfiguredTargetNodeToTargetNodeFactory, cell.getRootCell(), false);
     UnconfiguredTargetNodeWithDepsPackage unconfiguredTargetNodeWithDepsPackage =
         transformer.transform(
             ImmutableBuildPackagePathToUnconfiguredTargetNodePackageKey.of(Paths.get("")),
             new FakeComputationEnvironment(
                 ImmutableMap.of(
-                    ImmutableBuildPackagePathToBuildFileManifestKey.of(Paths.get("")),
+                    BuildPackagePathToBuildFileManifestKey.of(Paths.get("")),
                     buildFileManifest,
                     ImmutableBuildTargetToUnconfiguredTargetNodeKey.of(
                         unconfiguredBuildTarget1, Paths.get("")),

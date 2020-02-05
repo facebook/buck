@@ -23,6 +23,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.hashing.FileHashLoader;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.stream.RichStream;
+import com.facebook.buck.util.types.Either;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -77,23 +78,41 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
   }
 
   @Override
-  public Optional<String> getValue(String key) {
+  public Either<String, Exception> getValue(String key) {
     if (key.equals(BuildInfo.MetadataKey.DEP_FILE)) {
-      return projectFilesystem.readFileIfItExists(metadataDirectory.resolve(key));
+      Path depFilePath = metadataDirectory.resolve(key);
+      return projectFilesystem
+          .readFileIfItExists(depFilePath)
+          .map(Either::<String, Exception>ofLeft)
+          .orElseGet(
+              () -> {
+                return Either.ofRight(new Exception("depfile does not exist: " + depFilePath));
+              });
     }
 
     Optional<String> artifactMetadata =
         projectFilesystem.readFileIfItExists(artifactMetadataFilePath);
 
     if (!artifactMetadata.isPresent()) {
-      return artifactMetadata;
+      return Either.ofRight(
+          new Exception("artifact metadata file does not exist: " + artifactMetadataFilePath));
     }
 
     try {
       ImmutableMap<String, String> json =
           ObjectMappers.readValue(
               artifactMetadata.get(), new TypeReference<ImmutableMap<String, String>>() {});
-      return Optional.ofNullable(json.get(key));
+      return Optional.ofNullable(json.get(key))
+          .map(Either::<String, Exception>ofLeft)
+          .orElseGet(
+              () -> {
+                return Either.ofRight(
+                    new Exception(
+                        "artifact metadata file "
+                            + artifactMetadataFilePath
+                            + " does not have a key "
+                            + key));
+              });
     } catch (IOException e) {
       LOG.warn(
           e,
@@ -101,7 +120,8 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
           key,
           artifactMetadataFilePath.toString(),
           artifactMetadata.get());
-      return Optional.empty();
+      return Either.ofRight(
+          new Exception("failed to read artifact metadata file " + artifactMetadataFilePath, e));
     }
   }
 
@@ -121,12 +141,13 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
 
   @Override
   public ImmutableList<String> getValuesOrThrow(String key) throws IOException {
-    Optional<String> value = getValue(key);
-    if (!value.isPresent()) {
+    Either<String, Exception> value = getValue(key);
+    if (!value.isLeft()) {
       throw new FileNotFoundException(metadataDirectory.resolve(key).toString());
     }
     try {
-      return ObjectMappers.readValue(value.get(), new TypeReference<ImmutableList<String>>() {});
+      return ObjectMappers.readValue(
+          value.getLeft(), new TypeReference<ImmutableList<String>>() {});
     } catch (IOException ignored) {
       Path path = projectFilesystem.getPathForRelativePath(metadataDirectory.resolve(key));
       BasicFileAttributes attr = Files.readAttributes(path, BasicFileAttributes.class);
@@ -156,14 +177,14 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
 
   @Override
   public Optional<ImmutableMap<String, String>> getMap(String key) {
-    Optional<String> value = getValue(key);
-    if (!value.isPresent()) {
+    Either<String, Exception> value = getValue(key);
+    if (!value.isLeft()) {
       return Optional.empty();
     }
     try {
       ImmutableMap<String, String> map =
           ObjectMappers.readValue(
-              value.get(), new TypeReference<ImmutableMap<String, String>>() {});
+              value.getLeft(), new TypeReference<ImmutableMap<String, String>>() {});
       return Optional.of(map);
     } catch (IOException ignored) {
       return Optional.empty();

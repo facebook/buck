@@ -31,10 +31,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
+import java.util.function.Consumer;
 
 /**
  * The group of {@link BuildTarget}s from C/C++ constructor args which comprise a C/C++ descriptions
@@ -52,31 +51,41 @@ public abstract class CxxDeps {
   public abstract ImmutableList<PatternMatchedCollection<ImmutableSortedSet<BuildTarget>>>
       getPlatformDeps();
 
-  private Stream<BuildTarget> getSpecificPlatformDeps(CxxPlatform cxxPlatform) {
-    return getPlatformDeps().stream()
-        .flatMap(
-            p ->
-                p.getMatchingValues(cxxPlatform.getFlavor().toString()).stream()
-                    .flatMap(Collection::stream));
-  }
+  public void forEachForAllPlatforms(Consumer<BuildTarget> consumer) {
+    // Process all platform-agnostic deps.
+    getDeps().forEach(consumer);
 
-  private Stream<BuildTarget> getAllPlatformDeps() {
-    return getPlatformDeps().stream()
-        .flatMap(p -> p.getValues().stream().flatMap(Collection::stream));
+    // Process all platform-specific deps.
+    Consumer<ImmutableSortedSet<BuildTarget>> setConsumer = s -> s.forEach(consumer);
+    int size = getPlatformDeps().size();
+    for (int idx = 0; idx < size; idx++) {
+      getPlatformDeps().get(idx).forEachValue(setConsumer);
+    }
   }
 
   public ImmutableSet<BuildRule> getForAllPlatforms(BuildRuleResolver resolver) {
-    return RichStream.from(getDeps())
-        .concat(getAllPlatformDeps())
-        .map(resolver::getRule)
-        .toImmutableSet();
+    ImmutableSet.Builder<BuildRule> builder = ImmutableSet.builder();
+    forEachForAllPlatforms(t -> builder.add(resolver.getRule(t)));
+    return builder.build();
+  }
+
+  public void forEach(CxxPlatform platform, Consumer<BuildTarget> consumer) {
+    // Process all platform-agnostic deps.
+    getDeps().forEach(consumer);
+
+    // Process matching platform-specific deps.
+    Consumer<ImmutableSortedSet<BuildTarget>> setConsumer = s -> s.forEach(consumer);
+    int size = getPlatformDeps().size();
+    String platformName = platform.getFlavor().toString();
+    for (int idx = 0; idx < size; idx++) {
+      getPlatformDeps().get(idx).forEachMatchingValue(platformName, setConsumer);
+    }
   }
 
   public ImmutableSet<BuildRule> get(BuildRuleResolver resolver, CxxPlatform cxxPlatform) {
-    return RichStream.from(getDeps())
-        .concat(getSpecificPlatformDeps(cxxPlatform))
-        .map(resolver::getRule)
-        .toImmutableSet();
+    ImmutableSet.Builder<BuildRule> builder = ImmutableSet.builder();
+    forEach(cxxPlatform, t -> builder.add(resolver.getRule(t)));
+    return builder.build();
   }
 
   public static CxxDeps concat(Iterable<CxxDeps> cxxDeps) {

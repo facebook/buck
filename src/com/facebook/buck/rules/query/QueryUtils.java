@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.query;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.HasApplicationModuleBlacklist;
 import com.facebook.buck.core.description.arg.HasDepsQuery;
 import com.facebook.buck.core.description.arg.HasProvidedDepsQuery;
@@ -62,7 +62,7 @@ public final class QueryUtils {
       BuildTarget target,
       QueryCache cache,
       ActionGraphBuilder graphBuilder,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       TargetGraph graph) {
     if (arg instanceof HasDepsQuery) {
       HasDepsQuery castedArg = (HasDepsQuery) arg;
@@ -84,7 +84,7 @@ public final class QueryUtils {
       BuildTarget target,
       QueryCache cache,
       ActionGraphBuilder graphBuilder,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       TargetGraph graph) {
     if (arg instanceof HasProvidedDepsQuery) {
       HasProvidedDepsQuery castedArg = (HasProvidedDepsQuery) arg;
@@ -118,7 +118,7 @@ public final class QueryUtils {
       BuildTarget target,
       QueryCache cache,
       ActionGraphBuilder graphBuilder,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       TargetGraph graph) {
     if (arg instanceof HasApplicationModuleBlacklist) {
       HasApplicationModuleBlacklist castedArg = (HasApplicationModuleBlacklist) arg;
@@ -152,7 +152,7 @@ public final class QueryUtils {
       Query query,
       QueryCache cache,
       ActionGraphBuilder graphBuilder,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       TargetGraph targetGraph,
       ImmutableSet<BuildTarget> declaredDeps) {
     GraphEnhancementQueryEnvironment env =
@@ -181,14 +181,14 @@ public final class QueryUtils {
   }
 
   public static Stream<BuildTarget> extractBuildTargets(
-      CellPathResolver cellPathResolver, BaseName targetBaseName, Query query)
+      CellNameResolver cellNameResolver, BaseName targetBaseName, Query query)
       throws QueryException {
     GraphEnhancementQueryEnvironment env =
         new GraphEnhancementQueryEnvironment(
             Optional.empty(),
             Optional.empty(),
             TYPE_COERCER_FACTORY,
-            cellPathResolver,
+            cellNameResolver,
             UNCONFIGURED_BUILD_TARGET_FACTORY,
             targetBaseName,
             ImmutableSet.of(),
@@ -203,7 +203,7 @@ public final class QueryUtils {
   }
 
   public static Stream<BuildTarget> extractParseTimeTargets(
-      BuildTarget target, CellPathResolver cellNames, Query query) {
+      BuildTarget target, CellNameResolver cellNames, Query query) {
     try {
       return extractBuildTargets(cellNames, target.getBaseName(), query);
     } catch (QueryException e) {

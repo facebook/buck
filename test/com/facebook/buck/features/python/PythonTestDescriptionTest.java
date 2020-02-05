@@ -55,6 +55,10 @@ import com.facebook.buck.rules.coercer.VersionMatchedCollection;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
+import com.facebook.buck.rules.macros.LocationMacro;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
+import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.shell.ShBinary;
 import com.facebook.buck.shell.ShBinaryBuilder;
@@ -160,10 +164,20 @@ public class PythonTestDescriptionTest {
   public void buildArgs() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:test");
-    ImmutableList<String> buildArgs = ImmutableList.of("--some", "--args");
-    PythonTestBuilder builder = PythonTestBuilder.create(target).setBuildArgs(buildArgs);
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
+    GenruleBuilder genruleBuilder =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:gen"))
+            .setOut("out.txt");
+    PythonTestBuilder builder =
+        PythonTestBuilder.create(target)
+            .setBuildArgs(
+                ImmutableList.of(
+                    StringWithMacros.ofConstantString("--foo"),
+                    StringWithMacrosUtils.format(
+                        "--arg=%s", LocationMacro.of(genruleBuilder.getTarget()))));
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(genruleBuilder.build(), builder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    Genrule genrule = genruleBuilder.build(graphBuilder, filesystem, targetGraph);
     PythonTest test = builder.build(graphBuilder, filesystem, targetGraph);
     PythonBinary binary = test.getBinary();
     ImmutableList<? extends Step> buildSteps =
@@ -171,7 +185,14 @@ public class PythonTestDescriptionTest {
             FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()),
             new FakeBuildableContext());
     PexStep pexStep = RichStream.from(buildSteps).filter(PexStep.class).toImmutableList().get(0);
-    assertThat(pexStep.getCommandPrefix(), Matchers.hasItems(buildArgs.toArray(new String[0])));
+    assertThat(
+        pexStep.getCommandPrefix(),
+        Matchers.hasItems(
+            "--foo",
+            "--arg="
+                + graphBuilder
+                    .getSourcePathResolver()
+                    .getAbsolutePath(genrule.getSourcePathToOutput())));
   }
 
   @Test

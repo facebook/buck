@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.artifact.Artifact;
-import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
+import com.facebook.buck.core.artifact.SourceArtifactImpl;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
@@ -57,7 +57,7 @@ public class CopyActionTest {
 
     PathSourcePath inputPath = PathSourcePath.of(projectFilesystem, Paths.get("input"));
     projectFilesystem.writeContentsToPath("contents", inputPath.getRelativePath());
-    Artifact input = ImmutableSourceArtifactImpl.of(inputPath);
+    Artifact input = SourceArtifactImpl.of(inputPath);
 
     Artifact output = runner.declareArtifact(Paths.get("out"));
 

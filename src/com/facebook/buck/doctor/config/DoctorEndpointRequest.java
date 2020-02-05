@@ -41,4 +41,14 @@ public interface DoctorEndpointRequest {
 
   /** @return if report command returned a redirect link this will be saved here. */
   Optional<String> getReportUrl();
+
+  static DoctorEndpointRequest of(
+      Optional<? extends BuildId> buildId,
+      String logDirPath,
+      Optional<String> machineReadableLog,
+      Optional<String> endpointMessage,
+      Optional<String> reportUrl) {
+    return ImmutableDoctorEndpointRequest.of(
+        buildId, logDirPath, machineReadableLog, endpointMessage, reportUrl);
+  }
 }

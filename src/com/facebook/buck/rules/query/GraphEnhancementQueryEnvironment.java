@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.query;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
@@ -84,12 +84,13 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment<QueryB
   private final Optional<TargetGraph> targetGraph;
   private final TypeCoercerFactory typeCoercerFactory;
   private final QueryEnvironment.TargetEvaluator targetEvaluator;
+  private final CellNameResolver cellNameResolver;
 
   public GraphEnhancementQueryEnvironment(
       Optional<ActionGraphBuilder> graphBuilder,
       Optional<TargetGraph> targetGraph,
       TypeCoercerFactory typeCoercerFactory,
-      CellPathResolver cellNames,
+      CellNameResolver cellNames,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       BaseName targetBaseName,
       Set<BuildTarget> declaredDeps,
@@ -97,6 +98,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment<QueryB
     this.graphBuilder = graphBuilder;
     this.targetGraph = targetGraph;
     this.typeCoercerFactory = typeCoercerFactory;
+    this.cellNameResolver = cellNames;
     this.targetEvaluator =
         new TargetEvaluator(
             cellNames,
@@ -187,14 +189,14 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment<QueryB
   public ImmutableSet<? extends QueryTarget> getTargetsInAttribute(
       QueryBuildTarget target, String attribute) {
     return QueryTargetAccessor.getTargetsInAttribute(
-        typeCoercerFactory, getNode(target), attribute);
+        typeCoercerFactory, getNode(target), attribute, cellNameResolver);
   }
 
   @Override
   public ImmutableSet<Object> filterAttributeContents(
       QueryBuildTarget target, String attribute, Predicate<Object> predicate) {
     return QueryTargetAccessor.filterAttributeContents(
-        typeCoercerFactory, getNode(target), attribute, predicate);
+        typeCoercerFactory, getNode(target), attribute, predicate, cellNameResolver);
   }
 
   private TargetNode<?> getNode(QueryTarget target) {
@@ -270,14 +272,14 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment<QueryB
   }
 
   private static class TargetEvaluator implements QueryEnvironment.TargetEvaluator {
-    private final CellPathResolver cellNames;
+    private final CellNameResolver cellNames;
     private final BaseName targetBaseName;
     private final ImmutableSet<BuildTarget> declaredDeps;
     private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
     private final TargetConfiguration targetConfiguration;
 
     private TargetEvaluator(
-        CellPathResolver cellNames,
+        CellNameResolver cellNames,
         UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
         BaseName targetBaseName,
         Set<BuildTarget> declaredDeps,
@@ -299,7 +301,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment<QueryB
       try {
         BuildTarget buildTarget =
             unconfiguredBuildTargetFactory
-                .createForBaseName(cellNames, targetBaseName, target)
+                .createForBaseName(targetBaseName, target, cellNames)
                 .configure(targetConfiguration);
         return ImmutableSet.of(QueryBuildTarget.of(buildTarget));
       } catch (BuildTargetParseException e) {

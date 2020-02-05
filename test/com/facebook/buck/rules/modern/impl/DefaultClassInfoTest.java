@@ -72,7 +72,8 @@ public class DefaultClassInfoTest {
   private Consumer<OutputPath> outputConsumer = createStrictMock(Consumer.class);
 
   private ProjectFilesystem filesystem =
-      new FakeProjectFilesystem(CanonicalCellName.rootCell(), Paths.get("/project/root"));
+      new FakeProjectFilesystem(
+          CanonicalCellName.rootCell(), Paths.get("project/root").toAbsolutePath());
 
   static class NoOpBuildable implements Buildable {
     @Override
@@ -323,7 +324,11 @@ public class DefaultClassInfoTest {
     StringifyingValueVisitor visitor = new StringifyingValueVisitor();
     classInfo.visit(derived, visitor);
     assertEquals(
-        "path:excluded\n" + "lazyPath:SourcePath(/project/root/some.path)", visitor.getValue());
+        "path:excluded\n"
+            + "lazyPath:SourcePath("
+            + filesystem.getRootPath().toString().replace('\\', '/')
+            + "/some.path)",
+        visitor.getValue().replace('\\', '/'));
   }
 
   @RuleArg
@@ -344,7 +349,9 @@ public class DefaultClassInfoTest {
     ClassInfo<BuckStyleValueImmutable> classInfo = DefaultClassInfoFactory.forInstance(immutable);
     StringifyingValueVisitor visitor = new StringifyingValueVisitor();
     classInfo.visit(immutable, visitor);
-    assertEquals("path:SourcePath(/project/root/some.path)", visitor.getValue());
+    assertEquals(
+        "path:SourcePath(" + filesystem.getRootPath().toString().replace('\\', '/') + "/some.path)",
+        visitor.getValue().replace('\\', '/'));
   }
 
   @BuckStyleValue

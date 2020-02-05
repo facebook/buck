@@ -24,8 +24,6 @@ import com.facebook.buck.core.graph.transformation.model.ComposedKey;
 import com.facebook.buck.core.graph.transformation.model.ComposedResult;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
-import com.facebook.buck.core.graph.transformation.model.ImmutableComposedKey;
-import com.facebook.buck.core.graph.transformation.model.ImmutableComposedResult;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
@@ -90,8 +88,7 @@ public class LeftComposingComputation<
       ComposedKey<BaseKey, Result2> key, ComputationEnvironment env) throws Exception {
     // TODO(bobyf): figure out how to not do this computation twice
     ComposedResult<ComputeKey<Result1>, Result1> results =
-        env.getDep(
-            ImmutableComposedKey.of(key.getOriginKey(), baseIdentifier.getTargetResultClass()));
+        env.getDep(ComposedKey.of(key.getOriginKey(), baseIdentifier.getTargetResultClass()));
     ImmutableMap.Builder<ComputeKey<Result2>, Result2> resultBuilder =
         ImmutableMap.builderWithExpectedSize(results.resultMap().size());
 
@@ -105,7 +102,7 @@ public class LeftComposingComputation<
                           ::contains));
       resultBuilder.putAll(values);
     }
-    return ImmutableComposedResult.of(resultBuilder.build());
+    return ComposedResult.of(resultBuilder.build());
   }
 
   @Override
@@ -113,8 +110,7 @@ public class LeftComposingComputation<
   public ImmutableSet<? extends ComputeKey<? extends ComputeResult>> discoverDeps(
       ComposedKey<BaseKey, Result2> key, ComputationEnvironment env) throws Exception {
     ComposedResult<ComputeKey<Result1>, Result1> results =
-        env.getDep(
-            ImmutableComposedKey.of(key.getOriginKey(), baseIdentifier.getTargetResultClass()));
+        env.getDep(ComposedKey.of(key.getOriginKey(), baseIdentifier.getTargetResultClass()));
 
     ImmutableSet.Builder<ComputeKey<?>> depBuilder =
         ImmutableSet.builderWithExpectedSize(results.resultMap().size());
@@ -128,7 +124,7 @@ public class LeftComposingComputation<
   public ImmutableSet<? extends ComputeKey<? extends ComputeResult>> discoverPreliminaryDeps(
       ComposedKey<BaseKey, Result2> key) {
     return ImmutableSet.of(
-        ImmutableComposedKey.of(key.getOriginKey(), baseIdentifier.getTargetResultClass()));
+        ComposedKey.of(key.getOriginKey(), baseIdentifier.getTargetResultClass()));
   }
 
   @Override

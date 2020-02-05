@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -457,7 +458,7 @@ public class StringWithMacrosTypeCoercerTest {
     }
 
     @Override
-    public void traverse(CellPathResolver cellRoots, TestMacro macro, Traversal traversal) {}
+    public void traverse(CellNameResolver cellRoots, TestMacro macro, Traversal traversal) {}
 
     @Override
     public TestMacro coerce(
@@ -484,7 +485,7 @@ public class StringWithMacrosTypeCoercerTest {
     }
 
     @Override
-    public void traverse(CellPathResolver cellRoots, TestMacro macro, Traversal traversal) {}
+    public void traverse(CellNameResolver cellRoots, TestMacro macro, Traversal traversal) {}
 
     @Override
     public TestMacro coerce(

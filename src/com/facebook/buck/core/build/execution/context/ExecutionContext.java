@@ -19,6 +19,7 @@ package com.facebook.buck.core.build.execution.context;
 import com.facebook.buck.android.device.TargetDevice;
 import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.rulekey.RuleKeyDiagnosticsMode;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
@@ -78,6 +79,8 @@ public abstract class ExecutionContext implements Closeable {
 
   public abstract CellPathResolver getCellPathResolver();
 
+  public abstract Cells getCells();
+
   /** See {@link com.facebook.buck.core.build.context.BuildContext#getBuildCellRootPath}. */
   public abstract Path getBuildCellRootPath();
 
@@ -113,6 +116,11 @@ public abstract class ExecutionContext implements Closeable {
   @Value.Default
   public RuleKeyDiagnosticsMode getRuleKeyDiagnosticsMode() {
     return RuleKeyDiagnosticsMode.NEVER;
+  }
+
+  @Value.Default
+  public boolean isTruncateFailingCommandEnabled() {
+    return true;
   }
 
   /**

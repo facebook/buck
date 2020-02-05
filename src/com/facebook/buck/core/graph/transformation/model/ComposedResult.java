@@ -19,6 +19,7 @@ package com.facebook.buck.core.graph.transformation.model;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableMap;
 import java.util.Iterator;
+import java.util.Map;
 
 /**
  * The {@link ComputeResult} for a composed computation. Each {@link ComposedResult} holds a list of
@@ -36,5 +37,11 @@ public abstract class ComposedResult<
   @Override
   public Iterator<ResultType> iterator() {
     return resultMap().values().iterator();
+  }
+
+  public static <KeyType extends ComputeKey<ResultType>, ResultType extends ComputeResult>
+      ComposedResult<KeyType, ResultType> of(
+          Map<? extends KeyType, ? extends ResultType> resultMap) {
+    return ImmutableComposedResult.of(resultMap);
   }
 }

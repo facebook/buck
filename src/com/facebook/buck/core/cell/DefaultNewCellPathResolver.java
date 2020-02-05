@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Ordering;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.stream.Collectors;
 import org.immutables.value.Value;
 
@@ -66,6 +67,11 @@ public abstract class DefaultNewCellPathResolver implements NewCellPathResolver 
               "No known cell with path %s. Known cells are {%s}", path, formatKnownCells()));
     }
     return canonicalCellName;
+  }
+
+  public static ImmutableDefaultNewCellPathResolver of(
+      Map<? extends Path, ? extends CanonicalCellName> pathToNameMap) {
+    return ImmutableDefaultNewCellPathResolver.of(pathToNameMap);
   }
 
   private String formatKnownCells() {

@@ -89,7 +89,7 @@ public class BuildExecutor {
     this.build =
         new Build(
             actionGraphAndBuilder.getActionGraphBuilder(),
-            args.getRootCell(),
+            args.getCells().getRootCell(),
             cachingBuildEngine,
             args.getArtifactCacheFactory().newInstance(),
             args.getBuckConfig().getView(JavaBuckConfig.class).createDefaultJavaPackageFinder(),
@@ -149,8 +149,8 @@ public class BuildExecutor {
             args.getBuckConfig().getView(ModernBuildRuleConfig.class),
             args.getBuckConfig().getView(RemoteExecutionConfig.class),
             actionGraphAndBuilder.getActionGraphBuilder(),
-            args.getRootCell(),
-            args.getRootCell().getCellPathResolver(),
+            args.getCells().getRootCell(),
+            args.getCells().getRootCell().getCellPathResolver(),
             cachingBuildEngineDelegate.getFileHashCache(),
             args.getBuckEventBus(),
             metadataProvider,

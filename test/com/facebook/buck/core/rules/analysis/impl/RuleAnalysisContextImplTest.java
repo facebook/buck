@@ -28,7 +28,7 @@ import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
 import com.facebook.buck.core.rules.actions.ActionExecutionResult;
@@ -101,7 +101,7 @@ public class RuleAnalysisContextImplTest {
             .resolveSrcs(
                 ImmutableSet.of(
                     DefaultBuildTargetSourcePath.of(
-                        ImmutableBuildTargetWithOutputs.of(target, OutputLabel.defaultLabel())))));
+                        BuildTargetWithOutputs.of(target, OutputLabel.defaultLabel())))));
   }
 
   @Test

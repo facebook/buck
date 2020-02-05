@@ -153,6 +153,16 @@ public class ConfigTest {
                 "[foo]", "bar=\"foo [bar]\\t\\\"\tbaz\\\\\\n\\x1f\\U00103005\\u6211\\r\"")
             .getValue("foo", "bar")
             .get());
+
+    // After interpolation, this value is empty, but we don't know that until after we've
+    // already checked for empty strings
+    Config config =
+        ConfigBuilder.createFromText(
+            "[foo]", "bar = \\", "$(config user.bar) \\", "$(config other.bar)");
+    assertEquals(
+        "handles empty strings properly when config is involved",
+        Optional.empty(),
+        config.getValue("foo", "bar"));
   }
 
   @Test
@@ -162,6 +172,21 @@ public class ConfigTest {
         ImmutableList.of("foo bar", ",,,", ";", "\n"),
         ConfigBuilder.createFromText("[foo]", "bar=\"foo bar\" ,,, ; \"\\n\"")
             .getListWithoutComments("foo", "bar", ' '));
+    assertEquals(
+        "lists with quoted parts are decoded",
+        ImmutableList.of(),
+        new Config(RawConfig.of(ImmutableMap.of("foo", ImmutableMap.of("bar", " "))))
+            .getListWithoutComments("foo", "bar", ' '));
+
+    // After interpolation, this value is empty, but we don't know that until after we've
+    // already checked for empty strings
+    Config config =
+        ConfigBuilder.createFromText(
+            "[foo]", "bar = \\", "$(config user.bar) \\", "$(config other.bar)");
+    assertEquals(
+        "handles empty strings properly when config is involved",
+        ImmutableList.of(),
+        config.getListWithoutComments("foo", "bar"));
   }
 
   @Test

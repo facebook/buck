@@ -16,11 +16,10 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
-import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.versions.TargetNodeTranslator;
 import java.util.Objects;
 import java.util.Optional;
@@ -42,13 +41,13 @@ public abstract class BuildTargetMacro implements Macro {
 
   @Override
   public final Optional<Macro> translateTargets(
-      CellPathResolver cellPathResolver, BaseName targetBaseName, TargetNodeTranslator translator) {
+      CellNameResolver cellPathResolver, BaseName targetBaseName, TargetNodeTranslator translator) {
     return translator
         .translate(cellPathResolver, targetBaseName, getTarget())
         .map(
             buildTarget ->
                 withTargetWithOutputs(
-                    ImmutableBuildTargetWithOutputs.of(
+                    BuildTargetWithOutputs.of(
                         buildTarget, getTargetWithOutputs().getOutputLabel())));
   }
 

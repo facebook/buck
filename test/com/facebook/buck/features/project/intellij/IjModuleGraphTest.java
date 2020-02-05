@@ -752,6 +752,12 @@ public class IjModuleGraphTest {
               }
 
               @Override
+              public Optional<Path> getKaptAnnotationOutputPath(
+                  TargetNode<? extends JvmLibraryArg> targetNode) {
+                return Optional.empty();
+              }
+
+              @Override
               public Optional<Path> getCompilerOutputPath(
                   TargetNode<? extends JvmLibraryArg> targetNode) {
                 return Optional.empty();

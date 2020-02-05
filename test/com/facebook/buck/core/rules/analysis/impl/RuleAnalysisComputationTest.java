@@ -30,9 +30,9 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
-import com.facebook.buck.core.rules.analysis.ImmutableRuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisException;
+import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.collect.impl.TestProviderInfoCollectionImpl;
@@ -83,7 +83,7 @@ public class RuleAnalysisComputationTest {
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
-            cellPathResolver);
+            cellPathResolver.getCellNameResolver());
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     graph.addNode(targetNode);
     ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex =
@@ -92,8 +92,7 @@ public class RuleAnalysisComputationTest {
 
     RuleAnalysisComputation transformer = new RuleAnalysisComputation(targetGraph, eventBus);
     assertEquals(
-        ImmutableSet.of(),
-        transformer.discoverPreliminaryDeps(ImmutableRuleAnalysisKey.of(buildTarget)));
+        ImmutableSet.of(), transformer.discoverPreliminaryDeps(RuleAnalysisKey.of(buildTarget)));
   }
 
   @Test
@@ -126,7 +125,7 @@ public class RuleAnalysisComputationTest {
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
-            cellPathResolver);
+            cellPathResolver.getCellNameResolver());
     TargetNode<?> targetNode2 =
         targetNodeFactory.createFromObject(
             ruleDescription,
@@ -138,7 +137,7 @@ public class RuleAnalysisComputationTest {
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
-            cellPathResolver);
+            cellPathResolver.getCellNameResolver());
     TargetNode<?> targetNode3 =
         targetNodeFactory.createFromObject(
             ruleDescription,
@@ -150,7 +149,7 @@ public class RuleAnalysisComputationTest {
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
-            cellPathResolver);
+            cellPathResolver.getCellNameResolver());
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     graph.addNode(targetNode1);
     graph.addNode(targetNode2);
@@ -162,9 +161,8 @@ public class RuleAnalysisComputationTest {
 
     RuleAnalysisComputation transformer = new RuleAnalysisComputation(targetGraph, eventBus);
     assertEquals(
-        ImmutableSet.of(
-            ImmutableRuleAnalysisKey.of(buildTarget2), ImmutableRuleAnalysisKey.of(buildTarget3)),
-        transformer.discoverPreliminaryDeps(ImmutableRuleAnalysisKey.of(buildTarget1)));
+        ImmutableSet.of(RuleAnalysisKey.of(buildTarget2), RuleAnalysisKey.of(buildTarget3)),
+        transformer.discoverPreliminaryDeps(RuleAnalysisKey.of(buildTarget1)));
   }
 
   @Test
@@ -203,7 +201,7 @@ public class RuleAnalysisComputationTest {
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
-            cellPathResolver);
+            cellPathResolver.getCellNameResolver());
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     graph.addNode(targetNode);
     ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex =
@@ -214,8 +212,7 @@ public class RuleAnalysisComputationTest {
 
     RuleAnalysisResult ruleAnalysisResult =
         transformer.transform(
-            ImmutableRuleAnalysisKey.of(buildTarget),
-            new FakeComputationEnvironment(ImmutableMap.of()));
+            RuleAnalysisKey.of(buildTarget), new FakeComputationEnvironment(ImmutableMap.of()));
 
     // We shouldn't be making copies of the providers or build target in our transformation. It
     // should be as given.
@@ -274,7 +271,7 @@ public class RuleAnalysisComputationTest {
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
-            cellPathResolver);
+            cellPathResolver.getCellNameResolver());
     TargetNode<?> targetNode2 =
         targetNodeFactory.createFromObject(
             ruleDescription2,
@@ -286,7 +283,7 @@ public class RuleAnalysisComputationTest {
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
             ImmutableSet.of(),
-            cellPathResolver);
+            cellPathResolver.getCellNameResolver());
 
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     graph.addNode(targetNode);
@@ -300,11 +297,11 @@ public class RuleAnalysisComputationTest {
 
     RuleAnalysisResult ruleAnalysisResult =
         transformer.transform(
-            ImmutableRuleAnalysisKey.of(buildTarget),
+            RuleAnalysisKey.of(buildTarget),
             // here we provide the deps via the TransformationEnvironment
             new FakeComputationEnvironment(
                 ImmutableMap.of(
-                    ImmutableRuleAnalysisKey.of(buildTarget2),
+                    RuleAnalysisKey.of(buildTarget2),
                     ImmutableRuleAnalysisResultImpl.of(
                         buildTarget2, expectedProviders, ImmutableMap.of()))));
 

@@ -26,7 +26,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.command.config.ConfigDifference.ConfigChange;
-import com.facebook.buck.command.config.ImmutableConfigChange;
 import com.facebook.buck.support.cli.args.GlobalCliOptions;
 import com.facebook.buck.util.config.Configs;
 import com.google.common.collect.ImmutableMap;
@@ -91,8 +90,7 @@ public class UIMessagesFormatterTest {
   private static Map<String, ConfigChange> generateConfigChange(int n) {
     ImmutableMap.Builder<String, ConfigChange> builder = ImmutableMap.builder();
     IntStream.range(0, n)
-        .forEach(
-            (i) -> builder.put("diff" + i, ImmutableConfigChange.of("before" + i, "after" + i)));
+        .forEach((i) -> builder.put("diff" + i, ConfigChange.of("before" + i, "after" + i)));
     return builder.build();
   }
 

@@ -23,8 +23,8 @@ import com.facebook.buck.core.starlark.coercer.SkylarkParamInfo;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
-import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableIntAttribute;
-import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableStringAttribute;
+import com.facebook.buck.core.starlark.rule.attr.impl.IntAttribute;
+import com.facebook.buck.core.starlark.rule.attr.impl.StringAttribute;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.parser.context.ParseContext;
@@ -130,8 +130,8 @@ public class SkylarkUserDefinedRuleTest {
   public void getsCorrectName() throws LabelSyntaxException, EvalException {
     ImmutableMap<String, AttributeHolder> params =
         ImmutableMap.of(
-            "arg1", ImmutableStringAttribute.of("some string", "", false, ImmutableList.of()),
-            "_arg2", ImmutableStringAttribute.of("some string", "", true, ImmutableList.of()));
+            "arg1", StringAttribute.of("some string", "", false, ImmutableList.of()),
+            "_arg2", StringAttribute.of("some string", "", true, ImmutableList.of()));
 
     SkylarkUserDefinedRule rule =
         SkylarkUserDefinedRule.of(
@@ -155,8 +155,8 @@ public class SkylarkUserDefinedRuleTest {
       throws EvalException, LabelSyntaxException {
     ImmutableMap<String, AttributeHolder> params =
         ImmutableMap.of(
-            "arg1", ImmutableStringAttribute.of("some string", "", false, ImmutableList.of()),
-            "_arg2", ImmutableStringAttribute.of("some string", "", true, ImmutableList.of()));
+            "arg1", StringAttribute.of("some string", "", false, ImmutableList.of()),
+            "_arg2", StringAttribute.of("some string", "", true, ImmutableList.of()));
 
     ImmutableList<String> expectedOrder = ImmutableList.of("name", "arg1");
     ImmutableList<String> expectedRawArgs = ImmutableList.of("name", "arg1", "_arg2");
@@ -181,12 +181,12 @@ public class SkylarkUserDefinedRuleTest {
       throws EvalException, LabelSyntaxException {
     ImmutableMap<String, AttributeHolder> params =
         ImmutableMap.<String, AttributeHolder>builder()
-            .put("arg1", ImmutableStringAttribute.of("some string", "", false, ImmutableList.of()))
-            .put("arg9", ImmutableStringAttribute.of("some string", "", true, ImmutableList.of()))
-            .put("arg2", ImmutableStringAttribute.of("some string", "", true, ImmutableList.of()))
-            .put("arg3", ImmutableIntAttribute.of(5, "", false, ImmutableList.of()))
-            .put("arg8", ImmutableIntAttribute.of(5, "", false, ImmutableList.of()))
-            .put("arg4", ImmutableIntAttribute.of(5, "", true, ImmutableList.of()))
+            .put("arg1", StringAttribute.of("some string", "", false, ImmutableList.of()))
+            .put("arg9", StringAttribute.of("some string", "", true, ImmutableList.of()))
+            .put("arg2", StringAttribute.of("some string", "", true, ImmutableList.of()))
+            .put("arg3", IntAttribute.of(5, "", false, ImmutableList.of()))
+            .put("arg8", IntAttribute.of(5, "", false, ImmutableList.of()))
+            .put("arg4", IntAttribute.of(5, "", true, ImmutableList.of()))
             .build();
 
     ImmutableList<String> expectedOrder =
@@ -245,8 +245,7 @@ public class SkylarkUserDefinedRuleTest {
   @Test
   public void raisesErrorIfArgumentDuplicatesBuiltInName() throws EvalException {
     ImmutableMap<String, AttributeHolder> params =
-        ImmutableMap.of(
-            "name", ImmutableStringAttribute.of("some string", "", false, ImmutableList.of()));
+        ImmutableMap.of("name", StringAttribute.of("some string", "", false, ImmutableList.of()));
 
     expectedException.expect(EvalException.class);
     expectedException.expectMessage(
@@ -306,10 +305,10 @@ public class SkylarkUserDefinedRuleTest {
       throws LabelSyntaxException, InterruptedException, EvalException {
     ImmutableMap<String, AttributeHolder> params =
         ImmutableMap.of(
-            "arg1", ImmutableStringAttribute.of("some string", "", false, ImmutableList.of()),
-            "arg2", ImmutableStringAttribute.of("some string", "", true, ImmutableList.of()),
-            "arg3", ImmutableIntAttribute.of(5, "", false, ImmutableList.of()),
-            "arg4", ImmutableIntAttribute.of(5, "", true, ImmutableList.of()));
+            "arg1", StringAttribute.of("some string", "", false, ImmutableList.of()),
+            "arg2", StringAttribute.of("some string", "", true, ImmutableList.of()),
+            "arg3", IntAttribute.of(5, "", false, ImmutableList.of()),
+            "arg4", IntAttribute.of(5, "", true, ImmutableList.of()));
     ImmutableMap<String, Object> expected =
         ImmutableMap.<String, Object>builder()
             .put("buck.base_path", "some_package/subdir")
@@ -357,10 +356,10 @@ public class SkylarkUserDefinedRuleTest {
       throws LabelSyntaxException, InterruptedException, EvalException {
     ImmutableMap<String, AttributeHolder> params =
         ImmutableMap.of(
-            "arg1", ImmutableStringAttribute.of("some string", "", false, ImmutableList.of()),
-            "arg2", ImmutableStringAttribute.of("some string", "", true, ImmutableList.of()),
-            "arg3", ImmutableIntAttribute.of(5, "", false, ImmutableList.of()),
-            "arg4", ImmutableIntAttribute.of(5, "", true, ImmutableList.of()));
+            "arg1", StringAttribute.of("some string", "", false, ImmutableList.of()),
+            "arg2", StringAttribute.of("some string", "", true, ImmutableList.of()),
+            "arg3", IntAttribute.of(5, "", false, ImmutableList.of()),
+            "arg4", IntAttribute.of(5, "", true, ImmutableList.of()));
 
     SkylarkUserDefinedRule rule =
         SkylarkUserDefinedRule.of(
@@ -392,8 +391,7 @@ public class SkylarkUserDefinedRuleTest {
   public void raisesErrorIfInvalidCharsInArgumentNameAreProvided() throws EvalException {
     ImmutableMap<String, AttributeHolder> params =
         ImmutableMap.of(
-            "invalid-name",
-            ImmutableStringAttribute.of("some string", "", false, ImmutableList.of()));
+            "invalid-name", StringAttribute.of("some string", "", false, ImmutableList.of()));
 
     expectedException.expect(EvalException.class);
     expectedException.expectMessage("Attribute name 'invalid-name' is not a valid identifier");
@@ -410,8 +408,7 @@ public class SkylarkUserDefinedRuleTest {
   @Test
   public void raisesErrorIfEmptyArgumentNameIsProvided() throws EvalException {
     ImmutableMap<String, AttributeHolder> params =
-        ImmutableMap.of(
-            "", ImmutableStringAttribute.of("some string", "", false, ImmutableList.of()));
+        ImmutableMap.of("", StringAttribute.of("some string", "", false, ImmutableList.of()));
 
     expectedException.expect(EvalException.class);
     expectedException.expectMessage("Attribute name '' is not a valid identifier");
@@ -430,10 +427,10 @@ public class SkylarkUserDefinedRuleTest {
       throws EvalException, IOException, InterruptedException, LabelSyntaxException {
     ImmutableMap<String, AttributeHolder> params =
         ImmutableMap.of(
-            "arg1", ImmutableStringAttribute.of("some string", "", false, ImmutableList.of()),
-            "arg2", ImmutableStringAttribute.of("some string", "", true, ImmutableList.of()),
-            "arg3", ImmutableIntAttribute.of(5, "", false, ImmutableList.of()),
-            "arg4", ImmutableIntAttribute.of(5, "", true, ImmutableList.of()));
+            "arg1", StringAttribute.of("some string", "", false, ImmutableList.of()),
+            "arg2", StringAttribute.of("some string", "", true, ImmutableList.of()),
+            "arg3", IntAttribute.of(5, "", false, ImmutableList.of()),
+            "arg4", IntAttribute.of(5, "", true, ImmutableList.of()));
     ImmutableMap<String, Object> expected =
         ImmutableMap.<String, Object>builder()
             .put("buck.base_path", "some_package/subdir")
@@ -490,8 +487,7 @@ public class SkylarkUserDefinedRuleTest {
   public void returnsParamInfos() throws EvalException {
 
     ImmutableMap<String, AttributeHolder> params =
-        ImmutableMap.of(
-            "arg1", ImmutableStringAttribute.of("some string", "", false, ImmutableList.of()));
+        ImmutableMap.of("arg1", StringAttribute.of("some string", "", false, ImmutableList.of()));
     SkylarkUserDefinedRule rule =
         SkylarkUserDefinedRule.of(
             Location.BUILTIN,
@@ -507,8 +503,7 @@ public class SkylarkUserDefinedRuleTest {
     assertEquals(
         ImmutableMap.of(
             "name",
-            new SkylarkParamInfo(
-                "name", ImmutableStringAttribute.of("", "", true, ImmutableList.of())),
+            new SkylarkParamInfo("name", StringAttribute.of("", "", true, ImmutableList.of())),
             "arg1",
             new SkylarkParamInfo("arg1", params.get("arg1").getAttribute())),
         paramInfos);

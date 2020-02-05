@@ -36,7 +36,10 @@ import java.util.concurrent.ExecutionException;
 /**
  * An implementation of {@link NativeLinkable} where (most of) the behavior is fixed when created.
  */
-public final class NativeLinkableInfo implements NativeLinkable {
+// TODO: This class should really be final, but extraneous instances of
+// `SwiftRuntimeNativeLinkableGroup` break the default hashcode/equals used in sets/maps, requiring
+// those instances to provide their own overloads.
+public class NativeLinkableInfo implements NativeLinkable {
   private final Cache<LinkableInputCacheKey, NativeLinkableInput> nativeLinkableCache =
       CacheBuilder.newBuilder().build();
   // TODO(cjhopman): We should remove this delegate, everything should be fixed when this is

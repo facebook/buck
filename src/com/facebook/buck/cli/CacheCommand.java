@@ -318,7 +318,7 @@ public class CacheCommand extends AbstractCommand {
     BuildTarget buildTarget =
         params
             .getUnconfiguredBuildTargetFactory()
-            .create(params.getCell().getCellPathResolver(), targetName)
+            .create(targetName, params.getCells().getRootCell().getCellNameResolver())
             // TODO(nga): ignores default_target_platform and platform detector
             .configure(
                 params.getTargetConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE));

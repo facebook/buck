@@ -19,14 +19,15 @@ package com.facebook.buck.features.python;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -221,14 +222,15 @@ public class PythonLibraryDescriptionTest {
                     ImmutableMap.of(
                         builder.getTarget(),
                         ImmutableMap.of(depBuilder.getTarget(), Version.of("1.0")))),
-                ImmutableTargetGraphCreationResult.of(
+                TargetGraphCreationResult.of(
                     TargetGraphFactory.newInstance(
                         transitiveDepBuilder.build(), depBuilder.build(), builder.build()),
                     ImmutableSet.of(builder.getTarget())),
                 executor.get(),
                 new DefaultTypeCoercerFactory(),
                 new ParsingUnconfiguredBuildTargetViewFactory(),
-                20)
+                20,
+                new TestCellBuilder().build())
             .getTargetGraph();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     PythonLibrary library = (PythonLibrary) graphBuilder.requireRule(builder.getTarget());
@@ -271,14 +273,15 @@ public class PythonLibraryDescriptionTest {
                     ImmutableMap.of(
                         builder.getTarget(),
                         ImmutableMap.of(depBuilder.getTarget(), Version.of("1.0")))),
-                ImmutableTargetGraphCreationResult.of(
+                TargetGraphCreationResult.of(
                     TargetGraphFactory.newInstance(
                         transitiveDepBuilder.build(), depBuilder.build(), builder.build()),
                     ImmutableSet.of(builder.getTarget())),
                 executor.get(),
                 new DefaultTypeCoercerFactory(),
                 new ParsingUnconfiguredBuildTargetViewFactory(),
-                20)
+                20,
+                new TestCellBuilder().build())
             .getTargetGraph();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     PythonLibrary library = (PythonLibrary) graphBuilder.requireRule(builder.getTarget());

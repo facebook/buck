@@ -56,4 +56,9 @@ public abstract class StringAttribute extends Attribute<String> {
   protected void validateCoercedValue(String value) throws CoerceFailedException {
     validateValueInList(getValues(), value);
   }
+
+  public static StringAttribute of(
+      String preCoercionDefaultValue, String doc, boolean mandatory, List<String> values) {
+    return ImmutableStringAttribute.of(preCoercionDefaultValue, doc, mandatory, values);
+  }
 }

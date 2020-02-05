@@ -42,7 +42,6 @@ import com.facebook.buck.slb.LoadBalancedService;
 import com.facebook.buck.slb.RetryingHttpService;
 import com.facebook.buck.slb.SingleUriService;
 import com.facebook.buck.support.bgtasks.BackgroundTask;
-import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskAction;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.util.timing.DefaultClock;
@@ -119,12 +118,11 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
     // long time to stat and cleanup large disk artifact cache directories
     // See https://github.com/facebook/buck/issues/1842
     BackgroundTask<List<ArtifactCache>> closeTask =
-        ImmutableBackgroundTask.<List<ArtifactCache>>builder()
-            .setAction(new ArtifactCachesCloseAction())
-            .setActionArgs(artifactCaches)
-            .setName("ArtifactCaches_close")
-            .setTimeout(BackgroundTask.Timeout.of(TIMEOUT_SECONDS, TimeUnit.SECONDS))
-            .build();
+        BackgroundTask.of(
+            "ArtifactCaches_close",
+            new ArtifactCachesCloseAction(),
+            artifactCaches,
+            BackgroundTask.Timeout.of(TIMEOUT_SECONDS, TimeUnit.SECONDS));
     managerScope.schedule(closeTask);
 
     buckEventBus.post(HttpArtifactCacheEvent.newShutdownEvent());

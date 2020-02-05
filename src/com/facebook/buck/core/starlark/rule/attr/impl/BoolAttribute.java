@@ -47,4 +47,8 @@ public abstract class BoolAttribute extends Attribute<Boolean> {
   public TypeCoercer<Boolean> getTypeCoercer() {
     return coercer;
   }
+
+  public static BoolAttribute of(Boolean preCoercionDefaultValue, String doc, boolean mandatory) {
+    return ImmutableBoolAttribute.of(preCoercionDefaultValue, doc, mandatory);
+  }
 }

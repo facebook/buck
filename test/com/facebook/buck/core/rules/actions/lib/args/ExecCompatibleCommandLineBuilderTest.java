@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
-import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
+import com.facebook.buck.core.artifact.SourceArtifactImpl;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rules.providers.lib.ImmutableRunInfo;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -38,13 +38,10 @@ public class ExecCompatibleCommandLineBuilderTest {
   @Test
   public void stringifiesProperly() {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Artifact path1 =
-        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("some_bin")));
-    Artifact path2 =
-        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("other_file")));
+    Artifact path1 = SourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("some_bin")));
+    Artifact path2 = SourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("other_file")));
     Artifact path3 =
-        ImmutableSourceArtifactImpl.of(
-            PathSourcePath.of(filesystem, Paths.get("subdir", "some_bin")));
+        SourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("subdir", "some_bin")));
 
     CommandLineArgs args1 =
         new ImmutableRunInfo(

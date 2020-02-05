@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -76,11 +77,13 @@ public interface ParamInfo extends Comparable<ParamInfo> {
    * <p>If this field has a top level Optional type, traversal begins at the Optional value, or not
    * at all if the field is empty.
    *
+   * @param cellPathResolver
    * @param traversal traversal to apply on the values.
    * @param dto the object whose field will be traversed.
-   * @see TypeCoercer#traverse(CellPathResolver, Object, TypeCoercer.Traversal)
+   * @see TypeCoercer#traverse(com.facebook.buck.core.cell.nameresolver.CellNameResolver, Object,
+   *     TypeCoercer.Traversal)
    */
-  void traverse(CellPathResolver cellPathResolver, Traversal traversal, Object dto);
+  void traverse(CellNameResolver cellPathResolver, Traversal traversal, Object dto);
 
   /**
    * @return The value for this parameter if it is an "implicit" attribute, otherwise {@code null}

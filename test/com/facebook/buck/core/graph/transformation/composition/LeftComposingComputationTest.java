@@ -21,14 +21,11 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.graph.transformation.impl.ChildrenAdder.LongNode;
 import com.facebook.buck.core.graph.transformation.impl.ChildrenSumMultiplier.LongMultNode;
 import com.facebook.buck.core.graph.transformation.impl.FakeComputationEnvironment;
-import com.facebook.buck.core.graph.transformation.impl.ImmutableLongMultNode;
-import com.facebook.buck.core.graph.transformation.impl.ImmutableLongNode;
 import com.facebook.buck.core.graph.transformation.model.ComposedComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComposedKey;
+import com.facebook.buck.core.graph.transformation.model.ComposedResult;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
-import com.facebook.buck.core.graph.transformation.model.ImmutableComposedKey;
-import com.facebook.buck.core.graph.transformation.model.ImmutableComposedResult;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Map;
@@ -38,8 +35,7 @@ public class LeftComposingComputationTest {
 
   @Test
   public void composedComputationReturnsCorrectPreliminaryDeps() {
-    ComposedKey<LongNode, LongNode> originKey =
-        ImmutableComposedKey.of(ImmutableLongNode.of(1), LongNode.class);
+    ComposedKey<LongNode, LongNode> originKey = ComposedKey.of(LongNode.of(1), LongNode.class);
 
     Composer<LongNode, LongNode> composer = (ignored1, ignored2) -> null;
     Transformer<ComputeKey<ComputeResult>, ComputeResult, LongMultNode> transformer =
@@ -54,24 +50,22 @@ public class LeftComposingComputationTest {
     assertEquals(
         ImmutableSet.of(originKey),
         computation.discoverPreliminaryDeps(
-            ImmutableComposedKey.of(originKey.getOriginKey(), LongMultNode.class)));
+            ComposedKey.of(originKey.getOriginKey(), LongMultNode.class)));
   }
 
   @Test
   public void composedComputationReturnsCorrectDeps() throws Exception {
-    LongNode originKey = ImmutableLongNode.of(1);
-    LongNode originResult = ImmutableLongNode.of(2);
-    ComposedKey<LongNode, LongNode> originComposedKey =
-        ImmutableComposedKey.of(originKey, LongNode.class);
+    LongNode originKey = LongNode.of(1);
+    LongNode originResult = LongNode.of(2);
+    ComposedKey<LongNode, LongNode> originComposedKey = ComposedKey.of(originKey, LongNode.class);
 
     ImmutableSet<LongMultNode> expectedDeps =
-        ImmutableSet.of(ImmutableLongMultNode.of(1), ImmutableLongMultNode.of(2));
+        ImmutableSet.of(LongMultNode.of(1), LongMultNode.of(2));
 
     FakeComputationEnvironment environment =
         new FakeComputationEnvironment(
             ImmutableMap.of(
-                originComposedKey,
-                ImmutableComposedResult.of(ImmutableMap.of(originKey, originResult))));
+                originComposedKey, ComposedResult.of(ImmutableMap.of(originKey, originResult))));
 
     Composer<LongNode, LongNode> composer =
         (key, result) -> {
@@ -91,8 +85,7 @@ public class LeftComposingComputationTest {
     assertEquals(
         expectedDeps,
         computation.discoverDeps(
-            ImmutableComposedKey.of(originComposedKey.getOriginKey(), LongMultNode.class),
-            environment));
+            ComposedKey.of(originComposedKey.getOriginKey(), LongMultNode.class), environment));
   }
 
   @Test
@@ -100,20 +93,17 @@ public class LeftComposingComputationTest {
     FakeComputationEnvironment environment =
         new FakeComputationEnvironment(
             ImmutableMap.of(
-                ImmutableComposedKey.of(ImmutableLongNode.of(1), LongNode.class),
-                ImmutableComposedResult.of(
+                ComposedKey.of(LongNode.of(1), LongNode.class),
+                ComposedResult.of(
                     ImmutableMap.of(
-                        ImmutableLongNode.of(1),
-                        ImmutableLongNode.of(1),
-                        ImmutableLongNode.of(2),
-                        ImmutableLongNode.of(2))),
-                ImmutableLongMultNode.of(1),
-                ImmutableLongMultNode.of(1),
-                ImmutableLongMultNode.of(2),
-                ImmutableLongMultNode.of(2)));
+                        LongNode.of(1), LongNode.of(1), LongNode.of(2), LongNode.of(2))),
+                LongMultNode.of(1),
+                LongMultNode.of(1),
+                LongMultNode.of(2),
+                LongMultNode.of(2)));
 
     Composer<LongNode, LongNode> composer =
-        (key, result) -> ImmutableSet.of(ImmutableLongMultNode.of(result.get()));
+        (key, result) -> ImmutableSet.of(LongMultNode.of(result.get()));
     Transformer<ComputeKey<ComputeResult>, ComputeResult, LongMultNode> transformer =
         deps ->
             (Map<ComputeKey<LongMultNode>, LongMultNode>)
@@ -127,13 +117,9 @@ public class LeftComposingComputationTest {
             transformer);
 
     assertEquals(
-        ImmutableComposedResult.of(
+        ComposedResult.of(
             ImmutableMap.of(
-                ImmutableLongMultNode.of(1),
-                ImmutableLongMultNode.of(1),
-                ImmutableLongMultNode.of(2),
-                ImmutableLongMultNode.of(2))),
-        computation.transform(
-            ImmutableComposedKey.of(ImmutableLongNode.of(1), LongMultNode.class), environment));
+                LongMultNode.of(1), LongMultNode.of(1), LongMultNode.of(2), LongMultNode.of(2))),
+        computation.transform(ComposedKey.of(LongNode.of(1), LongMultNode.class), environment));
   }
 }

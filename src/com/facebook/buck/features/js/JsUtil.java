@@ -166,7 +166,8 @@ public class JsUtil {
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots) {
     StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.of(target, cellRoots, graphBuilder, MACRO_EXPANDERS);
+        StringWithMacrosConverter.of(
+            target, cellRoots.getCellNameResolver(), graphBuilder, MACRO_EXPANDERS);
     return args.getExtraJson().map(macrosConverter::convert);
   }
 

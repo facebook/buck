@@ -18,7 +18,6 @@ package com.facebook.buck.core.sourcepath;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
-import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.facebook.buck.util.types.Pair;
@@ -45,7 +44,7 @@ public abstract class ExplicitBuildTargetSourcePath implements BuildTargetSource
    */
   public static ExplicitBuildTargetSourcePath of(BuildTarget target, Path resolvedPath) {
     return of(
-        ImmutableBuildTargetWithOutputs.of(target, OutputLabel.defaultLabel()),
+        BuildTargetWithOutputs.of(target, OutputLabel.defaultLabel()),
         resolvedPath,
         Optional.empty());
   }

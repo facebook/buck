@@ -29,7 +29,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -45,7 +44,7 @@ import java.util.stream.Collectors;
  */
 public class QueryOutputsMacroExpander extends QueryMacroExpander<QueryOutputsMacro> {
 
-  public QueryOutputsMacroExpander(Optional<TargetGraph> targetGraph) {
+  public QueryOutputsMacroExpander(TargetGraph targetGraph) {
     super(targetGraph);
   }
 

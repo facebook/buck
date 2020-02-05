@@ -57,7 +57,7 @@ public class FixCommand extends AbstractCommand {
 
     FixCommandHandler fixCommandHandler =
         new FixCommandHandler(
-            params.getCell().getFilesystem(),
+            params.getCells().getRootCell().getFilesystem(),
             params.getConsole(),
             params.getEnvironment(),
             config,
@@ -80,7 +80,7 @@ public class FixCommand extends AbstractCommand {
         ProcessExecutorParams.builder()
             .addAllCommand(scriptPath)
             .setEnvironment(params.getEnvironment())
-            .setDirectory(params.getCell().getFilesystem().getRootPath())
+            .setDirectory(params.getCells().getRootCell().getFilesystem().getRootPath())
             .build();
     int code =
         processExecutor

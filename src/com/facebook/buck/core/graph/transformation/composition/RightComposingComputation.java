@@ -25,7 +25,6 @@ import com.facebook.buck.core.graph.transformation.model.ComposedResult;
 import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
-import com.facebook.buck.core.graph.transformation.model.ImmutableComposedResult;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
@@ -104,7 +103,7 @@ public class RightComposingComputation<
                         ::contains));
     resultBuilder.putAll(values);
 
-    return ImmutableComposedResult.of(resultBuilder.build());
+    return ComposedResult.of(resultBuilder.build());
   }
 
   @Override

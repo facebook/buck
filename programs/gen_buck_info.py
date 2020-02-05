@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import argparse
 import errno
 import json
@@ -19,14 +21,10 @@ import os
 import sys
 import time
 
-import buck_version
-import buck_version_mercurial
-import java_version
+from programs import buck_version, buck_version_mercurial, java_version
 
-SUPPORTED_VCS = {
-    '.git': buck_version,
-    '.hg': buck_version_mercurial,
-    }
+
+SUPPORTED_VCS = {".git": buck_version, ".hg": buck_version_mercurial}
 
 
 def main(argv):

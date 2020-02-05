@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
@@ -31,8 +32,8 @@ import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -440,12 +441,13 @@ public class CxxBinaryDescriptionTest {
         AsyncVersionedTargetGraphBuilder.transform(
                 new VersionUniverseVersionSelector(
                     unversionedTargetGraph, ImmutableMap.of("1", universe1, "2", universe2)),
-                ImmutableTargetGraphCreationResult.of(
+                TargetGraphCreationResult.of(
                     unversionedTargetGraph, ImmutableSet.of(builder.getTarget())),
                 executor.get(),
                 new DefaultTypeCoercerFactory(),
                 new ParsingUnconfiguredBuildTargetViewFactory(),
-                20)
+                20,
+                new TestCellBuilder().build())
             .getTargetGraph();
 
     assertThat(

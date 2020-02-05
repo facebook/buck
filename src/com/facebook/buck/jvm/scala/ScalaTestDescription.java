@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.scala;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -133,7 +134,10 @@ public class ScalaTestDescription
 
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.of(
-            buildTarget, cellRoots, graphBuilder, JavaTestDescription.MACRO_EXPANDERS);
+            buildTarget,
+            cellRoots.getCellNameResolver(),
+            graphBuilder,
+            JavaTestDescription.MACRO_EXPANDERS);
     JavaLibrary testsLibrary = graphBuilder.addToIndex(scalaLibraryBuilder.buildLibrary());
 
     return new JavaTest(
@@ -179,7 +183,7 @@ public class ScalaTestDescription
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       AbstractScalaTestDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {

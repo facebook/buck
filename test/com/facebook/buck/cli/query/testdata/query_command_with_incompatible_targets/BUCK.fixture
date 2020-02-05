@@ -12,12 +12,32 @@ platform(
     ],
 )
 
+config_setting(
+    name = "osx_config",
+    constraint_values = [
+        "buck//config/constraints:osx",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+config_setting(
+    name = "linux_config",
+    constraint_values = [
+        "buck//config/constraints:linux",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
 genrule(
     name = "a",
     out = "a",
     cmd = "echo a > $OUT",
-    target_compatible_with = [
-        "buck//config/constraints:linux",
+    compatible_with = [
+        ":linux_config",
     ],
 )
 
@@ -25,8 +45,8 @@ genrule(
     name = "b",
     out = "b",
     cmd = "echo b > $OUT",
-    target_compatible_with = [
-        "buck//config/constraints:osx",
+    compatible_with = [
+        ":osx_config",
     ],
 )
 
@@ -35,8 +55,8 @@ java_library(
     srcs = [
         "A.java",
     ],
-    target_compatible_with = [
-        "buck//config/constraints:linux",
+    compatible_with = [
+        ":linux_config",
     ],
 )
 
@@ -45,7 +65,7 @@ java_library(
     srcs = [
         "A.java",
     ],
-    target_compatible_with = [
-        "buck//config/constraints:osx",
+    compatible_with = [
+        ":osx_config",
     ],
 )

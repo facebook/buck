@@ -19,6 +19,7 @@ package com.facebook.buck.rules.coercer;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
@@ -44,14 +45,16 @@ public class PatternMatchedCollectionTest {
     BuildTarget newTarget = BuildTargetFactory.newInstance("//something:else");
     TargetNodeTranslator translator =
         new FixedTargetNodeTranslator(
-            new DefaultTypeCoercerFactory(), ImmutableMap.of(target, newTarget));
+            new DefaultTypeCoercerFactory(),
+            ImmutableMap.of(target, newTarget),
+            new TestCellBuilder().build());
     PatternMatchedCollection<BuildTarget> collection =
         PatternMatchedCollection.<BuildTarget>builder()
             .add(Pattern.compile("something"), target)
             .build();
     assertThat(
         translator
-            .translate(CELL_PATH_RESOLVER, BaseName.ROOT, collection)
+            .translate(CELL_PATH_RESOLVER.getCellNameResolver(), BaseName.ROOT, collection)
             .map(PatternMatchedCollection::getValues),
         Matchers.equalTo(Optional.of(ImmutableList.of(newTarget))));
   }
@@ -60,13 +63,14 @@ public class PatternMatchedCollectionTest {
   public void untranslatedTargets() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     TargetNodeTranslator translator =
-        new FixedTargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableMap.of());
+        new FixedTargetNodeTranslator(
+            new DefaultTypeCoercerFactory(), ImmutableMap.of(), new TestCellBuilder().build());
     PatternMatchedCollection<BuildTarget> collection =
         PatternMatchedCollection.<BuildTarget>builder()
             .add(Pattern.compile("something"), target)
             .build();
     assertThat(
-        translator.translate(CELL_PATH_RESOLVER, BaseName.ROOT, collection),
+        translator.translate(CELL_PATH_RESOLVER.getCellNameResolver(), BaseName.ROOT, collection),
         Matchers.equalTo(Optional.empty()));
   }
 }

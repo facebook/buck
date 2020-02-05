@@ -23,7 +23,6 @@ import static com.facebook.buck.log.MachineReadableLogConfig.PREFIX_INVOCATION_I
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.doctor.config.BuildLogEntry;
-import com.facebook.buck.doctor.config.ImmutableBuildLogEntry;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.util.BuckConstant;
@@ -142,7 +141,7 @@ public class BuildLogHelper {
         Optional.of(logFile.resolveSibling(BuckConstant.BUCK_FIX_SPEC_FILE_NAME))
             .filter(projectFilesystem::isFile);
 
-    return ImmutableBuildLogEntry.of(
+    return BuildLogEntry.of(
         logFile,
         buildId,
         commandArgs,

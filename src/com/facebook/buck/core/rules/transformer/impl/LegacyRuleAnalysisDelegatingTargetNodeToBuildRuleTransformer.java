@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.rules.transformer.impl;
 
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.RuleDescription;
 import com.facebook.buck.core.description.RuleDescriptionWithInstanceName;
@@ -27,7 +28,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.actions.ActionWrapperData;
-import com.facebook.buck.core.rules.analysis.ImmutableRuleAnalysisKey;
+import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.core.rules.analysis.computation.RuleAnalysisGraph;
@@ -40,6 +41,7 @@ import com.facebook.buck.core.rules.tool.RuleAnalysisLegacyBinaryBuildRuleView;
 import com.facebook.buck.core.rules.tool.RuleAnalysisLegacyTestBuildRuleView;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.Iterables;
 import java.util.Optional;
@@ -68,11 +70,15 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer
       ConfigurationRuleRegistry configurationRuleRegistry,
       ActionGraphBuilder graphBuilder,
       TargetNode<T> targetNode,
-      ProviderInfoCollection providerInfoCollection) {
+      ProviderInfoCollection providerInfoCollection,
+      CellPathResolver cellPathResolver) {
+    Preconditions.checkArgument(
+        targetNode.getBuildTarget().getCell() == cellPathResolver.getCurrentCellName());
+
     BaseDescription<T> description = targetNode.getDescription();
     if (description instanceof RuleDescription) {
       RuleAnalysisResult result =
-          ruleAnalysisComputation.get(ImmutableRuleAnalysisKey.of(targetNode.getBuildTarget()));
+          ruleAnalysisComputation.get(RuleAnalysisKey.of(targetNode.getBuildTarget()));
 
       // TODO(bobyf): add support for multiple actions from a rule
       ImmutableCollection<ActionAnalysisData> actions = result.getRegisteredActions().values();
@@ -128,7 +134,8 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformer
         configurationRuleRegistry,
         graphBuilder,
         targetNode,
-        providerInfoCollection);
+        providerInfoCollection,
+        cellPathResolver);
   }
 
   private static <T extends BuildRuleArg> String getRuleName(

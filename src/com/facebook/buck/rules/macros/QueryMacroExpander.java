@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.QueryTarget;
@@ -45,22 +45,22 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
   private static final UnconfiguredBuildTargetViewFactory UNCONFIGURED_BUILD_TARGET_FACTORY =
       new ParsingUnconfiguredBuildTargetViewFactory();
 
-  private Optional<TargetGraph> targetGraph;
+  private TargetGraph targetGraph;
 
-  public QueryMacroExpander(Optional<TargetGraph> targetGraph) {
+  public QueryMacroExpander(TargetGraph targetGraph) {
     this.targetGraph = targetGraph;
   }
 
   Stream<QueryTarget> resolveQuery(
       BuildTarget target,
-      CellPathResolver cellNames,
+      CellNameResolver cellNames,
       ActionGraphBuilder graphBuilder,
       String queryExpression)
       throws MacroException {
     GraphEnhancementQueryEnvironment env =
         new GraphEnhancementQueryEnvironment(
             Optional.of(graphBuilder),
-            targetGraph,
+            Optional.of(targetGraph),
             TYPE_COERCER_FACTORY,
             cellNames,
             UNCONFIGURED_BUILD_TARGET_FACTORY,
@@ -79,7 +79,7 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
 
   @Override
   public QueryResults precomputeWorkFrom(
-      BuildTarget target, CellPathResolver cellNames, ActionGraphBuilder graphBuilder, T input)
+      BuildTarget target, CellNameResolver cellNames, ActionGraphBuilder graphBuilder, T input)
       throws MacroException {
     return new QueryResults(
         resolveQuery(target, cellNames, graphBuilder, input.getQuery().getQuery()));

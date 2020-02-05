@@ -27,7 +27,7 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.ThrowingTargetConfigurationTransformer;
@@ -126,7 +126,7 @@ public class GenruleDescriptionTest {
                 ImmutableSortedSet.of(),
                 visibilityPatterns.build(),
                 withinViewPatterns.build(),
-                createCellRoots(projectFilesystem));
+                createCellRoots(projectFilesystem).getCellNameResolver());
     assertEquals(
         "SourcePaths and targets from cmd string should be extracted as extra deps.",
         ImmutableSet.of("//foo:baz", "//biz:baz", "//bin:executable", "//foo:arg"),
@@ -153,7 +153,7 @@ public class GenruleDescriptionTest {
                 StringWithMacrosUtils.format(
                     "%s",
                     ClasspathMacro.of(
-                        ImmutableBuildTargetWithOutputs.of(
+                        BuildTargetWithOutputs.of(
                             depNode.getBuildTarget(), OutputLabel.defaultLabel()))))
             .build();
 
@@ -233,7 +233,9 @@ public class GenruleDescriptionTest {
                 "remoteexecution",
                 ImmutableMap.<String, String>builder()
                     .put(
-                        RemoteExecutionConfig.USE_REMOTE_EXECUTION_FOR_GENRULE_IF_REQUESTED, "true")
+                        RemoteExecutionConfig.getUseRemoteExecutionForGenruleIfRequestedField(
+                            "genrule"),
+                        "true")
                     .build())
             .build();
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(config).build();

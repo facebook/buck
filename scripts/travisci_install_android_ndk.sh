@@ -15,14 +15,21 @@
 
 set -x
 
+# $1: OS
+export OS="linux"
+if [ "x$1" == "xmacos" ]
+then
+  export OS="darwin"
+fi
+
 export NDK_VERSION_STRING="android-ndk-r10e"
-export NDK_FILENAME="$NDK_VERSION_STRING-linux-x86_64.bin"
+export NDK_FILENAME="$NDK_VERSION_STRING-${OS}-x86_64.bin"
 
 export CACHED_PATH="${HOME}/ndk_cache/$NDK_FILENAME"
 
 if [ ! -f "$CACHED_PATH" ]; then
   echo "Downloading NDK."
-  wget "https://dl.google.com/android/ndk/$NDK_FILENAME"
+  curl -O "https://dl.google.com/android/ndk/$NDK_FILENAME"
 else
   echo "Using cached NDK."
   mv "$CACHED_PATH" .

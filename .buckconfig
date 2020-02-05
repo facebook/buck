@@ -1,4 +1,7 @@
 
+[python]
+    interpreter = python3
+    pex_flags = "--python-shebang=/usr/bin/env python3"
 [repositories]
     buck = .
     buck_bazel_skylib = ./third-party/skylark/bazel-skylib

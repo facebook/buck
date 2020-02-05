@@ -47,4 +47,8 @@ public abstract class RuleAnalysisKey implements ComputeKey<RuleAnalysisResult> 
   public ComputationIdentifier<RuleAnalysisResult> getIdentifier() {
     return IDENTIFIER;
   }
+
+  public static RuleAnalysisKey of(BuildTarget buildTarget) {
+    return ImmutableRuleAnalysisKey.of(buildTarget);
+  }
 }

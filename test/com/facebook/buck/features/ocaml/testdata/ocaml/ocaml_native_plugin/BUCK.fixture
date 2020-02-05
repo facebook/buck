@@ -4,7 +4,7 @@ genrule(
         "registry.ml",
         "tester.ml",
     ],
-    out = "./tester",
+    out = "tester",
     cmd = "ocamlopt -o $OUT dynlink.cmxa registry.ml tester.ml",
     executable = True,
 )

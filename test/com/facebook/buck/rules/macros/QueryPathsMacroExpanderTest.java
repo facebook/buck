@@ -42,7 +42,6 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Paths;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.Before;
@@ -81,11 +80,11 @@ public class QueryPathsMacroExpanderTest {
     // Ensure that the root rule is in the graphBuilder
     BuildRule rule = graphBuilder.requireRule(targetNode.getBuildTarget());
 
-    QueryPathsMacroExpander expander = new QueryPathsMacroExpander(Optional.of(targetGraph));
+    QueryPathsMacroExpander expander = new QueryPathsMacroExpander(targetGraph);
     StringWithMacrosConverter converter =
         StringWithMacrosConverter.of(
             targetNode.getBuildTarget(),
-            cellPathResolver,
+            cellPathResolver.getCellNameResolver(),
             graphBuilder,
             ImmutableList.of(expander));
 

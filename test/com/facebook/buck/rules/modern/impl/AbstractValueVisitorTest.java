@@ -24,8 +24,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
-import com.facebook.buck.core.model.ImmutableRuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.OutputLabel;
+import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -83,7 +83,7 @@ public abstract class AbstractValueVisitorTest {
       new FakeProjectFilesystem(
           CanonicalCellName.rootCell(), absoluteRoot.resolve(Paths.get("project/other")));
   private static final TargetConfiguration TARGET_CONFIGURATION =
-      ImmutableRuleBasedTargetConfiguration.of(
+      RuleBasedTargetConfiguration.of(
           ConfigurationBuildTargetFactoryForTests.newInstance("//platform:platform"));
 
   protected static final BuildTarget someBuildTarget =

@@ -298,7 +298,7 @@ public class AppleDeviceControllerTest {
 
   @Test
   public void getSimulatorsTest() throws IOException {
-    ImmutableSet<ImmutableAppleDevice> simulators;
+    ImmutableSet<AppleDevice> simulators;
     try (OutputStream stdin = new ByteArrayOutputStream();
         InputStream stdout = getClass().getResourceAsStream("testdata/idb-list.txt");
         InputStream stderr = new ByteArrayInputStream(new byte[0])) {
@@ -405,7 +405,7 @@ public class AppleDeviceControllerTest {
 
   @Test
   public void getPhysicalDevicesTest() throws IOException {
-    ImmutableSet<ImmutableAppleDevice> physicalDevices;
+    ImmutableSet<AppleDevice> physicalDevices;
     try (OutputStream stdin = new ByteArrayOutputStream();
         InputStream stdout = getClass().getResourceAsStream("testdata/idb-list.txt");
         InputStream stderr = new ByteArrayInputStream(new byte[0])) {

@@ -49,7 +49,7 @@ public class ImmutableTypeCoercerTest {
         (TypeCoercer<DtoWithImmutableAttribute>)
             new DefaultTypeCoercerFactory().typeCoercerForType(dto.getClass());
     typeCoercer.traverse(
-        TestCellPathResolver.get(new FakeProjectFilesystem()),
+        TestCellPathResolver.get(new FakeProjectFilesystem()).getCellNameResolver(),
         dto,
         object -> {
           if (object instanceof BuildTarget) {

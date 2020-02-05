@@ -20,8 +20,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.parser.api.BuildFileManifest;
-import com.facebook.buck.parser.api.ImmutableBuildFileManifest;
-import com.facebook.buck.parser.exceptions.ImmutableParsingError;
 import com.facebook.buck.parser.exceptions.ParsingError;
 import com.facebook.buck.skylark.io.GlobSpec;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
@@ -65,7 +63,7 @@ public class BuildFileManifestSerializerTest {
     globSpecBuilder.add(GlobSpecWithResult.of(globSpec, globs));
     ImmutableList<GlobSpecWithResult> globSpecs = globSpecBuilder.build();
 
-    ImmutableMap<String, String> configs =
+    ImmutableMap<String, Object> configs =
         ImmutableMap.of("confKey1", "confVal1", "confKey2", "confVal2");
     ImmutableSortedSet<String> includes = ImmutableSortedSet.of("/Includes1", "/includes2");
     ImmutableMap<String, Object> target1 = ImmutableMap.of("t1K1", "t1V1", "t1K2", "t1V2");
@@ -75,11 +73,10 @@ public class BuildFileManifestSerializerTest {
 
     ImmutableList<ParsingError> errors =
         ImmutableList.of(
-            ImmutableParsingError.of("error1", ImmutableList.of("stack1", "stack2")),
-            ImmutableParsingError.of("error2", ImmutableList.of()));
+            ParsingError.of("error1", ImmutableList.of("stack1", "stack2")),
+            ParsingError.of("error2", ImmutableList.of()));
 
-    return ImmutableBuildFileManifest.of(
-        targets, includes, configs, Optional.of(envs), globSpecs, errors);
+    return BuildFileManifest.of(targets, includes, configs, Optional.of(envs), globSpecs, errors);
   }
 
   @Test

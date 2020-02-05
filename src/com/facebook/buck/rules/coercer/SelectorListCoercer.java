@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -66,7 +67,7 @@ public class SelectorListCoercer<T> implements TypeCoercer<SelectorList<T>> {
   }
 
   @Override
-  public void traverse(CellPathResolver cellRoots, SelectorList<T> object, Traversal traversal) {
+  public void traverse(CellNameResolver cellRoots, SelectorList<T> object, Traversal traversal) {
     traversal.traverse(object);
     for (Selector<T> element : object.getSelectors()) {
       for (Map.Entry<SelectorKey, T> entry : element.getConditions().entrySet()) {

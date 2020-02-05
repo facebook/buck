@@ -18,40 +18,41 @@ package com.facebook.buck.core.parser;
 
 import com.facebook.buck.core.files.DirectoryList;
 import com.facebook.buck.core.files.DirectoryListComputation;
+import com.facebook.buck.core.files.DirectoryListKey;
 import com.facebook.buck.core.files.FileTree;
 import com.facebook.buck.core.files.FileTreeComputation;
 import com.facebook.buck.core.files.FileTreeFileNameIterator;
-import com.facebook.buck.core.files.ImmutableDirectoryListKey;
-import com.facebook.buck.core.files.ImmutableFileTreeKey;
+import com.facebook.buck.core.files.FileTreeKey;
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.io.file.MorePaths;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystemView;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterators;
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
 
 /**
  * Discover paths for packages which contain targets that match specification (build target pattern)
  *
- * <p>This computation depends on {@link ImmutableFileTreeKey} ({@link FileTreeComputation}) and
- * {@link ImmutableDirectoryListKey} ({@link DirectoryListComputation}).
+ * <p>This computation depends on {@link FileTreeKey} ({@link FileTreeComputation}) and {@link
+ * DirectoryListKey} ({@link DirectoryListComputation}).
  *
  * <p>See {@link WatchmanBuildPackageComputation} for an equivalent computation which uses Watchman.
  */
 public class BuildTargetPatternToBuildPackagePathComputation
     implements GraphComputation<BuildTargetPatternToBuildPackagePathKey, BuildPackagePaths> {
   private final String buildFileName;
-  private final ProjectFilesystem projectFilesystem;
+  private final FileSystem filesystem;
 
   private BuildTargetPatternToBuildPackagePathComputation(
-      String buildFileName, ProjectFilesystem projectFilesystem) {
+      String buildFileName, ProjectFilesystemView projectFilesystemView) {
     this.buildFileName = buildFileName;
-    this.projectFilesystem = projectFilesystem;
+    this.filesystem = projectFilesystemView.getRootPath().getFileSystem();
   }
 
   /**
@@ -61,8 +62,9 @@ public class BuildTargetPatternToBuildPackagePathComputation
    *     'BUCK'
    */
   public static BuildTargetPatternToBuildPackagePathComputation of(
-      String buildFileName, ProjectFilesystem projectFilesystem) {
-    return new BuildTargetPatternToBuildPackagePathComputation(buildFileName, projectFilesystem);
+      String buildFileName, ProjectFilesystemView projectFilesystemView) {
+    return new BuildTargetPatternToBuildPackagePathComputation(
+        buildFileName, projectFilesystemView);
   }
 
   @Override
@@ -74,11 +76,7 @@ public class BuildTargetPatternToBuildPackagePathComputation
   public BuildPackagePaths transform(
       BuildTargetPatternToBuildPackagePathKey key, ComputationEnvironment env) {
 
-    Path basePath =
-        key.getPattern()
-            .getCellRelativeBasePath()
-            .getPath()
-            .toPath(projectFilesystem.getFileSystem());
+    Path basePath = key.getPattern().getCellRelativeBasePath().getPath().toPath(filesystem);
     ImmutableSortedSet<Path> packageRoots;
     switch (key.getPattern().getKind()) {
       case SINGLE:
@@ -86,7 +84,7 @@ public class BuildTargetPatternToBuildPackagePathComputation
         // Patterns like "//package:target" or "//package:" match targets from one build package
         // only, so we only determine if build file is in the appropriate folder and return one
         // element if it is, empty collection if it is not
-        DirectoryList dirList = env.getDep(ImmutableDirectoryListKey.of(basePath));
+        DirectoryList dirList = env.getDep(DirectoryListKey.of(basePath));
 
         Path relativeBuildFilePath = basePath.resolve(buildFileName);
 
@@ -99,7 +97,7 @@ public class BuildTargetPatternToBuildPackagePathComputation
       case RECURSIVE:
         // Patterns like //package/... match targets from all packages below certain folder, so
         // traverse file tree down and get all paths that have build file in them
-        FileTree fileTree = env.getDep(ImmutableFileTreeKey.of(basePath));
+        FileTree fileTree = env.getDep(FileTreeKey.of(basePath));
 
         // FileTreeFileNameIterator returns all paths in the directory tree which file name is
         // buildFileName
@@ -133,20 +131,14 @@ public class BuildTargetPatternToBuildPackagePathComputation
         // For patterns like "//package:target" or "//package:" we only need a listing of a
         // particular directory to determine if build file is there or not
         return ImmutableSet.of(
-            ImmutableDirectoryListKey.of(
-                key.getPattern()
-                    .getCellRelativeBasePath()
-                    .getPath()
-                    .toPath(projectFilesystem.getFileSystem())));
+            DirectoryListKey.of(
+                key.getPattern().getCellRelativeBasePath().getPath().toPath(filesystem)));
       case RECURSIVE:
         // For patterns like "//package/..." we need a complete directory tree structure to discover
         // all packages recursively
         return ImmutableSet.of(
-            ImmutableFileTreeKey.of(
-                key.getPattern()
-                    .getCellRelativeBasePath()
-                    .getPath()
-                    .toPath(projectFilesystem.getFileSystem())));
+            FileTreeKey.of(
+                key.getPattern().getCellRelativeBasePath().getPath().toPath(filesystem)));
     }
     throw new IllegalStateException();
   }

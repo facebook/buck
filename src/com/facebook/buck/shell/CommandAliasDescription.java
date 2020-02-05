@@ -49,7 +49,7 @@ public class CommandAliasDescription
       ImmutableList.of(
           new ExecutableMacroExpander<>(ExecutableMacro.class),
           new ExecutableMacroExpander<>(ExecutableTargetMacro.class),
-          new LocationMacroExpander());
+          LocationMacroExpander.INSTANCE);
   private final Platform platform;
 
   public CommandAliasDescription(Platform platform) {
@@ -79,7 +79,10 @@ public class CommandAliasDescription
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.of(
-            buildTarget, context.getCellPathResolver(), graphBuilder, MACRO_EXPANDERS);
+            buildTarget,
+            context.getCellPathResolver().getCellNameResolver(),
+            graphBuilder,
+            MACRO_EXPANDERS);
 
     for (StringWithMacros x : args.getArgs()) {
       toolArgs.add(macrosConverter.convert(x));

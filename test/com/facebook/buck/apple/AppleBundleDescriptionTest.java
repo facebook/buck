@@ -86,7 +86,7 @@ public class AppleBundleDescriptionTest {
     ImmutableSortedSet.Builder<BuildTarget> implicitDeps = ImmutableSortedSet.naturalOrder();
     desc.findDepsForTargetFromConstructorArgs(
         bundleTarget,
-        createCellRoots(filesystem),
+        createCellRoots(filesystem).getCellNameResolver(),
         constructorArg,
         implicitDeps,
         ImmutableSortedSet.naturalOrder());
@@ -150,7 +150,7 @@ public class AppleBundleDescriptionTest {
     ImmutableSortedSet.Builder<BuildTarget> implicitDeps = ImmutableSortedSet.naturalOrder();
     desc.findDepsForTargetFromConstructorArgs(
         bundleTargetWithStripFlavor,
-        createCellRoots(filesystem),
+        createCellRoots(filesystem).getCellNameResolver(),
         constructorArg,
         implicitDeps,
         ImmutableSortedSet.naturalOrder());
@@ -218,7 +218,7 @@ public class AppleBundleDescriptionTest {
     ImmutableSortedSet.Builder<BuildTarget> implicitDeps = ImmutableSortedSet.naturalOrder();
     desc.findDepsForTargetFromConstructorArgs(
         bundleTargetWithStripFlavor,
-        createCellRoots(filesystem),
+        createCellRoots(filesystem).getCellNameResolver(),
         constructorArg,
         implicitDeps,
         ImmutableSortedSet.naturalOrder());

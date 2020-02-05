@@ -168,7 +168,7 @@ public class PythonBinaryBuilder
     return this;
   }
 
-  public PythonBinaryBuilder setBuildArgs(ImmutableList<String> buildArgs) {
+  public PythonBinaryBuilder setBuildArgs(ImmutableList<StringWithMacros> buildArgs) {
     getArgForPopulating().setBuildArgs(buildArgs);
     return this;
   }

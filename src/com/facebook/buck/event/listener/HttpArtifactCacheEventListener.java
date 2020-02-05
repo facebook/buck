@@ -23,7 +23,6 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.support.bgtasks.BackgroundTask;
-import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskAction;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.util.network.BatchingLogger;
@@ -108,11 +107,10 @@ public class HttpArtifactCacheEventListener implements BuckEventListener {
     HttpArtifactCacheEventListenerCloseArgs args =
         ImmutableHttpArtifactCacheEventListenerCloseArgs.of(fetchRequestLogger, storeRequestLogger);
     BackgroundTask<HttpArtifactCacheEventListenerCloseArgs> task =
-        ImmutableBackgroundTask.<HttpArtifactCacheEventListenerCloseArgs>builder()
-            .setAction(new HttpArtifactCacheEventListenerCloseAction())
-            .setActionArgs(args)
-            .setName("HttpArtifactCacheEventListener_close")
-            .build();
+        BackgroundTask.of(
+            "HttpArtifactCacheEventListener_close",
+            new HttpArtifactCacheEventListenerCloseAction(),
+            args);
     managerScope.schedule(task);
   }
 

@@ -25,7 +25,7 @@ import com.facebook.buck.apple.AppleBundleBuilder;
 import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.AppleLibraryBuilder;
 import com.facebook.buck.apple.AppleTestBuilder;
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -481,15 +481,15 @@ public class XCodeProjectCommandHelperTest {
         createTargetGraph(
             originalTargetGraph, passedInTargetsSet, isWithTests, isWithDependenciesTests);
 
-    Cell cell =
+    Cells cell =
         new TestCellBuilder()
             .setFilesystem(new FakeProjectFilesystem(SettableFakeClock.DO_NOT_CARE))
             .build();
     return XCodeProjectCommandHelper.generateWorkspacesForTargets(
         BuckEventBusForTests.newInstance(),
         BuckPluginManagerFactory.createPluginManager(),
-        cell,
-        AppleProjectHelper.createDefaultBuckConfig(cell.getFilesystem()),
+        cell.getRootCell(),
+        AppleProjectHelper.createDefaultBuckConfig(cell.getRootCell().getFilesystem()),
         TestRuleKeyConfigurationFactory.create(),
         MoreExecutors.newDirectExecutorService(),
         TestTargetGraphCreationResultFactory.create(targetGraph, passedInTargetsSet),

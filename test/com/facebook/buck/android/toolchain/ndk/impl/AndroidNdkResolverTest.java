@@ -119,7 +119,7 @@ public class AndroidNdkResolverTest {
         new AndroidNdkResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_NDK_REPOSITORY", tmpDir.getRoot().toString()),
-            FakeAndroidBuckConfig.builder().setNdkVersion(" ").build());
+            FakeAndroidBuckConfig.builder().setNdkVersion("\"\"").build());
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(NDK_TARGET_VERSION_IS_EMPTY_MESSAGE);
@@ -133,7 +133,7 @@ public class AndroidNdkResolverTest {
         new AndroidNdkResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_NDK", tmpDir.getRoot().toString()),
-            FakeAndroidBuckConfig.builder().setNdkVersion(" ").build());
+            FakeAndroidBuckConfig.builder().setNdkVersion("\"\"").build());
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(
@@ -343,7 +343,7 @@ public class AndroidNdkResolverTest {
         new AndroidNdkResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_NDK_REPOSITORY", tmpDir.getRoot().toString()),
-            FakeAndroidBuckConfig.builder().setNdkVersion(" ").build());
+            FakeAndroidBuckConfig.builder().setNdkVersion("\"\"").build());
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(NDK_TARGET_VERSION_IS_EMPTY_MESSAGE);

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.parser.buildtargetparser;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -29,28 +29,28 @@ public class ParsingUnconfiguredBuildTargetViewFactory
 
   @Override
   public UnconfiguredBuildTargetView create(
-      CellPathResolver cellPathResolver, String buildTargetName) {
-    return buildTargetParser.parse(cellPathResolver, buildTargetName, null, false);
+      String buildTargetName, CellNameResolver cellNameResolver) {
+    return buildTargetParser.parse(buildTargetName, null, false, cellNameResolver);
   }
 
   @Override
   public UnconfiguredBuildTargetView createForBaseName(
-      CellPathResolver cellPathResolver, BaseName baseName, String buildTargetName) {
-    return buildTargetParser.parse(cellPathResolver, buildTargetName, baseName, false);
+      BaseName baseName, String buildTargetName, CellNameResolver cellNameResolver) {
+    return buildTargetParser.parse(buildTargetName, baseName, false, cellNameResolver);
   }
 
   @Override
   public UnconfiguredBuildTargetView createForPathRelativeToProjectRoot(
-      CellPathResolver cellPathResolver,
       ForwardRelativePath pathRelativeToProjectRoot,
-      String buildTargetName) {
+      String buildTargetName,
+      CellNameResolver cellNameResolver) {
     return createForBaseName(
-        cellPathResolver, BaseName.ofPath(pathRelativeToProjectRoot), buildTargetName);
+        BaseName.ofPath(pathRelativeToProjectRoot), buildTargetName, cellNameResolver);
   }
 
   @Override
   public UnconfiguredBuildTargetView createWithWildcard(
-      CellPathResolver cellPathResolver, String buildTargetName) {
-    return buildTargetParser.parse(cellPathResolver, buildTargetName, null, true);
+      String buildTargetName, CellNameResolver cellNameResolver) {
+    return buildTargetParser.parse(buildTargetName, null, true, cellNameResolver);
   }
 }

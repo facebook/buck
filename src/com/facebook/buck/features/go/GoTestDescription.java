@@ -17,6 +17,7 @@
 package com.facebook.buck.features.go;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasContacts;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
@@ -80,7 +81,7 @@ public class GoTestDescription
 
   private static final Flavor TEST_LIBRARY_FLAVOR = InternalFlavor.of("test-library");
   public static final ImmutableList<MacroExpander<? extends Macro, ?>> MACRO_EXPANDERS =
-      ImmutableList.of(new LocationMacroExpander(), new AbsoluteOutputMacroExpander());
+      ImmutableList.of(LocationMacroExpander.INSTANCE, AbsoluteOutputMacroExpander.INSTANCE);
 
   private final GoBuckConfig goBuckConfig;
   private final ToolchainProvider toolchainProvider;
@@ -350,7 +351,10 @@ public class GoTestDescription
 
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.of(
-            buildTarget, context.getCellPathResolver(), graphBuilder, MACRO_EXPANDERS);
+            buildTarget,
+            context.getCellPathResolver().getCellNameResolver(),
+            graphBuilder,
+            MACRO_EXPANDERS);
 
     if (args.getSpecs().isPresent()) {
       return new GoTestX(
@@ -544,7 +548,7 @@ public class GoTestDescription
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       AbstractGoTestDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {

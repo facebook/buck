@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -44,7 +45,7 @@ public class EnvMacroTypeCoercer implements MacroTypeCoercer<EnvMacro> {
   }
 
   @Override
-  public void traverse(CellPathResolver cellRoots, EnvMacro macro, Traversal traversal) {
+  public void traverse(CellNameResolver cellRoots, EnvMacro macro, Traversal traversal) {
     traversal.traverse(macro.getVar());
   }
 

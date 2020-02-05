@@ -17,12 +17,17 @@
 package com.facebook.buck.step;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -114,5 +119,58 @@ public class StepFailedExceptionTest {
         exception
             .getMessage()
             .startsWith("Copy failed!" + System.lineSeparator() + "  When running <cp>."));
+  }
+
+  @Test
+  public void testCreateForFailingStepWithTruncation() {
+    int exitCode = 17;
+
+    Step step = new FakeStep("cp", "cp foo bar", exitCode);
+
+    List<String> testCommand = new ArrayList<>();
+    for (int i = 0; i < StepFailedException.KEEP_FIRST_CHARS; i++) {
+      testCommand.add("ab");
+    }
+    ProcessExecutor.Result result =
+        new ProcessExecutor.Result(
+            StepExecutionResults.ERROR_EXIT_CODE,
+            ImmutableList.<String>builder().addAll(testCommand).build());
+    StepExecutionResult executionResult = StepExecutionResult.of(result);
+
+    assertTrue(silentContext.isTruncateFailingCommandEnabled()); // truncation is enabled by default
+
+    StepFailedException exception =
+        StepFailedException.createForFailingStepWithExitCode(step, silentContext, executionResult);
+
+    assertEquals(step, exception.getStep());
+    assertFalse(executionResult.getExecutedCommand().isEmpty());
+    assertTrue(exception.getMessage(), exception.getMessage().contains("<truncated>"));
+  }
+
+  @Test
+  public void testCreateForFailingStepWithoutTruncation() {
+    int exitCode = 17;
+
+    Step step = new FakeStep("cp", "cp foo bar", exitCode);
+    List<String> testCommand = new ArrayList<>();
+    for (int i = 0; i < StepFailedException.KEEP_FIRST_CHARS; i++) {
+      testCommand.add("ab");
+    }
+    ProcessExecutor.Result result =
+        new ProcessExecutor.Result(
+            StepExecutionResults.ERROR_EXIT_CODE,
+            ImmutableList.<String>builder().addAll(testCommand).build());
+
+    StepExecutionResult executionResult = StepExecutionResult.of(result);
+
+    ExecutionContext context =
+        TestExecutionContext.newBuilder().setTruncateFailingCommandEnabled(false).build();
+
+    StepFailedException exception =
+        StepFailedException.createForFailingStepWithExitCode(step, context, executionResult);
+
+    assertEquals(step, exception.getStep());
+    assertFalse(executionResult.getExecutedCommand().isEmpty());
+    assertFalse(exception.getMessage(), exception.getMessage().contains("<truncated>"));
   }
 }

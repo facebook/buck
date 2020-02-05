@@ -36,7 +36,8 @@ public class RootCommandTest {
     ExitCode exitCode = runCommand.run(commandRunnerParams);
     String testRoot =
         commandRunnerParams
-            .getCell()
+            .getCells()
+            .getRootCell()
             .getFilesystem()
             .getRootPath()
             .normalize()

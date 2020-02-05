@@ -1081,7 +1081,7 @@ public class ProjectGenerator {
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.of(
             node.getBuildTarget(),
-            node.getCellNames(),
+            projectCell.getCellPathResolver().getCellNameResolver(),
             emptyGraphBuilder,
             ImmutableList.of(locationMacroExpander));
     for (StringWithMacros flag : flags) {

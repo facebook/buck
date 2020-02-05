@@ -24,7 +24,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.rulekey.DefaultFieldInputs;
 import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -169,8 +168,10 @@ public class GenruleBuildable implements Buildable {
   @AddToRuleKey protected final boolean isCacheable;
 
   /** Whether or not this genrule can be executed remotely. Fails serialization if false. */
-  @AddToRuleKey
-  @CustomFieldBehavior(RemoteExecutionEnabled.class)
+  @ExcludeFromRuleKey(
+      reason = "Genrule execution is not relevant to artifact caching",
+      serialization = RemoteExecutionEnabled.class,
+      inputs = DefaultFieldInputs.class)
   private final boolean executeRemotely;
 
   /** Type for this genrule, if one was provided. */
@@ -272,7 +273,6 @@ public class GenruleBuildable implements Buildable {
                 .map(
                     p -> {
                       Path path = Paths.get(p);
-                      checkOutputPath(path, p);
                       return new OutputPath(path);
                     })
                 .collect(ImmutableSet.toImmutableSet()));
@@ -289,16 +289,7 @@ public class GenruleBuildable implements Buildable {
   private Path getLegacyPath(ProjectFilesystem filesystem, String output) {
     Path legacyBasePath =
         BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s").resolve(output).normalize();
-    checkOutputPath(legacyBasePath, output);
     return legacyBasePath;
-  }
-
-  private void checkOutputPath(Path path, String output) {
-    if (path.isAbsolute() || output.isEmpty()) {
-      throw new HumanReadableException(
-          "The 'out' or 'outs' parameter of genrule %s is '%s', which is not a valid file name.",
-          buildTarget, output);
-    }
   }
 
   /**
@@ -653,7 +644,7 @@ public class GenruleBuildable implements Buildable {
   }
 
   @VisibleForTesting
-  final boolean shouldExecuteRemotely() {
+  public final boolean shouldExecuteRemotely() {
     return executeRemotely;
   }
 

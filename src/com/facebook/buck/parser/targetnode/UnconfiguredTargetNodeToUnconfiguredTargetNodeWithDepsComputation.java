@@ -28,7 +28,6 @@ import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.model.targetgraph.raw.ImmutableUnconfiguredTargetNodeWithDeps;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDeps;
 import com.facebook.buck.event.SimplePerfEvent;
@@ -126,7 +125,7 @@ public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation
 
     // END TEMPORARY
 
-    return ImmutableUnconfiguredTargetNodeWithDeps.of(key.getUnconfiguredTargetNode(), deps);
+    return UnconfiguredTargetNodeWithDeps.of(key.getUnconfiguredTargetNode(), deps);
   }
 
   @Override

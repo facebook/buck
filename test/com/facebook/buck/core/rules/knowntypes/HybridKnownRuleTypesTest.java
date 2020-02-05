@@ -27,7 +27,7 @@ import com.facebook.buck.core.starlark.knowntypes.KnownUserDefinedRuleTypes;
 import com.facebook.buck.core.starlark.rule.SkylarkDescription;
 import com.facebook.buck.core.starlark.rule.SkylarkDescriptionArg;
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
-import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableStringAttribute;
+import com.facebook.buck.core.starlark.rule.attr.impl.StringAttribute;
 import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.skylark.function.FakeSkylarkUserDefinedRuleFactory;
@@ -53,8 +53,7 @@ public class HybridKnownRuleTypesTest {
         KnownNativeRuleTypes.of(
             ImmutableList.of(description), ImmutableList.of(), ImmutableList.of());
     userDefinedRuleTypes = new KnownUserDefinedRuleTypes();
-    ImmutableStringAttribute attr =
-        ImmutableStringAttribute.of("default", "", false, ImmutableList.of());
+    StringAttribute attr = StringAttribute.of("default", "", false, ImmutableList.of());
     SkylarkUserDefinedRule rule =
         FakeSkylarkUserDefinedRuleFactory.createSingleArgRuleWithLabel(
             "baz_rule", "baz", attr, "//foo:bar.bzl");

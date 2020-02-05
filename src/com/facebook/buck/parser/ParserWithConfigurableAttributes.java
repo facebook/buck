@@ -34,6 +34,7 @@ import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.core.select.impl.SelectorListFactory;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.parser.TargetSpecResolver.TargetNodeFilterForSpecResolver;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.config.ParserConfig;
@@ -343,19 +344,29 @@ class ParserWithConfigurableAttributes extends AbstractParser {
                     parsingContext.getApplyDefaultFlavorsMode()),
             state,
             targetNodeFilter);
-
     if (!state.getParsingContext().excludeUnsupportedTargets()) {
       return ImmutableSet.copyOf(Iterables.concat(buildTargets));
     }
-    return filterIncompatibleTargetNodes(
-            state,
-            buildTargets.stream()
-                .flatMap(ImmutableSet::stream)
-                .map(
-                    (BuildTarget target) ->
-                        state.getTargetNode(target, DependencyStack.top(target))))
-        .map(TargetNode::getBuildTarget)
-        .collect(ImmutableSet.toImmutableSet());
+    long totalTargets = buildTargets.stream().mapToInt(targets -> targets.size()).sum();
+    ImmutableSet<BuildTarget> filteredBuildTargets =
+        filterIncompatibleTargetNodes(
+                state,
+                buildTargets.stream()
+                    .flatMap(ImmutableSet::stream)
+                    .map(
+                        (BuildTarget target) ->
+                            state.getTargetNode(target, DependencyStack.top(target))))
+            .map(TargetNode::getBuildTarget)
+            .collect(ImmutableSet.toImmutableSet());
+    long skippedTargets = totalTargets - filteredBuildTargets.size();
+    if (skippedTargets > 0) {
+      this.eventBus.post(
+          ConsoleEvent.warning(
+              String.format(
+                  "%d target%s skipped due to incompatibility with target configuration",
+                  skippedTargets, skippedTargets > 1 ? "s" : "")));
+    }
+    return filteredBuildTargets;
   }
 
   private static boolean filterOutNonBuildTargets(TargetNode<?> node) {
@@ -384,16 +395,6 @@ class ParserWithConfigurableAttributes extends AbstractParser {
       BuildRuleArg argWithTargetCompatible = (BuildRuleArg) targetNode.getConstructorArg();
 
       StringBuilder diagnostics = new StringBuilder();
-      if (!argWithTargetCompatible.getTargetCompatibleWith().isEmpty()) {
-        diagnostics.append("%nTarget constraints:%n");
-        argWithTargetCompatible
-            .getTargetCompatibleWith()
-            .forEach(
-                target ->
-                    diagnostics
-                        .append(target.getFullyQualifiedName())
-                        .append(System.lineSeparator()));
-      }
       if (!argWithTargetCompatible.getCompatibleWith().isEmpty()) {
         diagnostics.append("%nTarget compatible with configurations:%n");
         argWithTargetCompatible
@@ -407,8 +408,8 @@ class ParserWithConfigurableAttributes extends AbstractParser {
 
       throw new HumanReadableException(
           dependencyStack,
-          "Build target %s is restricted to constraints in \"target_compatible_with\""
-              + " and \"compatible_with\" that do not match the target platform %s."
+          "Build target %s is restricted to constraints in \"compatible_with\""
+              + " that do not match the target platform %s."
               + diagnostics,
           targetNode.getBuildTarget(),
           targetPlatform);

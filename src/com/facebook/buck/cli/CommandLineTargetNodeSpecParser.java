@@ -206,7 +206,7 @@ public class CommandLineTargetNodeSpecParser {
     ImmutableSet.Builder<TargetNodeSpec> specs = new ImmutableSet.Builder<>();
     for (String resolvedArg : resolvedArgs) {
       String buildTarget = normalizeBuildTargetString(resolvedArg);
-      TargetNodeSpec spec = parser.parse(owningCell.getCellPathResolver(), buildTarget);
+      TargetNodeSpec spec = parser.parse(buildTarget, owningCell.getCellNameResolver());
       validateTargetSpec(spec, resolvedArg, owningCell);
       specs.add(spec);
     }

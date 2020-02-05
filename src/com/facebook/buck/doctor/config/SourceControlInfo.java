@@ -38,4 +38,20 @@ public interface SourceControlInfo {
   Optional<VersionControlSupplier<InputStream>> getDiff();
   /* A list of all the files that are changed from the base revision. */
   ImmutableSet<String> getDirtyFiles();
+
+  static SourceControlInfo of(
+      String currentRevisionId,
+      ImmutableSet<String> basedOffWhichTracked,
+      Optional<String> revisionIdOffTracked,
+      Optional<Long> revisionTimestampOffTracked,
+      Optional<VersionControlSupplier<InputStream>> diff,
+      ImmutableSet<String> dirtyFiles) {
+    return ImmutableSourceControlInfo.of(
+        currentRevisionId,
+        basedOffWhichTracked,
+        revisionIdOffTracked,
+        revisionTimestampOffTracked,
+        diff,
+        dirtyFiles);
+  }
 }

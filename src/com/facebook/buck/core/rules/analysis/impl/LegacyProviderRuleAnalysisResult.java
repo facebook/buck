@@ -24,6 +24,7 @@ import com.facebook.buck.core.rules.ProviderCreationContext;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 
@@ -34,6 +35,7 @@ import java.util.Optional;
  *
  * <p>This implementation throws on any operation relating to {@link ActionAnalysisData}
  */
+@BuckStyleValue
 public abstract class LegacyProviderRuleAnalysisResult implements RuleAnalysisResult {
 
   @Override

@@ -96,9 +96,9 @@ public class QueryTargetsAndOutputsMacroExpanderTest {
     converter =
         StringWithMacrosConverter.of(
             ruleNode.getBuildTarget(),
-            cellNames,
+            cellNames.getCellNameResolver(),
             graphBuilder,
-            ImmutableList.of(new QueryTargetsAndOutputsMacroExpander(Optional.of(targetGraph))),
+            ImmutableList.of(new QueryTargetsAndOutputsMacroExpander(targetGraph)),
             Optional.empty(),
             cache);
   }

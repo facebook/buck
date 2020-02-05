@@ -18,6 +18,7 @@ package com.facebook.buck.core.build.engine.buildinfo;
 
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.util.hashing.FileHashLoader;
+import com.facebook.buck.util.types.Either;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -31,7 +32,7 @@ import java.util.Set;
 public interface OnDiskBuildInfo {
 
   /** @return the rule "artifact" metadata value associated with the specified key, if it exists. */
-  Optional<String> getValue(String key);
+  Either<String, Exception> getValue(String key);
 
   /** @return the build engine metadata value associated with the specified key, if it exists. */
   Optional<String> getBuildValue(String key);

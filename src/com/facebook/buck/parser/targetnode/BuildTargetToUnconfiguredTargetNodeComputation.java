@@ -34,7 +34,6 @@ import com.facebook.buck.parser.api.PackageMetadata;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.parser.manifest.BuildPackagePathToBuildFileManifestKey;
-import com.facebook.buck.parser.manifest.ImmutableBuildPackagePathToBuildFileManifestKey;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Map;
@@ -143,7 +142,7 @@ public class BuildTargetToUnconfiguredTargetNodeComputation
     UnconfiguredBuildTargetView unconfiguredBuildTargetView =
         UnconfiguredBuildTargetView.of(buildTarget);
 
-    return ImmutableBuildPackagePathToBuildFileManifestKey.of(
+    return BuildPackagePathToBuildFileManifestKey.of(
         unconfiguredBuildTargetView
             .getCellRelativeBasePath()
             .getPath()

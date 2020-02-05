@@ -52,4 +52,9 @@ public interface DoctorSuggestion {
       return this.text;
     }
   }
+
+  static DoctorSuggestion of(
+      DoctorSuggestion.StepStatus status, Optional<String> area, String suggestion) {
+    return ImmutableDoctorSuggestion.of(status, area, suggestion);
+  }
 }

@@ -25,7 +25,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
-import com.facebook.buck.core.rules.analysis.action.ImmutableActionAnalysisDataKey;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -152,7 +151,7 @@ public class ArtifactFilesystemTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     BuildArtifactFactory factory = new BuildArtifactFactory(buildTarget, filesystem);
     ActionAnalysisDataKey key =
-        ImmutableActionAnalysisDataKey.of(buildTarget, new ActionAnalysisData.ID("a"));
+        ActionAnalysisDataKey.of(buildTarget, new ActionAnalysisData.ID("a"));
 
     DeclaredArtifact declaredArtifact =
         factory.createDeclaredArtifact(Paths.get("out.txt"), Location.BUILTIN);
@@ -175,7 +174,7 @@ public class ArtifactFilesystemTest {
 
     BuildArtifactFactory factory = new BuildArtifactFactory(buildTarget, filesystem);
     ActionAnalysisDataKey key =
-        ImmutableActionAnalysisDataKey.of(buildTarget, new ActionAnalysisData.ID("a"));
+        ActionAnalysisDataKey.of(buildTarget, new ActionAnalysisData.ID("a"));
 
     DeclaredArtifact declaredArtifact =
         factory.createDeclaredArtifact(Paths.get("out.txt"), Location.BUILTIN);

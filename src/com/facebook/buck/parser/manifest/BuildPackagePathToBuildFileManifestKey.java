@@ -49,4 +49,8 @@ public abstract class BuildPackagePathToBuildFileManifestKey
   public ComputationIdentifier<BuildFileManifest> getIdentifier() {
     return IDENTIFIER;
   }
+
+  public static BuildPackagePathToBuildFileManifestKey of(Path path) {
+    return ImmutableBuildPackagePathToBuildFileManifestKey.of(path);
+  }
 }

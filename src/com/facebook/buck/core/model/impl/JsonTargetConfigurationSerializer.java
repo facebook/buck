@@ -20,7 +20,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
-import com.facebook.buck.core.model.ImmutableRuleBasedTargetConfiguration;
+import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
@@ -96,6 +96,6 @@ public class JsonTargetConfigurationSerializer implements TargetConfigurationSer
     BuildTarget platform =
         ConfigurationBuildTargets.convert(
             buildTargetProvider.apply(targetPlatformNode.textValue()));
-    return ImmutableRuleBasedTargetConfiguration.of(platform);
+    return RuleBasedTargetConfiguration.of(platform);
   }
 }

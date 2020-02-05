@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
@@ -25,7 +26,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.parser.api.ImmutablePackageMetadata;
 import com.facebook.buck.parser.api.PackageMetadata;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
@@ -43,7 +43,7 @@ public class PerBuildStateCacheTest {
   private PerBuildStateCache.PackageCache packageCache;
   private BuckEventBus eventBus;
   private ProjectFilesystem filesystem;
-  private Cell rootCell;
+  private Cells cells;
   private Cell childCell;
 
   @Rule public TemporaryPaths tempDir = new TemporaryPaths();
@@ -60,8 +60,8 @@ public class PerBuildStateCacheTest {
             .setFilesystem(filesystem)
             .setSections(ImmutableMap.of("repositories", ImmutableMap.of("xplat", "xplat")))
             .build();
-    rootCell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
-    childCell = rootCell.getCell(filesystem.resolve("xplat").toAbsolutePath());
+    cells = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
+    childCell = cells.getRootCell().getCell(filesystem.resolve("xplat").toAbsolutePath());
   }
 
   Package createPackage(Cell cell, Path packageFile) {
@@ -73,10 +73,10 @@ public class PerBuildStateCacheTest {
       Path packageFile,
       ImmutableList<String> visibility,
       ImmutableList<String> within_view) {
-    return createPackage(cell, packageFile, ImmutablePackageMetadata.of(visibility, within_view));
+    return createPackage(cell, packageFile, PackageMetadata.of(visibility, within_view));
   }
 
-  Package createPackage(Cell cell, Path packageFile, ImmutablePackageMetadata packageMetadata) {
+  Package createPackage(Cell cell, Path packageFile, PackageMetadata packageMetadata) {
     return PackageFactory.create(cell, packageFile, packageMetadata, Optional.empty());
   }
 
@@ -84,10 +84,11 @@ public class PerBuildStateCacheTest {
   public void putPackageIfNotPresent() {
     Path packageFile = filesystem.resolve("Foo");
 
-    Package pkg = createPackage(rootCell, packageFile);
+    Package pkg = createPackage(cells.getRootCell(), packageFile);
 
     Package cachedPackage =
-        packageCache.putComputedNodeIfNotPresent(rootCell, packageFile, pkg, false, eventBus);
+        packageCache.putComputedNodeIfNotPresent(
+            cells.getRootCell(), packageFile, pkg, false, eventBus);
 
     Assert.assertSame(cachedPackage, pkg);
   }
@@ -97,15 +98,16 @@ public class PerBuildStateCacheTest {
     Path packageFile = filesystem.resolve("Foo");
 
     Optional<Package> lookupPackage =
-        packageCache.lookupComputedNode(rootCell, packageFile, eventBus);
+        packageCache.lookupComputedNode(cells.getRootCell(), packageFile, eventBus);
 
     Assert.assertFalse(lookupPackage.isPresent());
 
-    Package pkg = createPackage(rootCell, packageFile);
-    packageCache.putComputedNodeIfNotPresent(rootCell, packageFile, pkg, false, eventBus);
+    Package pkg = createPackage(cells.getRootCell(), packageFile);
+    packageCache.putComputedNodeIfNotPresent(
+        cells.getRootCell(), packageFile, pkg, false, eventBus);
 
     lookupPackage =
-        lookupPackage = packageCache.lookupComputedNode(rootCell, packageFile, eventBus);
+        lookupPackage = packageCache.lookupComputedNode(cells.getRootCell(), packageFile, eventBus);
     Assert.assertSame(lookupPackage.get(), pkg);
   }
 
@@ -115,15 +117,17 @@ public class PerBuildStateCacheTest {
 
     // Make sure to create two different packages
     Package pkg1 =
-        createPackage(rootCell, packageFile, ImmutableList.of("//bar/..."), ImmutableList.of());
+        createPackage(
+            cells.getRootCell(), packageFile, ImmutableList.of("//bar/..."), ImmutableList.of());
     Package pkg2 =
         createPackage(childCell, packageFile, ImmutableList.of("//bar/..."), ImmutableList.of());
 
-    packageCache.putComputedNodeIfNotPresent(rootCell, packageFile, pkg1, false, eventBus);
+    packageCache.putComputedNodeIfNotPresent(
+        cells.getRootCell(), packageFile, pkg1, false, eventBus);
     packageCache.putComputedNodeIfNotPresent(childCell, packageFile, pkg2, false, eventBus);
 
     Optional<Package> lookupPackage =
-        packageCache.lookupComputedNode(rootCell, packageFile, eventBus);
+        packageCache.lookupComputedNode(cells.getRootCell(), packageFile, eventBus);
     Assert.assertSame(lookupPackage.get(), pkg1);
     Assert.assertNotSame(lookupPackage.get(), pkg2);
 

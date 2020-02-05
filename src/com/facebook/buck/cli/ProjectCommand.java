@@ -136,7 +136,7 @@ public class ProjectCommand extends AbstractCommand implements PluginBasedComman
               getEnableParserProfiling(),
               arguments ->
                   parseArgumentsAsTargetNodeSpecs(
-                      params.getCell(),
+                      params.getCells().getRootCell(),
                       params.getClientWorkingDir(),
                       arguments,
                       params.getBuckConfig()));
@@ -184,7 +184,8 @@ public class ProjectCommand extends AbstractCommand implements PluginBasedComman
     if (!Paths.get(pathToScript).isAbsolute()) {
       pathToScript =
           params
-              .getCell()
+              .getCells()
+              .getRootCell()
               .getFilesystem()
               .getPathForRelativePath(pathToScript)
               .toAbsolutePath()
@@ -201,7 +202,7 @@ public class ProjectCommand extends AbstractCommand implements PluginBasedComman
                     .put("BUCK_PROJECT_TARGETS", Joiner.on(" ").join(arguments))
                     .put("BUCK_PROJECT_TYPE", projectIde)
                     .build())
-            .setDirectory(params.getCell().getFilesystem().getRootPath())
+            .setDirectory(params.getCells().getRootCell().getFilesystem().getRootPath())
             .build();
     ForwardingProcessListener processListener =
         new ForwardingProcessListener(

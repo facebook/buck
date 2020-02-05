@@ -17,7 +17,8 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.android.toolchain.AndroidTools;
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
@@ -33,6 +34,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.SourceSet;
 import com.facebook.buck.rules.macros.ClasspathAbiMacroExpander;
@@ -56,7 +58,9 @@ import com.facebook.buck.rules.macros.WorkerMacroArg;
 import com.facebook.buck.rules.macros.WorkerMacroExpander;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.util.stream.RichStream;
+import com.facebook.buck.util.string.MoreStrings;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -72,14 +76,17 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
     implements DescriptionWithTargetGraph<T>, ImplicitDepsInferringDescription<T> {
 
   protected final ToolchainProvider toolchainProvider;
+  protected final BuckConfig buckConfig;
   protected final SandboxExecutionStrategy sandboxExecutionStrategy;
   protected final boolean enableSandbox;
 
   protected AbstractGenruleDescription(
       ToolchainProvider toolchainProvider,
+      BuckConfig buckConfig,
       SandboxExecutionStrategy sandboxExecutionStrategy,
       boolean enableSandbox) {
     this.toolchainProvider = toolchainProvider;
+    this.buckConfig = buckConfig;
     this.sandboxExecutionStrategy = sandboxExecutionStrategy;
     this.enableSandbox = enableSandbox;
   }
@@ -93,6 +100,29 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       Optional<Arg> cmd,
       Optional<Arg> bash,
       Optional<Arg> cmdExe);
+
+  /** @return a {@link String} representing the type of the genrule */
+  protected String getGenruleType() {
+    String base =
+        MoreStrings.stripSuffix(getClass().getSimpleName(), "GenruleDescription")
+            .orElseThrow(
+                () ->
+                    new IllegalStateException(
+                        "Expected `AbstractGenruleDescription` child class `%s` to end with \"GenruleDescription\""));
+    return CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, base + "Genrule");
+  }
+
+  /** @return whether this genrule can use remote execution. */
+  protected boolean canExecuteRemotely(T args) {
+    boolean executeRemotely = args.getRemote().orElse(false);
+    if (executeRemotely) {
+      RemoteExecutionConfig reConfig = buckConfig.getView(RemoteExecutionConfig.class);
+      executeRemotely =
+          reConfig.shouldUseRemoteExecutionForGenruleIfRequested(
+              args.getType().map(type -> getGenruleType() + "_" + type).orElse(getGenruleType()));
+    }
+    return executeRemotely;
+  }
 
   protected BuildRule createBuildRule(
       BuildTarget buildTarget,
@@ -120,7 +150,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
         args.getCacheable().orElse(true),
         args.getEnvironmentExpansionSeparator(),
         getAndroidToolsOptional(args, buildTarget.getTargetConfiguration()),
-        false);
+        canExecuteRemotely(args));
   }
 
   /**
@@ -151,12 +181,12 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
             new ExecutableMacroExpander<>(ExecutableMacro.class),
             new ExecutableMacroExpander<>(ExecutableTargetMacro.class),
             new WorkerMacroExpander(),
-            new LocationMacroExpander(),
+            LocationMacroExpander.INSTANCE,
             new MavenCoordinatesMacroExpander(),
-            new QueryTargetsMacroExpander(Optional.of(targetGraph)),
-            new QueryOutputsMacroExpander(Optional.of(targetGraph)),
-            new QueryPathsMacroExpander(Optional.of(targetGraph)),
-            new QueryTargetsAndOutputsMacroExpander(Optional.of(targetGraph))));
+            new QueryTargetsMacroExpander(targetGraph),
+            new QueryOutputsMacroExpander(targetGraph),
+            new QueryPathsMacroExpander(targetGraph),
+            new QueryTargetsAndOutputsMacroExpander(targetGraph)));
   }
 
   @Override
@@ -177,7 +207,10 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       ImmutableList<MacroExpander<? extends Macro, ?>> expanders = maybeExpanders.get();
       StringWithMacrosConverter converter =
           StringWithMacrosConverter.of(
-              buildTarget, context.getCellPathResolver(), graphBuilder, expanders);
+              buildTarget,
+              context.getCellPathResolver().getCellNameResolver(),
+              graphBuilder,
+              expanders);
       Function<StringWithMacros, Arg> toArg =
           str -> {
             Arg arg = converter.convert(str);
@@ -221,7 +254,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       T constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {

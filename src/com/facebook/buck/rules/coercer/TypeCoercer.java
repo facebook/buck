@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -48,7 +49,7 @@ public interface TypeCoercer<T> extends Concatable<T> {
    * <p>#{link Traversal#traverse} function will be called once for the object. If the object is a
    * collection or map, it will also recursively traverse all elements of the map.
    */
-  void traverse(CellPathResolver cellRoots, T object, Traversal traversal);
+  void traverse(CellNameResolver cellRoots, T object, Traversal traversal);
 
   /** @throws CoerceFailedException Input object cannot be coerced into the given type. */
   T coerce(

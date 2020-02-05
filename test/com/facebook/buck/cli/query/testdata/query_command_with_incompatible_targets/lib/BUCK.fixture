@@ -3,8 +3,8 @@ java_library(
     srcs = [
         "A.java",
     ],
-    target_compatible_with = [
-        "buck//config/constraints:linux",
+    compatible_with = [
+        "//:linux_config",
     ],
 )
 
@@ -13,7 +13,7 @@ java_library(
     srcs = [
         "B.java",
     ],
-    target_compatible_with = [
-        "buck//config/constraints:osx",
+    compatible_with = [
+        "//:osx_config",
     ],
 )

@@ -281,7 +281,7 @@ public class CxxPythonExtensionDescriptionTest {
     ImmutableSortedSet.Builder<BuildTarget> builder = ImmutableSortedSet.naturalOrder();
     desc.findDepsForTargetFromConstructorArgs(
         BuildTargetFactory.newInstance("//foo:bar"),
-        createCellRoots(filesystem),
+        createCellRoots(filesystem).getCellNameResolver(),
         constructorArg,
         builder,
         ImmutableSortedSet.naturalOrder());

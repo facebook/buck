@@ -19,7 +19,6 @@ package com.facebook.buck.core.model.targetgraph;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
-import com.facebook.buck.core.rules.ImmutableBuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.config.registry.impl.ConfigurationRuleRegistryFactory;
 import com.facebook.buck.core.rules.providers.collect.impl.LegacyProviderInfoCollectionImpl;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -53,7 +52,7 @@ public class TestBuildRuleCreationContextFactory {
       ActionGraphBuilder graphBuilder,
       ProjectFilesystem projectFilesystem,
       ToolchainProvider toolchainProvider) {
-    return ImmutableBuildRuleCreationContextWithTargetGraph.of(
+    return BuildRuleCreationContextWithTargetGraph.of(
         targetGraph,
         graphBuilder,
         projectFilesystem,

@@ -24,8 +24,8 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.core.artifact.BuildArtifactFactoryForTests;
-import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
 import com.facebook.buck.core.artifact.OutputArtifact;
+import com.facebook.buck.core.artifact.SourceArtifactImpl;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildPaths;
@@ -71,10 +71,8 @@ public class AggregateCommandLineArgsTest {
   @Test
   public void returnsProperStreamAndArgCount() throws EvalException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Artifact path1 =
-        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("some_bin")));
-    Artifact path2 =
-        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("other_file")));
+    Artifact path1 = SourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("some_bin")));
+    Artifact path2 = SourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("other_file")));
 
     BuildTarget target = BuildTargetFactory.newInstance("//:some_rule");
     ActionRegistryForTests registry = new ActionRegistryForTests(target, filesystem);
@@ -124,14 +122,10 @@ public class AggregateCommandLineArgsTest {
   @Test
   public void formatsStrings() {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Artifact path1 =
-        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("in1.txt")));
-    Artifact path2 =
-        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("in2.txt")));
-    Artifact path3 =
-        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("in3.txt")));
-    Artifact path4 =
-        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("in4.txt")));
+    Artifact path1 = SourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("in1.txt")));
+    Artifact path2 = SourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("in2.txt")));
+    Artifact path3 = SourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("in3.txt")));
+    Artifact path4 = SourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("in4.txt")));
 
     CommandLineArgs args =
         new AggregateCommandLineArgs(
@@ -188,10 +182,8 @@ public class AggregateCommandLineArgsTest {
     Artifact path5 =
         buildArtifactFactory.createDeclaredArtifact(Paths.get("_bar_output_"), Location.BUILTIN);
 
-    Artifact path1 =
-        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("some_bin")));
-    Artifact path2 =
-        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("other_file")));
+    Artifact path1 = SourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("some_bin")));
+    Artifact path2 = SourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("other_file")));
 
     ListCommandLineArgs listArgs1 =
         new ListCommandLineArgs(

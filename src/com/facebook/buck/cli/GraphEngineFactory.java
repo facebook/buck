@@ -52,8 +52,8 @@ import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.manifest.BuildPackagePathToBuildFileManifestComputation;
 import com.facebook.buck.parser.targetnode.BuildPackagePathToUnconfiguredTargetNodePackageComputation;
+import com.facebook.buck.parser.targetnode.BuildPackagePathToUnconfiguredTargetNodePackageKey;
 import com.facebook.buck.parser.targetnode.BuildTargetToUnconfiguredTargetNodeComputation;
-import com.facebook.buck.parser.targetnode.ImmutableBuildPackagePathToUnconfiguredTargetNodePackageKey;
 import com.facebook.buck.parser.targetnode.UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -88,7 +88,7 @@ public class GraphEngineFactory {
     // patterns
     BuildTargetPatternToBuildPackagePathComputation patternToPackagePathComputation =
         BuildTargetPatternToBuildPackagePathComputation.of(
-            parserConfig.getBuildFileName(), cell.getFilesystem());
+            parserConfig.getBuildFileName(), cell.getFilesystem().asView());
 
     // -- DEP COMPUTATION: listing of a specific directory to search for build file
     DirectoryListComputation directoryListComputation =
@@ -111,7 +111,7 @@ public class GraphEngineFactory {
 
     ProjectBuildFileParser buildFileParser =
         projectBuildFileParserFactory.createFileParser(
-            params.getBuckEventBus(), params.getCell(), params.getWatchman(), true);
+            params.getBuckEventBus(), params.getCells().getRootCell(), params.getWatchman(), true);
 
     // Once computation is over, we want to close ProjectBuildFileParser to potentially release
     // resources
@@ -206,10 +206,7 @@ public class GraphEngineFactory {
                 patternToPathComputation,
                 (key, result) ->
                     result.getPackageRoots().stream()
-                        .map(
-                            path ->
-                                ImmutableBuildPackagePathToUnconfiguredTargetNodePackageKey.of(
-                                    path))
+                        .map(path -> BuildPackagePathToUnconfiguredTargetNodePackageKey.of(path))
                         .collect(ImmutableSet.toImmutableSet()));
 
     // ENGINE: bind computations to caches and feed them to Graph Engine

@@ -33,7 +33,6 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.manifestservice.ManifestServiceConfig;
 import com.facebook.buck.parser.api.BuildFileManifest;
-import com.facebook.buck.parser.api.ImmutableBuildFileManifest;
 import com.facebook.buck.parser.cache.ParserCacheStorage;
 import com.facebook.buck.parser.cache.json.BuildFileManifestSerializer;
 import com.facebook.buck.parser.config.ParserConfig;
@@ -189,11 +188,7 @@ public class RemoteManifestServiceCacheStorageTest {
   }
 
   ManifestService createManifestService(BuckConfig buckConfig) {
-    Clock fakeClock =
-        FakeClock.builder()
-            .currentTimeMillis(System.currentTimeMillis())
-            .nanoTime(System.nanoTime())
-            .build();
+    Clock fakeClock = FakeClock.of(System.currentTimeMillis(), System.nanoTime());
     ManifestServiceConfig config = new ManifestServiceConfig(buckConfig);
     // Make sure we can create the real manifest service.
     config.createManifestService(fakeClock, eventBus, MoreExecutors.newDirectExecutorService());
@@ -241,7 +236,7 @@ public class RemoteManifestServiceCacheStorageTest {
     ImmutableMap targets = ImmutableMap.of("tar1", target1, "tar2", target2);
 
     BuildFileManifest buildFileManifest =
-        ImmutableBuildFileManifest.of(
+        BuildFileManifest.of(
             targets,
             includes,
             configs,

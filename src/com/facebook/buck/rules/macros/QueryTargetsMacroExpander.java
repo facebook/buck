@@ -26,7 +26,6 @@ import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -41,7 +40,7 @@ import java.util.stream.Collectors;
  * </pre>
  */
 public class QueryTargetsMacroExpander extends QueryMacroExpander<QueryTargetsMacro> {
-  public QueryTargetsMacroExpander(Optional<TargetGraph> targetGraph) {
+  public QueryTargetsMacroExpander(TargetGraph targetGraph) {
     super(targetGraph);
   }
 

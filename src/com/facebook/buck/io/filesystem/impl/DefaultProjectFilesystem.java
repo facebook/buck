@@ -159,9 +159,11 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
       ProjectFilesystemDelegate delegate,
       ProjectFilesystemDelegatePair delegatePair,
       @Nullable WindowsFS winFSInstance) {
+
+    Preconditions.checkArgument(root.isAbsolute(), "Expected absolute path. Got <%s>.", root);
+
     if (shouldVerifyConstructorArguments()) {
       Preconditions.checkArgument(Files.isDirectory(root), "%s must be a directory", root);
-      Preconditions.checkArgument(root.isAbsolute(), "Expected absolute path. Got <%s>.", root);
     }
 
     this.projectRoot = MorePaths.normalize(root);

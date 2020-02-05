@@ -46,6 +46,10 @@ public class ChildrenAdder implements GraphComputation<LongNode, LongNode> {
     public ComputationIdentifier<LongNode> getIdentifier() {
       return IDENTIFIER;
     }
+
+    public static LongNode of(long get) {
+      return ImmutableLongNode.of(get);
+    }
   }
 
   private final MutableGraph<LongNode> input;

@@ -36,12 +36,9 @@ import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.sandbox.SandboxProperties;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
@@ -140,7 +137,7 @@ import java.util.stream.Collectors;
  *
  * <p>Note that the <code>SRCDIR</code> is populated by symlinking the sources.
  */
-public class Genrule extends ModernBuildRule<GenruleBuildable>
+public class Genrule extends BaseGenrule<GenruleBuildable>
     implements HasOutputName, HasMultipleOutputs {
   protected Genrule(
       BuildTarget buildTarget,
@@ -159,7 +156,7 @@ public class Genrule extends ModernBuildRule<GenruleBuildable>
       Optional<String> environmentExpansionSeparator,
       Optional<AndroidTools> androidTools,
       boolean executeRemotely) {
-    this(
+    super(
         buildTarget,
         projectFilesystem,
         buildRuleResolver,
@@ -185,55 +182,6 @@ public class Genrule extends ModernBuildRule<GenruleBuildable>
             androidTools.map(
                 tools -> GenruleAndroidTools.of(tools, buildTarget, buildRuleResolver)),
             executeRemotely));
-  }
-
-  protected Genrule(
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
-      BuildRuleResolver buildRuleResolver,
-      GenruleBuildable buildable) {
-    super(buildTarget, projectFilesystem, buildRuleResolver, buildable);
-  }
-
-  /**
-   * Returns the output defined in 'out'. Should not be used with multiple outputs. Use {@link
-   * #getSourcePathToOutput(OutputLabel)} instead.
-   */
-  @Override
-  public SourcePath getSourcePathToOutput() {
-    ImmutableSortedSet<SourcePath> sourcePaths = getSourcePathToOutput(OutputLabel.defaultLabel());
-    Preconditions.checkState(
-        sourcePaths != null && !sourcePaths.isEmpty(),
-        "Unexpectedly cannot find genrule single default output for target %s",
-        getBuildTarget());
-    return Iterables.getOnlyElement(sourcePaths);
-  }
-
-  @Override
-  public ImmutableSortedSet<SourcePath> getSourcePathToOutput(OutputLabel outputLabel) {
-    return getSourcePaths(getBuildable().getOutputs(outputLabel));
-  }
-
-  @Override
-  public ImmutableSet<OutputLabel> getOutputLabels() {
-    return getBuildable().getOutputLabels();
-  }
-
-  @Override
-  public String getType() {
-    return super.getType() + (getBuildable().type.map(typeStr -> "_" + typeStr).orElse(""));
-  }
-
-  /** Get the output name of the generated file, as listed in the BUCK file. */
-  @Override
-  public String getOutputName(OutputLabel outputLabel) {
-    return getBuildable().getOutputName(outputLabel);
-  }
-
-  /** Get whether or not the output of this genrule can be cached. */
-  @Override
-  public final boolean isCacheable() {
-    return getBuildable().isCacheable;
   }
 
   /**

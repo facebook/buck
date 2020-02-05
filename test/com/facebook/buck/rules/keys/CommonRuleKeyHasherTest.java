@@ -228,9 +228,11 @@ public final class CommonRuleKeyHasherTest {
     @BeforeClass
     public static void setupFileSystems() {
       filesystem1 =
-          new FakeProjectFilesystem(CanonicalCellName.rootCell(), Paths.get("first", "root"));
+          new FakeProjectFilesystem(
+              CanonicalCellName.rootCell(), Paths.get("first", "root").toAbsolutePath());
       filesystem2 =
-          new FakeProjectFilesystem(CanonicalCellName.rootCell(), Paths.get("other", "root"));
+          new FakeProjectFilesystem(
+              CanonicalCellName.rootCell(), Paths.get("other", "root").toAbsolutePath());
     }
 
     @Test

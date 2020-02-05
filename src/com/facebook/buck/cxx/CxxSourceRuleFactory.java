@@ -58,7 +58,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.Hashing;
 import java.io.File;
 import java.nio.file.Path;
@@ -148,21 +147,6 @@ public abstract class CxxSourceRuleFactory {
   }
 
   @Value.Lazy
-  protected ImmutableSortedSet<BuildRule> getPreprocessDeps() {
-    ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.naturalOrder();
-    for (CxxPreprocessorInput input : getCxxPreprocessorInput()) {
-      builder.addAll(input.getDeps(getActionGraphBuilder()));
-    }
-    if (getPreInclude().isPresent()) {
-      builder.addAll(
-          getActionGraphBuilder()
-              .filterBuildRuleInputs(getPreInclude().get().getHeaderSourcePath()));
-      builder.addAll(getPreInclude().get().getBuildDeps());
-    }
-    return builder.build();
-  }
-
-  @Value.Lazy
   protected ImmutableSet<FrameworkPath> getFrameworks() {
     return getCxxPreprocessorInput().stream()
         .flatMap(input -> input.getFrameworks().stream())
@@ -223,8 +207,19 @@ public abstract class CxxSourceRuleFactory {
     return getActionGraphBuilder()
         .computeIfAbsent(
             createAggregatedPreprocessDepsBuildTarget(),
-            target ->
-                new DependencyAggregation(target, getProjectFilesystem(), getPreprocessDeps()));
+            target -> {
+              ImmutableSet.Builder<BuildRule> builder = ImmutableSet.builder();
+              for (CxxPreprocessorInput input : getCxxPreprocessorInput()) {
+                builder.addAll(input.getDeps(getActionGraphBuilder()));
+              }
+              if (getPreInclude().isPresent()) {
+                builder.addAll(
+                    getActionGraphBuilder()
+                        .filterBuildRuleInputs(getPreInclude().get().getHeaderSourcePath()));
+                builder.addAll(getPreInclude().get().getBuildDeps());
+              }
+              return new DependencyAggregation(target, getProjectFilesystem(), builder.build());
+            });
   }
 
   @VisibleForTesting

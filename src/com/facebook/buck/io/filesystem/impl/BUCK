@@ -14,6 +14,7 @@ java_library(
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/file:file",
+        "//src/com/facebook/buck/io/watchman:capability",
         "//src/com/facebook/buck/io/windowsfs:windowsfs",
         "//src/com/facebook/buck/util:constants",
         "//src/com/facebook/buck/util:process_executor",

@@ -35,9 +35,7 @@ public class SettableFakeClock implements Clock {
    * System#currentTimeMillis()} and {@link System#nanoTime()} are completely unrelated.
    */
   public SettableFakeClock(long currentTimeMillis, long nanoTime) {
-    currentClock =
-        new AtomicReference<>(
-            FakeClock.builder().currentTimeMillis(currentTimeMillis).nanoTime(nanoTime).build());
+    currentClock = new AtomicReference<>(FakeClock.of(currentTimeMillis, nanoTime));
   }
 
   public void setCurrentTimeMillis(long millis) {

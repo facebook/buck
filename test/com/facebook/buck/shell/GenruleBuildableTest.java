@@ -58,7 +58,6 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -290,41 +289,6 @@ public class GenruleBuildableTest {
   }
 
   @Rule public ExpectedException humanReadableExceptionRule = ExpectedException.none();
-
-  @Test
-  public void shouldThrowIfOutPathIsEmpty() {
-    humanReadableExceptionRule.expect(HumanReadableException.class);
-    humanReadableExceptionRule.expectMessage(
-        "The 'out' or 'outs' parameter of genrule //example:genrule is '', which is not a valid file name.");
-    BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
-    ImmutableGenruleBuildableBuilder.builder()
-        .setBuildTarget(target)
-        .setFilesystem(filesystem)
-        .setOut(Optional.of(""))
-        .build()
-        .toBuildable();
-  }
-
-  @Test
-  public void shouldThrowIfOutPathIsAbsolute() {
-    humanReadableExceptionRule.expect(HumanReadableException.class);
-    if (Platform.detect() == Platform.WINDOWS) {
-      humanReadableExceptionRule.expectMessage(
-          "The 'out' or 'outs' parameter of genrule //example:genrule is 'C:\\opt\\src\\buck\\opt\\stuff', which is not a valid file name.");
-    } else {
-      humanReadableExceptionRule.expectMessage(
-          "The 'out' or 'outs' parameter of genrule //example:genrule is '/opt/src/buck/opt/stuff', which is not a valid file name.");
-    }
-    BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
-    ImmutableGenruleBuildableBuilder.builder()
-        .setBuildTarget(target)
-        .setFilesystem(filesystem)
-        .setOut(
-            Optional.of(
-                filesystem.getPathForRelativePath(filesystem.getPath("opt", "stuff")).toString()))
-        .build()
-        .toBuildable();
-  }
 
   /**
    * Tests that GenruleBuildable emits a zip-scrub step if the output file is a zipfile and that it

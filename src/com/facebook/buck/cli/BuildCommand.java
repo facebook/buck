@@ -28,7 +28,6 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
-import com.facebook.buck.core.model.ImmutableBuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -85,8 +84,10 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -308,14 +309,14 @@ public class BuildCommand extends AbstractCommand {
   private Path getLogDirectoryPath(CommandRunnerParams params) {
     InvocationInfo invocationInfo = params.getInvocationInfo().get();
     Path logDirectoryPath = invocationInfo.getLogDirectoryPath();
-    ProjectFilesystem filesystem = params.getCell().getFilesystem();
+    ProjectFilesystem filesystem = params.getCells().getRootCell().getFilesystem();
     return filesystem.resolve(logDirectoryPath);
   }
 
   BuildPrehook getPrehook(ListeningProcessExecutor processExecutor, CommandRunnerParams params) {
     return new BuildPrehook(
         processExecutor,
-        params.getCell(),
+        params.getCells().getRootCell(),
         params.getBuckEventBus(),
         params.getBuckConfig(),
         params.getEnvironment(),
@@ -387,7 +388,7 @@ public class BuildCommand extends AbstractCommand {
       specs =
           targetNodeSpecEnhancer.apply(
               parseArgumentsAsTargetNodeSpecs(
-                  params.getCell(),
+                  params.getCells().getRootCell(),
                   params.getClientWorkingDir(),
                   getArguments(),
                   params.getBuckConfig()));
@@ -436,7 +437,9 @@ public class BuildCommand extends AbstractCommand {
     BuildTarget explicitTarget =
         params
             .getUnconfiguredBuildTargetFactory()
-            .create(params.getCell().getCellPathResolver(), targetWithOutputLabel.getTargetName())
+            .create(
+                targetWithOutputLabel.getTargetName(),
+                params.getCells().getRootCell().getCellNameResolver())
             // TODO(nga): ignores default_target_platform and configuration detector
             .configure(targetConfiguration.orElse(UnconfiguredTargetConfiguration.INSTANCE));
     Iterable<BuildRule> actionGraphRules =
@@ -446,7 +449,7 @@ public class BuildCommand extends AbstractCommand {
           "Targets specified via `--just-build` must be a subset of action graph.");
     }
     return ImmutableSet.of(
-        ImmutableBuildTargetWithOutputs.of(explicitTarget, targetWithOutputLabel.getOutputLabel()));
+        BuildTargetWithOutputs.of(explicitTarget, targetWithOutputLabel.getOutputLabel()));
   }
 
   private void checkSingleBuildTargetSpecifiedForOutBuildMode(
@@ -560,7 +563,7 @@ public class BuildCommand extends AbstractCommand {
                 OUT_LONG_ARG,
                 loneTarget);
 
-        ProjectFilesystem projectFilesystem = params.getCell().getFilesystem();
+        ProjectFilesystem projectFilesystem = params.getCells().getRootCell().getFilesystem();
         SourcePathResolverAdapter pathResolver =
             graphs.getActionGraphAndBuilder().getActionGraphBuilder().getSourcePathResolver();
 
@@ -650,7 +653,16 @@ public class BuildCommand extends AbstractCommand {
         Files.createSymbolicLink(absolutePathWithoutHash, absolutePathWithHash);
         break;
       case HARDLINK:
-        if (Files.isDirectory(absolutePathWithHash)) {
+        boolean isDirectory;
+        try {
+          isDirectory =
+              Files.readAttributes(absolutePathWithHash, BasicFileAttributes.class).isDirectory();
+        } catch (NoSuchFileException e) {
+          // Rule did not produce a file.
+          // It should not be possible, but it happens.
+          return;
+        }
+        if (isDirectory) {
           Files.createSymbolicLink(absolutePathWithoutHash, absolutePathWithHash);
         } else {
           Files.createLink(absolutePathWithoutHash, absolutePathWithHash);
@@ -701,7 +713,13 @@ public class BuildCommand extends AbstractCommand {
       CommandRunnerParams params, GraphsAndBuildTargets graphsAndBuildTargets) throws IOException {
     // Clean up last buck-out/last.
     Path lastOutputDirPath =
-        params.getCell().getFilesystem().getBuckPaths().getLastOutputDir().toAbsolutePath();
+        params
+            .getCells()
+            .getRootCell()
+            .getFilesystem()
+            .getBuckPaths()
+            .getLastOutputDir()
+            .toAbsolutePath();
     MostFiles.deleteRecursivelyIfExists(lastOutputDirPath);
     Files.createDirectories(lastOutputDirPath);
 
@@ -768,7 +786,7 @@ public class BuildCommand extends AbstractCommand {
                   path ->
                       showFullOutput || showFullJsonOutput
                           ? path
-                          : params.getCell().getFilesystem().relativize(path));
+                          : params.getCells().getRootCell().getFilesystem().relativize(path));
 
       params.getConsole().getStdOut().flush();
       if (showJsonOutput || showFullJsonOutput) {
@@ -810,7 +828,7 @@ public class BuildCommand extends AbstractCommand {
       return params
           .getParser()
           .buildTargetGraphWithoutTopLevelConfigurationTargets(
-              createParsingContext(params.getCell(), executor)
+              createParsingContext(params.getCells().getRootCell(), executor)
                   .withSpeculativeParsing(SpeculativeParsing.ENABLED)
                   .withApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode()),
               specs,

@@ -39,7 +39,8 @@ public class JsDescriptionsProvider implements DescriptionProvider {
 
     return Arrays.asList(
         new JsLibraryDescription(),
-        new JsBundleGenruleDescription(toolchainProvider, context.getSandboxExecutionStrategy()),
+        new JsBundleGenruleDescription(
+            toolchainProvider, config, context.getSandboxExecutionStrategy()),
         new JsBundleDescription(toolchainProvider, androidBuckConfig));
   }
 }

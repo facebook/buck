@@ -56,4 +56,22 @@ public interface BuildRuleCreationContextWithTargetGraph extends BuildRuleCreati
    *     BuildRuleArg)}
    */
   ProviderInfoCollection getProviderInfoCollection();
+
+  static BuildRuleCreationContextWithTargetGraph of(
+      TargetGraph targetGraph,
+      ActionGraphBuilder actionGraphBuilder,
+      ProjectFilesystem projectFilesystem,
+      CellPathResolver cellPathResolver,
+      ToolchainProvider toolchainProvider,
+      ConfigurationRuleRegistry configurationRuleRegistry,
+      ProviderInfoCollection providerInfoCollection) {
+    return ImmutableBuildRuleCreationContextWithTargetGraph.of(
+        targetGraph,
+        actionGraphBuilder,
+        projectFilesystem,
+        cellPathResolver,
+        toolchainProvider,
+        configurationRuleRegistry,
+        providerInfoCollection);
+  }
 }

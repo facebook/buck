@@ -18,6 +18,7 @@ package com.facebook.buck.step;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
@@ -65,6 +66,7 @@ public class TestExecutionContext {
         .setExecutors(executors)
         .setProcessExecutor(new FakeProcessExecutor())
         .setCellPathResolver(cellPathResolver)
+        .setCells(new TestCellBuilder().setFilesystem(filesystem).build())
         .setProjectFilesystemFactory(new DefaultProjectFilesystemFactory())
         .setBuildCellRootPath(filesystem.getRootPath());
   }

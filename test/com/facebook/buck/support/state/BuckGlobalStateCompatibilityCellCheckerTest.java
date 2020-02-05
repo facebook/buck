@@ -22,7 +22,6 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.command.config.ConfigDifference;
-import com.facebook.buck.command.config.ImmutableConfigChange;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.google.common.collect.ImmutableMap;
@@ -55,7 +54,8 @@ public class BuckGlobalStateCompatibilityCellCheckerTest {
 
     assertEquals(
         ImmutableMap.of(
-            "cxx.cc", ImmutableConfigChange.of("/some_location/gcc", "/some_location/clang")),
+            "cxx.cc",
+            ConfigDifference.ConfigChange.of("/some_location/gcc", "/some_location/clang")),
         ConfigDifference.compareForCaching(buckConfig, buckConfigDifferentCompiler));
 
     assertEquals(
@@ -124,10 +124,10 @@ public class BuckGlobalStateCompatibilityCellCheckerTest {
             .build();
 
     assertEquals(
-        ImmutableMap.of("cxx.new", ImmutableConfigChange.of(null, "value")),
+        ImmutableMap.of("cxx.new", ConfigDifference.ConfigChange.of(null, "value")),
         ConfigDifference.compareForCaching(buckConfigWithoutValue, buckConfigWithValue));
     assertEquals(
-        ImmutableMap.of("cxx.new", ImmutableConfigChange.of("value", null)),
+        ImmutableMap.of("cxx.new", ConfigDifference.ConfigChange.of("value", null)),
         ConfigDifference.compareForCaching(buckConfigWithValue, buckConfigWithoutValue));
   }
 
@@ -141,10 +141,10 @@ public class BuckGlobalStateCompatibilityCellCheckerTest {
             .build();
 
     assertEquals(
-        ImmutableMap.of("cxx.new", ImmutableConfigChange.of(null, "value")),
+        ImmutableMap.of("cxx.new", ConfigDifference.ConfigChange.of(null, "value")),
         ConfigDifference.compareForCaching(buckConfigWithoutValue, buckConfigWithValue));
     assertEquals(
-        ImmutableMap.of("cxx.new", ImmutableConfigChange.of("value", null)),
+        ImmutableMap.of("cxx.new", ConfigDifference.ConfigChange.of("value", null)),
         ConfigDifference.compareForCaching(buckConfigWithValue, buckConfigWithoutValue));
   }
 }

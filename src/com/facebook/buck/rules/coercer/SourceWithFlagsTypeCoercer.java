@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -52,7 +53,7 @@ public class SourceWithFlagsTypeCoercer implements TypeCoercer<SourceWithFlags> 
   }
 
   @Override
-  public void traverse(CellPathResolver cellRoots, SourceWithFlags object, Traversal traversal) {
+  public void traverse(CellNameResolver cellRoots, SourceWithFlags object, Traversal traversal) {
     sourcePathTypeCoercer.traverse(cellRoots, object.getSourcePath(), traversal);
     flagsTypeCoercer.traverse(cellRoots, ImmutableList.copyOf(object.getFlags()), traversal);
   }

@@ -25,7 +25,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.api.BuildFileManifest;
-import com.facebook.buck.parser.api.ImmutableBuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
@@ -63,7 +62,7 @@ public class CachingProjectBuildFileParserDecoratorTest {
     public BuildFileManifest getManifest(Path buildFile) throws BuildFileParseException {
       ImmutableMap<String, Object> targetMap = ImmutableMap.of("foo", "foo", "bar", "bar");
 
-      return ImmutableBuildFileManifest.of(
+      return BuildFileManifest.of(
           ImmutableMap.of("tar1", targetMap),
           ImmutableSortedSet.of(),
           ImmutableMap.of(),

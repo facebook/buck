@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.DataTransferObject;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -51,7 +52,7 @@ public class ImmutableTypeCoercer<T extends DataTransferObject> implements TypeC
   }
 
   @Override
-  public void traverse(CellPathResolver cellRoots, T object, Traversal traversal) {
+  public void traverse(CellNameResolver cellRoots, T object, Traversal traversal) {
     traversal.traverse(object);
     for (ParamInfo paramInfo : paramInfos.values()) {
       @SuppressWarnings("unchecked")

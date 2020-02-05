@@ -16,6 +16,7 @@
 
 package com.facebook.buck.versions;
 
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
@@ -54,7 +55,8 @@ public class InstrumentedVersionedTargetGraphCache {
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       TargetGraphCreationResult targetGraphCreationResult,
-      ImmutableMap<String, VersionUniverse> versionUniverses)
+      ImmutableMap<String, VersionUniverse> versionUniverses,
+      Cells cells)
       throws VersionException, InterruptedException, TimeoutException {
     return cache.toVersionedTargetGraph(
         depsAwareExecutor,
@@ -62,7 +64,8 @@ public class InstrumentedVersionedTargetGraphCache {
         typeCoercerFactory,
         unconfiguredBuildTargetFactory,
         targetGraphCreationResult,
-        statsTracker);
+        statsTracker,
+        cells);
   }
 
   /**
@@ -76,7 +79,8 @@ public class InstrumentedVersionedTargetGraphCache {
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       TargetGraphCreationResult targetGraphCreationResult,
       Optional<TargetConfiguration> targetConfiguration,
-      BuckEventBus eventBus)
+      BuckEventBus eventBus,
+      Cells cells)
       throws VersionException, InterruptedException {
     return cache
         .getVersionedTargetGraph(
@@ -87,7 +91,8 @@ public class InstrumentedVersionedTargetGraphCache {
             targetGraphCreationResult,
             targetConfiguration,
             statsTracker,
-            eventBus)
+            eventBus,
+            cells)
         .getTargetGraphCreationResult();
   }
 

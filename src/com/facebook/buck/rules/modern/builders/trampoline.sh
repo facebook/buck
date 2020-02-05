@@ -43,11 +43,16 @@ export BASE_BUCK_OUT_DIR=$BASE_BUCK_OUT_DIR
 # this env variable is used in some rules to check if build is running using BUCK
 export BUCK_BUILD_ID="RE_buck_build_id"
 
+if [ "$BUCK_DEBUG_MODE" == "1" ]; then
+  export BUCK_DEBUG_ARGS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=8888"
+fi
+
 cd $1
 
 JAVA_PATH=$(getJavaPathForVersion $BUCK_JAVA_VERSION)
 
 $JAVA_PATH -cp $CLASSPATH \
+  $BUCK_DEBUG_ARGS \
   -Xverify:none -XX:+TieredCompilation -XX:TieredStopAtLevel=1 \
   -Dpf4j.pluginsDir=$BUCK_PLUGIN_ROOT \
   -Dbuck.module.resources=$BUCK_PLUGIN_RESOURCES \

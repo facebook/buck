@@ -16,8 +16,19 @@
 
 package com.facebook.buck.core.rules.analysis.impl;
 
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
+import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import java.util.Map;
 
 /** Just here to provide test visibility */
 @BuckStyleValue
-public abstract class FakeRuleAnalysisResultImpl extends RuleAnalysisResultImpl {}
+public abstract class FakeRuleAnalysisResultImpl extends RuleAnalysisResultImpl {
+  public static FakeRuleAnalysisResultImpl of(
+      BuildTarget buildTarget,
+      ProviderInfoCollection providerInfos,
+      Map<? extends ActionAnalysisData.ID, ? extends ActionAnalysisData> registeredActions) {
+    return ImmutableFakeRuleAnalysisResultImpl.of(buildTarget, providerInfos, registeredActions);
+  }
+}

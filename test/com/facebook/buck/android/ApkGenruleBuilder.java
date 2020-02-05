@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -35,7 +36,10 @@ public class ApkGenruleBuilder
         ApkGenrule> {
 
   private ApkGenruleBuilder(BuildTarget target, ToolchainProvider toolchainProvider) {
-    super(new ApkGenruleDescription(toolchainProvider, new NoSandboxExecutionStrategy()), target);
+    super(
+        new ApkGenruleDescription(
+            toolchainProvider, FakeBuckConfig.builder().build(), new NoSandboxExecutionStrategy()),
+        target);
   }
 
   public static ApkGenruleBuilder create(BuildTarget target) {

@@ -268,6 +268,6 @@ public class TargetNodeVisibilityTest {
             withinView.stream()
                 .map(s -> VisibilityPatternParser.parse(cellNames, buildFile, s))
                 .collect(ImmutableSet.toImmutableSet()),
-            createCellRoots(filesystem));
+            createCellRoots(filesystem).getCellNameResolver());
   }
 }

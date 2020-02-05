@@ -44,7 +44,7 @@ public class QueryTargetCollectorTest {
           Optional.empty(),
           Optional.empty(),
           new DefaultTypeCoercerFactory(),
-          TestCellPathResolver.create(ROOT),
+          TestCellPathResolver.create(ROOT).getCellNameResolver(),
           new ParsingUnconfiguredBuildTargetViewFactory(),
           BaseName.of(baseName),
           ImmutableSet.of(),

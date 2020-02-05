@@ -20,6 +20,7 @@ import com.facebook.buck.core.description.arg.DataTransferObject;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableMap;
+import java.util.Map;
 import java.util.function.Supplier;
 
 /** Class that contains the values needed to build a DescriptionArg */
@@ -78,5 +79,14 @@ public abstract class DataTransferObjectDescriptor<T extends DataTransferObject>
    */
   public interface BuilderBuildFunction<T> {
     T build(Object buildObject) throws BuilderBuildFailedException;
+  }
+
+  public static <T extends DataTransferObject> DataTransferObjectDescriptor<T> of(
+      Class<T> objectClass,
+      Supplier<Object> builderFactory,
+      Map<String, ? extends ParamInfo> paramInfos,
+      DataTransferObjectDescriptor.BuilderBuildFunction<T> buildFunction) {
+    return ImmutableDataTransferObjectDescriptor.of(
+        objectClass, builderFactory, paramInfos, buildFunction);
   }
 }

@@ -22,10 +22,15 @@ import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
+import com.facebook.buck.util.string.MoreStrings;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import java.io.IOException;
 import java.util.Map;
+import java.util.OptionalLong;
 
 /** A pipeline that provides access to a raw node by its {@link BuildTarget}. */
 public class BuildTargetRawNodeParsePipeline
@@ -41,6 +46,33 @@ public class BuildTargetRawNodeParsePipeline
     this.buildFileRawNodeParsePipeline = buildFileRawNodeParsePipeline;
   }
 
+  /**
+   * If a target wasn't found in a build file, find targets that are pretty closely named. This
+   * makes error messages more useful
+   */
+  private static ImmutableList<UnconfiguredBuildTargetView> findSimilarTargets(
+      ImmutableMap<String, ImmutableMap<String, Object>> buildFileTargets,
+      UnconfiguredBuildTargetView expectedTarget,
+      int maxLevenshteinDistance) {
+
+    UnconfiguredBuildTargetView targetWithoutFlavors = expectedTarget.withoutFlavors();
+    String expectedShortName = expectedTarget.getShortName();
+
+    ImmutableList.Builder<UnconfiguredBuildTargetView> builder = ImmutableList.builder();
+    for (String shortName : buildFileTargets.keySet()) {
+      if (shortName.startsWith(expectedShortName) || expectedShortName.startsWith(shortName)) {
+        builder.add(targetWithoutFlavors.withShortName(shortName));
+        continue;
+      }
+
+      int distance = MoreStrings.getLevenshteinDistance(shortName, expectedShortName);
+      if (distance < maxLevenshteinDistance) {
+        builder.add(targetWithoutFlavors.withShortName(shortName));
+      }
+    }
+    return builder.build().stream().sorted().collect(ImmutableList.toImmutableList());
+  }
+
   @Override
   public ListenableFuture<Map<String, Object>> getNodeJob(
       Cell cell, UnconfiguredBuildTargetView buildTarget) throws BuildTargetException {
@@ -51,10 +83,24 @@ public class BuildTargetRawNodeParsePipeline
                 .getAbsolutePathToBuildFile(cell, buildTarget)),
         input -> {
           if (!input.getTargets().containsKey(buildTarget.getShortName())) {
+            ParserConfig parserConfig = cell.getBuckConfigView(ParserConfig.class);
+            ImmutableList<UnconfiguredBuildTargetView> similarTargets =
+                findSimilarTargets(
+                    input.getTargets(),
+                    buildTarget,
+                    parserConfig.getMissingTargetLevenshteinDistance());
             throw NoSuchBuildTargetException.createForMissingBuildRule(
                 buildTarget,
-                cell.getBuckConfigView(ParserConfig.class)
-                    .getAbsolutePathToBuildFile(cell, buildTarget));
+                similarTargets,
+                input.getTargets().size(),
+                (buildFilePath) -> {
+                  try {
+                    return OptionalLong.of(cell.getFilesystem().getFileSize(buildFilePath));
+                  } catch (IOException e) {
+                    return OptionalLong.empty();
+                  }
+                },
+                parserConfig.getAbsolutePathToBuildFile(cell, buildTarget));
           }
           return Futures.immediateFuture(input.getTargets().get(buildTarget.getShortName()));
         },

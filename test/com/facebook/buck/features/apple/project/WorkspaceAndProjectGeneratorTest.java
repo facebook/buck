@@ -126,7 +126,7 @@ public class WorkspaceAndProjectGeneratorTest {
     assumeTrue(Platform.detect() == Platform.MACOS);
     xcodeDescriptions =
         XCodeDescriptionsFactory.create(BuckPluginManagerFactory.createPluginManager());
-    rootCell = (new TestCellBuilder()).build();
+    rootCell = (new TestCellBuilder()).build().getRootCell();
     ProjectFilesystem projectFilesystem = rootCell.getFilesystem();
     BuckConfig fakeBuckConfig = FakeBuckConfig.builder().build();
     halideBuckConfig = HalideLibraryBuilder.createDefaultHalideConfig(projectFilesystem);
