@@ -122,7 +122,7 @@ public class StackedDownloaderTest {
     Path m2Root = vfs.getPath(jimfAbsolutePath("/home/user/.m2/repository"));
     Files.createDirectories(m2Root);
 
-    Path gradleRoot = vfs.getPath(jimfAbsolutePath("/home/user/.gradle/cache"));
+    Path gradleRoot = vfs.getPath(jimfAbsolutePath("/home/user/gradle/cache"));
     Files.createDirectories(gradleRoot);
 
     // Set up a config so we expect to see both a local and a remote maven repo.
@@ -135,7 +135,7 @@ public class StackedDownloaderTest {
                 "[maven_repositories]",
                 "local = " + m2Root,
                 "central = https://repo1.maven.org/maven2",
-                "gradle = gradle:/home/user/.gradle/cache")
+                "gradle = gradle:/home/user/gradle/cache")
             .build();
 
     Downloader downloader =
