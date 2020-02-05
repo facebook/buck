@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.util.environment.Platform;
 import java.nio.file.InvalidPathException;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -64,6 +65,22 @@ public class PathTypeCoercerTest {
     expectedException.expect(CoerceFailedException.class);
     expectedException.expectMessage(String.format("Could not convert '%s' to a Path", invalidPath));
     expectedException.expectCause(Matchers.instanceOf(InvalidPathException.class));
+
+    pathTypeCoercer.coerce(
+        createCellRoots(filesystem),
+        filesystem,
+        pathRelativeToProjectRoot,
+        UnconfiguredTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
+        invalidPath);
+  }
+
+  @Test
+  public void absolutePath() throws CoerceFailedException {
+    String invalidPath = Platform.detect() == Platform.WINDOWS ? "c:/foo/bar" : "/foo/bar";
+
+    expectedException.expect(CoerceFailedException.class);
+    expectedException.expectMessage("Path cannot contain an absolute path");
 
     pathTypeCoercer.coerce(
         createCellRoots(filesystem),

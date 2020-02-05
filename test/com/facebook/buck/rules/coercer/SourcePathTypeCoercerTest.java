@@ -175,7 +175,7 @@ public class SourcePathTypeCoercerTest {
     projectFilesystem.touch(path);
 
     exception.expect(CoerceFailedException.class);
-    exception.expectMessage("SourcePath cannot contain an absolute path");
+    exception.expectMessage("Path cannot contain an absolute path");
 
     sourcePathTypeCoercer.coerce(
         cellRoots,

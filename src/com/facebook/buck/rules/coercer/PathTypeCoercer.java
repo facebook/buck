@@ -61,7 +61,12 @@ public class PathTypeCoercer extends LeafTypeCoercer<Path> {
       }
       try {
         Path fsPath = pathRelativeToProjectRoot.toPath(filesystem.getFileSystem());
-        return pathCache.getUnchecked(fsPath).getUnchecked(pathString);
+        Path resultPath = pathCache.getUnchecked(fsPath).getUnchecked(pathString);
+        if (resultPath.isAbsolute()) {
+          throw CoerceFailedException.simple(
+              object, getOutputClass(), "Path cannot contain an absolute path");
+        }
+        return resultPath;
       } catch (UncheckedExecutionException e) {
         throw new CoerceFailedException(
             String.format("Could not convert '%s' to a Path", pathString), e.getCause());
