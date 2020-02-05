@@ -19,6 +19,7 @@ package com.facebook.buck.shell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.path.GenruleOutPath;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -119,6 +120,12 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
       if (!(getOut().isPresent() ^ getOuts().isPresent())) {
         throw new HumanReadableException(
             "One and only one of 'out' or 'outs' must be present in genrule.");
+      }
+      // Lets check if out fields are valid GenruleOutPath
+      if (getOut().isPresent()) {
+        GenruleOutPath.of(getOut().get());
+      } else if (getOuts().isPresent()) {
+        getOuts().get().forEach((key, paths) -> paths.forEach(path -> GenruleOutPath.of(path)));
       }
     }
   }

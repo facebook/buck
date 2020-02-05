@@ -273,7 +273,6 @@ public class GenruleBuildable implements Buildable {
                 .map(
                     p -> {
                       Path path = Paths.get(p);
-                      checkOutputPath(path, p);
                       return new OutputPath(path);
                     })
                 .collect(ImmutableSet.toImmutableSet()));
@@ -290,16 +289,7 @@ public class GenruleBuildable implements Buildable {
   private Path getLegacyPath(ProjectFilesystem filesystem, String output) {
     Path legacyBasePath =
         BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s").resolve(output).normalize();
-    checkOutputPath(legacyBasePath, output);
     return legacyBasePath;
-  }
-
-  private void checkOutputPath(Path path, String output) {
-    if (path.isAbsolute() || output.isEmpty()) {
-      throw new HumanReadableException(
-          "The 'out' or 'outs' parameter of genrule %s is '%s', which is not a valid file name.",
-          buildTarget, output);
-    }
   }
 
   /**

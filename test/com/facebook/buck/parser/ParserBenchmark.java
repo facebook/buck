@@ -86,7 +86,7 @@ public class ParserBenchmark {
       Files.createFile(buckFile);
       Files.write(
           buckFile,
-          ("java_library(name = 'foo', srcs = ['A.java'])\n" + "genrule(name = 'baz', out = '')\n")
+          ("java_library(name = 'foo', srcs = ['A.java'])\n" + "genrule(name = 'baz', out = '.')\n")
               .getBytes(StandardCharsets.UTF_8));
       Path javaFile = targetRoot.resolve("A.java");
       Files.createFile(javaFile);

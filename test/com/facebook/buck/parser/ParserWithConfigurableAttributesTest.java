@@ -259,7 +259,7 @@ public class ParserWithConfigurableAttributesTest {
         ("include_defs('//java/com/facebook/includedByBuildFile')\n"
                 + "java_library(name = 'foo')\n"
                 + "java_library(name = 'bar')\n"
-                + "genrule(name = 'baz', out = '')\n")
+                + "genrule(name = 'baz', out = '.')\n")
             .getBytes(UTF_8));
 
     tempDir.newFile("bar.py");

@@ -132,9 +132,7 @@ public class GenruleIntegrationTest {
     assertThat(
         processResult.getStderr(),
         containsString(
-            String.format(
-                "The 'out' or 'outs' parameter of genrule %s is '', which is not a valid file name.",
-                targetName)));
+            "The output path must be relative, simple, non-empty and not cross package boundary"));
   }
 
   @Test
@@ -152,10 +150,7 @@ public class GenruleIntegrationTest {
     assertThat(
         processResult.getStderr(),
         containsString(
-            String.format(
-                "The 'out' or 'outs' parameter of genrule %s is '/tmp/file', "
-                    + "which is not a valid file name.",
-                targetName)));
+            "The output path must be relative, simple, non-empty and not cross package boundary"));
   }
 
   @Test
@@ -626,6 +621,34 @@ public class GenruleIntegrationTest {
             workspace
                 .getGenPath(BuildTargetFactory.newInstance(targetName), "%s__srcs")
                 .resolve("hello.txt")));
+  }
+
+  @Test
+  public void genruleWithInvalidOutParameterFails() throws IOException {
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_invalid_out", temporaryFolder);
+    workspace.setUp();
+
+    String[] targets = {
+      "//:genrule",
+      "//:genrule-double-dot",
+      "//:genrule-double-dot-middle",
+      "//:genrule-double-slash",
+      "//:genrule-middle-dot",
+      "//:genrule-slash-end",
+    };
+
+    for (String target : targets) {
+      String targetName = targetWithSuffix(target);
+      ProcessResult processResult = workspace.runBuckCommand("build", targetName);
+      processResult.assertFailure();
+      assertThat(
+          processResult.getStderr(),
+          containsString(
+              "The output path must be relative, simple, non-empty and not cross package boundary"));
+    }
   }
 
   private Sha1HashCode buildAndGetRuleKey(String scenario, Path temporaryFolder, String target)

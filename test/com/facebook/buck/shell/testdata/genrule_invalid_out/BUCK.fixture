@@ -1,0 +1,83 @@
+genrule(
+    name = "genrule",
+    out = "../abc.txt",
+    cmd = "echo something > $OUT",
+)
+
+genrule(
+    name = "genrule-double-dot",
+    out = "..",
+    cmd = "echo something > $OUT",
+)
+
+genrule(
+    name = "genrule-double-dot-middle",
+    out = "a/b/../c",
+    cmd = "echo something > $OUT",
+)
+
+genrule(
+    name = "genrule-double-slash",
+    out = "//a/b/c",
+    cmd = "echo something > $OUT",
+)
+
+genrule(
+    name = "genrule-middle-dot",
+    out = "a/./b",
+    cmd = "echo something > $OUT",
+)
+
+genrule(
+    name = "genrule-slash-end",
+    out = "a/b/",
+    cmd = "echo something > $OUT",
+)
+
+genrule(
+    name = "genrule_outs",
+    outs = {
+        "output": ["../abc.txt"],
+    },
+    cmd = "echo something > $OUT",
+)
+
+genrule(
+    name = "genrule-double-dot_outs",
+    outs = {
+        "output": [".."],
+    },
+    cmd = "echo something > $OUT",
+)
+
+genrule(
+    name = "genrule-double-dot-middle_outs",
+    outs = {
+        "output": ["a/b/../c"],
+    },
+    cmd = "echo something > $OUT",
+)
+
+genrule(
+    name = "genrule-double-slash_outs",
+    outs = {
+        "output": ["//a/b/c"],
+    },
+    cmd = "echo something > $OUT",
+)
+
+genrule(
+    name = "genrule-middle-dot_outs",
+    outs = {
+        "output": ["a/./b"],
+    },
+    cmd = "echo something > $OUT",
+)
+
+genrule(
+    name = "genrule-slash-end_outs",
+    outs = {
+        "output": ["a/b/"],
+    },
+    cmd = "echo something > $OUT",
+)
