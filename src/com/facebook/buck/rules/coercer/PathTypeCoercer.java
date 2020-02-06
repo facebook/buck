@@ -66,6 +66,10 @@ public class PathTypeCoercer extends LeafTypeCoercer<Path> {
           throw CoerceFailedException.simple(
               object, getOutputClass(), "Path cannot contain an absolute path");
         }
+        if (resultPath.startsWith("..")) {
+          throw CoerceFailedException.simple(
+              object, getOutputClass(), "Path cannot point to above repository root");
+        }
         return resultPath;
       } catch (UncheckedExecutionException e) {
         throw new CoerceFailedException(

@@ -92,6 +92,22 @@ public class PathTypeCoercerTest {
   }
 
   @Test
+  public void aboveRepoRoot() throws CoerceFailedException {
+    String invalidPath = "../..";
+
+    expectedException.expect(CoerceFailedException.class);
+    expectedException.expectMessage("Path cannot point to above repository root");
+
+    pathTypeCoercer.coerce(
+        createCellRoots(filesystem),
+        filesystem,
+        ForwardRelativePath.of("foo"),
+        UnconfiguredTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
+        invalidPath);
+  }
+
+  @Test
   public void coercingMissingFileDoesNotThrow() throws Exception {
     String missingPath = "hello";
     new PathTypeCoercer()
