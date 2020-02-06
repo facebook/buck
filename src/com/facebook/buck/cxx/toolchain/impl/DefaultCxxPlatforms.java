@@ -123,7 +123,7 @@ public class DefaultCxxPlatforms {
         break;
       case MACOS:
         sharedLibraryExtension = "dylib";
-        sharedLibraryVersionedExtensionFormat = ".%s.dylib";
+        sharedLibraryVersionedExtensionFormat = "%s.dylib";
         staticLibraryExtension = "a";
         objectFileExtension = "o";
         defaultCFrontend = getExecutablePath("clang", DEFAULT_OSX_C_FRONTEND, env);
