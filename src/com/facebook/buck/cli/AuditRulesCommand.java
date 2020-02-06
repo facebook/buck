@@ -23,6 +23,7 @@ import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.function.BuckPyFunction;
 import com.facebook.buck.parser.syntax.ListWithSelects;
+import com.facebook.buck.parser.syntax.SelectorValue;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.util.Escaper;
@@ -262,7 +263,20 @@ public class AuditRulesCommand extends AbstractCommand {
       out.append(indent).append("}");
       return out.toString();
     } else if (value instanceof ListWithSelects) {
-      return value.toString();
+      StringBuilder out = new StringBuilder();
+      for (Object item : ((ListWithSelects) value).getElements()) {
+        if (out.length() > 0) {
+          out.append(" + ");
+        }
+        if (item instanceof SelectorValue) {
+          out.append("select(")
+              .append(createDisplayString(indent, ((SelectorValue) item).getDictionary()))
+              .append(")");
+        } else {
+          out.append(createDisplayString(indent, item));
+        }
+      }
+      return out.toString();
     } else {
       throw new IllegalStateException();
     }
