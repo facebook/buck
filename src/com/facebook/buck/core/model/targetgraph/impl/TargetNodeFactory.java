@@ -30,6 +30,7 @@ import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.targetgraph.NodeCopier;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -153,7 +154,7 @@ public class TargetNodeFactory implements NodeCopier {
     ImmutableSortedSet.Builder<BuildTarget> extraDepsBuilder = ImmutableSortedSet.naturalOrder();
     ImmutableSortedSet.Builder<BuildTarget> targetGraphOnlyDepsBuilder =
         ImmutableSortedSet.naturalOrder();
-    ImmutableSet.Builder<Path> pathsBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<ForwardRelativePath> pathsBuilder = ImmutableSet.builder();
 
     ImmutableMap<String, ParamInfo> paramInfos;
     if (constructorArg instanceof SkylarkDescriptionArg) {
@@ -195,11 +196,10 @@ public class TargetNodeFactory implements NodeCopier {
     }
 
     if (description instanceof ImplicitInputsInferringDescription) {
-      ((ImplicitInputsInferringDescription<T>) description)
-          .inferInputsFromConstructorArgs(buildTarget.getUnflavoredBuildTarget(), constructorArg)
-              .stream()
-              .map(p -> p.toPath(filesystem.getFileSystem()))
-              .forEach(pathsBuilder::add);
+      pathsBuilder.addAll(
+          ((ImplicitInputsInferringDescription<T>) description)
+              .inferInputsFromConstructorArgs(
+                  buildTarget.getUnflavoredBuildTarget(), constructorArg));
     }
 
     ImmutableSet<BuildTarget> configurationDepsFromArg =
@@ -212,7 +212,7 @@ public class TargetNodeFactory implements NodeCopier {
               .build();
     }
 
-    ImmutableSet<Path> paths = pathsBuilder.build();
+    ImmutableSet<ForwardRelativePath> paths = pathsBuilder.build();
     pathsChecker.checkPaths(filesystem, buildTarget, paths);
 
     // This method uses the TargetNodeFactory, rather than just calling withBuildTarget,
@@ -240,7 +240,7 @@ public class TargetNodeFactory implements NodeCopier {
       BuildTarget buildTarget,
       CellNameResolver cellRoots,
       ImmutableSet.Builder<BuildTarget> depsBuilder,
-      ImmutableSet.Builder<Path> pathsBuilder,
+      ImmutableSet.Builder<ForwardRelativePath> pathsBuilder,
       ParamInfo info,
       ConstructorArg constructorArg)
       throws NoSuchBuildTargetException {
@@ -251,11 +251,14 @@ public class TargetNodeFactory implements NodeCopier {
           cellRoots,
           object -> {
             if (object instanceof PathSourcePath) {
-              pathsBuilder.add(((PathSourcePath) object).getRelativePath());
+              // We know that coercer returns normalized object, so
+              // converting to ForwardRelativePath is OK
+              pathsBuilder.add(
+                  ForwardRelativePath.ofPath(((PathSourcePath) object).getRelativePath()));
+            } else if (object instanceof Path) {
+              pathsBuilder.add(ForwardRelativePath.ofPath((Path) object));
             } else if (object instanceof BuildTargetSourcePath) {
               depsBuilder.add(((BuildTargetSourcePath) object).getTarget());
-            } else if (object instanceof Path) {
-              pathsBuilder.add((Path) object);
             } else if (object instanceof BuildTarget) {
               depsBuilder.add((BuildTarget) object);
             } else if (object instanceof BuildTargetWithOutputs) {

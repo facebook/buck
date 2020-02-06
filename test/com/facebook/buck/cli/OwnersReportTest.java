@@ -238,7 +238,11 @@ public class OwnersReportTest {
 
     assertEquals(inputs.size(), report.owners.size());
     assertTrue(report.owners.containsKey(targetNode));
-    assertEquals(targetNode.getInputs(), report.owners.get(targetNode));
+    assertEquals(
+        targetNode.getInputs().stream()
+            .map(p -> p.toPath(filesystem.getFileSystem()))
+            .collect(ImmutableSet.toImmutableSet()),
+        report.owners.get(targetNode));
   }
 
   /** Verify that owners are correctly detected: - inputs that belong to multiple targets */
@@ -267,8 +271,16 @@ public class OwnersReportTest {
 
     assertTrue(report.owners.containsKey(targetNode1));
     assertTrue(report.owners.containsKey(targetNode2));
-    assertEquals(targetNode1.getInputs(), report.owners.get(targetNode1));
-    assertEquals(targetNode2.getInputs(), report.owners.get(targetNode2));
+    assertEquals(
+        targetNode1.getInputs().stream()
+            .map(p -> p.toPath(filesystem.getFileSystem()))
+            .collect(ImmutableSet.toImmutableSet()),
+        report.owners.get(targetNode1));
+    assertEquals(
+        targetNode2.getInputs().stream()
+            .map(p -> p.toPath(filesystem.getFileSystem()))
+            .collect(ImmutableSet.toImmutableSet()),
+        report.owners.get(targetNode2));
   }
 
   @Test

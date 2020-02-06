@@ -364,8 +364,8 @@ public class AndroidBinaryTest {
 
   @Test
   public void testDexingCommandWithIntraDexReorder() {
-    SourcePath reorderTool = FakeSourcePath.of("/tools#reorder_tool");
-    SourcePath reorderData = FakeSourcePath.of("/tools#reorder_data");
+    SourcePath reorderTool = FakeSourcePath.of("tools#reorder_tool");
+    SourcePath reorderData = FakeSourcePath.of("tools#reorder_data");
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     AndroidBinary splitDexRule =
         AndroidBinaryBuilder.createBuilder(

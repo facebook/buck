@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.targetgraph.NodeCopier;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.visibility.VisibilityChecker;
@@ -35,7 +36,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 import org.immutables.value.Value;
@@ -80,7 +80,7 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
   public abstract ProjectFilesystem getFilesystem();
 
   @Override
-  public abstract ImmutableSet<Path> getInputs();
+  public abstract ImmutableSet<ForwardRelativePath> getInputs();
 
   @Override
   public abstract ImmutableSet<BuildTarget> getDeclaredDeps();
@@ -306,7 +306,7 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
       BaseDescription<T> description,
       T constructorArg,
       ProjectFilesystem filesystem,
-      ImmutableSet<Path> inputs,
+      ImmutableSet<ForwardRelativePath> inputs,
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableSortedSet<BuildTarget> extraDeps,
       ImmutableSortedSet<BuildTarget> targetGraphOnlyDeps,

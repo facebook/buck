@@ -146,8 +146,7 @@ public class ForwardRelativePath implements Comparable<ForwardRelativePath> {
       return new ForwardRelativePath(segments);
     } else {
       String pathString = path.toString();
-      if (Platform.detect() == Platform.WINDOWS
-          && path.getFileSystem() == FileSystems.getDefault()) {
+      if (Platform.detect() == Platform.WINDOWS) {
         // Suboptimal
         pathString = pathString.replace('\\', '/');
       }

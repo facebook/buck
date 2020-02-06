@@ -36,6 +36,7 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -1187,7 +1188,7 @@ public class AppleDescriptions {
 
   public static boolean targetNodeContainsSwiftSourceCode(
       TargetNode<? extends CxxLibraryDescription.CommonArg> node) {
-    for (Path inputPath : node.getInputs()) {
+    for (ForwardRelativePath inputPath : node.getInputs()) {
       if (inputPath.toString().endsWith(".swift")) {
         return true;
       }

@@ -36,6 +36,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.ThrowingTargetConfigurationTransformer;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -118,7 +119,8 @@ public class TargetNodeTest {
     assertThat(
         targetNode.getInputs(),
         containsInAnyOrder(
-            Paths.get("example/path/MyClass.java"), Paths.get("example/path/AnotherClass.java")));
+            ForwardRelativePath.of("example/path/MyClass.java"),
+            ForwardRelativePath.of("example/path/AnotherClass.java")));
 
     assertThat(
         targetNode.getExtraDeps(),

@@ -24,6 +24,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.HasBuildTarget;
 import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.visibility.ObeysVisibility;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
@@ -32,7 +33,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 
@@ -60,7 +60,8 @@ public interface TargetNode<T extends ConstructorArg>
 
   ProjectFilesystem getFilesystem();
 
-  ImmutableSet<Path> getInputs();
+  /** Cell root-relative paths. */
+  ImmutableSet<ForwardRelativePath> getInputs();
 
   ImmutableSet<BuildTarget> getDeclaredDeps();
 

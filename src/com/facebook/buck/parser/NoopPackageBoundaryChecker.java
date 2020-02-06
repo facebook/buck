@@ -18,11 +18,11 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.Path;
 
 public class NoopPackageBoundaryChecker implements PackageBoundaryChecker {
   @Override
   public void enforceBuckPackageBoundaries(
-      Cell targetCell, BuildTarget target, ImmutableSet<Path> paths) {}
+      Cell targetCell, BuildTarget target, ImmutableSet<ForwardRelativePath> paths) {}
 }

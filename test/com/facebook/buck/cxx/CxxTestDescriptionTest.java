@@ -26,6 +26,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -401,7 +402,7 @@ public class CxxTestDescriptionTest {
               .setFramework(framework)
               .setResources(ImmutableSortedSet.of(resource))
               .build();
-      assertThat(cxxTestWithResources.getInputs(), hasItem(resource));
+      assertThat(cxxTestWithResources.getInputs(), hasItem(ForwardRelativePath.ofPath(resource)));
     }
   }
 

@@ -18,10 +18,11 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.Path;
 
 /** Performs checks around accessing files outside of a target's package. */
 public interface PackageBoundaryChecker {
-  void enforceBuckPackageBoundaries(Cell targetCell, BuildTarget target, ImmutableSet<Path> paths);
+  void enforceBuckPackageBoundaries(
+      Cell targetCell, BuildTarget target, ImmutableSet<ForwardRelativePath> paths);
 }

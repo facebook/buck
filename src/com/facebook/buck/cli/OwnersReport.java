@@ -21,6 +21,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.Parser;
@@ -46,7 +47,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -134,10 +134,14 @@ final class OwnersReport {
           ImmutableSet.of(filePath));
     } else {
       Path commandInput = rootCell.getFilesystem().getPath(filePath);
-      Set<Path> ruleInputs = targetNode.getInputs();
+      ImmutableSet<ForwardRelativePath> ruleInputs = targetNode.getInputs();
+      ImmutableSet<Path> ruleInputPaths =
+          ruleInputs.stream()
+              .map(p -> p.toPath(commandInput.getFileSystem()))
+              .collect(ImmutableSet.toImmutableSet());
       Predicate<Path> startsWith =
           input -> !commandInput.equals(input) && commandInput.startsWith(input);
-      if (ruleInputs.contains(commandInput) || ruleInputs.stream().anyMatch(startsWith)) {
+      if (ruleInputPaths.contains(commandInput) || ruleInputPaths.stream().anyMatch(startsWith)) {
         return new OwnersReport(
             ImmutableSetMultimap.of(targetNode, commandInput),
             ImmutableSet.of(),
