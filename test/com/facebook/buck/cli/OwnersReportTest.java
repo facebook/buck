@@ -16,13 +16,13 @@
 
 package com.facebook.buck.cli;
 
-import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.cell.nameresolver.SingleRootCellNameResolverProvider;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
@@ -105,7 +105,8 @@ public class OwnersReportTest {
             .setInputs(inputs)
             .build();
     try {
-      return new TargetNodeFactory(new DefaultTypeCoercerFactory())
+      return new TargetNodeFactory(
+              new DefaultTypeCoercerFactory(), SingleRootCellNameResolverProvider.INSTANCE)
           .createFromObject(
               description,
               arg,
@@ -115,8 +116,7 @@ public class OwnersReportTest {
               ImmutableSet.of(),
               ImmutableSortedSet.of(),
               ImmutableSet.of(),
-              ImmutableSet.of(),
-              createCellRoots(filesystem).getCellNameResolver());
+              ImmutableSet.of());
     } catch (NoSuchBuildTargetException e) {
       throw new RuntimeException(e);
     }

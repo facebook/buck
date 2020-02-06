@@ -16,7 +16,9 @@
 
 package com.facebook.buck.parser;
 
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
+import com.facebook.buck.core.cell.DefaultCellNameResolverProvider;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
@@ -103,20 +105,20 @@ public class PerBuildStateFactory {
       DaemonicParserState daemonicParserState,
       Optional<AtomicLong> parseProcessedBytes) {
 
-    Cell rootCell = parsingContext.getCell();
+    Cells cells = new Cells(parsingContext.getCell().getCell(CanonicalCellName.rootCell()));
     ListeningExecutorService executorService = parsingContext.getExecutor();
     SymlinkCache symlinkCache = new SymlinkCache(eventBus, daemonicParserState);
-    CellManager cellManager = new CellManager(rootCell, symlinkCache);
+    CellManager cellManager = new CellManager(cells.getRootCell(), symlinkCache);
 
     TargetNodeListener<TargetNode<?>> symlinkCheckers = cellManager::registerInputsUnderSymlinks;
-    ParserConfig parserConfig = rootCell.getBuckConfig().getView(ParserConfig.class);
+    ParserConfig parserConfig = cells.getRootCell().getBuckConfig().getView(ParserConfig.class);
 
     TargetConfigurationDetector targetConfigurationDetector =
         TargetConfigurationDetectorFactory.fromBuckConfig(
             parserConfig,
             unconfiguredBuildTargetFactory,
-            rootCell.getCellPathResolver(),
-            rootCell.getCellNameResolver());
+            cells.getRootCell().getCellPathResolver(),
+            cells.getRootCell().getCellNameResolver());
 
     int numParsingThreads = parserConfig.getNumParsingThreads();
     DefaultProjectBuildFileParserFactory projectBuildFileParserFactory =
@@ -134,7 +136,8 @@ public class PerBuildStateFactory {
             projectBuildFileParserFactory,
             parsingContext.isProfilingEnabled());
 
-    TargetNodeFactory targetNodeFactory = new TargetNodeFactory(typeCoercerFactory);
+    TargetNodeFactory targetNodeFactory =
+        new TargetNodeFactory(typeCoercerFactory, new DefaultCellNameResolverProvider(cells));
 
     SelectorListFactory selectorListFactory =
         new SelectorListFactory(new SelectorFactory(unconfiguredBuildTargetFactory));
@@ -198,7 +201,7 @@ public class PerBuildStateFactory {
             new DefaultUnconfiguredTargetNodeFactory(
                 knownRuleTypesProvider,
                 new BuiltTargetVerifier(),
-                rootCell.getCellPathResolver(),
+                cells.getRootCell().getCellPathResolver(),
                 selectorListFactory));
 
     PackageBoundaryChecker packageBoundaryChecker =
@@ -233,7 +236,7 @@ public class PerBuildStateFactory {
             nonResolvingRawTargetNodeToTargetNodeFactory,
             parserConfig.getRequireTargetPlatform(),
             new TargetConfigurationFactory(
-                unconfiguredBuildTargetFactory, rootCell.getCellPathResolver()));
+                unconfiguredBuildTargetFactory, cells.getRootCell().getCellPathResolver()));
 
     ConfigurationRuleRegistry configurationRuleRegistry =
         ConfigurationRuleRegistryFactory.createRegistry(
@@ -268,7 +271,7 @@ public class PerBuildStateFactory {
 
     ListeningExecutorService configuredPipelineExecutor =
         MoreExecutors.listeningDecorator(
-            createExecutorService(rootCell.getBuckConfig(), "configured-pipeline"));
+            createExecutorService(cells.getRootCell().getBuckConfig(), "configured-pipeline"));
 
     UnconfiguredTargetNodeToTargetNodeParsePipeline targetNodeParsePipeline =
         new UnconfiguredTargetNodeToTargetNodeParsePipeline(
@@ -282,7 +285,7 @@ public class PerBuildStateFactory {
             unconfiguredTargetNodeToTargetNodeFactory,
             parserConfig.getRequireTargetPlatform(),
             new TargetConfigurationFactory(
-                unconfiguredBuildTargetFactory, rootCell.getCellPathResolver())) {
+                unconfiguredBuildTargetFactory, cells.getRootCell().getCellPathResolver())) {
           @Override
           public void close() {
             super.close();

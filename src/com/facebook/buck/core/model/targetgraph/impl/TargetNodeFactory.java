@@ -17,6 +17,7 @@
 package com.facebook.buck.core.model.targetgraph.impl;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolverProvider;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
@@ -51,20 +52,28 @@ public class TargetNodeFactory implements NodeCopier {
 
   private final TypeCoercerFactory typeCoercerFactory;
   private final PathsChecker pathsChecker;
+  private final CellNameResolverProvider cellNames;
 
-  public TargetNodeFactory(TypeCoercerFactory typeCoercerFactory) {
-    this(typeCoercerFactory, PathExistenceVerificationMode.VERIFY);
+  public TargetNodeFactory(
+      TypeCoercerFactory typeCoercerFactory, CellNameResolverProvider cellNames) {
+    this(typeCoercerFactory, PathExistenceVerificationMode.VERIFY, cellNames);
   }
 
   public TargetNodeFactory(
       TypeCoercerFactory typeCoercerFactory,
-      PathExistenceVerificationMode pathExistenceVerificationMode) {
-    this(typeCoercerFactory, getPathsChecker(pathExistenceVerificationMode));
+      PathExistenceVerificationMode pathExistenceVerificationMode,
+      CellNameResolverProvider cellNames) {
+    this(typeCoercerFactory, getPathsChecker(pathExistenceVerificationMode), cellNames);
   }
 
-  public TargetNodeFactory(TypeCoercerFactory typeCoercerFactory, PathsChecker pathsChecker) {
+  public TargetNodeFactory(
+      TypeCoercerFactory typeCoercerFactory,
+      PathsChecker pathsChecker,
+      CellNameResolverProvider cellNames) {
+
     this.typeCoercerFactory = typeCoercerFactory;
     this.pathsChecker = pathsChecker;
+    this.cellNames = cellNames;
   }
 
   private static PathsChecker getPathsChecker(
@@ -94,8 +103,7 @@ public class TargetNodeFactory implements NodeCopier {
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableSortedSet<BuildTarget> configurationDeps,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
-      ImmutableSet<VisibilityPattern> withinViewPatterns,
-      CellNameResolver cellRoots)
+      ImmutableSet<VisibilityPattern> withinViewPatterns)
       throws NoSuchBuildTargetException {
     return create(
         description,
@@ -106,8 +114,7 @@ public class TargetNodeFactory implements NodeCopier {
         declaredDeps,
         configurationDeps,
         visibilityPatterns,
-        withinViewPatterns,
-        cellRoots);
+        withinViewPatterns);
   }
 
   @SuppressWarnings("unchecked")
@@ -120,8 +127,7 @@ public class TargetNodeFactory implements NodeCopier {
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableSortedSet<BuildTarget> configurationDeps,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
-      ImmutableSet<VisibilityPattern> withinViewPatterns,
-      CellNameResolver cellRoots)
+      ImmutableSet<VisibilityPattern> withinViewPatterns)
       throws NoSuchBuildTargetException {
 
     boolean isConfigurationRule = description instanceof ConfigurationRuleDescription<?, ?>;
@@ -160,6 +166,8 @@ public class TargetNodeFactory implements NodeCopier {
               .getParamInfos();
     }
 
+    CellNameResolver cellNameResolver = cellNames.cellNameResolverForCell(buildTarget.getCell());
+
     // Scan the input to find possible BuildTargetPaths, necessary for loading dependent rules.
     for (ParamInfo info : paramInfos.values()) {
       if (info.isDep()
@@ -168,7 +176,7 @@ public class TargetNodeFactory implements NodeCopier {
           && !info.getName().equals("deps")) {
         detectBuildTargetsAndPathsForConstructorArg(
             buildTarget,
-            cellRoots,
+            cellNameResolver,
             info.isTargetGraphOnlyDep() ? targetGraphOnlyDepsBuilder : extraDepsBuilder,
             pathsBuilder,
             info,
@@ -179,7 +187,11 @@ public class TargetNodeFactory implements NodeCopier {
     if (description instanceof ImplicitDepsInferringDescription) {
       ((ImplicitDepsInferringDescription<T>) description)
           .findDepsForTargetFromConstructorArgs(
-              buildTarget, cellRoots, constructorArg, extraDepsBuilder, targetGraphOnlyDepsBuilder);
+              buildTarget,
+              cellNameResolver,
+              constructorArg,
+              extraDepsBuilder,
+              targetGraphOnlyDepsBuilder);
     }
 
     if (description instanceof ImplicitInputsInferringDescription) {
@@ -219,7 +231,7 @@ public class TargetNodeFactory implements NodeCopier {
         extraDepsBuilder.build(),
         targetGraphOnlyDepsBuilder.build(),
         configurationDeps,
-        cellRoots,
+        cellNameResolver,
         visibilityPatterns,
         withinViewPatterns,
         Optional.empty());
@@ -274,8 +286,7 @@ public class TargetNodeFactory implements NodeCopier {
           originalNode.getDeclaredDeps(),
           originalNode.getConfigurationDeps(),
           originalNode.getVisibilityPatterns(),
-          originalNode.getWithinViewPatterns(),
-          originalNode.getCellNames());
+          originalNode.getWithinViewPatterns());
     } catch (NoSuchBuildTargetException e) {
       throw new IllegalStateException(
           String.format(

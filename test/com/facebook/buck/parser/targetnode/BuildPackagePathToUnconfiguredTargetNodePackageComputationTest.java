@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.facebook.buck.core.cell.Cells;
+import com.facebook.buck.core.cell.DefaultCellNameResolverProvider;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.graph.transformation.impl.FakeComputationEnvironment;
 import com.facebook.buck.core.model.BaseName;
@@ -67,7 +68,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
             typeCoercerFactory,
             TestKnownRuleTypesProvider.create(BuckPluginManagerFactory.createPluginManager()),
             new DefaultConstructorArgMarshaller(typeCoercerFactory),
-            new TargetNodeFactory(typeCoercerFactory),
+            new TargetNodeFactory(typeCoercerFactory, new DefaultCellNameResolverProvider(cell)),
             new NoopPackageBoundaryChecker(),
             (file, targetNode) -> {},
             new DefaultSelectorListResolver(new TestSelectableResolver()),

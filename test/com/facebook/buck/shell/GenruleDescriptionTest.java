@@ -22,6 +22,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.cell.nameresolver.SingleRootCellNameResolverProvider;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.DependencyStack;
@@ -115,7 +116,8 @@ public class GenruleDescriptionTest {
             ImmutableSet.builder(),
             instance);
     TargetNode<GenruleDescriptionArg> targetNode =
-        new TargetNodeFactory(new DefaultTypeCoercerFactory())
+        new TargetNodeFactory(
+                new DefaultTypeCoercerFactory(), SingleRootCellNameResolverProvider.INSTANCE)
             .createFromObject(
                 genruleDescription,
                 constructorArg,
@@ -125,8 +127,7 @@ public class GenruleDescriptionTest {
                 declaredDeps.build(),
                 ImmutableSortedSet.of(),
                 visibilityPatterns.build(),
-                withinViewPatterns.build(),
-                createCellRoots(projectFilesystem).getCellNameResolver());
+                withinViewPatterns.build());
     assertEquals(
         "SourcePaths and targets from cmd string should be extracted as extra deps.",
         ImmutableSet.of("//foo:baz", "//biz:baz", "//bin:executable", "//foo:arg"),
