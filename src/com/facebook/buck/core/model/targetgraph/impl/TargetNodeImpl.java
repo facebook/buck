@@ -16,7 +16,6 @@
 
 package com.facebook.buck.core.model.targetgraph.impl;
 
-import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.impl.DescriptionCache;
@@ -105,9 +104,6 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
   public abstract ImmutableSortedSet<BuildTarget> getConfigurationDeps();
 
   @Override
-  public abstract CellNameResolver getCellNames();
-
-  @Override
   public abstract ImmutableSet<VisibilityPattern> getVisibilityPatterns();
 
   @Override
@@ -189,7 +185,6 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
         getExtraDeps(),
         getTargetGraphOnlyDeps(),
         getConfigurationDeps(),
-        getCellNames(),
         getVisibilityPatterns(),
         getWithinViewPatterns(),
         getSelectedVersions());
@@ -208,7 +203,6 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
         getExtraDeps(),
         getTargetGraphOnlyDeps(),
         getConfigurationDeps(),
-        getCellNames(),
         getVisibilityPatterns(),
         getWithinViewPatterns(),
         getSelectedVersions());
@@ -227,7 +221,6 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
         getExtraDeps(),
         getTargetGraphOnlyDeps(),
         getConfigurationDeps(),
-        getCellNames(),
         getVisibilityPatterns(),
         getWithinViewPatterns(),
         getSelectedVersions());
@@ -246,7 +239,6 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
         getExtraDeps(),
         getTargetGraphOnlyDeps(),
         getConfigurationDeps(),
-        getCellNames(),
         getVisibilityPatterns(),
         getWithinViewPatterns(),
         getSelectedVersions());
@@ -265,7 +257,6 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
         extraDeps,
         getTargetGraphOnlyDeps(),
         getConfigurationDeps(),
-        getCellNames(),
         getVisibilityPatterns(),
         getWithinViewPatterns(),
         getSelectedVersions());
@@ -285,7 +276,6 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
         getExtraDeps(),
         targetGraphOnlyDeps,
         getConfigurationDeps(),
-        getCellNames(),
         getVisibilityPatterns(),
         getWithinViewPatterns(),
         getSelectedVersions());
@@ -305,7 +295,6 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
         getExtraDeps(),
         getTargetGraphOnlyDeps(),
         getConfigurationDeps(),
-        getCellNames(),
         getVisibilityPatterns(),
         getWithinViewPatterns(),
         selectedVersions);
@@ -322,7 +311,6 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
       ImmutableSortedSet<BuildTarget> extraDeps,
       ImmutableSortedSet<BuildTarget> targetGraphOnlyDeps,
       ImmutableSortedSet<BuildTarget> configurationDeps,
-      CellNameResolver cellNames,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
       ImmutableSet<VisibilityPattern> withinViewPatterns,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions) {
@@ -337,7 +325,6 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
         extraDeps,
         targetGraphOnlyDeps,
         configurationDeps,
-        cellNames,
         visibilityPatterns,
         withinViewPatterns,
         selectedVersions);

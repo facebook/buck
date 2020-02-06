@@ -16,7 +16,6 @@
 
 package com.facebook.buck.core.model.targetgraph;
 
-import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
@@ -85,8 +84,6 @@ public interface TargetNode<T extends ConstructorArg>
    * select} statements.
    */
   ImmutableSortedSet<BuildTarget> getConfigurationDeps();
-
-  CellNameResolver getCellNames();
 
   ImmutableSet<VisibilityPattern> getVisibilityPatterns();
 

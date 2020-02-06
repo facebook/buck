@@ -231,7 +231,6 @@ public class TargetNodeFactory implements NodeCopier {
         extraDepsBuilder.build(),
         targetGraphOnlyDepsBuilder.build(),
         configurationDeps,
-        cellNameResolver,
         visibilityPatterns,
         withinViewPatterns,
         Optional.empty());
