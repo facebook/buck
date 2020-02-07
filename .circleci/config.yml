@@ -88,7 +88,7 @@ run_ant_build: &run_ant_build
   name: Run Ant Build
   command: |
     if [ "${PLATFORM}" == "macos" ]; then
-      # The latest ant depends on JDK13, install 1.9 instead
+      # The latest ant depends on JDK13, install 1.9 instead.
       brew install ant@1.9
       export PATH="/usr/local/opt/ant@1.9/bin:${PATH}"
     fi
