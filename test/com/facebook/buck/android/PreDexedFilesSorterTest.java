@@ -22,7 +22,6 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -80,15 +79,6 @@ public class PreDexedFilesSorterTest {
       assertThat(store, is(moduleGraph.getRootAPKModule().getName()));
     }
     assertThat(sortResults.size(), is(1));
-  }
-
-  @Test(expected = HumanReadableException.class)
-  public void testPrimaryOverFlow() throws IOException {
-    int numberOfPrimaryDexes = 15;
-    int numberOfSecondaryDexes = 0;
-    int numberOfExtraDexes = 0;
-
-    generatePreDexSorterResults(numberOfPrimaryDexes, numberOfSecondaryDexes, numberOfExtraDexes);
   }
 
   @Test

@@ -89,6 +89,22 @@ android_binary(
     ],
 )
 
+android_binary(
+    name = "primary_dex_overflow",
+    dex_group_lib_limit = 1,
+    keystore = "//keystores:debug",
+    linear_alloc_hard_limit = 1,
+    manifest = "SimpleManifest.xml",
+    primary_dex_patterns = [
+        "/MyApplication^",
+    ],
+    use_split_dex = True,
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+    ],
+)
+
 genrule(
     name = "disassemble_app_with_d8_for_canary",
     out = "disassembled_d8_canary.smali",

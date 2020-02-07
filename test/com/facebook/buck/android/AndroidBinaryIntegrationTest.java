@@ -392,6 +392,16 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
+  public void testPrimaryDexOverflow() {
+    ProcessResult result = workspace.runBuckBuild("//apps/multidex:primary_dex_overflow");
+
+    assertThat(
+        "Dex weight warning should be logged.",
+        result.getStderr(),
+        containsRegex("Primary dex weight .* exceeds limit of 1."));
+  }
+
+  @Test
   public void testDexGroups() throws IOException {
     Path apkPath = workspace.buildAndReturnOutput("//apps/multidex:dex_groups");
 
