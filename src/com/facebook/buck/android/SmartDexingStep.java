@@ -189,55 +189,68 @@ public class SmartDexingStep implements Step {
   @Override
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
-    try {
-      Multimap<Path, Path> outputToInputs = outputToInputsSupplier.get();
-      runDxCommands(context, outputToInputs);
-      if (secondaryOutputDir.isPresent()) {
-        removeExtraneousSecondaryArtifacts(
-            secondaryOutputDir.get(), outputToInputs.keySet(), filesystem);
 
-        // Concatenate if solid compression is specified.
-        // create a mapping of the xzs file target and the dex.jar files that go into it
-        ImmutableMultimap.Builder<Path, Path> secondaryDexJarsMultimapBuilder =
-            ImmutableMultimap.builder();
-        for (Path p : outputToInputs.keySet()) {
-          if (DexStore.XZS.matchesPath(p)) {
-            String[] matches = p.getFileName().toString().split("-");
-            Path output = p.getParent().resolve(matches[0].concat(SECONDARY_SOLID_DEX_EXTENSION));
-            secondaryDexJarsMultimapBuilder.put(output, p);
-          }
-        }
-        ImmutableMultimap<Path, Path> secondaryDexJarsMultimap =
-            secondaryDexJarsMultimapBuilder.build();
-        if (!secondaryDexJarsMultimap.isEmpty()) {
-          for (Map.Entry<Path, Collection<Path>> entry :
-              secondaryDexJarsMultimap.asMap().entrySet()) {
-            Path secondaryCompressedBlobOutput = entry.getKey();
-            Collection<Path> secondaryDexJars = entry.getValue();
-            // Construct the output path for our solid blob and its compressed form.
-            Path secondaryBlobOutput =
-                secondaryCompressedBlobOutput.getParent().resolve("uncompressed.dex.blob");
-            // Concatenate the jars into a blob and compress it.
-            Step concatStep =
-                new ConcatStep(
-                    filesystem, ImmutableList.copyOf(secondaryDexJars), secondaryBlobOutput);
-            Step xzStep =
-                new XzStep(
-                    filesystem,
-                    secondaryBlobOutput,
-                    secondaryCompressedBlobOutput,
-                    xzCompressionLevel);
-            StepRunner.runStep(context, concatStep, Optional.of(buildTarget));
-            StepRunner.runStep(context, xzStep, Optional.of(buildTarget));
-          }
-        }
-      }
+    Multimap<Path, Path> outputToInputs;
+    try {
+      outputToInputs = outputToInputsSupplier.get();
+      runDxCommands(context, outputToInputs);
     } catch (StepFailedException e) {
       context.logError(e, "There was an error in smart dexing step.");
       return StepExecutionResults.ERROR;
     }
 
+    if (outputToInputs != null && secondaryOutputDir.isPresent()) {
+      removeExtraneousSecondaryArtifacts(
+          secondaryOutputDir.get(), outputToInputs.keySet(), filesystem);
+
+      ImmutableMultimap<Path, Path> xzsOutputsToInputs = createXzsOutputsToInputs(outputToInputs);
+      if (!xzsOutputsToInputs.isEmpty()) {
+        try {
+          runXzsCommands(context, xzsOutputsToInputs);
+        } catch (StepFailedException e) {
+          context.logError(e, "There was an error producing an xzs file from dex jars");
+          return StepExecutionResults.ERROR;
+        }
+      }
+    }
+
     return StepExecutionResults.SUCCESS;
+  }
+
+  private ImmutableMultimap<Path, Path> createXzsOutputsToInputs(
+      Multimap<Path, Path> outputToInputs) {
+    // Concatenate if solid compression is specified.
+    // create a mapping of the xzs file target and the dex.jar files that go into it
+    ImmutableMultimap.Builder<Path, Path> xzsMultimapBuilder = ImmutableMultimap.builder();
+    for (Path p : outputToInputs.keySet()) {
+      if (DexStore.XZS.matchesPath(p)) {
+        String[] matches = p.getFileName().toString().split("-");
+        Path output = p.getParent().resolve(matches[0].concat(SECONDARY_SOLID_DEX_EXTENSION));
+        xzsMultimapBuilder.put(output, p);
+      }
+    }
+    return xzsMultimapBuilder.build();
+  }
+
+  private void runXzsCommands(
+      ExecutionContext context, ImmutableMultimap<Path, Path> outputsToInputs)
+      throws StepFailedException, InterruptedException {
+    for (Map.Entry<Path, Collection<Path>> entry : outputsToInputs.asMap().entrySet()) {
+      Path secondaryCompressedBlobOutput = entry.getKey();
+      Collection<Path> secondaryDexJars = entry.getValue();
+      // Construct the output path for our solid blob and its compressed form.
+      Path secondaryBlobOutput =
+          secondaryCompressedBlobOutput.getParent().resolve("uncompressed.dex.blob");
+      // Concatenate the jars into a blob and compress it.
+      Step concatStep =
+          new ConcatStep(filesystem, ImmutableList.copyOf(secondaryDexJars), secondaryBlobOutput);
+      Step xzStep =
+          new XzStep(
+              filesystem, secondaryBlobOutput, secondaryCompressedBlobOutput, xzCompressionLevel);
+
+      StepRunner.runStep(context, concatStep, Optional.of(buildTarget));
+      StepRunner.runStep(context, xzStep, Optional.of(buildTarget));
+    }
   }
 
   private void runDxCommands(ExecutionContext context, Multimap<Path, Path> outputToInputs)
