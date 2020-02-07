@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import print_function
+
 import os
 import shutil
 import tempfile
@@ -26,15 +28,15 @@ leak_files_please = []
 
 
 def acquire_shared_lock(path):
-    f = open(path, "a+")
-    leak_files_please.append(f)
-    return file_locks.acquire_shared_lock(f)
+    fh = open(path, "a+")  # noqa: P201
+    leak_files_please.append(fh)
+    return file_locks.acquire_shared_lock(fh)
 
 
 def acquire_exclusive_lock(path):
-    f = open(path, "a+")
-    leak_files_please.append(f)
-    return file_locks.acquire_exclusive_lock(f)
+    fh = open(path, "a+")  # noqa: P201
+    leak_files_please.append(fh)
+    return file_locks.acquire_exclusive_lock(fh)
 
 
 # All functions used by other_process must be defined before this call
@@ -50,29 +52,29 @@ class TestFileLocks(unittest.TestCase):
         shutil.rmtree(self.tmpdir)
 
     def test_acquire_shared_twice_same_process(self):
-        l = os.path.join(self.tmpdir, "l")
-        self.assertTrue(acquire_shared_lock(l))
-        self.assertTrue(acquire_shared_lock(l))
+        lock = os.path.join(self.tmpdir, "lock")
+        self.assertTrue(acquire_shared_lock(lock))
+        self.assertTrue(acquire_shared_lock(lock))
 
     def test_acquire_shared_twice_multi_process(self):
-        l = os.path.join(self.tmpdir, "l")
-        self.assertTrue(acquire_shared_lock(l))
-        self.assertTrue(other_process.apply(acquire_shared_lock, [l]))
+        lock = os.path.join(self.tmpdir, "lock")
+        self.assertTrue(acquire_shared_lock(lock))
+        self.assertTrue(other_process.apply(acquire_shared_lock, [lock]))
 
     def test_acquire_shared_exclusive_same_process(self):
-        l = os.path.join(self.tmpdir, "l")
-        self.assertTrue(acquire_shared_lock(l))
-        self.assertTrue(acquire_exclusive_lock(l))
+        lock = os.path.join(self.tmpdir, "lock")
+        self.assertTrue(acquire_shared_lock(lock))
+        self.assertTrue(acquire_exclusive_lock(lock))
 
     def test_acquire_shared_exclusive_multi_process(self):
-        l = os.path.join(self.tmpdir, "l")
-        self.assertTrue(acquire_shared_lock(l))
-        self.assertFalse(other_process.apply(acquire_exclusive_lock, [l]))
+        lock = os.path.join(self.tmpdir, "lock")
+        self.assertTrue(acquire_shared_lock(lock))
+        self.assertFalse(other_process.apply(acquire_exclusive_lock, [lock]))
 
     def test_acquire_exclusive_shared_multi_process(self):
-        l = os.path.join(self.tmpdir, "l")
-        self.assertTrue(acquire_exclusive_lock(l))
-        self.assertFalse(other_process.apply(acquire_shared_lock, [l]))
+        lock = os.path.join(self.tmpdir, "lock")
+        self.assertTrue(acquire_exclusive_lock(lock))
+        self.assertFalse(other_process.apply(acquire_shared_lock, [lock]))
 
     def test_rmtree_if_can_lock(self):
         def resolve(path):

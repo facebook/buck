@@ -897,7 +897,7 @@ class BuckTool(object):
 
             wait_seconds = 0.01
             repetitions = int(BUCKD_STARTUP_TIMEOUT_MILLIS / 1000.0 / wait_seconds)
-            for i in range(repetitions):
+            for _idx in range(repetitions):
                 if transport_exists(buckd_transport_file_path):
                     break
                 time.sleep(wait_seconds)
@@ -979,7 +979,7 @@ class BuckTool(object):
             elif os.name == "nt":
                 # for Windows, we rely on transport to be closed to determine the process is done
                 # TODO(buck_team) implement wait for process and hard kill for Windows
-                for i in range(0, 300):
+                for _idx in range(0, 300):
                     if not transport_exists(buckd_transport_file_path):
                         break
                     time.sleep(0.01)
@@ -1259,7 +1259,7 @@ def wait_for_process_posix(pid, timeout):
     )
 
     # poll 10 times a second
-    for i in range(0, int(timeout / 100)):
+    for _idx in range(0, int(timeout / 100)):
         if not pid_exists_posix(pid):
             return True
         time.sleep(0.1)
