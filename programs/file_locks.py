@@ -14,6 +14,7 @@
 
 from __future__ import print_function
 
+import contextlib
 import errno
 import os
 
@@ -24,10 +25,12 @@ BUCK_LOCK_FILE_NAME = ".buck_lock"
 if os.name == "posix":
     import fcntl
 
-    def _fcntl_with_exception_handling(fh, exclusive):
+    def _fcntl_with_exception_handling(fh, exclusive, wait):
         lock_type = fcntl.LOCK_EX if exclusive else fcntl.LOCK_SH
+        if not wait:
+            lock_type |= fcntl.LOCK_NB
         try:
-            fcntl.lockf(fh.fileno(), lock_type | fcntl.LOCK_NB)
+            fcntl.lockf(fh.fileno(), lock_type)
             return True
         except IOError as e:
             if e.errno in [errno.EACCES, errno.EAGAIN]:
@@ -37,24 +40,42 @@ if os.name == "posix":
 
 else:
 
-    def _fcntl_with_exception_handling(f, exclusive):
+    def _fcntl_with_exception_handling(fh, exclusive, wait):
         return True
 
 
-def acquire_shared_lock(fh):
+def acquire_shared_lock(fh, wait=False):
     """ Acquires a shared posix advisory lock on a file in a non-blocking way. The f argument
     should be a file (ideally opened with 'a+', as that works for both shared and exclusive locks).
     Returns True on success, False if the lock cannot be taken, throws on error.
     """
-    return _fcntl_with_exception_handling(fh, exclusive=False)
+    return _fcntl_with_exception_handling(fh, exclusive=False, wait=wait)
 
 
-def acquire_exclusive_lock(fh):
+@contextlib.contextmanager
+def shared_lock(path, *args, **kwargs):
+    with open(path, "a+b") as fh:
+        if acquire_shared_lock(fh, *args, **kwargs):
+            yield fh
+        else:
+            raise OSError("Failed to acquire shared lock on %s" % path)
+
+
+def acquire_exclusive_lock(fh, wait=False):
     """ Acquires an exclusive posix advisory lock on a file in a non-blocking way. The f argument
     should be a file (ideally opened with 'a+', as that works for both shared and exclusive locks).
     Returns True on success, False if the lock cannot be taken, throws on error.
     """
-    return _fcntl_with_exception_handling(fh, exclusive=True)
+    return _fcntl_with_exception_handling(fh, exclusive=True, wait=wait)
+
+
+@contextlib.contextmanager
+def exclusive_lock(path, *args, **kwargs):
+    with open(path, "a+b") as fh:
+        if acquire_exclusive_lock(fh, *args, **kwargs):
+            yield fh
+        else:
+            raise OSError("Failed to acquire exclusive lock on %s" % path)
 
 
 def rmtree_if_can_lock(root):
