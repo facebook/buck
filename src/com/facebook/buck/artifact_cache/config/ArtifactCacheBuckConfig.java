@@ -130,6 +130,14 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   private static final String REPOSITORY = "repository";
   private static final String DEFAULT_REPOSITORY = "";
 
+  private static final String ENABLE_WRITE_TO_CAS = "enable_write_to_cas";
+  private static final Boolean DEFAULT_ENABLE_WRITE_TO_CAS = false;
+  private static final String CAS_HOST = "cas_host";
+  private static final String CAS_PORT = "cas_port";
+  private static final int DEFAULT_CAS_PORT = 443;
+  private static final String CAS_DEADLINE_SEC = "cas_deadline_sec";
+  private static final int DEFAULT_CAS_DEADLINE_SEC = 300;
+
   private static final String SCHEDULE_TYPE = "schedule_type";
   private static final String DEFAULT_SCHEDULE_TYPE = "none";
   public static final String MULTI_FETCH = "multi_fetch";
@@ -195,6 +203,29 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
 
   public Optional<String> getHybridThriftEndpoint() {
     return buckConfig.getValue(CACHE_SECTION_NAME, HYBRID_THRIFT_ENDPOINT);
+  }
+
+  public Boolean getEnableWriteToCas() {
+    return buckConfig.getBooleanValue(
+        CACHE_SECTION_NAME, ENABLE_WRITE_TO_CAS, DEFAULT_ENABLE_WRITE_TO_CAS);
+  }
+
+  public Optional<String> getCasHost() {
+    return buckConfig.getValue(CACHE_SECTION_NAME, CAS_HOST);
+  }
+
+  public int getCasPort() {
+    return buckConfig
+        .getValue(CACHE_SECTION_NAME, CAS_PORT)
+        .map(Integer::parseInt)
+        .orElse(DEFAULT_CAS_PORT);
+  }
+
+  public int getCasDeadline() {
+    return buckConfig
+        .getValue(CACHE_SECTION_NAME, CAS_DEADLINE_SEC)
+        .map(Integer::parseInt)
+        .orElse(DEFAULT_CAS_DEADLINE_SEC);
   }
 
   public LoadBalancingType getLoadBalancingType() {
