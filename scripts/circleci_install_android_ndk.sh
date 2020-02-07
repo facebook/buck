@@ -17,8 +17,7 @@ set -x
 
 # $1: OS
 export OS="linux"
-if [ "x$1" == "xmacos" ]
-then
+if [ "$1" == "macos" ]; then
   export OS="darwin"
 fi
 
