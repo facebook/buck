@@ -224,6 +224,7 @@
     <include name="thrift/libthrift-0.12.0.jar" />
     <include name="xz-java-1.5/xz-1.5.jar" />
     <include name="zstd-jni/zstd-jni-1.4.0-1.jar" />
+    <include name="remote-apis/remote-apis.jar" />
 
     <!-- maven interop -->
     <include name="aether/aether-api-1.0.2.v20150114.jar" />

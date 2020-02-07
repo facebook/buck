@@ -7,6 +7,7 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/grpc/grpc-netty-shaded-1.18.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/grpc/grpc-core-1.18.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/grpc/grpc-context-1.18.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/remote-apis/remote-apis.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
