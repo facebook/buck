@@ -130,7 +130,7 @@ public class IjProjectWriter {
     Path targetInfoMapPath = getTargetInfoMapPath();
     return outFilesystem.exists(targetInfoMapPath)
         ? ObjectMappers.createParser(outFilesystem.newFileInputStream(targetInfoMapPath))
-            .readValueAs(new TypeReference<TreeMap<String, TreeMap<String, String>>>() {})
+            .readValueAs(new TypeReference<TreeMap<String, TreeMap<String, Object>>>() {})
         : Maps.newTreeMap();
   }
 
