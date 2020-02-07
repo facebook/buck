@@ -215,7 +215,6 @@ jobs:
             cd "${BUCKROOT}"
             export PATH="${ANDROID_SDK}/tools/bin:${PATH}"
             export ANDROID_HOME="${ANDROID_SDK}"
-            export PATH="/usr/local/opt/ant@1.9/bin:${PATH}"
             set -eux
             ant circleci
             ./scripts/circleci_test_java_file_format
