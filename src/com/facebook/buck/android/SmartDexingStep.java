@@ -21,6 +21,7 @@ import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -59,6 +60,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -66,6 +68,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -79,9 +82,15 @@ import javax.annotation.Nullable;
  * even the right course of action given that it would require dynamically modifying the DAG.
  */
 public class SmartDexingStep implements Step {
+  private static final Logger log = Logger.get(SmartDexingStep.class);
 
   public static final String SHORT_NAME = "smart_dex";
   private static final String SECONDARY_SOLID_DEX_EXTENSION = ".dex.jar.xzs";
+  private final String PRIMARY_DEX_OVERFLOW_MESSAGE =
+      "Primary dex size exceeds 64k method ref limit\n"
+          + "Use primary dex patterns to exclude classes from the primary dex.";
+
+  private final Optional<Supplier<List<String>>> primaryDexWeightsSupplier;
 
   public interface DexInputHashesProvider {
     ImmutableMap<Path, Sha1HashCode> getDexInputHashes();
@@ -124,6 +133,7 @@ public class SmartDexingStep implements Step {
       ProjectFilesystem filesystem,
       Optional<Path> primaryOutputPath,
       Optional<Supplier<Set<Path>>> primaryInputsToDex,
+      Optional<Supplier<List<String>>> primaryDexWeightsSupplier,
       Optional<Path> secondaryOutputDir,
       Optional<Supplier<Multimap<Path, Path>>> secondaryInputsToDex,
       DexInputHashesProvider dexInputHashesProvider,
@@ -154,6 +164,7 @@ public class SmartDexingStep implements Step {
               }
               return map.build();
             });
+    this.primaryDexWeightsSupplier = primaryDexWeightsSupplier;
     this.secondaryOutputDir = secondaryOutputDir;
     this.dexInputHashesProvider = dexInputHashesProvider;
     this.successDir = successDir;
@@ -195,7 +206,27 @@ public class SmartDexingStep implements Step {
       outputToInputs = outputToInputsSupplier.get();
       runDxCommands(context, outputToInputs);
     } catch (StepFailedException e) {
-      context.logError(e, "There was an error in smart dexing step.");
+      if (e.getStep() instanceof DxStep
+          && e.getExitCode().orElse(DxStep.SUCCESS_EXIT_CODE)
+              == DxStep.DEX_REFERENCE_OVERFLOW_EXIT_CODE) {
+        DxStep dxStep = (DxStep) e.getStep();
+        if (dxStep.getOutputDexFile().endsWith("classes.dex")) {
+          if (primaryDexWeightsSupplier.isPresent()) {
+            List<String> dexWeights = primaryDexWeightsSupplier.get().get();
+            context.getConsole().printErrorText(formatDexOverflowMessage(dexWeights));
+          } else {
+            context.logError(e, PRIMARY_DEX_OVERFLOW_MESSAGE);
+          }
+        } else {
+          context.logError(
+              e,
+              "Secondary dex size exceeds 64k method ref limit."
+                  + "linear_alloc_hard_limit determines the maximum size in bytes of secondary dexes."
+                  + "Reduce linear_alloc_hard_limit until all secondary dexes are small enough. (16mb recommended)");
+        }
+      } else {
+        context.logError(e, "There was an error in smart dexing step.");
+      }
       return StepExecutionResults.ERROR;
     }
 
@@ -215,6 +246,23 @@ public class SmartDexingStep implements Step {
     }
 
     return StepExecutionResults.SUCCESS;
+  }
+
+  private String formatDexOverflowMessage(List<String> dexWeights) {
+    StringBuilder builder = new StringBuilder();
+    builder.append(
+        PRIMARY_DEX_OVERFLOW_MESSAGE
+            + "\n"
+            + "The largest libraries in the primary dex, by number of bytes:\n"
+            + "Weight\tDex file path\n");
+
+    builder.append(dexWeights.stream().limit(20).collect(Collectors.joining("\n")));
+
+    if (dexWeights.size() > 20) {
+      builder.append("\n... See buck log for full list");
+      log.error(String.join("\n", dexWeights));
+    }
+    return builder.toString();
   }
 
   private ImmutableMultimap<Path, Path> createXzsOutputsToInputs(

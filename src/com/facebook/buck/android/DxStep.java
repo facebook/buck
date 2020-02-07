@@ -22,6 +22,7 @@ import com.android.tools.r8.D8Command;
 import com.android.tools.r8.Diagnostic;
 import com.android.tools.r8.DiagnosticsHandler;
 import com.android.tools.r8.OutputMode;
+import com.android.tools.r8.utils.AbortException;
 import com.android.tools.r8.utils.InternalOptions;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
@@ -80,6 +81,10 @@ public class DxStep extends ShellStep {
     NO_DESUGAR,
     ;
   }
+
+  public static final int SUCCESS_EXIT_CODE = 0;
+  public static final int FAILURE_EXIT_CODE = 1;
+  public static final int DEX_REFERENCE_OVERFLOW_EXIT_CODE = 2;
 
   /** Available tools to create dex files * */
   public static final String DX = "dx";
@@ -385,17 +390,21 @@ public class DxStep extends ShellStep {
         }
 
         resourcesReferencedInCode = d8Command.getDexItemFactory().computeReferencedResources();
-        return 0;
-      } catch (CompilationFailedException | IOException e) {
-        context.postEvent(
-            ConsoleEvent.severe(
-                String.join(
-                    System.lineSeparator(),
-                    diagnosticsHandler.diagnostics.stream()
-                        .map(Diagnostic::getDiagnosticMessage)
-                        .collect(ImmutableList.toImmutableList()))));
+        return SUCCESS_EXIT_CODE;
+      } catch (CompilationFailedException e) {
+        if (isOverloadedDexException(e)) {
+          context.getConsole().printErrorText(e.getMessage());
+          return DEX_REFERENCE_OVERFLOW_EXIT_CODE;
+        } else {
+          postCompilationFailureToConsole(context, diagnosticsHandler);
+          e.printStackTrace(context.getStdErr());
+          return FAILURE_EXIT_CODE;
+        }
+      } catch (IOException e) {
+        postCompilationFailureToConsole(context, diagnosticsHandler);
         e.printStackTrace(context.getStdErr());
-        return 1;
+
+        return FAILURE_EXIT_CODE;
       }
     } else if (DX.equals(dexTool)) {
       ImmutableList<String> argv = getShellCommandInternal(context);
@@ -428,11 +437,27 @@ public class DxStep extends ShellStep {
         return returncode;
       } catch (IOException e) {
         e.printStackTrace(context.getStdErr());
-        return 1;
+        return FAILURE_EXIT_CODE;
       }
     } else {
-      return 1;
+      return FAILURE_EXIT_CODE;
     }
+  }
+
+  private boolean isOverloadedDexException(CompilationFailedException e) {
+    return e.getCause() instanceof AbortException
+        && e.getCause().getMessage().contains("Cannot fit requested classes in a single dex file");
+  }
+
+  private void postCompilationFailureToConsole(
+      ExecutionContext context, D8DiagnosticsHandler diagnosticsHandler) {
+    context.postEvent(
+        ConsoleEvent.severe(
+            String.join(
+                System.lineSeparator(),
+                diagnosticsHandler.diagnostics.stream()
+                    .map(Diagnostic::getDiagnosticMessage)
+                    .collect(ImmutableList.toImmutableList()))));
   }
 
   @Override
@@ -513,5 +538,9 @@ public class DxStep extends ShellStep {
     public int getCharCount() {
       return mCharCounter;
     }
+  }
+
+  public Path getOutputDexFile() {
+    return outputDexFile;
   }
 }

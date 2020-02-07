@@ -28,7 +28,6 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -153,39 +152,6 @@ public class PreDexSplitDexMerge extends PreDexMerge {
     buildableContext.recordArtifact(paths.successDir);
     buildableContext.recordArtifact(paths.additionalJarfilesSubdir);
 
-    int primaryDexInputSize = 0;
-    for (PreDexSplitDexGroup partialDex : preDexDeps) {
-      primaryDexInputSize += partialDex.getPrimaryDexInputMetadata().getWeight();
-    }
-
-    long dexWeightLimit = dexSplitMode.getLinearAllocHardLimit();
-    if (primaryDexInputSize > dexWeightLimit) {
-      ImmutableMap.Builder<String, PreDexedFilesSorter.DexMetadata> primaryDexInputs =
-          ImmutableMap.builder();
-      for (PreDexSplitDexGroup partialDex : preDexDeps) {
-        primaryDexInputs.putAll(partialDex.getPrimaryDexInputMetadata().getMetadata());
-      }
-      Comparator<PreDexedFilesSorter.DexMetadata> bySizeDescending =
-          (o1, o2) -> Integer.compare(o2.getWeight(), o1.getWeight());
-      primaryDexInputs.orderEntriesByValue(bySizeDescending);
-
-      ImmutableMap<String, PreDexedFilesSorter.DexMetadata> sortedDexContents =
-          primaryDexInputs.build();
-      StringBuilder message = new StringBuilder();
-      message.append(
-          String.format(
-              "Primary dex weight %s exceeds limit of %s. This may result in exceeding the 65k dex ref count limit\n"
-                  + "It contains...%n",
-              primaryDexInputSize, dexWeightLimit));
-      message.append(String.format("Weight\tDex file path%n"));
-      for (Map.Entry<String, PreDexedFilesSorter.DexMetadata> entry :
-          sortedDexContents.entrySet()) {
-        message.append(String.format("%s\t%s%n", entry.getValue().getWeight(), entry.getKey()));
-      }
-
-      context.getEventBus().post(ConsoleEvent.warning(message.toString()));
-    }
-
     Path primaryDexPath = getPrimaryDexPath();
     steps.add(
         new SmartDexingStep(
@@ -194,6 +160,7 @@ public class PreDexSplitDexMerge extends PreDexMerge {
             getProjectFilesystem(),
             Optional.of(primaryDexPath),
             Optional.of(this::getPrimaryDexInputs),
+            Optional.of(this::getPrimaryDexWeightDetails),
             Optional.empty(),
             Optional.empty(),
             this::resolvePrimaryDexInputHashPaths,
@@ -273,6 +240,26 @@ public class PreDexSplitDexMerge extends PreDexMerge {
         });
 
     return steps.build();
+  }
+
+  private List<String> getPrimaryDexWeightDetails() {
+    ImmutableMap.Builder<String, PreDexedFilesSorter.DexMetadata> primaryDexInputs =
+        ImmutableMap.builder();
+    for (PreDexSplitDexGroup partialDex : preDexDeps) {
+      primaryDexInputs.putAll(partialDex.getPrimaryDexInputMetadata().getMetadata());
+    }
+    Comparator<PreDexedFilesSorter.DexMetadata> bySizeDescending =
+        (o1, o2) -> Integer.compare(o2.getWeight(), o1.getWeight());
+    primaryDexInputs.orderEntriesByValue(bySizeDescending);
+
+    ImmutableMap<String, PreDexedFilesSorter.DexMetadata> sortedDexContents =
+        primaryDexInputs.build();
+
+    ImmutableList.Builder<String> dexContentsBuilder = ImmutableList.builder();
+    for (Map.Entry<String, PreDexedFilesSorter.DexMetadata> entry : sortedDexContents.entrySet()) {
+      dexContentsBuilder.add(String.format("%s\t%s", entry.getValue().getWeight(), entry.getKey()));
+    }
+    return dexContentsBuilder.build();
   }
 
   private Set<Path> getPrimaryDexInputs() {

@@ -89,8 +89,45 @@ android_binary(
     ],
 )
 
+def gen_src_with_refs(index, ref_count):
+    method_refs = " ".join(["void fun%d() {};\n" % i for i in range(1, ref_count)])
+    name = "generated_class_%d_%d_refs" % (index, ref_count)
+    genrule(
+        name = name,
+        out = "Class%d.java" % index,
+        # bash = "echo 'a' > $OUT"
+        bash = "echo -e 'package gen;\npublic class Class%d {\n%s}' > $OUT" % (index, method_refs)
+    )
+    return ":%s" % name
+
+android_library(
+    name = "generated_lib_ref_overflow",
+    srcs = [
+        gen_src_with_refs(1, 30000),
+        gen_src_with_refs(2, 36000),
+    ],
+    visibility = ["PUBLIC"],
+)
+
 android_binary(
     name = "primary_dex_overflow",
+    dex_group_lib_limit = 1,
+    keystore = "//keystores:debug",
+    linear_alloc_hard_limit = 1,
+    manifest = "SimpleManifest.xml",
+    primary_dex_patterns = [
+        "^gen/Class"
+    ],
+    use_split_dex = True,
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        ":generated_lib_ref_overflow",
+    ],
+)
+
+android_binary(
+    name = "secondary_dex_overflow",
     dex_group_lib_limit = 1,
     keystore = "//keystores:debug",
     linear_alloc_hard_limit = 1,
@@ -102,6 +139,7 @@ android_binary(
     deps = [
         "//java/com/sample/app:app",
         "//java/com/sample/lib:lib",
+        ":generated_lib_ref_overflow",
     ],
 )
 
