@@ -67,7 +67,8 @@ public abstract class ConfigIgnoredByDaemon implements ConfigView<BuckConfig> {
         "client", ImmutableSet.of("id", "skip-action-graph-cache"));
     ignoreFieldsForDaemonRestartBuilder.put("doctor", ImmutableSet.of("slb_server_pool"));
     ignoreFieldsForDaemonRestartBuilder.put(
-        "intellij", ImmutableSet.of("multi_cell_module_support"));
+        "intellij",
+        ImmutableSet.of("multi_cell_module_support", "kotlin_java_runtime_library_template_path"));
     ignoreFieldsForDaemonRestartBuilder.put(
         "log",
         ImmutableSet.of(

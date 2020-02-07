@@ -277,7 +277,18 @@ public class IjProjectWriter {
   }
 
   private void writeLibrary(IjLibrary library) throws IOException {
-    ST contents = StringTemplateFile.LIBRARY_TEMPLATE.getST();
+    ST contents = null;
+    if (library.getType() == IjLibrary.Type.DEFAULT) {
+      contents = StringTemplateFile.LIBRARY_TEMPLATE.getST();
+    } else if (library.getType() == IjLibrary.Type.KOTLIN_JAVA_RUNTIME) {
+      Optional<Path> templatePath = projectConfig.getKotlinJavaRuntimeLibraryTemplatePath();
+      if (templatePath.isPresent()) {
+        contents = StringTemplateFile.getST(templatePath.get());
+      }
+    }
+    if (contents == null) {
+      return;
+    }
     contents.add("name", library.getName());
     contents.add(
         "binaryJars",

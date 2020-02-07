@@ -158,7 +158,10 @@ public class IjProjectBuckConfig {
                 INTELLIJ_BUCK_CONFIG_SECTION, "multi_cell_module_support", false))
         .setGeneratingDummyRDotJavaEnabled(
             buckConfig.getBooleanValue(
-                INTELLIJ_BUCK_CONFIG_SECTION, "generate_dummy_r_dot_java", true));
+                INTELLIJ_BUCK_CONFIG_SECTION, "generate_dummy_r_dot_java", true))
+        .setKotlinJavaRuntimeLibraryTemplatePath(
+            buckConfig.getPath(
+                INTELLIJ_BUCK_CONFIG_SECTION, "kotlin_java_runtime_library_template_path"));
   }
 
   private static String getModuleGroupName(String moduleGroupName, BuckConfig buckConfig) {
