@@ -748,7 +748,18 @@ public class IjModuleGraphTest {
               @Override
               public Optional<Path> getAnnotationOutputPath(
                   TargetNode<? extends JvmLibraryArg> targetNode) {
-                return Optional.empty();
+                JvmLibraryArg constructorArg = targetNode.getConstructorArg();
+                if (constructorArg.getPlugins().isEmpty()
+                    && constructorArg.getAnnotationProcessors().isEmpty()) {
+                  return Optional.empty();
+                }
+                return Optional.of(
+                    targetNode
+                        .getFilesystem()
+                        .getBuckPaths()
+                        .getBuckOut()
+                        .resolve("annotation")
+                        .resolve(targetNode.getBuildTarget().getShortName()));
               }
 
               @Override
@@ -765,7 +776,8 @@ public class IjModuleGraphTest {
             },
             projectConfig,
             packageFinder);
-    IjModuleFactory moduleFactory = new DefaultIjModuleFactory(filesystem, typeRegistry);
+    IjModuleFactory moduleFactory =
+        new DefaultIjModuleFactory(filesystem, projectConfig, typeRegistry);
     IjLibraryFactory libraryFactory = new DefaultIjLibraryFactory(sourceOnlyResolver);
     return IjModuleGraphFactory.from(
         filesystem,

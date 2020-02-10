@@ -39,6 +39,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -311,6 +312,18 @@ class CxxPreprocessAndCompileStep implements Step {
       err = formatErrors(errorLines.stream(), context);
     } else {
       err = formatErrors(lines, context);
+    }
+    // Replace absolute paths with relative path for headers from the repo.
+    // TODO: with RE we probably don't need to verify headers with depfile at all.
+    if (depFile.isPresent()) {
+      Optional<String> depFileContent = filesystem.readFileIfItExists(depFile.get());
+      if (depFileContent.isPresent()) {
+        filesystem.writeContentsToPath(
+            depFileContent
+                .get()
+                .replace(filesystem.getRootPath().toString() + File.separatorChar, ""),
+            depFile.get());
+      }
     }
     return err;
   }

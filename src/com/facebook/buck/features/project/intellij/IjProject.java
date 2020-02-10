@@ -116,7 +116,7 @@ public class IjProject {
             projectConfig,
             targetGraph,
             libraryFactory,
-            new DefaultIjModuleFactory(projectFilesystem, typeRegistry),
+            new DefaultIjModuleFactory(projectFilesystem, projectConfig, typeRegistry),
             new DefaultAggregationModuleFactory(typeRegistry));
     JavaPackageFinder parsingJavaPackageFinder =
         ParsingJavaPackageFinder.preparse(

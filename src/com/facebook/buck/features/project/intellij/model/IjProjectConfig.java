@@ -46,6 +46,8 @@ public abstract class IjProjectConfig {
 
   public abstract Optional<String> getAndroidModuleSdkName();
 
+  public abstract Optional<String> getAndroidGenDir();
+
   public abstract Optional<String> getAndroidModuleSdkType();
 
   public abstract Optional<String> getIntellijModuleSdkName();

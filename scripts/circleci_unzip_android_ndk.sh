@@ -25,8 +25,7 @@ fi
 # $2: OS
 export NDK_VERSION_STRING="$1"
 export OS="linux"
-if [ "x$2" == "xmacos" ]
-then
+if [ "$2" == "macos" ]; then
   export OS="darwin"
 fi
 export NDK_FILENAME="$NDK_VERSION_STRING-${OS}-x86_64.zip"
