@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs:
+  win: circleci/windows@2.2.0
+
 install_openjdk8: &install_openjdk8
   name: Install OpenJDK8
   command: |
@@ -762,6 +765,13 @@ jobs:
             set -eux
             ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
             ${BUCK_PEX_LOCATION} test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
+  windows_build_test:
+    executor: win/default
+    steps:
+      - checkout
+      - run:
+          <<: *install_openjdk8
+          shell: bash.exe
 
 workflows:
   version: 2.1
@@ -790,3 +800,6 @@ workflows:
       - macos_test_android_ndk_17
       - macos_test_android_ndk_18
 
+  windows_jobs:
+    jobs:
+      - windows_build_test
