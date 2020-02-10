@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
@@ -46,6 +47,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -721,5 +723,28 @@ public class CxxPreprocessAndCompileIntegrationTest {
     workspace
         .runBuckBuild("-c", "test.header=first.h", "-c", "test.flag=-DBAR", "//:first")
         .assertSuccess();
+  }
+
+  @Test
+  public void depfilePathsRelative() throws IOException {
+    String targetName = "//:binary_using_location_include_path";
+    BuildTarget target = BuildTargetFactory.newInstance(targetName);
+
+    // Run the build and verify that the C++ source was preprocessed.
+    Path output =
+        workspace.buildAndReturnOutput("--config", "build.depfiles=enabled", target.toString());
+    Path parentFolder = output.getParent();
+    String[] listFiles =
+        parentFolder
+            .toFile()
+            .list(
+                (dir, name) ->
+                    name.startsWith("binary_using_location_include_path#compile-foo.cpp."));
+    assertTrue(listFiles != null && listFiles.length == 1);
+    Path depfile = parentFolder.resolve(listFiles[0]).resolve("foo.cpp.o.dep");
+    ProjectFilesystem projectFileSystem = workspace.getProjectFileSystem();
+    String depfileContent =
+        projectFileSystem.readFileIfItExists(depfile).orElseThrow(FileNotFoundException::new);
+    assertFalse(depfileContent.contains(projectFileSystem.getRootPath().toString()));
   }
 }
