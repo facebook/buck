@@ -36,9 +36,10 @@ public class AuditRulesCommandTest {
     assertEquals("3.14", AuditRulesCommand.createDisplayString(3.14));
     assertEquals("\"Hello, world!\"", AuditRulesCommand.createDisplayString("Hello, world!"));
     assertEquals("[\n]", AuditRulesCommand.createDisplayString(ImmutableList.<String>of()));
+    ImmutableList<String> testList = ImmutableList.of("foo", "bar", "baz");
     assertEquals(
         "[\n  \"foo\",\n  \"bar\",\n  \"baz\",\n]",
-        AuditRulesCommand.createDisplayString(ImmutableList.of("foo", "bar", "baz")));
+        AuditRulesCommand.createDisplayString(testList));
     assertEquals(
         "{\n  \"foo\": 1,\n  \"bar\": 2,\n  \"baz\": 3,\n}",
         AuditRulesCommand.createDisplayString(ImmutableMap.of("foo", 1, "bar", 2, "baz", 3)));
@@ -47,16 +48,31 @@ public class AuditRulesCommandTest {
         AuditRulesCommand.createDisplayString(ImmutableMap.of("foo", ImmutableList.of(1))));
     SkylarkDict<String, String> testDict = SkylarkDict.of(null, "one", "two");
     assertEquals(
-        "select({\"one\": \"two\"})",
+        "select({\n  \"one\": \"two\",\n})",
         AuditRulesCommand.createDisplayString(
             ListWithSelects.of(ImmutableList.of(SelectorValue.of(testDict, "")), String.class)));
     SkylarkDict<String, String> testDict2 = SkylarkDict.of(null, "three", "four");
     SkylarkDict<String, String> twoEntryDict = SkylarkDict.plus(testDict, testDict2, null);
     assertEquals(
-        "select({\"one\": \"two\", \"three\": \"four\"})",
+        "select({\n  \"one\": \"two\",\n  \"three\": \"four\",\n})",
         AuditRulesCommand.createDisplayString(
             ListWithSelects.of(
                 ImmutableList.of(SelectorValue.of(twoEntryDict, "")), String.class)));
+    SkylarkDict<String, ImmutableList<String>> testDict3 = SkylarkDict.of(null, "foo", testList);
+    testDict3 = SkylarkDict.plus(testDict3, SkylarkDict.of(null, "bar", testList), null);
+    // ListWithSelects with SelectorValue only
+    assertEquals(
+        "select({\n  \"foo\": [\n    \"foo\",\n    \"bar\",\n    \"baz\",\n  ],\n  \"bar\": [\n    \"foo\",\n    \"bar\",\n    \"baz\",\n  ],\n})",
+        AuditRulesCommand.createDisplayString(
+            ListWithSelects.of(ImmutableList.of(SelectorValue.of(testDict3, "")), String.class)));
+    // ListWithSelects with SelectorValue and other types
+    ImmutableList<String> shortList = ImmutableList.of("foo");
+    assertEquals(
+        "[\n  \"foo\",\n] + select({\n  \"foo\": [\n    \"foo\",\n    \"bar\",\n    \"baz\",\n  ],\n  \"bar\": [\n    \"foo\",\n    \"bar\",\n    \"baz\",\n  ],\n}) + [\n  \"foo\",\n  \"bar\",\n  \"baz\",\n]",
+        AuditRulesCommand.createDisplayString(
+            ListWithSelects.of(
+                ImmutableList.of(shortList, SelectorValue.of(testDict3, ""), testList),
+                String.class)));
   }
 
   @Test(expected = IllegalStateException.class)

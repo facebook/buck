@@ -25,6 +25,8 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
+import com.facebook.buck.core.cell.DefaultCellNameResolverProvider;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
@@ -135,7 +137,7 @@ public class ParsePipelineTest {
   @Test
   public void speculativeDepsTraversal() throws Exception {
     Fixture fixture = createMultiThreadedFixture("pipeline_test");
-    Cell cell = fixture.getCell();
+    Cell cell = fixture.getCells();
     TargetNode<?> libTargetNode =
         fixture
             .getTargetNodeParsePipeline()
@@ -148,12 +150,12 @@ public class ParsePipelineTest {
   @Test
   public void speculativeDepsTraversalWhenGettingAllNodes() throws Exception {
     Fixture fixture = createMultiThreadedFixture("pipeline_test");
-    Cell cell = fixture.getCell();
+    Cell cell = fixture.getCells();
     ImmutableList<TargetNode<?>> libTargetNodes =
         fixture
             .getTargetNodeParsePipeline()
             .getAllRequestedTargetNodes(
-                cell, fixture.getCell().getFilesystem().resolve("BUCK"), Optional.empty());
+                cell, fixture.getCells().getFilesystem().resolve("BUCK"), Optional.empty());
     FluentIterable<BuildTarget> allDeps =
         FluentIterable.from(libTargetNodes).transformAndConcat(input -> input.getBuildDeps());
     waitForAll(allDeps, dep -> fixture.targetExistsInCache(dep));
@@ -163,7 +165,7 @@ public class ParsePipelineTest {
   @Test
   public void missingTarget() throws Exception {
     try (Fixture fixture = createMultiThreadedFixture("parse_rule_with_bad_dependency")) {
-      Cell cell = fixture.getCell();
+      Cell cell = fixture.getCells();
       expectedException.expect(NoSuchBuildTargetException.class);
       expectedException.expectMessage(
           "The rule //:notthere could not be found.\nPlease check the spelling and whether");
@@ -176,7 +178,7 @@ public class ParsePipelineTest {
   @Test
   public void missingBuildFile() throws Exception {
     try (Fixture fixture = createMultiThreadedFixture("parse_rule_with_bad_dependency")) {
-      Cell cell = fixture.getCell();
+      Cell cell = fixture.getCells();
       expectedException.expect(BuildFileParseException.class);
       expectedException.expectMessage(
           stringContainsInOrder("Buck wasn't able to parse", "No such file or directory"));
@@ -190,7 +192,7 @@ public class ParsePipelineTest {
   @Test
   public void missingBuildFileRaw() throws Exception {
     try (Fixture fixture = createMultiThreadedFixture("parse_rule_with_bad_dependency")) {
-      Cell cell = fixture.getCell();
+      Cell cell = fixture.getCells();
       expectedException.expect(BuildFileParseException.class);
       expectedException.expectMessage(
           stringContainsInOrder("Buck wasn't able to parse", "No such file or directory"));
@@ -203,7 +205,7 @@ public class ParsePipelineTest {
   @Test
   public void badDependency() throws Exception {
     try (Fixture fixture = createMultiThreadedFixture("parse_rule_with_bad_dependency")) {
-      Cell cell = fixture.getCell();
+      Cell cell = fixture.getCells();
       fixture
           .getTargetNodeParsePipeline()
           .getNode(cell, BuildTargetFactory.newInstance("//:base"), DependencyStack.root());
@@ -213,7 +215,7 @@ public class ParsePipelineTest {
   @Test
   public void recoversAfterSyntaxError() throws Exception {
     try (Fixture fixture = createSynchronousExecutionFixture("syntax_error")) {
-      Cell cell = fixture.getCell();
+      Cell cell = fixture.getCells();
       try {
         cell.getFilesystem().getRootPath();
         fixture
@@ -234,7 +236,7 @@ public class ParsePipelineTest {
   @Test
   public void invalidedBuildFileInvalidatesRelevantNodesAndManifest() throws Exception {
     Fixture fixture = createMultiThreadedFixture("pipeline_test");
-    Cell cell = fixture.getCell();
+    Cell cell = fixture.getCells();
 
     Path rootBuildFile = cell.getFilesystem().resolve("BUCK");
 
@@ -278,7 +280,7 @@ public class ParsePipelineTest {
   @Test
   public void invalidatedIncludeFileInvalidatesRelevantNodesAndManifest() throws Exception {
     Fixture fixture = createMultiThreadedFixture("pipeline_test");
-    Cell cell = fixture.getCell();
+    Cell cell = fixture.getCells();
 
     Path rootBuildFile = cell.getFilesystem().resolve("BUCK");
 
@@ -322,7 +324,7 @@ public class ParsePipelineTest {
   @Test
   public void invalidatedSourceFileDoesNotInvalidateNodesOrManifest() throws Exception {
     Fixture fixture = createMultiThreadedFixture("pipeline_test");
-    Cell cell = fixture.getCell();
+    Cell cell = fixture.getCells();
 
     Path rootBuildFile = cell.getFilesystem().resolve("BUCK");
 
@@ -366,7 +368,7 @@ public class ParsePipelineTest {
   @Test
   public void invalidatedPackageFileInvalidatesNodeButNotManifest() throws Exception {
     Fixture fixture = createMultiThreadedFixture("pipeline_test");
-    Cell cell = fixture.getCell();
+    Cell cell = fixture.getCells();
 
     Path rootBuildFile = cell.getFilesystem().resolve("BUCK");
 
@@ -415,7 +417,7 @@ public class ParsePipelineTest {
   @Test
   public void packageFileInvalidationInvalidatesAllChildNodes() throws Exception {
     try (Fixture fixture = createMultiThreadedFixture("package_inheritance")) {
-      Cell cell = fixture.getCell();
+      Cell cell = fixture.getCells();
       Path barBuildFilePath = cell.getFilesystem().resolve("bar/BUCK");
       List<TargetNode<?>> nodes =
           fixture
@@ -485,7 +487,7 @@ public class ParsePipelineTest {
     private final UnconfiguredTargetNodeToTargetNodeParsePipeline targetNodeParsePipeline;
     private final BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline;
     private final ProjectBuildFileParserPool projectBuildFileParserPool;
-    private final Cell cell;
+    private final Cells cells;
     private final DaemonicParserState daemonicParserState;
     private final ListeningExecutorService executorService;
     private final Set<CloseRecordingProjectBuildFileParserDecorator> projectBuildFileParsers;
@@ -506,7 +508,7 @@ public class ParsePipelineTest {
       this.projectBuildFileParsers = new HashSet<>();
       this.workspace.setUp();
 
-      this.cell = this.workspace.asCell();
+      this.cells = new Cells(this.workspace.asCell());
 
       TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory();
       ConstructorArgMarshaller constructorArgMarshaller =
@@ -563,7 +565,8 @@ public class ParsePipelineTest {
           TestKnownRuleTypesProvider.create(BuckPluginManagerFactory.createPluginManager());
 
       ParserPythonInterpreterProvider pythonInterpreterProvider =
-          new ParserPythonInterpreterProvider(cell.getBuckConfig(), new ExecutableFinder());
+          new ParserPythonInterpreterProvider(
+              cells.getRootCell().getBuckConfig(), new ExecutableFinder());
 
       PackageFileParserFactory packageFileParserFactory =
           new PackageFileParserFactory(
@@ -600,7 +603,7 @@ public class ParsePipelineTest {
               new DefaultUnconfiguredTargetNodeFactory(
                   knownRuleTypesProvider,
                   new BuiltTargetVerifier(),
-                  cell.getCellPathResolver(),
+                  cells.getRootCell().getCellPathResolver(),
                   new SelectorListFactory(
                       new SelectorFactory(new ParsingUnconfiguredBuildTargetViewFactory()))));
       ParserTargetNodeFromUnconfiguredTargetNodeFactory rawTargetNodeToTargetNodeFactory =
@@ -608,7 +611,7 @@ public class ParsePipelineTest {
               coercerFactory,
               knownRuleTypesProvider,
               constructorArgMarshaller,
-              new TargetNodeFactory(coercerFactory),
+              new TargetNodeFactory(coercerFactory, new DefaultCellNameResolverProvider(cells)),
               new ThrowingPackageBoundaryChecker(buildFileTrees),
               nodeListener,
               new ThrowingSelectorListResolver(),
@@ -627,7 +630,8 @@ public class ParsePipelineTest {
               rawTargetNodeToTargetNodeFactory,
               false,
               new TargetConfigurationFactory(
-                  new ParsingUnconfiguredBuildTargetViewFactory(), cell.getCellPathResolver()));
+                  new ParsingUnconfiguredBuildTargetViewFactory(),
+                  cells.getRootCell().getCellPathResolver()));
     }
 
     public UnconfiguredTargetNodeToTargetNodeParsePipeline getTargetNodeParsePipeline() {
@@ -638,28 +642,28 @@ public class ParsePipelineTest {
       return buildFileRawNodeParsePipeline;
     }
 
-    public Cell getCell() {
-      return cell;
+    public Cell getCells() {
+      return cells.getRootCell();
     }
 
     public boolean targetExistsInCache(BuildTarget target) {
       return daemonicParserState
           .getTargetNodeCache()
-          .lookupComputedNode(cell, target, eventBus)
+          .lookupComputedNode(cells.getRootCell(), target, eventBus)
           .isPresent();
     }
 
     public boolean buildFileExistsInCache(Path path) {
       return daemonicParserState
           .getRawNodeCache()
-          .lookupComputedNode(cell, path, eventBus)
+          .lookupComputedNode(cells.getRootCell(), path, eventBus)
           .isPresent();
     }
 
     public boolean packageFileExistsInCache(Path path) {
       return daemonicParserState
           .getPackageFileCache()
-          .lookupComputedNode(cell, path, eventBus)
+          .lookupComputedNode(cells.getRootCell(), path, eventBus)
           .isPresent();
     }
 

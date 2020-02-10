@@ -41,6 +41,7 @@ import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.ArgFactory;
 import com.facebook.buck.rules.args.SanitizedArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -70,6 +71,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.NotThreadSafe;
 import org.immutables.value.Value;
@@ -497,9 +499,23 @@ public abstract class CxxSourceRuleFactory {
                           PreprocessorDelegateCacheKey.of(source.getType(), source.getFlags()));
                   depsBuilder.add(preprocessorDelegateValue.getPreprocessorDelegate());
 
+                  Stream<Arg> commandPrefixFlags =
+                      CxxSourceTypes.getCompiler(
+                              getCxxPlatform(),
+                              CxxSourceTypes.getPreprocessorOutputType(source.getType()))
+                          .resolve(
+                              getActionGraphBuilder(),
+                              getBaseBuildTarget().getTargetConfiguration())
+                          .getCommandPrefix(getPathResolver()).stream()
+                          .skip(1) // drop the binary
+                          .map(a -> ArgFactory.from(a));
+
                   CxxToolFlags ppFlags =
                       CxxToolFlags.copyOf(
-                          getPlatformPreprocessorFlags(source.getType()),
+                          Stream.concat(
+                                  commandPrefixFlags,
+                                  getPlatformPreprocessorFlags(source.getType()).stream())
+                              .collect(ImmutableList.toImmutableList()),
                           rulePreprocessorFlags.apply(source.getType()));
 
                   CxxToolFlags cFlags = computeCompilerFlags(source.getType(), source.getFlags());

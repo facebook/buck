@@ -645,7 +645,7 @@ public class BuildCommand extends AbstractCommand {
       return;
     }
     Path absolutePathWithoutHash = maybeAbsolutePathWithoutHash.get();
-    Files.deleteIfExists(absolutePathWithoutHash);
+    MostFiles.deleteRecursivelyIfExists(absolutePathWithoutHash);
     Files.createDirectories(absolutePathWithoutHash.getParent());
 
     switch (linkMode) {

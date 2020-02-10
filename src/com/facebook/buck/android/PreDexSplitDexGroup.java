@@ -53,7 +53,6 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Ordering;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -78,7 +77,8 @@ import javax.annotation.Nullable;
  */
 public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements InitializableFromDisk<PreDexSplitDexGroup.BuildOutput>,
-        TrimUberRDotJava.UsesResources, SupportsInputBasedRuleKey {
+        TrimUberRDotJava.UsesResources,
+        SupportsInputBasedRuleKey {
 
   @AddToRuleKey private final DexSplitMode dexSplitMode;
 
@@ -221,10 +221,10 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
         });
 
     steps.add(
-        new AbstractExecutionStep("write_primary_dex_input_hashes") {
+        new AbstractExecutionStep("write_primary_dex_input_metadata") {
           @Override
           public StepExecutionResult execute(ExecutionContext context) throws IOException {
-            writePrimaryDexInputHashes(primaryDexInputHashesPath, result.primaryDexInputHashes);
+            writePrimaryDexInputMetadata(primaryDexInputHashesPath, result.primaryDexInputMetadata);
             return StepExecutionResults.SUCCESS;
           }
         });
@@ -247,6 +247,7 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
             androidPlatformTarget,
             context,
             getProjectFilesystem(),
+            Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             Optional.of(secondaryDexDir),
@@ -369,17 +370,13 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
 
   @Override
   public BuildOutput initializeFromDisk(SourcePathResolverAdapter pathResolver) throws IOException {
-    return new BuildOutput(readPrimaryDexInputHashesFromMetadata(), readReferencedResources());
+    return new BuildOutput(readPrimaryDexInputMetadata(), readReferencedResources());
   }
 
-  private ImmutableMap<String, Sha1HashCode> readPrimaryDexInputHashesFromMetadata()
-      throws IOException {
-    Map<String, String> map =
-        ObjectMappers.readValue(
-            getProjectFilesystem().readFileIfItExists(getPrimaryDexInputHashesPath()).get(),
-            new TypeReference<Map<String, String>>() {});
-
-    return ImmutableMap.copyOf(Maps.transformValues(map, Sha1HashCode::of));
+  private ImmutablePrimaryDexInputMetadata readPrimaryDexInputMetadata() throws IOException {
+    return ObjectMappers.readValue(
+        getProjectFilesystem().readFileIfItExists(getPrimaryDexInputHashesPath()).get(),
+        new TypeReference<ImmutablePrimaryDexInputMetadata>() {});
   }
 
   private ImmutableList<String> readReferencedResources() throws IOException {
@@ -390,14 +387,10 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
     return ImmutableList.copyOf(list);
   }
 
-  private void writePrimaryDexInputHashes(
-      Path outputPath, ImmutableMap<String, Sha1HashCode> primaryDexInputHashes)
-      throws IOException {
+  private void writePrimaryDexInputMetadata(
+      Path outputPath, ImmutablePrimaryDexInputMetadata primaryDexInputs) throws IOException {
     getProjectFilesystem()
-        .writeContentsToPath(
-            ObjectMappers.WRITER.writeValueAsString(
-                Maps.transformValues(primaryDexInputHashes, Sha1HashCode::toString)),
-            outputPath);
+        .writeContentsToPath(ObjectMappers.WRITER.writeValueAsString(primaryDexInputs), outputPath);
   }
 
   private void writeReferencedResources(Path outputPath, ImmutableList<String> referencedResources)
@@ -414,18 +407,18 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
 
   /** Contains serialized build output accessible from the rule type */
   static class BuildOutput {
-    final ImmutableMap<String, Sha1HashCode> primaryDexInputHashes;
+    final ImmutablePrimaryDexInputMetadata primaryDexInputMetadata;
     final ImmutableList<String> referencedResources;
 
     BuildOutput(
-        ImmutableMap<String, Sha1HashCode> primaryDexInputHashes,
+        ImmutablePrimaryDexInputMetadata primaryDexInputMetadata,
         ImmutableList<String> referencedResources) {
-      this.primaryDexInputHashes = primaryDexInputHashes;
+      this.primaryDexInputMetadata = primaryDexInputMetadata;
       this.referencedResources = referencedResources;
     }
   }
 
-  public ImmutableMap<String, Sha1HashCode> getPrimaryDexInputHashes() {
-    return buildOutputInitializer.getBuildOutput().primaryDexInputHashes;
+  public ImmutablePrimaryDexInputMetadata getPrimaryDexInputMetadata() {
+    return buildOutputInitializer.getBuildOutput().primaryDexInputMetadata;
   }
 }

@@ -23,6 +23,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.InMemoryBuildFileTree;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.cache.CacheBuilder;
@@ -56,15 +57,12 @@ public class ThrowingPackageBoundaryCheckerTest {
         new ThrowingPackageBoundaryChecker(buildFileTrees);
 
     thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(
-        "'"
-            + MorePaths.pathWithPlatformSeparators("../Test.java")
-            + "' in '//a/b:c' refers to a parent directory.");
+    thrown.expectMessage("'../Test.java' in '//a/b:c' refers to a parent directory.");
 
     boundaryChecker.enforceBuckPackageBoundaries(
         new TestCellBuilder().build().getRootCell(),
         BuildTargetFactory.newInstance("//a/b:c"),
-        ImmutableSet.of(Paths.get("a/Test.java")));
+        ImmutableSet.of(ForwardRelativePath.of("a/Test.java")));
   }
 
   @Test
@@ -90,7 +88,7 @@ public class ThrowingPackageBoundaryCheckerTest {
             .build()
             .getRootCell(),
         BuildTargetFactory.newInstance("//a/b:c"),
-        ImmutableSet.of(Paths.get("a/Test.java")));
+        ImmutableSet.of(ForwardRelativePath.of("a/Test.java")));
   }
 
   @Test
@@ -114,14 +112,12 @@ public class ThrowingPackageBoundaryCheckerTest {
 
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage(
-        "Target '//a/b:c' refers to file '"
-            + MorePaths.pathWithPlatformSeparators("a/b/Test.java")
-            + "', which doesn't belong to any package. "
-            + "More info at:\nhttps://buck.build/about/overview.html\n");
+        "Target '//a/b:c' refers to file 'a/b/Test.java', which doesn't belong to any package."
+            + " More info at:\nhttps://buck.build/about/overview.html\n");
     boundaryChecker.enforceBuckPackageBoundaries(
         new TestCellBuilder().build().getRootCell(),
         BuildTargetFactory.newInstance("//a/b:c"),
-        ImmutableSet.of(Paths.get("a/b/Test.java")));
+        ImmutableSet.of(ForwardRelativePath.of("a/b/Test.java")));
   }
 
   @Test
@@ -144,7 +140,7 @@ public class ThrowingPackageBoundaryCheckerTest {
         new ThrowingPackageBoundaryChecker(buildFileTrees);
 
     thrown.expect(HumanReadableException.class);
-    String testPath = MorePaths.pathWithPlatformSeparators("a/b/Test.java");
+    String testPath = "a/b/Test.java";
     String dPath = MorePaths.pathWithPlatformSeparators("d/BUCK");
     thrown.expectMessage(
         "The target '//a/b:c' tried to reference '"
@@ -167,7 +163,7 @@ public class ThrowingPackageBoundaryCheckerTest {
     boundaryChecker.enforceBuckPackageBoundaries(
         new TestCellBuilder().build().getRootCell(),
         BuildTargetFactory.newInstance("//a/b:c"),
-        ImmutableSet.of(Paths.get("a/b/Test.java")));
+        ImmutableSet.of(ForwardRelativePath.of("a/b/Test.java")));
   }
 
   @Test
@@ -187,6 +183,6 @@ public class ThrowingPackageBoundaryCheckerTest {
     boundaryChecker.enforceBuckPackageBoundaries(
         new TestCellBuilder().setFilesystem(new FakeProjectFilesystem()).build().getRootCell(),
         BuildTargetFactory.newInstance("//a/b:c"),
-        ImmutableSet.of(Paths.get("a/b/Test.java")));
+        ImmutableSet.of(ForwardRelativePath.of("a/b/Test.java")));
   }
 }

@@ -25,6 +25,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.SingleRootCellNameResolverProvider;
 import com.facebook.buck.core.description.RuleDescription;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
@@ -105,7 +106,9 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilderTest {
 
   @Test
   public void actionGraphBuildMethodsDelegatesToRuleAnalysisComputationWithNewRules() {
-    TargetNodeFactory targetNodeFactory = new TargetNodeFactory(new DefaultTypeCoercerFactory());
+    TargetNodeFactory targetNodeFactory =
+        new TargetNodeFactory(
+            new DefaultTypeCoercerFactory(), SingleRootCellNameResolverProvider.INSTANCE);
     RuleDescription<?> ruleDescription =
         new RuleDescription<FakeRuleDescriptionArg>() {
           @Override
@@ -129,8 +132,7 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilderTest {
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            ImmutableSet.of(),
-            cellPathResolver.getCellNameResolver());
+            ImmutableSet.of());
 
     MutableDirectedGraph<TargetNode<?>> mutableDirectedGraph =
         MutableDirectedGraph.createConcurrent();

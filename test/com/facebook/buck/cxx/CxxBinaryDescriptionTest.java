@@ -351,17 +351,21 @@ public class CxxBinaryDescriptionTest {
     binaryBuilder
         .setLibraries(
             ImmutableSortedSet.of(
-                FrameworkPath.ofSourcePath(FakeSourcePath.of("/some/path/libs.dylib")),
-                FrameworkPath.ofSourcePath(FakeSourcePath.of("/another/path/liba.dylib"))))
+                FrameworkPath.ofSourcePath(FakeSourcePath.of("some/path/libs.dylib")),
+                FrameworkPath.ofSourcePath(FakeSourcePath.of("another/path/liba.dylib"))))
         .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.c"))));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(binaryBuilder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     CxxBinary binary = binaryBuilder.build(graphBuilder, filesystem, targetGraph);
     assertThat(binary.getLinkRule(), Matchers.instanceOf(CxxLink.class));
-    assertThat(
+    ImmutableList<String> args =
         Arg.stringify(
-            ((CxxLink) binary.getLinkRule()).getArgs(), graphBuilder.getSourcePathResolver()),
-        Matchers.hasItems("-L", "/another/path", "/some/path", "-la", "-ls"));
+            ((CxxLink) binary.getLinkRule()).getArgs(), graphBuilder.getSourcePathResolver());
+    assertThat(args, Matchers.hasItems("-L"));
+    assertThat(args, Matchers.hasItems(Matchers.matchesRegex(".*some[/\\\\]path$")));
+    assertThat(args, Matchers.hasItems(Matchers.matchesRegex(".*another[/\\\\]path$")));
+    assertThat(args, Matchers.hasItems("-la"));
+    assertThat(args, Matchers.hasItems("-ls"));
   }
 
   @Test

@@ -115,6 +115,8 @@ public abstract class IjProjectConfig {
 
   public abstract boolean isGeneratingDummyRDotJavaEnabled();
 
+  public abstract Optional<Path> getKotlinJavaRuntimeLibraryTemplatePath();
+
   public static Builder builder() {
     return new Builder();
   }

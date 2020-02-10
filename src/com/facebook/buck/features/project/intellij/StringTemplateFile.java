@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import org.stringtemplate.v4.ST;
@@ -57,6 +58,10 @@ enum StringTemplateFile {
     URL templateUrl = Resources.getResource(StringTemplateFile.class, "templates/" + fileName);
     String template = Resources.toString(templateUrl, StandardCharsets.UTF_8);
     return new ST(template, DELIMITER, DELIMITER);
+  }
+
+  public static ST getST(Path templatePath) throws IOException {
+    return new ST(new String(Files.readAllBytes(templatePath)), DELIMITER, DELIMITER);
   }
 
   public static boolean writeToFile(

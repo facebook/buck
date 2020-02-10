@@ -195,6 +195,6 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
         protocol,
         buckEventBus,
         metadataProvider.get(),
-        strategyConfig);
+        strategyConfig.getOutputMaterializationThreads());
   }
 }

@@ -335,6 +335,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
               builder);
           break;
         case thrift_over_http:
+        case hybrid_thrift_grpc:
           Preconditions.checkArgument(
               buckConfig.getHybridThriftEndpoint().isPresent(),
               "Hybrid thrift endpoint path is mandatory for the ThriftArtifactCache.");

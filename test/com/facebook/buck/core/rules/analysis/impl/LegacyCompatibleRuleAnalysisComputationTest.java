@@ -23,6 +23,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.SingleRootCellNameResolverProvider;
 import com.facebook.buck.core.description.RuleDescription;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
@@ -60,7 +61,8 @@ public class LegacyCompatibleRuleAnalysisComputationTest {
   private final ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
   private final CellPathResolver cellPathResolver = TestCellPathResolver.get(projectFilesystem);
   private final TargetNodeFactory targetNodeFactory =
-      new TargetNodeFactory(new DefaultTypeCoercerFactory());
+      new TargetNodeFactory(
+          new DefaultTypeCoercerFactory(), SingleRootCellNameResolverProvider.INSTANCE);
   private final BuckEventBus eventBus = BuckEventBusForTests.newInstance();
 
   @Test
@@ -198,8 +200,7 @@ public class LegacyCompatibleRuleAnalysisComputationTest {
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            ImmutableSet.of(),
-            cellPathResolver.getCellNameResolver());
+            ImmutableSet.of());
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     graph.addNode(targetNode);
     ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex =
@@ -262,8 +263,7 @@ public class LegacyCompatibleRuleAnalysisComputationTest {
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            ImmutableSet.of(),
-            cellPathResolver.getCellNameResolver());
+            ImmutableSet.of());
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     graph.addNode(targetNode);
     ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex =

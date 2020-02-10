@@ -18,6 +18,7 @@ package com.facebook.buck.core.model.targetgraph.impl;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
@@ -45,24 +46,23 @@ public class MissingPathsCheckerTest {
     checker.checkPaths(
         new FakeProjectFilesystem(),
         BuildTargetFactory.newInstance("//:a"),
-        ImmutableSet.of(Paths.get("b")));
+        ImmutableSet.of(ForwardRelativePath.of("b")));
   }
 
   @Test
   public void testCheckPathsPassesWithExistingPath() {
     MissingPathsChecker checker = new MissingPathsChecker();
 
-    ImmutableSet<Path> paths = ImmutableSet.of(Paths.get("b"));
-
     checker.checkPaths(
-        new FakeProjectFilesystem(paths), BuildTargetFactory.newInstance("//:a"), paths);
+        new FakeProjectFilesystem(ImmutableSet.of(Paths.get("b"))),
+        BuildTargetFactory.newInstance("//:a"),
+        ImmutableSet.of(ForwardRelativePath.of("b")));
   }
 
   @Test
   public void testCheckPathsThrowsErrorForNonMissingFileErrors() {
-    ImmutableSet<Path> paths = ImmutableSet.of(Paths.get("b"));
     ProjectFilesystem filesystem =
-        new FakeProjectFilesystem(paths) {
+        new FakeProjectFilesystem(ImmutableSet.of(Paths.get("b"))) {
           @Override
           public <A extends BasicFileAttributes> A readAttributes(
               Path pathRelativeToProjectRoot, Class<A> type, LinkOption... options)
@@ -75,6 +75,9 @@ public class MissingPathsCheckerTest {
     thrown.expectMessage("//:a references inaccessible file or directory 'b'");
 
     MissingPathsChecker checker = new MissingPathsChecker();
-    checker.checkPaths(filesystem, BuildTargetFactory.newInstance("//:a"), paths);
+    checker.checkPaths(
+        filesystem,
+        BuildTargetFactory.newInstance("//:a"),
+        ImmutableSet.of(ForwardRelativePath.of("b")));
   }
 }

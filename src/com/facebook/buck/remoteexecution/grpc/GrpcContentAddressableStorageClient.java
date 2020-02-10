@@ -20,7 +20,6 @@ import build.bazel.remote.execution.v2.ContentAddressableStorageGrpc.ContentAddr
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.ContentAddressedStorageClient;
 import com.facebook.buck.remoteexecution.UploadDataSupplier;
-import com.facebook.buck.remoteexecution.config.RemoteExecutionStrategyConfig;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputDirectory;
@@ -56,7 +55,7 @@ public class GrpcContentAddressableStorageClient implements ContentAddressedStor
       Protocol protocol,
       BuckEventBus buckEventBus,
       RemoteExecutionMetadata metadata,
-      RemoteExecutionStrategyConfig strategyConfig) {
+      int outputMaterializationThreads) {
     this.uploader =
         new MultiThreadedBlobUploader(
             FIND_MISSING_CHECK_LIMIT,
@@ -78,7 +77,7 @@ public class GrpcContentAddressableStorageClient implements ContentAddressedStor
         new OutputsMaterializer(
             SIZE_LIMIT,
             MostExecutors.newMultiThreadExecutor(
-                "output-materializer", strategyConfig.getOutputMaterializationThreads()),
+                "output-materializer", outputMaterializationThreads),
             fetcher,
             protocol,
             buckEventBus);

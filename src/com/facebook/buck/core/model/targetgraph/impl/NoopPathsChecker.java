@@ -17,13 +17,15 @@
 package com.facebook.buck.core.model.targetgraph.impl;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.Path;
 
 /** Does not perform any checks. */
 class NoopPathsChecker implements PathsChecker {
   @Override
   public void checkPaths(
-      ProjectFilesystem projectFilesystem, BuildTarget buildTarget, ImmutableSet<Path> paths) {}
+      ProjectFilesystem projectFilesystem,
+      BuildTarget buildTarget,
+      ImmutableSet<ForwardRelativePath> paths) {}
 }

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.sourcepath;
 
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ComparisonChain;
@@ -74,6 +75,10 @@ public abstract class PathSourcePath implements SourcePath {
 
   public static PathSourcePath of(ProjectFilesystem filesystem, Path relativePath) {
     return ImmutablePathSourcePath.of(filesystem, relativePath);
+  }
+
+  public static PathSourcePath of(ProjectFilesystem filesystem, ForwardRelativePath relativePath) {
+    return of(filesystem, relativePath.toPath(filesystem.getFileSystem()));
   }
 
   /** @return the {@link PathSourcePath} backing the given {@link SourcePath}, if any. */

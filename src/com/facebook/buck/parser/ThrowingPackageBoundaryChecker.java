@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.google.common.cache.LoadingCache;
@@ -43,33 +44,32 @@ public class ThrowingPackageBoundaryChecker implements PackageBoundaryChecker {
 
   @Override
   public void enforceBuckPackageBoundaries(
-      Cell targetCell, BuildTarget target, ImmutableSet<Path> paths) {
+      Cell targetCell, BuildTarget target, ImmutableSet<ForwardRelativePath> paths) {
 
-    Path basePath =
-        target
-            .getCellRelativeBasePath()
-            .getPath()
-            .toPath(targetCell.getFilesystem().getFileSystem());
+    ForwardRelativePath basePath = target.getCellRelativeBasePath().getPath();
 
     ParserConfig.PackageBoundaryEnforcement enforcing =
         targetCell
             .getBuckConfigView(ParserConfig.class)
-            .getPackageBoundaryEnforcementPolicy(basePath);
+            .getPackageBoundaryEnforcementPolicy(
+                basePath.toPath(targetCell.getFilesystem().getFileSystem()));
     if (enforcing == ParserConfig.PackageBoundaryEnforcement.DISABLED) {
       return;
     }
 
     BuildFileTree buildFileTree = buildFileTrees.getUnchecked(targetCell);
-    boolean isBasePathEmpty = basePath.equals(targetCell.getFilesystem().getPath(""));
+    boolean isBasePathEmpty = basePath.isEmpty();
 
-    for (Path path : paths) {
+    for (ForwardRelativePath path : paths) {
       if (!isBasePathEmpty && !path.startsWith(basePath)) {
         String formatString = "'%s' in '%s' refers to a parent directory.";
         warnOrError(enforcing, formatString, basePath.relativize(path), target);
         continue;
       }
 
-      Optional<Path> ancestor = buildFileTree.getBasePathOfAncestorTarget(path);
+      Optional<Path> ancestor =
+          buildFileTree.getBasePathOfAncestorTarget(
+              path.toPath(targetCell.getFilesystem().getFileSystem()));
       // It should not be possible for us to ever get an Optional.empty() for this because that
       // would require one of two conditions:
       // 1) The source path references parent directories, which we check for above.
@@ -83,7 +83,7 @@ public class ThrowingPackageBoundaryChecker implements PackageBoundaryChecker {
                 target, path));
       }
 
-      if (!ancestor.get().equals(basePath)) {
+      if (!ancestor.get().equals(basePath.toPath(targetCell.getFilesystem().getFileSystem()))) {
         String buildFileName = targetCell.getBuckConfigView(ParserConfig.class).getBuildFileName();
         Path buckFile = ancestor.get().resolve(buildFileName);
         // TODO(cjhopman): If we want to manually split error message lines ourselves, we should

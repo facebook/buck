@@ -21,7 +21,8 @@ public enum ArtifactCacheMode {
   dir(CacheType.local),
   http(CacheType.remote),
   sqlite(CacheType.local),
-  thrift_over_http(CacheType.remote);
+  thrift_over_http(CacheType.remote),
+  hybrid_thrift_grpc(CacheType.remote);
 
   private final CacheType type;
 

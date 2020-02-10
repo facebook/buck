@@ -51,6 +51,7 @@ java_test(
         "//src/com/facebook/buck/util/json:json",
         "//test/com/facebook/buck/core/artifact:testutil",
         "//test/com/facebook/buck/core/cell:testutil",
+        "//test/com/facebook/buck/core/cell/nameresolver:testutil",
         "//test/com/facebook/buck/core/graph/transformation/impl:testutil",
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/model/targetgraph:testutil",

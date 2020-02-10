@@ -17,6 +17,9 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
+import com.facebook.buck.core.cell.DefaultCellNameResolverProvider;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.files.DirectoryListComputation;
 import com.facebook.buck.core.files.FileTreeComputation;
@@ -161,7 +164,10 @@ public class GraphEngineFactory {
             params.getTypeCoercerFactory(),
             params.getKnownRuleTypesProvider(),
             new DefaultConstructorArgMarshaller(params.getTypeCoercerFactory()),
-            new TargetNodeFactory(params.getTypeCoercerFactory()),
+            new TargetNodeFactory(
+                params.getTypeCoercerFactory(),
+                new DefaultCellNameResolverProvider(
+                    new Cells(cell.getCell(CanonicalCellName.rootCell())))),
             // TODO: replace with ThrowingPackageBoundaryChecker
             new NoopPackageBoundaryChecker(),
             // TODO: replace with symlink checker

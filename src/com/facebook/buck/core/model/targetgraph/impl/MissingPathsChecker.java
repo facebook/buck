@@ -18,6 +18,7 @@ package com.facebook.buck.core.model.targetgraph.impl;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -33,22 +34,26 @@ import java.util.Set;
 /** Checks that paths exist and throw an exception if at least one path doesn't exist. */
 class MissingPathsChecker implements PathsChecker {
 
-  private final LoadingCache<Path, Set<Path>> pathsCache =
+  private final LoadingCache<Path, Set<ForwardRelativePath>> pathsCache =
       CacheBuilder.newBuilder()
           .weakValues()
           .build(CacheLoader.from(rootPath -> Sets.newConcurrentHashSet()));
 
   @Override
   public void checkPaths(
-      ProjectFilesystem projectFilesystem, BuildTarget buildTarget, ImmutableSet<Path> paths) {
-    Set<Path> checkedPaths = pathsCache.getUnchecked(projectFilesystem.getRootPath());
-    for (Path path : paths) {
+      ProjectFilesystem projectFilesystem,
+      BuildTarget buildTarget,
+      ImmutableSet<ForwardRelativePath> paths) {
+    Set<ForwardRelativePath> checkedPaths =
+        pathsCache.getUnchecked(projectFilesystem.getRootPath());
+    for (ForwardRelativePath path : paths) {
       if (!checkedPaths.add(path)) {
         continue;
       }
 
       try {
-        projectFilesystem.readAttributes(path, BasicFileAttributes.class);
+        projectFilesystem.readAttributes(
+            path.toPath(projectFilesystem.getFileSystem()), BasicFileAttributes.class);
       } catch (NoSuchFileException e) {
         throw new HumanReadableException(
             e, "%s references non-existing file or directory '%s'", buildTarget, path);

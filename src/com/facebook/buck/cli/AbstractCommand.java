@@ -25,6 +25,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
@@ -58,6 +59,7 @@ import com.facebook.buck.util.config.Configs;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.versions.VersionException;
 import com.google.common.base.Splitter;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -81,6 +83,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 import javax.annotation.Nullable;
@@ -358,28 +361,33 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
    * if a given build target cannot find a matching spec.
    */
   protected ImmutableSet<BuildTargetWithOutputs> matchBuildTargetsWithLabelsFromSpecs(
-      ImmutableList<TargetNodeSpec> specs, ImmutableSet<BuildTarget> buildTargets) {
+      ImmutableList<TargetNodeSpec> specs, Set<BuildTarget> buildTargets) {
+    HashMultimap<UnconfiguredBuildTargetView, OutputLabel> buildTargetViewToOutputLabel =
+        HashMultimap.create(specs.size(), 1);
+
+    specs.stream()
+        .filter(BuildTargetSpec.class::isInstance)
+        .map(BuildTargetSpec.class::cast)
+        .forEach(
+            buildTargetSpec -> {
+              buildTargetViewToOutputLabel.put(
+                  buildTargetSpec.getUnconfiguredBuildTargetView(),
+                  buildTargetSpec.getUnconfiguredBuildTargetViewWithOutputs().getOutputLabel());
+            });
+
     ImmutableSet.Builder<BuildTargetWithOutputs> builder =
         ImmutableSet.builderWithExpectedSize(buildTargets.size());
     for (BuildTarget target : buildTargets) {
       boolean mappedTarget = false;
 
-      // Need to look through all the specs even after finding a match because there may be multiple
-      // matches
-      for (TargetNodeSpec spec : specs) {
-        if (!(spec instanceof BuildTargetSpec)) {
-          continue;
-        }
-        BuildTargetSpec buildTargetSpec = (BuildTargetSpec) spec;
-        if (buildTargetSpec
-            .getUnconfiguredBuildTargetView()
-            .equals(target.getUnconfiguredBuildTargetView())) {
-          builder.add(
-              BuildTargetWithOutputs.of(
-                  target,
-                  buildTargetSpec.getUnconfiguredBuildTargetViewWithOutputs().getOutputLabel()));
-          mappedTarget = true;
-        }
+      UnconfiguredBuildTargetView targetView = target.getUnconfiguredBuildTargetView();
+      // HashMultimap creates an empty collection on 'get()' if key is missing, rather than
+      // returning null
+      if (buildTargetViewToOutputLabel.containsKey(targetView)) {
+        buildTargetViewToOutputLabel
+            .get(targetView)
+            .forEach(outputLabel -> builder.add(BuildTargetWithOutputs.of(target, outputLabel)));
+        mappedTarget = true;
       }
 
       // A target may not map to an output label if the build command wasn't invoked with a build

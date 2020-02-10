@@ -25,6 +25,7 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.SingleRootCellNameResolverProvider;
 import com.facebook.buck.core.description.RuleDescription;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
@@ -158,7 +159,9 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
   public void transformDelegatesWhenNewDescription() throws ActionCreationException {
     BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
 
-    TargetNodeFactory nodeCopier = new TargetNodeFactory(new DefaultTypeCoercerFactory());
+    TargetNodeFactory nodeCopier =
+        new TargetNodeFactory(
+            new DefaultTypeCoercerFactory(), SingleRootCellNameResolverProvider.INSTANCE);
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
     FakeTargetNodeRuleDescription description = new FakeTargetNodeRuleDescription();
@@ -173,8 +176,7 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            ImmutableSet.of(),
-            TestCellPathResolver.create(Paths.get("")).getCellNameResolver());
+            ImmutableSet.of());
 
     ToolchainProvider toolchainProvider = new ToolchainProviderBuilder().build();
     ActionGraphBuilder actionGraphBuilder = new TestActionGraphBuilder();

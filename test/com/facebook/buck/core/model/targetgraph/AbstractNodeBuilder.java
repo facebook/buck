@@ -18,6 +18,7 @@ package com.facebook.buck.core.model.targetgraph;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.SimpleCellNameResolverProvider;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
@@ -163,7 +164,10 @@ public abstract class AbstractNodeBuilder<
   public TargetNode<TArg> build(ProjectFilesystem filesystem) {
     try {
       TargetNodeFactory factory =
-          new TargetNodeFactory(TYPE_COERCER_FACTORY, PathExistenceVerificationMode.DO_NOT_VERIFY);
+          new TargetNodeFactory(
+              TYPE_COERCER_FACTORY,
+              PathExistenceVerificationMode.DO_NOT_VERIFY,
+              new SimpleCellNameResolverProvider(target.getCell()));
       TArg populatedArg = getPopulatedArg();
       return factory
           .createFromObject(
@@ -179,8 +183,7 @@ public abstract class AbstractNodeBuilder<
                       null,
                       filesystem.getRootPath().resolve("BUCK"),
                       VisibilityPatternParser.VISIBILITY_PUBLIC)),
-              ImmutableSet.of(),
-              cellRoots.getCellNameResolver())
+              ImmutableSet.of())
           .withSelectedVersions(selectedVersions);
     } catch (NoSuchBuildTargetException e) {
       throw new RuntimeException(e);

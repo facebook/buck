@@ -139,8 +139,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
             declaredDeps.build(),
             configurationDeps.build(),
             unconfiguredTargetNode.getVisibilityPatterns(),
-            unconfiguredTargetNode.getWithinViewPatterns(),
-            targetCell.getCellNameResolver());
+            unconfiguredTargetNode.getWithinViewPatterns());
 
     packageBoundaryChecker.enforceBuckPackageBoundaries(targetCell, target, targetNode.getInputs());
 

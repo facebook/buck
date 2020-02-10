@@ -20,10 +20,10 @@ import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.dalvik.CanaryFactory;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.classes.FileLike;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -31,6 +31,8 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.sha1.Sha1HashCode;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
@@ -48,7 +50,6 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
@@ -138,7 +139,7 @@ public class PreDexedFilesSorter {
 
     private final ProjectFilesystem filesystem;
     private final ImmutableList.Builder<Step> steps;
-    private final ImmutableMap.Builder<String, Sha1HashCode> primaryDexInputsHashes =
+    private final ImmutableMap.Builder<String, DexMetadata> primaryDexInputMetadata =
         ImmutableMap.builder();
     private final ImmutableMap.Builder<SourcePath, Sha1HashCode> secondaryDexInputsHashes =
         ImmutableMap.builder();
@@ -155,7 +156,10 @@ public class PreDexedFilesSorter {
     public void addPrimaryDex(DexWithClasses dexWithClasses) {
       primaryDexSize += dexWithClasses.getWeightEstimate();
       primaryDexContents.add(dexWithClasses);
-      primaryDexInputsHashes.put(getJarName(dexWithClasses), dexWithClasses.getClassesHash());
+      primaryDexInputMetadata.put(
+          getJarName(dexWithClasses),
+          ImmutableDexMetadata.of(
+              dexWithClasses.getWeightEstimate(), dexWithClasses.getClassesHash().toString()));
     }
 
     private String getJarName(DexWithClasses dexWithClasses) {
@@ -192,10 +196,6 @@ public class PreDexedFilesSorter {
     }
 
     Result getResult() {
-      if (primaryDexSize > dexWeightLimit) {
-        throwErrorForPrimaryDexExceedsWeightLimit();
-      }
-
       ImmutableSortedMap.Builder<Path, DexWithClasses> metadataTxtEntries =
           ImmutableSortedMap.naturalOrder();
       ImmutableMultimap.Builder<Path, SourcePath> secondaryOutputToInputs =
@@ -219,28 +219,8 @@ public class PreDexedFilesSorter {
           builder.build(),
           secondaryOutputToInputs.build(),
           metadataTxtEntries.build(),
-          primaryDexInputsHashes.build(),
+          ImmutablePrimaryDexInputMetadata.of(primaryDexSize, primaryDexInputMetadata.build()),
           secondaryDexInputsHashes.build());
-    }
-
-    private void throwErrorForPrimaryDexExceedsWeightLimit() {
-      StringBuilder message = new StringBuilder();
-      message.append(
-          String.format(
-              "Primary dex weight %s exceeds limit of %s. It contains...%n",
-              primaryDexSize, dexWeightLimit));
-      message.append(String.format("Weight\tDex file path%n"));
-      Comparator<DexWithClasses> bySizeDescending =
-          (o1, o2) -> Integer.compare(o2.getWeightEstimate(), o1.getWeightEstimate());
-      ImmutableList<DexWithClasses> sortedBySizeDescending =
-          primaryDexContents.stream()
-              .sorted(bySizeDescending)
-              .collect(ImmutableList.toImmutableList());
-      for (DexWithClasses dex : sortedBySizeDescending) {
-        message.append(
-            String.format("%s\t%s%n", dex.getWeightEstimate(), dex.getSourcePathToDexFile()));
-      }
-      throw new HumanReadableException(message.toString());
     }
 
     /** @see CanaryFactory#create(String, String) */
@@ -312,23 +292,43 @@ public class PreDexedFilesSorter {
     }
   }
 
+  /** A serializable subset of DexWithClasses used when merging primary dexes */
+  @BuckStyleValue
+  @JsonSerialize
+  @JsonDeserialize(as = ImmutableDexMetadata.class)
+  abstract static class DexMetadata {
+    public abstract int getWeight();
+
+    public abstract String getHash();
+  }
+
+  /** Serializable metadata for the contribution to the primary dex of a single dex group */
+  @BuckStyleValue
+  @JsonSerialize
+  @JsonDeserialize(as = ImmutablePrimaryDexInputMetadata.class)
+  abstract static class PrimaryDexInputMetadata {
+    public abstract int getWeight();
+
+    public abstract ImmutableMap<String, PreDexedFilesSorter.DexMetadata> getMetadata();
+  }
+
   public static class Result {
     public final Map<String, SourcePath> primaryDexInputs;
     public final Multimap<Path, SourcePath> secondaryOutputToInputs;
     public final Map<Path, DexWithClasses> metadataTxtDexEntries;
-    public final ImmutableMap<String, Sha1HashCode> primaryDexInputHashes;
+    public final ImmutablePrimaryDexInputMetadata primaryDexInputMetadata;
     public final ImmutableMap<SourcePath, Sha1HashCode> secondaryDexInputHashes;
 
     public Result(
         Map<String, SourcePath> primaryDexInputs,
         Multimap<Path, SourcePath> secondaryOutputToInputs,
         Map<Path, DexWithClasses> metadataTxtDexEntries,
-        ImmutableMap<String, Sha1HashCode> primaryDexInputHashes,
+        ImmutablePrimaryDexInputMetadata primaryDexInputMetadata,
         ImmutableMap<SourcePath, Sha1HashCode> secondaryDexInputHashes) {
       this.primaryDexInputs = primaryDexInputs;
       this.secondaryOutputToInputs = secondaryOutputToInputs;
       this.metadataTxtDexEntries = metadataTxtDexEntries;
-      this.primaryDexInputHashes = primaryDexInputHashes;
+      this.primaryDexInputMetadata = primaryDexInputMetadata;
       this.secondaryDexInputHashes = secondaryDexInputHashes;
     }
   }

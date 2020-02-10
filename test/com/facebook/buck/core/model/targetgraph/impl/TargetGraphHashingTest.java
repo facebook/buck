@@ -42,7 +42,6 @@ import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -342,10 +341,7 @@ public class TargetGraphHashingTest {
 
     FileHashLoader cache = new FakeFileHashCache(ImmutableMap.of());
 
-    thrown.expectMessage(
-        "Error reading path "
-            + MorePaths.pathWithPlatformSeparators("foo/FooLib.java")
-            + " for rule //foo:lib");
+    thrown.expectMessage("Error reading path foo/FooLib.java for rule //foo:lib");
 
     new TargetGraphHashing(
             eventBus,

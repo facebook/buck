@@ -23,6 +23,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.cell.nameresolver.CellNameResolverProvider;
+import com.facebook.buck.core.cell.nameresolver.SimpleCellNameResolverProvider;
+import com.facebook.buck.core.cell.nameresolver.SingleRootCellNameResolverProvider;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.Hint;
@@ -33,6 +36,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.ThrowingTargetConfigurationTransformer;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -74,7 +78,8 @@ public class TargetNodeTest {
   public void testIgnoreNonBuildTargetOrPathOrSourcePathArgument()
       throws NoSuchBuildTargetException {
 
-    TargetNode<ExampleDescriptionArg> targetNode = createTargetNode(TARGET_THREE);
+    TargetNode<ExampleDescriptionArg> targetNode =
+        createTargetNode(TARGET_THREE, SingleRootCellNameResolverProvider.INSTANCE);
 
     assertTrue(targetNode.getExtraDeps().isEmpty());
     assertTrue(targetNode.getDeclaredDeps().isEmpty());
@@ -103,6 +108,7 @@ public class TargetNodeTest {
 
     TargetNode<ExampleDescriptionArg> targetNode =
         createTargetNode(
+            SingleRootCellNameResolverProvider.INSTANCE,
             TARGET_THREE,
             depsTargets,
             rawNode,
@@ -113,7 +119,8 @@ public class TargetNodeTest {
     assertThat(
         targetNode.getInputs(),
         containsInAnyOrder(
-            Paths.get("example/path/MyClass.java"), Paths.get("example/path/AnotherClass.java")));
+            ForwardRelativePath.of("example/path/MyClass.java"),
+            ForwardRelativePath.of("example/path/AnotherClass.java")));
 
     assertThat(
         targetNode.getExtraDeps(),
@@ -131,12 +138,13 @@ public class TargetNodeTest {
 
   @Test
   public void targetsWithTheSameRelativePathButNotTheSameCellMightNotBeAbleToSeeEachOther() {
+    SimpleCellNameResolverProvider cellNames = new SimpleCellNameResolverProvider("aaa", "bbb");
 
     BuildTarget buildTargetOne = BuildTargetFactory.newInstance("aaa//foo:bar");
-    TargetNode<ExampleDescriptionArg> targetNodeOne = createTargetNode(buildTargetOne);
+    TargetNode<ExampleDescriptionArg> targetNodeOne = createTargetNode(buildTargetOne, cellNames);
 
     BuildTarget buildTargetTwo = BuildTargetFactory.newInstance("bbb//foo:bar");
-    TargetNode<ExampleDescriptionArg> targetNodeTwo = createTargetNode(buildTargetTwo);
+    TargetNode<ExampleDescriptionArg> targetNodeTwo = createTargetNode(buildTargetTwo, cellNames);
 
     boolean isVisible = targetNodeOne.isVisibleTo(targetNodeTwo);
 
@@ -149,7 +157,12 @@ public class TargetNodeTest {
         ImmutableMap.of("name", TARGET_THREE.getShortName(), "cmd", "$(query_outputs '123')");
 
     try {
-      createTargetNode(TARGET_THREE, ImmutableSet.of(), rawNode, Sets.newHashSet());
+      createTargetNode(
+          SingleRootCellNameResolverProvider.INSTANCE,
+          TARGET_THREE,
+          ImmutableSet.of(),
+          rawNode,
+          Sets.newHashSet());
     } catch (HumanReadableException e) {
       assertEquals(
           "Cannot traverse attribute cmd of //example/path:three: Error parsing query: 123",
@@ -164,7 +177,8 @@ public class TargetNodeTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     BuildTarget configurationBuildTarget = BuildTargetFactory.newInstance("//config:bar");
     TargetNode<?> targetNode =
-        new TargetNodeFactory(new DefaultTypeCoercerFactory())
+        new TargetNodeFactory(
+                new DefaultTypeCoercerFactory(), SingleRootCellNameResolverProvider.INSTANCE)
             .createFromObject(
                 description,
                 createPopulatedConstructorArg(buildTarget, ImmutableMap.of("name", "bar")),
@@ -174,8 +188,7 @@ public class TargetNodeTest {
                 ImmutableSet.of(),
                 ImmutableSortedSet.of(configurationBuildTarget),
                 ImmutableSet.of(),
-                ImmutableSet.of(),
-                createCellRoots(filesystem).getCellNameResolver());
+                ImmutableSet.of());
 
     assertEquals(ImmutableSet.of(configurationBuildTarget), targetNode.getConfigurationDeps());
   }
@@ -215,7 +228,8 @@ public class TargetNodeTest {
     }
   }
 
-  private static TargetNode<ExampleDescriptionArg> createTargetNode(BuildTarget buildTarget)
+  private static TargetNode<ExampleDescriptionArg> createTargetNode(
+      BuildTarget buildTarget, CellNameResolverProvider cellNames)
       throws NoSuchBuildTargetException {
     ImmutableMap<String, Object> rawNode =
         ImmutableMap.of(
@@ -230,10 +244,11 @@ public class TargetNodeTest {
             "sourcePaths",
             ImmutableSortedSet.of());
 
-    return createTargetNode(buildTarget, ImmutableSet.of(), rawNode, Sets.newHashSet());
+    return createTargetNode(cellNames, buildTarget, ImmutableSet.of(), rawNode, Sets.newHashSet());
   }
 
   private static TargetNode<ExampleDescriptionArg> createTargetNode(
+      CellNameResolverProvider cellNames,
       BuildTarget buildTarget,
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableMap<String, Object> rawNode,
@@ -243,7 +258,7 @@ public class TargetNodeTest {
 
     ExampleDescription description = new ExampleDescription();
 
-    return new TargetNodeFactory(new DefaultTypeCoercerFactory())
+    return new TargetNodeFactory(new DefaultTypeCoercerFactory(), cellNames)
         .createFromObject(
             description,
             createPopulatedConstructorArg(buildTarget, rawNode),
@@ -253,8 +268,7 @@ public class TargetNodeTest {
             declaredDeps,
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            ImmutableSet.of(),
-            createCellRoots(filesystem).getCellNameResolver());
+            ImmutableSet.of());
   }
 
   private static ExampleDescriptionArg createPopulatedConstructorArg(
