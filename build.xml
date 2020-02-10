@@ -1288,7 +1288,7 @@
     </exec>
   </target>
 
-  <target name="travis" depends="verify-javadoc, verify-soydoc, lint" />
+  <target name="circleci" depends="verify-javadoc, verify-soydoc, lint" />
 
   <target name="pre-checkin" depends="clean, default, lint"/>
   <target name="all" depends="default, javadoc" />
