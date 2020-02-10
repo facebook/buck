@@ -22,6 +22,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.features.project.intellij.model.IjModule;
 import com.facebook.buck.features.project.intellij.model.IjModuleFactory;
 import com.facebook.buck.features.project.intellij.model.IjModuleRule;
+import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 import com.facebook.buck.features.project.intellij.model.folders.ExcludeFolder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Preconditions;
@@ -37,11 +38,15 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
   private static final Logger LOG = Logger.get(DefaultIjModuleFactory.class);
 
   private final ProjectFilesystem projectFilesystem;
+  private final IjProjectConfig projectConfig;
   private final SupportedTargetTypeRegistry typeRegistry;
 
   public DefaultIjModuleFactory(
-      ProjectFilesystem projectFilesystem, SupportedTargetTypeRegistry typeRegistry) {
+      ProjectFilesystem projectFilesystem,
+      IjProjectConfig projectConfig,
+      SupportedTargetTypeRegistry typeRegistry) {
     this.projectFilesystem = projectFilesystem;
+    this.projectConfig = projectConfig;
     this.typeRegistry = typeRegistry;
   }
 
@@ -83,7 +88,8 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
       context
           .getOrCreateAndroidFacetBuilder()
           .setGeneratedSourcePath(
-              IjAndroidHelper.createAndroidGenPath(projectFilesystem, moduleBasePath));
+              IjAndroidHelper.createAndroidGenPath(
+                  projectFilesystem, projectConfig, moduleBasePath));
     }
 
     excludes.stream()

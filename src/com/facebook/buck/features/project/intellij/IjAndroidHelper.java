@@ -16,6 +16,7 @@
 
 package com.facebook.buck.features.project.intellij;
 
+import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import java.nio.file.Path;
@@ -31,9 +32,13 @@ public final class IjAndroidHelper {
    * mess with the user's use of {@code glob(['**&#x2f;*.java'])}. For this reason, we encourage
    * users to target
    */
-  public static String getAndroidGenDir(ProjectFilesystem filesystem) {
-    return PathFormatter.pathWithUnixSeparators(
-        filesystem.getBuckPaths().getBuckOut().resolve("android"));
+  public static String getAndroidGenDir(
+      ProjectFilesystem filesystem, IjProjectConfig projectConfig) {
+    return projectConfig
+        .getAndroidGenDir()
+        .orElse(
+            PathFormatter.pathWithUnixSeparators(
+                filesystem.getBuckPaths().getBuckOut().resolve("android")));
   }
 
   public static String getAndroidApkDir(ProjectFilesystem filesystem) {
@@ -41,8 +46,10 @@ public final class IjAndroidHelper {
   }
 
   public static Path createAndroidGenPath(
-      ProjectFilesystem projectFilesystem, Path moduleBasePath) {
-    return Paths.get(getAndroidGenDir(projectFilesystem)).resolve(moduleBasePath).resolve("gen");
+      ProjectFilesystem projectFilesystem, IjProjectConfig projectConfig, Path moduleBasePath) {
+    return Paths.get(getAndroidGenDir(projectFilesystem, projectConfig))
+        .resolve(moduleBasePath)
+        .resolve("gen");
   }
 
   private IjAndroidHelper() {}

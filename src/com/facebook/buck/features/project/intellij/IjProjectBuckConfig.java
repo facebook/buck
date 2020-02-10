@@ -112,6 +112,8 @@ public class IjProjectBuckConfig {
         .setProjectJdkType(buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "jdk_type"))
         .setAndroidModuleSdkName(
             buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "android_module_sdk_name"))
+        .setAndroidGenDir(
+            buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "android_generated_files_directory"))
         .setAndroidModuleSdkType(
             buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "android_module_sdk_type"))
         .setIntellijModuleSdkName(

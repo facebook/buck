@@ -68,7 +68,10 @@ public abstract class ConfigIgnoredByDaemon implements ConfigView<BuckConfig> {
     ignoreFieldsForDaemonRestartBuilder.put("doctor", ImmutableSet.of("slb_server_pool"));
     ignoreFieldsForDaemonRestartBuilder.put(
         "intellij",
-        ImmutableSet.of("multi_cell_module_support", "kotlin_java_runtime_library_template_path"));
+        ImmutableSet.of(
+            "android_generated_files_directory",
+            "multi_cell_module_support",
+            "kotlin_java_runtime_library_template_path"));
     ignoreFieldsForDaemonRestartBuilder.put(
         "log",
         ImmutableSet.of(

@@ -776,7 +776,8 @@ public class IjModuleGraphTest {
             },
             projectConfig,
             packageFinder);
-    IjModuleFactory moduleFactory = new DefaultIjModuleFactory(filesystem, typeRegistry);
+    IjModuleFactory moduleFactory =
+        new DefaultIjModuleFactory(filesystem, projectConfig, typeRegistry);
     IjLibraryFactory libraryFactory = new DefaultIjLibraryFactory(sourceOnlyResolver);
     return IjModuleGraphFactory.from(
         filesystem,
