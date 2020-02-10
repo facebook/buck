@@ -127,6 +127,15 @@ macos_environment: &macos_environment
   BUCK_NUM_THREADS: 3
   BUCK_PEX_LOCATION: "./new_buck.pex"
 
+windows_environment: &windows_environment
+  PLATFORM: "windows"
+  JAVA_HOME: "C:\\Program Files\\Java\\jdk1.8.0"
+  BUCKROOT: "C:\\Users\\circleci\\buck"
+  ANDROID_SDK: "C:\\Users\\circleci\\android-sdk"
+  TERM: "dumb"
+  BUCK_NUM_THREADS: 3
+  BUCK_PEX_LOCATION: "./new_buck.pex"
+
 jobs:
   linux_build_openjdk8:
     environment:
@@ -766,6 +775,8 @@ jobs:
             ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
             ${BUCK_PEX_LOCATION} test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
   windows_build_test:
+    environment:
+      <<: *ms_windows_environment
     executor: win/default
     steps:
       - checkout
