@@ -776,7 +776,7 @@ jobs:
             ${BUCK_PEX_LOCATION} test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
   windows_build_test:
     environment:
-      <<: *ms_windows_environment
+      <<: *windows_environment
     executor: win/default
     steps:
       - checkout
