@@ -103,6 +103,21 @@ prebuilt_jar(
     ],
 )
 
+prebuilt_jar(
+    name = "grpc-testing",
+    binary_jar = "grpc-testing-1.18.0.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    source_jar = "grpc-testing-1.18.0-sources.jar",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":grpc-core",
+    ],
+)
+
 file_alias(
     name = "protobuf-plugin",
     source = "protoc-gen-grpc-java-1.10.1-osx-x86_64.exe",

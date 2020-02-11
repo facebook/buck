@@ -8,6 +8,7 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/grpc/grpc-core-1.18.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/grpc/grpc-context-1.18.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/remote-apis/remote-apis.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/grpc/grpc-testing-1.18.0.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
