@@ -142,11 +142,11 @@ public class FilesystemBackedBuildFileTreeTest {
   public void shouldIgnoreBuckCacheDirectoriesByDefault() throws IOException {
     Path root = tmp.getRoot();
 
-    Path cacheDir = root.resolve("buck-out/cache");
-    Files.createDirectories(cacheDir);
-    touch(cacheDir.resolve("BUCK"));
+    Path cacheDir = Paths.get("buck-out/cache");
+    Files.createDirectories(root.resolve(cacheDir));
+    touch(root.resolve(cacheDir).resolve("BUCK"));
     Path sibling = cacheDir.resolve("someFile");
-    touch(sibling);
+    touch(root.resolve(sibling));
 
     // Config doesn't set any "ignore" entries.
     ProjectFilesystem filesystem =

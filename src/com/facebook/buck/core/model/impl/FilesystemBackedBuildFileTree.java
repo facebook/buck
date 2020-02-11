@@ -18,6 +18,7 @@ package com.facebook.buck.core.model.impl;
 
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -91,6 +92,7 @@ public class FilesystemBackedBuildFileTree implements BuildFileTree {
    */
   @Override
   public Optional<Path> getBasePathOfAncestorTarget(Path filePath) {
+    Preconditions.checkArgument(!filePath.isAbsolute(), "must be relative: %s", filePath);
 
     // This will do `stat` which might be expensive. In fact, we almost always know if filePath
     // is a file or folder at caller's site, but the API based on Path is just too generic.
