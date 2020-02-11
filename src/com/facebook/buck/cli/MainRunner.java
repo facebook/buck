@@ -880,7 +880,7 @@ public final class MainRunner {
 
       Pair<BuckGlobalState, LifecycleStatus> buckGlobalStateRequest =
           buckGlobalStateLifecycleManager.getBuckGlobalState(
-              cells.getRootCell(),
+              cells,
               knownRuleTypesProvider,
               watchman,
               printConsole,

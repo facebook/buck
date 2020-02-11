@@ -474,7 +474,8 @@ public class TargetsCommand extends AbstractCommand {
               .findFirst()
               .orElseThrow(() -> new BuckUncheckedExecutionException("Unknown cell " + cellName));
 
-      GraphTransformationEngine engine = GraphEngineFactory.create(cell, closer, params);
+      GraphTransformationEngine engine =
+          GraphEngineFactory.create(params.getCells(), cell, closer, params);
 
       builder.put(cellName, engine);
     }

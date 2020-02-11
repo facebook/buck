@@ -127,7 +127,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
 
     BuildPackagePathToUnconfiguredTargetNodePackageComputation transformer =
         BuildPackagePathToUnconfiguredTargetNodePackageComputation.of(
-            unconfiguredTargetNodeToTargetNodeFactory, cell.getRootCell(), false);
+            unconfiguredTargetNodeToTargetNodeFactory, cell, cell.getRootCell(), false);
     UnconfiguredTargetNodeWithDepsPackage unconfiguredTargetNodeWithDepsPackage =
         transformer.transform(
             ImmutableBuildPackagePathToUnconfiguredTargetNodePackageKey.of(Paths.get("")),

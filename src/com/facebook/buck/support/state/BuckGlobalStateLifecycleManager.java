@@ -19,6 +19,7 @@ package com.facebook.buck.support.state;
 import com.facebook.buck.command.config.ConfigDifference;
 import com.facebook.buck.command.config.ConfigDifference.ConfigChange;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
@@ -113,13 +114,15 @@ public class BuckGlobalStateLifecycleManager {
 
   /** Get or create Daemon. */
   public synchronized Pair<BuckGlobalState, LifecycleStatus> getBuckGlobalState(
-      Cell rootCell,
+      Cells cells,
       KnownRuleTypesProvider knownRuleTypesProvider,
       Watchman watchman,
       Console console,
       Clock clock,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       TargetConfigurationSerializer targetConfigurationSerializer) {
+
+    Cell rootCell = cells.getRootCell();
 
     BuckGlobalState currentState = buckGlobalState;
     LifecycleStatus lifecycleStatus =
@@ -211,7 +214,7 @@ public class BuckGlobalStateLifecycleManager {
 
       buckGlobalState =
           BuckGlobalStateFactory.create(
-              rootCell,
+              cells,
               knownRuleTypesProvider,
               watchman,
               webServer,

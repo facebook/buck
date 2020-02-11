@@ -21,7 +21,6 @@ import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.artifact_cache.SingletonArtifactCacheFactory;
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
-import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
@@ -102,7 +101,7 @@ public class CommandRunnerParamsForTesting {
   public static CommandRunnerParams createCommandRunnerParamsForTesting(
       DepsAwareExecutor<? super ComputeResult, ?> executor,
       Console console,
-      Cell cell,
+      Cells cells,
       ArtifactCache artifactCache,
       BuckEventBus eventBus,
       BuckConfig config,
@@ -113,11 +112,11 @@ public class CommandRunnerParamsForTesting {
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
     KnownRuleTypesProvider knownRuleTypesProvider =
         TestKnownRuleTypesProvider.create(pluginManager);
-    Parser parser = TestParserFactory.create(executor, cell, knownRuleTypesProvider);
+    Parser parser = TestParserFactory.create(executor, cells.getRootCell(), knownRuleTypesProvider);
     return createCommandRunnerParamsForTesting(
         executor,
         console,
-        cell,
+        cells,
         artifactCache,
         eventBus,
         config,
@@ -133,7 +132,7 @@ public class CommandRunnerParamsForTesting {
   public static CommandRunnerParams createCommandRunnerParamsForTesting(
       DepsAwareExecutor<? super ComputeResult, ?> executor,
       Console console,
-      Cell cell,
+      Cells cells,
       ArtifactCache artifactCache,
       BuckEventBus eventBus,
       BuckConfig config,
@@ -144,6 +143,7 @@ public class CommandRunnerParamsForTesting {
       PluginManager pluginManager,
       KnownRuleTypesProvider knownRuleTypesProvider,
       Parser parser) {
+
     ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
 
@@ -158,18 +158,18 @@ public class CommandRunnerParamsForTesting {
 
     BuckGlobalState buckGlobalState =
         BuckGlobalStateFactory.create(
-            cell,
+            cells,
             knownRuleTypesProvider,
             WatchmanFactory.NULL_WATCHMAN,
             Optional.empty(),
             new ParsingUnconfiguredBuildTargetViewFactory(),
-            new TargetConfigurationSerializerForTests(cell.getCellPathResolver()),
+            new TargetConfigurationSerializerForTests(cells.getRootCell().getCellPathResolver()),
             FakeClock.doNotCare());
 
     return ImmutableCommandRunnerParams.of(
         console,
         new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)),
-        new Cells(cell),
+        new Cells(cells.getRootCell()),
         WatchmanFactory.NULL_WATCHMAN,
         new InstrumentedVersionedTargetGraphCache(
             new VersionedTargetGraphCache(), new NoOpCacheStatsTracker()),
@@ -178,7 +178,7 @@ public class CommandRunnerParamsForTesting {
         new ParsingUnconfiguredBuildTargetViewFactory(),
         Optional.empty(),
         Optional.empty(),
-        TargetConfigurationSerializerForTests.create(cell.getCellPathResolver()),
+        TargetConfigurationSerializerForTests.create(cells.getRootCell().getCellPathResolver()),
         parser,
         eventBus,
         platform,
@@ -213,7 +213,7 @@ public class CommandRunnerParamsForTesting {
         MetadataProviderFactory.emptyMetadataProvider(),
         getManifestSupplier(),
         buckGlobalState,
-        cell.getRoot());
+        cells.getRootCell().getRoot());
   }
 
   public static Builder builder() {
@@ -248,7 +248,7 @@ public class CommandRunnerParamsForTesting {
       return createCommandRunnerParamsForTesting(
           executor,
           console,
-          cell.getRootCell(),
+          cell,
           artifactCache,
           eventBus,
           config,

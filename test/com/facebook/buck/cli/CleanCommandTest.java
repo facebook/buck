@@ -24,7 +24,6 @@ import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.artifact_cache.SingletonArtifactCacheFactory;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.config.DirCacheEntry;
-import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellName;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
@@ -261,10 +260,10 @@ public class CleanCommandTest {
     BuckConfig buckConfig = buckConfigBuilder.build();
     Cells cell =
         new TestCellBuilder().setFilesystem(projectFilesystem).setBuckConfig(buckConfig).build();
-    return createCommandRunnerParams(buckConfig, cell.getRootCell());
+    return createCommandRunnerParams(buckConfig, cell);
   }
 
-  private CommandRunnerParams createCommandRunnerParams(BuckConfig buckConfig, Cell cell) {
+  private CommandRunnerParams createCommandRunnerParams(BuckConfig buckConfig, Cells cells) {
     CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>>
         depsAwareExecutorSupplier =
             MainRunner.getDepsAwareExecutorSupplier(buckConfig, BuckEventBusForTests.newInstance());
@@ -272,7 +271,7 @@ public class CleanCommandTest {
     return CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
         depsAwareExecutorSupplier.get(),
         new TestConsole(),
-        cell,
+        cells,
         new SingletonArtifactCacheFactory(new NoopArtifactCache()).newInstance(),
         BuckEventBusForTests.newInstance(),
         buckConfig,

@@ -136,7 +136,7 @@ public class TargetsCommandTest {
         CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
             depsAwareExecutor.get(),
             console,
-            cell.getRootCell(),
+            cell,
             artifactCache,
             eventBus,
             FakeBuckConfig.builder().build(),

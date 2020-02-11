@@ -112,7 +112,7 @@ public class QueryCommandTest {
         CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
             executor.get(),
             console,
-            cell.getRootCell(),
+            cell,
             artifactCache,
             eventBus,
             FakeBuckConfig.builder().build(),

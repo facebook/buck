@@ -84,7 +84,7 @@ public class GraphEngineFactory {
    * @param params All other parameters used to run the command.
    */
   public static GraphTransformationEngine create(
-      Cell cell, Closer closer, CommandRunnerParams params) {
+      Cells cells, Cell cell, Closer closer, CommandRunnerParams params) {
     ParserConfig parserConfig = cell.getBuckConfig().getView(ParserConfig.class);
 
     // COMPUTATION: discover paths of build files needed to be parsed for provided target
@@ -201,7 +201,7 @@ public class GraphEngineFactory {
     BuildPackagePathToUnconfiguredTargetNodePackageComputation
         buildPackagePathToUnconfiguredTargetNodePackageComputation =
             BuildPackagePathToUnconfiguredTargetNodePackageComputation.of(
-                unconfiguredTargetNodeToTargetNodeFactory, cell, false);
+                unconfiguredTargetNodeToTargetNodeFactory, cells, cell, false);
 
     // COMPOSITION: build target pattern to raw target node package
     ComposedComputation<
