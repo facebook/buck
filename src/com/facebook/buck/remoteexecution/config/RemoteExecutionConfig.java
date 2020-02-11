@@ -131,7 +131,7 @@ public abstract class RemoteExecutionConfig implements ConfigView<BuckConfig> {
 
   // Should retry actions locally if action exit code is returned and is not 0.
   public static final String IS_LOCAL_FALLBACK_ENABLED_FOR_COMPLETED_ACTION_KEY =
-      "is_local_fallback_for_completed_actions";
+      "is_local_fallback_enabled_for_completed_actions";
 
   public static final String AUTO_RE_BUILD_PROJECTS_WHITELIST_KEY =
       "auto_re_build_projects_whitelist";
