@@ -781,35 +781,28 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install ant and OpenJDK8
-          command: |
-            choco install ant --version=1.9.7
-            refreshenv
-            choco install adoptopenjdk8
-            refreshenv
-            ant -version
-            java -version
-            python --version
-            go version
+          name: Install ant
+          command: choco install ant --version=1.9.7
+          shell: cmd.exe
+      - run: 
+          name: Install OpenJDK8
+          command: choco install adoptopenjdk8
+          shell: cmd.exe
+      - run:
+          name: Refresh environment variables
+          command: refreshenv
           shell: cmd.exe
       - run:
           name: Ant build
-          command: |
-            refreshenv
-            cd %BUCKROOT%
-            ant
+          command: cd %BUCKROOT% && ant
           shell: cmd.exe
       - run:
           name: Buck build
-          command: |
-            refreshenv
-            cd %BUCKROOT%
-            bin\buck build buck
+          command: cd %BUCKROOT% && bin\buck build buck
           shell: cmd.exe
       - run:
           name: Run Windows tests
           command: |
-            refreshenv
             cd %BUCKROOT%
             bin\buck test --all --test-selectors=:windows_failures.txt --test-selectors=:windows_cxx_support.txt
           shell: cmd.exe
