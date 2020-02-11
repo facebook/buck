@@ -777,6 +777,7 @@ jobs:
   windows_build_test:
     environment:
       <<: *windows_environment
+    working_directory: "C:\\Users\\circleci\\buck"
     executor: win/default
     steps:
       - checkout
