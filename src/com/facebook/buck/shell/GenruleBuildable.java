@@ -240,17 +240,6 @@ public class GenruleBuildable implements Buildable {
     this.cmdExe = cmdExe;
     this.type = type;
     this.out = out;
-    this.outs =
-        outs.map(
-            outputs -> {
-              ImmutableMap.Builder<OutputLabel, ImmutableSet<String>> builder =
-                  ImmutableMap.builderWithExpectedSize(outputs.size() + 1);
-              outputs
-                  .entrySet()
-                  .forEach(e -> builder.put(OutputLabel.of(e.getKey()), e.getValue()));
-              builder.put(OutputLabel.defaultLabel(), DEFAULT_OUTS);
-              return builder.build();
-            });
     this.outputLabelsSupplier = MoreSuppliers.memoize(this::getOutputLabelsSupplier);
     this.enableSandboxingInGenrule = enableSandboxingInGenrule;
     this.isCacheable = isCacheable;
@@ -264,11 +253,15 @@ public class GenruleBuildable implements Buildable {
         out.isPresent() ^ outs.isPresent(), "Genrule unexpectedly has both 'out' and 'outs'.");
     if (outs.isPresent()) {
       ImmutableMap<String, ImmutableSet<String>> outputs = outs.get();
-      ImmutableMap.Builder<OutputLabel, ImmutableSet<OutputPath>> mapBuilder =
-          ImmutableMap.builderWithExpectedSize(outputs.size());
+      ImmutableMap.Builder<OutputLabel, ImmutableSet<String>> outsBuilder =
+          ImmutableMap.builderWithExpectedSize(outputs.size() + 1);
+      ImmutableMap.Builder<OutputLabel, ImmutableSet<OutputPath>> outputPathsBuilder =
+          ImmutableMap.builderWithExpectedSize(outputs.size() + 1);
       for (Map.Entry<String, ImmutableSet<String>> outputLabelToOutputs : outputs.entrySet()) {
-        mapBuilder.put(
-            OutputLabel.of(outputLabelToOutputs.getKey()),
+        OutputLabel outputLabel = OutputLabel.of(outputLabelToOutputs.getKey());
+        outsBuilder.put(outputLabel, outputLabelToOutputs.getValue());
+        outputPathsBuilder.put(
+            outputLabel,
             outputLabelToOutputs.getValue().stream()
                 .map(
                     p -> {
@@ -277,9 +270,13 @@ public class GenruleBuildable implements Buildable {
                     })
                 .collect(ImmutableSet.toImmutableSet()));
       }
-      this.outputPaths = Optional.of(mapBuilder.build());
+      outsBuilder.put(OutputLabel.defaultLabel(), DEFAULT_OUTS);
+      outputPathsBuilder.put(OutputLabel.defaultLabel(), DEFAULT_OUTPUTS);
+      this.outs = Optional.of(outsBuilder.build());
+      this.outputPaths = Optional.of(outputPathsBuilder.build());
       this.outputPath = Optional.empty();
     } else {
+      this.outs = Optional.empty();
       // Sanity check for the output paths.
       this.outputPath = Optional.of(new PublicOutputPath(getLegacyPath(filesystem, out.get())));
       this.outputPaths = Optional.empty();
@@ -304,9 +301,6 @@ public class GenruleBuildable implements Buildable {
     return outputPaths
         .map(
             paths -> {
-              if (outputLabel.isDefault()) {
-                return DEFAULT_OUTPUTS;
-              }
               ImmutableSet<OutputPath> pathsForLabel = paths.get(outputLabel);
               if (pathsForLabel == null) {
                 throw new HumanReadableException(
@@ -332,14 +326,9 @@ public class GenruleBuildable implements Buildable {
   }
 
   private ImmutableSet<OutputLabel> getOutputLabelsSupplier() {
-    if (!outputPaths.isPresent()) {
-      return ImmutableSet.of(OutputLabel.defaultLabel());
-    }
-    ImmutableSet<OutputLabel> outputLabels = outputPaths.get().keySet();
-    return ImmutableSet.<OutputLabel>builderWithExpectedSize(outputLabels.size() + 1)
-        .addAll(outputLabels)
-        .add(OutputLabel.defaultLabel())
-        .build();
+    return outputPaths
+        .map(paths -> paths.keySet())
+        .orElse(ImmutableSet.of(OutputLabel.defaultLabel()));
   }
 
   /** Returns a String representation of the output path relative to the root output directory. */
