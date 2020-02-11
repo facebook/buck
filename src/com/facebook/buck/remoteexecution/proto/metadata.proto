@@ -18,6 +18,8 @@ syntax = "proto3";
 
 package facebook.remote_execution;
 
+import "google/protobuf/wrappers.proto";
+
 option java_multiple_files = true;
 option java_outer_classname = "RemoteExecutionMetadataProto";
 option java_package = "com.facebook.buck.remoteexecution.proto";
@@ -154,6 +156,9 @@ message ExecutedActionInfo {
   int64 cpu_stat_usage_usec = 1;
   int64 cpu_stat_user_usec = 2;
   int64 cpu_stat_system_usec = 3;
+  // Whether we should fallback to local retry if this action fails with exit code 1.
+  // Fallback means we don't trust if this action failed and it may be flaky.
+  BoolValue is_fallback_enabled_for_completed_action = 4;
 }
 
 message DebugInfo {

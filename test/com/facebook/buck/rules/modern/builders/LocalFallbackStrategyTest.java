@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.modern.builders;
 
-import build.bazel.remote.execution.v2.ExecutedActionMetadata;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.build.engine.BuildRuleStatus;
@@ -31,6 +30,9 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.remoteexecution.event.LocalFallbackEvent;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent.State;
+import com.facebook.buck.remoteexecution.proto.ExecutedActionInfo;
+import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
+import com.facebook.buck.remoteexecution.proto.WorkerInfo;
 import com.facebook.buck.remoteexecution.util.MultiThreadedBlobUploader;
 import com.facebook.buck.rules.modern.builders.LocalFallbackStrategy.FallbackStrategyBuildResult;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -42,6 +44,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
+import com.google.protobuf.BoolValue;
 import io.grpc.Status;
 import java.io.IOException;
 import java.util.List;
@@ -158,14 +161,22 @@ public class LocalFallbackStrategyTest {
   }
 
   @Test
-  public void testExitCode() throws ExecutionException, InterruptedException, IOException {
+  public void testExitCodeAndFallback()
+      throws ExecutionException, InterruptedException, IOException {
     Capture<LocalFallbackEvent> eventCapture = Capture.newInstance(CaptureType.ALL);
     eventBus.post(EasyMock.capture(eventCapture));
     EasyMock.expectLastCall().times(2);
     EasyMock.replay(eventBus);
     String mockWorker = "mock_worker";
-    ExecutedActionMetadata executedActionMetadata =
-        ExecutedActionMetadata.newBuilder().setWorker(mockWorker).build();
+    RemoteExecutionMetadata remoteExecutionMetadata =
+        RemoteExecutionMetadata.newBuilder()
+            .setWorkerInfo(WorkerInfo.newBuilder().setHostname(mockWorker).build())
+            .setExecutedActionInfo(
+                ExecutedActionInfo.newBuilder()
+                    .setIsFallbackEnabledForCompletedAction(
+                        BoolValue.newBuilder().setValue(true).build())
+                    .build())
+            .build();
 
     StepFailedException exc =
         StepFailedException.createForFailingStepWithExitCode(
@@ -177,7 +188,7 @@ public class LocalFallbackStrategyTest {
             },
             executionContext,
             StepExecutionResult.builder().setExitCode(1).setStderr("").build(),
-            executedActionMetadata);
+            remoteExecutionMetadata);
 
     // Just here to test if this is serializable by jackson, as we do Log.warn this.
     new ObjectMapper().writeValueAsString(exc);
@@ -195,7 +206,7 @@ public class LocalFallbackStrategyTest {
     EasyMock.replay(strategyBuildResult, buildStrategyContext);
     FallbackStrategyBuildResult fallbackStrategyBuildResult =
         new FallbackStrategyBuildResult(
-            RULE_NAME, strategyBuildResult, buildStrategyContext, eventBus, true, false, true);
+            RULE_NAME, strategyBuildResult, buildStrategyContext, eventBus, true, false, false);
     Assert.assertEquals(
         localResult.getStatus(),
         fallbackStrategyBuildResult.getBuildResult().get().get().getStatus());
@@ -207,7 +218,8 @@ public class LocalFallbackStrategyTest {
     LocalFallbackEvent.Finished finishedEvent = (LocalFallbackEvent.Finished) events.get(1);
     Assert.assertEquals(finishedEvent.getRemoteGrpcStatus(), Status.OK);
     Assert.assertEquals(finishedEvent.getExitCode(), OptionalInt.of(1));
-    Assert.assertEquals(finishedEvent.getExecutedActionMetadata().get().getWorker(), mockWorker);
+    Assert.assertEquals(
+        finishedEvent.getRemoteExecutionMetadata().get().getWorkerInfo().getHostname(), mockWorker);
   }
 
   @Test

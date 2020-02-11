@@ -555,7 +555,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
           },
           strategyContext.getExecutionContext(),
           StepExecutionResult.builder().setExitCode(exitCode).setStderr(stderr).build(),
-          result.getActionMetadata());
+          result.getRemoteExecutionMetadata());
     }
 
     stdout.ifPresent(x -> eventBus.post(ConsoleEvent.info(x)));

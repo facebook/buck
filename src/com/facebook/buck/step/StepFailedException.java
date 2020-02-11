@@ -16,11 +16,11 @@
 
 package com.facebook.buck.step;
 
-import build.bazel.remote.execution.v2.ExecutedActionMetadata;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.ExceptionWithContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.WrapsException;
+import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
 import com.facebook.buck.util.json.CustomOptionalProtoSerializer;
 import com.facebook.buck.util.string.MoreStrings;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -38,7 +38,7 @@ public class StepFailedException extends Exception implements WrapsException, Ex
   private final OptionalInt exitCode;
 
   @JsonSerialize(using = CustomOptionalProtoSerializer.class)
-  private Optional<ExecutedActionMetadata> executedActionMetadata;
+  private Optional<RemoteExecutionMetadata> remoteExecutionMetadata;
 
   /** Callers should use {@link #createForFailingStepWithExitCode} unless in a unit test. */
   private StepFailedException(
@@ -47,7 +47,7 @@ public class StepFailedException extends Exception implements WrapsException, Ex
     this.step = step;
     this.description = description;
     this.exitCode = exitCode;
-    this.executedActionMetadata = Optional.empty();
+    this.remoteExecutionMetadata = Optional.empty();
   }
 
   @Override
@@ -91,10 +91,10 @@ public class StepFailedException extends Exception implements WrapsException, Ex
       Step step,
       ExecutionContext context,
       StepExecutionResult executionResult,
-      ExecutedActionMetadata executedActionMetadata) {
+      RemoteExecutionMetadata remoteExecutionMetadata) {
     StepFailedException ret =
         StepFailedException.createForFailingStepWithExitCode(step, context, executionResult);
-    ret.executedActionMetadata = Optional.of(executedActionMetadata);
+    ret.remoteExecutionMetadata = Optional.of(remoteExecutionMetadata);
     return ret;
   }
 
@@ -128,8 +128,8 @@ public class StepFailedException extends Exception implements WrapsException, Ex
     return exitCode;
   }
 
-  public Optional<ExecutedActionMetadata> getExecutedActionMetadata() {
-    return executedActionMetadata;
+  public Optional<RemoteExecutionMetadata> getRemoteExecutionMetadata() {
+    return remoteExecutionMetadata;
   }
 
   @Override
