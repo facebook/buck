@@ -26,7 +26,9 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
+import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.remoteexecution.event.LocalFallbackEvent;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent.State;
 import com.facebook.buck.remoteexecution.util.MultiThreadedBlobUploader;
@@ -402,6 +404,23 @@ public class LocalFallbackStrategyTest {
     Assert.assertTrue(events.get(0) instanceof LocalFallbackEvent.Started);
     Assert.assertTrue(events.get(1) instanceof LocalFallbackEvent.Finished);
     LocalFallbackEvent.Finished finishedEvent = (LocalFallbackEvent.Finished) events.get(1);
+    Assert.assertEquals(finishedEvent.getRemoteGrpcStatus(), Status.OK);
+  }
+
+  @Test
+  public void testEventBusLogForFallbackDisabled() throws ExecutionException, InterruptedException {
+    Capture<AbstractBuckEvent> eventCapture = Capture.newInstance(CaptureType.ALL);
+    eventBus.post(EasyMock.capture(eventCapture));
+    EasyMock.expectLastCall().times(3);
+    EasyMock.replay(eventBus);
+
+    testRemoteActionExceptionFallbackDisabledForBuildError();
+
+    List<AbstractBuckEvent> events = eventCapture.getValues();
+    Assert.assertTrue(events.get(0) instanceof LocalFallbackEvent.Started);
+    Assert.assertTrue(events.get(1) instanceof ConsoleEvent);
+    Assert.assertTrue(events.get(2) instanceof LocalFallbackEvent.Finished);
+    LocalFallbackEvent.Finished finishedEvent = (LocalFallbackEvent.Finished) events.get(2);
     Assert.assertEquals(finishedEvent.getRemoteGrpcStatus(), Status.OK);
   }
 

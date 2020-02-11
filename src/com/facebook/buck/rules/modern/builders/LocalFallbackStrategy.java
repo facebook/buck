@@ -25,6 +25,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.remoteexecution.event.LocalFallbackEvent;
 import com.facebook.buck.remoteexecution.event.LocalFallbackEvent.Result;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent.State;
@@ -272,6 +273,10 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
             t, "Remote build failed for a build rule so trying locally now for [%s].", buildTarget);
         fallbackBuildToLocalStrategy();
       } else {
+        eventBus.post(
+            ConsoleEvent.severe(
+                "The build failed trying to build remotely. This is most likely due to a missing dependency"
+                ));
         completeCombinedFutureWithException(t, remoteBuildResult.get(), Result.NOT_RUN);
       }
     }
