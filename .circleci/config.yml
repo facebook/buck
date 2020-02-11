@@ -789,16 +789,12 @@ jobs:
           command: choco install adoptopenjdk8
           shell: cmd.exe
       - run:
-          name: Refresh environment variables
-          command: refreshenv
-          shell: cmd.exe
-      - run:
           name: Ant build
-          command: cd %BUCKROOT% && ant
+          command: cd %BUCKROOT% && refreshenv && ant
           shell: cmd.exe
       - run:
           name: Buck build
-          command: cd %BUCKROOT% && bin\buck build buck
+          command: cd %BUCKROOT% && refreshenv && bin\buck build buck
           shell: cmd.exe
       - run:
           name: Run Windows tests
