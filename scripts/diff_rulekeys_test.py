@@ -343,8 +343,7 @@ class TestRuleKeyDiff(unittest.TestCase):
                 os.unlink(temp_file.name)
 
     def test_diff_all(self):
-        name = "//:lib"
-        result = diffAll(
+        result, _ = diffAll(
             RuleKeyStructureInfo(
                 MockFile(
                     [

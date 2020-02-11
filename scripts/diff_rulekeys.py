@@ -434,7 +434,7 @@ def diffInternal(
             right_index = dict(
                 [(right_name, i) for (i, right_name) in enumerate(right_names)]
             )
-            for left_idx, (left_v, left_key) in enumerate(left_with_keys):
+            for left_idx, (_left_v, left_key) in enumerate(left_with_keys):
                 left_name = left_info.getNameForKey(left_key)
                 if left_name is None or left_idx >= len(right_with_keys):
                     continue
@@ -595,6 +595,7 @@ def diffAll(
     )
     all_seen = set()
     all_results = []
+    matches = 0
     while True:
         if not seen_left_names:
             break
@@ -614,6 +615,7 @@ def diffAll(
             )
             continue
         if left_key == right_key:
+            matches += 1
             continue
         print("Analyzing", name, "for changes...")
 
@@ -632,10 +634,10 @@ def diffAll(
                 "I don't know why RuleKeys for {} do not match.".format(name)
             )
         all_results.extend(single_result)
-        for l, r in visited_keys:
+        for l, _r in visited_keys:
             left_name = left_info.getNameForKey(l)
             seen_left_names.pop(left_name, False)
-    return all_results
+    return all_results, matches
 
 
 def compute_rulekey_mismatches(
@@ -714,7 +716,9 @@ def main():
                 right_args,
                 "]. This might cause " + "spurious differences to be listed.",
             )
-        print("\n".join(diffAll(left, right, args.verbose)))
+        all_results, matches = diffAll(left, right, args.verbose)
+        print("\n".join(all_results))
+        print("\nDone comparing, {} rulekeys matched.".format(matches))
 
 
 if __name__ == "__main__":
