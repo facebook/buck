@@ -72,7 +72,6 @@ enum StringTemplateFile {
       throws IOException {
 
     byte[] renderedContentsBytes = contents.render().getBytes();
-    projectFilesystem.createParentDirs(path);
     if (projectFilesystem.exists(path)) {
       Sha1HashCode fileSha1 = projectFilesystem.computeSha1(path);
       Sha1HashCode contentsSha1 =
@@ -97,6 +96,7 @@ enum StringTemplateFile {
         }
       }
     } else {
+      projectFilesystem.createParentDirs(path);
       try (OutputStream outputStream = projectFilesystem.newFileOutputStream(path)) {
         outputStream.write(renderedContentsBytes);
       }
