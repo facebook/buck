@@ -779,10 +779,6 @@ jobs:
     working_directory: "C:\\Users\\circleci\\buck"
     executor: win/default
     steps:
-      - run:
-          name: Create working directory
-          command: |
-            mkdir %BUCKROOT%
       - checkout
       - run:
           name: Install ant and OpenJDK8
