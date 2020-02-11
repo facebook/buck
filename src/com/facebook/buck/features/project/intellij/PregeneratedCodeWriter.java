@@ -49,7 +49,7 @@ public class PregeneratedCodeWriter {
   }
 
   public void write() throws IOException {
-    if (!projectConfig.isAutogenerateAndroidFacetSourcesEnabled()) {
+    if (projectConfig.isGeneratingDummyRDotJavaEnabled()) {
       projectDataPreparer
           .getModulesToBeWritten()
           .parallelStream()
@@ -89,9 +89,7 @@ public class PregeneratedCodeWriter {
       return;
     }
 
-    if (projectConfig.isGeneratingDummyRDotJavaEnabled()) {
-      writeGeneratedByIdeaClassToFile(androidFacet.get(), packageName.get(), "R", null);
-    }
+    writeGeneratedByIdeaClassToFile(androidFacet.get(), packageName.get(), "R", null);
 
     writeGeneratedByIdeaClassToFile(androidFacet.get(), packageName.get(), "Manifest", null);
   }
