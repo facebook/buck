@@ -23,7 +23,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.RuleType;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.util.log.Logger;
@@ -42,7 +42,7 @@ public class BuiltTargetVerifier {
       Cell cell,
       RuleType buildRuleType,
       Path buildFile,
-      UnconfiguredBuildTargetView target,
+      UnconfiguredBuildTarget target,
       BaseDescription<?> description,
       Map<String, Object> rawNode) {
     UnflavoredBuildTarget unflavoredBuildTargetView = target.getUnflavoredBuildTarget();

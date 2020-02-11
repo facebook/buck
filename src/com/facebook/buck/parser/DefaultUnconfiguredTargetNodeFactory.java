@@ -22,7 +22,7 @@ import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.RuleType;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableUnconfiguredTargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.Package;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
@@ -110,7 +110,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
   public UnconfiguredTargetNode create(
       Cell cell,
       Path buildFile,
-      UnconfiguredBuildTargetView target,
+      UnconfiguredBuildTarget target,
       DependencyStack dependencyStack,
       Map<String, Object> rawAttributes,
       Package pkg) {
@@ -127,7 +127,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
     builtTargetVerifier.verifyBuildTarget(
         cell, ruleType, buildFile, target, description, rawAttributes);
 
-    String visibilityDefinerDescription = target.getData().getFullyQualifiedName();
+    String visibilityDefinerDescription = target.getFullyQualifiedName();
 
     ImmutableSet<VisibilityPattern> visibilityPatterns =
         VisibilityPatterns.createFromStringList(
@@ -157,7 +157,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
         convertSelects(rawAttributes, target.getCellRelativeBasePath().getPath(), dependencyStack);
 
     return ImmutableUnconfiguredTargetNode.of(
-        target.getData(), ruleType, withSelects, visibilityPatterns, withinViewPatterns);
+        target, ruleType, withSelects, visibilityPatterns, withinViewPatterns);
   }
 
   private static RuleType parseRuleTypeFromRawRule(
@@ -168,7 +168,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
   }
 
   private void assertRawTargetNodeAttributesNotConfigurable(
-      UnconfiguredBuildTargetView buildTarget, Map<String, Object> rawTargetNodeAttributes) {
+      UnconfiguredBuildTarget buildTarget, Map<String, Object> rawTargetNodeAttributes) {
     for (Map.Entry<String, ?> entry : rawTargetNodeAttributes.entrySet()) {
       Preconditions.checkState(
           !(entry.getValue() instanceof SelectorList),

@@ -61,6 +61,10 @@ public class BuildTarget implements Comparable<BuildTarget>, DependencyStack.Ele
     return unconfiguredBuildTargetView;
   }
 
+  public UnconfiguredBuildTarget getUnconfiguredBuildTarget() {
+    return getUnconfiguredBuildTargetView().getData();
+  }
+
   public UnflavoredBuildTarget getUnflavoredBuildTarget() {
     return unconfiguredBuildTargetView.getUnflavoredBuildTarget();
   }

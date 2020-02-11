@@ -19,7 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
@@ -158,33 +158,33 @@ class DaemonicCellState {
   /** Type-safe accessor to one of state caches */
   static class CellCacheType<K, T> {
     private final Function<DaemonicCellState, Cache<K, T>> getCache;
-    private final Function<K, UnconfiguredBuildTargetView> keyToUnconfiguredBuildTargetView;
+    private final Function<K, UnconfiguredBuildTarget> keyToUnconfiguredBuildTarget;
     private final Function<K, UnflavoredBuildTarget> keyToUnflavoredBuildTargetView;
 
     CellCacheType(
         Function<DaemonicCellState, Cache<K, T>> getCache,
-        Function<K, UnconfiguredBuildTargetView> keyToUnconfiguredBuildTargetView,
+        Function<K, UnconfiguredBuildTarget> keyToUnconfiguredBuildTarget,
         Function<K, UnflavoredBuildTarget> keyToUnflavoredBuildTargetView) {
       this.getCache = getCache;
-      this.keyToUnconfiguredBuildTargetView = keyToUnconfiguredBuildTargetView;
+      this.keyToUnconfiguredBuildTarget = keyToUnconfiguredBuildTarget;
       this.keyToUnflavoredBuildTargetView = keyToUnflavoredBuildTargetView;
     }
 
-    UnconfiguredBuildTargetView convertToUnconfiguredBuildTargetView(K key) {
-      return keyToUnconfiguredBuildTargetView.apply(key);
+    UnconfiguredBuildTarget convertToUnconfiguredBuildTargetView(K key) {
+      return keyToUnconfiguredBuildTarget.apply(key);
     }
   }
 
-  static final CellCacheType<UnconfiguredBuildTargetView, UnconfiguredTargetNode>
+  static final CellCacheType<UnconfiguredBuildTarget, UnconfiguredTargetNode>
       RAW_TARGET_NODE_CACHE_TYPE =
           new CellCacheType<>(
               state -> state.rawTargetNodeCache,
               k -> k,
-              UnconfiguredBuildTargetView::getUnflavoredBuildTarget);
+              UnconfiguredBuildTarget::getUnflavoredBuildTarget);
   static final CellCacheType<BuildTarget, TargetNode<?>> TARGET_NODE_CACHE_TYPE =
       new CellCacheType<>(
           state -> state.targetNodeCache,
-          BuildTarget::getUnconfiguredBuildTargetView,
+          BuildTarget::getUnconfiguredBuildTarget,
           BuildTarget::getUnflavoredBuildTarget);
 
   private Cache<?, ?>[] typedNodeCaches() {
@@ -194,7 +194,7 @@ class DaemonicCellState {
   /** Keeps caches by the object type supported by the cache. */
   private final Cache<BuildTarget, TargetNode<?>> targetNodeCache;
 
-  private final Cache<UnconfiguredBuildTargetView, UnconfiguredTargetNode> rawTargetNodeCache;
+  private final Cache<UnconfiguredBuildTarget, UnconfiguredTargetNode> rawTargetNodeCache;
 
   private final AutoCloseableReadWriteUpdateLock cachesLock;
   private final int parsingThreads;
@@ -287,7 +287,7 @@ class DaemonicCellState {
 
   /**
    * Invalidates all target nodes defined in {@param path}. Optionally also invalidates the build
-   * targets {@link UnflavoredBuildTargetView} depending on {@param invalidateBuildTargets}.
+   * targets {@link UnflavoredBuildTarget} depending on {@param invalidateBuildTargets}.
    *
    * @return The number of invalidated nodes.
    */

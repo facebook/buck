@@ -224,4 +224,21 @@ public class UnconfiguredBuildTarget
       @JsonProperty("flavors") ImmutableSortedSet<Flavor> flavors) {
     return of(cell, BaseName.of(baseName), name, flavors);
   }
+
+  public UnconfiguredBuildTarget withoutFlavors() {
+    return of(getCell(), getBaseName(), getName(), NO_FLAVORS);
+  }
+
+  public UnconfiguredBuildTarget withLocalName(String localName) {
+    return of(getCell(), getBaseName(), localName, flavors);
+  }
+
+  public BuildTarget configure(TargetConfiguration targetConfiguration) {
+    return BuildTarget.of(UnconfiguredBuildTargetView.of(this), targetConfiguration);
+  }
+
+  @JsonIgnore
+  public boolean isFlavored() {
+    return !getFlavors().isEmpty();
+  }
 }

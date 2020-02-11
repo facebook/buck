@@ -21,7 +21,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.impl.FilesystemBackedBuildFileTree;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
@@ -333,7 +333,7 @@ public class DaemonicParserState {
 
   private final DaemonicCacheView<BuildTarget, TargetNode<?>> targetNodeCache =
       new DaemonicCacheView<>(DaemonicCellState.TARGET_NODE_CACHE_TYPE);
-  private final DaemonicCacheView<UnconfiguredBuildTargetView, UnconfiguredTargetNode>
+  private final DaemonicCacheView<UnconfiguredBuildTarget, UnconfiguredTargetNode>
       rawTargetNodeCache = new DaemonicCacheView<>(DaemonicCellState.RAW_TARGET_NODE_CACHE_TYPE);
 
   /**
@@ -428,7 +428,7 @@ public class DaemonicParserState {
 
   public static final CacheType<BuildTarget, TargetNode<?>> TARGET_NODE_CACHE_TYPE =
       new CacheType<>(state -> state.targetNodeCache);
-  public static final CacheType<UnconfiguredBuildTargetView, UnconfiguredTargetNode>
+  public static final CacheType<UnconfiguredBuildTarget, UnconfiguredTargetNode>
       RAW_TARGET_NODE_CACHE_TYPE = new CacheType<>(state -> state.rawTargetNodeCache);
 
   /**

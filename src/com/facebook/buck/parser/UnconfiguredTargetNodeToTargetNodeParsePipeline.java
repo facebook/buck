@@ -25,7 +25,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
@@ -128,7 +128,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
         rawTargetNodeToTargetNodeFactory.createTargetNode(
             cell,
             cell.getBuckConfigView(ParserConfig.class)
-                .getAbsolutePathToBuildFile(cell, buildTarget.getUnconfiguredBuildTargetView()),
+                .getAbsolutePathToBuildFile(cell, buildTarget.getUnconfiguredBuildTarget()),
             buildTarget,
             dependencyStack,
             rawNode,
@@ -199,7 +199,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
    */
   ListenableFuture<TargetNode<?>> getRequestedTargetNodeJob(
       Cell cell,
-      UnconfiguredBuildTargetView unconfiguredTarget,
+      UnconfiguredBuildTarget unconfiguredTarget,
       Optional<TargetConfiguration> globalTargetConfiguration) {
     ListenableFuture<UnconfiguredTargetNode> rawTargetNodeFuture =
         unconfiguredTargetNodePipeline.getNodeJob(
@@ -241,8 +241,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
                     ImmutableList.builderWithExpectedSize(allToConvert.size());
 
                 for (UnconfiguredTargetNode from : allToConvert) {
-                  UnconfiguredBuildTargetView unconfiguredTarget =
-                      UnconfiguredBuildTargetView.of(from.getBuildTarget());
+                  UnconfiguredBuildTarget unconfiguredTarget = from.getBuildTarget();
                   ListenableFuture<TargetNode<?>> targetNode =
                       configureRequestedTarget(
                           cell, unconfiguredTarget, globalTargetConfiguration, from);
@@ -286,7 +285,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
    */
   private ListenableFuture<TargetNode<?>> configureRequestedTarget(
       Cell cell,
-      UnconfiguredBuildTargetView unconfiguredTarget,
+      UnconfiguredBuildTarget unconfiguredTarget,
       Optional<TargetConfiguration> globalTargetConfiguration,
       UnconfiguredTargetNode unconfiguredTargetNode) {
     TargetConfiguration targetConfiguration;
@@ -306,7 +305,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
   }
 
   private TargetConfiguration targetConfigurationForBuildTarget(
-      UnconfiguredBuildTargetView unconfiguredTarget,
+      UnconfiguredBuildTarget unconfiguredTarget,
       Optional<TargetConfiguration> globalTargetConfiguration,
       UnconfiguredTargetNode unconfiguredTargetNode) {
     if (globalTargetConfiguration.isPresent()) {
@@ -368,7 +367,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
           } else {
             return Futures.transformAsync(
                 unconfiguredTargetNodePipeline.getNodeJob(
-                    cell, buildTarget.getUnconfiguredBuildTargetView(), dependencyStack),
+                    cell, buildTarget.getUnconfiguredBuildTarget(), dependencyStack),
                 from -> dispatchComputeNode(cell, buildTarget, dependencyStack, from),
                 executorService);
           }

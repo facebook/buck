@@ -30,7 +30,7 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.RuleType;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableUnconfiguredTargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser;
@@ -119,7 +119,7 @@ public class DaemonicCellStateTest {
 
   @Test
   public void testPutComputedNodeIfNotPresent() throws BuildTargetException {
-    Cache<UnconfiguredBuildTargetView, UnconfiguredTargetNode> cache =
+    Cache<UnconfiguredBuildTarget, UnconfiguredTargetNode> cache =
         state.getCache(DaemonicCellState.RAW_TARGET_NODE_CACHE_TYPE);
     BuildTarget target = BuildTargetFactory.newInstance("//path/to:target");
 
@@ -129,23 +129,22 @@ public class DaemonicCellStateTest {
     UnconfiguredTargetNode n1 = rawTargetNode("n1");
     UnconfiguredTargetNode n2 = rawTargetNode("n2");
 
-    cache.putComputedNodeIfNotPresent(target.getUnconfiguredBuildTargetView(), n1);
+    cache.putComputedNodeIfNotPresent(target.getUnconfiguredBuildTarget(), n1);
     assertEquals(
         "Cached node was not found",
         Optional.of(n1),
-        cache.lookupComputedNode(target.getUnconfiguredBuildTargetView()));
+        cache.lookupComputedNode(target.getUnconfiguredBuildTarget()));
 
-    assertEquals(
-        n1, cache.putComputedNodeIfNotPresent(target.getUnconfiguredBuildTargetView(), n2));
+    assertEquals(n1, cache.putComputedNodeIfNotPresent(target.getUnconfiguredBuildTarget(), n2));
     assertEquals(
         "Previously cached node should not be updated",
         Optional.of(n1),
-        cache.lookupComputedNode(target.getUnconfiguredBuildTargetView()));
+        cache.lookupComputedNode(target.getUnconfiguredBuildTarget()));
   }
 
   @Test
   public void testCellNameDoesNotAffectInvalidation() throws BuildTargetException {
-    Cache<UnconfiguredBuildTargetView, UnconfiguredTargetNode> cache =
+    Cache<UnconfiguredBuildTarget, UnconfiguredTargetNode> cache =
         childState.getCache(DaemonicCellState.RAW_TARGET_NODE_CACHE_TYPE);
 
     Path targetPath = childCell.getRoot().resolve("path/to/BUCK");
@@ -156,9 +155,8 @@ public class DaemonicCellStateTest {
 
     UnconfiguredTargetNode n1 = rawTargetNode("n1");
 
-    cache.putComputedNodeIfNotPresent(target.getUnconfiguredBuildTargetView(), n1);
-    assertEquals(
-        Optional.of(n1), cache.lookupComputedNode(target.getUnconfiguredBuildTargetView()));
+    cache.putComputedNodeIfNotPresent(target.getUnconfiguredBuildTarget(), n1);
+    assertEquals(Optional.of(n1), cache.lookupComputedNode(target.getUnconfiguredBuildTarget()));
 
     childState.putBuildFileManifestIfNotPresent(
         targetPath,
@@ -175,7 +173,7 @@ public class DaemonicCellStateTest {
     assertEquals(
         "Cell-named target should still be invalidated",
         Optional.empty(),
-        cache.lookupComputedNode(target.getUnconfiguredBuildTargetView()));
+        cache.lookupComputedNode(target.getUnconfiguredBuildTarget()));
   }
 
   @Test

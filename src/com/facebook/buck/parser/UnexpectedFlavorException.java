@@ -19,7 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.util.PatternAndMessage;
 import com.google.common.collect.ImmutableList;
@@ -62,7 +62,7 @@ public class UnexpectedFlavorException extends HumanReadableException {
   }
 
   public static UnexpectedFlavorException createWithSuggestions(
-      Flavored flavored, UnconfiguredBuildTargetView target) {
+      Flavored flavored, UnconfiguredBuildTarget target) {
     ImmutableSet<Flavor> invalidFlavors = getInvalidFlavors(flavored, target);
     ImmutableSet<Flavor> validFlavors = getValidFlavors(flavored, target);
     // Get the specific message
@@ -90,7 +90,7 @@ public class UnexpectedFlavorException extends HumanReadableException {
   }
 
   private static ImmutableSet<Flavor> getInvalidFlavors(
-      Flavored flavored, UnconfiguredBuildTargetView target) {
+      Flavored flavored, UnconfiguredBuildTarget target) {
     // TODO(nga): wrong target configuration
     return target.getFlavors().stream()
         .filter(
@@ -101,7 +101,7 @@ public class UnexpectedFlavorException extends HumanReadableException {
   }
 
   private static ImmutableSet<Flavor> getValidFlavors(
-      Flavored flavored, UnconfiguredBuildTargetView target) {
+      Flavored flavored, UnconfiguredBuildTarget target) {
     // TODO(nga): wrong target configuration
     return target.getFlavors().stream()
         .filter(
@@ -112,7 +112,7 @@ public class UnexpectedFlavorException extends HumanReadableException {
   }
 
   private static String createDefaultMessage(
-      UnconfiguredBuildTargetView target,
+      UnconfiguredBuildTarget target,
       ImmutableSet<Flavor> invalidFlavors,
       ImmutableSet<Flavor> validFlavors) {
     String invalidFlavorsStr =

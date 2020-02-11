@@ -67,7 +67,7 @@ public class BuiltTargetVerifierTest {
         cell.getRootCell(),
         RuleType.of("build_rule", RuleType.Kind.BUILD),
         Paths.get("a/b/BUCK"),
-        UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c#d"),
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c#d").getData(),
         new FlavoredDescription(
             new FlavorDomain<>("flavors", ImmutableMap.of(InternalFlavor.of("a"), "b"))),
         ImmutableMap.of());
@@ -86,7 +86,7 @@ public class BuiltTargetVerifierTest {
         cell.getRootCell(),
         RuleType.of("build_rule", RuleType.Kind.BUILD),
         Paths.get("a/b/BUCK"),
-        UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c#d"),
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c#d").getData(),
         new NonFlavoredDescription(),
         ImmutableMap.of());
   }
@@ -105,7 +105,7 @@ public class BuiltTargetVerifierTest {
         cell.getRootCell(),
         RuleType.of("build_rule", RuleType.Kind.BUILD),
         Paths.get("a/b/BUCK"),
-        UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c"),
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c").getData(),
         new NonFlavoredDescription(),
         ImmutableMap.of("attribute", "value"));
   }
@@ -124,7 +124,7 @@ public class BuiltTargetVerifierTest {
         cell.getRootCell(),
         RuleType.of("build_rule", RuleType.Kind.BUILD),
         cell.getRootCell().getRoot().resolve("a/b/BUCK"),
-        UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c"),
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c").getData(),
         new NonFlavoredDescription(),
         ImmutableMap.of("name", "target_name", "buck.base_path", "z/y/z"));
   }
@@ -142,7 +142,7 @@ public class BuiltTargetVerifierTest {
         cell.getRootCell(),
         RuleType.of("build_rule", RuleType.Kind.BUILD),
         cell.getRootCell().getRoot().resolve("a/b/BUCK"),
-        UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c"),
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c").getData(),
         new NonFlavoredDescription(),
         ImmutableMap.of("name", "target_name", "buck.base_path", "a/b"));
   }
@@ -155,7 +155,7 @@ public class BuiltTargetVerifierTest {
         cell.getRootCell(),
         RuleType.of("build_rule", RuleType.Kind.BUILD),
         cell.getRootCell().getRoot().resolve("a/b/BUCK"),
-        UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c#d"),
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c#d").getData(),
         new FlavoredDescription(
             new FlavorDomain<>("flavors", ImmutableMap.of(InternalFlavor.of("d"), "b"))),
         ImmutableMap.of("name", "c", "buck.base_path", "a/b"));
@@ -169,7 +169,7 @@ public class BuiltTargetVerifierTest {
         cell.getRootCell(),
         RuleType.of("build_rule", RuleType.Kind.BUILD),
         cell.getRootCell().getRoot().resolve("a/b/BUCK"),
-        UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c"),
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c").getData(),
         new NonFlavoredDescription(),
         ImmutableMap.of("name", "c", "buck.base_path", "a/b"));
   }

@@ -20,7 +20,6 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.impl.Package;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.util.log.Logger;
@@ -52,7 +51,7 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
   private final ListeningExecutorService executorService;
   private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
   private final BuckEventBus eventBus;
-  private final PipelineNodeCache<UnconfiguredBuildTargetView, UnconfiguredTargetNode> cache;
+  private final PipelineNodeCache<UnconfiguredBuildTarget, UnconfiguredTargetNode> cache;
   private final ConcurrentHashMap<Path, ListenableFuture<ImmutableList<UnconfiguredTargetNode>>>
       allNodeCache = new ConcurrentHashMap<>();
   private final Scope perfEventScope;
@@ -71,7 +70,7 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
 
   public UnconfiguredTargetNodePipeline(
       ListeningExecutorService executorService,
-      Cache<UnconfiguredBuildTargetView, UnconfiguredTargetNode> cache,
+      Cache<UnconfiguredBuildTarget, UnconfiguredTargetNode> cache,
       BuckEventBus eventBus,
       BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline,
       BuildTargetRawNodeParsePipeline buildTargetRawNodeParsePipeline,
@@ -125,8 +124,8 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
                     ImmutableList.builderWithExpectedSize(allToConvert.size());
 
                 for (Map<String, Object> from : allToConvert) {
-                  UnconfiguredBuildTargetView target =
-                      UnconfiguredBuildTargetView.of(
+                  UnconfiguredBuildTarget target =
+                      UnconfiguredBuildTarget.of(
                           UnflavoredBuildTargetFactory.createFromRawNode(
                               cell.getRoot(), cell.getCanonicalName(), from, buildFile),
                           UnconfiguredBuildTarget.NO_FLAVORS);
@@ -156,7 +155,7 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
 
   /** Get build target by name, load if necessary */
   public ListenableFuture<UnconfiguredTargetNode> getNodeJob(
-      Cell cell, UnconfiguredBuildTargetView buildTarget, DependencyStack dependencyStack)
+      Cell cell, UnconfiguredBuildTarget buildTarget, DependencyStack dependencyStack)
       throws BuildTargetException {
 
     Path buildFile =
@@ -182,7 +181,7 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
 
   private ListenableFuture<UnconfiguredTargetNode> dispatchComputeNode(
       Cell cell,
-      UnconfiguredBuildTargetView buildTarget,
+      UnconfiguredBuildTarget buildTarget,
       DependencyStack dependencyStack,
       Map<String, Object> from,
       Package pkg)
