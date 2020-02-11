@@ -22,7 +22,6 @@ import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Resources;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -85,9 +84,7 @@ enum StringTemplateFile {
           projectFilesystem.createTempFile(ideaConfigDir, path.getFileName().toString(), ".tmp");
       try {
         danglingTempFile = true;
-        try (OutputStream outputStream = projectFilesystem.newFileOutputStream(tempFile)) {
-          outputStream.write(renderedContentsBytes);
-        }
+        projectFilesystem.writeBytesToPath(renderedContentsBytes, tempFile);
         projectFilesystem.move(tempFile, path, StandardCopyOption.REPLACE_EXISTING);
         danglingTempFile = false;
       } finally {
@@ -97,9 +94,7 @@ enum StringTemplateFile {
       }
     } else {
       projectFilesystem.createParentDirs(path);
-      try (OutputStream outputStream = projectFilesystem.newFileOutputStream(path)) {
-        outputStream.write(renderedContentsBytes);
-      }
+      projectFilesystem.writeBytesToPath(renderedContentsBytes, path);
     }
     return true;
   }
