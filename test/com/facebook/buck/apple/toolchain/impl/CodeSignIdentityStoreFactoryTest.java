@@ -56,7 +56,13 @@ public class CodeSignIdentityStoreFactoryTest {
                 + "\"Apple Development: Fizz Buzz (AAAAA12345)\" (CSSMERR_TP_CERT_REVOKED)\n"
                 + "  6) FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF "
                 + "\"Apple Development: Fizz Buzz (54321BBBBB)\" (CSSMERR_TP_CERT_EXPIRED)\n"
-                + "     6 valid identities found\n",
+                + "  7) EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE "
+                + "\"Apple Distribution: Fuss Bizz (12345BBBBB)\"\n"
+                + "  8) EEEEEEEEEEEEEEEEEEEEFFFFFFFFFFFFFFFFFFFF "
+                + "\"Apple Distribution: Fuss Bizz (BBBBB12345)\" (CSSMERR_TP_CERT_REVOKED)\n"
+                + "  9) FFFFFFFFFFFFFFFFFFFFAAAAAAAAAAAAAAAAAAAA "
+                + "\"Apple Distribution: Fuss Bizz (54321CCCCC)\" (CSSMERR_TP_CERT_EXPIRED)\n"
+                + "     9 valid identities found\n",
             "");
 
     FakeProcessExecutor processExecutor =
@@ -71,7 +77,10 @@ public class CodeSignIdentityStoreFactoryTest {
                 "iPhone Developer: Foo Bar (54321EDCBA)"),
             CodeSignIdentity.of(
                 CodeSignIdentity.toFingerprint("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"),
-                "Apple Development: Fizz Buzz (12345AAAAA)"));
+                "Apple Development: Fizz Buzz (12345AAAAA)"),
+            CodeSignIdentity.of(
+                CodeSignIdentity.toFingerprint("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE"),
+                "Apple Distribution: Fuss Bizz (12345BBBBB)"));
 
     assertThat(store.getIdentitiesSupplier().get(), equalTo(expected));
   }
