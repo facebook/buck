@@ -1,3 +1,84 @@
+delimiters "%", "%"
+
+android_manifest(package, minSdkVersion) ::= <<
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="%package%">
+%if(minSdkVersion)%
+  <uses-sdk android:minSdkVersion="%minSdkVersion%"/>
+%endif%
+</manifest>
+>>
+
+generated_by_idea(package, className, content) ::= <<
+/*___Generated_by_IDEA___*/
+
+package %package%;
+
+/* This stub is only used by the IDE. It is NOT the %className% class actually packed into the APK */
+public final class %className% {
+%if(content)%
+%content%
+%endif%
+}
+>>
+
+ij_library(name, binaryJars, classPaths, javadocUrls, sourceJars) ::= <<
+<component name="libraryTable">
+  <library name="%name%">
+    <CLASSES>
+%if(binaryJars)%
+%binaryJars:{binaryJar |
+      <root url="jar://$PROJECT_DIR$/%binaryJar%!/" />
+}%%endif%
+%if(classPaths)%
+%classPaths:{classPath |
+      <root url="file://$PROJECT_DIR$/%classPath%" />
+}%%endif%
+    </CLASSES>
+%if(javadocUrls)%
+    <JAVADOC>
+%javadocUrls:{javadocUrl |
+      <root url="%javadocUrl%" />
+}%    </JAVADOC>
+%else%
+    <JAVADOC />
+%endif%
+%if(sourceJars)%
+    <SOURCES>
+%sourceJars:{sourceJar |
+      <root url="jar://$PROJECT_DIR$/%sourceJar%!/" />
+}%    </SOURCES>
+%else%
+    <SOURCES />
+%endif%
+  </library>
+</component>
+>>
+
+ij_misc(jdk15, jdkName, jdkType, outputUrl, languageLevel) ::= <<
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="FrameworkDetectionExcludesConfiguration" detection-enabled="false" />
+  <component name="ProjectRootManager" version="2" languageLevel="%languageLevel%" assert-keyword="true" jdk-15="%jdk15%" project-jdk-name="%jdkName%" project-jdk-type="%jdkType%">
+%if(outputUrl)%    <output url="file://$PROJECT_DIR$/%outputUrl%" />
+%endif%  </component>
+</project>
+>>
+
+ij_module_index(modules) ::= <<
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+%modules:{module |
+      <module fileurl="%module.fileUrl%" filepath="$PROJECT_DIR$/%module.filePath%"%\\%
+        %if (module.group)% group="%module.group%"%endif% />
+}%    </modules>
+  </component>
+</project>
+>>
+
+ij_module(moduleType, metaInfDirectory, androidFacet, languageLevel, generatedSourceFolders, contentRoots, sdk, sdkType, dependencies) ::= <<
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="%moduleType%" version="4">
 %if(metaInfDirectory)%
@@ -88,3 +169,4 @@
   %endif%
 }%  </component>
 </module>
+>>

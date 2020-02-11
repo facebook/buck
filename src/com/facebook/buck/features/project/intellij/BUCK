@@ -64,7 +64,7 @@ buck_module(
         "//third-party/java/infer-annotations:infer-annotations",
         "//third-party/java/stringtemplate:stringtemplate",
     ],
-    resources = glob(["templates/*.st"]),
+    resources = ["templates.stg"],
     tests = [
         "//test/com/facebook/buck/features/project/intellij:intellij",
     ],
