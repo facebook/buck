@@ -41,7 +41,7 @@ public class LcUuidContentsScrubber implements FileContentsScrubber {
     resetUuidIfPresent(map);
     map.rewind();
 
-    Hasher hasher = Hashing.sha1().newHasher();
+    Hasher hasher = Hashing.murmur3_128().newHasher();
     hasher.putBytes(map);
 
     map.rewind();
