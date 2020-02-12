@@ -58,4 +58,16 @@ public interface RelPath extends PathWrapper {
   default Path resolve(String other) {
     return getPath().resolve(other);
   }
+
+  default RelPath resolveRel(String other) {
+    return RelPath.of(resolve(other));
+  }
+
+  default RelPath resolve(RelPath other) {
+    return RelPath.of(getPath().resolve(other.getPath()));
+  }
+
+  default RelPath subpath(int beginIndex, int endIndex) {
+    return RelPath.of(getPath().subpath(beginIndex, endIndex));
+  }
 }

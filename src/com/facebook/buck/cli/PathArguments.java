@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -27,12 +29,12 @@ public class PathArguments {
   private PathArguments() {}
 
   static class ReferencedFiles {
-    final ImmutableSet<Path> relativePathsUnderProjectRoot;
-    final ImmutableSet<Path> absolutePathsOutsideProjectRootOrNonExistingPaths;
+    final ImmutableSet<RelPath> relativePathsUnderProjectRoot;
+    final ImmutableSet<AbsPath> absolutePathsOutsideProjectRootOrNonExistingPaths;
 
     public ReferencedFiles(
-        ImmutableSet<Path> relativePathsUnderProjectRoot,
-        ImmutableSet<Path> absolutePathsOutsideProjectRootOrNonExistingPaths) {
+        ImmutableSet<RelPath> relativePathsUnderProjectRoot,
+        ImmutableSet<AbsPath> absolutePathsOutsideProjectRootOrNonExistingPaths) {
       this.relativePathsUnderProjectRoot = relativePathsUnderProjectRoot;
       this.absolutePathsOutsideProjectRootOrNonExistingPaths =
           absolutePathsOutsideProjectRootOrNonExistingPaths;
@@ -49,8 +51,8 @@ public class PathArguments {
       Path projectRoot, Iterable<String> nonCanonicalFilePaths) throws IOException {
     // toRealPath() is used throughout to resolve symlinks or else the Path.startsWith() check will
     // not be reliable.
-    ImmutableSet.Builder<Path> projectFiles = ImmutableSet.builder();
-    ImmutableSet.Builder<Path> nonProjectFiles = ImmutableSet.builder();
+    ImmutableSet.Builder<RelPath> projectFiles = ImmutableSet.builder();
+    ImmutableSet.Builder<AbsPath> nonProjectFiles = ImmutableSet.builder();
     Path normalizedRoot = projectRoot.toRealPath();
     for (String filePath : nonCanonicalFilePaths) {
       Path canonicalFullPath = Paths.get(filePath);
@@ -58,7 +60,7 @@ public class PathArguments {
         canonicalFullPath = projectRoot.resolve(canonicalFullPath);
       }
       if (!canonicalFullPath.toFile().exists()) {
-        nonProjectFiles.add(canonicalFullPath);
+        nonProjectFiles.add(AbsPath.of(canonicalFullPath));
         continue;
       }
       canonicalFullPath = canonicalFullPath.toRealPath();
@@ -68,9 +70,9 @@ public class PathArguments {
         Path relativePath =
             canonicalFullPath.subpath(
                 normalizedRoot.getNameCount(), canonicalFullPath.getNameCount());
-        projectFiles.add(relativePath);
+        projectFiles.add(RelPath.of(relativePath));
       } else {
-        nonProjectFiles.add(canonicalFullPath);
+        nonProjectFiles.add(AbsPath.of(canonicalFullPath));
       }
     }
     return new ReferencedFiles(projectFiles.build(), nonProjectFiles.build());

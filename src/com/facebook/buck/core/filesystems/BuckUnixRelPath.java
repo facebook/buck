@@ -34,4 +34,9 @@ class BuckUnixRelPath extends BuckUnixPath implements RelPath {
   public BuckUnixRelPath getParent() {
     return (BuckUnixRelPath) super.getParent();
   }
+
+  @Override
+  public BuckUnixRelPath subpath(int beginIndex, int endIndex) {
+    return (BuckUnixRelPath) super.subpath(beginIndex, endIndex);
+  }
 }

@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.QueryTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -140,7 +141,7 @@ class TargetPatternEvaluator {
   }
 
   private ImmutableSet<QueryTarget> resolveFilePattern(String pattern) throws IOException {
-    ImmutableSet<Path> filePaths =
+    ImmutableSet<RelPath> filePaths =
         PathArguments.getCanonicalFilesUnderProjectRoot(projectRoot, ImmutableList.of(pattern))
             .relativePathsUnderProjectRoot;
 

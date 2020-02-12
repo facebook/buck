@@ -25,6 +25,7 @@ import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.graph.transformation.GraphTransformationEngine;
 import com.facebook.buck.core.graph.transformation.model.ComposedKey;
 import com.facebook.buck.core.graph.transformation.model.ComposedResult;
@@ -876,7 +877,7 @@ public class TargetsCommand extends AbstractCommand {
   @VisibleForTesting
   ImmutableSortedMap<String, TargetNode<?>> getMatchingNodes(
       TargetGraph graph,
-      Optional<ImmutableSet<Path>> referencedFiles,
+      Optional<ImmutableSet<RelPath>> referencedFiles,
       Optional<ImmutableSet<BuildTarget>> matchingBuildTargets,
       Optional<ImmutableSet<Class<? extends BaseDescription<?>>>> descriptionClasses,
       boolean detectTestChanges,
@@ -1516,8 +1517,8 @@ public class TargetsCommand extends AbstractCommand {
   private static class DirectOwnerPredicate implements Predicate<TargetNode<?>> {
 
     private final ProjectFilesystem projectFilesystem;
-    private final ImmutableSet<Path> referencedInputs;
-    private final ImmutableSet<Path> basePathOfTargets;
+    private final ImmutableSet<RelPath> referencedInputs;
+    private final ImmutableSet<RelPath> basePathOfTargets;
     private final String buildFileName;
 
     /**
@@ -1527,13 +1528,13 @@ public class TargetsCommand extends AbstractCommand {
     public DirectOwnerPredicate(
         BuildFileTree buildFileTree,
         ProjectFilesystem projectFilesystem,
-        ImmutableSet<Path> referencedInputs,
+        ImmutableSet<RelPath> referencedInputs,
         String buildFileName) {
       this.projectFilesystem = projectFilesystem;
       this.referencedInputs = referencedInputs;
 
-      ImmutableSet.Builder<Path> basePathOfTargetsBuilder = ImmutableSet.builder();
-      for (Path input : referencedInputs) {
+      ImmutableSet.Builder<RelPath> basePathOfTargetsBuilder = ImmutableSet.builder();
+      for (RelPath input : referencedInputs) {
         buildFileTree.getBasePathOfAncestorTarget(input).ifPresent(basePathOfTargetsBuilder::add);
       }
       this.basePathOfTargets = basePathOfTargetsBuilder.build();
@@ -1548,12 +1549,12 @@ public class TargetsCommand extends AbstractCommand {
           node.getBuildTarget()
               .getCellRelativeBasePath()
               .getPath()
-              .toPath(projectFilesystem.getFileSystem()))) {
+              .toRelPath(projectFilesystem.getFileSystem()))) {
         return false;
       }
 
       for (ForwardRelativePath input : node.getInputs()) {
-        for (Path referencedInput : referencedInputs) {
+        for (RelPath referencedInput : referencedInputs) {
           if (referencedInput.startsWith(input.toPath(projectFilesystem.getFileSystem()))) {
             return true;
           }
@@ -1561,11 +1562,12 @@ public class TargetsCommand extends AbstractCommand {
       }
 
       return referencedInputs.contains(
-          node.getBuildTarget()
-              .getCellRelativeBasePath()
-              .getPath()
-              .toPath(projectFilesystem.getFileSystem())
-              .resolve(buildFileName));
+          RelPath.of(
+              node.getBuildTarget()
+                  .getCellRelativeBasePath()
+                  .getPath()
+                  .toRelPath(projectFilesystem.getFileSystem())
+                  .resolve(buildFileName)));
     }
   }
 

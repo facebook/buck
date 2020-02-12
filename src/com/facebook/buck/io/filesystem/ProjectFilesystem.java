@@ -126,6 +126,10 @@ public interface ProjectFilesystem {
     return exists(pathRelativeToProjectRoot.toPath(getFileSystem()), options);
   }
 
+  default boolean exists(RelPath pathRelativeToProjectRoot, LinkOption... options) {
+    return exists(pathRelativeToProjectRoot.getPath(), options);
+  }
+
   long getFileSize(Path pathRelativeToProjectRoot) throws IOException;
 
   /**

@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.InMemoryBuildFileTree;
@@ -30,10 +31,9 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Optional;
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -50,14 +50,15 @@ public class ThrowingPackageBoundaryCheckerTest {
                 new CacheLoader<Cell, BuildFileTree>() {
                   @Override
                   public BuildFileTree load(Cell cell) {
-                    return new InMemoryBuildFileTree(Collections.<Path>emptyList());
+                    return new InMemoryBuildFileTree(Collections.emptyList());
                   }
                 });
     ThrowingPackageBoundaryChecker boundaryChecker =
         new ThrowingPackageBoundaryChecker(buildFileTrees);
 
     thrown.expect(HumanReadableException.class);
-    thrown.expectMessage("'../Test.java' in '//a/b:c' refers to a parent directory.");
+    thrown.expectMessage(
+        Matchers.matchesRegex("'..[/\\\\]Test.java' in '//a/b:c' refers to a parent directory."));
 
     boundaryChecker.enforceBuckPackageBoundaries(
         new TestCellBuilder().build().getRootCell(),
@@ -73,7 +74,7 @@ public class ThrowingPackageBoundaryCheckerTest {
                 new CacheLoader<Cell, BuildFileTree>() {
                   @Override
                   public BuildFileTree load(Cell cell) {
-                    return new InMemoryBuildFileTree(Collections.<Path>emptyList());
+                    return new InMemoryBuildFileTree(Collections.emptyList());
                   }
                 });
     ThrowingPackageBoundaryChecker boundaryChecker =
@@ -99,9 +100,9 @@ public class ThrowingPackageBoundaryCheckerTest {
                 new CacheLoader<Cell, BuildFileTree>() {
                   @Override
                   public BuildFileTree load(Cell cell) {
-                    return new InMemoryBuildFileTree(Collections.<Path>emptyList()) {
+                    return new InMemoryBuildFileTree(Collections.emptyList()) {
                       @Override
-                      public Optional<Path> getBasePathOfAncestorTarget(Path filePath) {
+                      public Optional<RelPath> getBasePathOfAncestorTarget(RelPath filePath) {
                         return Optional.empty();
                       }
                     };
@@ -128,10 +129,10 @@ public class ThrowingPackageBoundaryCheckerTest {
                 new CacheLoader<Cell, BuildFileTree>() {
                   @Override
                   public BuildFileTree load(Cell cell) {
-                    return new InMemoryBuildFileTree(Collections.<Path>emptyList()) {
+                    return new InMemoryBuildFileTree(Collections.emptyList()) {
                       @Override
-                      public Optional<Path> getBasePathOfAncestorTarget(Path filePath) {
-                        return Optional.of(Paths.get("d"));
+                      public Optional<RelPath> getBasePathOfAncestorTarget(RelPath filePath) {
+                        return Optional.of(RelPath.get("d"));
                       }
                     };
                   }
@@ -174,7 +175,7 @@ public class ThrowingPackageBoundaryCheckerTest {
                 new CacheLoader<Cell, BuildFileTree>() {
                   @Override
                   public BuildFileTree load(Cell cell) {
-                    return new InMemoryBuildFileTree(Collections.singleton(Paths.get("a/b")));
+                    return new InMemoryBuildFileTree(Collections.singleton(RelPath.get("a/b")));
                   }
                 });
     ThrowingPackageBoundaryChecker boundaryChecker =

@@ -16,9 +16,9 @@
 
 package com.facebook.buck.core.model.impl;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -39,30 +39,30 @@ import java.util.Optional;
  */
 public class FilesystemBackedBuildFileTree implements BuildFileTree {
   private final ProjectFilesystem projectFilesystem;
-  private final Path buildFile;
-  private final Path rootPath;
+  private final RelPath buildFile;
+  private final RelPath rootPath;
 
   /**
    * Cache for the base path of a given path. Key is a folder for which base path is wanted and
    * value is a base path. If folder is a package itself (i.e. it does have a build file) then key
    * and value are the same object. All paths are relative to provided filesystem root.
    */
-  private final LoadingCache<Path, Optional<Path>> basePathOfAncestorCache =
+  private final LoadingCache<RelPath, Optional<RelPath>> basePathOfAncestorCache =
       CacheBuilder.newBuilder()
           .weakValues()
           .build(
-              new CacheLoader<Path, Optional<Path>>() {
+              new CacheLoader<RelPath, Optional<RelPath>>() {
                 @Override
-                public Optional<Path> load(Path folderPath) throws Exception {
+                public Optional<RelPath> load(RelPath folderPath) throws Exception {
 
-                  Path buildFileCandidate = folderPath.resolve(buildFile);
+                  RelPath buildFileCandidate = folderPath.resolve(buildFile);
 
                   // projectFilesystem.isIgnored() is invoked for any folder in a tree
                   // this is not effective, can be optimized by using more efficient tree matchers
                   // for ignored paths
                   if (projectFilesystem.isFile(buildFileCandidate)
                       && !projectFilesystem.isIgnored(buildFileCandidate)
-                      && !isBuckSpecialPath(folderPath)) {
+                      && !isBuckSpecialPath(folderPath.getPath())) {
                     return Optional.of(folderPath);
                   }
 
@@ -71,7 +71,7 @@ public class FilesystemBackedBuildFileTree implements BuildFileTree {
                   }
 
                   // traverse up
-                  Path parent = folderPath.getParent();
+                  RelPath parent = folderPath.getParent();
                   if (parent == null) {
                     parent = rootPath;
                   }
@@ -82,17 +82,19 @@ public class FilesystemBackedBuildFileTree implements BuildFileTree {
 
   public FilesystemBackedBuildFileTree(ProjectFilesystem projectFilesystem, String buildFileName) {
     this.projectFilesystem = projectFilesystem;
-    this.buildFile = projectFilesystem.getPath(buildFileName);
-    this.rootPath = projectFilesystem.getPath("");
+    this.buildFile = RelPath.of(projectFilesystem.getPath(buildFileName));
+    this.rootPath = RelPath.of(projectFilesystem.getPath(""));
   }
 
   /**
    * Returns the base path for a given path. The base path is the nearest directory at or above
    * filePath that contains a build file. If no base directory is found, returns an empty path.
+   *
+   * @param filePath
+   * @return
    */
   @Override
-  public Optional<Path> getBasePathOfAncestorTarget(Path filePath) {
-    Preconditions.checkArgument(!filePath.isAbsolute(), "must be relative: %s", filePath);
+  public Optional<RelPath> getBasePathOfAncestorTarget(RelPath filePath) {
 
     // This will do `stat` which might be expensive. In fact, we almost always know if filePath
     // is a file or folder at caller's site, but the API based on Path is just too generic.
@@ -103,10 +105,6 @@ public class FilesystemBackedBuildFileTree implements BuildFileTree {
       if (filePath == null) {
         filePath = rootPath;
       }
-    }
-
-    if (filePath.isAbsolute()) {
-      filePath = projectFilesystem.relativize(filePath);
     }
 
     return basePathOfAncestorCache.getUnchecked(filePath);

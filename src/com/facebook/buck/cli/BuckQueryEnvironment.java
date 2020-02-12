@@ -21,6 +21,8 @@ import static com.facebook.buck.util.concurrent.MoreFutures.propagateCauseIfInst
 import com.facebook.buck.cli.OwnersReport.Builder;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.QueryTarget;
@@ -84,7 +86,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -508,8 +509,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
   @Override
   public ImmutableSet<QueryFileTarget> getBuildFiles(Set<QueryBuildTarget> targets) {
     ProjectFilesystem cellFilesystem = rootCell.getFilesystem();
-    Path rootPath = cellFilesystem.getRootPath();
-    Preconditions.checkState(rootPath.isAbsolute());
+    AbsPath rootPath = AbsPath.of(cellFilesystem.getRootPath());
 
     ImmutableSet.Builder<QueryFileTarget> builder =
         ImmutableSet.builderWithExpectedSize(targets.size());
@@ -517,15 +517,15 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
       BuildTarget buildTarget = target.getBuildTarget();
       Cell cell = rootCell.getCell(buildTarget.getCell());
       BuildFileTree buildFileTree = Objects.requireNonNull(buildFileTrees.get(cell));
-      Optional<Path> path =
+      Optional<RelPath> path =
           buildFileTree.getBasePathOfAncestorTarget(
               buildTarget
                   .getCellRelativeBasePath()
                   .getPath()
-                  .toPath(cellFilesystem.getFileSystem()));
+                  .toRelPath(cellFilesystem.getFileSystem()));
       Preconditions.checkState(path.isPresent());
 
-      Path buildFilePath =
+      RelPath buildFilePath =
           MorePaths.relativize(
               rootPath,
               cell.getFilesystem()

@@ -18,6 +18,7 @@ package com.facebook.buck.io.file;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.BuckUnixPath;
+import com.facebook.buck.core.filesystems.PathWrapper;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.io.windowsfs.WindowsFS;
@@ -118,6 +119,10 @@ public class MorePaths {
       return path2;
     }
     return path1.relativize(path2);
+  }
+
+  public static RelPath relativize(PathWrapper path1, PathWrapper path2) {
+    return RelPath.of(relativize(path1.getPath(), path2.getPath()));
   }
 
   /**

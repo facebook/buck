@@ -55,10 +55,6 @@ public interface AbsPath extends PathWrapper {
     return resolve(other.getPath());
   }
 
-  default boolean startsWith(Path path) {
-    return getPath().startsWith(path);
-  }
-
   default boolean startsWith(AbsPath path) {
     return startsWith(path.getPath());
   }
