@@ -42,9 +42,7 @@ public class LcUuidContentsScrubber implements FileContentsScrubber {
     map.rewind();
 
     Hasher hasher = Hashing.sha1().newHasher();
-    while (map.hasRemaining()) {
-      hasher.putByte(map.get());
-    }
+    hasher.putBytes(map);
 
     map.rewind();
     try {
