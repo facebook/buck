@@ -71,6 +71,8 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   public static final String BUILD_SCRIPT = "xcode_build_script";
 
+  public static final String LINK_SCRUB_CONCURRENTLY = "link_scrub_concurrently";
+
   private final BuckConfig delegate;
 
   // Reflection-based factory for ConfigView
@@ -500,6 +502,10 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   public boolean shouldUseModernBuildSystem() {
     return delegate.getBooleanValue(APPLE_SECTION, "use_modern_build_system", true);
+  }
+
+  public boolean shouldLinkScrubConcurrently() {
+    return delegate.getBooleanValue(APPLE_SECTION, LINK_SCRUB_CONCURRENTLY, false);
   }
 
   @BuckStyleValue

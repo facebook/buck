@@ -55,17 +55,20 @@ public class DarwinLinker extends DelegatingTool
     implements Linker, HasLinkerMap, HasIncrementalThinLTO, HasLTO {
 
   private final boolean cacheLinks;
+  private final boolean scrubConcurrently;
 
-  public DarwinLinker(Tool tool, boolean cacheLinks) {
+  public DarwinLinker(Tool tool, boolean cacheLinks, boolean scrubConcurrently) {
     super(tool);
     this.cacheLinks = cacheLinks;
+    this.scrubConcurrently = scrubConcurrently;
   }
 
   @Override
   public ImmutableList<FileScrubber> getScrubbers(ImmutableMap<Path, Path> cellRootMap) {
     if (cacheLinks) {
       return ImmutableList.of(
-          new OsoSymbolsContentsScrubber(cellRootMap), new LcUuidContentsScrubber(false));
+          new OsoSymbolsContentsScrubber(cellRootMap),
+          new LcUuidContentsScrubber(scrubConcurrently));
     } else {
       // there's no point scrubbing the debug info if the linked objects are never getting cached
       return ImmutableList.of();
