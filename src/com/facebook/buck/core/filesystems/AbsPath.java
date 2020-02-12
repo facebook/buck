@@ -51,11 +51,32 @@ public interface AbsPath extends PathWrapper {
     return AbsPath.of(getPath().toRealPath(options));
   }
 
+  default AbsPath resolve(RelPath other) {
+    return resolve(other.getPath());
+  }
+
+  default boolean startsWith(Path path) {
+    return getPath().startsWith(path);
+  }
+
+  default boolean startsWith(AbsPath path) {
+    return startsWith(path.getPath());
+  }
+
   default AbsPath resolve(Path path) {
     return AbsPath.of(getPath().resolve(path));
   }
 
-  default AbsPath resolve(RelPath other) {
-    return resolve(other.getPath());
+  default AbsPath resolve(String path) {
+    return AbsPath.of(getPath().resolve(path));
+  }
+
+  default AbsPath getParent() {
+    Path parent = getPath().getParent();
+    return parent != null ? AbsPath.of(parent) : null;
+  }
+
+  default RelPath relativize(AbsPath other) {
+    return RelPath.of(this.getPath().relativize(other.getPath()));
   }
 }

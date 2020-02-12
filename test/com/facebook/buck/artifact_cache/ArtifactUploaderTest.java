@@ -26,6 +26,8 @@ import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rules.TestBuildRuleParams;
+import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.MorePosixFilePermissions;
@@ -129,8 +131,7 @@ public class ArtifactUploaderTest {
         BuckEventBusForTests.newInstance(),
         ImmutableMap.of("metadata", "metadata", "build-metadata", "build-metadata"),
         ImmutableSortedSet.of(dir, file, dirFile, metadataFile),
-        BUILD_TARGET,
-        filesystem,
+        new FakeBuildRule(BUILD_TARGET, filesystem, TestBuildRuleParams.create()),
         1000);
 
     assertTrue(stored.get());

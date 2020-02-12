@@ -435,7 +435,8 @@ public class AppleCxxPlatforms {
             new DefaultLinkerProvider(
                 LinkerProvider.Type.DARWIN,
                 new ConstantToolProvider(clangXxPath),
-                config.shouldCacheLinks()),
+                config.shouldCacheLinks(),
+                appleConfig.shouldLinkScrubConcurrently()),
             ImmutableList.<String>builder().addAll(cflags).addAll(ldflagsBuilder.build()).build(),
             ImmutableMultimap.of(),
             strip,

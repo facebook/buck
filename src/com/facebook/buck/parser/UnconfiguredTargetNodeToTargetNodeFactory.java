@@ -21,6 +21,7 @@ import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -42,7 +43,6 @@ import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.function.Function;
 
 /** Creates {@link TargetNode} from {@link UnconfiguredTargetNode}. */
@@ -86,7 +86,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
   @Override
   public TargetNode<?> createTargetNode(
       Cell cell,
-      Path buildFile,
+      AbsPath buildFile,
       BuildTarget target,
       DependencyStack dependencyStack,
       UnconfiguredTargetNode unconfiguredTargetNode,
@@ -144,7 +144,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
     packageBoundaryChecker.enforceBuckPackageBoundaries(targetCell, target, targetNode.getInputs());
 
     try {
-      nodeListener.onCreate(buildFile, targetNode);
+      nodeListener.onCreate(buildFile.getPath(), targetNode);
     } catch (IOException e) {
       throw new HumanReadableException(e.getMessage(), e);
     }

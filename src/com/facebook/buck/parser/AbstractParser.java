@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -37,14 +38,12 @@ import com.facebook.buck.parser.temporarytargetuniquenesschecker.TemporaryUnconf
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -86,8 +85,7 @@ abstract class AbstractParser implements Parser {
 
   @VisibleForTesting
   static BuildFileManifest getTargetNodeRawAttributes(
-      PerBuildState state, Cell cell, Path buildFile) throws BuildFileParseException {
-    Preconditions.checkState(buildFile.isAbsolute());
+      PerBuildState state, Cell cell, AbsPath buildFile) throws BuildFileParseException {
     return state.getBuildFileManifest(cell, buildFile);
   }
 
@@ -95,7 +93,7 @@ abstract class AbstractParser implements Parser {
   public ImmutableList<TargetNode<?>> getAllTargetNodes(
       PerBuildState perBuildState,
       Cell cell,
-      Path buildFile,
+      AbsPath buildFile,
       Optional<TargetConfiguration> targetConfiguration)
       throws BuildFileParseException {
     return perBuildState.getAllTargetNodes(cell, buildFile, targetConfiguration);

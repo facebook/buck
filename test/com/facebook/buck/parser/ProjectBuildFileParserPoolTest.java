@@ -22,6 +22,7 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.parser.api.BuildFileManifest;
@@ -359,7 +360,7 @@ public class ProjectBuildFileParserPoolTest {
               BuckEventBusForTests.newInstance(),
               cell,
               WatchmanFactory.NULL_WATCHMAN,
-              Paths.get("BUCK"),
+              AbsPath.of(Paths.get("BUCK").toAbsolutePath()),
               executorService));
     }
     return futures.build();

@@ -49,4 +49,13 @@ public interface RelPath extends PathWrapper {
   default RelPath normalize() {
     return of(getPath().normalize());
   }
+
+  default RelPath getParent() {
+    Path parent = getPath().getParent();
+    return parent != null ? RelPath.of(parent) : null;
+  }
+
+  default Path resolve(String other) {
+    return getPath().resolve(other);
+  }
 }

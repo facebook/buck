@@ -17,6 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -66,7 +67,7 @@ abstract class GenruleBuildableBuilder {
   }
 
   @Value.Default
-  public Optional<ImmutableMap<String, ImmutableSet<String>>> getOuts() {
+  public Optional<ImmutableMap<OutputLabel, ImmutableSet<String>>> getOuts() {
     return Optional.empty();
   }
 

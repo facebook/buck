@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.log.Logger;
@@ -51,7 +52,7 @@ class SymlinkCache {
    * Build rule input files (e.g., paths in {@code srcs}) whose paths contain an element which
    * exists in {@code symlinkExistenceCache}.
    */
-  private final Set<Path> buildInputPathsUnderSymlink = Sets.newConcurrentHashSet();
+  private final Set<AbsPath> buildInputPathsUnderSymlink = Sets.newConcurrentHashSet();
 
   /**
    * Cache of (symlink path: symlink target) pairs used to avoid repeatedly checking for the
@@ -68,7 +69,7 @@ class SymlinkCache {
   }
 
   public void registerInputsUnderSymlinks(
-      Cell currentCell, Cell targetCell, Path buildFile, TargetNode<?> node) throws IOException {
+      Cell currentCell, Cell targetCell, AbsPath buildFile, TargetNode<?> node) throws IOException {
     Map<Path, Path> newSymlinksEncountered =
         inputFilesUnderSymlink(node.getInputs(), node.getFilesystem());
     Optional<ImmutableList<Path>> readOnlyPaths =
@@ -177,9 +178,9 @@ class SymlinkCache {
           "Cleaning cache of build files with inputs under symlink %s",
           buildInputPathsUnderSymlink);
     }
-    Set<Path> buildInputPathsUnderSymlinkCopy = new HashSet<>(buildInputPathsUnderSymlink);
+    Set<AbsPath> buildInputPathsUnderSymlinkCopy = new HashSet<>(buildInputPathsUnderSymlink);
     buildInputPathsUnderSymlink.clear();
-    for (Path buildFilePath : buildInputPathsUnderSymlinkCopy) {
+    for (AbsPath buildFilePath : buildInputPathsUnderSymlinkCopy) {
       daemonicParserState.invalidatePath(buildFilePath);
     }
   }

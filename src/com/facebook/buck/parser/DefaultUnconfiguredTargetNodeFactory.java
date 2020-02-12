@@ -17,16 +17,16 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableUnconfiguredTargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.Package;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.core.select.SelectorList;
@@ -53,23 +53,23 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
 
   private final KnownRuleTypesProvider knownRuleTypesProvider;
   private final BuiltTargetVerifier builtTargetVerifier;
-  private final CellPathResolver cellPathResolver;
+  private final Cells cells;
   private final SelectorListFactory selectorListFactory;
 
   public DefaultUnconfiguredTargetNodeFactory(
       KnownRuleTypesProvider knownRuleTypesProvider,
       BuiltTargetVerifier builtTargetVerifier,
-      CellPathResolver cellPathResolver,
+      Cells cells,
       SelectorListFactory selectorListFactory) {
     this.knownRuleTypesProvider = knownRuleTypesProvider;
     this.builtTargetVerifier = builtTargetVerifier;
-    this.cellPathResolver = cellPathResolver;
+    this.cells = cells;
     this.selectorListFactory = selectorListFactory;
   }
 
   private ImmutableMap<String, Object> convertSelects(
       Map<String, Object> attrs,
-      ForwardRelativePath pathRelativeToProjectRoot,
+      CellRelativePath pathRelativeToProjectRoot,
       DependencyStack dependencyStack) {
     ImmutableMap.Builder<String, Object> result = ImmutableMap.builder();
     for (Map.Entry<String, Object> attr : attrs.entrySet()) {
@@ -87,12 +87,14 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
   private Object convertSelectorListInAttrValue(
       String attrName,
       Object attrValue,
-      ForwardRelativePath pathRelativeToProjectRoot,
+      CellRelativePath pathRelativeToProjectRoot,
       DependencyStack dependencyStack) {
     if (attrValue instanceof ListWithSelects) {
       try {
         return selectorListFactory.create(
-            cellPathResolver, pathRelativeToProjectRoot, (ListWithSelects) attrValue);
+            cells.getCell(pathRelativeToProjectRoot.getCellName()).getCellPathResolver(),
+            pathRelativeToProjectRoot.getPath(),
+            (ListWithSelects) attrValue);
       } catch (CoerceFailedException e) {
         throw new HumanReadableException(
             e,
@@ -154,7 +156,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
     }
 
     ImmutableMap<String, Object> withSelects =
-        convertSelects(rawAttributes, target.getCellRelativeBasePath().getPath(), dependencyStack);
+        convertSelects(rawAttributes, target.getCellRelativeBasePath(), dependencyStack);
 
     return ImmutableUnconfiguredTargetNode.of(
         target, ruleType, withSelects, visibilityPatterns, withinViewPatterns);

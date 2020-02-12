@@ -100,7 +100,7 @@ public class BuildTargetRawNodeParsePipeline
                     return OptionalLong.empty();
                   }
                 },
-                parserConfig.getAbsolutePathToBuildFile(cell, buildTarget));
+                parserConfig.getAbsolutePathToBuildFile(cell, buildTarget).getPath());
           }
           return Futures.immediateFuture(input.getTargets().get(buildTarget.getName()));
         },

@@ -1,0 +1,18 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "logd",
+    srcs = glob(["**/*.java"]),
+    tests = [
+        "//test/com/facebook/buck/logd:logd",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src-gen:logd-protobuf",
+        "//src-gen:protobuf",
+        "//src/com/facebook/buck/core/exceptions:exceptions",
+        "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/util:util",
+        "//third-party/java/remote-apis:remote-apis",
+    ],
+)

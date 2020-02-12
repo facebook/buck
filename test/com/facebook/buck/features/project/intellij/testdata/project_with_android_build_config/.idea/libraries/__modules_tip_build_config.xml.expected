@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="//modules/tip:build_config">
+    <CLASSES>
+     <root url="jar://$PROJECT_DIR$/buck-out/gen/modules/tip/lib__build_config__output/build_config.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

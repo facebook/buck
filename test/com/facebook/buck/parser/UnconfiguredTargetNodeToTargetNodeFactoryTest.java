@@ -22,6 +22,7 @@ import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.DefaultCellNameResolverProvider;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
@@ -141,7 +142,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactoryTest {
     TargetNode<?> targetNode =
         factory.createTargetNode(
             cell.getRootCell(),
-            Paths.get("a/b/BUCK"),
+            AbsPath.of(Paths.get("a/b/BUCK").toAbsolutePath()),
             buildTarget,
             DependencyStack.root(),
             node,

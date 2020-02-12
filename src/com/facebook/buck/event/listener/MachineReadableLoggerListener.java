@@ -36,6 +36,7 @@ import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ActionGraphEvent;
+import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.ParsingEvent;
@@ -242,6 +243,16 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   @Subscribe
   public void actionGraphFinishedEvent(ActionGraphEvent.Finished event) {
     writeToLog("BuildActionGraphFinished", event);
+  }
+
+  @Subscribe
+  public void artifactCompressionStarted(ArtifactCompressionEvent.Started event) {
+    writeToLog(event.getEventName(), event);
+  }
+
+  @Subscribe
+  public void artifactCompressionFinished(ArtifactCompressionEvent.Finished event) {
+    writeToLog(event.getEventName(), event);
   }
 
   @Subscribe

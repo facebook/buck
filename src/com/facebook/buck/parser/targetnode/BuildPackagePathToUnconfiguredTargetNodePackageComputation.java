@@ -19,6 +19,7 @@ package com.facebook.buck.parser.targetnode;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
@@ -107,10 +108,11 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputation
         env.getDeps(BuildTargetToUnconfiguredTargetNodeKey.IDENTIFIER);
 
     Path packagePath = key.getPath();
-    Path buildFileAbsolutePath =
-        cell.getRoot()
-            .resolve(packagePath)
-            .resolve(cell.getBuckConfig().getView(ParserConfig.class).getBuildFileName());
+    AbsPath buildFileAbsolutePath =
+        AbsPath.of(
+            cell.getRoot()
+                .resolve(packagePath)
+                .resolve(cell.getBuckConfig().getView(ParserConfig.class).getBuildFileName()));
 
     ImmutableMap.Builder<String, UnconfiguredTargetNodeWithDeps> builder =
         ImmutableMap.builderWithExpectedSize(rawTargetNodes.size());
@@ -173,7 +175,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputation
   private ImmutableSet<UnconfiguredBuildTarget> getTargetDeps(
       UnconfiguredTargetNode unconfiguredTargetNode,
       DependencyStack dependencyStack,
-      Path buildFileAbsolutePath) {
+      AbsPath buildFileAbsolutePath) {
     // To discover dependencies, we coerce UnconfiguredTargetNode to TargetNode, get dependencies
     // out of it,
     // then trash target node

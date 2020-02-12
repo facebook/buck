@@ -206,7 +206,7 @@ public final class JsBundleGenrule extends BaseGenrule<JsBundleGenrule.Buildable
         Optional<Arg> cmdExe,
         Optional<String> type,
         Optional<String> out,
-        Optional<ImmutableMap<String, ImmutableSet<String>>> outs,
+        Optional<ImmutableMap<OutputLabel, ImmutableSet<String>>> outs,
         boolean enableSandboxingInGenrule,
         boolean isCacheable,
         String environmentExpansionSeparator,
@@ -481,30 +481,31 @@ public final class JsBundleGenrule extends BaseGenrule<JsBundleGenrule.Buildable
    * @param bundleName The name of the bundle we are building
    * @return An output map for this genrule
    */
-  private static ImmutableMap<String, ImmutableSet<String>> generateOuts(
+  private static ImmutableMap<OutputLabel, ImmutableSet<String>> generateOuts(
       BuildTarget target,
       ProjectFilesystem filesystem,
       boolean rewriteSourcemap,
       boolean rewriteMisc,
       boolean rewriteDepsFile,
       String bundleName) {
-    ImmutableMap.Builder<String, ImmutableSet<String>> builder = ImmutableMap.builder();
+    ImmutableMap.Builder<OutputLabel, ImmutableSet<String>> builder = ImmutableMap.builder();
     if (rewriteSourcemap) {
       Path sourceMap = filesystem.getPath(JsUtil.getSourcemapPath(bundleName));
-      builder.put(SOURCE_MAP.toString(), ImmutableSet.of(sourceMap.toString()));
+      builder.put(SOURCE_MAP, ImmutableSet.of(sourceMap.toString()));
     }
 
     if (rewriteMisc) {
       Path miscPath = filesystem.getPath("misc");
-      builder.put(MISC.toString(), ImmutableSet.of(miscPath.toString()));
+      builder.put(MISC, ImmutableSet.of(miscPath.toString()));
     }
 
     if (rewriteDepsFile) {
       Path depsPath = filesystem.getPath(String.format("%s.deps", target.getShortName()));
-      builder.put(DEPS_FILE.toString(), ImmutableSet.of(depsPath.toString()));
+      builder.put(DEPS_FILE, ImmutableSet.of(depsPath.toString()));
     }
 
-    builder.put(JS.toString(), ImmutableSet.of(JsBundleOutputs.JS_DIR_NAME));
+    builder.put(JS, ImmutableSet.of(JsBundleOutputs.JS_DIR_NAME));
+    builder.put(OutputLabel.defaultLabel(), ImmutableSet.of(JsBundleOutputs.JS_DIR_NAME));
     return builder.build();
   }
 }

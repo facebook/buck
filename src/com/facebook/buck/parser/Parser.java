@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -30,7 +31,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.SortedMap;
 import javax.annotation.Nullable;
@@ -53,14 +53,14 @@ public interface Parser {
   ImmutableList<TargetNode<?>> getAllTargetNodes(
       PerBuildState perBuildState,
       Cell cell,
-      Path buildFile,
+      AbsPath buildFile,
       Optional<TargetConfiguration> targetConfiguration)
       throws BuildFileParseException;
 
   ImmutableList<TargetNode<?>> getAllTargetNodesWithTargetCompatibilityFiltering(
       PerBuildState state,
       Cell cell,
-      Path buildFile,
+      AbsPath buildFile,
       Optional<TargetConfiguration> targetConfiguration)
       throws BuildFileParseException;
 

@@ -18,6 +18,7 @@ package com.facebook.buck.parser.targetnode;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
@@ -94,11 +95,12 @@ public class BuildTargetToUnconfiguredTargetNodeComputation
      * TODO: If we want to support packages in the query service, we'll need to implement the
      * required computations.
      */
-    Path buildFile =
+    AbsPath buildFile =
         cell.getBuckConfigView(ParserConfig.class).getAbsolutePathToBuildFile(cell, buildTarget);
 
     Package stubPackage =
-        PackageFactory.create(cell, buildFile, PackageMetadata.EMPTY_SINGLETON, Optional.empty());
+        PackageFactory.create(
+            cell, buildFile.getPath(), PackageMetadata.EMPTY_SINGLETON, Optional.empty());
 
     return unconfiguredTargetNodeFactory.create(
         cell,
