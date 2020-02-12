@@ -16,17 +16,17 @@
 
 package com.facebook.buck.parser;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import java.nio.file.Path;
 
 /** A pipeline that provides a {@link BuildFileManifest} for a given build file. */
 public class BuildFileRawNodeParsePipeline extends GenericFileParsePipeline<BuildFileManifest> {
 
   public BuildFileRawNodeParsePipeline(
-      PipelineNodeCache<Path, BuildFileManifest> cache,
+      PipelineNodeCache<AbsPath, BuildFileManifest> cache,
       ProjectBuildFileParserPool projectBuildFileParserPool,
       ListeningExecutorService executorService,
       BuckEventBus eventBus,

@@ -43,4 +43,14 @@ class BuckUnixAbsPath extends BuckUnixPath implements AbsPath {
   public BuckUnixAbsPath resolve(Path obj) {
     return (BuckUnixAbsPath) super.resolve(obj);
   }
+
+  @Override
+  public BuckUnixAbsPath resolve(String other) {
+    return (BuckUnixAbsPath) super.resolve(other);
+  }
+
+  @Override
+  public BuckUnixAbsPath getParent() {
+    return (BuckUnixAbsPath) super.getParent();
+  }
 }

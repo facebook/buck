@@ -18,6 +18,7 @@ package com.facebook.buck.parser.targetnode;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
@@ -34,7 +35,6 @@ import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.parser.UnconfiguredTargetNodeToTargetNodeFactory;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.Path;
 import java.util.Optional;
 
 /** Transforms {@link UnconfiguredTargetNode} to {@link UnconfiguredTargetNodeWithDeps} */
@@ -78,10 +78,11 @@ public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation
   public UnconfiguredTargetNodeWithDeps transform(
       UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsKey key, ComputationEnvironment env) {
 
-    Path buildFileAbsolutePath =
-        cell.getRoot()
-            .resolve(key.getPackagePath())
-            .resolve(cell.getBuckConfig().getView(ParserConfig.class).getBuildFileName());
+    AbsPath buildFileAbsolutePath =
+        AbsPath.of(
+            cell.getRoot()
+                .resolve(key.getPackagePath())
+                .resolve(cell.getBuckConfig().getView(ParserConfig.class).getBuildFileName()));
 
     UnconfiguredBuildTarget unconfiguredBuildTarget =
         key.getUnconfiguredTargetNode().getBuildTarget();

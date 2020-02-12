@@ -21,6 +21,7 @@ import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.HumanReadableExceptions;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.RuleType;
@@ -46,7 +47,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.SettableFuture;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -71,7 +71,8 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
   private final BuckEventBus eventBus;
   private final PipelineNodeCache<BuildTarget, TargetNode<?>> cache;
   private final ConcurrentHashMap<
-          Pair<Path, Optional<TargetConfiguration>>, ListenableFuture<ImmutableList<TargetNode<?>>>>
+          Pair<AbsPath, Optional<TargetConfiguration>>,
+          ListenableFuture<ImmutableList<TargetNode<?>>>>
       allNodeCache = new ConcurrentHashMap<>();
   private final Scope perfEventScope;
   private final SimplePerfEvent.PerfEventId perfEventId;
@@ -217,9 +218,9 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
    * configuration or {@code default_target_platform} rule arg
    */
   ListenableFuture<ImmutableList<TargetNode<?>>> getAllRequestedTargetNodesJob(
-      Cell cell, Path buildFile, Optional<TargetConfiguration> globalTargetConfiguration) {
+      Cell cell, AbsPath buildFile, Optional<TargetConfiguration> globalTargetConfiguration) {
     SettableFuture<ImmutableList<TargetNode<?>>> future = SettableFuture.create();
-    Pair<Path, Optional<TargetConfiguration>> pathCacheKey =
+    Pair<AbsPath, Optional<TargetConfiguration>> pathCacheKey =
         new Pair<>(buildFile, globalTargetConfiguration);
     ListenableFuture<ImmutableList<TargetNode<?>>> cachedFuture =
         allNodeCache.putIfAbsent(pathCacheKey, future);
@@ -268,7 +269,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
    * @throws BuildFileParseException for syntax errors.
    */
   ImmutableList<TargetNode<?>> getAllRequestedTargetNodes(
-      Cell cell, Path buildFile, Optional<TargetConfiguration> globalTargetConfiguration) {
+      Cell cell, AbsPath buildFile, Optional<TargetConfiguration> globalTargetConfiguration) {
     Preconditions.checkState(!shuttingDown.get());
 
     try {

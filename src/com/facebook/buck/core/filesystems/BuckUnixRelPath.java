@@ -29,4 +29,9 @@ class BuckUnixRelPath extends BuckUnixPath implements RelPath {
   public BuckUnixRelPath normalize() {
     return (BuckUnixRelPath) super.normalize();
   }
+
+  @Override
+  public BuckUnixRelPath getParent() {
+    return (BuckUnixRelPath) super.getParent();
+  }
 }

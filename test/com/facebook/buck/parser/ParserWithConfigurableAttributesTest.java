@@ -237,7 +237,7 @@ public class ParserWithConfigurableAttributesTest {
             .create(
                 ParsingContext.builder(cell, executor).setProfilingEnabled(enableProfiling).build(),
                 parser.getPermState())) {
-      AbstractParser.getTargetNodeRawAttributes(state, cell, buildFile).getTargets();
+      AbstractParser.getTargetNodeRawAttributes(state, cell, AbsPath.of(buildFile)).getTargets();
     }
   }
 

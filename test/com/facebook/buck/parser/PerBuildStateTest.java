@@ -26,6 +26,7 @@ import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
@@ -135,9 +136,9 @@ public class PerBuildStateTest {
       throws IOException, BuildFileParseException {
     tempDir.newFolder("foo");
 
-    Path testFooBuckFile = tempDir.newFile("foo/BUCK").toRealPath();
+    AbsPath testFooBuckFile = AbsPath.of(tempDir.newFile("foo/BUCK").toRealPath());
     Files.write(
-        testFooBuckFile,
+        testFooBuckFile.getPath(),
         "java_library(name = 'lib1')\njava_library(name = 'lib2')\n".getBytes(UTF_8));
     BuildTarget fooLib1Target = BuildTargetFactory.newInstance("//foo", "lib1");
     BuildTarget fooLib2Target = BuildTargetFactory.newInstance("//foo", "lib2");

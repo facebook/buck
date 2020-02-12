@@ -22,6 +22,7 @@ import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.attr.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.HasDefaultFlavors;
@@ -50,7 +51,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
-import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.SortedMap;
@@ -240,7 +240,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
   public ImmutableList<TargetNode<?>> getAllTargetNodesWithTargetCompatibilityFiltering(
       PerBuildState state,
       Cell cell,
-      Path buildFile,
+      AbsPath buildFile,
       Optional<TargetConfiguration> targetConfiguration)
       throws BuildFileParseException {
     ImmutableList<TargetNode<?>> allTargetNodes =

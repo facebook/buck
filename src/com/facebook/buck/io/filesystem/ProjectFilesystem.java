@@ -16,7 +16,9 @@
 
 package com.facebook.buck.io.filesystem;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.PathWrapper;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableCollection;
@@ -83,8 +85,16 @@ public interface ProjectFilesystem {
     return resolve(path.toPath(getFileSystem()));
   }
 
+  default AbsPath resolve(RelPath path) {
+    return AbsPath.of(resolve(path.getPath()));
+  }
+
   /** Construct a relative path between the project root and a given path. */
   Path relativize(Path path);
+
+  default RelPath relativize(AbsPath path) {
+    return RelPath.of(relativize(path.getPath()));
+  }
 
   /** @return a set of {@link PathMatcher} objects ignored by {@link #isIgnored(Path)} */
   ImmutableSet<PathMatcher> getBlacklistedPaths();
@@ -139,6 +149,10 @@ public interface ProjectFilesystem {
 
   /** Checks whether there is a normal file at the specified path. */
   boolean isFile(Path pathRelativeToProjectRoot, LinkOption... options);
+
+  default boolean isFile(PathWrapper pathRelativeToProjectRoot, LinkOption... options) {
+    return isFile(pathRelativeToProjectRoot.getPath(), options);
+  }
 
   boolean isHidden(Path pathRelativeToProjectRoot) throws IOException;
 

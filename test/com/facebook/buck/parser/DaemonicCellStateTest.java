@@ -27,6 +27,7 @@ import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.RuleType;
@@ -47,7 +48,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
@@ -70,14 +70,15 @@ public class DaemonicCellStateTest {
       throw new AssertionError();
     }
     state.putBuildFileManifestIfNotPresent(
-        targetCell
-            .getRoot()
-            .resolve(
-                target
-                    .getCellRelativeBasePath()
-                    .getPath()
-                    .toPath(filesystem.getFileSystem())
-                    .resolve("BUCK")),
+        AbsPath.of(
+            targetCell
+                .getRoot()
+                .resolve(
+                    target
+                        .getCellRelativeBasePath()
+                        .getPath()
+                        .toPath(filesystem.getFileSystem())
+                        .resolve("BUCK"))),
         BuildFileManifestFactory.create(
             ImmutableMap.of(
                 target.getShortName(),
@@ -113,8 +114,8 @@ public class DaemonicCellStateTest {
         ImmutableSet.of());
   }
 
-  private Path dummyPackageFile() {
-    return filesystem.resolve("path/to/PACKAGE");
+  private AbsPath dummyPackageFile() {
+    return AbsPath.of(filesystem.resolve("path/to/PACKAGE"));
   }
 
   @Test
@@ -147,7 +148,7 @@ public class DaemonicCellStateTest {
     Cache<UnconfiguredBuildTarget, UnconfiguredTargetNode> cache =
         childState.getCache(DaemonicCellState.RAW_TARGET_NODE_CACHE_TYPE);
 
-    Path targetPath = childCell.getRoot().resolve("path/to/BUCK");
+    AbsPath targetPath = AbsPath.of(childCell.getRoot().resolve("path/to/BUCK"));
     BuildTarget target = BuildTargetFactory.newInstance("xplat//path/to:target");
 
     // Make sure the cache has a raw node for this target.
@@ -178,7 +179,7 @@ public class DaemonicCellStateTest {
 
   @Test
   public void putPackageIfNotPresent() {
-    Path packageFile = dummyPackageFile();
+    AbsPath packageFile = dummyPackageFile();
     PackageFileManifest manifest = PackageFileManifest.EMPTY_SINGLETON;
 
     PackageFileManifest cachedManifest =
@@ -204,7 +205,7 @@ public class DaemonicCellStateTest {
 
   @Test
   public void lookupPackage() {
-    Path packageFile = dummyPackageFile();
+    AbsPath packageFile = dummyPackageFile();
 
     Optional<PackageFileManifest> lookupManifest = state.lookupPackageFileManifest(packageFile);
 
@@ -219,7 +220,7 @@ public class DaemonicCellStateTest {
 
   @Test
   public void invalidatePackageFilePath() {
-    Path packageFile = dummyPackageFile();
+    AbsPath packageFile = dummyPackageFile();
     PackageFileManifest manifest = PackageFileManifest.EMPTY_SINGLETON;
 
     state.putPackageFileManifestIfNotPresent(
@@ -228,7 +229,7 @@ public class DaemonicCellStateTest {
     Optional<PackageFileManifest> lookupManifest = state.lookupPackageFileManifest(packageFile);
     assertTrue(lookupManifest.isPresent());
 
-    state.invalidatePath(filesystem.resolve("path/to/random.bzl"));
+    state.invalidatePath(AbsPath.of(filesystem.resolve("path/to/random.bzl")));
 
     lookupManifest = state.lookupPackageFileManifest(packageFile);
     assertTrue(lookupManifest.isPresent());
@@ -241,10 +242,10 @@ public class DaemonicCellStateTest {
 
   @Test
   public void dependentInvalidatesPackageFileManifest() {
-    Path packageFile = dummyPackageFile();
+    AbsPath packageFile = dummyPackageFile();
     PackageFileManifest manifest = PackageFileManifest.EMPTY_SINGLETON;
 
-    Path dependentFile = filesystem.resolve("path/to/pkg_dependent.bzl");
+    AbsPath dependentFile = AbsPath.of(filesystem.resolve("path/to/pkg_dependent.bzl"));
 
     state.putPackageFileManifestIfNotPresent(
         packageFile,

@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
@@ -106,7 +107,7 @@ class DaemonicCellState {
     }
   }
 
-  private final Path cellRoot;
+  private final AbsPath cellRoot;
   private final CanonicalCellName cellCanonicalName;
   private final AtomicReference<Cell> cell;
 
@@ -116,7 +117,7 @@ class DaemonicCellState {
    * files to invalidate when a dependent file changes.
    */
   @GuardedBy("cachesLock")
-  private final SetMultimap<Path, Path> buildFileDependents;
+  private final SetMultimap<AbsPath, AbsPath> buildFileDependents;
 
   /**
    * A mapping from dependent files (typically .bzl files) to all PACKAGE files which include that
@@ -124,7 +125,7 @@ class DaemonicCellState {
    * invalidate when a dependent file changes.
    */
   @GuardedBy("cachesLock")
-  private final SetMultimap<Path, Path> packageFileDependents;
+  private final SetMultimap<AbsPath, AbsPath> packageFileDependents;
 
   /**
    * Contains environment variables used during parsing of a particular build file.
@@ -134,15 +135,15 @@ class DaemonicCellState {
    * changed.
    */
   @GuardedBy("cachesLock")
-  private final Map<Path, ImmutableMap<String, Optional<String>>> buildFileEnv;
+  private final Map<AbsPath, ImmutableMap<String, Optional<String>>> buildFileEnv;
 
   /** Used as an unbounded cache to stored build file manifests by build file path. */
   @GuardedBy("cachesLock")
-  private final ConcurrentMapCache<Path, BuildFileManifest> allBuildFileManifests;
+  private final ConcurrentMapCache<AbsPath, BuildFileManifest> allBuildFileManifests;
 
   /** Used as an unbounded cache to stored package file manifests by package file path. */
   @GuardedBy("cachesLock")
-  private final ConcurrentMapCache<Path, PackageFileManifest> allPackageFileManifests;
+  private final ConcurrentMapCache<AbsPath, PackageFileManifest> allPackageFileManifests;
 
   /**
    * Contains all the unflavored build targets that were collected from all processed build file
@@ -202,7 +203,7 @@ class DaemonicCellState {
   DaemonicCellState(Cell cell, int parsingThreads) {
     this.cell = new AtomicReference<>(cell);
     this.parsingThreads = parsingThreads;
-    this.cellRoot = cell.getRoot();
+    this.cellRoot = AbsPath.of(cell.getRoot());
     this.cellCanonicalName = cell.getCanonicalName();
     this.buildFileDependents = HashMultimap.create();
     this.packageFileDependents = HashMultimap.create();
@@ -220,7 +221,7 @@ class DaemonicCellState {
     return Objects.requireNonNull(cell.get());
   }
 
-  Path getCellRoot() {
+  AbsPath getCellRoot() {
     return cellRoot;
   }
 
@@ -228,16 +229,16 @@ class DaemonicCellState {
     return type.getCache.apply(this);
   }
 
-  Optional<BuildFileManifest> lookupBuildFileManifest(Path buildFile) {
+  Optional<BuildFileManifest> lookupBuildFileManifest(AbsPath buildFile) {
     try (AutoCloseableLock readLock = cachesLock.readLock()) {
       return Optional.ofNullable(allBuildFileManifests.getIfPresent(buildFile));
     }
   }
 
   BuildFileManifest putBuildFileManifestIfNotPresent(
-      Path buildFile,
+      AbsPath buildFile,
       BuildFileManifest buildFileManifest,
-      ImmutableSet<Path> dependentsOfEveryNode,
+      ImmutableSet<AbsPath> dependentsOfEveryNode,
       ImmutableMap<String, Optional<String>> env) {
     try (AutoCloseableLock writeLock = cachesLock.writeLock()) {
       BuildFileManifest updated =
@@ -245,13 +246,13 @@ class DaemonicCellState {
       for (Map<String, Object> node : updated.getTargets().values()) {
         allRawNodeTargets.add(
             UnflavoredBuildTargetFactory.createFromRawNode(
-                cellRoot, cellCanonicalName, node, buildFile));
+                cellRoot.getPath(), cellCanonicalName, node, buildFile.getPath()));
       }
       buildFileEnv.put(buildFile, env);
       if (updated == buildFileManifest) {
         // We now know all the nodes. They all implicitly depend on everything in
         // the "dependentsOfEveryNode" set.
-        for (Path dependent : dependentsOfEveryNode) {
+        for (AbsPath dependent : dependentsOfEveryNode) {
           buildFileDependents.put(dependent, buildFile);
         }
       }
@@ -259,16 +260,16 @@ class DaemonicCellState {
     }
   }
 
-  Optional<PackageFileManifest> lookupPackageFileManifest(Path packageFile) {
+  Optional<PackageFileManifest> lookupPackageFileManifest(AbsPath packageFile) {
     try (AutoCloseableLock readLock = cachesLock.readLock()) {
       return Optional.ofNullable(allPackageFileManifests.getIfPresent(packageFile));
     }
   }
 
   PackageFileManifest putPackageFileManifestIfNotPresent(
-      Path packageFile,
+      AbsPath packageFile,
       PackageFileManifest packageFileManifest,
-      ImmutableSet<Path> packageDependents,
+      ImmutableSet<AbsPath> packageDependents,
       ImmutableMap<String, Optional<String>> env) {
     try (AutoCloseableLock writeLock = cachesLock.writeLock()) {
       PackageFileManifest updated =
@@ -277,7 +278,7 @@ class DaemonicCellState {
       if (updated == packageFileManifest) {
         // The package file will depend on all dependents and we keep a reverse mapping to know
         // which package files to invalidate if a dependent changes.
-        for (Path dependent : packageDependents) {
+        for (AbsPath dependent : packageDependents) {
           this.packageFileDependents.put(dependent, packageFile);
         }
       }
@@ -291,7 +292,7 @@ class DaemonicCellState {
    *
    * @return The number of invalidated nodes.
    */
-  int invalidateNodesInPath(Path path, boolean invalidateBuildTargets) {
+  int invalidateNodesInPath(AbsPath path, boolean invalidateBuildTargets) {
     try (AutoCloseableLock writeLock = cachesLock.writeLock()) {
       int invalidatedRawNodes = 0;
       BuildFileManifest buildFileManifest = allBuildFileManifests.getIfPresent(path);
@@ -303,7 +304,7 @@ class DaemonicCellState {
         for (Map<String, Object> rawNode : rawNodes.values()) {
           UnflavoredBuildTarget target =
               UnflavoredBuildTargetFactory.createFromRawNode(
-                  cellRoot, cellCanonicalName, rawNode, path);
+                  cellRoot.getPath(), cellCanonicalName, rawNode, path.getPath());
           LOG.debug("Invalidating target for path %s: %s", path, target);
           for (Cache<?, ?> cache : typedNodeCaches()) {
             cache.invalidateFor(target);
@@ -334,7 +335,7 @@ class DaemonicCellState {
    * @param path Absolute path to the file for which to invalidate all cached content.
    * @return Count of all invalidated raw nodes for the path
    */
-  int invalidatePath(Path path) {
+  int invalidatePath(AbsPath path) {
     try (AutoCloseableLock writeLock = cachesLock.writeLock()) {
       // If `path` is a build file with a valid entry in `allBuildFileManifests`, we also want to
       // invalidate the build targets in the manifest.
@@ -344,10 +345,10 @@ class DaemonicCellState {
       allPackageFileManifests.invalidate(path);
 
       // We may have been given a file that other build files depend on. Invalidate accordingly.
-      Iterable<Path> dependents = buildFileDependents.get(path);
-      boolean isPackageFile = PackagePipeline.isPackageFile(path);
+      Set<AbsPath> dependents = buildFileDependents.get(path);
+      boolean isPackageFile = PackagePipeline.isPackageFile(path.getPath());
       LOG.verbose("Invalidating dependents for path %s: %s", path, dependents);
-      for (Path dependent : dependents) {
+      for (AbsPath dependent : dependents) {
         if (dependent.equals(path)) {
           continue;
         }
@@ -371,7 +372,7 @@ class DaemonicCellState {
       // We may have been given a file that package files depends on. Iteratively invalidate those
       // package files.
       dependents = packageFileDependents.get(path);
-      for (Path dependent : dependents) {
+      for (AbsPath dependent : dependents) {
         if (dependent.equals(path)) {
           continue;
         }
@@ -383,7 +384,7 @@ class DaemonicCellState {
     }
   }
 
-  Optional<MapDifference<String, String>> invalidateIfEnvHasChanged(Cell cell, Path buildFile) {
+  Optional<MapDifference<String, String>> invalidateIfEnvHasChanged(Cell cell, AbsPath buildFile) {
     // Invalidate if env vars have changed.
     ImmutableMap<String, Optional<String>> usedEnv;
     try (AutoCloseableLock readLock = cachesLock.readLock()) {
@@ -412,7 +413,7 @@ class DaemonicCellState {
   }
 
   /** @return {@code true} if the given path has dependencies that are present in the given set. */
-  boolean pathDependentPresentIn(Path path, Set<Path> buildFiles) {
+  boolean pathDependentPresentIn(Path path, Set<AbsPath> buildFiles) {
     return !Collections.disjoint(buildFileDependents.get(cellRoot.resolve(path)), buildFiles);
   }
 }

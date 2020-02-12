@@ -28,6 +28,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
@@ -682,7 +683,7 @@ public class BuildCommandTest {
     public ImmutableList<TargetNode<?>> getAllTargetNodes(
         PerBuildState perBuildState,
         Cell cell,
-        Path buildFile,
+        AbsPath buildFile,
         Optional<TargetConfiguration> targetConfiguration)
         throws BuildFileParseException {
       return parser.getAllTargetNodes(perBuildState, cell, buildFile, targetConfiguration);
@@ -692,7 +693,7 @@ public class BuildCommandTest {
     public ImmutableList<TargetNode<?>> getAllTargetNodesWithTargetCompatibilityFiltering(
         PerBuildState state,
         Cell cell,
-        Path buildFile,
+        AbsPath buildFile,
         Optional<TargetConfiguration> targetConfiguration)
         throws BuildFileParseException {
       return parser.getAllTargetNodesWithTargetCompatibilityFiltering(

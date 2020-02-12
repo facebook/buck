@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -201,7 +202,7 @@ final class OwnersReport {
               basePath1 -> {
                 try {
                   return parser.getAllTargetNodesWithTargetCompatibilityFiltering(
-                      parserState, cell, basePath1, targetConfiguration);
+                      parserState, cell, AbsPath.of(basePath1), targetConfiguration);
                 } catch (BuildFileParseException e) {
                   throw new HumanReadableException(e);
                 }

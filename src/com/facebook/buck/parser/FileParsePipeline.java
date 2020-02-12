@@ -20,13 +20,13 @@ import static com.facebook.buck.util.concurrent.MoreFutures.propagateCauseIfInst
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.parser.api.FileManifest;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.UncheckedExecutionException;
-import java.nio.file.Path;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -45,7 +45,7 @@ public interface FileParsePipeline<T extends FileManifest> extends AutoCloseable
    * @return all targets from the file
    * @throws BuildFileParseException for syntax errors.
    */
-  default T getFile(Cell cell, Path buildFile) throws BuildFileParseException {
+  default T getFile(Cell cell, AbsPath buildFile) throws BuildFileParseException {
     try {
       return getFileJob(cell, buildFile).get();
     } catch (Exception e) {
@@ -68,5 +68,5 @@ public interface FileParsePipeline<T extends FileManifest> extends AutoCloseable
    * @param buildFile absolute path to the file to process.
    * @return future.
    */
-  ListenableFuture<T> getFileJob(Cell cell, Path buildFile) throws BuildTargetException;
+  ListenableFuture<T> getFileJob(Cell cell, AbsPath buildFile) throws BuildTargetException;
 }

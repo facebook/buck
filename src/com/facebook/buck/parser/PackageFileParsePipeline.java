@@ -16,17 +16,17 @@
 
 package com.facebook.buck.parser;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.parser.api.PackageFileManifest;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import java.nio.file.Path;
 
 /** A pipeline that provides a {@link PackageFileManifest} for a given package file. */
 public class PackageFileParsePipeline extends GenericFileParsePipeline<PackageFileManifest> {
 
   public PackageFileParsePipeline(
-      PipelineNodeCache<Path, PackageFileManifest> cache,
+      PipelineNodeCache<AbsPath, PackageFileManifest> cache,
       PackageFileParserPool packageFileParserPool,
       ListeningExecutorService executorService,
       BuckEventBus eventBus,
