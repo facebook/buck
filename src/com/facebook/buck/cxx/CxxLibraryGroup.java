@@ -503,15 +503,13 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
       LOG.verbose("Skipping library %s on platform %s", this, cxxPlatform.getFlavor());
       return ImmutableMap.of();
     }
-    ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
     String sharedLibrarySoname =
         CxxDescriptionEnhancer.getSharedLibrarySoname(
             soname, getBuildTarget(), cxxPlatform, getProjectFilesystem());
     BuildRule sharedLibraryBuildRule =
         requireBuildRule(
             graphBuilder, cxxPlatform.getFlavor(), CxxDescriptionEnhancer.SHARED_FLAVOR);
-    libs.put(sharedLibrarySoname, sharedLibraryBuildRule.getSourcePathToOutput());
-    return libs.build();
+    return ImmutableMap.of(sharedLibrarySoname, sharedLibraryBuildRule.getSourcePathToOutput());
   }
 
   @Override
