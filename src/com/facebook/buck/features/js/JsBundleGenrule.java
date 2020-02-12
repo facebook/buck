@@ -505,6 +505,7 @@ public final class JsBundleGenrule extends BaseGenrule<JsBundleGenrule.Buildable
     }
 
     builder.put(JS, ImmutableSet.of(JsBundleOutputs.JS_DIR_NAME));
+    builder.put(OutputLabel.defaultLabel(), ImmutableSet.of(JsBundleOutputs.JS_DIR_NAME));
     return builder.build();
   }
 }

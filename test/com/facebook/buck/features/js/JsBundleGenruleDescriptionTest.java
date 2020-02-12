@@ -41,12 +41,14 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -674,6 +676,23 @@ public class JsBundleGenruleDescriptionTest {
   public void dependsOnDepsFile() {
     setUp();
     assertThat(setup.genrule().getBuildDeps(), hasItem(setup.jsBundleDepsFile()));
+  }
+
+  @Test
+  public void defaultOutputIsJSFolder() {
+    setUp();
+
+    Path targetOutputPath =
+        BuildPaths.removeHashFrom(
+                BuildPaths.getGenDir(setup.scenario.filesystem, setup.target).resolve("js"),
+                setup.target)
+            .get();
+    SourcePath outputPath = setup.genrule().getSourcePathToOutput();
+    Path resolvedPath =
+        BuildPaths.removeHashFrom(sourcePathResolver().getRelativePath(outputPath), setup.target)
+            .get();
+
+    assertThat(resolvedPath, equalTo(targetOutputPath));
   }
 
   private JsBundleGenruleBuilder.Options builderOptions(
