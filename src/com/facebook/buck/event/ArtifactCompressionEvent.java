@@ -17,7 +17,10 @@
 package com.facebook.buck.event;
 
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rules.HasNameAndType;
+import com.facebook.buck.log.views.JsonViews;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
@@ -33,11 +36,15 @@ public abstract class ArtifactCompressionEvent extends AbstractBuckEvent
   private final Operation operation;
   @JsonIgnore private final ImmutableSet<RuleKey> ruleKeys;
 
+  @JsonView(JsonViews.MachineReadableLog.class)
+  private final HasNameAndType buildRule;
+
   protected ArtifactCompressionEvent(
-      EventKey eventKey, Operation operation, ImmutableSet<RuleKey> ruleKeys) {
+      EventKey eventKey, Operation operation, ImmutableSet<RuleKey> ruleKeys, HasNameAndType rule) {
     super(eventKey);
     this.operation = operation;
     this.ruleKeys = ruleKeys;
+    this.buildRule = rule;
   }
 
   @Override
@@ -60,19 +67,21 @@ public abstract class ArtifactCompressionEvent extends AbstractBuckEvent
   }
 
   /** Create a new Started event for the operation and set of RuleKeys */
-  public static Started started(Operation operation, ImmutableSet<RuleKey> ruleKeys) {
-    return new Started(operation, ruleKeys);
+  public static Started started(
+      Operation operation, ImmutableSet<RuleKey> ruleKeys, HasNameAndType rule) {
+    return new Started(operation, ruleKeys, rule);
   }
 
   /** Create a new Finished event for corresponding Started event */
-  public static Finished finished(Started started, long fullSize, long compressedSize) {
-    return new Finished(started, fullSize, compressedSize);
+  public static Finished finished(
+      Started started, long fullSize, long compressedSize, HasNameAndType rule) {
+    return new Finished(started, fullSize, compressedSize, rule);
   }
 
   /** Event for when a artifact starts compression/decompression */
   public static class Started extends ArtifactCompressionEvent {
-    protected Started(Operation operation, ImmutableSet<RuleKey> ruleKeys) {
-      super(EventKey.unique(), operation, ruleKeys);
+    protected Started(Operation operation, ImmutableSet<RuleKey> ruleKeys, HasNameAndType rule) {
+      super(EventKey.unique(), operation, ruleKeys, rule);
     }
 
     @Override
@@ -85,15 +94,19 @@ public abstract class ArtifactCompressionEvent extends AbstractBuckEvent
 
   /** Event for when a artifact finishes compression/decompression */
   public static class Finished extends ArtifactCompressionEvent {
-    protected Finished(Started started, long fullSize, long compressedSize) {
-      super(started.getEventKey(), started.getOperation(), started.getRuleKeys());
+    protected Finished(Started started, long fullSize, long compressedSize, HasNameAndType rule) {
+      super(started.getEventKey(), started.getOperation(), started.getRuleKeys(), rule);
       startedTimeStamp = started.getTimestampMillis();
       this.fullSize = fullSize;
       this.compressedSize = compressedSize;
     }
 
     private final long startedTimeStamp;
+
+    @JsonView(JsonViews.MachineReadableLog.class)
     public final long fullSize;
+
+    @JsonView(JsonViews.MachineReadableLog.class)
     public final long compressedSize;
 
     /** Returns the timestamp of corresponding started event */

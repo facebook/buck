@@ -331,7 +331,7 @@ public class SuperConsoleEventBusListenerTest {
 
     ArtifactCompressionEvent.Started compressStarted =
         ArtifactCompressionEvent.started(
-            ArtifactCompressionEvent.Operation.COMPRESS, ImmutableSet.of());
+            ArtifactCompressionEvent.Operation.COMPRESS, ImmutableSet.of(), fakeRule);
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(compressStarted, 703L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
@@ -348,7 +348,7 @@ public class SuperConsoleEventBusListenerTest {
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            ArtifactCompressionEvent.finished(compressStarted, 0, 0),
+            ArtifactCompressionEvent.finished(compressStarted, 0, 0, fakeRule),
             704L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));

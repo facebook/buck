@@ -485,9 +485,9 @@ public class ChromeTraceBuildListenerTest {
 
     ArtifactCompressionEvent.Started artifactCompressionStartedEvent =
         ArtifactCompressionEvent.started(
-            ArtifactCompressionEvent.Operation.COMPRESS, ImmutableSet.of(ruleKey));
+            ArtifactCompressionEvent.Operation.COMPRESS, ImmutableSet.of(ruleKey), rule);
     eventBus.post(artifactCompressionStartedEvent);
-    eventBus.post(ArtifactCompressionEvent.finished(artifactCompressionStartedEvent, 0, 0));
+    eventBus.post(ArtifactCompressionEvent.finished(artifactCompressionStartedEvent, 0, 0, rule));
 
     BuildRuleEvent.Started started = BuildRuleEvent.started(rule, durationTracker);
     eventBus.post(started);
