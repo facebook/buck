@@ -17,12 +17,14 @@
 package com.facebook.buck.cxx.toolchain.objectfile;
 
 import com.facebook.buck.io.file.FileContentsScrubber;
+import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.Arrays;
+import javax.annotation.Nonnull;
 
 public class LcUuidContentsScrubber implements FileContentsScrubber {
 
@@ -39,17 +41,23 @@ public class LcUuidContentsScrubber implements FileContentsScrubber {
     MappedByteBuffer map = file.map(FileChannel.MapMode.READ_WRITE, 0, size);
 
     resetUuidIfPresent(map);
+    HashCode hashCode = computeHash(map);
+
+    map.rewind();
+    try {
+      Machos.setUuidIfPresent(map, Arrays.copyOf(hashCode.asBytes(), UUID_LENGTH));
+    } catch (Machos.MachoException e) {
+      throw new ScrubException(e.getMessage());
+    }
+  }
+
+  @Nonnull
+  private HashCode computeHash(MappedByteBuffer map) {
     map.rewind();
 
     Hasher hasher = Hashing.murmur3_128().newHasher();
     hasher.putBytes(map);
-
-    map.rewind();
-    try {
-      Machos.setUuidIfPresent(map, Arrays.copyOf(hasher.hash().asBytes(), UUID_LENGTH));
-    } catch (Machos.MachoException e) {
-      throw new ScrubException(e.getMessage());
-    }
+    return hasher.hash();
   }
 
   /** Sets the LC_UUID to all zeroes if it's part of the Mach-O file. */
