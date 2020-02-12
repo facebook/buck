@@ -147,7 +147,7 @@ public class GraphEngineFactory {
         new DefaultUnconfiguredTargetNodeFactory(
             params.getKnownRuleTypesProvider(),
             new BuiltTargetVerifier(),
-            cell.getCellPathResolver(),
+            cells,
             new SelectorListFactory(
                 new SelectorFactory(params.getUnconfiguredBuildTargetFactory())));
 

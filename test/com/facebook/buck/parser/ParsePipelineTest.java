@@ -608,7 +608,7 @@ public class ParsePipelineTest {
               new DefaultUnconfiguredTargetNodeFactory(
                   knownRuleTypesProvider,
                   new BuiltTargetVerifier(),
-                  cells.getRootCell().getCellPathResolver(),
+                  cells,
                   new SelectorListFactory(
                       new SelectorFactory(new ParsingUnconfiguredBuildTargetViewFactory()))));
       ParserTargetNodeFromUnconfiguredTargetNodeFactory rawTargetNodeToTargetNodeFactory =

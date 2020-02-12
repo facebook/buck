@@ -69,7 +69,7 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
         new DefaultUnconfiguredTargetNodeFactory(
             knownRuleTypesProvider,
             new BuiltTargetVerifier(),
-            cell.getRootCell().getCellPathResolver(),
+            cell,
             new SelectorListFactory(
                 new SelectorFactory(new ParsingUnconfiguredBuildTargetViewFactory())));
   }

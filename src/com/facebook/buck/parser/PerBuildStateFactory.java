@@ -199,10 +199,7 @@ public class PerBuildStateFactory {
             buildTargetRawNodeParsePipeline,
             packagePipeline,
             new DefaultUnconfiguredTargetNodeFactory(
-                knownRuleTypesProvider,
-                new BuiltTargetVerifier(),
-                cells.getRootCell().getCellPathResolver(),
-                selectorListFactory));
+                knownRuleTypesProvider, new BuiltTargetVerifier(), cells, selectorListFactory));
 
     PackageBoundaryChecker packageBoundaryChecker =
         new ThrowingPackageBoundaryChecker(daemonicParserState.getBuildFileTrees());
