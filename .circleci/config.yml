@@ -784,7 +784,7 @@ jobs:
           name: Install ant
           command: choco install ant --version=1.9.7
           shell: cmd.exe
-      - run: 
+      - run:
           name: Install OpenJDK8
           command: choco install adoptopenjdk8
           shell: cmd.exe
@@ -796,7 +796,7 @@ jobs:
           name: Buck build
           command: cd %BUCKROOT% && refreshenv && bin\buck build buck -c python.interpreter=python
           shell: cmd.exe
-      # We know there are some Windows test failures, comment out for now. They should be fixed. 
+      # We know there are some Windows test failures, comment out for now. They should be fixed.
       #- run:
       #    name: Run Windows tests
       #    command: |
