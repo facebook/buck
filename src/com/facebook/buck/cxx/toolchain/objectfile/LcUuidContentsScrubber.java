@@ -26,7 +26,8 @@ import java.util.Arrays;
 
 public class LcUuidContentsScrubber implements FileContentsScrubber {
 
-  private static final byte[] ZERO_UUID = new byte[16];
+  private static final int UUID_LENGTH = 16;
+  private static final byte[] ZERO_UUID = new byte[UUID_LENGTH];
 
   @Override
   public void scrubFile(FileChannel file) throws IOException, ScrubException {
@@ -47,7 +48,7 @@ public class LcUuidContentsScrubber implements FileContentsScrubber {
 
     map.rewind();
     try {
-      Machos.setUuidIfPresent(map, Arrays.copyOf(hasher.hash().asBytes(), 16));
+      Machos.setUuidIfPresent(map, Arrays.copyOf(hasher.hash().asBytes(), UUID_LENGTH));
     } catch (Machos.MachoException e) {
       throw new ScrubException(e.getMessage());
     }
