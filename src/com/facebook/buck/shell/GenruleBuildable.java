@@ -270,8 +270,10 @@ public class GenruleBuildable implements Buildable {
                     })
                 .collect(ImmutableSet.toImmutableSet()));
       }
-      outsBuilder.put(OutputLabel.defaultLabel(), DEFAULT_OUTS);
-      outputPathsBuilder.put(OutputLabel.defaultLabel(), DEFAULT_OUTPUTS);
+      if (!outputs.containsKey(OutputLabel.defaultLabel())) {
+        outsBuilder.put(OutputLabel.defaultLabel(), DEFAULT_OUTS);
+        outputPathsBuilder.put(OutputLabel.defaultLabel(), DEFAULT_OUTPUTS);
+      }
       this.outs = Optional.of(outsBuilder.build());
       this.outputPaths = Optional.of(outputPathsBuilder.build());
       this.outputPath = Optional.empty();

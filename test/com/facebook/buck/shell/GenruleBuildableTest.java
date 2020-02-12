@@ -846,4 +846,21 @@ public class GenruleBuildableTest {
 
     buildable.getOutputName(OutputLabel.defaultLabel());
   }
+
+  @Test
+  public void doesNotOverwriteDefaultOutputsIfDefaultOutputsWereGiven() {
+    BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
+
+    GenruleBuildable buildable =
+        ImmutableGenruleBuildableBuilder.builder()
+            .setBuildTarget(target)
+            .setFilesystem(new FakeProjectFilesystem())
+            .setCmd("echo something")
+            .setOuts(
+                Optional.of(ImmutableMap.of(OutputLabel.defaultLabel(), ImmutableSet.of("foo"))))
+            .build()
+            .toBuildable();
+
+    assertEquals("foo", buildable.getOutputName(OutputLabel.defaultLabel()));
+  }
 }
