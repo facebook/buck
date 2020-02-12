@@ -16,6 +16,8 @@
 
 package com.facebook.buck.features.project.intellij;
 
+import com.facebook.buck.android.AndroidBuildConfigDescription;
+import com.facebook.buck.android.AndroidBuildConfigDescriptionArg;
 import com.facebook.buck.android.AndroidPrebuiltAarDescription;
 import com.facebook.buck.android.AndroidPrebuiltAarDescriptionArg;
 import com.facebook.buck.android.UnzipAar;
@@ -79,6 +81,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
 
     addToIndex(new AndroidPrebuiltAarLibraryRule());
     addToIndex(new PrebuiltJarLibraryRule());
+    addToIndex(new AndroidBuildConfigLibraryRule());
 
     libraryCache = new HashMap<>();
   }
@@ -195,6 +198,22 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
       arg.getSourceJar()
           .ifPresent(sourceJar -> library.addSourceJars(libraryFactoryResolver.getPath(sourceJar)));
       arg.getJavadocUrl().ifPresent(library::addJavadocUrls);
+    }
+  }
+
+  private class AndroidBuildConfigLibraryRule
+      extends TypedIjLibraryRule<AndroidBuildConfigDescriptionArg> {
+
+    @Override
+    Class<? extends DescriptionWithTargetGraph<?>> getDescriptionClass() {
+      return AndroidBuildConfigDescription.class;
+    }
+
+    @Override
+    void apply(TargetNode<AndroidBuildConfigDescriptionArg> targetNode, IjLibrary.Builder library) {
+      library.addBinaryJars(
+          libraryFactoryResolver.getPath(
+              DefaultBuildTargetSourcePath.of(targetNode.getBuildTarget())));
     }
   }
 }

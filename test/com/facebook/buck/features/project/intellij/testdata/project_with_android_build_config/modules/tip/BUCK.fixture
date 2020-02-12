@@ -1,0 +1,14 @@
+java_library(
+    name = "tip",
+    srcs = [
+        "Test.java",
+    ],
+    deps = [
+        ":build_config",
+    ],
+)
+
+android_build_config(
+    name = "build_config",
+    package = "com.facebook",
+)
