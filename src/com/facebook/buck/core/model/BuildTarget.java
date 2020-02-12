@@ -150,6 +150,11 @@ public class BuildTarget implements Comparable<BuildTarget>, DependencyStack.Ele
     return getFullyQualifiedName();
   }
 
+  /** Target name and configuration. */
+  public String toStringWithConfiguration() {
+    return getFullyQualifiedName() + " (" + targetConfiguration + ")";
+  }
+
   public BuildTarget withShortName(String shortName) {
     return BuildTarget.of(
         unconfiguredBuildTargetView.withShortName(shortName), targetConfiguration);
