@@ -19,6 +19,8 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
@@ -489,8 +491,8 @@ public class DaemonicParserState {
 
     filesChangedCounter.inc();
 
-    Path path = event.getPath();
-    Path fullPath = event.getCellPath().resolve(event.getPath());
+    RelPath path = event.getPath();
+    AbsPath fullPath = event.getCellPath().resolve(event.getPath());
 
     // We only care about creation and deletion events because modified should result in a
     // rule key change.  For parsing, these are the only events we need to care about.
@@ -512,7 +514,7 @@ public class DaemonicParserState {
             // Added or removed files can affect globs, so invalidate the package build file
             // "containing" {@code path} unless its filename matches a temp file pattern.
             if (!cell.getFilesystem().isIgnored(path)) {
-              invalidateContainingBuildFile(state, cell, buildFiles, path);
+              invalidateContainingBuildFile(state, cell, buildFiles, path.getPath());
             } else {
               LOG.debug(
                   "Not invalidating the owning build file of %s because it is a temporary file.",
@@ -531,10 +533,11 @@ public class DaemonicParserState {
       }
     }
 
-    if (configurationBuildFiles.contains(fullPath) || configurationRulesDependOn(path)) {
+    if (configurationBuildFiles.contains(fullPath.getPath())
+        || configurationRulesDependOn(path.getPath())) {
       invalidateAllCaches();
     } else {
-      invalidatePath(fullPath);
+      invalidatePath(fullPath.getPath());
     }
   }
 

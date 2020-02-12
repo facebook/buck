@@ -16,8 +16,8 @@
 
 package com.facebook.buck.io.watchman;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
-import java.nio.file.Path;
 
 /**
  * Buck sends this event when Watchman is unable to correctly determine the whole set of changes in
@@ -26,12 +26,12 @@ import java.nio.file.Path;
 @BuckStyleValue
 public abstract class WatchmanOverflowEvent implements WatchmanEvent {
   @Override
-  public abstract Path getCellPath();
+  public abstract AbsPath getCellPath();
 
   /** Human-readable message why overflow event is sent */
   public abstract String getReason();
 
-  public static WatchmanOverflowEvent of(Path cellPath, String reason) {
+  public static WatchmanOverflowEvent of(AbsPath cellPath, String reason) {
     return ImmutableWatchmanOverflowEvent.of(cellPath, reason);
   }
 }

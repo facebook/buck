@@ -22,6 +22,8 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -76,7 +78,7 @@ public class WatchedFileHashCacheTest {
     HashCodeAndFileType value = HashCodeAndFileType.ofFile(HashCode.fromInt(42));
     cache.fileHashCacheEngine.put(path, value);
     cache.fileHashCacheEngine.putSize(path, 1234L);
-    cache.onFileSystemChange(WatchmanOverflowEvent.of(filesystem.getRootPath(), ""));
+    cache.onFileSystemChange(WatchmanOverflowEvent.of(AbsPath.of(filesystem.getRootPath()), ""));
 
     assertFalse("Cache should not contain path", cache.getIfPresent(path).isPresent());
     assertThat(
@@ -95,7 +97,8 @@ public class WatchedFileHashCacheTest {
     HashCodeAndFileType value = HashCodeAndFileType.ofFile(HashCode.fromInt(42));
     cache.fileHashCacheEngine.put(path, value);
     cache.fileHashCacheEngine.putSize(path, 1234L);
-    cache.onFileSystemChange(WatchmanPathEvent.of(filesystem.getRootPath(), Kind.CREATE, path));
+    cache.onFileSystemChange(
+        WatchmanPathEvent.of(AbsPath.of(filesystem.getRootPath()), Kind.CREATE, RelPath.of(path)));
     assertFalse("Cache should not contain path", cache.getIfPresent(path).isPresent());
     assertThat(
         "Cache should not contain path",
@@ -113,7 +116,8 @@ public class WatchedFileHashCacheTest {
     HashCodeAndFileType value = HashCodeAndFileType.ofFile(HashCode.fromInt(42));
     cache.fileHashCacheEngine.put(path, value);
     cache.fileHashCacheEngine.putSize(path, 1234L);
-    cache.onFileSystemChange(WatchmanPathEvent.of(filesystem.getRootPath(), Kind.MODIFY, path));
+    cache.onFileSystemChange(
+        WatchmanPathEvent.of(AbsPath.of(filesystem.getRootPath()), Kind.MODIFY, RelPath.of(path)));
     assertFalse("Cache should not contain path", cache.getIfPresent(path).isPresent());
     assertThat(
         "Cache should not contain path",
@@ -131,7 +135,8 @@ public class WatchedFileHashCacheTest {
     HashCodeAndFileType value = HashCodeAndFileType.ofFile(HashCode.fromInt(42));
     cache.fileHashCacheEngine.put(path, value);
     cache.fileHashCacheEngine.putSize(path, 1234L);
-    cache.onFileSystemChange(WatchmanPathEvent.of(filesystem.getRootPath(), Kind.DELETE, path));
+    cache.onFileSystemChange(
+        WatchmanPathEvent.of(AbsPath.of(filesystem.getRootPath()), Kind.DELETE, RelPath.of(path)));
     assertFalse("Cache should not contain path", cache.getIfPresent(path).isPresent());
     assertThat(
         "Cache should not contain path",
@@ -151,7 +156,8 @@ public class WatchedFileHashCacheTest {
     HashCode dirHash = cache.get(dir);
     Files.write(inputFile, "Goodbye world".getBytes(Charsets.UTF_8));
     cache.onFileSystemChange(
-        WatchmanPathEvent.of(filesystem.getRootPath(), Kind.MODIFY, dir.resolve("baz")));
+        WatchmanPathEvent.of(
+            AbsPath.of(filesystem.getRootPath()), Kind.MODIFY, RelPath.of(dir.resolve("baz"))));
     HashCode dirHash2 = cache.get(dir);
     assertNotEquals(dirHash, dirHash2);
   }
@@ -167,7 +173,8 @@ public class WatchedFileHashCacheTest {
     cache.fileHashCacheEngine.put(dir, value);
     cache.fileHashCacheEngine.putSize(dir, 1234L);
     cache.onFileSystemChange(
-        WatchmanPathEvent.of(filesystem.getRootPath(), Kind.CREATE, dir.resolve("blech")));
+        WatchmanPathEvent.of(
+            AbsPath.of(filesystem.getRootPath()), Kind.CREATE, RelPath.of(dir.resolve("blech"))));
     assertFalse("Cache should not contain path", cache.getIfPresent(dir).isPresent());
     assertThat(
         "Cache should not contain path",
@@ -194,7 +201,8 @@ public class WatchedFileHashCacheTest {
     assertTrue(cache.willGet(child2));
 
     // Trigger an event on the directory.
-    cache.onFileSystemChange(WatchmanPathEvent.of(filesystem.getRootPath(), Kind.MODIFY, dir));
+    cache.onFileSystemChange(
+        WatchmanPathEvent.of(AbsPath.of(filesystem.getRootPath()), Kind.MODIFY, RelPath.of(dir)));
 
     assertFalse(cache.getIfPresent(dir).isPresent());
     assertFalse(cache.getIfPresent(child1).isPresent());
@@ -213,7 +221,9 @@ public class WatchedFileHashCacheTest {
     HashCodeAndFileType value = HashCodeAndFileType.ofFile(HashCode.fromInt(42));
     cache.fileHashCacheEngine.put(path, value);
     cache.fileHashCacheEngine.putSize(path, 1234L);
-    cache.onFileSystemChange(WatchmanPathEvent.of(filesystem.getRootPath(), Kind.MODIFY, parent));
+    cache.onFileSystemChange(
+        WatchmanPathEvent.of(
+            AbsPath.of(filesystem.getRootPath()), Kind.MODIFY, RelPath.of(parent)));
     assertFalse("Cache should not contain path", cache.getIfPresent(path).isPresent());
     assertThat(
         "Cache should not contain path",

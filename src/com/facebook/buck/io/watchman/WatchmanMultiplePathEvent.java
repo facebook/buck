@@ -16,6 +16,7 @@
 
 package com.facebook.buck.io.watchman;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
@@ -42,7 +43,7 @@ public abstract class WatchmanMultiplePathEvent implements WatchmanEvent {
   }
 
   @Override
-  public abstract Path getCellPath();
+  public abstract AbsPath getCellPath();
 
   /** All changes to monitored file system that occurred since last invalidation */
   public abstract ImmutableList<Change> getChanges();

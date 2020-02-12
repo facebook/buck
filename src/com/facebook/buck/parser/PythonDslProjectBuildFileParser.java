@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -431,7 +432,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
     ImmutableList<Map<String, Object>> values = ImmutableList.of();
     Optional<String> profile = Optional.empty();
     try (AssertScopeExclusiveAccess.Scope scope = assertSingleThreadedParsing.scope()) {
-      Path cellPath = options.getProjectRoot().toAbsolutePath();
+      AbsPath cellPath = AbsPath.of(options.getProjectRoot().toAbsolutePath());
       String watchRoot = cellPath.toString();
       String projectPrefix = "";
       if (options.getWatchman().getProjectWatches().containsKey(cellPath)) {

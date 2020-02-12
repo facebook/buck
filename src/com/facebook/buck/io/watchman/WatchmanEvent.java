@@ -16,12 +16,16 @@
 
 package com.facebook.buck.io.watchman;
 
-import java.nio.file.Path;
+import com.facebook.buck.core.filesystems.AbsPath;
 
 /** Interface for all Watchman events, requires them to have a base path */
 public interface WatchmanEvent {
-  /** Absolute cell path root being watched. */
-  Path getCellPath();
+  /**
+   * Absolute cell path root being watched.
+   *
+   * @return
+   */
+  AbsPath getCellPath();
 
   /** The kind of event that occurred in watched file system, like creation of a new file */
   enum Kind {

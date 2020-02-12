@@ -19,6 +19,7 @@ package com.facebook.buck.core.filesystems;
 import java.io.IOException;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /** Absolute path. */
 public interface AbsPath extends PathWrapper {
@@ -37,6 +38,10 @@ public interface AbsPath extends PathWrapper {
     }
   }
 
+  static AbsPath get(String path) {
+    return AbsPath.of(Paths.get(path));
+  }
+
   /** Behaves exactly like {@link Path#normalize()}. */
   default AbsPath normalize() {
     return of(getPath().normalize());
@@ -48,5 +53,9 @@ public interface AbsPath extends PathWrapper {
 
   default AbsPath resolve(Path path) {
     return AbsPath.of(getPath().resolve(path));
+  }
+
+  default AbsPath resolve(RelPath other) {
+    return resolve(other.getPath());
   }
 }

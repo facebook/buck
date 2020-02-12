@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.filesystems;
 
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.util.Objects;
 
@@ -55,4 +56,16 @@ public interface PathWrapper {
 
   @Override
   String toString();
+
+  default boolean endsWith(String other) {
+    return getPath().endsWith(other);
+  }
+
+  default boolean endsWith(Path path) {
+    return getPath().endsWith(path);
+  }
+
+  default FileSystem getFileSystem() {
+    return getPath().getFileSystem();
+  }
 }

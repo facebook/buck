@@ -16,6 +16,7 @@
 
 package com.facebook.buck.io.watchman;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -28,14 +29,14 @@ import java.util.UUID;
 /** Contains the configuration for a Watchman client as well as the ability to create a client. */
 public abstract class Watchman {
 
-  private final ImmutableMap<Path, ProjectWatch> projectWatches;
+  private final ImmutableMap<AbsPath, ProjectWatch> projectWatches;
   private final ImmutableSet<Capability> capabilities;
   private final ImmutableMap<String, String> clockIds;
   private final Optional<Path> transportPath;
   private final String version;
 
   public Watchman(
-      ImmutableMap<Path, ProjectWatch> projectWatches,
+      ImmutableMap<AbsPath, ProjectWatch> projectWatches,
       ImmutableSet<Capability> capabilities,
       ImmutableMap<String, String> clockIds,
       Optional<Path> transportPath,
@@ -47,9 +48,10 @@ public abstract class Watchman {
     this.version = version;
   }
 
-  public ImmutableMap<Path, WatchmanCursor> buildClockWatchmanCursorMap() {
-    ImmutableMap.Builder<Path, WatchmanCursor> cursorBuilder = ImmutableMap.builder();
-    for (Map.Entry<Path, ProjectWatch> entry : projectWatches.entrySet()) {
+  /** Build. */
+  public ImmutableMap<AbsPath, WatchmanCursor> buildClockWatchmanCursorMap() {
+    ImmutableMap.Builder<AbsPath, WatchmanCursor> cursorBuilder = ImmutableMap.builder();
+    for (Map.Entry<AbsPath, ProjectWatch> entry : projectWatches.entrySet()) {
       String clockId = clockIds.get(entry.getValue().getWatchRoot());
       Preconditions.checkNotNull(
           clockId, "No ClockId found for watch root %s", entry.getValue().getWatchRoot());
@@ -58,15 +60,16 @@ public abstract class Watchman {
     return cursorBuilder.build();
   }
 
-  public ImmutableMap<Path, WatchmanCursor> buildNamedWatchmanCursorMap() {
-    ImmutableMap.Builder<Path, WatchmanCursor> cursorBuilder = ImmutableMap.builder();
-    for (Path cellPath : projectWatches.keySet()) {
+  /** Build. */
+  public ImmutableMap<AbsPath, WatchmanCursor> buildNamedWatchmanCursorMap() {
+    ImmutableMap.Builder<AbsPath, WatchmanCursor> cursorBuilder = ImmutableMap.builder();
+    for (AbsPath cellPath : projectWatches.keySet()) {
       cursorBuilder.put(cellPath, new WatchmanCursor("n:buckd" + UUID.randomUUID()));
     }
     return cursorBuilder.build();
   }
 
-  public ImmutableMap<Path, ProjectWatch> getProjectWatches() {
+  public ImmutableMap<AbsPath, ProjectWatch> getProjectWatches() {
     return projectWatches;
   }
 

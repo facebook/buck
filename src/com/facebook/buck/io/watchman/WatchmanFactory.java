@@ -16,6 +16,7 @@
 
 package com.facebook.buck.io.watchman;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.unixsocket.UnixDomainSocket;
@@ -235,16 +236,16 @@ public class WatchmanFactory {
     ImmutableSet<Capability> capabilities = capabilitiesBuilder.build();
     LOG.debug("Got Watchman capabilities: %s", capabilities);
 
-    ImmutableMap.Builder<Path, ProjectWatch> projectWatchesBuilder = ImmutableMap.builder();
+    ImmutableMap.Builder<AbsPath, ProjectWatch> projectWatchesBuilder = ImmutableMap.builder();
     for (Path projectRoot : projectWatchList) {
       Optional<ProjectWatch> projectWatch =
           queryWatchProject(client, projectRoot, clock, endTimeNanos - clock.nanoTime());
       if (!projectWatch.isPresent()) {
         return NULL_WATCHMAN;
       }
-      projectWatchesBuilder.put(projectRoot, projectWatch.get());
+      projectWatchesBuilder.put(AbsPath.of(projectRoot), projectWatch.get());
     }
-    ImmutableMap<Path, ProjectWatch> projectWatches = projectWatchesBuilder.build();
+    ImmutableMap<AbsPath, ProjectWatch> projectWatches = projectWatchesBuilder.build();
     Iterable<String> watchRoots =
         RichStream.from(projectWatches.values())
             .map(ProjectWatch::getWatchRoot)

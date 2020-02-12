@@ -19,6 +19,7 @@ package com.facebook.buck.core.parser;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.graph.transformation.impl.GraphComputationStage;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
 import com.facebook.buck.core.util.log.Logger;
@@ -238,7 +239,8 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
     public MockWatchmanFactory() {
       super(
           ImmutableMap.of(
-              tmp.getRoot(), ProjectWatch.of(tmp.getRoot().toString(), Optional.empty())),
+              AbsPath.of(tmp.getRoot()),
+              ProjectWatch.of(tmp.getRoot().toString(), Optional.empty())),
           ImmutableSet.of(),
           ImmutableMap.of(),
           Optional.of(Paths.get("(MockWatchmanFactory socket)")),

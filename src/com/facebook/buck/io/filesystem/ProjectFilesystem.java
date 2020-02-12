@@ -16,6 +16,7 @@
 
 package com.facebook.buck.io.filesystem;
 
+import com.facebook.buck.core.filesystems.PathWrapper;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableCollection;
@@ -389,6 +390,11 @@ public interface ProjectFilesystem {
    */
   @Deprecated
   boolean isIgnored(Path path);
+
+  @Deprecated
+  default boolean isIgnored(PathWrapper path) {
+    return isIgnored(path.getPath());
+  }
 
   /**
    * Returns a relative path whose parent directory is guaranteed to exist. The path will be under

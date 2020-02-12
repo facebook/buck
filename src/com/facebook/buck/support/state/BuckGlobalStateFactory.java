@@ -26,6 +26,7 @@ import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.files.DirectoryListCache;
 import com.facebook.buck.core.files.FileTreeCache;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
@@ -144,7 +145,7 @@ public class BuckGlobalStateFactory {
         LOG.warn("Can't start web server");
       }
     }
-    ImmutableMap<Path, WatchmanCursor> cursor;
+    ImmutableMap<AbsPath, WatchmanCursor> cursor;
     if (rootCell.getRootCell().getBuckConfig().getView(ParserConfig.class).getWatchmanCursor()
             == WatchmanWatcher.CursorType.CLOCK_ID
         && !watchman.getClockIds().isEmpty()) {

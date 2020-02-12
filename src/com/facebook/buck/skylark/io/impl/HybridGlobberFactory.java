@@ -16,6 +16,7 @@
 
 package com.facebook.buck.skylark.io.impl;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.watchman.ProjectWatch;
 import com.facebook.buck.io.watchman.WatchmanClient;
 import com.facebook.buck.skylark.io.Globber;
@@ -35,14 +36,14 @@ public class HybridGlobberFactory implements GlobberFactory {
 
   private final WatchmanClient watchmanClient;
   private final java.nio.file.Path projectRoot;
-  private final ImmutableMap<java.nio.file.Path, ProjectWatch> projectWatches;
+  private final ImmutableMap<AbsPath, ProjectWatch> projectWatches;
   private final SyncCookieState syncCookieState;
 
   private HybridGlobberFactory(
       WatchmanClient watchmanClient,
       SyncCookieState syncCookieState,
       java.nio.file.Path projectRoot,
-      ImmutableMap<java.nio.file.Path, ProjectWatch> projectWatches) {
+      ImmutableMap<AbsPath, ProjectWatch> projectWatches) {
     this.watchmanClient = watchmanClient;
     this.syncCookieState = syncCookieState;
     this.projectRoot = projectRoot;
@@ -84,7 +85,7 @@ public class HybridGlobberFactory implements GlobberFactory {
 
   @Override
   public Globber create(Path basePath) {
-    java.nio.file.Path cellPath = projectRoot.toAbsolutePath();
+    AbsPath cellPath = AbsPath.of(projectRoot.toAbsolutePath());
     String watchRoot = cellPath.toString();
     @Nullable ProjectWatch projectWatch = projectWatches.get(cellPath);
     if (projectWatch != null) {
@@ -124,7 +125,7 @@ public class HybridGlobberFactory implements GlobberFactory {
       WatchmanClient watchmanClient,
       SyncCookieState syncCookieState,
       java.nio.file.Path projectRoot,
-      ImmutableMap<java.nio.file.Path, ProjectWatch> projectWatches) {
+      ImmutableMap<AbsPath, ProjectWatch> projectWatches) {
     return new HybridGlobberFactory(watchmanClient, syncCookieState, projectRoot, projectWatches);
   }
 }

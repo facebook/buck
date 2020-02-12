@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util.cache.impl;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.watchman.WatchmanOverflowEvent;
@@ -41,9 +42,9 @@ public class WatchedFileHashCache extends DefaultFileHashCache {
   @Subscribe
   public synchronized void onFileSystemChange(WatchmanPathEvent event) {
     // Path event, remove the path from the cache as it has been changed, added or deleted.
-    Path path = event.getPath().normalize();
+    RelPath path = event.getPath().normalize();
     LOG.verbose("Invalidating %s", path);
-    fileHashCacheEngine.invalidateWithParents(path);
+    fileHashCacheEngine.invalidateWithParents(path.getPath());
   }
 
   @SuppressWarnings("unused")
