@@ -183,14 +183,6 @@ public class ProgressEstimator implements AutoCloseable {
     calculateBuildProgress();
   }
 
-  public void didResumeRule() {
-    calculateBuildProgress();
-  }
-
-  public void didSuspendRule() {
-    calculateBuildProgress();
-  }
-
   public void didFinishRule() {
     numberOfFinishedRules.incrementAndGet();
     calculateBuildProgress();

@@ -130,7 +130,7 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
         factory.create(
             cell.getRootCell(),
             cell.getRootCell().getRoot().resolve("a/b/BUCK"),
-            buildTarget,
+            buildTarget.getData(),
             DependencyStack.root(),
             inputAttributes,
             getPackage());

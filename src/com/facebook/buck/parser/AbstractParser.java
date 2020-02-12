@@ -311,9 +311,8 @@ abstract class AbstractParser implements Parser {
    * @throws com.facebook.buck.core.exceptions.HumanReadableException if the target not is not
    *     compatible with the target platform.
    */
-  @SuppressWarnings("unused")
-  protected void assertTargetIsCompatible(
-      PerBuildState state, TargetNode<?> targetNode, DependencyStack dependencyStack) {}
+  protected abstract void assertTargetIsCompatible(
+      PerBuildState state, TargetNode<?> targetNode, DependencyStack dependencyStack);
 
   @Override
   public String toString() {

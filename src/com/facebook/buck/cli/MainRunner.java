@@ -40,6 +40,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.exceptions.ThrowableCauseIterable;
 import com.facebook.buck.core.exceptions.config.ErrorHandlingBuckConfig;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.config.DepsAwareExecutorConfig;
 import com.facebook.buck.core.graph.transformation.executor.factory.DepsAwareExecutorFactory;
@@ -575,9 +576,10 @@ public final class MainRunner {
     }
   }
 
-  private ImmutableMap<CellName, Path> getCellMapping(Path canonicalRootPath) throws IOException {
+  private ImmutableMap<CellName, Path> getCellMapping(AbsPath canonicalRootPath)
+      throws IOException {
     return DefaultCellPathResolver.bootstrapPathMapping(
-        canonicalRootPath, Configs.createDefaultConfig(canonicalRootPath));
+        canonicalRootPath.getPath(), Configs.createDefaultConfig(canonicalRootPath.getPath()));
   }
 
   private Config setupDefaultConfig(ImmutableMap<CellName, Path> cellMapping, BuckCommand command)
@@ -606,9 +608,9 @@ public final class MainRunner {
   }
 
   private ImmutableSet<Path> getProjectWatchList(
-      Path canonicalRootPath, BuckConfig buckConfig, DefaultCellPathResolver cellPathResolver) {
+      AbsPath canonicalRootPath, BuckConfig buckConfig, DefaultCellPathResolver cellPathResolver) {
     return ImmutableSet.<Path>builder()
-        .add(canonicalRootPath)
+        .add(canonicalRootPath.getPath())
         .addAll(
             buckConfig.getView(ParserConfig.class).getWatchCells()
                 ? cellPathResolver.getPathMapping().values()
@@ -633,7 +635,7 @@ public final class MainRunner {
     ExitCode exitCode = ExitCode.FATAL_GENERIC;
 
     // Setup filesystem and buck config.
-    Path canonicalRootPath = projectRoot.toRealPath().normalize();
+    AbsPath canonicalRootPath = AbsPath.of(projectRoot.toRealPath()).normalize();
     ImmutableMap<CellName, Path> rootCellMapping = getCellMapping(canonicalRootPath);
     ImmutableList<String> args =
         BuckArgsMethods.expandAtFiles(unexpandedCommandLineArgs, rootCellMapping);
@@ -878,7 +880,7 @@ public final class MainRunner {
 
       Pair<BuckGlobalState, LifecycleStatus> buckGlobalStateRequest =
           buckGlobalStateLifecycleManager.getBuckGlobalState(
-              cells.getRootCell(),
+              cells,
               knownRuleTypesProvider,
               watchman,
               printConsole,
@@ -913,7 +915,7 @@ public final class MainRunner {
       ProjectFilesystem rootCellProjectFilesystem =
           projectFilesystemFactory.createOrThrow(
               CanonicalCellName.rootCell(),
-              cells.getRootCell().getFilesystem().getRootPath(),
+              AbsPath.of(cells.getRootCell().getFilesystem().getRootPath()),
               BuckPaths.getBuckOutIncludeTargetConfigHashFromRootCellConfig(config));
       BuildBuckConfig buildBuckConfig =
           cells.getRootCell().getBuckConfig().getView(BuildBuckConfig.class);
@@ -986,7 +988,8 @@ public final class MainRunner {
               remoteExecutionConfig.getReSessionLabel(),
               remoteExecutionConfig.getTenantId(),
               remoteExecutionConfig.getAuxiliaryBuildTag(),
-              projectPrefix.orElse(""));
+              projectPrefix.orElse(""),
+              executionEnvironment);
 
       LogBuckConfig logBuckConfig = buckConfig.getView(LogBuckConfig.class);
 

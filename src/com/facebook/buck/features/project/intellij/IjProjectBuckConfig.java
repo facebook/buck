@@ -104,8 +104,8 @@ public class IjProjectBuckConfig {
   static IjProjectConfig.Builder createBuilder(BuckConfig buckConfig) {
     return IjProjectConfig.builder()
         .setAutogenerateAndroidFacetSourcesEnabled(
-            !buckConfig.getBooleanValue(
-                PROJECT_BUCK_CONFIG_SECTION, "disable_r_java_idea_generator", false))
+            buckConfig.getBooleanValue(
+                INTELLIJ_BUCK_CONFIG_SECTION, "auto_generate_android_facet_sources", true))
         .setJavaBuckConfig(buckConfig.getView(JavaBuckConfig.class))
         .setBuckConfig(buckConfig)
         .setProjectJdkName(buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "jdk_name"))

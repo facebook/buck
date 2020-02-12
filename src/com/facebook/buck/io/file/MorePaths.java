@@ -18,6 +18,7 @@ package com.facebook.buck.io.file;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.BuckUnixPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.facebook.buck.util.environment.Platform;
@@ -69,6 +70,10 @@ public class MorePaths {
       parent = emptyOf(path);
     }
     return parent;
+  }
+
+  public static RelPath getParentOrEmpty(RelPath path) {
+    return RelPath.of(getParentOrEmpty(path.getPath()));
   }
 
   /**

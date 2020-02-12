@@ -207,6 +207,30 @@ class HeaderSearchPaths {
 
     ImmutableList.Builder<SourcePath> sourcePathsToBuildBuilder = ImmutableList.builder();
 
+    NodeHelper.getAppleNativeNode(targetGraph, headerSearchPathAttributes.targetNode())
+        .ifPresent(
+            argTargetNode ->
+                visitRecursiveHeaderSymlinkTrees(
+                    argTargetNode,
+                    (depNativeNode, headerVisibility) -> {
+                      // Skip nodes that are not public or do not ask for symlinks
+                      if (headerVisibility == HeaderVisibility.PUBLIC
+                          && depNativeNode
+                              .getConstructorArg()
+                              .getXcodePublicHeadersSymlinks()
+                              .orElse(cxxBuckConfig.getPublicHeadersSymlinksEnabled())) {
+                        try {
+                          createPublicHeaderSymlinkTree(
+                              depNativeNode, getPublicCxxHeaders(depNativeNode));
+                        } catch (IOException e) {
+                          LOG.verbose(
+                              "Failed to create public header symlink tree for target "
+                                  + depNativeNode.getBuildTarget().getFullyQualifiedName());
+                          return;
+                        }
+                      }
+                    }));
+
     createPrivateHeaderSymlinkTree(
         headerSearchPathAttributes.targetNode(),
         headerSearchPathAttributes.privateCxxHeaders(),
@@ -385,6 +409,26 @@ class HeaderSearchPaths {
       output.put(Paths.get(entry.getKey()), entry.getValue());
     }
     return output.build();
+  }
+
+  private void createPublicHeaderSymlinkTree(
+      TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode,
+      Map<Path, SourcePath> contents)
+      throws IOException {
+
+    Path headerSymlinkTreeRoot = getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PUBLIC);
+
+    LOG.verbose(
+        "Building header symlink tree at %s with contents %s", headerSymlinkTreeRoot, contents);
+
+    ImmutableSortedMap<Path, Path> resolvedContents =
+        resolveHeaderContent(
+            contents, ImmutableMap.of(), headerSymlinkTreeRoot, ImmutableList.builder());
+
+    // This function has the unfortunate side effect of writing the symlink to disk (if needed).
+    // This should prolly be cleaned up to be more explicit, but for now it makes sense to piggy
+    // back off this existing functionality.
+    shouldUpdateSymlinkTree(headerSymlinkTreeRoot, resolvedContents, true, ImmutableList.builder());
   }
 
   private void createPrivateHeaderSymlinkTree(

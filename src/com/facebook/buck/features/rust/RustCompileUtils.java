@@ -314,7 +314,7 @@ public class RustCompileUtils {
         mappedSources,
         rootModule,
         rustConfig.getRemapSrcPaths(),
-        rustPlatform.getXcrunSdkPath());
+        rustPlatform.getXcrunSdkPath().map(path -> path.toString()));
   }
 
   private static void addDependencyArgs(

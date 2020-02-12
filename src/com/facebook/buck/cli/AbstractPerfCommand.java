@@ -20,6 +20,7 @@ import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -251,7 +252,7 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
                       @Override
                       public ProjectFilesystem createProjectFilesystem(
                           CanonicalCellName cellName,
-                          Path root,
+                          AbsPath root,
                           Config config,
                           Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo,
                           boolean buckOutIncludeTargetConfigHash) {
@@ -268,7 +269,7 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
                       @Override
                       public ProjectFilesystem createProjectFilesystem(
                           CanonicalCellName cellName,
-                          Path root,
+                          AbsPath root,
                           Config config,
                           boolean buckOutIncludeTargetConfigHash) {
                         return createProjectFilesystem(
@@ -282,7 +283,7 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
                       @Override
                       public ProjectFilesystem createProjectFilesystem(
                           CanonicalCellName cellName,
-                          Path root,
+                          AbsPath root,
                           boolean buckOutIncludeTargetCofigHash) {
                         final Config config = new Config();
                         return createProjectFilesystem(
@@ -292,7 +293,7 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
                       @Override
                       public ProjectFilesystem createOrThrow(
                           CanonicalCellName cellName,
-                          Path path,
+                          AbsPath path,
                           boolean buckOutIncludeTargetCofigHash) {
                         return createProjectFilesystem(
                             cellName, path, buckOutIncludeTargetCofigHash);

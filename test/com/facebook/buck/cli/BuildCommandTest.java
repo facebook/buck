@@ -550,7 +550,7 @@ public class BuildCommandTest {
     return CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
         executor.get(),
         console,
-        cell.getRootCell(),
+        cell,
         artifactCache,
         eventBus,
         FakeBuckConfig.builder().build(),

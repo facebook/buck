@@ -24,6 +24,7 @@ import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.TestExecutionContext;
@@ -57,7 +58,7 @@ public class GenerateManifestStepTest {
             .getProjectFilesystemFactory()
             .createProjectFilesystem(
                 CanonicalCellName.rootCell(),
-                tmpFolder.getRoot(),
+                AbsPath.of(tmpFolder.getRoot()),
                 BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH);
 
     Path expectedOutputPath = Paths.get("AndroidManifest.expected.xml");
@@ -101,7 +102,7 @@ public class GenerateManifestStepTest {
             .getProjectFilesystemFactory()
             .createProjectFilesystem(
                 CanonicalCellName.rootCell(),
-                tmpFolder.getRoot(),
+                AbsPath.of(tmpFolder.getRoot()),
                 BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH);
 
     Path expectedOutputPath = Paths.get("ModuleManifest.expected.xml");

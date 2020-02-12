@@ -16,6 +16,8 @@
 
 package com.facebook.buck.io.watchman;
 
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
@@ -34,7 +36,6 @@ import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import java.io.IOException;
 import java.nio.file.FileSystem;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -83,8 +84,8 @@ public class WatchmanWatcher {
 
   private final EventBus fileChangeEventBus;
   private final WatchmanClientFactory watchmanClientFactory;
-  private final ImmutableMap<Path, WatchmanQuery> queries;
-  private final Map<Path, WatchmanCursor> cursors;
+  private final ImmutableMap<AbsPath, WatchmanQuery> queries;
+  private final Map<AbsPath, WatchmanCursor> cursors;
   private final int numThreads;
 
   private final long timeoutMillis;
@@ -99,7 +100,7 @@ public class WatchmanWatcher {
       Watchman watchman,
       EventBus fileChangeEventBus,
       ImmutableSet<PathMatcher> ignorePaths,
-      Map<Path, WatchmanCursor> cursors,
+      Map<AbsPath, WatchmanCursor> cursors,
       int numThreads) {
     this(
         fileChangeEventBus,
@@ -115,8 +116,8 @@ public class WatchmanWatcher {
       EventBus fileChangeEventBus,
       WatchmanClientFactory watchmanClientFactory,
       long timeoutMillis,
-      ImmutableMap<Path, WatchmanQuery> queries,
-      Map<Path, WatchmanCursor> cursors,
+      ImmutableMap<AbsPath, WatchmanQuery> queries,
+      Map<AbsPath, WatchmanCursor> cursors,
       int numThreads) {
     this.fileChangeEventBus = fileChangeEventBus;
     this.watchmanClientFactory = watchmanClientFactory;
@@ -127,12 +128,12 @@ public class WatchmanWatcher {
   }
 
   @VisibleForTesting
-  static ImmutableMap<Path, WatchmanQuery> createQueries(
-      ImmutableMap<Path, ProjectWatch> projectWatches,
+  static ImmutableMap<AbsPath, WatchmanQuery> createQueries(
+      ImmutableMap<AbsPath, ProjectWatch> projectWatches,
       ImmutableSet<PathMatcher> ignorePaths,
       Set<Capability> watchmanCapabilities) {
-    ImmutableMap.Builder<Path, WatchmanQuery> watchmanQueryBuilder = ImmutableMap.builder();
-    for (Map.Entry<Path, ProjectWatch> entry : projectWatches.entrySet()) {
+    ImmutableMap.Builder<AbsPath, WatchmanQuery> watchmanQueryBuilder = ImmutableMap.builder();
+    for (Map.Entry<AbsPath, ProjectWatch> entry : projectWatches.entrySet()) {
       watchmanQueryBuilder.put(
           entry.getKey(), createQuery(entry.getValue(), ignorePaths, watchmanCapabilities));
     }
@@ -176,7 +177,7 @@ public class WatchmanWatcher {
   }
 
   @VisibleForTesting
-  ImmutableList<Object> getWatchmanQuery(Path cellPath) {
+  ImmutableList<Object> getWatchmanQuery(AbsPath cellPath) {
     if (queries.containsKey(cellPath) && cursors.containsKey(cellPath)) {
       return queries.get(cellPath).toList(cursors.get(cellPath).get());
     }
@@ -202,7 +203,7 @@ public class WatchmanWatcher {
 
     try {
       List<Callable<Unit>> watchmanQueries = new ArrayList<>();
-      for (Path cellPath : queries.keySet()) {
+      for (AbsPath cellPath : queries.keySet()) {
         watchmanQueries.add(
             () -> {
               WatchmanQuery query = queries.get(cellPath);
@@ -263,7 +264,7 @@ public class WatchmanWatcher {
   private void postEvents(
       BuckEventBus buckEventBus,
       FreshInstanceAction freshInstanceAction,
-      Path cellPath,
+      AbsPath cellPath,
       WatchmanClient client,
       WatchmanQuery query,
       WatchmanCursor cursor,
@@ -404,9 +405,9 @@ public class WatchmanWatcher {
             }
           }
 
-          Path filePath = fileSystem.getPath(fileName);
+          RelPath filePath = RelPath.of(fileSystem.getPath(fileName));
 
-          changes.add(ImmutableChange.of(type, filePath, kind));
+          changes.add(ImmutableChange.of(type, filePath.getPath(), kind));
 
           if (type != WatchmanEvent.Type.DIRECTORY) {
             // WatchmanPathEvent is sent for everything but directories - this is legacy
@@ -451,7 +452,8 @@ public class WatchmanWatcher {
       WatchmanOverflowEvent overflowEvent = (WatchmanOverflowEvent) event;
 
       eventBus.post(
-          WatchmanStatusEvent.overflow(overflowEvent.getReason(), overflowEvent.getCellPath()));
+          WatchmanStatusEvent.overflow(
+              overflowEvent.getReason(), overflowEvent.getCellPath().getPath()));
     } else if (event instanceof WatchmanPathEvent) {
       WatchmanPathEvent pathEvent = (WatchmanPathEvent) event;
       switch (pathEvent.getKind()) {

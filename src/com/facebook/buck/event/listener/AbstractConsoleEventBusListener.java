@@ -765,13 +765,11 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   @Subscribe
   public void buildRuleResumed(BuildRuleEvent.Resumed resumed) {
-    progressEstimator.ifPresent(ProgressEstimator::didResumeRule);
     buildRuleThreadTracker.didResumeBuildRule(resumed);
   }
 
   @Subscribe
   public void buildRuleSuspended(BuildRuleEvent.Suspended suspended) {
-    progressEstimator.ifPresent(ProgressEstimator::didSuspendRule);
     buildRuleThreadTracker.didSuspendBuildRule(suspended);
   }
 

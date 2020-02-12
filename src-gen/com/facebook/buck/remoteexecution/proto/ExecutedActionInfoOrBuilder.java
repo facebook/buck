@@ -23,4 +23,32 @@ public interface ExecutedActionInfoOrBuilder extends
    * <code>int64 cpu_stat_system_usec = 3;</code>
    */
   long getCpuStatSystemUsec();
+
+  /**
+   * <pre>
+   * Whether we should fallback to local retry if this action fails with exit code 1.
+   * Fallback means we don't trust if this action failed and it may be flaky.
+   * </pre>
+   *
+   * <code>.google.protobuf.BoolValue is_fallback_enabled_for_completed_action = 4;</code>
+   */
+  boolean hasIsFallbackEnabledForCompletedAction();
+  /**
+   * <pre>
+   * Whether we should fallback to local retry if this action fails with exit code 1.
+   * Fallback means we don't trust if this action failed and it may be flaky.
+   * </pre>
+   *
+   * <code>.google.protobuf.BoolValue is_fallback_enabled_for_completed_action = 4;</code>
+   */
+  com.google.protobuf.BoolValue getIsFallbackEnabledForCompletedAction();
+  /**
+   * <pre>
+   * Whether we should fallback to local retry if this action fails with exit code 1.
+   * Fallback means we don't trust if this action failed and it may be flaky.
+   * </pre>
+   *
+   * <code>.google.protobuf.BoolValue is_fallback_enabled_for_completed_action = 4;</code>
+   */
+  com.google.protobuf.BoolValueOrBuilder getIsFallbackEnabledForCompletedActionOrBuilder();
 }

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.parser;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
@@ -79,7 +80,7 @@ public class WatchmanBuildPackageComputation
     this.filesystemView = filesystemView;
     this.watchman = watchman;
 
-    ProjectWatch watch = watchman.getProjectWatches().get(filesystemView.getRootPath());
+    ProjectWatch watch = watchman.getProjectWatches().get(AbsPath.of(filesystemView.getRootPath()));
     if (watch == null) {
       throw new FileSystemNotWatchedException();
     }

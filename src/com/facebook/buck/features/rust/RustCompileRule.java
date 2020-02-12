@@ -86,7 +86,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
       ImmutableSortedMap<SourcePath, Optional<String>> mappedSources,
       String rootModule,
       RemapSrcPaths remapSrcPaths,
-      Optional<Path> xcrunSdkPath) {
+      Optional<String> xcrunSdkPath) {
     super(
         buildTarget,
         projectFilesystem,
@@ -120,7 +120,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
       ImmutableSortedMap<SourcePath, Optional<String>> mappedSources,
       String rootModule,
       RemapSrcPaths remapSrcPaths,
-      Optional<Path> xcrunSdkPath) {
+      Optional<String> xcrunSdkPath) {
     return new RustCompileRule(
         buildTarget,
         projectFilesystem,
@@ -174,7 +174,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
         reason = "This should probably be properly represented as a ToolChain?",
         serialization = DefaultFieldSerialization.class,
         inputs = IgnoredFieldInputs.class)
-    private final Optional<Path> xcrunSdkpath;
+    private final Optional<String> xcrunSdkpath;
 
     public Impl(
         Tool compiler,
@@ -188,7 +188,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
         String outputName,
         ImmutableSortedMap<SourcePath, Optional<String>> mappedSources,
         RemapSrcPaths remapSrcPaths,
-        Optional<Path> xcrunpath) {
+        Optional<String> xcrunpath) {
       this.compiler = compiler;
       this.linker = linker;
       this.buildTarget = buildTarget;
@@ -333,7 +333,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
                   "RUSTC_BUILD_CONTAINER_BASE_PATH",
                   root.resolve(scratchDir.resolve(basePath.toPath(scratchDir.getFileSystem())))
                       + "/");
-              Impl.this.xcrunSdkpath.ifPresent((path) -> env.put("SDKROOT", path.toString()));
+              Impl.this.xcrunSdkpath.ifPresent((path) -> env.put("SDKROOT", path));
               return env.build();
             }
 

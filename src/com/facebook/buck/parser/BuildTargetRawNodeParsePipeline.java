@@ -18,7 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
@@ -50,24 +50,24 @@ public class BuildTargetRawNodeParsePipeline
    * If a target wasn't found in a build file, find targets that are pretty closely named. This
    * makes error messages more useful
    */
-  private static ImmutableList<UnconfiguredBuildTargetView> findSimilarTargets(
+  private static ImmutableList<UnconfiguredBuildTarget> findSimilarTargets(
       ImmutableMap<String, ImmutableMap<String, Object>> buildFileTargets,
-      UnconfiguredBuildTargetView expectedTarget,
+      UnconfiguredBuildTarget expectedTarget,
       int maxLevenshteinDistance) {
 
-    UnconfiguredBuildTargetView targetWithoutFlavors = expectedTarget.withoutFlavors();
-    String expectedShortName = expectedTarget.getShortName();
+    UnconfiguredBuildTarget targetWithoutFlavors = expectedTarget.withoutFlavors();
+    String expectedShortName = expectedTarget.getName();
 
-    ImmutableList.Builder<UnconfiguredBuildTargetView> builder = ImmutableList.builder();
+    ImmutableList.Builder<UnconfiguredBuildTarget> builder = ImmutableList.builder();
     for (String shortName : buildFileTargets.keySet()) {
       if (shortName.startsWith(expectedShortName) || expectedShortName.startsWith(shortName)) {
-        builder.add(targetWithoutFlavors.withShortName(shortName));
+        builder.add(targetWithoutFlavors.withLocalName(shortName));
         continue;
       }
 
       int distance = MoreStrings.getLevenshteinDistance(shortName, expectedShortName);
       if (distance < maxLevenshteinDistance) {
-        builder.add(targetWithoutFlavors.withShortName(shortName));
+        builder.add(targetWithoutFlavors.withLocalName(shortName));
       }
     }
     return builder.build().stream().sorted().collect(ImmutableList.toImmutableList());
@@ -75,16 +75,16 @@ public class BuildTargetRawNodeParsePipeline
 
   @Override
   public ListenableFuture<Map<String, Object>> getNodeJob(
-      Cell cell, UnconfiguredBuildTargetView buildTarget) throws BuildTargetException {
+      Cell cell, UnconfiguredBuildTarget buildTarget) throws BuildTargetException {
     return Futures.transformAsync(
         buildFileRawNodeParsePipeline.getFileJob(
             cell,
             cell.getBuckConfigView(ParserConfig.class)
                 .getAbsolutePathToBuildFile(cell, buildTarget)),
         input -> {
-          if (!input.getTargets().containsKey(buildTarget.getShortName())) {
+          if (!input.getTargets().containsKey(buildTarget.getName())) {
             ParserConfig parserConfig = cell.getBuckConfigView(ParserConfig.class);
-            ImmutableList<UnconfiguredBuildTargetView> similarTargets =
+            ImmutableList<UnconfiguredBuildTarget> similarTargets =
                 findSimilarTargets(
                     input.getTargets(),
                     buildTarget,
@@ -102,7 +102,7 @@ public class BuildTargetRawNodeParsePipeline
                 },
                 parserConfig.getAbsolutePathToBuildFile(cell, buildTarget));
           }
-          return Futures.immediateFuture(input.getTargets().get(buildTarget.getShortName()));
+          return Futures.immediateFuture(input.getTargets().get(buildTarget.getName()));
         },
         executorService);
   }

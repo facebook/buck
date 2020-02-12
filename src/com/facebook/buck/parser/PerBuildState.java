@@ -20,7 +20,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.select.SelectorListResolver;
@@ -84,7 +84,7 @@ public class PerBuildState implements AutoCloseable {
   }
 
   ListenableFuture<TargetNode<?>> getRequestedTargetNodeJob(
-      UnconfiguredBuildTargetView target, Optional<TargetConfiguration> targetConfiguration) {
+      UnconfiguredBuildTarget target, Optional<TargetConfiguration> targetConfiguration) {
     Cell owningCell = cellManager.getCell(target.getCell());
 
     return targetNodeParsePipeline.getRequestedTargetNodeJob(

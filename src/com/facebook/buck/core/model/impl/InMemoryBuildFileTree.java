@@ -19,6 +19,7 @@ package com.facebook.buck.core.model.impl;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -99,6 +100,8 @@ public class InMemoryBuildFileTree implements BuildFileTree {
 
   @Override
   public Optional<Path> getBasePathOfAncestorTarget(Path filePath) {
+    Preconditions.checkArgument(!filePath.isAbsolute(), "must be relative: %s", filePath);
+
     Node node = new Node(filePath);
     Node parent = findParent(node, basePathToNodeIndex);
     if (parent != null) {

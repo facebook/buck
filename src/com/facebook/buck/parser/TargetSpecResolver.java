@@ -314,7 +314,7 @@ public class TargetSpecResolver implements AutoCloseable {
       targetFutures.add(
           Futures.transform(
               perBuildState.getRequestedTargetNodeJob(
-                  buildTargetSpec.getUnconfiguredBuildTargetView(), targetConfiguration),
+                  buildTargetSpec.getUnconfiguredBuildTargetView().getData(), targetConfiguration),
               node -> {
                 ImmutableSet<BuildTarget> buildTargets =
                     applySpecFilter(spec, ImmutableList.of(node), flavorEnhancer, targetNodeFilter);

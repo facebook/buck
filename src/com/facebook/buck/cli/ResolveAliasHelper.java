@@ -81,7 +81,7 @@ public class ResolveAliasHelper {
       buildFile =
           owningCell
               .getBuckConfigView(ParserConfig.class)
-              .getAbsolutePathToBuildFile(owningCell, buildTarget);
+              .getAbsolutePathToBuildFile(owningCell, buildTarget.getData());
     } catch (MissingBuildFileException e) {
       throw new HumanReadableException(e);
     }

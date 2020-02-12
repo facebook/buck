@@ -19,9 +19,11 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.impl.FilesystemBackedBuildFileTree;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
@@ -333,7 +335,7 @@ public class DaemonicParserState {
 
   private final DaemonicCacheView<BuildTarget, TargetNode<?>> targetNodeCache =
       new DaemonicCacheView<>(DaemonicCellState.TARGET_NODE_CACHE_TYPE);
-  private final DaemonicCacheView<UnconfiguredBuildTargetView, UnconfiguredTargetNode>
+  private final DaemonicCacheView<UnconfiguredBuildTarget, UnconfiguredTargetNode>
       rawTargetNodeCache = new DaemonicCacheView<>(DaemonicCellState.RAW_TARGET_NODE_CACHE_TYPE);
 
   /**
@@ -428,7 +430,7 @@ public class DaemonicParserState {
 
   public static final CacheType<BuildTarget, TargetNode<?>> TARGET_NODE_CACHE_TYPE =
       new CacheType<>(state -> state.targetNodeCache);
-  public static final CacheType<UnconfiguredBuildTargetView, UnconfiguredTargetNode>
+  public static final CacheType<UnconfiguredBuildTarget, UnconfiguredTargetNode>
       RAW_TARGET_NODE_CACHE_TYPE = new CacheType<>(state -> state.rawTargetNodeCache);
 
   /**
@@ -489,8 +491,8 @@ public class DaemonicParserState {
 
     filesChangedCounter.inc();
 
-    Path path = event.getPath();
-    Path fullPath = event.getCellPath().resolve(event.getPath());
+    RelPath path = event.getPath();
+    AbsPath fullPath = event.getCellPath().resolve(event.getPath());
 
     // We only care about creation and deletion events because modified should result in a
     // rule key change.  For parsing, these are the only events we need to care about.
@@ -512,7 +514,7 @@ public class DaemonicParserState {
             // Added or removed files can affect globs, so invalidate the package build file
             // "containing" {@code path} unless its filename matches a temp file pattern.
             if (!cell.getFilesystem().isIgnored(path)) {
-              invalidateContainingBuildFile(state, cell, buildFiles, path);
+              invalidateContainingBuildFile(state, cell, buildFiles, path.getPath());
             } else {
               LOG.debug(
                   "Not invalidating the owning build file of %s because it is a temporary file.",
@@ -531,10 +533,11 @@ public class DaemonicParserState {
       }
     }
 
-    if (configurationBuildFiles.contains(fullPath) || configurationRulesDependOn(path)) {
+    if (configurationBuildFiles.contains(fullPath.getPath())
+        || configurationRulesDependOn(path.getPath())) {
       invalidateAllCaches();
     } else {
-      invalidatePath(fullPath);
+      invalidatePath(fullPath.getPath());
     }
   }
 

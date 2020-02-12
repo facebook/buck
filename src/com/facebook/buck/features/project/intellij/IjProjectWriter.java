@@ -350,13 +350,30 @@ public class IjProjectWriter {
    */
   public void update() throws IOException {
     outFilesystem.mkdirs(getIdeaConfigDir());
-    for (IjModule module : projectDataPreparer.getModulesToBeWritten()) {
-      ImmutableList<ContentRoot> contentRoots = projectDataPreparer.getContentRoots(module);
-      writeModule(module, contentRoots);
-    }
-    for (IjLibrary library : projectDataPreparer.getLibrariesToBeWritten()) {
-      writeLibrary(library);
-    }
+    projectDataPreparer
+        .getModulesToBeWritten()
+        .parallelStream()
+        .forEach(
+            module -> {
+              try {
+                ImmutableList<ContentRoot> contentRoots =
+                    projectDataPreparer.getContentRoots(module);
+                writeModule(module, contentRoots);
+              } catch (IOException e) {
+                throw new RuntimeException(e);
+              }
+            });
+    projectDataPreparer
+        .getLibrariesToBeWritten()
+        .parallelStream()
+        .forEach(
+            library -> {
+              try {
+                writeLibrary(library);
+              } catch (IOException e) {
+                throw new RuntimeException(e);
+              }
+            });
     updateModulesIndex(projectDataPreparer.getModulesToBeWritten());
 
     if (projectConfig.isGeneratingTargetInfoMapEnabled()) {

@@ -9,6 +9,7 @@ java_library(
     ],
     deps = [
         "//src/com/facebook/buck/core/exceptions:exceptions",
+        "//src/com/facebook/buck/core/filesystems:filesystems",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/model/targetgraph/raw:raw",
         "//src/com/facebook/buck/core/parser/buildtargetpattern:buildtargetpattern",

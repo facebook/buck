@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.modern.builders;
 
-import build.bazel.remote.execution.v2.ExecutedActionMetadata;
 import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.build.engine.BuildRuleStatus;
 import com.facebook.buck.core.build.engine.BuildStrategyContext;
@@ -25,9 +24,11 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.remoteexecution.event.LocalFallbackEvent;
 import com.facebook.buck.remoteexecution.event.LocalFallbackEvent.Result;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent.State;
+import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
 import com.facebook.buck.remoteexecution.util.MultiThreadedBlobUploader;
 import com.facebook.buck.step.StepFailedException;
 import com.google.common.base.Preconditions;
@@ -116,7 +117,7 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
     private final Stopwatch remoteExecutionTimer;
     private final boolean localFallbackEnabled;
     private final boolean localFallbackDisabledOnCorruptedArtifacts;
-    private final boolean localFallbackEnabledForCompletedAction;
+    private boolean localFallbackEnabledForCompletedAction;
 
     private Optional<ListenableFuture<Optional<BuildResult>>> localStrategyBuildResult;
     private boolean hasCancellationBeenRequested;
@@ -125,7 +126,7 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
     private Status remoteGrpcStatus;
     private State lastNonTerminalState;
     private OptionalInt exitCode;
-    private Optional<ExecutedActionMetadata> executedActionMetadata;
+    private Optional<RemoteExecutionMetadata> remoteExecutionMetadata;
 
     public FallbackStrategyBuildResult(
         String buildTarget,
@@ -153,7 +154,7 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
       this.remoteGrpcStatus = Status.fromCode(Status.Code.OK);
       this.lastNonTerminalState = State.WAITING;
       this.exitCode = OptionalInt.empty();
-      this.executedActionMetadata = Optional.empty();
+      this.remoteExecutionMetadata = Optional.empty();
 
       this.eventBus.post(this.startedEvent);
       this.remoteStrategyBuildResult
@@ -248,7 +249,20 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
       if (t instanceof StepFailedException) {
         StepFailedException exc = (StepFailedException) t;
         exitCode = exc.getExitCode();
-        executedActionMetadata = exc.getExecutedActionMetadata();
+        remoteExecutionMetadata = exc.getRemoteExecutionMetadata();
+        if (remoteExecutionMetadata.isPresent()) {
+          if (remoteExecutionMetadata
+              .get()
+              .getExecutedActionInfo()
+              .hasIsFallbackEnabledForCompletedAction()) {
+            localFallbackEnabledForCompletedAction =
+                remoteExecutionMetadata
+                    .get()
+                    .getExecutedActionInfo()
+                    .getIsFallbackEnabledForCompletedAction()
+                    .getValue();
+          }
+        }
       }
       remoteGrpcStatus = exitCode.isPresent() ? Status.OK : Status.fromThrowable(t);
 
@@ -272,6 +286,10 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
             t, "Remote build failed for a build rule so trying locally now for [%s].", buildTarget);
         fallbackBuildToLocalStrategy();
       } else {
+        eventBus.post(
+            ConsoleEvent.severe(
+                "The build failed trying to build remotely. This is most likely due to a missing dependency"
+                ));
         completeCombinedFutureWithException(t, remoteBuildResult.get(), Result.NOT_RUN);
       }
     }
@@ -343,7 +361,7 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
               remoteGrpcStatus,
               lastNonTerminalState,
               exitCode,
-              executedActionMetadata));
+              remoteExecutionMetadata));
     }
 
     private void completeCombinedFutureWithException(
@@ -358,7 +376,7 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
               remoteGrpcStatus,
               lastNonTerminalState,
               exitCode,
-              executedActionMetadata));
+              remoteExecutionMetadata));
     }
   }
 }

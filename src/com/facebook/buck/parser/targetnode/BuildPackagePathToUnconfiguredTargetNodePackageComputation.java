@@ -17,6 +17,7 @@
 package com.facebook.buck.parser.targetnode;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.GraphComputation;
@@ -63,10 +64,11 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputation
   private BuildPackagePathToUnconfiguredTargetNodePackageComputation(
       UnconfiguredTargetNodeToTargetNodeFactory unconfiguredTargetNodeToTargetNodeFactory,
       Cell cell,
-      boolean throwOnValidationError) {
+      boolean throwOnValidationError,
+      Path superRootPath) {
     this.unconfiguredTargetNodeToTargetNodeFactory = unconfiguredTargetNodeToTargetNodeFactory;
     this.cell = cell;
-    this.superRootPath = cell.getSuperRootPath();
+    this.superRootPath = superRootPath;
     this.throwOnValidationError = throwOnValidationError;
   }
 
@@ -82,10 +84,14 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputation
    */
   public static BuildPackagePathToUnconfiguredTargetNodePackageComputation of(
       UnconfiguredTargetNodeToTargetNodeFactory unconfiguredTargetNodeToTargetNodeFactory,
+      Cells cells,
       Cell cell,
       boolean throwOnValidationError) {
     return new BuildPackagePathToUnconfiguredTargetNodePackageComputation(
-        unconfiguredTargetNodeToTargetNodeFactory, cell, throwOnValidationError);
+        unconfiguredTargetNodeToTargetNodeFactory,
+        cell,
+        throwOnValidationError,
+        cells.getSuperRootPath());
   }
 
   @Override

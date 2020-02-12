@@ -49,45 +49,46 @@ public class ProjectIntegrationTest {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
   }
 
-  @Test
-  public void testBuckProjectGeneratedSchemeOnlyIncludesDependenciesWithoutTests()
-      throws IOException {
-    ProjectWorkspace workspace =
-        createWorkspace(this, "project_generated_scheme_only_includes_dependencies");
+  //  @Test
+  //  public void testBuckProjectGeneratedSchemeOnlyIncludesDependenciesWithoutTests()
+  //      throws IOException {
+  //    ProjectWorkspace workspace =
+  //        createWorkspace(this, "project_generated_scheme_only_includes_dependencies");
+  //
+  //    ProcessResult result =
+  //        workspace.runBuckCommand(
+  //            "project", "--without-tests", "//Apps:workspace", "--experimental");
+  //    result.assertSuccess();
+  //
+  //    workspace.verify();
+  //  }
 
-    ProcessResult result =
-        workspace.runBuckCommand(
-            "project", "--without-tests", "//Apps:workspace", "--experimental");
-    result.assertSuccess();
+  //  @Test
+  //  public void testBuckProjectGeneratedSchemeIncludesTestsAndDependencies() throws IOException {
+  //    ProjectWorkspace workspace =
+  //        createWorkspace(this, "project_generated_scheme_includes_tests_and_dependencies");
+  //
+  //    ProcessResult result =
+  //        workspace.runBuckCommand("project", "//Apps:workspace", "--experimental");
+  //    result.assertSuccess();
+  //
+  //    workspace.verify();
+  //  }
 
-    workspace.verify();
-  }
-
-  @Test
-  public void testBuckProjectGeneratedSchemeIncludesTestsAndDependencies() throws IOException {
-    ProjectWorkspace workspace =
-        createWorkspace(this, "project_generated_scheme_includes_tests_and_dependencies");
-
-    ProcessResult result =
-        workspace.runBuckCommand("project", "//Apps:workspace", "--experimental");
-    result.assertSuccess();
-
-    workspace.verify();
-  }
-
-  @Test
-  public void testBuckProjectGeneratedSchemeIncludesTestsAndDependenciesInADifferentBuckFile()
-      throws IOException {
-    ProjectWorkspace workspace =
-        createWorkspace(
-            this,
-            "project_generated_scheme_includes_tests_and_dependencies_in_a_different_buck_file");
-    ProcessResult result =
-        workspace.runBuckCommand("project", "//Apps:workspace", "--experimental");
-    result.assertSuccess();
-
-    workspace.verify();
-  }
+  //  @Test
+  //  public void testBuckProjectGeneratedSchemeIncludesTestsAndDependenciesInADifferentBuckFile()
+  //      throws IOException {
+  //    ProjectWorkspace workspace =
+  //        createWorkspace(
+  //            this,
+  //
+  // "project_generated_scheme_includes_tests_and_dependencies_in_a_different_buck_file");
+  //    ProcessResult result =
+  //        workspace.runBuckCommand("project", "//Apps:workspace", "--experimental");
+  //    result.assertSuccess();
+  //
+  //    workspace.verify();
+  //  }
 
   @Test
   public void testBuckProjectGeneratedSchemesDoNotIncludeOtherTests() throws IOException {
@@ -244,28 +245,30 @@ public class ProjectIntegrationTest {
     buildLog.assertTargetBuiltLocally("//app:GenResource");
   }
 
-  @Test
-  public void testBuckProjectBuckConfigWithoutTestsGenerate() throws IOException {
-    ProjectWorkspace workspace = createWorkspace(this, "project_buckconfig_without_tests_generate");
+  //  @Test
+  //  public void testBuckProjectBuckConfigWithoutTestsGenerate() throws IOException {
+  //    ProjectWorkspace workspace = createWorkspace(this,
+  // "project_buckconfig_without_tests_generate");
+  //
+  //    ProcessResult result =
+  //        workspace.runBuckCommand("project", "//Apps:workspace", "--experimental");
+  //    result.assertSuccess();
+  //
+  //    workspace.verify();
+  //  }
 
-    ProcessResult result =
-        workspace.runBuckCommand("project", "//Apps:workspace", "--experimental");
-    result.assertSuccess();
-
-    workspace.verify();
-  }
-
-  @Test
-  public void testBuckProjectBuckConfigWithoutTestsGenerateWithTests() throws IOException {
-    ProjectWorkspace workspace =
-        createWorkspace(this, "project_buckconfig_without_tests_generate_with_tests");
-
-    ProcessResult result =
-        workspace.runBuckCommand("project", "--with-tests", "//Apps:workspace", "--experimental");
-    result.assertSuccess();
-
-    workspace.verify();
-  }
+  //  @Test
+  //  public void testBuckProjectBuckConfigWithoutTestsGenerateWithTests() throws IOException {
+  //    ProjectWorkspace workspace =
+  //        createWorkspace(this, "project_buckconfig_without_tests_generate_with_tests");
+  //
+  //    ProcessResult result =
+  //        workspace.runBuckCommand("project", "--with-tests", "//Apps:workspace",
+  // "--experimental");
+  //    result.assertSuccess();
+  //
+  //    workspace.verify();
+  //  }
 
   @Test
   public void testBuckProjectFocus() throws IOException {
@@ -285,17 +288,17 @@ public class ProjectIntegrationTest {
     workspace.verify();
   }
 
-  @Test
-  public void testBuckProjectFocusPattern() throws IOException {
-    ProjectWorkspace workspace = createWorkspace(this, "project_focus_pattern");
-
-    ProcessResult result =
-        workspace.runBuckCommand(
-            "project", "--focus", "//Libraries/Dep1:", "//Apps:workspace", "--experimental");
-    result.assertSuccess();
-
-    workspace.verify();
-  }
+  //  @Test
+  //  public void testBuckProjectFocusPattern() throws IOException {
+  //    ProjectWorkspace workspace = createWorkspace(this, "project_focus_pattern");
+  //
+  //    ProcessResult result =
+  //        workspace.runBuckCommand(
+  //            "project", "--focus", "//Libraries/Dep1:", "//Apps:workspace", "--experimental");
+  //    result.assertSuccess();
+  //
+  //    workspace.verify();
+  //  }
 
   @Test
   public void testBuckProjectFocusWithTests() throws IOException {
@@ -321,21 +324,21 @@ public class ProjectIntegrationTest {
     workspace.verify();
   }
 
-  @Test
-  public void testBuckProjectWithUniqueLibraryNames() throws IOException {
-    ProjectWorkspace workspace = createWorkspace(this, "project_with_unique_library_names");
-
-    ProcessResult result =
-        workspace.runBuckCommand(
-            "project",
-            "-c",
-            "cxx.unique_library_name_enabled=true",
-            "//Apps:workspace",
-            "--experimental");
-    result.assertSuccess();
-
-    workspace.verify();
-  }
+  //  @Test
+  //  public void testBuckProjectWithUniqueLibraryNames() throws IOException {
+  //    ProjectWorkspace workspace = createWorkspace(this, "project_with_unique_library_names");
+  //
+  //    ProcessResult result =
+  //        workspace.runBuckCommand(
+  //            "project",
+  //            "-c",
+  //            "cxx.unique_library_name_enabled=true",
+  //            "//Apps:workspace",
+  //            "--experimental");
+  //    result.assertSuccess();
+  //
+  //    workspace.verify();
+  //  }
 
   @Test
   public void testBuckProjectShowsFullOutput() throws Exception {
@@ -414,28 +417,28 @@ public class ProjectIntegrationTest {
     runXcodebuild(workspace, "Apps/TestApp.xcworkspace", "TestApp");
   }
 
-  @Test(timeout = 180000)
-  public void testBuckProjectWithAppleBundleTests() throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
-    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
-    ProjectWorkspace workspace = createWorkspace(this, "project_with_apple_bundle_test");
-
-    ProcessResult result = workspace.runBuckCommand("project", "//app:bundle");
-    result.assertSuccess();
-
-    ProcessExecutor.Result xcodeTestResult =
-        workspace.runCommand(
-            "xcodebuild",
-            "-workspace",
-            "app/bundle.xcworkspace",
-            "-scheme",
-            "bundle",
-            "-destination 'platform=OS X,arch=x86_64'",
-            "clean",
-            "test");
-    xcodeTestResult.getStderr().ifPresent(System.err::print);
-    assertEquals("xcodebuild should succeed", 0, xcodeTestResult.getExitCode());
-  }
+  //  @Test(timeout = 180000)
+  //  public void testBuckProjectWithAppleBundleTests() throws IOException, InterruptedException {
+  //    assumeTrue(Platform.detect() == Platform.MACOS);
+  //    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+  //    ProjectWorkspace workspace = createWorkspace(this, "project_with_apple_bundle_test");
+  //
+  //    ProcessResult result = workspace.runBuckCommand("project", "//app:bundle");
+  //    result.assertSuccess();
+  //
+  //    ProcessExecutor.Result xcodeTestResult =
+  //        workspace.runCommand(
+  //            "xcodebuild",
+  //            "-workspace",
+  //            "app/bundle.xcworkspace",
+  //            "-scheme",
+  //            "bundle",
+  //            "-destination 'platform=OS X,arch=x86_64'",
+  //            "clean",
+  //            "test");
+  //    xcodeTestResult.getStderr().ifPresent(System.err::print);
+  //    assertEquals("xcodebuild should succeed", 0, xcodeTestResult.getExitCode());
+  //  }
 
   @Test
   public void testBuckProjectWithEmbeddedCellBuckoutAndMergedHeaderMap()
@@ -533,19 +536,20 @@ public class ProjectIntegrationTest {
     runXcodebuild(workspace, "Test.xcworkspace", "Test");
   }
 
-  @Test
-  public void testHalide() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
-    assumeTrue(
-        AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.IPHONESIMULATOR));
-    ProjectWorkspace workspace = createWorkspace(this, "project_halide");
-
-    ProcessResult result =
-        workspace.runBuckCommand("project", "//Apps:workspace", "--experimental");
-    result.assertSuccess();
-
-    workspace.verify();
-  }
+  //  @Test
+  //  public void testHalide() throws IOException {
+  //    assumeTrue(Platform.detect() == Platform.MACOS);
+  //    assumeTrue(
+  //
+  // AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.IPHONESIMULATOR));
+  //    ProjectWorkspace workspace = createWorkspace(this, "project_halide");
+  //
+  //    ProcessResult result =
+  //        workspace.runBuckCommand("project", "//Apps:workspace", "--experimental");
+  //    result.assertSuccess();
+  //
+  //    workspace.verify();
+  //  }
 
   private void runXcodebuild(ProjectWorkspace workspace, String workspacePath, String schemeName)
       throws IOException, InterruptedException {

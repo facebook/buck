@@ -25,6 +25,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -44,7 +45,6 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -59,13 +59,14 @@ import org.junit.Test;
 
 public class WatchmanWatcherTest {
 
-  private static final Path FAKE_ROOT = Paths.get("/fake/root").toAbsolutePath();
+  private static final AbsPath FAKE_ROOT = AbsPath.of(Paths.get("/fake/root").toAbsolutePath());
   private static final WatchmanQuery FAKE_QUERY =
       ImmutableWatchmanQuery.of("/fake/root", ImmutableMap.of());
   private static final List<Object> FAKE_UUID_QUERY = FAKE_QUERY.toList("n:buckduuid");
   private static final List<Object> FAKE_CLOCK_QUERY = FAKE_QUERY.toList("c:0:0");
 
-  private static final Path FAKE_SECONDARY_ROOT = Paths.get("/fake/secondary").toAbsolutePath();
+  private static final AbsPath FAKE_SECONDARY_ROOT =
+      AbsPath.of(Paths.get("/fake/secondary").toAbsolutePath());
   private static final WatchmanQuery FAKE_SECONDARY_QUERY =
       ImmutableWatchmanQuery.of("/fake/SECONDARY", ImmutableMap.of());
 

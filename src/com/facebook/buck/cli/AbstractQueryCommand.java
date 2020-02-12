@@ -568,7 +568,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
                 cell.getRootCell()
                     .getBuckConfigView(ParserConfig.class)
                     .getAbsolutePathToBuildFile(
-                        cell.getRootCell(), buildTarget.getUnconfiguredBuildTargetView()));
+                        cell.getRootCell(), buildTarget.getUnconfiguredBuildTarget()));
 
     String shortName = buildTarget.getShortName();
     if (!buildFileManifest.getTargets().containsKey(shortName)) {

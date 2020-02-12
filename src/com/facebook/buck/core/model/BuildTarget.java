@@ -61,6 +61,10 @@ public class BuildTarget implements Comparable<BuildTarget>, DependencyStack.Ele
     return unconfiguredBuildTargetView;
   }
 
+  public UnconfiguredBuildTarget getUnconfiguredBuildTarget() {
+    return getUnconfiguredBuildTargetView().getData();
+  }
+
   public UnflavoredBuildTarget getUnflavoredBuildTarget() {
     return unconfiguredBuildTargetView.getUnflavoredBuildTarget();
   }
@@ -144,6 +148,11 @@ public class BuildTarget implements Comparable<BuildTarget>, DependencyStack.Ele
   @Override
   public String toString() {
     return getFullyQualifiedName();
+  }
+
+  /** Target name and configuration. */
+  public String toStringWithConfiguration() {
+    return getFullyQualifiedName() + " (" + targetConfiguration + ")";
   }
 
   public BuildTarget withShortName(String shortName) {

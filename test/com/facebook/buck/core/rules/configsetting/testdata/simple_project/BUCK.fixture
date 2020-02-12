@@ -22,8 +22,8 @@ genrule(
 genrule(
     name = "cat_with_refined_config",
     srcs = select({
-        "//:bc": ["c.txt"],
         "//:b": ["b.txt"],
+        "//:bc": ["c.txt"],
     }),
     out = "cat_out.txt",
     cmd = "cat $SRCS > $OUT",
@@ -190,4 +190,33 @@ genrule(
     }) + ["c.txt"],
     out = "select_concat_out.txt",
     cmd = "cat $SRCS > $OUT",
+)
+
+config_setting(
+    name = "str-a",
+    values = {
+        "str.value": "a",
+    },
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+config_setting(
+    name = "str-b",
+    values = {
+        "str.value": "b",
+    },
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+genrule(
+    name = "select_concat_str",
+    cmd = "echo " + select({
+        ":str-a": "aa",
+        ":str-b": "bb",
+    }) + ">$OUT",
+    out = "select_concat_str_out.txt",
 )

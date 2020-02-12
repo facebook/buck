@@ -24,6 +24,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.doctor.BuildLogHelper;
 import com.facebook.buck.doctor.config.BuildLogEntry;
@@ -294,7 +295,7 @@ public class BuildEndToEndTest {
                 new DefaultProjectFilesystemFactory()
                     .createProjectFilesystem(
                         CanonicalCellName.rootCell(),
-                        workspace.getDestPath(),
+                        AbsPath.of(workspace.getDestPath()),
                         BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH))
             .getBuildLogs();
 

@@ -49,16 +49,32 @@ public class PregeneratedCodeWriter {
   }
 
   public void write() throws IOException {
-    if (!projectConfig.isAutogenerateAndroidFacetSourcesEnabled()) {
-      for (IjModule module : projectDataPreparer.getModulesToBeWritten()) {
-        writeClassesGeneratedByIdea(module);
-      }
+    if (projectConfig.isGeneratingDummyRDotJavaEnabled()) {
+      projectDataPreparer
+          .getModulesToBeWritten()
+          .parallelStream()
+          .forEach(
+              module -> {
+                try {
+                  writeClassesGeneratedByIdea(module);
+                } catch (IOException e) {
+                  throw new RuntimeException(e);
+                }
+              });
     }
 
     if (projectConfig.isGeneratingAndroidManifestEnabled()) {
-      for (IjModule module : projectDataPreparer.getModulesToBeWritten()) {
-        writeAndroidManifest(module);
-      }
+      projectDataPreparer
+          .getModulesToBeWritten()
+          .parallelStream()
+          .forEach(
+              module -> {
+                try {
+                  writeAndroidManifest(module);
+                } catch (IOException e) {
+                  throw new RuntimeException(e);
+                }
+              });
     }
   }
 
@@ -73,9 +89,7 @@ public class PregeneratedCodeWriter {
       return;
     }
 
-    if (projectConfig.isGeneratingDummyRDotJavaEnabled()) {
-      writeGeneratedByIdeaClassToFile(androidFacet.get(), packageName.get(), "R", null);
-    }
+    writeGeneratedByIdeaClassToFile(androidFacet.get(), packageName.get(), "R", null);
 
     writeGeneratedByIdeaClassToFile(androidFacet.get(), packageName.get(), "Manifest", null);
   }

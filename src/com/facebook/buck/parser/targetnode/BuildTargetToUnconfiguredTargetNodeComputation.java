@@ -90,17 +90,12 @@ public class BuildTargetToUnconfiguredTargetNodeComputation
       throw new NoSuchBuildTargetException(buildTarget);
     }
 
-    /** TODO: do it directly not using {@link UnconfiguredBuildTargetView} */
-    UnconfiguredBuildTargetView unconfiguredBuildTargetView =
-        UnconfiguredBuildTargetView.of(buildTarget);
-
     /**
      * TODO: If we want to support packages in the query service, we'll need to implement the
      * required computations.
      */
     Path buildFile =
-        cell.getBuckConfigView(ParserConfig.class)
-            .getAbsolutePathToBuildFile(cell, unconfiguredBuildTargetView);
+        cell.getBuckConfigView(ParserConfig.class).getAbsolutePathToBuildFile(cell, buildTarget);
 
     Package stubPackage =
         PackageFactory.create(cell, buildFile, PackageMetadata.EMPTY_SINGLETON, Optional.empty());
@@ -109,12 +104,12 @@ public class BuildTargetToUnconfiguredTargetNodeComputation
         cell,
         cell.getRoot()
             .resolve(
-                unconfiguredBuildTargetView
+                buildTarget
                     .getCellRelativeBasePath()
                     .getPath()
                     .toPath(cell.getFilesystem().getFileSystem()))
             .resolve(buildFileName),
-        unconfiguredBuildTargetView,
+        buildTarget,
         DependencyStack.root(),
         rawAttributes,
         stubPackage);

@@ -17,11 +17,11 @@
 package com.facebook.buck.io.filesystem.impl;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.util.config.Config;
-import java.nio.file.Path;
 import java.util.Optional;
 
 public class FakeProjectFilesystemFactory implements ProjectFilesystemFactory {
@@ -29,31 +29,31 @@ public class FakeProjectFilesystemFactory implements ProjectFilesystemFactory {
   @Override
   public ProjectFilesystem createProjectFilesystem(
       CanonicalCellName cellName,
-      Path root,
+      AbsPath root,
       Config config,
       Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo,
       boolean buckOutIncludeTargetConfigHash) {
-    return new FakeProjectFilesystem(CanonicalCellName.rootCell(), root);
+    return new FakeProjectFilesystem(CanonicalCellName.rootCell(), root.getPath());
   }
 
   @Override
   public ProjectFilesystem createProjectFilesystem(
       CanonicalCellName cellName,
-      Path root,
+      AbsPath root,
       Config config,
       boolean buckOutIncludeTargetConfigHash) {
-    return new FakeProjectFilesystem(CanonicalCellName.rootCell(), root);
+    return new FakeProjectFilesystem(CanonicalCellName.rootCell(), root.getPath());
   }
 
   @Override
   public ProjectFilesystem createProjectFilesystem(
-      CanonicalCellName cellName, Path root, boolean buckOutIncludeTargetCofigHash) {
-    return new FakeProjectFilesystem(CanonicalCellName.rootCell(), root);
+      CanonicalCellName cellName, AbsPath root, boolean buckOutIncludeTargetCofigHash) {
+    return new FakeProjectFilesystem(CanonicalCellName.rootCell(), root.getPath());
   }
 
   @Override
   public ProjectFilesystem createOrThrow(
-      CanonicalCellName cellName, Path path, boolean buckOutIncludeTargetCofigHash) {
-    return new FakeProjectFilesystem(CanonicalCellName.rootCell(), path);
+      CanonicalCellName cellName, AbsPath path, boolean buckOutIncludeTargetCofigHash) {
+    return new FakeProjectFilesystem(CanonicalCellName.rootCell(), path.getPath());
   }
 }

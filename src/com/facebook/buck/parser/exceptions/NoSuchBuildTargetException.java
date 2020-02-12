@@ -18,7 +18,6 @@ package com.facebook.buck.parser.exceptions;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -51,8 +50,8 @@ public class NoSuchBuildTargetException extends BuildTargetException {
    * @param buildFilePath the absolute path to the build file
    */
   public static NoSuchBuildTargetException createForMissingBuildRule(
-      UnconfiguredBuildTargetView buildTarget,
-      ImmutableList<UnconfiguredBuildTargetView> similarTargets,
+      UnconfiguredBuildTarget buildTarget,
+      ImmutableList<UnconfiguredBuildTarget> similarTargets,
       int totalTargets,
       Function<Path, OptionalLong> fileSizeFetcher,
       Path buildFilePath) {
@@ -74,7 +73,7 @@ public class NoSuchBuildTargetException extends BuildTargetException {
       int displayed = Math.min(MAX_SIMILAR_TARGETS_TO_DISPLAY, similarTargets.size());
       builder.append(String.format("\n%s similar targets in %s are:\n", displayed, buildFilePath));
       int i = 0;
-      for (UnconfiguredBuildTargetView target : similarTargets) {
+      for (UnconfiguredBuildTarget target : similarTargets) {
         if (i >= MAX_SIMILAR_TARGETS_TO_DISPLAY) {
           break;
         }
