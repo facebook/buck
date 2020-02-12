@@ -65,7 +65,7 @@ public class DarwinLinker extends DelegatingTool
   public ImmutableList<FileScrubber> getScrubbers(ImmutableMap<Path, Path> cellRootMap) {
     if (cacheLinks) {
       return ImmutableList.of(
-          new OsoSymbolsContentsScrubber(cellRootMap), new LcUuidContentsScrubber());
+          new OsoSymbolsContentsScrubber(cellRootMap), new LcUuidContentsScrubber(false));
     } else {
       // there's no point scrubbing the debug info if the linked objects are never getting cached
       return ImmutableList.of();

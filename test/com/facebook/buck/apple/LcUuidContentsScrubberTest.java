@@ -70,10 +70,11 @@ public class LcUuidContentsScrubberTest {
     workspace.setUp();
   }
 
-  private static void scrubUuidOf(Path path) throws IOException, FileScrubber.ScrubException {
+  private static void scrubUuidOf(Path path, boolean scrubConcurrently)
+      throws IOException, FileScrubber.ScrubException {
     try (FileChannel file =
         FileChannel.open(path, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
-      LcUuidContentsScrubber scrubber = new LcUuidContentsScrubber();
+      LcUuidContentsScrubber scrubber = new LcUuidContentsScrubber(scrubConcurrently);
       scrubber.scrubFile(file);
     }
   }
@@ -106,7 +107,7 @@ public class LcUuidContentsScrubberTest {
     Path destDylibPath = destFolder.resolve(srcDylibPath.getFileName());
     destDylibPath = Files.copy(srcDylibPath, destDylibPath);
 
-    scrubUuidOf(destDylibPath);
+    scrubUuidOf(destDylibPath, false);
     Optional<String> destUuid = getUuidOf(destDylibPath);
     assertTrue(destUuid.isPresent());
 
@@ -119,6 +120,21 @@ public class LcUuidContentsScrubberTest {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
+    testScrubberDeterminism(false, false);
+  }
+
+  @Test
+  public void testDeterministicConcurrentScrubber()
+      throws IOException, FileScrubber.ScrubException, InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    testScrubberDeterminism(false, true);
+  }
+
+  private void testScrubberDeterminism(
+      boolean scrubFirstCopyConcurrently, boolean scrubSecondCopyConcurrently)
+      throws IOException, FileScrubber.ScrubException, InterruptedException {
     Path srcDylibPath = getHelloLibDylibPath();
 
     final Path destFolder = tmp.newFolder();
@@ -128,11 +144,11 @@ public class LcUuidContentsScrubberTest {
     firstCopyDylibPath = Files.copy(srcDylibPath, firstCopyDylibPath);
     secondCopyDylibPath = Files.copy(srcDylibPath, secondCopyDylibPath);
 
-    scrubUuidOf(firstCopyDylibPath);
+    scrubUuidOf(firstCopyDylibPath, scrubFirstCopyConcurrently);
     Optional<String> firstUuid = getUuidOf(firstCopyDylibPath);
     assertTrue(firstUuid.isPresent());
 
-    scrubUuidOf(secondCopyDylibPath);
+    scrubUuidOf(secondCopyDylibPath, scrubSecondCopyConcurrently);
     Optional<String> secondUuid = getUuidOf(secondCopyDylibPath);
     assertTrue(secondUuid.isPresent());
 
