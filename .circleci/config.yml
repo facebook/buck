@@ -563,7 +563,8 @@ jobs:
       - run:
           # There is an issue with python in macos 10.14.x. this step is a work around and should be removed later.
           # https://stackoverflow.com/questions/59269208/errorrootcode-for-hash-md5-was-not-found-not-able-to-use-any-hg-mercurial-co
-          name: Python2 was EOL on 1/1/2020, it does not work with Xcode 10.3.0
+          name: Uninstall Python2
+          # Python2 was EOL on 1/1/2020, it does not work with Xcode 10.3.0
           command: |
             brew uninstall python@2
       - run:
