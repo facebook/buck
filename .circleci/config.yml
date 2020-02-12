@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs:
+  win: circleci/windows@2.2.0
+
 install_openjdk8: &install_openjdk8
   name: Install OpenJDK8
   command: |
@@ -120,6 +123,14 @@ macos_environment: &macos_environment
   PLATFORM: "macos"
   BUCKROOT: "/Users/distiller/buck"
   ANDROID_SDK: "/Users/distiller/android-sdk"
+  TERM: "dumb"
+  BUCK_NUM_THREADS: 3
+  BUCK_PEX_LOCATION: "./new_buck.pex"
+
+windows_environment: &windows_environment
+  PLATFORM: "windows"
+  BUCKROOT: "C:\\Users\\circleci\\buck"
+  ANDROID_SDK: "C:\\Users\\circleci\\android-sdk"
   TERM: "dumb"
   BUCK_NUM_THREADS: 3
   BUCK_PEX_LOCATION: "./new_buck.pex"
@@ -552,10 +563,10 @@ jobs:
       - run:
           # There is an issue with python in macos 10.14.x. this step is a work around and should be removed later.
           # https://stackoverflow.com/questions/59269208/errorrootcode-for-hash-md5-was-not-found-not-able-to-use-any-hg-mercurial-co
-          name: Make Python work with Xcode 10.3.0
+          name: Uninstall Python2
+          # Python2 was EOL on 1/1/2020, it does not work with Xcode 10.3.0
           command: |
-            brew unlink openssl
-            brew reinstall python@2
+            brew uninstall python@2
       - run:
           <<: *run_ant_build
       - run:
@@ -762,6 +773,36 @@ jobs:
             set -eux
             ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
             ${BUCK_PEX_LOCATION} test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
+  windows_build_test:
+    environment:
+      <<: *windows_environment
+    working_directory: "C:\\Users\\circleci\\buck"
+    executor: win/default
+    steps:
+      - checkout
+      - run:
+          name: Install ant
+          command: choco install ant --version=1.9.7
+          shell: cmd.exe
+      - run:
+          name: Install OpenJDK8
+          command: choco install adoptopenjdk8
+          shell: cmd.exe
+      - run:
+          name: Ant build
+          command: cd %BUCKROOT% && refreshenv && ant
+          shell: cmd.exe
+      - run:
+          name: Buck build
+          command: cd %BUCKROOT% && refreshenv && bin\buck build buck -c python.interpreter=python
+          shell: cmd.exe
+      # We know there are some Windows test failures, comment out for now. They should be fixed.
+      #- run:
+      #    name: Run Windows tests
+      #    command: |
+      #      cd %BUCKROOT%
+      #      bin\buck test --all --test-selectors=:windows_failures.txt --test-selectors=:windows_cxx_support.txt
+      #    shell: cmd.exe
 
 workflows:
   version: 2.1
@@ -790,3 +831,6 @@ workflows:
       - macos_test_android_ndk_17
       - macos_test_android_ndk_18
 
+  windows_jobs:
+    jobs:
+      - windows_build_test
