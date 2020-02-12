@@ -988,7 +988,8 @@ public final class MainRunner {
               remoteExecutionConfig.getReSessionLabel(),
               remoteExecutionConfig.getTenantId(),
               remoteExecutionConfig.getAuxiliaryBuildTag(),
-              projectPrefix.orElse(""));
+              projectPrefix.orElse(""),
+              executionEnvironment);
 
       LogBuckConfig logBuckConfig = buckConfig.getView(LogBuckConfig.class);
 
