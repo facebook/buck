@@ -29,6 +29,7 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -83,18 +84,19 @@ public class LocalCellProviderFactory {
             new CacheLoader<Path, Cell>() {
               @Override
               public Cell load(Path cellPath) throws IOException {
-                Path normalizedCellPath = cellPath.toRealPath().normalize();
+                AbsPath normalizedCellPath = AbsPath.of(cellPath).toRealPath().normalize();
 
                 Preconditions.checkState(
-                    allRoots.contains(normalizedCellPath),
+                    allRoots.contains(normalizedCellPath.getPath()),
                     "Cell %s outside of transitive closure of root cell (%s).",
                     normalizedCellPath,
                     allRoots);
 
                 RawConfig configOverrides =
-                    Optional.ofNullable(pathToConfigOverrides.get(normalizedCellPath))
+                    Optional.ofNullable(pathToConfigOverrides.get(normalizedCellPath.getPath()))
                         .orElse(RawConfig.of(ImmutableMap.of()));
-                Config config = Configs.createDefaultConfig(normalizedCellPath, configOverrides);
+                Config config =
+                    Configs.createDefaultConfig(normalizedCellPath.getPath(), configOverrides);
 
                 ImmutableMap<String, Path> cellMapping =
                     DefaultCellPathResolver.getCellPathsFromConfigRepositoriesSection(
@@ -134,7 +136,7 @@ public class LocalCellProviderFactory {
                 CanonicalCellName canonicalCellName =
                     cellPathResolver
                         .getNewCellPathResolver()
-                        .getCanonicalCellName(normalizedCellPath);
+                        .getCanonicalCellName(normalizedCellPath.getPath());
                 if (rootConfig.getView(BuildBuckConfig.class).isEmbeddedCellBuckOutEnabled()
                     && canonicalCellName.getLegacyName().isPresent()) {
                   embeddedCellBuckOutInfo =

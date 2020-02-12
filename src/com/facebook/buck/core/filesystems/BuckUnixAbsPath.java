@@ -16,6 +16,10 @@
 
 package com.facebook.buck.core.filesystems;
 
+import java.io.IOException;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+
 /**
  * {@link com.facebook.buck.core.filesystems.BuckUnixPath} with {@link
  * com.facebook.buck.core.filesystems.AbsPath} marker.
@@ -28,5 +32,15 @@ class BuckUnixAbsPath extends BuckUnixPath implements AbsPath {
   @Override
   public BuckUnixAbsPath normalize() {
     return (BuckUnixAbsPath) super.normalize();
+  }
+
+  @Override
+  public BuckUnixAbsPath toRealPath(LinkOption... options) throws IOException {
+    return (BuckUnixAbsPath) super.toRealPath(options);
+  }
+
+  @Override
+  public BuckUnixAbsPath resolve(Path obj) {
+    return (BuckUnixAbsPath) super.resolve(obj);
   }
 }

@@ -723,7 +723,7 @@ public final class MainRunner {
         filesystem =
             projectFilesystemFactory.createProjectFilesystem(
                 CanonicalCellName.rootCell(),
-                canonicalRootPath.getPath(),
+                canonicalRootPath,
                 config,
                 BuckPaths.getBuckOutIncludeTargetConfigHashFromRootCellConfig(config));
         cellPathResolver = DefaultCellPathResolver.create(filesystem.getRootPath(), config);
@@ -915,7 +915,7 @@ public final class MainRunner {
       ProjectFilesystem rootCellProjectFilesystem =
           projectFilesystemFactory.createOrThrow(
               CanonicalCellName.rootCell(),
-              cells.getRootCell().getFilesystem().getRootPath(),
+              AbsPath.of(cells.getRootCell().getFilesystem().getRootPath()),
               BuckPaths.getBuckOutIncludeTargetConfigHashFromRootCellConfig(config));
       BuildBuckConfig buildBuckConfig =
           cells.getRootCell().getBuckConfig().getView(BuildBuckConfig.class);

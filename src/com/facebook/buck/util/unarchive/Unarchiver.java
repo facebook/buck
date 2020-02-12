@@ -17,6 +17,7 @@
 package com.facebook.buck.util.unarchive;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.util.PatternsMatcher;
@@ -148,7 +149,7 @@ public abstract class Unarchiver {
     return extractArchive(
             archiveFile,
             projectFilesystemFactory.createProjectFilesystem(
-                CanonicalCellName.unsafeNotACell(), destination, false),
+                CanonicalCellName.unsafeNotACell(), AbsPath.of(destination), false),
             destination.getFileSystem().getPath(""),
             stripPrefix,
             entriesToExclude,

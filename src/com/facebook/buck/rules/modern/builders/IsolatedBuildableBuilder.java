@@ -26,6 +26,7 @@ import com.facebook.buck.core.cell.impl.LocalCellProviderFactory;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.module.impl.BuckModuleJarHashProvider;
@@ -110,8 +111,8 @@ public abstract class IsolatedBuildableBuilder {
 
   @SuppressWarnings("PMD.EmptyCatchBlock")
   IsolatedBuildableBuilder(Path workRoot, Path projectRoot, Path metadataPath) throws IOException {
-    Path canonicalWorkRoot = workRoot.toRealPath().normalize();
-    Path canonicalProjectRoot = canonicalWorkRoot.resolve(projectRoot).normalize();
+    AbsPath canonicalWorkRoot = AbsPath.of(workRoot.toRealPath()).normalize();
+    AbsPath canonicalProjectRoot = canonicalWorkRoot.resolve(projectRoot).normalize();
     this.metadataPath = metadataPath;
     this.dataRoot = workRoot.resolve("__data__");
 
@@ -134,7 +135,7 @@ public abstract class IsolatedBuildableBuilder {
         };
 
     // Setup filesystemCell and buck config.
-    Config config = Configs.createDefaultConfig(canonicalProjectRoot);
+    Config config = Configs.createDefaultConfig(canonicalProjectRoot.getPath());
     ProjectFilesystemFactory projectFilesystemFactory = new DefaultProjectFilesystemFactory();
 
     // Root filesystemCell doesn't require embedded buck-out info.
@@ -209,7 +210,7 @@ public abstract class IsolatedBuildableBuilder {
             .setExecutors(ImmutableMap.of())
             .setCellPathResolver(cellPathResolver)
             .setCells(cellProvider.getRootCell())
-            .setBuildCellRootPath(canonicalProjectRoot)
+            .setBuildCellRootPath(canonicalProjectRoot.getPath())
             .setProcessExecutor(processExecutor)
             .setProjectFilesystemFactory(projectFilesystemFactory)
             .build();
@@ -240,7 +241,7 @@ public abstract class IsolatedBuildableBuilder {
                         "Cannot resolve SourcePath names during build when running with an isolated strategy.");
                   }
                 }),
-            canonicalProjectRoot,
+            canonicalProjectRoot.getPath(),
             javaPackageFinder,
             eventBus,
             buckConfig.getView(BuildBuckConfig.class).getShouldDeleteTemporaries());

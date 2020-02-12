@@ -18,6 +18,7 @@ package com.facebook.buck.io.filesystem.impl;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
 import com.facebook.buck.io.filesystem.GlobPatternMatcher;
@@ -60,18 +61,22 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
   @Override
   public DefaultProjectFilesystem createProjectFilesystem(
       CanonicalCellName cellName,
-      Path root,
+      AbsPath root,
       Config config,
       Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo,
       boolean buckOutIncludeTargetConfigHash) {
     BuckPaths buckPaths =
         getConfiguredBuckPaths(
-            cellName, root, config, embeddedCellBuckOutInfo, buckOutIncludeTargetConfigHash);
+            cellName,
+            root.getPath(),
+            config,
+            embeddedCellBuckOutInfo,
+            buckOutIncludeTargetConfigHash);
     ProjectFilesystemDelegatePair delegatePair =
-        ProjectFilesystemDelegateFactory.newInstance(root, config);
+        ProjectFilesystemDelegateFactory.newInstance(root.getPath(), config);
     return new DefaultProjectFilesystem(
-        root,
-        extractIgnorePaths(root, config, buckPaths, embeddedCellBuckOutInfo),
+        root.getPath(),
+        extractIgnorePaths(root.getPath(), config, buckPaths, embeddedCellBuckOutInfo),
         buckPaths,
         delegatePair.getGeneralDelegate(),
         delegatePair,
@@ -81,7 +86,7 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
   @Override
   public DefaultProjectFilesystem createProjectFilesystem(
       CanonicalCellName cellName,
-      Path root,
+      AbsPath root,
       Config config,
       boolean buckOutIncludeTargetConfigHash) {
     return createProjectFilesystem(
@@ -90,7 +95,7 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
 
   @Override
   public DefaultProjectFilesystem createProjectFilesystem(
-      CanonicalCellName cellName, Path root, boolean buckOutIncludeTargetCofigHash) {
+      CanonicalCellName cellName, AbsPath root, boolean buckOutIncludeTargetCofigHash) {
     final Config config = new Config();
     return createProjectFilesystem(cellName, root, config, buckOutIncludeTargetCofigHash);
   }
@@ -227,7 +232,7 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
 
   @Override
   public DefaultProjectFilesystem createOrThrow(
-      CanonicalCellName cellName, Path path, boolean buckOutIncludeTargetCofigHash) {
+      CanonicalCellName cellName, AbsPath path, boolean buckOutIncludeTargetCofigHash) {
     try {
       // toRealPath() is necessary to resolve symlinks, allowing us to later
       // check whether files are inside or outside of the project without issue.
@@ -238,7 +243,7 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
           String.format(
               ("Failed to resolve project root [%s]."
                   + "Check if it exists and has the right permissions."),
-              path.toAbsolutePath()),
+              path),
           e);
     }
   }

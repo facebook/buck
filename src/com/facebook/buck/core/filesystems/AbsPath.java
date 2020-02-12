@@ -16,6 +16,8 @@
 
 package com.facebook.buck.core.filesystems;
 
+import java.io.IOException;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 
 /** Absolute path. */
@@ -38,5 +40,13 @@ public interface AbsPath extends PathWrapper {
   /** Behaves exactly like {@link Path#normalize()}. */
   default AbsPath normalize() {
     return of(getPath().normalize());
+  }
+
+  default AbsPath toRealPath(LinkOption... options) throws IOException {
+    return AbsPath.of(getPath().toRealPath(options));
+  }
+
+  default AbsPath resolve(Path path) {
+    return AbsPath.of(getPath().resolve(path));
   }
 }

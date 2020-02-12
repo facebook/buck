@@ -25,6 +25,7 @@ import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
@@ -74,7 +75,6 @@ import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
@@ -225,8 +225,8 @@ public class IjProjectCommandHelper {
 
   private ProjectFilesystem getProjectOutputFilesystem() throws IOException {
     if (outputDir != null) {
-      Path outputPath = Paths.get(outputDir).toAbsolutePath();
-      Files.createDirectories(outputPath);
+      AbsPath outputPath = AbsPath.of(Paths.get(outputDir).toAbsolutePath());
+      Files.createDirectories(outputPath.getPath());
       Cell rootCell = this.cell.getCell(CanonicalCellName.rootCell());
       return new DefaultProjectFilesystemFactory()
           .createProjectFilesystem(
