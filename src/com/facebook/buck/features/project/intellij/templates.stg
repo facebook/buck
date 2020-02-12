@@ -7,6 +7,7 @@ android_manifest(package, minSdkVersion) ::= <<
   <uses-sdk android:minSdkVersion="%minSdkVersion%"/>
 %endif%
 </manifest>
+
 >>
 
 generated_by_idea(package, className, content) ::= <<
@@ -20,6 +21,7 @@ public final class %className% {
 %content%
 %endif%
 }
+
 >>
 
 ij_library(name, binaryJars, classPaths, javadocUrls, sourceJars) ::= <<
@@ -63,6 +65,7 @@ ij_misc(jdk15, jdkName, jdkType, outputUrl, languageLevel) ::= <<
 %if(outputUrl)%    <output url="file://$PROJECT_DIR$/%outputUrl%" />
 %endif%  </component>
 </project>
+
 >>
 
 ij_module_index(modules) ::= <<
@@ -76,6 +79,7 @@ ij_module_index(modules) ::= <<
 }%    </modules>
   </component>
 </project>
+
 >>
 
 ij_module(moduleType, metaInfDirectory, androidFacet, languageLevel, generatedSourceFolders, contentRoots, sdk, sdkType, dependencies) ::= <<
