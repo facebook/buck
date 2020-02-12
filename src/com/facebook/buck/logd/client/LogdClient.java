@@ -49,6 +49,8 @@ public class LogdClient implements LogDaemonClient {
   private Map<Integer, StreamObserver<LogMessage>> requestObservers = new ConcurrentHashMap<>();
   private Map<Integer, String> fileIdToPath = new ConcurrentHashMap<>();
 
+  private StreamObserverFactory streamObserverFactory;
+
   /**
    * Constructs a LogdClient with the provided hostname and port number.
    *
@@ -56,7 +58,19 @@ public class LogdClient implements LogDaemonClient {
    * @param port port number
    */
   public LogdClient(String host, int port) {
-    this(ManagedChannelBuilder.forAddress(host, port).usePlaintext());
+    this(host, port, new DefaultStreamObserverFactory());
+  }
+
+  /**
+   * Constructs a LogdClient with the provided hostname, port number and an implementation of
+   * StreamObserverFactory.
+   *
+   * @param host host name
+   * @param port port number
+   * @param streamObserverFactory an implementation of StreamObserverFactory
+   */
+  public LogdClient(String host, int port, StreamObserverFactory streamObserverFactory) {
+    this(ManagedChannelBuilder.forAddress(host, port).usePlaintext(), streamObserverFactory);
     LOG.info("Channel established to " + host + " at port " + port);
   }
 
@@ -66,10 +80,12 @@ public class LogdClient implements LogDaemonClient {
    * @param channelBuilder a channel to LogD server
    */
   @VisibleForTesting
-  public LogdClient(ManagedChannelBuilder<?> channelBuilder) {
+  public LogdClient(
+      ManagedChannelBuilder<?> channelBuilder, StreamObserverFactory streamObserverFactory) {
     channel = channelBuilder.build();
     blockingStub = LogdServiceGrpc.newBlockingStub(channel);
     asyncStub = LogdServiceGrpc.newStub(channel);
+    this.streamObserverFactory = streamObserverFactory;
   }
 
   @Override
@@ -123,25 +139,7 @@ public class LogdClient implements LogDaemonClient {
     //   the responseObserver.
     responseObservers.computeIfAbsent(
         logFileId,
-        newLogFileId ->
-            new StreamObserver<Status>() {
-              private String path = fileIdToPath.get(newLogFileId);
-
-              @Override
-              public void onNext(Status response) {
-                LOG.info("Logs written to " + path);
-              }
-
-              @Override
-              public void onError(Throwable t) {
-                LOG.error(t, "LogD failed to send a response: " + io.grpc.Status.fromThrowable(t));
-              }
-
-              @Override
-              public void onCompleted() {
-                LOG.info("LogD closing stream to " + path);
-              }
-            });
+        newLogFileId -> streamObserverFactory.createStreamObserver(fileIdToPath.get(newLogFileId)));
 
     StreamObserver<LogMessage> requestObserver =
         requestObservers.computeIfAbsent(
