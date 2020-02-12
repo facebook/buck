@@ -225,7 +225,7 @@ public class GenruleBuildable implements Buildable {
       Optional<Arg> cmdExe,
       Optional<String> type,
       Optional<String> out,
-      Optional<ImmutableMap<String, ImmutableSet<String>>> outs,
+      Optional<ImmutableMap<OutputLabel, ImmutableSet<String>>> outs,
       boolean enableSandboxingInGenrule,
       boolean isCacheable,
       String environmentExpansionSeparator,
@@ -252,13 +252,13 @@ public class GenruleBuildable implements Buildable {
     Preconditions.checkArgument(
         out.isPresent() ^ outs.isPresent(), "Genrule unexpectedly has both 'out' and 'outs'.");
     if (outs.isPresent()) {
-      ImmutableMap<String, ImmutableSet<String>> outputs = outs.get();
+      ImmutableMap<OutputLabel, ImmutableSet<String>> outputs = outs.get();
       ImmutableMap.Builder<OutputLabel, ImmutableSet<String>> outsBuilder =
           ImmutableMap.builderWithExpectedSize(outputs.size() + 1);
       ImmutableMap.Builder<OutputLabel, ImmutableSet<OutputPath>> outputPathsBuilder =
           ImmutableMap.builderWithExpectedSize(outputs.size() + 1);
-      for (Map.Entry<String, ImmutableSet<String>> outputLabelToOutputs : outputs.entrySet()) {
-        OutputLabel outputLabel = OutputLabel.of(outputLabelToOutputs.getKey());
+      for (Map.Entry<OutputLabel, ImmutableSet<String>> outputLabelToOutputs : outputs.entrySet()) {
+        OutputLabel outputLabel = outputLabelToOutputs.getKey();
         outsBuilder.put(outputLabel, outputLabelToOutputs.getValue());
         outputPathsBuilder.put(
             outputLabel,
