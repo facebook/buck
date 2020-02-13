@@ -219,7 +219,6 @@ public class BuildReport {
                 public void logVerbose(Throwable e) {}
               },
               new HumanReadableExceptionAugmentor(ImmutableMap.of()))
-          .setSuppressStackTraces(true)
           .logException(failure);
       failures.put(failureResult.getRule().getFullyQualifiedName(), messageBuilder.toString());
     }

@@ -43,6 +43,7 @@ import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.json.ObjectMappers;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
@@ -65,6 +66,7 @@ public class BuildReportTest {
   private Cells cells;
   private ActionGraphBuilder graphBuilder;
   private Map<BuildRule, Optional<BuildResult>> ruleToResult;
+  private RuntimeException runtimeException;
 
   @Before
   public void setUp() {
@@ -80,7 +82,8 @@ public class BuildReportTest {
         rule1, Optional.of(BuildResult.success(rule1, BUILT_LOCALLY, CacheResult.miss())));
 
     BuildRule rule2 = new FakeBuildRule(BuildTargetFactory.newInstance("//fake:rule2"));
-    BuildResult rule2Failure = BuildResult.failure(rule2, new RuntimeException("some"));
+    runtimeException = new RuntimeException("some");
+    BuildResult rule2Failure = BuildResult.failure(rule2, runtimeException);
     ruleToResult.put(rule2, Optional.of(rule2Failure));
     graphBuilder.addToIndex(rule2);
 
@@ -260,12 +263,17 @@ public class BuildReportTest {
             "    }",
             "  },",
             "  \"failures\" : {",
-            "    \"//fake:rule2\" : \"java.lang.RuntimeException: some\"",
+            "    \"//fake:rule2\" : \""
+                + Throwables.getStackTraceAsString(runtimeException)
+                    .replace("\r\n", "\n")
+                    .replace("\t", "\\t")
+                    .replace("\n", "\\n")
+                + "\"",
             "  }",
             "}");
     String observedReport =
         new BuildReport(buildExecutionResult, resolver, cells.getRootCell())
             .generateJsonBuildReport();
-    assertEquals(expectedReport, observedReport);
+    assertEquals(expectedReport.replace("\\r\\n", "\\n"), observedReport.replace("\\r\\n", "\\n"));
   }
 }
