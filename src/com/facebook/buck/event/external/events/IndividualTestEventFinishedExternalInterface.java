@@ -21,7 +21,8 @@ package com.facebook.buck.event.external.events;
  * by external applications (like the Intellij Buck plugin) to deserialize events coming from the
  * webserver.
  */
-public interface IndividualTesEventFinishedExternalInterface<T> extends BuckEventExternalInterface {
+public interface IndividualTestEventFinishedExternalInterface<T>
+    extends BuckEventExternalInterface {
   // Sent when an individual test's results are available
   String RESULTS_AVAILABLE = "ResultsAvailable";
   /**

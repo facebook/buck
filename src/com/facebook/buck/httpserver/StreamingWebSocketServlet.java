@@ -19,7 +19,7 @@ package com.facebook.buck.httpserver;
 import com.facebook.buck.event.external.events.BuckEventExternalInterface;
 import com.facebook.buck.event.external.events.CompilerErrorEventExternalInterface;
 import com.facebook.buck.event.external.events.ConsoleEventExternalInterface;
-import com.facebook.buck.event.external.events.IndividualTesEventFinishedExternalInterface;
+import com.facebook.buck.event.external.events.IndividualTestEventFinishedExternalInterface;
 import com.facebook.buck.event.external.events.InstallFinishedEventExternalInterface;
 import com.facebook.buck.event.external.events.ProgressEventInterface;
 import com.facebook.buck.event.external.events.TestRunFinishedEventInterface;
@@ -121,7 +121,7 @@ public class StreamingWebSocketServlet extends WebSocketServlet {
                 BuckEventExternalInterface.TEST_RUN_STARTED,
                 TestRunFinishedEventInterface.RUN_COMPLETE,
                 BuckEventExternalInterface.INDIVIDUAL_TEST_AWAITING_RESULTS,
-                IndividualTesEventFinishedExternalInterface.RESULTS_AVAILABLE,
+                IndividualTestEventFinishedExternalInterface.RESULTS_AVAILABLE,
                 InstallFinishedEventExternalInterface.INSTALL_FINISHED,
                 CompilerErrorEventExternalInterface.COMPILER_ERROR_EVENT,
                 ConsoleEventExternalInterface.CONSOLE_EVENT,
