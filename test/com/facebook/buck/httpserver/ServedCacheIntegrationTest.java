@@ -54,6 +54,7 @@ import com.facebook.buck.support.bgtasks.TestBackgroundTaskManager;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Futures;
@@ -162,7 +163,7 @@ public class ServedCacheIntegrationTest {
 
   @Test
   public void testFetchFromServedDircache() throws Exception {
-    webServer = new WebServer(/* port */ 0, projectFilesystem);
+    webServer = new WebServer(/* port */ 0, projectFilesystem, FakeClock.doNotCare());
     webServer.updateAndStartIfNeeded(Optional.of(dirCache));
 
     ArtifactCache serverBackedCache =
@@ -235,7 +236,7 @@ public class ServedCacheIntegrationTest {
           }
         };
 
-    webServer = new WebServer(/* port */ 0, throwingStreamFilesystem);
+    webServer = new WebServer(/* port */ 0, throwingStreamFilesystem, FakeClock.doNotCare());
     webServer.updateAndStartIfNeeded(Optional.of(dirCache));
 
     ArtifactCache serverBackedCache =
@@ -275,7 +276,7 @@ public class ServedCacheIntegrationTest {
           }
         };
 
-    webServer = new WebServer(/* port */ 0, throwingStreamFilesystem);
+    webServer = new WebServer(/* port */ 0, throwingStreamFilesystem, FakeClock.doNotCare());
     webServer.updateAndStartIfNeeded(Optional.of(dirCache));
 
     ArtifactCache serverBackedCache =
@@ -310,7 +311,7 @@ public class ServedCacheIntegrationTest {
           }
         };
 
-    webServer = new WebServer(/* port */ 0, throwingStreamFilesystem);
+    webServer = new WebServer(/* port */ 0, throwingStreamFilesystem, FakeClock.doNotCare());
     webServer.updateAndStartIfNeeded(Optional.of(dirCache));
 
     ArtifactCache serverBackedCache =
@@ -336,7 +337,7 @@ public class ServedCacheIntegrationTest {
       outputStream.writeInt(1024);
     }
 
-    webServer = new WebServer(/* port */ 0, projectFilesystem);
+    webServer = new WebServer(/* port */ 0, projectFilesystem, FakeClock.doNotCare());
     webServer.updateAndStartIfNeeded(Optional.of(dirCache));
 
     ArtifactCache serverBackedCache =
@@ -350,7 +351,7 @@ public class ServedCacheIntegrationTest {
 
   @Test
   public void whenNoCacheIsServedLookupsAreErrors() throws Exception {
-    webServer = new WebServer(/* port */ 0, projectFilesystem);
+    webServer = new WebServer(/* port */ 0, projectFilesystem, FakeClock.doNotCare());
     webServer.updateAndStartIfNeeded(Optional.empty());
 
     ArtifactCache serverBackedCache =
@@ -364,7 +365,7 @@ public class ServedCacheIntegrationTest {
 
   @Test
   public void canSetArtifactCacheWithoutRestartingServer() throws Exception {
-    webServer = new WebServer(/* port */ 0, projectFilesystem);
+    webServer = new WebServer(/* port */ 0, projectFilesystem, FakeClock.doNotCare());
     webServer.updateAndStartIfNeeded(Optional.empty());
 
     ArtifactCache serverBackedCache =
@@ -391,7 +392,7 @@ public class ServedCacheIntegrationTest {
 
   @Test
   public void testStoreAndFetchNotBorrowable() throws Exception {
-    webServer = new WebServer(/* port */ 0, projectFilesystem);
+    webServer = new WebServer(/* port */ 0, projectFilesystem, FakeClock.doNotCare());
     webServer.updateAndStartIfNeeded(
         ArtifactCaches.newServedCache(
             createMockLocalConfig(
@@ -431,7 +432,7 @@ public class ServedCacheIntegrationTest {
 
   @Test
   public void testStoreAndFetchBorrowable() throws Exception {
-    webServer = new WebServer(/* port */ 0, projectFilesystem);
+    webServer = new WebServer(/* port */ 0, projectFilesystem, FakeClock.doNotCare());
     webServer.updateAndStartIfNeeded(
         ArtifactCaches.newServedCache(
             createMockLocalConfig(
@@ -471,7 +472,7 @@ public class ServedCacheIntegrationTest {
 
   @Test
   public void testStoreDisabled() throws Exception {
-    webServer = new WebServer(/* port */ 0, projectFilesystem);
+    webServer = new WebServer(/* port */ 0, projectFilesystem, FakeClock.doNotCare());
     webServer.updateAndStartIfNeeded(
         ArtifactCaches.newServedCache(
             createMockLocalConfig(
@@ -508,7 +509,7 @@ public class ServedCacheIntegrationTest {
 
   @Test
   public void fullStackIntegrationTest() throws Exception {
-    webServer = new WebServer(/* port */ 0, projectFilesystem);
+    webServer = new WebServer(/* port */ 0, projectFilesystem, FakeClock.doNotCare());
     webServer.updateAndStartIfNeeded(
         ArtifactCaches.newServedCache(
             createMockLocalConfig(

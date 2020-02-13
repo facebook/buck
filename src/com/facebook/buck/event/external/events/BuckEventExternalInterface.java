@@ -16,6 +16,7 @@
 
 package com.facebook.buck.event.external.events;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -45,9 +46,25 @@ public interface BuckEventExternalInterface {
   String PROJECT_GENERATION_FINISHED = "ProjectGenerationFinished";
   // Updates about cache rate stats
   String CACHE_RATE_STATS_UPDATE_EVENT = "CacheRateStatsUpdateEvent";
+  // Updates about the status of the current build
+  String BUILD_STATUS_EVENT = "BuildStatus";
   /** @return the time at which the event has been created, in milliseconds. */
   long getTimestampMillis();
   /** @return the type of the event. */
   @JsonProperty("type")
   String getEventName();
+
+  /**
+   * By default, events sent to external websocket listeners are fire-and-forget; a client never
+   * receives past events. However events may opt in to a behavior where the last instance of the
+   * event is stored and sent to new clients as they connect. This is useful for "snapshot" events
+   * which provide information about an ongoing event.
+   *
+   * <p>Note that this does not replay multiple instances of an event. Only the last instance will
+   * be sent to new clients.
+   */
+  @JsonIgnore
+  default boolean storeLastInstanceAndReplayForNewClients() {
+    return false;
+  }
 }

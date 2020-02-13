@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.timing.FakeClock;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,7 +36,7 @@ public class ServerStatusCommandTest {
   public void setUp() {
     console = new TestConsole();
     WebServer webServer =
-        new WebServer(0, new FakeProjectFilesystem()) {
+        new WebServer(0, new FakeProjectFilesystem(), FakeClock.doNotCare()) {
           @Override
           public int getPort() {
             return webServerPort;

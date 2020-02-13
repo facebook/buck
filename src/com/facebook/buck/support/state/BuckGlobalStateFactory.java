@@ -130,7 +130,9 @@ public class BuckGlobalStateFactory {
     } else {
       webServer =
           createWebServer(
-              rootCell.getRootCell().getBuckConfig(), rootCell.getRootCell().getFilesystem());
+              rootCell.getRootCell().getBuckConfig(),
+              rootCell.getRootCell().getFilesystem(),
+              clock);
     }
     if (webServer.isPresent()) {
       Optional<ArtifactCache> servedCache =
@@ -231,12 +233,12 @@ public class BuckGlobalStateFactory {
   }
 
   private static Optional<WebServer> createWebServer(
-      BuckConfig config, ProjectFilesystem filesystem) {
+      BuckConfig config, ProjectFilesystem filesystem, Clock clock) {
     OptionalInt port = getValidWebServerPort(config);
     if (!port.isPresent()) {
       return Optional.empty();
     }
-    return Optional.of(new WebServer(port.getAsInt(), filesystem));
+    return Optional.of(new WebServer(port.getAsInt(), filesystem, clock));
   }
 
   /**

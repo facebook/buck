@@ -19,6 +19,7 @@ package com.facebook.buck.httpserver;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.trace.BuildTraces;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -63,6 +64,7 @@ public class WebServer {
   private static final Path HTTP_PORT_FILE = Paths.get(".httpport");
 
   private final ProjectFilesystem projectFilesystem;
+  private final Clock clock;
   private final Server server;
   private final StreamingWebSocketServlet streamingWebSocketServlet;
   private final ArtifactCacheHandler artifactCacheHandler;
@@ -71,8 +73,9 @@ public class WebServer {
    * @param port If 0, then an <a href="http://en.wikipedia.org/wiki/Ephemeral_port">ephemeral
    *     port</a> will be assigned. Use {@link #getPort()} to find out which port is being used.
    */
-  public WebServer(int port, ProjectFilesystem projectFilesystem) {
+  public WebServer(int port, ProjectFilesystem projectFilesystem, Clock clock) {
     this.projectFilesystem = projectFilesystem;
+    this.clock = clock;
     this.server = new Server(port);
     this.streamingWebSocketServlet = new StreamingWebSocketServlet();
     this.artifactCacheHandler = new ArtifactCacheHandler(projectFilesystem);
@@ -85,7 +88,7 @@ public class WebServer {
   }
 
   public WebServerBuckEventListener createListener() {
-    return new WebServerBuckEventListener(streamingWebSocketServlet);
+    return new WebServerBuckEventListener(streamingWebSocketServlet, clock);
   }
 
   /** @return Number of clients streaming from webserver */
