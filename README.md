@@ -9,14 +9,9 @@ check out the documentation at <http://buck.build/>.
 Installation
 ------------
 
-First, clone the Buck repository:
-
-    git clone --depth 1 https://github.com/facebook/buck.git
-    cd buck
-
 Since Buck is used to build Buck, the initial build process involves 2 phases:
 
-##### 1. Bootstrap Buck with ant
+##### 1. Clone the Buck repository and bootstrap it with ant:
 
     git clone --depth 1 https://github.com/facebook/buck.git
     cd buck
