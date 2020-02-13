@@ -58,23 +58,21 @@ public class StreamingWebSocketServlet extends WebSocketServlet {
     factory.setCreator(wrapperCreator);
   }
 
+  /** Sends the message to all WebSockets that are subscribed to the given event. */
   public void tellClients(BuckEventExternalInterface event) {
-    if (connections.isEmpty()) {
-      return;
-    }
-
-    try {
-      String message = ObjectMappers.WRITER.writeValueAsString(event);
-      tellAll(event.getEventName(), message);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  /** Sends the message to all WebSockets that are currently connected. */
-  private void tellAll(String eventName, String message) {
+    String eventName = event.getEventName();
+    // We don't want to pay the cost of serializing to JSON unless
+    // at least one client is connected and subscribed.
+    String message = null;
     for (MyWebSocket webSocket : connections) {
       if (webSocket.isConnected() && webSocket.isSubscribedTo(eventName)) {
+        if (message == null) {
+          try {
+            message = ObjectMappers.WRITER.writeValueAsString(event);
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }
+        }
         webSocket.getRemote().sendStringByFuture(message);
       }
     }
