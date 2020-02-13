@@ -85,11 +85,7 @@ public class WebServer {
   }
 
   public WebServerBuckEventListener createListener() {
-    return new WebServerBuckEventListener(this);
-  }
-
-  public StreamingWebSocketServlet getStreamingWebSocketServlet() {
-    return streamingWebSocketServlet;
+    return new WebServerBuckEventListener(streamingWebSocketServlet);
   }
 
   /** @return Number of clients streaming from webserver */
