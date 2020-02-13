@@ -293,11 +293,6 @@ public class ProgressEstimatorTest {
     e.didStartBuild();
     e.setNumberOfRules(10);
 
-    e.didStartRule();
-    e.didStartRule();
-    e.didStartRule();
-    e.didStartRule();
-
     e.didFinishRule();
     e.didFinishRule();
     e.didFinishRule();
