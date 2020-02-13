@@ -84,7 +84,7 @@ public class TargetSpecResolver implements AutoCloseable {
   // instance per each cell object
   // A better design would be to make TargetSpecResolver cell-centric, i.e. have resolver work
   // in a scope of a Cell only
-  private final LoadingCache<Path, GraphTransformationEngine> graphEngineForRecursiveSpecPerRoot;
+  private final LoadingCache<AbsPath, GraphTransformationEngine> graphEngineForRecursiveSpecPerRoot;
 
   @FunctionalInterface
   private interface EngineFactory {
@@ -94,7 +94,7 @@ public class TargetSpecResolver implements AutoCloseable {
 
   private TargetSpecResolver(
       BuckEventBus eventBus,
-      LoadingCache<Path, GraphTransformationEngine> graphEngineForRecursiveSpecPerRoot) {
+      LoadingCache<AbsPath, GraphTransformationEngine> graphEngineForRecursiveSpecPerRoot) {
     this.eventBus = eventBus;
     this.graphEngineForRecursiveSpecPerRoot = graphEngineForRecursiveSpecPerRoot;
   }
@@ -107,11 +107,12 @@ public class TargetSpecResolver implements AutoCloseable {
             .build(
                 CacheLoader.from(
                     path -> {
-                      Cell cell = cellProvider.getCellByPath(path);
+                      Cell cell = cellProvider.getCellByPath(path.getPath());
                       String buildFileName =
                           cell.getBuckConfigView(ParserConfig.class).getBuildFileName();
                       ProjectFilesystemView fileSystemView = cell.getFilesystemViewForSourceFiles();
-                      return engineFactory.makeEngine(path, buildFileName, fileSystemView);
+                      return engineFactory.makeEngine(
+                          path.getPath(), buildFileName, fileSystemView);
                     })));
   }
 

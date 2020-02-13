@@ -70,15 +70,14 @@ public class DaemonicCellStateTest {
       throw new AssertionError();
     }
     state.putBuildFileManifestIfNotPresent(
-        AbsPath.of(
-            targetCell
-                .getRoot()
-                .resolve(
-                    target
-                        .getCellRelativeBasePath()
-                        .getPath()
-                        .toPath(filesystem.getFileSystem())
-                        .resolve("BUCK"))),
+        targetCell
+            .getRoot()
+            .resolve(
+                target
+                    .getCellRelativeBasePath()
+                    .getPath()
+                    .toPath(filesystem.getFileSystem())
+                    .resolve("BUCK")),
         BuildFileManifestFactory.create(
             ImmutableMap.of(
                 target.getShortName(),
@@ -148,7 +147,7 @@ public class DaemonicCellStateTest {
     Cache<UnconfiguredBuildTarget, UnconfiguredTargetNode> cache =
         childState.getCache(DaemonicCellState.RAW_TARGET_NODE_CACHE_TYPE);
 
-    AbsPath targetPath = AbsPath.of(childCell.getRoot().resolve("path/to/BUCK"));
+    AbsPath targetPath = childCell.getRoot().resolve("path/to/BUCK");
     BuildTarget target = BuildTargetFactory.newInstance("xplat//path/to:target");
 
     // Make sure the cache has a raw node for this target.

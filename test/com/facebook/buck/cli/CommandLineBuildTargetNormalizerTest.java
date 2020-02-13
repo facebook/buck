@@ -150,7 +150,7 @@ public class CommandLineBuildTargetNormalizerTest {
   private String normalize(Path relativeWorkingDirectory, String buildTargetFromCommandLine) {
     return new CommandLineBuildTargetNormalizer(
             cells.getRootCell(),
-            cells.getRootCell().getRoot().resolve(relativeWorkingDirectory),
+            cells.getRootCell().getRoot().resolve(relativeWorkingDirectory).getPath(),
             config)
         .normalizeBuildTargetIdentifier(buildTargetFromCommandLine);
   }

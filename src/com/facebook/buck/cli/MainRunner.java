@@ -1287,12 +1287,12 @@ public final class MainRunner {
 
           if (logBuckConfig.isBuckConfigLocalWarningEnabled()
               && !printConsole.getVerbosity().isSilent()) {
-            ImmutableList<Path> localConfigFiles =
+            ImmutableList<AbsPath> localConfigFiles =
                 cells.getAllCells().stream()
                     .map(
                         cell ->
                             cell.getRoot().resolve(Configs.DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME))
-                    .filter(path -> Files.isRegularFile(path))
+                    .filter(path -> Files.isRegularFile(path.getPath()))
                     .collect(ImmutableList.toImmutableList());
             if (localConfigFiles.size() > 0) {
               String message =
@@ -1300,7 +1300,7 @@ public final class MainRunner {
                       ? "Using local configuration:"
                       : "Using local configurations:";
               buildEventBus.post(ConsoleEvent.warning(message));
-              for (Path localConfigFile : localConfigFiles) {
+              for (AbsPath localConfigFile : localConfigFiles) {
                 buildEventBus.post(ConsoleEvent.warning(String.format("- %s", localConfigFile)));
               }
             }
@@ -1371,7 +1371,7 @@ public final class MainRunner {
               CommandEvent.started(
                   command.getDeclaredSubCommandName(),
                   remainingArgs,
-                  cells.getRootCell().getRoot().relativize(absoluteClientPwd).normalize(),
+                  cells.getRootCell().getRoot().getPath().relativize(absoluteClientPwd).normalize(),
                   context.isPresent()
                       ? OptionalLong.of(buckGlobalState.getUptime())
                       : OptionalLong.empty(),
@@ -1600,7 +1600,7 @@ public final class MainRunner {
       // Pass if we can't resolve the path, it'll blow up eventually
     }
 
-    if (!pwd.startsWith(rootCell.getRoot())) {
+    if (!pwd.startsWith(rootCell.getRoot().getPath())) {
       if (originalPwd.equals(pwd)) {
         throw new IllegalStateException(
             String.format(

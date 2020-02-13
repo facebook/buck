@@ -129,7 +129,7 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
     UnconfiguredTargetNode unconfiguredTargetNode =
         factory.create(
             cell.getRootCell(),
-            cell.getRootCell().getRoot().resolve("a/b/BUCK"),
+            cell.getRootCell().getRoot().resolve("a/b/BUCK").getPath(),
             buildTarget.getData(),
             DependencyStack.root(),
             inputAttributes,
@@ -157,7 +157,7 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
 
     return PackageFactory.create(
         cell.getRootCell(),
-        cell.getRootCell().getRoot().resolve("a/b/BUCK"),
+        cell.getRootCell().getRoot().resolve("a/b/BUCK").getPath(),
         pkg,
         Optional.empty());
   }

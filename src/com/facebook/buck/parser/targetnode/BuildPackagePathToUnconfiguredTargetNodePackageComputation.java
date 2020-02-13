@@ -92,7 +92,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputation
         unconfiguredTargetNodeToTargetNodeFactory,
         cell,
         throwOnValidationError,
-        cells.getSuperRootPath());
+        cells.getSuperRootPath().getPath());
   }
 
   @Override
@@ -109,10 +109,9 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputation
 
     Path packagePath = key.getPath();
     AbsPath buildFileAbsolutePath =
-        AbsPath.of(
-            cell.getRoot()
-                .resolve(packagePath)
-                .resolve(cell.getBuckConfig().getView(ParserConfig.class).getBuildFileName()));
+        cell.getRoot()
+            .resolve(packagePath)
+            .resolve(cell.getBuckConfig().getView(ParserConfig.class).getBuildFileName());
 
     ImmutableMap.Builder<String, UnconfiguredTargetNodeWithDeps> builder =
         ImmutableMap.builderWithExpectedSize(rawTargetNodes.size());

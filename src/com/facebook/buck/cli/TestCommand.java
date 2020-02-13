@@ -673,7 +673,7 @@ public class TestCommand extends BuildCommand {
           BuildContext buildContext =
               BuildContext.of(
                   actionGraphAndBuilder.getActionGraphBuilder().getSourcePathResolver(),
-                  params.getCells().getRootCell().getRoot(),
+                  params.getCells().getRootCell().getRoot().getPath(),
                   params.getJavaPackageFinder(),
                   params.getBuckEventBus(),
                   params

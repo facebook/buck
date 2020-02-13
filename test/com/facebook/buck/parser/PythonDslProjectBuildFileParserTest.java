@@ -22,6 +22,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationDescriptionsFactory;
 import com.facebook.buck.core.rules.knowntypes.DefaultKnownNativeRuleTypesFactory;
@@ -52,7 +53,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -154,7 +154,7 @@ public class PythonDslProjectBuildFileParserTest {
         buildFileParserFactory.createNoopParserThatAlwaysReturnsSuccessAndPrintsToStderr(
             buckEventBus)) {
       buildFileParser.initIfNeeded();
-      buildFileParser.getManifest(cell.getRootCell().getRoot().resolve("foo"));
+      buildFileParser.getManifest(cell.getRootCell().getRoot().resolve("foo").getPath());
     }
     assertThat(consoleEvents.get(1).getMessage(), Matchers.containsString("| Don't Panic!"));
   }
@@ -187,7 +187,7 @@ public class PythonDslProjectBuildFileParserTest {
         buildFileParserFactory.createNoopParserThatAlwaysReturnsSuccessWithWarning(
             buckEventBus, "This is a warning", "parser")) {
       buildFileParser.initIfNeeded();
-      buildFileParser.getManifest(cell.getRootCell().getRoot().resolve("foo"));
+      buildFileParser.getManifest(cell.getRootCell().getRoot().resolve("foo").getPath());
     }
     assertThat(
         consoleEvents,
@@ -221,7 +221,7 @@ public class PythonDslProjectBuildFileParserTest {
         buildFileParserFactory.createNoopParserThatAlwaysReturnsSuccessWithWarning(
             buckEventBus, "This is a watchman warning", "watchman")) {
       buildFileParser.initIfNeeded();
-      buildFileParser.getManifest(cell.getRootCell().getRoot().resolve("foo"));
+      buildFileParser.getManifest(cell.getRootCell().getRoot().resolve("foo").getPath());
     }
     assertThat(
         watchmanDiagnosticEvents,
@@ -251,7 +251,7 @@ public class PythonDslProjectBuildFileParserTest {
         buildFileParserFactory.createNoopParserThatAlwaysReturnsSuccessWithError(
             buckEventBus, "This is an error", "parser")) {
       buildFileParser.initIfNeeded();
-      buildFileParser.getManifest(cell.getRootCell().getRoot().resolve("foo"));
+      buildFileParser.getManifest(cell.getRootCell().getRoot().resolve("foo").getPath());
     }
     assertThat(
         consoleEvents,
@@ -299,7 +299,7 @@ public class PythonDslProjectBuildFileParserTest {
                             "text", "java_test(name=*@!&#(!@&*()\n")))
                 .build())) {
       buildFileParser.initIfNeeded();
-      buildFileParser.getManifest(cell.getRootCell().getRoot().resolve("foo/BUCK"));
+      buildFileParser.getManifest(cell.getRootCell().getRoot().resolve("foo/BUCK").getPath());
     }
   }
 
@@ -341,7 +341,7 @@ public class PythonDslProjectBuildFileParserTest {
                             "text", "java_test(name=*@!&#(!@&*()\n")))
                 .build())) {
       buildFileParser.initIfNeeded();
-      buildFileParser.getManifest(cell.getRootCell().getRoot().resolve("foo/BUCK"));
+      buildFileParser.getManifest(cell.getRootCell().getRoot().resolve("foo/BUCK").getPath());
     }
   }
 
@@ -405,7 +405,7 @@ public class PythonDslProjectBuildFileParserTest {
                             "some_helper_method(name=*@!&#(!@&*()\n")))
                 .build())) {
       buildFileParser.initIfNeeded();
-      buildFileParser.getManifest(cell.getRootCell().getRoot().resolve("foo/BUCK"));
+      buildFileParser.getManifest(cell.getRootCell().getRoot().resolve("foo/BUCK").getPath());
     }
   }
 
@@ -459,7 +459,7 @@ public class PythonDslProjectBuildFileParserTest {
                             "text", "lets_divide_by_zero()\n")))
                 .build())) {
       buildFileParser.initIfNeeded();
-      buildFileParser.getManifest(cell.getRootCell().getRoot().resolve("foo/BUCK"));
+      buildFileParser.getManifest(cell.getRootCell().getRoot().resolve("foo/BUCK").getPath());
     }
   }
 
@@ -468,10 +468,10 @@ public class PythonDslProjectBuildFileParserTest {
    * caching logic in Parser.
    */
   private static class TestProjectBuildFileParserFactory {
-    private final Path projectRoot;
+    private final AbsPath projectRoot;
     private final KnownNativeRuleTypes ruleTypes;
 
-    public TestProjectBuildFileParserFactory(Path projectRoot, KnownNativeRuleTypes ruleTypes) {
+    public TestProjectBuildFileParserFactory(AbsPath projectRoot, KnownNativeRuleTypes ruleTypes) {
       this.projectRoot = projectRoot;
       this.ruleTypes = ruleTypes;
     }
@@ -582,7 +582,7 @@ public class PythonDslProjectBuildFileParserTest {
           String pythonInterpreter, ProcessExecutor processExecutor, BuckEventBus buckEventBus) {
         super(
             ProjectBuildFileParserOptions.builder()
-                .setProjectRoot(projectRoot)
+                .setProjectRoot(projectRoot.getPath())
                 .setPythonInterpreter(pythonInterpreter)
                 .setAllowEmptyGlobs(ParserConfig.DEFAULT_ALLOW_EMPTY_GLOBS)
                 .setIgnorePaths(ImmutableSet.of())

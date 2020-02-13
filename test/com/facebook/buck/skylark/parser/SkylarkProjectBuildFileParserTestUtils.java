@@ -80,7 +80,7 @@ public class SkylarkProjectBuildFileParserTestUtils {
   static ProjectBuildFileParserOptions.Builder getDefaultParserOptions(
       Cell cell, KnownRuleTypesProvider knownRuleTypesProvider) {
     return ProjectBuildFileParserOptions.builder()
-        .setProjectRoot(cell.getRoot())
+        .setProjectRoot(cell.getRoot().getPath())
         .setAllowEmptyGlobs(ParserConfig.DEFAULT_ALLOW_EMPTY_GLOBS)
         .setIgnorePaths(ImmutableSet.of())
         .setBuildFileName("BUCK")

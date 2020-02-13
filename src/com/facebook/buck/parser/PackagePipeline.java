@@ -106,7 +106,7 @@ class PackagePipeline implements AutoCloseable {
     AbsPath currentDir =
         Preconditions.checkNotNull(
             packageFile.getParent(), "The package file path must have a parent: %s", packageFile);
-    AbsPath cellRoot = AbsPath.of(cell.getRoot());
+    AbsPath cellRoot = cell.getRoot();
     if (currentDir.equals(cellRoot)) {
       return Optional.empty();
     }

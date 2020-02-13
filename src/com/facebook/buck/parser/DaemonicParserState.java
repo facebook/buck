@@ -331,7 +331,7 @@ public class DaemonicParserState {
    * usage.
    */
   @GuardedBy("cellStateLock")
-  private final ConcurrentMap<Path, DaemonicCellState> cellPathToDaemonicState;
+  private final ConcurrentMap<AbsPath, DaemonicCellState> cellPathToDaemonicState;
 
   private final DaemonicCacheView<BuildTarget, TargetNode<?>> targetNodeCache =
       new DaemonicCacheView<>(DaemonicCellState.TARGET_NODE_CACHE_TYPE);
@@ -364,7 +364,7 @@ public class DaemonicParserState {
    * root path). If this value changes, then we need to invalidate all the caches.
    */
   @GuardedBy("cachedStateLock")
-  private Map<Path, Iterable<String>> cachedIncludes;
+  private Map<AbsPath, Iterable<String>> cachedIncludes;
 
   private final AutoCloseableReadWriteLock cachedStateLock;
   private final AutoCloseableReadWriteLock cellStateLock;
@@ -612,11 +612,10 @@ public class DaemonicParserState {
     for (RelPath buildFile : packageBuildFiles) {
       invalidatePath(
           state,
-          AbsPath.of(
-              cell.getRoot()
-                  .resolve(
-                      buildFile.resolve(
-                          cell.getBuckConfigView(ParserConfig.class).getBuildFileName()))));
+          cell.getRoot()
+              .resolve(
+                  buildFile.resolve(
+                      cell.getBuckConfigView(ParserConfig.class).getBuildFileName())));
     }
   }
 

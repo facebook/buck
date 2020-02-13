@@ -110,7 +110,8 @@ public class BuildTargetToUnconfiguredTargetNodeComputation
                     .getCellRelativeBasePath()
                     .getPath()
                     .toPath(cell.getFilesystem().getFileSystem()))
-            .resolve(buildFileName),
+            .resolve(buildFileName)
+            .getPath(),
         buildTarget,
         DependencyStack.root(),
         rawAttributes,

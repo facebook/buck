@@ -32,6 +32,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
@@ -468,7 +469,7 @@ public class WorkspaceAndProjectGenerator {
       }
       ImmutableMultimap<Path, BuildTarget> projectDirectoryToBuildTargets =
           projectDirectoryToBuildTargetsBuilder.build();
-      Path relativeTargetCell = rootCell.getRoot().relativize(projectCell.getRoot());
+      RelPath relativeTargetCell = rootCell.getRoot().relativize(projectCell.getRoot());
       for (Path projectDirectory : projectDirectoryToBuildTargets.keySet()) {
         ImmutableSet<BuildTarget> rules =
             filterRulesForProjectDirectory(
@@ -495,7 +496,7 @@ public class WorkspaceAndProjectGenerator {
                   // convert the projectPath to relative to the target cell here
                   result =
                       GenerationResult.of(
-                          relativeTargetCell.resolve(result.getProjectPath()),
+                          relativeTargetCell.getPath().resolve(result.getProjectPath()),
                           result.isProjectGenerated(),
                           result.getRequiredBuildTargets(),
                           result.getXcconfigPaths(),

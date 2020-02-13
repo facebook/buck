@@ -436,8 +436,8 @@ public class ProjectGenerator {
         // Set the cell root relative to the source root for each configuration.
         Path cellRootRelativeToSourceRoot =
             MorePaths.relativizeWithDotDotSupport(
-                projectCell.getRoot().resolve(xcodeProjectWriteOptions.sourceRoot()),
-                projectCell.getRoot());
+                projectCell.getRoot().getPath().resolve(xcodeProjectWriteOptions.sourceRoot()),
+                projectCell.getRoot().getPath());
         projectBuildSettings.put(
             BUCK_CELL_RELATIVE_PATH, cellRootRelativeToSourceRoot.normalize().toString());
 

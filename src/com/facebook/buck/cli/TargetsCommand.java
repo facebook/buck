@@ -1367,7 +1367,7 @@ public class TargetsCommand extends AbstractCommand {
         return params.getFileHashCache();
       case PATHS_ONLY:
         return new FilePathHashLoader(
-            params.getCells().getRootCell().getRoot(),
+            params.getCells().getRootCell().getRoot().getPath(),
             getTargetHashModifiedPaths(),
             params
                     .getCells()

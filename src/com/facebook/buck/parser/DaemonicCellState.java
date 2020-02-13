@@ -203,7 +203,7 @@ class DaemonicCellState {
   DaemonicCellState(Cell cell, int parsingThreads) {
     this.cell = new AtomicReference<>(cell);
     this.parsingThreads = parsingThreads;
-    this.cellRoot = AbsPath.of(cell.getRoot());
+    this.cellRoot = cell.getRoot();
     this.cellCanonicalName = cell.getCanonicalName();
     this.buildFileDependents = HashMultimap.create();
     this.packageFileDependents = HashMultimap.create();

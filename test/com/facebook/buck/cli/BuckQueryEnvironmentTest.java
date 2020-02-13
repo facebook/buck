@@ -143,7 +143,7 @@ public class BuckQueryEnvironmentTest {
     TargetPatternEvaluator targetPatternEvaluator =
         new TargetPatternEvaluator(
             cell.getRootCell(),
-            cell.getRootCell().getRoot(),
+            cell.getRootCell().getRoot().getPath(),
             FakeBuckConfig.builder().build(),
             parser,
             ParsingContext.builder(cell.getRootCell(), executor).build(),
@@ -151,7 +151,7 @@ public class BuckQueryEnvironmentTest {
     OwnersReport.Builder ownersReportBuilder =
         OwnersReport.builder(
             cell.getRootCell(),
-            cell.getRootCell().getRoot(),
+            cell.getRootCell().getRoot().getPath(),
             parser,
             parserState,
             Optional.empty());

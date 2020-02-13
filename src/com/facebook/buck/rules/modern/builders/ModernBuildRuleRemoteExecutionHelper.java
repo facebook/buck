@@ -208,7 +208,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
     this.protocol = protocol;
 
     this.pathResolver = ruleFinder.getSourcePathResolver();
-    this.projectRoot = cellPathPrefix.relativize(rootCell.getRoot());
+    this.projectRoot = cellPathPrefix.relativize(rootCell.getRoot().getPath());
 
     this.nodeMap = new ConcurrentHashMap<>();
     this.hasher = protocol.getHashFunction();

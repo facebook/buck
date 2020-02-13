@@ -204,7 +204,7 @@ public class CommandRunnerParamsForTesting {
         depsAwareExecutorSupplier,
         MetadataProviderFactory.emptyMetadataProvider(),
         buckGlobalState,
-        cells.getRootCell().getRoot());
+        cells.getRootCell().getRoot().getPath());
   }
 
   public static Builder builder() {

@@ -17,6 +17,7 @@
 package com.facebook.buck.core.model;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.support.cli.args.BuckCellArg;
@@ -61,6 +62,11 @@ public class UnconfiguredBuildTargetFactoryForTests {
             .map(InternalFlavor::of)
             .collect(
                 ImmutableSortedSet.toImmutableSortedSet(UnconfiguredBuildTarget.FLAVOR_ORDERING)));
+  }
+
+  public static UnconfiguredBuildTargetView newInstance(
+      @Nullable AbsPath root, String fullyQualifiedName) {
+    return newInstance(root != null ? root.getPath() : null, fullyQualifiedName);
   }
 
   public static UnconfiguredBuildTargetView newInstance(String baseName, String shortName) {

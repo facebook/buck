@@ -25,6 +25,7 @@ import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.PathMatcher;
@@ -65,7 +66,7 @@ abstract class CellImpl implements Cell {
     ignores.addAll(filesystem.getBlacklistedPaths());
     ignores.add(RecursiveFileMatcher.of(filesystem.getBuckPaths().getBuckOut()));
     for (Path subCellRoots : getKnownRootsOfAllCells()) {
-      if (!subCellRoots.equals(getRoot())) {
+      if (!AbsPath.of(subCellRoots).equals(getRoot())) {
         ignores.add(RecursiveFileMatcher.of(filesystem.relativize(subCellRoots)));
       }
     }
@@ -90,8 +91,8 @@ abstract class CellImpl implements Cell {
   public abstract ToolchainProvider getToolchainProvider();
 
   @Override
-  public Path getRoot() {
-    return getFilesystem().getRootPath();
+  public AbsPath getRoot() {
+    return AbsPath.of(getFilesystem().getRootPath());
   }
 
   @Override
@@ -117,7 +118,7 @@ abstract class CellImpl implements Cell {
   @Override
   public ImmutableList<Cell> getAllCells() {
     return RichStream.from(getKnownRootsOfAllCells())
-        .concat(RichStream.of(getRoot()))
+        .concat(RichStream.of(getRoot().getPath()))
         .distinct()
         .map(getCellProvider()::getCellByPath)
         .toImmutableList();

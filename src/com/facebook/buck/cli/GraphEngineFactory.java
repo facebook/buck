@@ -133,7 +133,7 @@ public class GraphEngineFactory {
         BuildPackagePathToBuildFileManifestComputation.of(
             buildFileParser,
             cell.getFilesystem().getPath(parserConfig.getBuildFileName()),
-            cell.getRoot(),
+            cell.getRoot().getPath(),
             false);
 
     // COMPOSITION: build target pattern to build file manifest
@@ -223,17 +223,23 @@ public class GraphEngineFactory {
                 new GraphComputationStage<>(patternToPackagePathComputation),
                 new GraphComputationStage<>(
                     directoryListComputation,
-                    params.getGlobalState().getDirectoryListCaches().getUnchecked(cell.getRoot())),
+                    params
+                        .getGlobalState()
+                        .getDirectoryListCaches()
+                        .getUnchecked(cell.getRoot().getPath())),
                 new GraphComputationStage<>(
                     fileTreeComputation,
-                    params.getGlobalState().getFileTreeCaches().getUnchecked(cell.getRoot())),
+                    params
+                        .getGlobalState()
+                        .getFileTreeCaches()
+                        .getUnchecked(cell.getRoot().getPath())),
                 patternToPathComputation.asStage(),
                 new GraphComputationStage<>(
                     packagePathToManifestComputation,
                     params
                         .getGlobalState()
                         .getBuildFileManifestCaches()
-                        .getUnchecked(cell.getRoot())),
+                        .getUnchecked(cell.getRoot().getPath())),
                 new GraphComputationStage<>(buildTargetToUnconfiguredTargetNodeComputation),
                 new GraphComputationStage<>(
                     unconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation),

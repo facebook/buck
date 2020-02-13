@@ -75,4 +75,16 @@ public interface AbsPath extends PathWrapper {
   default RelPath relativize(AbsPath other) {
     return RelPath.of(this.getPath().relativize(other.getPath()));
   }
+
+  /**
+   * Get the filesystem root of the current path. Note unlike {@link Path#getRoot()} this function
+   * never returns {@code null} because absolute paths always have root.
+   */
+  default AbsPath getRoot() {
+    Path root = getPath().getRoot();
+    if (root == null) {
+      throw new IllegalStateException("abs path must have a root: " + this);
+    }
+    return AbsPath.of(root);
+  }
 }

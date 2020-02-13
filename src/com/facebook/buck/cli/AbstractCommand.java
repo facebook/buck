@@ -421,7 +421,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
             .setJavaPackageFinder(params.getJavaPackageFinder())
             .setExecutors(params.getExecutors())
             .setCellPathResolver(params.getCells().getRootCell().getCellPathResolver())
-            .setBuildCellRootPath(params.getCells().getRootCell().getRoot())
+            .setBuildCellRootPath(params.getCells().getRootCell().getRoot().getPath())
             .setCells(params.getCells())
             .setProcessExecutor(new DefaultProcessExecutor(params.getConsole()))
             .setDefaultTestTimeoutMillis(testBuckConfig.getDefaultTestTimeoutMillis())

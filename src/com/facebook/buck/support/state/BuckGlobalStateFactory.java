@@ -209,7 +209,7 @@ public class BuckGlobalStateFactory {
 
   /** Create a number of instances of {@link BuildFileManifestCache}, one per each cell */
   private static LoadingCache<Path, BuildFileManifestCache> createBuildFileManifestCachePerCellMap(
-      EventBus fileEventBus, CellProvider cellProvider, Path superRootPath) {
+      EventBus fileEventBus, CellProvider cellProvider, AbsPath superRootPath) {
     return CacheBuilder.newBuilder()
         .build(
             new CacheLoader<Path, BuildFileManifestCache>() {
@@ -220,7 +220,7 @@ public class BuckGlobalStateFactory {
                     cell.getBuckConfigView(ParserConfig.class).getBuildFileName();
                 BuildFileManifestCache cache =
                     BuildFileManifestCache.of(
-                        superRootPath,
+                        superRootPath.getPath(),
                         path,
                         cell.getFilesystem().getPath(buildFileName),
                         cell.getFilesystemViewForSourceFiles());

@@ -269,7 +269,7 @@ final class OwnersReport {
                   Collectors.groupingBy(
                       path -> {
                         for (Cell c : cellsByRootLength) {
-                          if (path.startsWith(c.getRoot())) {
+                          if (path.startsWith(c.getRoot().getPath())) {
                             return Optional.of(c);
                           }
                         }

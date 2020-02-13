@@ -50,7 +50,7 @@ public final class CellProvider {
     this.cells = CacheBuilder.newBuilder().build(cellCacheLoader.apply(this));
     if (rootCellLoader != null) {
       Cell rootCell = rootCellLoader.apply(this);
-      cells.put(rootCell.getRoot(), rootCell);
+      cells.put(rootCell.getRoot().getPath(), rootCell);
     }
   }
 

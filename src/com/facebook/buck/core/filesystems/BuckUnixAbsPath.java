@@ -53,4 +53,9 @@ class BuckUnixAbsPath extends BuckUnixPath implements AbsPath {
   public BuckUnixAbsPath getParent() {
     return (BuckUnixAbsPath) super.getParent();
   }
+
+  @Override
+  public BuckUnixAbsPath getRoot() {
+    return (BuckUnixAbsPath) super.getRoot();
+  }
 }

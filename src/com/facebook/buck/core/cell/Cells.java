@@ -17,6 +17,7 @@
 package com.facebook.buck.core.cell;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -50,21 +51,21 @@ public class Cells {
   }
 
   /** @return Path of the topmost cell's path that roots all other cells */
-  public Path getSuperRootPath() {
-    Path cellRoot = getRootCell().getRoot();
+  public AbsPath getSuperRootPath() {
+    AbsPath cellRoot = getRootCell().getRoot();
     ImmutableSortedSet<Path> allRoots = getRootCell().getKnownRootsOfAllCells();
-    Path path = cellRoot.getRoot();
+    AbsPath path = cellRoot.getRoot();
 
     // check if supercell is a root folder, like '/' or 'C:\'
-    if (allRoots.contains(path)) {
+    if (allRoots.contains(path.getPath())) {
       return path;
     }
 
     // There is an assumption that there is exactly one cell with a path that prefixes all other
     // cell paths. So just try to find the cell with the shortest common path.
-    for (Path next : cellRoot) {
+    for (Path next : cellRoot.getPath()) {
       path = path.resolve(next);
-      if (allRoots.contains(path)) {
+      if (allRoots.contains(path.getPath())) {
         return path;
       }
     }

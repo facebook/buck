@@ -60,7 +60,6 @@ public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation
    *     TargetNode} from {@link UnconfiguredTargetNode} in order to resolve deps
    * @param cell A {@link Cell} object that contains targets used in this transformation, it is
    *     mostly used to resolve paths to absolute paths
-   * @return
    */
   public static UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation of(
       UnconfiguredTargetNodeToTargetNodeFactory unconfiguredTargetNodeToTargetNodeFactory,
@@ -79,10 +78,9 @@ public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation
       UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsKey key, ComputationEnvironment env) {
 
     AbsPath buildFileAbsolutePath =
-        AbsPath.of(
-            cell.getRoot()
-                .resolve(key.getPackagePath())
-                .resolve(cell.getBuckConfig().getView(ParserConfig.class).getBuildFileName()));
+        cell.getRoot()
+            .resolve(key.getPackagePath())
+            .resolve(cell.getBuckConfig().getView(ParserConfig.class).getBuildFileName());
 
     UnconfiguredBuildTarget unconfiguredBuildTarget =
         key.getUnconfiguredTargetNode().getBuildTarget();
