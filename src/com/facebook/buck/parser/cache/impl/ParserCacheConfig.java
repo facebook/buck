@@ -38,10 +38,6 @@ public abstract class ParserCacheConfig implements ConfigView<BuckConfig> {
   private static final String PARSER_CACHE_LOCAL_MODE_NAME = "dir_mode";
   private static final String DEFAULT_PARSER_CACHE_MODE_VALUE = "NONE";
 
-  private static final String MANIFEST_SERVICE_SECTION_NAME = "manifestservice";
-  private static final String MANIFEST_SERVICE_THRIFT_ENDPOINT_NAME = "hybrid_thrift_endpoint";
-  private static final String MANIFEST_SERVICE_MODE_NAME = "remote_parser_caching_access_mode";
-
   @Override
   public abstract BuckConfig getDelegate();
 
@@ -102,33 +98,6 @@ public abstract class ParserCacheConfig implements ConfigView<BuckConfig> {
     return ImmutableParserDirCacheEntry.of(Optional.of(pathToCacheDir), parserCacheAccessMode);
   }
 
-  /** Obtains a {@link ParserDirCacheEntry} from the {@link BuckConfig}. */
-  @Value.Lazy
-  protected ParserRemoteCacheEntry obtainRemoteEntry() {
-    String thriftEndpoint =
-        getDelegate()
-            .getValue(MANIFEST_SERVICE_SECTION_NAME, MANIFEST_SERVICE_THRIFT_ENDPOINT_NAME)
-            .orElse(null);
-
-    if (thriftEndpoint == null) {
-      // No endpoint specified. Disable remote cache.
-      return ImmutableParserRemoteCacheEntry.of(ParserCacheAccessMode.NONE);
-    }
-
-    ParserCacheAccessMode parserCacheAccessMode = ParserCacheAccessMode.NONE;
-    try {
-      parserCacheAccessMode = getCacheMode(MANIFEST_SERVICE_MODE_NAME);
-    } catch (ParserCacheException t) {
-      LOG.error(t, "Could not get ParserCacheAccessMode for remote AbstractCacheConfig.");
-    }
-
-    if (parserCacheAccessMode == ParserCacheAccessMode.NONE) {
-      return ImmutableParserRemoteCacheEntry.of(ParserCacheAccessMode.NONE); // Disable local cache.
-    }
-
-    return ImmutableParserRemoteCacheEntry.of(parserCacheAccessMode);
-  }
-
   /** @returns the location for the local cache. */
   @Value.Lazy
   public Optional<Path> getDirCacheLocation() {
@@ -162,28 +131,9 @@ public abstract class ParserCacheConfig implements ConfigView<BuckConfig> {
   }
 
   /**
-   * @returns {@code true} if the {@link RemoteManifestServiceCacheStorage} is enabled, otherwise
-   *     {@code false}.
-   */
-  public boolean isRemoteParserCacheEnabled() {
-    ParserRemoteCacheEntry parserRemoteCacheEntry = obtainRemoteEntry();
-    return parserRemoteCacheEntry.getRemoteCacheMode() != ParserCacheAccessMode.NONE;
-  }
-
-  /** @returns the access mode for the {@link RemoteManifestServiceCacheStorage}. */
-  public ParserCacheAccessMode getRemoteCacheAccessMode() {
-    ParserRemoteCacheEntry parserRemoteCacheEntry = obtainRemoteEntry();
-    if (parserRemoteCacheEntry != null) {
-      return parserRemoteCacheEntry.getRemoteCacheMode();
-    }
-
-    return ParserCacheAccessMode.NONE;
-  }
-
-  /**
    * @returns {@code true} if there is a cache storage that is enabled. Otherwise, {@code false}.
    */
   public boolean isParserCacheEnabled() {
-    return isDirParserCacheEnabled() || isRemoteParserCacheEnabled();
+    return isDirParserCacheEnabled();
   }
 }

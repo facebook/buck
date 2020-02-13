@@ -33,7 +33,6 @@ import com.facebook.buck.io.watchman.Capability;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.json.TargetCountVerificationParserDecorator;
-import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.parser.cache.impl.CachingProjectBuildFileParserDecorator;
@@ -54,7 +53,6 @@ import com.facebook.buck.skylark.parser.RuleFunctionFactory;
 import com.facebook.buck.skylark.parser.SkylarkProjectBuildFileParser;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
-import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -74,8 +72,6 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
   private final KnownRuleTypesProvider knownRuleTypesProvider;
   private final boolean enableProfiling;
   private final Optional<AtomicLong> processedBytes;
-  private final ThrowingCloseableMemoizedSupplier<ManifestService, IOException>
-      manifestServiceSupplier;
   private final FileHashLoader fileHashLoader;
 
   public DefaultProjectBuildFileParserFactory(
@@ -85,7 +81,6 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
       KnownRuleTypesProvider knownRuleTypesProvider,
       boolean enableProfiling,
       Optional<AtomicLong> processedBytes,
-      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
       FileHashLoader fileHashLoader) {
     this.typeCoercerFactory = typeCoercerFactory;
     this.console = console;
@@ -93,7 +88,6 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
     this.knownRuleTypesProvider = knownRuleTypesProvider;
     this.enableProfiling = enableProfiling;
     this.processedBytes = processedBytes;
-    this.manifestServiceSupplier = manifestServiceSupplier;
     this.fileHashLoader = fileHashLoader;
   }
 
@@ -103,7 +97,6 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
       boolean enableProfiling,
       Optional<AtomicLong> processedBytes,
       KnownRuleTypesProvider knownRuleTypesProvider,
-      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
       FileHashLoader fileHashLoader) {
     this(
         typeCoercerFactory,
@@ -112,7 +105,6 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
         knownRuleTypesProvider,
         enableProfiling,
         processedBytes,
-        manifestServiceSupplier,
         fileHashLoader);
   }
 
@@ -121,7 +113,6 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
       Console console,
       ParserPythonInterpreterProvider pythonInterpreterProvider,
       KnownRuleTypesProvider knownRuleTypesProvider,
-      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
       FileHashLoader fileHashLoader) {
     this(
         typeCoercerFactory,
@@ -130,7 +121,6 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
         knownRuleTypesProvider,
         false,
         Optional.empty(),
-        manifestServiceSupplier,
         fileHashLoader);
   }
 
@@ -206,8 +196,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
       BuckEventBus eventBus) {
     ParserCacheConfig parserCacheConfig = buckConfig.getView(ParserCacheConfig.class);
     if (parserCacheConfig.isParserCacheEnabled()) {
-      ParserCache parserCache =
-          ParserCache.of(buckConfig, filesystem, manifestServiceSupplier, eventBus);
+      ParserCache parserCache = ParserCache.of(buckConfig, filesystem, eventBus);
       return CachingProjectBuildFileParserDecorator.of(
           parserCache, skylarkParser, buckConfig.getConfig(), filesystem, fileHashLoader);
     }

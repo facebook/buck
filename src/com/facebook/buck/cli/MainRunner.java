@@ -126,8 +126,6 @@ import com.facebook.buck.log.ConsoleHandlerState;
 import com.facebook.buck.log.GlobalStateManager;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.log.LogConfig;
-import com.facebook.buck.manifestservice.ManifestService;
-import com.facebook.buck.manifestservice.ManifestServiceConfig;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserFactory;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
@@ -189,7 +187,6 @@ import com.facebook.buck.util.PrintStreamProcessExecutorFactory;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.Scope;
-import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.ThrowingCloseableWrapper;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.cache.InstrumentingCacheStatsTracker;
@@ -1010,15 +1007,6 @@ public final class MainRunner {
                       printConsole.getStdErr().getRawStream(),
                       verbosity);
           DefaultBuckEventBus buildEventBus = new DefaultBuckEventBus(clock, buildId);
-          ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier =
-              ThrowingCloseableMemoizedSupplier.of(
-                  () -> {
-                    ManifestServiceConfig manifestServiceConfig =
-                        new ManifestServiceConfig(buckConfig);
-                    return manifestServiceConfig.createManifestService(
-                        clock, buildEventBus, newDirectExecutorService());
-                  },
-                  ManifestService::close);
           ) {
         BuckConfigWriter.writeConfig(filesystem.getRootPath(), invocationInfo, buckConfig);
 
@@ -1417,7 +1405,6 @@ public final class MainRunner {
                   ruleKeyConfiguration,
                   depsAwareExecutorSupplier,
                   executableFinder,
-                  manifestServiceSupplier,
                   fileHashCache,
                   buildTargetFactory,
                   hostConfiguration.orElse(UnconfiguredTargetConfiguration.INSTANCE),
@@ -1502,7 +1489,6 @@ public final class MainRunner {
                         moduleManager,
                         depsAwareExecutorSupplier,
                         metadataProvider,
-                        manifestServiceSupplier,
                         buckGlobalState,
                         absoluteClientPwd));
           } catch (InterruptedException | ClosedByInterruptException e) {
@@ -1864,7 +1850,6 @@ public final class MainRunner {
       CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>>
           depsAwareExecutorSupplier,
       ExecutableFinder executableFinder,
-      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
       FileHashLoader fileHashLoader,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       TargetConfiguration hostConfiguration,
@@ -1922,7 +1907,6 @@ public final class MainRunner {
             targetSpecResolver,
             watchman,
             buildEventBus,
-            manifestServiceSupplier,
             fileHashLoader,
             unconfiguredBuildTargetFactory,
             hostConfiguration),

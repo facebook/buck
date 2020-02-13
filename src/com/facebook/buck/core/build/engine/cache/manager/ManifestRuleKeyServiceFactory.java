@@ -22,7 +22,6 @@ import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
-import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.nio.file.Path;
@@ -56,10 +55,5 @@ public abstract class ManifestRuleKeyServiceFactory {
         return buildCacheArtifactFetcher.fetch(artifactCache, manifestKey, downloadedManifest);
       }
     };
-  }
-
-  /** Return an implementation of the ManifestRuleKeyService that uses the ManifestService. */
-  public static ManifestRuleKeyService fromManifestService(ManifestService manifestService) {
-    return new ManifestRuleKeyServiceImpl(manifestService);
   }
 }

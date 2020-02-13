@@ -87,7 +87,6 @@ import com.facebook.buck.io.watchman.WatchmanOverflowEvent;
 import com.facebook.buck.io.watchman.WatchmanPathEvent;
 import com.facebook.buck.json.JsonObjectHashing;
 import com.facebook.buck.jvm.core.JavaLibrary;
-import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.config.ParserConfig.ApplyDefaultFlavorsMode;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
@@ -109,7 +108,6 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.CreateSymlinksForTests;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.config.ConfigBuilder;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
@@ -188,11 +186,6 @@ public class ParserWithConfigurableAttributesTest {
   private ExecutableFinder executableFinder;
   private ParsingContext parsingContext;
 
-  private static ThrowingCloseableMemoizedSupplier<ManifestService, IOException>
-      getManifestSupplier() {
-    return ThrowingCloseableMemoizedSupplier.of(() -> null, ManifestService::close);
-  }
-
   @Parameterized.Parameters(name = "project.parsing_threads={0}, project.parallel_parsing={1}")
   public static Collection<Object[]> generateData() {
     return Arrays.asList(
@@ -229,7 +222,6 @@ public class ParserWithConfigurableAttributesTest {
                 new ParserPythonInterpreterProvider(cell.getBuckConfig(), executableFinder),
                 WatchmanFactory.NULL_WATCHMAN,
                 eventBus,
-                getManifestSupplier(),
                 new FakeFileHashCache(
                     ImmutableMap.of(buildFile, HashCode.fromBytes(new byte[] {1}))),
                 new ParsingUnconfiguredBuildTargetViewFactory(),
@@ -2743,7 +2735,6 @@ public class ParserWithConfigurableAttributesTest {
                 new ParserPythonInterpreterProvider(cell.getBuckConfig(), executableFinder),
                 WatchmanFactory.NULL_WATCHMAN,
                 eventBus,
-                getManifestSupplier(),
                 new FakeFileHashCache(hashes),
                 new ParsingUnconfiguredBuildTargetViewFactory(),
                 UnconfiguredTargetConfiguration.INSTANCE)

@@ -18,11 +18,8 @@ package com.facebook.buck.parser.cache.impl;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.cache.ParserCacheStorage;
-import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.google.common.base.Preconditions;
-import java.io.IOException;
 
 /**
  * Factory for creating the appropriate {@link ParserCacheStorage}, based on the {@link
@@ -39,41 +36,17 @@ public class ParserCacheStorageFactory {
     return LocalCacheStorage.of(parserCacheConfig, filesystem);
   }
 
-  private static ParserCacheStorage createRemoteManifestParserStorage(
-      ParserCacheConfig parserCacheConfig,
-      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier) {
-    Preconditions.checkState(parserCacheConfig.isRemoteParserCacheEnabled());
-    return RemoteManifestServiceCacheStorage.of(manifestServiceSupplier.get(), parserCacheConfig);
-  }
-
   /**
    * @returns the appropriate {@link ParserCacheStorage} implementation based on the parameters
    *     passed in.
    */
   static ParserCacheStorage createParserCacheStorage(
-      BuckConfig buckConfig,
-      ProjectFilesystem filesystem,
-      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier) {
+      BuckConfig buckConfig, ProjectFilesystem filesystem) {
     // TODO(buck_team): Generalize this to return a list of parser storages (see TODOs in
     // HybridCacheStorage.java).
     ParserCacheConfig parserCacheConfig = obtainParserCacheConfig(buckConfig);
-    Preconditions.checkState(
-        parserCacheConfig.isDirParserCacheEnabled()
-            || parserCacheConfig.isRemoteParserCacheEnabled());
+    Preconditions.checkState(parserCacheConfig.isDirParserCacheEnabled());
 
-    if (parserCacheConfig.isDirParserCacheEnabled()
-        && parserCacheConfig.isRemoteParserCacheEnabled()) {
-      ParserCacheStorage localStorage = createLocalParserStorage(parserCacheConfig, filesystem);
-      ParserCacheStorage remoteManifestStorage =
-          createRemoteManifestParserStorage(parserCacheConfig, manifestServiceSupplier);
-
-      return HybridCacheStorage.of(localStorage, remoteManifestStorage);
-    }
-
-    if (parserCacheConfig.isDirParserCacheEnabled()) {
-      return createLocalParserStorage(parserCacheConfig, filesystem);
-    }
-
-    return createRemoteManifestParserStorage(parserCacheConfig, manifestServiceSupplier);
+    return createLocalParserStorage(parserCacheConfig, filesystem);
   }
 }

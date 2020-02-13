@@ -628,9 +628,7 @@ public class TestCommand extends BuildCommand {
                             .getBuckConfig()
                             .getView(BuildBuckConfig.class)
                             .getBuildInputRuleKeyFileSizeLimit(),
-                        ruleKeyCacheScope.getCache()),
-                    cachingBuildEngineBuckConfig.getManifestServiceIfEnabled(
-                        params.getManifestServiceSupplier()));
+                        ruleKeyCacheScope.getCache()));
             Build build =
                 new Build(
                     actionGraphAndBuilder.getActionGraphBuilder(),

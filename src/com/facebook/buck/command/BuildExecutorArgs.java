@@ -23,7 +23,6 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
-import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.concurrent.ExecutorPool;
@@ -32,7 +31,6 @@ import com.facebook.buck.util.timing.Clock;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.Map;
-import java.util.Optional;
 
 /** Common arguments for running a build. */
 @BuckStyleValue
@@ -57,8 +55,6 @@ public abstract class BuildExecutorArgs {
 
   public abstract RuleKeyConfiguration getRuleKeyConfiguration();
 
-  public abstract Optional<ManifestService> getManifestService();
-
   public BuckConfig getBuckConfig() {
     return getCells().getRootCell().getBuckConfig();
   }
@@ -73,8 +69,7 @@ public abstract class BuildExecutorArgs {
       ProjectFilesystemFactory projectFilesystemFactory,
       BuildInfoStoreManager buildInfoStoreManager,
       ArtifactCacheFactory artifactCacheFactory,
-      RuleKeyConfiguration ruleKeyConfiguration,
-      Optional<? extends ManifestService> manifestService) {
+      RuleKeyConfiguration ruleKeyConfiguration) {
     return ImmutableBuildExecutorArgs.of(
         console,
         buckEventBus,
@@ -85,7 +80,6 @@ public abstract class BuildExecutorArgs {
         projectFilesystemFactory,
         buildInfoStoreManager,
         artifactCacheFactory,
-        ruleKeyConfiguration,
-        manifestService);
+        ruleKeyConfiguration);
   }
 }

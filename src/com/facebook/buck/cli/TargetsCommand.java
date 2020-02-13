@@ -995,7 +995,6 @@ public class TargetsCommand extends AbstractCommand {
                     params.getCells().getRootCell().getBuckConfig(), params.getExecutableFinder()),
                 params.getWatchman(),
                 params.getBuckEventBus(),
-                params.getManifestServiceSupplier(),
                 params.getFileHashCache(),
                 params.getUnconfiguredBuildTargetFactory(),
                 params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))
@@ -1409,7 +1408,6 @@ public class TargetsCommand extends AbstractCommand {
                     params.getCells().getRootCell().getBuckConfig(), params.getExecutableFinder()),
                 params.getWatchman(),
                 params.getBuckEventBus(),
-                params.getManifestServiceSupplier(),
                 params.getFileHashCache(),
                 params.getUnconfiguredBuildTargetFactory(),
                 params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))

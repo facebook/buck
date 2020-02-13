@@ -43,7 +43,6 @@ import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
-import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.TestParserFactory;
 import com.facebook.buck.remoteexecution.MetadataProviderFactory;
@@ -58,7 +57,6 @@ import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.cache.NoOpCacheStatsTracker;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.concurrent.ExecutorPool;
@@ -77,7 +75,6 @@ import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.concurrent.Executors;
@@ -92,11 +89,6 @@ public class CommandRunnerParamsForTesting {
 
   /** Utility class: do not instantiate. */
   private CommandRunnerParamsForTesting() {}
-
-  private static ThrowingCloseableMemoizedSupplier<ManifestService, IOException>
-      getManifestSupplier() {
-    return ThrowingCloseableMemoizedSupplier.of(() -> null, ManifestService::close);
-  }
 
   public static CommandRunnerParams createCommandRunnerParamsForTesting(
       DepsAwareExecutor<? super ComputeResult, ?> executor,
@@ -211,7 +203,6 @@ public class CommandRunnerParamsForTesting {
         TestBuckModuleManagerFactory.create(pluginManager),
         depsAwareExecutorSupplier,
         MetadataProviderFactory.emptyMetadataProvider(),
-        getManifestSupplier(),
         buckGlobalState,
         cells.getRootCell().getRoot());
   }

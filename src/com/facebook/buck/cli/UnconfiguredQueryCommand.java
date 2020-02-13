@@ -73,7 +73,6 @@ public class UnconfiguredQueryCommand extends AbstractQueryCommand {
                         params.getExecutableFinder()),
                     params.getWatchman(),
                     params.getBuckEventBus(),
-                    params.getManifestServiceSupplier(),
                     params.getFileHashCache(),
                     params.getUnconfiguredBuildTargetFactory(),
                     params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))

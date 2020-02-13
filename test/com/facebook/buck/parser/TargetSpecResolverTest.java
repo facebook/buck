@@ -41,7 +41,6 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.watchman.WatchmanFactory;
-import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.TargetSpecResolver.FlavorEnhancer;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -57,7 +56,6 @@ import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -99,11 +97,6 @@ public class TargetSpecResolverTest {
   private TargetSpecResolver targetNodeTargetSpecResolver;
   private FlavorEnhancer flavorEnhancer;
 
-  private static ThrowingCloseableMemoizedSupplier<ManifestService, IOException>
-      getManifestSupplier() {
-    return ThrowingCloseableMemoizedSupplier.of(() -> null, ManifestService::close);
-  }
-
   @Before
   public void setUp() throws Exception {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "target_specs", tmp);
@@ -130,7 +123,6 @@ public class TargetSpecResolverTest {
             parserPythonInterpreterProvider,
             WatchmanFactory.NULL_WATCHMAN,
             eventBus,
-            getManifestSupplier(),
             new FakeFileHashCache(ImmutableMap.of()),
             new ParsingUnconfiguredBuildTargetViewFactory(),
             UnconfiguredTargetConfiguration.INSTANCE);

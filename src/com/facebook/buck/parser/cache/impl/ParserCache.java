@@ -20,13 +20,11 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.cache.ParserCacheStorage;
 import com.facebook.buck.parser.cache.json.BuildFileManifestSerializer;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
-import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
@@ -54,14 +52,9 @@ public class ParserCache {
    * @return a new instance of a caching parser.
    */
   public static ParserCache of(
-      BuckConfig buckConfig,
-      ProjectFilesystem filesystem,
-      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
-      BuckEventBus eventBus) {
+      BuckConfig buckConfig, ProjectFilesystem filesystem, BuckEventBus eventBus) {
     return new ParserCache(
-        ParserCacheStorageFactory.createParserCacheStorage(
-            buckConfig, filesystem, manifestServiceSupplier),
-        eventBus);
+        ParserCacheStorageFactory.createParserCacheStorage(buckConfig, filesystem), eventBus);
   }
 
   @VisibleForTesting

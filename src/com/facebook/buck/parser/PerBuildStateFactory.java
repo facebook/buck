@@ -42,13 +42,11 @@ import com.facebook.buck.core.select.impl.UnconfiguredSelectorListResolver;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.log.GlobalStateManager;
-import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.detector.TargetConfigurationDetector;
 import com.facebook.buck.parser.detector.TargetConfigurationDetectorFactory;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.concurrent.CommandThreadFactory;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.MostExecutors;
@@ -56,7 +54,6 @@ import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -65,8 +62,6 @@ import java.util.concurrent.atomic.AtomicLong;
 /** Can be used to create {@link PerBuildState}. */
 public class PerBuildStateFactory {
 
-  private final ThrowingCloseableMemoizedSupplier<ManifestService, IOException>
-      manifestServiceSupplier;
   private final FileHashLoader fileHashLoader;
   private final TypeCoercerFactory typeCoercerFactory;
   private final ConstructorArgMarshaller marshaller;
@@ -84,11 +79,9 @@ public class PerBuildStateFactory {
       ParserPythonInterpreterProvider parserPythonInterpreterProvider,
       Watchman watchman,
       BuckEventBus eventBus,
-      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
       FileHashLoader fileHashLoader,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       TargetConfiguration hostConfiguration) {
-    this.manifestServiceSupplier = manifestServiceSupplier;
     this.fileHashLoader = fileHashLoader;
     this.typeCoercerFactory = typeCoercerFactory;
     this.marshaller = marshaller;
@@ -128,7 +121,6 @@ public class PerBuildStateFactory {
             parsingContext.isProfilingEnabled(),
             parseProcessedBytes,
             knownRuleTypesProvider,
-            manifestServiceSupplier,
             fileHashLoader);
     ProjectBuildFileParserPool projectBuildFileParserPool =
         new ProjectBuildFileParserPool(

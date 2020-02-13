@@ -78,7 +78,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.event.ThrowableConsoleEvent;
-import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.rules.keys.DependencyFileEntry;
 import com.facebook.buck.rules.keys.DependencyFileRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyDiagnostics;
@@ -215,8 +214,7 @@ class CachingBuildRuleBuilder {
       BuildInfoRecorder buildInfoRecorder,
       BuildableContext buildableContext,
       BuildRulePipelinesRunner pipelinesRunner,
-      Optional<BuildRuleStrategy> customBuildRuleStrategy,
-      Optional<ManifestService> manifestService) {
+      Optional<BuildRuleStrategy> customBuildRuleStrategy) {
     this.buildRuleBuilderDelegate = buildRuleBuilderDelegate;
     this.buildMode = buildMode;
     this.consoleLogBuildFailuresInline = consoleLogBuildFailuresInline;
@@ -285,13 +283,8 @@ class CachingBuildRuleBuilder {
             inputBasedKey);
 
     ManifestRuleKeyService manifestRuleKeyService;
-    if (manifestService.isPresent()) {
-      manifestRuleKeyService =
-          ManifestRuleKeyServiceFactory.fromManifestService(manifestService.get());
-    } else {
-      manifestRuleKeyService =
-          ManifestRuleKeyServiceFactory.fromArtifactCache(buildCacheArtifactFetcher, artifactCache);
-    }
+    manifestRuleKeyService =
+        ManifestRuleKeyServiceFactory.fromArtifactCache(buildCacheArtifactFetcher, artifactCache);
     manifestRuleKeyManager =
         new ManifestRuleKeyManager(
             depFiles,

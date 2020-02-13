@@ -64,7 +64,6 @@ public class AuditIncludesCommand extends AbstractCommand {
                 new ParserPythonInterpreterProvider(
                     params.getCells().getRootCell().getBuckConfig(), params.getExecutableFinder()),
                 params.getKnownRuleTypesProvider(),
-                params.getManifestServiceSupplier(),
                 params.getFileHashCache())
             .createFileParser(
                 params.getBuckEventBus(),

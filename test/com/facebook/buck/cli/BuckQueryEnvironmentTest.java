@@ -41,7 +41,6 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.watchman.WatchmanFactory;
-import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.ParsingContext;
@@ -60,7 +59,6 @@ import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -100,11 +98,6 @@ public class BuckQueryEnvironmentTest {
     return QueryBuildTarget.of(BuildTargetFactory.newInstance(baseName, shortName));
   }
 
-  private static ThrowingCloseableMemoizedSupplier<ManifestService, IOException>
-      getManifestSupplier() {
-    return ThrowingCloseableMemoizedSupplier.of(() -> null, ManifestService::close);
-  }
-
   @Before
   public void setUp() throws IOException {
     executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
@@ -134,7 +127,6 @@ public class BuckQueryEnvironmentTest {
             new ParserPythonInterpreterProvider(parserConfig, executableFinder),
             WatchmanFactory.NULL_WATCHMAN,
             eventBus,
-            getManifestSupplier(),
             new FakeFileHashCache(ImmutableMap.of()),
             new ParsingUnconfiguredBuildTargetViewFactory(),
             UnconfiguredTargetConfiguration.INSTANCE);

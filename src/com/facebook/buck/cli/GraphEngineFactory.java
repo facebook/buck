@@ -109,7 +109,6 @@ public class GraphEngineFactory {
             params.getConsole(),
             new ParserPythonInterpreterProvider(cell.getBuckConfig(), params.getExecutableFinder()),
             params.getKnownRuleTypesProvider(),
-            params.getManifestServiceSupplier(),
             params.getFileHashCache());
 
     ProjectBuildFileParser buildFileParser =

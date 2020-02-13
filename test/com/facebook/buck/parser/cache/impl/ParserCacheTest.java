@@ -18,41 +18,29 @@ package com.facebook.buck.parser.cache.impl;
 
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
-import com.facebook.buck.artifact_cache.thrift.Manifest;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.cache.json.BuildFileManifestSerializer;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.skylark.io.GlobSpec;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
-import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.environment.Platform;
-import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
@@ -64,70 +52,6 @@ public class ParserCacheTest {
 
   private ProjectFilesystem filesystem;
 
-  /** Operation over a Manifest. */
-  static class ManifestServiceImpl implements ManifestService {
-    private final Map<String, ArrayList<ByteBuffer>> fingerprints = new HashMap<>();
-
-    /** Appends one more entry to the manifest. Creates a new one if it does not already exist. */
-    @Override
-    public ListenableFuture<Unit> appendToManifest(Manifest manifest) {
-      return addToManifestBackingCollection(manifest);
-    }
-
-    /**
-     * Fetch the current value of the Manifest. An empty list is returned if no value is present.
-     */
-    @Override
-    public ListenableFuture<Manifest> fetchManifest(String manifestKey) {
-      Manifest manifest = new Manifest();
-      manifest.setKey(manifestKey);
-
-      List<ByteBuffer> storedValues = fingerprints.get(manifestKey);
-      if (storedValues == null) {
-        storedValues = ImmutableList.of();
-      }
-      manifest.setValues(storedValues);
-      return Futures.immediateFuture(manifest);
-    }
-
-    /** Deletes an existing Manifest. */
-    @Override
-    public ListenableFuture<Unit> deleteManifest(String manifestKey) {
-      fingerprints.remove(manifestKey);
-      return Futures.immediateFuture(null);
-    }
-
-    /** Sets the Manifest for key. Overwrites existing one if it already exists. */
-    @Override
-    public ListenableFuture<Unit> setManifest(Manifest manifest) {
-      return addToManifestBackingCollection(manifest);
-    }
-
-    private ListenableFuture<Unit> addToManifestBackingCollection(Manifest manifest) {
-      String key = manifest.key;
-      ArrayList fingerprintsForKey = fingerprints.get(key);
-      if (fingerprintsForKey == null) {
-        fingerprintsForKey = new ArrayList();
-        fingerprints.put(key, fingerprintsForKey);
-      }
-
-      for (ByteBuffer bytes : manifest.values) {
-        fingerprintsForKey.add(bytes);
-      }
-
-      return Futures.immediateFuture(null);
-    }
-
-    @Override
-    public void close() {}
-  }
-
-  private static ThrowingCloseableMemoizedSupplier<ManifestService, IOException>
-      getManifestSupplier() {
-    return ThrowingCloseableMemoizedSupplier.of(
-        () -> new ManifestServiceImpl(), ManifestService::close);
-  }
-
   private BuckConfig getConfig(Path path, String localAccess, String remoteAccess) {
     return FakeBuckConfig.builder()
         .setSections(
@@ -137,14 +61,7 @@ public class ParserCacheTest {
             "dir_mode = " + localAccess,
             "[project]",
             "Z = " + "Z",
-            "Y = " + "Y",
-            "[manifestservice]",
-            "hybrid_thrift_endpoint=/hybrid_thrift",
-            "slb_server_pool=https://buckcache-native.internal.tfbnw.net",
-            "slb_timeout_millis=2000",
-            "slb_max_acceptable_latency_millis=2000",
-            "slb_ping_endpoint=/status.php",
-            "slb_health_check_internal_millis=5000")
+            "Y = " + "Y")
         .setFilesystem(filesystem)
         .build();
   }
@@ -202,48 +119,11 @@ public class ParserCacheTest {
   }
 
   @Test
-  public void testHybridStorageInstantiatedWhenLocalAndRemoteStoragesEnabled() {
-    BuckConfig buckConfig = getConfig(filesystem.getPath("foobar"), "readwrite", "readwrite");
-    ParserCache parserCache =
-        ParserCache.of(
-            buckConfig, filesystem, getManifestSupplier(), BuckEventBusForTests.newInstance());
-    assertTrue(parserCache.getParserCacheStorage() instanceof HybridCacheStorage);
-  }
-
-  @Test
-  public void testRemoteStorageInstantiatedWhenRemoteOnlyEnabled() {
-    BuckConfig buckConfig = getConfig(filesystem.getPath("foobar"), "none", "readwrite");
-    ParserCache parserCache =
-        ParserCache.of(
-            buckConfig, filesystem, getManifestSupplier(), BuckEventBusForTests.newInstance());
-    assertTrue(parserCache.getParserCacheStorage() instanceof RemoteManifestServiceCacheStorage);
-  }
-
-  @Test
   public void testLocalStorageInstantiatedWhenLocalOnlyEnabled() {
     BuckConfig buckConfig = getConfig(filesystem.getPath("foobar"), "readwrite", "none");
     ParserCache parserCache =
-        ParserCache.of(
-            buckConfig, filesystem, getManifestSupplier(), BuckEventBusForTests.newInstance());
+        ParserCache.of(buckConfig, filesystem, BuckEventBusForTests.newInstance());
     assertTrue(parserCache.getParserCacheStorage() instanceof LocalCacheStorage);
-  }
-
-  @Test
-  public void testCacheWhenGetAllIncludesThrowsBuildFileParseException()
-      throws IOException, InterruptedException {
-    BuckConfig buckConfig = getConfig(filesystem.getPath("foobar"), "none", "readwrite");
-    ParserCache parserCache =
-        ParserCache.of(
-            buckConfig, filesystem, getManifestSupplier(), BuckEventBusForTests.newInstance());
-    Path buildPath = filesystem.getPath("Foo/Bar");
-    assertFalse(
-        parserCache
-            .getBuildFileManifest(
-                buildPath,
-                new FakeParser(filesystem, true),
-                HashCode.fromInt(1),
-                HashCode.fromInt(2))
-            .isPresent());
   }
 
   @Test
@@ -256,8 +136,7 @@ public class ParserCacheTest {
     filesystem.createNewFile(filesystem.getPath("Includes1"));
     filesystem.createNewFile(filesystem.getPath("Includes2"));
     ParserCache parserCache =
-        ParserCache.of(
-            buckConfig, filesystem, getManifestSupplier(), BuckEventBusForTests.newInstance());
+        ParserCache.of(buckConfig, filesystem, BuckEventBusForTests.newInstance());
     GlobSpec globSpec =
         GlobSpec.of(ImmutableList.of("excludeSpec"), ImmutableList.of("includeSpec"), true);
     ImmutableSet<String> globs = ImmutableSet.of("FooBar.java");

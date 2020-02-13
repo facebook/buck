@@ -28,15 +28,12 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.watchman.WatchmanFactory;
-import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
-import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.google.common.collect.ImmutableMap;
-import java.io.IOException;
 import org.pf4j.PluginManager;
 
 public class TestParserFactory {
@@ -45,11 +42,6 @@ public class TestParserFactory {
     KnownRuleTypesProvider knownRuleTypesProvider =
         TestKnownRuleTypesProvider.create(pluginManager);
     return create(executor, cell, knownRuleTypesProvider);
-  }
-
-  private static ThrowingCloseableMemoizedSupplier<ManifestService, IOException>
-      getManifestSupplier() {
-    return ThrowingCloseableMemoizedSupplier.of(() -> null, ManifestService::close);
   }
 
   public static Parser create(
@@ -69,7 +61,6 @@ public class TestParserFactory {
             new ParserPythonInterpreterProvider(parserConfig, new ExecutableFinder()),
             WatchmanFactory.NULL_WATCHMAN,
             eventBus,
-            getManifestSupplier(),
             new FakeFileHashCache(ImmutableMap.of()),
             new ParsingUnconfiguredBuildTargetViewFactory(),
             UnconfiguredTargetConfiguration.INSTANCE),

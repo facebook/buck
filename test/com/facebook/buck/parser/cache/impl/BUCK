@@ -17,7 +17,6 @@ java_library(
     ],
     exported_deps = [
         "//src-gen:thrift",
-        "//src/com/facebook/buck/manifestservice:manifestservice",
         "//third-party/java/guava:guava",
     ],
 )
