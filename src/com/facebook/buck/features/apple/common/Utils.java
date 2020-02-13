@@ -23,8 +23,8 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * Common utility methods for use in Apple Project.
- * TODO(chatatap): There may be a better place for this and it may be already exist.
+ * Common utility methods for use in Apple Project. TODO(chatatap): There may be a better place for
+ * this and it may be already exist.
  */
 public class Utils {
 

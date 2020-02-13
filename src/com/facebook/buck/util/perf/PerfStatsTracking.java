@@ -135,8 +135,7 @@ public class PerfStatsTracking extends AbstractScheduledService implements AutoC
      *     unused
      * @param maxMemoryBytes Maximum amount of memory in bytes that JVM can allocate (-Xmx
      *     parameter)
-     * @param timeSpentInGcMs Total amount of milliseconds spent doing garbage collection till
-     *     now
+     * @param timeSpentInGcMs Total amount of milliseconds spent doing garbage collection till now
      * @param currentMemoryBytesUsageByPool A map of JVM memory pool name to the amount of memory
      *     used by that pool
      */

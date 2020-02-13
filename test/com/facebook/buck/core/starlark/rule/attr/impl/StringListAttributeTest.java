@@ -84,8 +84,7 @@ public class StringListAttributeTest {
 
   @Test
   public void failsIfEmptyListProvidedAndNotAllowed() throws CoerceFailedException {
-    StringListAttribute attr =
-        ImmutableStringListAttribute.of(ImmutableList.of(), "", true, false);
+    StringListAttribute attr = ImmutableStringListAttribute.of(ImmutableList.of(), "", true, false);
 
     thrown.expect(CoerceFailedException.class);
     thrown.expectMessage("may not be empty");

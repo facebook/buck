@@ -240,9 +240,7 @@ public class Main {
               Optional.ofNullable(args.repositoryDirectory).map(Paths::get));
       System.out.println(String.format("Commands: %s", buckCommands));
       List<Path> outputFiles =
-          stressRunner
-              .run(buckCommands, tempDirectory, args.parallelism)
-              .stream()
+          stressRunner.run(buckCommands, tempDirectory, args.parallelism).stream()
               .map(
                   stdout ->
                       stdout.resolveSibling(

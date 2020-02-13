@@ -192,8 +192,7 @@ public class OutputListAttributeTest {
     thrown.expect(CoerceFailedException.class);
     thrown.expectMessage("may not be empty");
 
-    OutputListAttribute attr =
-        ImmutableOutputListAttribute.of(ImmutableList.of(), "", true, false);
+    OutputListAttribute attr = ImmutableOutputListAttribute.of(ImmutableList.of(), "", true, false);
 
     attr.getValue(
         cellRoots,

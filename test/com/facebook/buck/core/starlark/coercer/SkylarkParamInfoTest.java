@@ -161,15 +161,13 @@ public class SkylarkParamInfoTest {
 
   @Test
   public void doesNotReturnAHint() {
-    SkylarkParamInfo info =
-        new SkylarkParamInfo("foo", ImmutableTestIntAttribute.of(1, "", false));
+    SkylarkParamInfo info = new SkylarkParamInfo("foo", ImmutableTestIntAttribute.of(1, "", false));
     assertNull(info.getHint());
   }
 
   @Test
   public void errorsOnWrongDTOTypeInGet() {
-    SkylarkParamInfo info =
-        new SkylarkParamInfo("foo", ImmutableTestIntAttribute.of(1, "", false));
+    SkylarkParamInfo info = new SkylarkParamInfo("foo", ImmutableTestIntAttribute.of(1, "", false));
 
     expected.expect(IllegalArgumentException.class);
 
@@ -178,8 +176,7 @@ public class SkylarkParamInfoTest {
 
   @Test
   public void errorsOnWrongDTOTypeInSet() {
-    SkylarkParamInfo info =
-        new SkylarkParamInfo("foo", ImmutableTestIntAttribute.of(1, "", false));
+    SkylarkParamInfo info = new SkylarkParamInfo("foo", ImmutableTestIntAttribute.of(1, "", false));
 
     expected.expect(IllegalArgumentException.class);
 
@@ -188,8 +185,7 @@ public class SkylarkParamInfoTest {
 
   @Test
   public void returnsEmptyGenericsOnNonGenericCoercer() {
-    SkylarkParamInfo info =
-        new SkylarkParamInfo("foo", ImmutableTestIntAttribute.of(1, "", false));
+    SkylarkParamInfo info = new SkylarkParamInfo("foo", ImmutableTestIntAttribute.of(1, "", false));
     assertEquals(0, info.getGenericParameterTypes().length);
   }
 
