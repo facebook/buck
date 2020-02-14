@@ -5,8 +5,7 @@ prebuilt_jar(
         "LICENSE",
     ],
     visibility = [
-        "//src/com/facebook/buck/logd:logd",
-        "//test/...",
+        "PUBLIC",
     ],
     deps = [],
 )
@@ -18,8 +17,7 @@ prebuilt_jar(
         "LICENSE",
     ],
     visibility = [
-        "//src/com/facebook/buck/logd:logd",
-        "//test/...",
+        "PUBLIC",
     ],
     deps = [],
 )

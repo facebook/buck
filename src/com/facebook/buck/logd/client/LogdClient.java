@@ -16,7 +16,6 @@
 
 package com.facebook.buck.logd.client;
 
-import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.logd.LogDaemonException;
 import com.facebook.buck.logd.proto.CreateLogRequest;
 import com.facebook.buck.logd.proto.CreateLogResponse;
@@ -32,13 +31,15 @@ import io.grpc.stub.StreamObserver;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Given a host and port number, this client is used to make a connection and stream logs to logD
  * server
  */
 public class LogdClient implements LogDaemonClient {
-  private static final Logger LOG = Logger.get(LogdClient.class.getName());
+  private static final Logger LOG = LogManager.getLogger();
   private static final int TIME_OUT_SECONDS = 5;
 
   private final ManagedChannel channel;
@@ -71,7 +72,7 @@ public class LogdClient implements LogDaemonClient {
    */
   public LogdClient(String host, int port, StreamObserverFactory streamObserverFactory) {
     this(ManagedChannelBuilder.forAddress(host, port).usePlaintext(), streamObserverFactory);
-    LOG.info("Channel established to " + host + " at port " + port);
+    LOG.info("Channel established to {} at port {}", host, port);
   }
 
   /**
@@ -92,13 +93,12 @@ public class LogdClient implements LogDaemonClient {
   public void shutdown() {
     try {
       LOG.info(
-          "Awaiting termination of channel to logD server. Waiting for up to %s seconds...",
+          "Awaiting termination of channel to logD server. Waiting for up to {} seconds...",
           TIME_OUT_SECONDS);
       channel.shutdown().awaitTermination(TIME_OUT_SECONDS, TimeUnit.SECONDS);
       if (!channel.isTerminated()) {
         LOG.warn(
-            "Channel is still open after shutdown request and "
-                + "%s seconds timeout. Shutting down forcefully...",
+            "Channel is still open after shutdown request and {} seconds timeout. Shutting down forcefully...",
             TIME_OUT_SECONDS);
         channel.shutdownNow();
         LOG.info("Successfully shut down LogD client.");
@@ -122,7 +122,7 @@ public class LogdClient implements LogDaemonClient {
 
       return logdFileId;
     } catch (StatusRuntimeException e) {
-      LOG.error("LogD failed to return response with a file identifier: ", e.getStatus());
+      LOG.error("LogD failed to return response with a file identifier: " + e.getStatus(), e);
       throw new LogDaemonException(
           e, "LogD failed to create a log file at %s, of type %s", path, logType);
     }
