@@ -114,8 +114,10 @@ public class WebServerBuckEventListener implements BuckEventListener {
   @Subscribe
   public void buildFinished(BuildEvent.Finished finished) {
     synchronized (this) {
-      buildStatusFuture.cancel(false);
-      buildStatusFuture = null;
+      if (buildStatusFuture != null) {
+        buildStatusFuture.cancel(false);
+        buildStatusFuture = null;
+      }
     }
     resetBuildState(null);
 
