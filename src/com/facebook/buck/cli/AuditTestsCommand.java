@@ -93,7 +93,6 @@ public class AuditTestsCommand extends AbstractCommand {
                         params.getExecutableFinder()),
                     params.getWatchman(),
                     params.getBuckEventBus(),
-                    params.getFileHashCache(),
                     params.getUnconfiguredBuildTargetFactory(),
                     params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))
                 .create(

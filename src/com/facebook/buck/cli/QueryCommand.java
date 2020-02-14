@@ -50,7 +50,6 @@ public class QueryCommand extends AbstractQueryCommand {
                         params.getExecutableFinder()),
                     params.getWatchman(),
                     params.getBuckEventBus(),
-                    params.getFileHashCache(),
                     params.getUnconfiguredBuildTargetFactory(),
                     params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))
                 .create(

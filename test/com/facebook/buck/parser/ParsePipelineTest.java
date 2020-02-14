@@ -60,7 +60,6 @@ import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
@@ -72,7 +71,6 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Streams;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -527,8 +525,7 @@ public class ParsePipelineTest {
                                 new ParserPythonInterpreterProvider(
                                     input.getBuckConfig(), new ExecutableFinder()),
                                 TestKnownRuleTypesProvider.create(
-                                    BuckPluginManagerFactory.createPluginManager()),
-                                new FakeFileHashCache(ImmutableMap.of()))
+                                    BuckPluginManagerFactory.createPluginManager()))
                             .createFileParser(eventBus, input, watchman, threadSafe));
                 synchronized (projectBuildFileParsers) {
                   projectBuildFileParsers.add(buildFileParser);

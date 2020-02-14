@@ -32,8 +32,6 @@ import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.testutil.FakeFileHashCache;
-import com.google.common.collect.ImmutableMap;
 import org.pf4j.PluginManager;
 
 public class TestParserFactory {
@@ -61,7 +59,6 @@ public class TestParserFactory {
             new ParserPythonInterpreterProvider(parserConfig, new ExecutableFinder()),
             WatchmanFactory.NULL_WATCHMAN,
             eventBus,
-            new FakeFileHashCache(ImmutableMap.of()),
             new ParsingUnconfiguredBuildTargetViewFactory(),
             UnconfiguredTargetConfiguration.INSTANCE),
         eventBus);

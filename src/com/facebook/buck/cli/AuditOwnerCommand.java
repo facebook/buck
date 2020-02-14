@@ -71,7 +71,6 @@ public class AuditOwnerCommand extends AbstractCommand {
                         params.getExecutableFinder()),
                     params.getWatchman(),
                     params.getBuckEventBus(),
-                    params.getFileHashCache(),
                     params.getUnconfiguredBuildTargetFactory(),
                     params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))
                 .create(

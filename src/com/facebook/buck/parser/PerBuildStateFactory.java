@@ -50,7 +50,6 @@ import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.concurrent.CommandThreadFactory;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.MostExecutors;
-import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -62,7 +61,6 @@ import java.util.concurrent.atomic.AtomicLong;
 /** Can be used to create {@link PerBuildState}. */
 public class PerBuildStateFactory {
 
-  private final FileHashLoader fileHashLoader;
   private final TypeCoercerFactory typeCoercerFactory;
   private final ConstructorArgMarshaller marshaller;
   private final KnownRuleTypesProvider knownRuleTypesProvider;
@@ -79,10 +77,8 @@ public class PerBuildStateFactory {
       ParserPythonInterpreterProvider parserPythonInterpreterProvider,
       Watchman watchman,
       BuckEventBus eventBus,
-      FileHashLoader fileHashLoader,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       TargetConfiguration hostConfiguration) {
-    this.fileHashLoader = fileHashLoader;
     this.typeCoercerFactory = typeCoercerFactory;
     this.marshaller = marshaller;
     this.knownRuleTypesProvider = knownRuleTypesProvider;
@@ -120,8 +116,7 @@ public class PerBuildStateFactory {
             parserPythonInterpreterProvider,
             parsingContext.isProfilingEnabled(),
             parseProcessedBytes,
-            knownRuleTypesProvider,
-            fileHashLoader);
+            knownRuleTypesProvider);
     ProjectBuildFileParserPool projectBuildFileParserPool =
         new ProjectBuildFileParserPool(
             numParsingThreads, // Max parsers to create per cell.

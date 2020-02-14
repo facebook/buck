@@ -207,7 +207,6 @@ import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.environment.NetworkInfo;
 import com.facebook.buck.util.environment.Platform;
-import com.facebook.buck.util.hashing.FileHashLoader;
 import com.facebook.buck.util.network.MacIpv6BugWorkaround;
 import com.facebook.buck.util.network.RemoteLogBuckConfig;
 import com.facebook.buck.util.perf.PerfStatsTracking;
@@ -1405,7 +1404,6 @@ public final class MainRunner {
                   ruleKeyConfiguration,
                   depsAwareExecutorSupplier,
                   executableFinder,
-                  fileHashCache,
                   buildTargetFactory,
                   hostConfiguration.orElse(UnconfiguredTargetConfiguration.INSTANCE),
                   targetSpecResolver);
@@ -1850,7 +1848,6 @@ public final class MainRunner {
       CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>>
           depsAwareExecutorSupplier,
       ExecutableFinder executableFinder,
-      FileHashLoader fileHashLoader,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       TargetConfiguration hostConfiguration,
       TargetSpecResolver targetSpecResolver)
@@ -1907,7 +1904,6 @@ public final class MainRunner {
             targetSpecResolver,
             watchman,
             buildEventBus,
-            fileHashLoader,
             unconfiguredBuildTargetFactory,
             hostConfiguration),
         buckGlobalState.getTypeCoercerFactory(),

@@ -55,12 +55,10 @@ import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.CloseableResource;
-import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -127,7 +125,6 @@ public class BuckQueryEnvironmentTest {
             new ParserPythonInterpreterProvider(parserConfig, executableFinder),
             WatchmanFactory.NULL_WATCHMAN,
             eventBus,
-            new FakeFileHashCache(ImmutableMap.of()),
             new ParsingUnconfiguredBuildTargetViewFactory(),
             UnconfiguredTargetConfiguration.INSTANCE);
     Parser parser =

@@ -117,7 +117,6 @@ public class TargetGraphHashingTest {
                 new ParserPythonInterpreterProvider(cell.getBuckConfig(), new ExecutableFinder()),
                 WatchmanFactory.NULL_WATCHMAN,
                 eventBus,
-                new FakeFileHashCache(ImmutableMap.of()),
                 new ParsingUnconfiguredBuildTargetViewFactory(),
                 UnconfiguredTargetConfiguration.INSTANCE)
             .create(

@@ -23,7 +23,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.util.hashing.FileHashLoader;
 
 /** Responsible for creating an instance of {@link Parser}. */
 public class ParserFactory {
@@ -38,7 +37,6 @@ public class ParserFactory {
       TargetSpecResolver targetSpecResolver,
       Watchman watchman,
       BuckEventBus eventBus,
-      FileHashLoader fileHashLoader,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       TargetConfiguration hostConfiguration) {
     return new ParserWithConfigurableAttributes(
@@ -50,7 +48,6 @@ public class ParserFactory {
             parserPythonInterpreterProvider,
             watchman,
             eventBus,
-            fileHashLoader,
             unconfiguredBuildTargetFactory,
             hostConfiguration),
         targetSpecResolver,
