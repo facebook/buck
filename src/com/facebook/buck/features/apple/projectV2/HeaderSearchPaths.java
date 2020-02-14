@@ -200,11 +200,7 @@ class HeaderSearchPaths {
    */
   ImmutableList<SourcePath> createHeaderSearchPaths(
       HeaderSearchPathAttributes headerSearchPathAttributes,
-      ImmutableList.Builder<Path> headerSymlinkTreesBuilder)
-      throws IOException {
-    CxxLibraryDescription.CommonArg arg =
-        headerSearchPathAttributes.targetNode().getConstructorArg();
-
+      ImmutableList.Builder<Path> headerSymlinkTreesBuilder) {
     ImmutableList.Builder<SourcePath> sourcePathsToBuildBuilder = ImmutableList.builder();
 
     NodeHelper.getAppleNativeNode(targetGraph, headerSearchPathAttributes.targetNode())
@@ -213,31 +209,33 @@ class HeaderSearchPaths {
                 visitRecursiveHeaderSymlinkTrees(
                     argTargetNode,
                     (depNativeNode, headerVisibility) -> {
-                      // Skip nodes that are not public or do not ask for symlinks
-                      if (headerVisibility == HeaderVisibility.PUBLIC
-                          && depNativeNode
-                              .getConstructorArg()
-                              .getXcodePublicHeadersSymlinks()
-                              .orElse(cxxBuckConfig.getPublicHeadersSymlinksEnabled())) {
-                        try {
+                      try {
+                        // Skip nodes that are not public or do not ask for symlinks
+                        if (headerVisibility == HeaderVisibility.PUBLIC
+                            && depNativeNode
+                                .getConstructorArg()
+                                .getXcodePublicHeadersSymlinks()
+                                .orElse(cxxBuckConfig.getPublicHeadersSymlinksEnabled())) {
                           createPublicHeaderSymlinkTree(
                               depNativeNode, getPublicCxxHeaders(depNativeNode));
-                        } catch (IOException e) {
-                          LOG.verbose(
-                              "Failed to create public header symlink tree for target "
-                                  + depNativeNode.getBuildTarget().getFullyQualifiedName());
-                          return;
+                        } else if (headerVisibility == HeaderVisibility.PRIVATE) {
+                          createPrivateHeaderSymlinkTree(
+                              depNativeNode,
+                              getPrivateCxxHeaders(depNativeNode),
+                              sourcePathsToBuildBuilder,
+                              depNativeNode
+                                  .getConstructorArg()
+                                  .getXcodePrivateHeadersSymlinks()
+                                  .orElse(cxxBuckConfig.getPrivateHeadersSymlinksEnabled()),
+                              headerSymlinkTreesBuilder);
                         }
+                      } catch (IOException e) {
+                        LOG.verbose(
+                            "Failed to create public header symlink tree for target "
+                                + depNativeNode.getBuildTarget().getFullyQualifiedName());
+                        return;
                       }
                     }));
-
-    createPrivateHeaderSymlinkTree(
-        headerSearchPathAttributes.targetNode(),
-        headerSearchPathAttributes.privateCxxHeaders(),
-        sourcePathsToBuildBuilder,
-        arg.getXcodePrivateHeadersSymlinks()
-            .orElse(cxxBuckConfig.getPrivateHeadersSymlinksEnabled()),
-        headerSymlinkTreesBuilder);
 
     return sourcePathsToBuildBuilder.build();
   }

@@ -22,6 +22,7 @@ import com.facebook.buck.apple.AppleBundleDescriptionArg;
 import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleLibraryDescriptionArg;
+import com.facebook.buck.apple.AppleTestDescription;
 import com.facebook.buck.apple.clang.ModuleMapMode;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -44,6 +45,7 @@ public class NodeHelper {
           ImmutableSet.of(
               AppleBinaryDescription.class,
               AppleLibraryDescription.class,
+              AppleTestDescription.class,
               CxxLibraryDescription.class);
 
   static final ImmutableSet<AppleBundleExtension> APPLE_NATIVE_BUNDLE_EXTENSIONS =
