@@ -228,8 +228,11 @@ public class ReflectionParamInfo extends AbstractParamInfo {
   }
 
   @Override
-  public Type[] getGenericParameterTypes() {
-    return setter.getGenericParameterTypes();
+  public Type getGenericParameterType() {
+    Type[] parameterTypes = setter.getGenericParameterTypes();
+    Preconditions.checkState(
+        parameterTypes.length == 1, "setter must have one parameter: %s", setter);
+    return parameterTypes[0];
   }
 
   /** Returns the most-overridden getter on the abstract Immutable. */

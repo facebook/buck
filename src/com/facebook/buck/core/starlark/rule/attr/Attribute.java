@@ -28,6 +28,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -45,15 +46,9 @@ public abstract class Attribute<CoercedType> implements AttributeHolder {
     return this;
   }
 
-  /**
-   * Get the generic type parameters of {@code CoercedType}, if any.
-   *
-   * @returns A list of the generic types of {@code CoercedType}. For example, {@link
-   *     Attribute<com.google.common.collect.ImmutableList<String>>} would return {@link Type}
-   *     objects for {@link String}. {@link Attribute<Integer>} would return an empty array.
-   */
+  /** Get the generic type of {@code CoercedType}. */
   @Value.Lazy
-  public Type[] getGenericTypes() {
+  public Type getGenericType() {
     Class<?> clazz = this.getClass();
 
     /**
@@ -64,12 +59,13 @@ public abstract class Attribute<CoercedType> implements AttributeHolder {
       if (Attribute.class.equals(clazz.getSuperclass())) {
         // Get {@code CoercedType}; if it's something parameterized, return its types,
         // otherwise return an empty list of types
-        Type coercedType =
-            ((ParameterizedType) clazz.getGenericSuperclass()).getActualTypeArguments()[0];
-        if (coercedType instanceof ParameterizedType) {
-          return ((ParameterizedType) coercedType).getActualTypeArguments();
-        }
-        return new Type[0];
+        ParameterizedType genericSuperclass = (ParameterizedType) clazz.getGenericSuperclass();
+
+        Type[] attributeTypeArguments = genericSuperclass.getActualTypeArguments();
+        Preconditions.checkState(
+            attributeTypeArguments.length == 1, "for type %s", this.getClass().getName());
+
+        return attributeTypeArguments[0];
 
       } else {
         clazz = clazz.getSuperclass();

@@ -18,7 +18,6 @@ package com.facebook.buck.core.starlark.coercer;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -186,7 +185,7 @@ public class SkylarkParamInfoTest {
   @Test
   public void returnsEmptyGenericsOnNonGenericCoercer() {
     SkylarkParamInfo info = new SkylarkParamInfo("foo", ImmutableTestIntAttribute.of(1, "", false));
-    assertEquals(0, info.getGenericParameterTypes().length);
+    assertEquals(Integer.class, info.getGenericParameterType());
   }
 
   @Test
@@ -199,17 +198,11 @@ public class SkylarkParamInfoTest {
         new SkylarkParamInfo(
             "foo", ImmutableTestMapStringAttribute.of(ImmutableMap.of(), "", false));
 
-    Type[] listParamTypes = listInfo.getGenericParameterTypes();
-    Type[] mapParamTypes = mapInfo.getGenericParameterTypes();
+    Type listParamTypes = listInfo.getGenericParameterType();
+    Type mapParamTypes = mapInfo.getGenericParameterType();
 
-    assertNotNull(listParamTypes);
-    assertEquals(1, listParamTypes.length);
-    assertEquals(TypeToken.of(String.class).getType(), listParamTypes[0]);
-
-    assertNotNull(mapParamTypes);
-    assertEquals(2, mapParamTypes.length);
-    assertEquals(TypeToken.of(String.class).getType(), mapParamTypes[0]);
-    assertEquals(TypeToken.of(Integer.class).getType(), mapParamTypes[1]);
+    assertEquals(new TypeToken<ImmutableList<String>>() {}.getType(), listParamTypes);
+    assertEquals(new TypeToken<ImmutableMap<String, Integer>>() {}.getType(), mapParamTypes);
   }
 
   @Test

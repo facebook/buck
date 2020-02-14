@@ -137,15 +137,8 @@ public interface ParamInfo extends Comparable<ParamInfo> {
    */
   void setCoercedValue(Object dto, Object value);
 
-  /**
-   * Get the {@link Type}s of any generic parameters for the final coerced type.
-   *
-   * <p>e.g. For a parameter that returns a {@code List<String>}, this would return an array
-   * containing a {@link Type} for {@link String}
-   *
-   * @return An array of {@link Type}s, or an empty array if the type is not generic
-   */
-  Type[] getGenericParameterTypes();
+  /** Get the {@link Type}s the final coerced type. */
+  Type getGenericParameterType();
 
   /** Traversal interface used when coercing values */
   interface Traversal extends TypeCoercer.Traversal {}

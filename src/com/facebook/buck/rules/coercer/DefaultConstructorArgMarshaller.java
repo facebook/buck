@@ -35,6 +35,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.lang.reflect.Type;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -269,7 +270,9 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
 
       coercer =
           typeCoercerFactory.typeCoercerForParameterizedType(
-              "SelectorList", SelectorList.class, argumentInfo.getGenericParameterTypes());
+              "SelectorList",
+              SelectorList.class,
+              new Type[] {argumentInfo.getGenericParameterType()});
     } else {
       coercer = argumentInfo.getTypeCoercer();
     }

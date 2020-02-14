@@ -74,7 +74,7 @@ public class SkylarkParamInfo extends AbstractParamInfo {
   }
 
   @Override
-  public Type[] getGenericParameterTypes() {
-    return attr.getGenericTypes();
+  public Type getGenericParameterType() {
+    return attr.getGenericType();
   }
 }
