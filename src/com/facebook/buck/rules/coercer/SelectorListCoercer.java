@@ -17,8 +17,6 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.select.Selector;
@@ -35,63 +33,22 @@ import java.util.Map;
  * <p>This {@link TypeCoercer} is used to convert the result of a <code>select</code> call to a
  * {@link SelectorList}.
  */
-public class SelectorListCoercer<T> implements TypeCoercer<SelectorList<T>> {
+public class SelectorListCoercer<T> {
 
-  private final BuildTargetTypeCoercer buildTargetTypeCoercer;
   private final TypeCoercer<T> elementTypeCoercer;
 
-  public SelectorListCoercer(
-      BuildTargetTypeCoercer buildTargetTypeCoercer, TypeCoercer<T> elementTypeCoercer) {
-    this.buildTargetTypeCoercer = buildTargetTypeCoercer;
+  public SelectorListCoercer(TypeCoercer<T> elementTypeCoercer) {
     this.elementTypeCoercer = elementTypeCoercer;
   }
 
-  @Override
-  @SuppressWarnings("unchecked")
-  public Class<SelectorList<T>> getOutputClass() {
-    return (Class<SelectorList<T>>) (Class<?>) SelectorList.class;
-  }
-
-  @Override
-  public boolean hasElementClass(Class<?>... types) {
-    return elementTypeCoercer.hasElementClass(types) || hasBuildTargetType(types);
-  }
-
-  private static boolean hasBuildTargetType(Class<?>... types) {
-    for (Class<?> type : types) {
-      if (type.isAssignableFrom(BuildTarget.class)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  @Override
-  public void traverse(CellNameResolver cellRoots, SelectorList<T> object, Traversal traversal) {
-    traversal.traverse(object);
-    for (Selector<T> element : object.getSelectors()) {
-      for (Map.Entry<SelectorKey, T> entry : element.getConditions().entrySet()) {
-        if (!entry.getKey().isReserved()) {
-          buildTargetTypeCoercer.traverse(cellRoots, entry.getKey().getBuildTarget(), traversal);
-        }
-        elementTypeCoercer.traverse(cellRoots, entry.getValue(), traversal);
-      }
-      for (SelectorKey selectorKey : element.getNullConditions()) {
-        buildTargetTypeCoercer.traverse(cellRoots, selectorKey.getBuildTarget(), traversal);
-      }
-    }
-  }
-
-  @Override
   public SelectorList<T> coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       TargetConfiguration hostConfiguration,
-      Object object)
+      SelectorList<?> list)
       throws CoerceFailedException {
-    SelectorList<?> list = (SelectorList<?>) object;
 
     ImmutableList.Builder<Selector<T>> selectors = ImmutableList.builder();
     for (Selector<?> selector : list.getSelectors()) {

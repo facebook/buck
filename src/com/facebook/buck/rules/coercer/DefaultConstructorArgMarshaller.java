@@ -35,7 +35,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import java.lang.reflect.Type;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -219,73 +218,54 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       boolean isConfigurationRule,
       Object attribute)
       throws CoerceFailedException {
-    Object attributeWithSelectableValue =
-        createCoercedAttributeWithSelectableValue(
-            cellPathResolver,
-            filesystem,
-            buildTarget,
-            targetConfiguration,
-            hostConfiguration,
-            info,
-            isConfigurationRule,
-            attribute);
-    return configureAttributeValue(
-        configurationContext,
-        selectorListResolver,
-        buildTarget,
-        dependencyStack,
-        configurationDeps,
-        info.getName(),
-        attributeWithSelectableValue);
-  }
-
-  private Object createCoercedAttributeWithSelectableValue(
-      CellPathResolver cellRoots,
-      ProjectFilesystem filesystem,
-      BuildTarget buildTarget,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
-      ParamInfo argumentInfo,
-      boolean isConfigurationRule,
-      Object rawValue)
-      throws CoerceFailedException {
     if (isConfigurationRule) {
-      if (argumentInfo.isConfigurable()) {
+      if (info.isConfigurable()) {
         throw new IllegalStateException("configurable param in configuration rule");
       }
     }
 
-    TypeCoercer<?> coercer;
     // When an attribute value contains an instance of {@link ListWithSelects} it's coerced by a
     // coercer for {@link SelectorList}.
     // The reason why we cannot use coercer from {@code argumentInfo} because {@link
     // ListWithSelects} is not generic class, but an instance contains all necessary information
     // to coerce the value into an instance of {@link SelectorList} which is a generic class.
-    if (rawValue instanceof SelectorList<?>) {
-      if (!argumentInfo.isConfigurable()) {
+    if (attribute instanceof SelectorList<?>) {
+      if (!info.isConfigurable()) {
         throw new HumanReadableException(
-            "%s: attribute '%s' cannot be configured using select",
-            buildTarget, argumentInfo.getName());
+            "%s: attribute '%s' cannot be configured using select", buildTarget, info.getName());
       }
 
-      coercer =
-          typeCoercerFactory.typeCoercerForParameterizedType(
-              "SelectorList",
-              SelectorList.class,
-              new Type[] {argumentInfo.getGenericParameterType()});
+      SelectorListCoercer<?> coercer =
+          new SelectorListCoercer<>(
+              typeCoercerFactory.typeCoercerForType(info.getGenericParameterType()));
+      SelectorList<?> attributeWithSelectableValue =
+          coercer.coerce(
+              cellPathResolver,
+              filesystem,
+              buildTarget.getCellRelativeBasePath().getPath(),
+              targetConfiguration,
+              hostConfiguration,
+              (SelectorList<?>) attribute);
+      return configureAttributeValue(
+          configurationContext,
+          selectorListResolver,
+          buildTarget,
+          dependencyStack,
+          configurationDeps,
+          info.getName(),
+          attributeWithSelectableValue);
     } else {
-      coercer = argumentInfo.getTypeCoercer();
+      return info.getTypeCoercer()
+          .coerce(
+              cellPathResolver,
+              filesystem,
+              buildTarget.getCellRelativeBasePath().getPath(),
+              targetConfiguration,
+              hostConfiguration,
+              attribute);
     }
-    return coercer.coerce(
-        cellRoots,
-        filesystem,
-        buildTarget.getCellRelativeBasePath().getPath(),
-        targetConfiguration,
-        hostConfiguration,
-        rawValue);
   }
 
-  @SuppressWarnings("unchecked")
   @Nullable
   private <T> T configureAttributeValue(
       SelectableConfigurationContext configurationContext,
@@ -294,17 +274,11 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       DependencyStack dependencyStack,
       ImmutableSet.Builder<BuildTarget> configurationDeps,
       String attributeName,
-      Object rawAttributeValue) {
-    T value;
-    if (rawAttributeValue instanceof SelectorList) {
-      SelectorList<T> selectorList = (SelectorList<T>) rawAttributeValue;
-      value =
-          selectorListResolver.resolveList(
-              configurationContext, buildTarget, attributeName, selectorList, dependencyStack);
-      addSelectorListConfigurationDepsToBuilder(configurationDeps, selectorList);
-    } else {
-      value = (T) rawAttributeValue;
-    }
+      SelectorList<T> selectorList) {
+    T value =
+        selectorListResolver.resolveList(
+            configurationContext, buildTarget, attributeName, selectorList, dependencyStack);
+    addSelectorListConfigurationDepsToBuilder(configurationDeps, selectorList);
     return value;
   }
 
