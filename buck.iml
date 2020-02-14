@@ -158,6 +158,7 @@
     <orderEntry type="library" name="kotlin-compiler" level="project" />
     <orderEntry type="library" name="kotlinx-metadata" level="project" />
     <orderEntry type="library" name="jackson-module-kotlin-2.9.9" level="project" />
-    <orderEntry type="library" name="log4j2" level="project" />
+    <orderEntry type="library" name="log4j-api-2.13.0" level="project" />
+    <orderEntry type="library" name="log4j-core-2.13.0" level="project" />
   </component>
 </module>
