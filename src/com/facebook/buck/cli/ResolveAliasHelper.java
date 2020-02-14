@@ -91,7 +91,8 @@ public class ResolveAliasHelper {
     ImmutableList<TargetNode<?>> targetNodes =
         params
             .getParser()
-            .getAllTargetNodes(parserState, owningCell, buildFile, params.getTargetConfiguration());
+            .getAllTargetNodesWithTargetCompatibilityFiltering(
+                parserState, owningCell, buildFile, params.getTargetConfiguration());
 
     // Check that the given target is a valid target.
     for (TargetNode<?> candidate : targetNodes) {

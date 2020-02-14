@@ -37,6 +37,7 @@ import com.facebook.buck.core.model.impl.FilesystemBackedBuildFileTree;
 import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
 import com.facebook.buck.core.model.platform.impl.ThrowingPlatformResolver;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.model.tc.factory.TargetConfigurationFactory;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
@@ -138,7 +139,8 @@ public class ParsePipelineTest {
     TargetNode<?> libTargetNode =
         fixture
             .getTargetNodeParsePipeline()
-            .getNode(cell, BuildTargetFactory.newInstance("//:lib"), DependencyStack.root());
+            .getNode(cell, BuildTargetFactory.newInstance("//:lib"), DependencyStack.root())
+            .assertGetTargetNode(DependencyStack.root());
 
     waitForAll(libTargetNode.getBuildDeps(), dep -> fixture.targetExistsInCache(dep));
     fixture.close();
@@ -148,7 +150,7 @@ public class ParsePipelineTest {
   public void speculativeDepsTraversalWhenGettingAllNodes() throws Exception {
     Fixture fixture = createMultiThreadedFixture("pipeline_test");
     Cell cell = fixture.getCells();
-    ImmutableList<TargetNode<?>> libTargetNodes =
+    ImmutableList<TargetNodeMaybeIncompatible> libTargetNodes =
         fixture
             .getTargetNodeParsePipeline()
             .getAllRequestedTargetNodes(
@@ -156,7 +158,9 @@ public class ParsePipelineTest {
                 AbsPath.of(fixture.getCells().getFilesystem().resolve("BUCK")),
                 Optional.empty());
     FluentIterable<BuildTarget> allDeps =
-        FluentIterable.from(libTargetNodes).transformAndConcat(input -> input.getBuildDeps());
+        FluentIterable.from(libTargetNodes)
+            .transformAndConcat(
+                input -> input.assertGetTargetNode(DependencyStack.root()).getBuildDeps());
     waitForAll(allDeps, dep -> fixture.targetExistsInCache(dep));
     fixture.close();
   }
@@ -244,7 +248,10 @@ public class ParsePipelineTest {
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
 
     TargetNode<?> libTargetNode =
-        fixture.getTargetNodeParsePipeline().getNode(cell, libTarget, DependencyStack.root());
+        fixture
+            .getTargetNodeParsePipeline()
+            .getNode(cell, libTarget, DependencyStack.root())
+            .assertGetTargetNode(DependencyStack.root());
 
     Set<BuildTarget> deps = libTargetNode.getBuildDeps();
     for (BuildTarget buildTarget : deps) {
@@ -288,7 +295,10 @@ public class ParsePipelineTest {
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
 
     TargetNode<?> libTargetNode =
-        fixture.getTargetNodeParsePipeline().getNode(cell, libTarget, DependencyStack.root());
+        fixture
+            .getTargetNodeParsePipeline()
+            .getNode(cell, libTarget, DependencyStack.root())
+            .assertGetTargetNode(DependencyStack.root());
 
     Set<BuildTarget> deps = libTargetNode.getBuildDeps();
     for (BuildTarget buildTarget : deps) {
@@ -332,7 +342,10 @@ public class ParsePipelineTest {
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
 
     TargetNode<?> libTargetNode =
-        fixture.getTargetNodeParsePipeline().getNode(cell, libTarget, DependencyStack.root());
+        fixture
+            .getTargetNodeParsePipeline()
+            .getNode(cell, libTarget, DependencyStack.root())
+            .assertGetTargetNode(DependencyStack.root());
 
     Set<BuildTarget> deps = libTargetNode.getBuildDeps();
     for (BuildTarget buildTarget : deps) {
@@ -376,7 +389,10 @@ public class ParsePipelineTest {
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
 
     TargetNode<?> libTargetNode =
-        fixture.getTargetNodeParsePipeline().getNode(cell, libTarget, DependencyStack.root());
+        fixture
+            .getTargetNodeParsePipeline()
+            .getNode(cell, libTarget, DependencyStack.root())
+            .assertGetTargetNode(DependencyStack.root());
 
     Set<BuildTarget> deps = libTargetNode.getBuildDeps();
     for (BuildTarget buildTarget : deps) {
@@ -420,7 +436,7 @@ public class ParsePipelineTest {
     try (Fixture fixture = createMultiThreadedFixture("package_inheritance")) {
       Cell cell = fixture.getCells();
       AbsPath barBuildFilePath = AbsPath.of(cell.getFilesystem().resolve("bar/BUCK"));
-      List<TargetNode<?>> nodes =
+      List<TargetNodeMaybeIncompatible> nodes =
           fixture
               .getTargetNodeParsePipeline()
               .getAllRequestedTargetNodes(cell, barBuildFilePath, Optional.empty());
@@ -612,7 +628,9 @@ public class ParsePipelineTest {
               new ThrowingSelectorListResolver(),
               new ThrowingPlatformResolver(),
               new MultiPlatformTargetConfigurationTransformer(new ThrowingPlatformResolver()),
-              UnconfiguredTargetConfiguration.INSTANCE);
+              UnconfiguredTargetConfiguration.INSTANCE,
+              cells.getRootCell().getBuckConfig(),
+              Optional.empty());
       this.targetNodeParsePipeline =
           new UnconfiguredTargetNodeToTargetNodeParsePipeline(
               this.daemonicParserState.getTargetNodeCache(),

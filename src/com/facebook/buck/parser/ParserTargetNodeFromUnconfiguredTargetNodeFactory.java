@@ -21,13 +21,14 @@ import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.event.SimplePerfEvent;
 import java.util.function.Function;
 
 /** Convert {@link UnconfiguredTargetNode} to {@link TargetNode} for the parser. */
 public interface ParserTargetNodeFromUnconfiguredTargetNodeFactory {
-  TargetNode<?> createTargetNode(
+  TargetNodeMaybeIncompatible createTargetNode(
       Cell cell,
       AbsPath buildFile,
       BuildTarget target,

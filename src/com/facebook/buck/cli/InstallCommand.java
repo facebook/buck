@@ -374,7 +374,9 @@ public class InstallCommand extends BuildCommand {
               .get();
 
       TargetNode<?> node =
-          params.getParser().getTargetNode(parsingContext, target, DependencyStack.top(target));
+          params
+              .getParser()
+              .getTargetNodeAssertCompatible(parsingContext, target, DependencyStack.top(target));
 
       if (node != null
           && node.getRuleType()

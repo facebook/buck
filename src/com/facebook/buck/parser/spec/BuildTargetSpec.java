@@ -23,6 +23,7 @@ import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
@@ -85,8 +86,9 @@ public abstract class BuildTargetSpec implements TargetNodeSpec {
   }
 
   @Override
-  public ImmutableMap<BuildTarget, TargetNode<?>> filter(Iterable<TargetNode<?>> nodes) {
-    TargetNode<?> firstMatchingNode =
+  public ImmutableMap<BuildTarget, TargetNodeMaybeIncompatible> filter(
+      Iterable<TargetNodeMaybeIncompatible> nodes) {
+    TargetNodeMaybeIncompatible firstMatchingNode =
         StreamSupport.stream(nodes.spliterator(), false)
             .filter(
                 input ->

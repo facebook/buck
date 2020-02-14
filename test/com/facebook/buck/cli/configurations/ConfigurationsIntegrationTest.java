@@ -120,6 +120,22 @@ public class ConfigurationsIntegrationTest {
   }
 
   @Test
+  public void testIncompleteSelectGetsFilteredIfIncompatible() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_target_filtering", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "build",
+            "--target-platforms",
+            "//config:linux_x86_64",
+            "//compatible_with:constrained_select");
+    result.assertSuccess();
+    MatcherAssert.assertThat(result.getStderr(), Matchers.containsString("1 target skipped"));
+  }
+
+  @Test
   public void selectWithoutTargetPlatform() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(

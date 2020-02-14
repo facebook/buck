@@ -48,6 +48,7 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -680,7 +681,7 @@ public class BuildCommandTest {
     }
 
     @Override
-    public ImmutableList<TargetNode<?>> getAllTargetNodes(
+    public ImmutableList<TargetNodeMaybeIncompatible> getAllTargetNodes(
         PerBuildState perBuildState,
         Cell cell,
         AbsPath buildFile,
@@ -711,24 +712,24 @@ public class BuildCommandTest {
     }
 
     @Override
-    public TargetNode<?> getTargetNode(
+    public TargetNode<?> getTargetNodeAssertCompatible(
         ParsingContext parsingContext, BuildTarget target, DependencyStack dependencyStack)
         throws BuildFileParseException {
-      return parser.getTargetNode(parsingContext, target, dependencyStack);
+      return parser.getTargetNodeAssertCompatible(parsingContext, target, dependencyStack);
     }
 
     @Override
-    public TargetNode<?> getTargetNode(
+    public TargetNode<?> getTargetNodeAssertCompatible(
         PerBuildState perBuildState, BuildTarget target, DependencyStack dependencyStack)
         throws BuildFileParseException {
-      return parser.getTargetNode(perBuildState, target, dependencyStack);
+      return parser.getTargetNodeAssertCompatible(perBuildState, target, dependencyStack);
     }
 
     @Override
-    public ListenableFuture<TargetNode<?>> getTargetNodeJob(
+    public ListenableFuture<TargetNode<?>> getTargetNodeJobAssertCompatible(
         PerBuildState perBuildState, BuildTarget target, DependencyStack dependencyStack)
         throws BuildTargetException {
-      return parser.getTargetNodeJob(perBuildState, target, dependencyStack);
+      return parser.getTargetNodeJobAssertCompatible(perBuildState, target, dependencyStack);
     }
 
     @Nullable

@@ -22,7 +22,7 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
-import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.parser.api.BuildFileManifest;
@@ -182,7 +182,7 @@ class DaemonicCellState {
               state -> state.rawTargetNodeCache,
               k -> k,
               UnconfiguredBuildTarget::getUnflavoredBuildTarget);
-  static final CellCacheType<BuildTarget, TargetNode<?>> TARGET_NODE_CACHE_TYPE =
+  static final CellCacheType<BuildTarget, TargetNodeMaybeIncompatible> TARGET_NODE_CACHE_TYPE =
       new CellCacheType<>(
           state -> state.targetNodeCache,
           BuildTarget::getUnconfiguredBuildTarget,
@@ -193,7 +193,7 @@ class DaemonicCellState {
   }
 
   /** Keeps caches by the object type supported by the cache. */
-  private final Cache<BuildTarget, TargetNode<?>> targetNodeCache;
+  private final Cache<BuildTarget, TargetNodeMaybeIncompatible> targetNodeCache;
 
   private final Cache<UnconfiguredBuildTarget, UnconfiguredTargetNode> rawTargetNodeCache;
 

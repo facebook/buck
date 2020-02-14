@@ -107,21 +107,22 @@ public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation
     // All target nodes are created sequentially from raw target nodes
     // TODO: use RawTargetNodeToTargetNode transformation
     TargetNode<?> targetNode =
-        unconfiguredTargetNodeToTargetNodeFactory.createTargetNode(
-            cell,
-            buildFileAbsolutePath,
-            buildTarget,
-            dependencyStack,
-            key.getUnconfiguredTargetNode(),
-            id ->
-                SimplePerfEvent.scope(
-                    Optional.empty(), SimplePerfEvent.PerfEventId.of("raw_to_targetnode")));
+        unconfiguredTargetNodeToTargetNodeFactory
+            .createTargetNode(
+                cell,
+                buildFileAbsolutePath,
+                buildTarget,
+                dependencyStack,
+                key.getUnconfiguredTargetNode(),
+                id ->
+                    SimplePerfEvent.scope(
+                        Optional.empty(), SimplePerfEvent.PerfEventId.of("raw_to_targetnode")))
+            .assertGetTargetNode(dependencyStack);
 
     ImmutableSet<UnconfiguredBuildTarget> deps =
         targetNode.getParseDeps().stream()
             .map(bt -> bt.getUnconfiguredBuildTargetView().getData())
             .collect(ImmutableSet.toImmutableSet());
-
     // END TEMPORARY
 
     return UnconfiguredTargetNodeWithDeps.of(key.getUnconfiguredTargetNode(), deps);

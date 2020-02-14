@@ -32,7 +32,7 @@ import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwar
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
@@ -145,16 +145,17 @@ public class PerBuildStateTest {
 
     // First, only load one target from the build file so the file is parsed, but only one of the
     // TargetNodes will be cached.
-    TargetNode<?> targetNode = perBuildState.getTargetNode(fooLib1Target, DependencyStack.root());
+    TargetNodeMaybeIncompatible targetNode =
+        perBuildState.getTargetNode(fooLib1Target, DependencyStack.root());
     assertThat(targetNode.getBuildTarget(), equalTo(fooLib1Target));
 
     // Now, try to load the entire build file and get all TargetNodes.
-    ImmutableList<TargetNode<?>> targetNodes =
+    ImmutableList<TargetNodeMaybeIncompatible> targetNodes =
         perBuildState.getAllTargetNodes(cell.getRootCell(), testFooBuckFile, Optional.empty());
     assertThat(targetNodes.size(), equalTo(2));
     assertThat(
         targetNodes.stream()
-            .map(TargetNode::getBuildTarget)
+            .map(TargetNodeMaybeIncompatible::getBuildTarget)
             .collect(ImmutableList.toImmutableList()),
         hasItems(fooLib1Target, fooLib2Target));
   }

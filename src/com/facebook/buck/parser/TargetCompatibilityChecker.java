@@ -22,11 +22,11 @@ import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
-import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.configsetting.ConfigSettingRule;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Checks whether a list of constraints listed in {@code compatible_with} attribute of a target is
@@ -48,37 +48,48 @@ class TargetCompatibilityChecker {
       return true;
     }
     BuildRuleArg argWithTargetCompatible = (BuildRuleArg) targetNodeArg;
-    ConstraintResolver constraintResolver = configurationRuleRegistry.getConstraintResolver();
-
     if (!argWithTargetCompatible.getCompatibleWith().isEmpty()) {
-      ConfigurationRuleResolver configurationRuleResolver =
-          configurationRuleRegistry.getConfigurationRuleResolver();
-      boolean compatible = false;
-      for (UnconfiguredBuildTargetView compatibleConfigTarget :
-          argWithTargetCompatible.getCompatibleWith()) {
-        ConfigSettingRule configSettingRule =
-            configurationRuleResolver.getRule(
-                ConfigurationBuildTargets.convert(compatibleConfigTarget),
-                ConfigSettingRule.class,
-                dependencyStack.child(compatibleConfigTarget));
-
-        if (configSettingRule
-            .getSelectable()
-            .matchesPlatform(
-                platform,
-                constraintResolver,
-                dependencyStack.child(compatibleConfigTarget),
-                buckConfig)) {
-          compatible = true;
-          break;
-        }
-      }
-
-      if (!compatible) {
-        return false;
-      }
+      return configTargetsMatchPlatform(
+          configurationRuleRegistry,
+          argWithTargetCompatible.getCompatibleWith(),
+          platform,
+          dependencyStack,
+          buckConfig);
     }
 
     return true;
+  }
+
+  public static boolean configTargetsMatchPlatform(
+      ConfigurationRuleRegistry configurationRuleRegistry,
+      ImmutableList<UnconfiguredBuildTargetView> compatibleConfigTargets,
+      Platform platform,
+      DependencyStack dependencyStack,
+      BuckConfig buckConfig) {
+    if (compatibleConfigTargets.isEmpty()) {
+      return true;
+    }
+    ConfigurationRuleResolver configurationRuleResolver =
+        configurationRuleRegistry.getConfigurationRuleResolver();
+    boolean compatible = false;
+    for (UnconfiguredBuildTargetView compatibleConfigTarget : compatibleConfigTargets) {
+      ConfigSettingRule configSettingRule =
+          configurationRuleResolver.getRule(
+              ConfigurationBuildTargets.convert(compatibleConfigTarget),
+              ConfigSettingRule.class,
+              dependencyStack.child(compatibleConfigTarget));
+
+      if (configSettingRule
+          .getSelectable()
+          .matchesPlatform(
+              platform,
+              configurationRuleRegistry.getConstraintResolver(),
+              dependencyStack.child(compatibleConfigTarget),
+              buckConfig)) {
+        compatible = true;
+        break;
+      }
+    }
+    return compatible;
   }
 }

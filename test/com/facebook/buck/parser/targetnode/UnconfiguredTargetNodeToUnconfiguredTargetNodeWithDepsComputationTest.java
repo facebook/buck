@@ -46,6 +46,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Paths;
+import java.util.Optional;
 import org.junit.Test;
 
 public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputationTest {
@@ -68,7 +69,9 @@ public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputationTe
             new DefaultSelectorListResolver(new TestSelectableResolver()),
             targetPlatformResolver,
             new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver),
-            UnconfiguredTargetConfiguration.INSTANCE);
+            UnconfiguredTargetConfiguration.INSTANCE,
+            cell.getRootCell().getBuckConfig(),
+            Optional.empty());
 
     ImmutableMap<String, Object> rawAttributes1 =
         ImmutableMap.of(

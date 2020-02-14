@@ -64,6 +64,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Closer;
 import java.io.IOException;
+import java.util.Optional;
 import javax.annotation.Nullable;
 
 /** Factory that creates {@link GraphTransformationEngine} for given parameters */
@@ -186,7 +187,9 @@ public class GraphEngineFactory {
             // TODO: replace with RuleBasedConstraintResolver
             targetPlatformResolver,
             new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver),
-            params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE));
+            params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE),
+            cell.getBuckConfig(),
+            Optional.empty());
 
     UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation
         unconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation =

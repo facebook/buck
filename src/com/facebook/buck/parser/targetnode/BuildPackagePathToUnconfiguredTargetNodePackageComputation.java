@@ -30,7 +30,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
-import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDeps;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDepsPackage;
@@ -191,7 +191,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputation
 
     // All target nodes are created sequentially from raw target nodes
     // TODO: use RawTargetNodeToTargetNode transformation
-    TargetNode<?> targetNode =
+    TargetNodeMaybeIncompatible targetNodeMaybeIncompatible =
         unconfiguredTargetNodeToTargetNodeFactory.createTargetNode(
             cell,
             buildFileAbsolutePath,
@@ -202,7 +202,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputation
                 SimplePerfEvent.scope(
                     Optional.empty(), SimplePerfEvent.PerfEventId.of("raw_to_targetnode")));
 
-    return targetNode.getParseDeps().stream()
+    return targetNodeMaybeIncompatible.assertGetTargetNode(dependencyStack).getParseDeps().stream()
         .map(bt -> bt.getUnconfiguredBuildTargetView().getData())
         .collect(ImmutableSet.toImmutableSet());
   }

@@ -25,7 +25,7 @@ import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.impl.FilesystemBackedBuildFileTree;
-import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.counters.Counter;
@@ -333,7 +333,7 @@ public class DaemonicParserState {
   @GuardedBy("cellStateLock")
   private final ConcurrentMap<AbsPath, DaemonicCellState> cellPathToDaemonicState;
 
-  private final DaemonicCacheView<BuildTarget, TargetNode<?>> targetNodeCache =
+  private final DaemonicCacheView<BuildTarget, TargetNodeMaybeIncompatible> targetNodeCache =
       new DaemonicCacheView<>(DaemonicCellState.TARGET_NODE_CACHE_TYPE);
   private final DaemonicCacheView<UnconfiguredBuildTarget, UnconfiguredTargetNode>
       rawTargetNodeCache = new DaemonicCacheView<>(DaemonicCellState.RAW_TARGET_NODE_CACHE_TYPE);
@@ -428,7 +428,7 @@ public class DaemonicParserState {
     }
   }
 
-  public static final CacheType<BuildTarget, TargetNode<?>> TARGET_NODE_CACHE_TYPE =
+  public static final CacheType<BuildTarget, TargetNodeMaybeIncompatible> TARGET_NODE_CACHE_TYPE =
       new CacheType<>(state -> state.targetNodeCache);
   public static final CacheType<UnconfiguredBuildTarget, UnconfiguredTargetNode>
       RAW_TARGET_NODE_CACHE_TYPE = new CacheType<>(state -> state.rawTargetNodeCache);
@@ -452,7 +452,7 @@ public class DaemonicParserState {
   }
 
   @VisibleForTesting
-  PipelineNodeCache.Cache<BuildTarget, TargetNode<?>> getTargetNodeCache() {
+  PipelineNodeCache.Cache<BuildTarget, TargetNodeMaybeIncompatible> getTargetNodeCache() {
     return targetNodeCache;
   }
 

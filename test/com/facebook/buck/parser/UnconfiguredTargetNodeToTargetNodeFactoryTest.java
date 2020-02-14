@@ -137,16 +137,20 @@ public class UnconfiguredTargetNodeToTargetNodeFactoryTest {
                     ImmutableList.of(new TestSelectable(selectableTarget, true)))),
             targetPlatformResolver,
             new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver),
-            UnconfiguredTargetConfiguration.INSTANCE);
+            UnconfiguredTargetConfiguration.INSTANCE,
+            cell.getRootCell().getBuckConfig(),
+            Optional.empty());
 
     TargetNode<?> targetNode =
-        factory.createTargetNode(
-            cell.getRootCell(),
-            AbsPath.of(Paths.get("a/b/BUCK").toAbsolutePath()),
-            buildTarget,
-            DependencyStack.root(),
-            node,
-            id -> SimplePerfEvent.scope(Optional.empty(), null, null));
+        factory
+            .createTargetNode(
+                cell.getRootCell(),
+                AbsPath.of(Paths.get("a/b/BUCK").toAbsolutePath()),
+                buildTarget,
+                DependencyStack.root(),
+                node,
+                id -> SimplePerfEvent.scope(Optional.empty(), null, null))
+            .assertGetTargetNode(DependencyStack.root());
 
     assertEquals(JavaLibraryDescription.class, targetNode.getDescription().getClass());
     JavaLibraryDescriptionArg arg = (JavaLibraryDescriptionArg) targetNode.getConstructorArg();

@@ -33,7 +33,7 @@ import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.HasBuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
 import com.facebook.buck.core.parser.BuildPackagePaths;
 import com.facebook.buck.core.parser.BuildTargetPatternToBuildPackagePathComputation;
 import com.facebook.buck.core.parser.BuildTargetPatternToBuildPackagePathKey;
@@ -370,13 +370,14 @@ public class TargetSpecResolver implements AutoCloseable {
 
   private ImmutableSet<BuildTarget> applySpecFilter(
       TargetNodeSpec spec,
-      ImmutableList<TargetNode<?>> targetNodes,
+      ImmutableList<TargetNodeMaybeIncompatible> targetNodes,
       FlavorEnhancer flavorEnhancer,
       TargetNodeFilterForSpecResolver targetNodeFilter) {
     ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
-    ImmutableMap<BuildTarget, TargetNode<?>> partialTargets =
+    ImmutableMap<BuildTarget, TargetNodeMaybeIncompatible> partialTargets =
         targetNodeFilter.filter(spec, targetNodes);
-    for (Map.Entry<BuildTarget, TargetNode<?>> partialTarget : partialTargets.entrySet()) {
+    for (Map.Entry<BuildTarget, TargetNodeMaybeIncompatible> partialTarget :
+        partialTargets.entrySet()) {
       BuildTarget target =
           flavorEnhancer.enhanceFlavors(
               partialTarget.getKey(), partialTarget.getValue(), spec.getTargetType());
@@ -393,12 +394,14 @@ public class TargetSpecResolver implements AutoCloseable {
   /** Allows to change flavors of some targets while performing the resolution. */
   public interface FlavorEnhancer {
     BuildTarget enhanceFlavors(
-        BuildTarget target, TargetNode<?> targetNode, TargetNodeSpec.TargetType targetType);
+        BuildTarget target,
+        TargetNodeMaybeIncompatible targetNode,
+        TargetNodeSpec.TargetType targetType);
   }
 
   /** Performs filtering of target nodes using a given {@link TargetNodeSpec}. */
   public interface TargetNodeFilterForSpecResolver {
-    ImmutableMap<BuildTarget, TargetNode<?>> filter(
-        TargetNodeSpec spec, Iterable<TargetNode<?>> nodes);
+    ImmutableMap<BuildTarget, TargetNodeMaybeIncompatible> filter(
+        TargetNodeSpec spec, Iterable<TargetNodeMaybeIncompatible> nodes);
   }
 }

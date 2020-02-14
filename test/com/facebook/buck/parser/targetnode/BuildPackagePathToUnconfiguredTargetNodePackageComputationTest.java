@@ -74,7 +74,9 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
             new DefaultSelectorListResolver(new TestSelectableResolver()),
             targetPlatformResolver,
             new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver),
-            UnconfiguredTargetConfiguration.INSTANCE);
+            UnconfiguredTargetConfiguration.INSTANCE,
+            cell.getRootCell().getBuckConfig(),
+            Optional.empty());
 
     ImmutableMap<String, Object> rawAttributes1 =
         ImmutableMap.of(

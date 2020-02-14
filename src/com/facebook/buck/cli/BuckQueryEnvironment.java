@@ -263,7 +263,8 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
     }
 
     try {
-      return parser.getTargetNode(parserState, buildTarget, DependencyStack.top(buildTarget));
+      return parser.getTargetNodeAssertCompatible(
+          parserState, buildTarget, DependencyStack.top(buildTarget));
     } catch (BuildFileParseException e) {
       throw new QueryException(e, "Error getting target node for %s\n%s", target, e.getMessage());
     }
@@ -459,7 +460,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
 
     ListenableFuture<Unit> future =
         Futures.transformAsync(
-            parser.getTargetNodeJob(parserState, buildTarget, dependencyStack),
+            parser.getTargetNodeJobAssertCompatible(parserState, buildTarget, dependencyStack),
             targetNode -> {
               targetsToNodes.put(buildTarget, targetNode);
               checker.addTarget(buildTarget, dependencyStack);

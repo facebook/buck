@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.DefaultCellNameResolverProvider;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
 import com.facebook.buck.core.model.platform.impl.ThrowingPlatformResolver;
@@ -202,7 +203,9 @@ public class PerBuildStateFactory {
             new ThrowingSelectorListResolver(),
             new ThrowingPlatformResolver(),
             new MultiPlatformTargetConfigurationTransformer(new ThrowingPlatformResolver()),
-            hostConfiguration);
+            hostConfiguration,
+            parsingContext.getCell().getBuckConfig(),
+            Optional.empty());
 
     // This pipeline uses a direct executor instead of pipelineExecutorService to avoid
     // deadlocks happening when too many node are requested from targetNodeParsePipeline.
@@ -225,8 +228,9 @@ public class PerBuildStateFactory {
     ConfigurationRuleRegistry configurationRuleRegistry =
         ConfigurationRuleRegistryFactory.createRegistry(
             (target, callerContext) ->
-                nonResolvingTargetNodeParsePipeline.getNode(
-                    cellManager.getCell(target.getCell()), target, callerContext));
+                nonResolvingTargetNodeParsePipeline
+                    .getNode(cellManager.getCell(target.getCell()), target, callerContext)
+                    .assertGetTargetNode(DependencyStack.root()));
 
     SelectableResolver selectableResolver =
         new ConfigurationRuleSelectableResolver(
@@ -251,7 +255,12 @@ public class PerBuildStateFactory {
             configurationRuleRegistry.getTargetPlatformResolver(),
             new MultiPlatformTargetConfigurationTransformer(
                 configurationRuleRegistry.getTargetPlatformResolver()),
-            hostConfiguration);
+            hostConfiguration,
+            parsingContext.getCell().getBuckConfig(),
+            (parsingContext.excludeUnsupportedTargets()
+                    && parsingContext.enableTargetCompatibilityChecks())
+                ? Optional.of(configurationRuleRegistry)
+                : Optional.empty());
 
     ListeningExecutorService configuredPipelineExecutor =
         MoreExecutors.listeningDecorator(
