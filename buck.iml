@@ -23,6 +23,7 @@
       <excludeFolder url="file://$MODULE_DIR$/.buckd" />
       <excludeFolder url="file://$MODULE_DIR$/ant-out" />
       <excludeFolder url="file://$MODULE_DIR$/buck-out" />
+      <excludeFolder url="file://$MODULE_DIR$/logd-out" />
       <excludeFolder url="file://$MODULE_DIR$/skunkworks/protobuck/buckv2/target" />
       <excludeFolder url="file://$MODULE_DIR$/skunkworks/protobuck/dice/target" />
       <excludeFolder url="file://$MODULE_DIR$/skunkworks/protobuck/dice_macros/target" />
