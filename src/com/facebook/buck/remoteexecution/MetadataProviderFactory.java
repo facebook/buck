@@ -28,6 +28,7 @@ import com.facebook.buck.remoteexecution.proto.RESessionID;
 import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
 import com.facebook.buck.remoteexecution.proto.TraceInfo;
 import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
+import com.facebook.buck.rules.keys.config.impl.BuckVersion;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import java.util.Optional;
 import java.util.UUID;
@@ -91,6 +92,7 @@ public class MetadataProviderFactory {
                 .setBuildId(buildId.toString())
                 .setAuxiliaryBuildTag(auxiliaryBuildTag)
                 .setProjectPrefix(projectPrefix)
+                .setVersion(BuckVersion.getVersion())
                 .build();
         CreatorInfo creatorInfo =
             CreatorInfo.newBuilder()

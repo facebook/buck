@@ -51,6 +51,8 @@ message BuckInfo {
   // Note: project_prefix is not necessarily the same as the prefix for the specific action
   // that is being executed right now
   string project_prefix = 4;
+  // Buck version
+  string version = 5;
 }
 
 // Data about the client that wants to start the session - may be ignored if
