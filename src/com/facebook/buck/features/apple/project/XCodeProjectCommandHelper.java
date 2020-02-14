@@ -382,7 +382,7 @@ public class XCodeProjectCommandHelper {
 
     LOG.debug("Xcode project generation: Generates workspaces for targets");
 
-    ImmutableSet<BuildTarget> requiredBuildTargets =
+    ImmutableList<Result> results =
         generateWorkspacesForTargets(
             buckEventBus,
             pluginManager,
@@ -396,8 +396,11 @@ public class XCodeProjectCommandHelper {
             getFocusModules(),
             new HashMap<>(),
             combinedProject,
-            outputPresenter,
             sharedLibraryToBundle);
+    ImmutableSet<BuildTarget> requiredBuildTargets =
+        results.stream()
+            .flatMap(b -> b.getBuildTargets().stream())
+            .collect(ImmutableSet.toImmutableSet());
     if (!requiredBuildTargets.isEmpty()) {
       ImmutableList<String> arguments =
           RichStream.from(requiredBuildTargets)
@@ -417,11 +420,50 @@ public class XCodeProjectCommandHelper {
               .toImmutableList();
       exitCode = buildRunner.apply(arguments);
     }
+
+    // Write all output paths to stdout if requested.
+    // IMPORTANT: this shuts down RenderingConsole since it writes to stdout.
+    // (See DirtyPrintStreamDecorator and note how RenderingConsole uses it.)
+    // Thus this must be the *last* thing we do, or we disable progress UI.
+    //
+    // This is still not the "right" way to do this; we should probably use
+    // RenderingConsole#printToStdOut since it ensures we do one last render.
+    for (Result result : results) {
+      outputPresenter.present(
+          result.inputTarget.getFullyQualifiedName(), result.outputRelativePath);
+    }
+
     return exitCode;
   }
 
+  /** A result with metadata about the subcommand helper's output. */
+  public static class Result {
+    private final BuildTarget inputTarget;
+    private final Path outputRelativePath;
+    private final ImmutableSet<BuildTarget> buildTargets;
+
+    public Result(
+        BuildTarget inputTarget, Path outputRelativePath, ImmutableSet<BuildTarget> buildTargets) {
+      this.inputTarget = inputTarget;
+      this.outputRelativePath = outputRelativePath;
+      this.buildTargets = buildTargets;
+    }
+
+    public BuildTarget getInputTarget() {
+      return inputTarget;
+    }
+
+    public Path getOutputRelativePath() {
+      return outputRelativePath;
+    }
+
+    public ImmutableSet<BuildTarget> getBuildTargets() {
+      return buildTargets;
+    }
+  }
+
   @VisibleForTesting
-  static ImmutableSet<BuildTarget> generateWorkspacesForTargets(
+  static ImmutableList<Result> generateWorkspacesForTargets(
       BuckEventBus buckEventBus,
       PluginManager pluginManager,
       Cell cell,
@@ -434,7 +476,6 @@ public class XCodeProjectCommandHelper {
       FocusedModuleTargetMatcher focusModules,
       Map<Path, ProjectGenerator> projectGenerators,
       boolean combinedProject,
-      PathOutputPresenter presenter,
       Optional<ImmutableMap<BuildTarget, TargetNode<?>>> sharedLibraryToBundle)
       throws IOException, InterruptedException {
 
@@ -445,7 +486,7 @@ public class XCodeProjectCommandHelper {
 
     LOG.debug(
         "Generating workspace for config targets %s", targetGraphCreationResult.getBuildTargets());
-    ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder = ImmutableSet.builder();
+    ImmutableList.Builder<Result> generationResultsBuilder = ImmutableList.builder();
     for (BuildTarget inputTarget : targetGraphCreationResult.getBuildTargets()) {
       TargetNode<?> inputNode = targetGraphCreationResult.getTargetGraph().get(inputTarget);
       XcodeWorkspaceConfigDescriptionArg workspaceArgs;
@@ -509,14 +550,15 @@ public class XCodeProjectCommandHelper {
       LOG.debug(
           "Required build targets for workspace %s: %s",
           inputTarget, requiredBuildTargetsForWorkspace);
-      requiredBuildTargetsBuilder.addAll(requiredBuildTargetsForWorkspace);
 
       Path absolutePath = workspaceCell.getFilesystem().resolve(outputPath);
       Path relativePath = cell.getFilesystem().relativize(absolutePath);
-      presenter.present(inputTarget.getFullyQualifiedName(), relativePath);
+
+      generationResultsBuilder.add(
+          new Result(inputTarget, relativePath, requiredBuildTargetsForWorkspace));
     }
 
-    return requiredBuildTargetsBuilder.build();
+    return generationResultsBuilder.build();
   }
 
   private FocusedModuleTargetMatcher getFocusModules() throws InterruptedException {

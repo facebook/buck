@@ -37,7 +37,6 @@ import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup.Linkage;
 import com.facebook.buck.event.BuckEventBusForTests;
-import com.facebook.buck.features.apple.common.NullPathOutputPresenter;
 import com.facebook.buck.features.apple.common.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
@@ -503,7 +502,6 @@ public class XCodeProjectCommandHelperTest {
             .build(),
         ImmutableSet.of(),
         FocusedTargetMatcher.noFocus(),
-        new NullPathOutputPresenter(),
         Optional.empty());
   }
 }
