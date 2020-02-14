@@ -17,36 +17,27 @@
 package com.facebook.buck.parser.temporarytargetuniquenesschecker;
 
 import com.facebook.buck.core.exceptions.DependencyStack;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Check there's only one {@link BuildTarget} for {@link UnconfiguredBuildTargetView}. We do that
  * this until we use target configuration in the output path.
  */
-public class TemporaryUnconfiguredTargetToTargetUniquenessChecker {
-
-  private ConcurrentHashMap<UnconfiguredBuildTargetView, BuildTarget>
-      targetToUnconfiguredBuildTarget = new ConcurrentHashMap<>();
-
+public interface TemporaryUnconfiguredTargetToTargetUniquenessChecker {
   /**
-   * Register a target, throw if there's already registered target with the same unconfigured
+   * Register a target, check if there's already registered target with the same unconfigured
    * target, same flavors but different configuration.
    */
-  public void addTarget(BuildTarget buildTarget, DependencyStack dependencyStack) {
-    BuildTarget prev =
-        targetToUnconfiguredBuildTarget.putIfAbsent(
-            buildTarget.getUnconfiguredBuildTargetView(), buildTarget);
-    if (prev != null && !prev.equals(buildTarget)) {
-      throw new HumanReadableException(
-          dependencyStack,
-          "Target %s has more than one configurations (%s and %s) with the same set of flavors %s",
-          buildTarget.getUnconfiguredBuildTargetView(),
-          buildTarget.getTargetConfiguration(),
-          prev.getTargetConfiguration(),
-          buildTarget.getUnconfiguredBuildTargetView().getFlavors());
-    }
+  void addTarget(BuildTarget buildTarget, DependencyStack dependencyStack);
+
+  /**
+   * Create a uniqueness checker, deny or no-op depending on hashed buck-out disabled or enabled.
+   */
+  static TemporaryUnconfiguredTargetToTargetUniquenessChecker create(
+      boolean buckOutIncludeTargetConfigHash) {
+    return buckOutIncludeTargetConfigHash
+        ? TemporaryUnconfiguredTargetToTargetUniquenessCheckerAllow.instance
+        : new TemporaryUnconfiguredTargetToTargetUniquenessCheckerDeny();
   }
 }

@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import static com.facebook.buck.util.concurrent.MoreFutures.propagateCauseIfInstanceOf;
 
 import com.facebook.buck.cli.OwnersReport.Builder;
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -142,8 +143,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
   // traverses the graph in parallel.
   private MutableDirectedGraph<TargetNode<?>> graph = MutableDirectedGraph.createConcurrent();
   private Map<BuildTarget, TargetNode<?>> targetsToNodes = new ConcurrentHashMap<>();
-  private TemporaryUnconfiguredTargetToTargetUniquenessChecker checker =
-      new TemporaryUnconfiguredTargetToTargetUniquenessChecker();
+  private TemporaryUnconfiguredTargetToTargetUniquenessChecker checker;
 
   @VisibleForTesting
   protected BuckQueryEnvironment(
@@ -171,6 +171,9 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
     this.targetPatternEvaluator = targetPatternEvaluator;
     this.queryTargetEvaluator = new TargetEvaluator(targetPatternEvaluator);
     this.typeCoercerFactory = typeCoercerFactory;
+    this.checker =
+        TemporaryUnconfiguredTargetToTargetUniquenessChecker.create(
+            BuildBuckConfig.of(rootCell.getBuckConfig()).shouldBuckOutIncludeTargetConfigHash());
   }
 
   public static BuckQueryEnvironment from(

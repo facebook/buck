@@ -1905,7 +1905,8 @@ public final class MainRunner {
             watchman,
             buildEventBus,
             unconfiguredBuildTargetFactory,
-            hostConfiguration),
+            hostConfiguration,
+            BuildBuckConfig.of(buckConfig).shouldBuckOutIncludeTargetConfigHash()),
         buckGlobalState.getTypeCoercerFactory(),
         new InstrumentedVersionedTargetGraphCache(
             buckGlobalState.getVersionedTargetGraphCache(), new InstrumentingCacheStatsTracker()),

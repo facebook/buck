@@ -165,6 +165,7 @@ java_library(
         "//test/...",
     ],
     deps = [
+        "//src/com/facebook/buck/command/config:config",
         "//src/com/facebook/buck/core/plugin/impl:impl",
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io/watchman:watchman",

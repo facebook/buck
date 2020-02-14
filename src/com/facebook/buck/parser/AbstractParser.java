@@ -64,14 +64,17 @@ abstract class AbstractParser implements Parser {
   protected final PerBuildStateFactory perBuildStateFactory;
   protected final DaemonicParserState permState;
   protected final BuckEventBus eventBus;
+  private final boolean buckOutIncludeTargetConfigHash;
 
   AbstractParser(
       DaemonicParserState daemonicParserState,
       PerBuildStateFactory perBuildStateFactory,
-      BuckEventBus eventBus) {
+      BuckEventBus eventBus,
+      boolean buckOutIncludeTargetConfigHash) {
     this.perBuildStateFactory = perBuildStateFactory;
     this.permState = daemonicParserState;
     this.eventBus = eventBus;
+    this.buckOutIncludeTargetConfigHash = buckOutIncludeTargetConfigHash;
   }
 
   @Override
@@ -176,7 +179,7 @@ abstract class AbstractParser implements Parser {
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     Map<BuildTarget, TargetNode<?>> index = new HashMap<>();
     TemporaryUnconfiguredTargetToTargetUniquenessChecker checker =
-        new TemporaryUnconfiguredTargetToTargetUniquenessChecker();
+        TemporaryUnconfiguredTargetToTargetUniquenessChecker.create(buckOutIncludeTargetConfigHash);
 
     ParseEvent.Started parseStart = ParseEvent.started(toExplore);
     eventBus.post(parseStart);
