@@ -20,8 +20,6 @@ import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.parser.exceptions.ParsingError;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -29,29 +27,22 @@ import java.util.Optional;
 
 /** Describes the content of a build file, which includes defined targets and their metadata. */
 @BuckStyleValue
-@JsonDeserialize(as = ImmutableBuildFileManifest.class)
 public abstract class BuildFileManifest implements ComputeResult, FileManifest {
   /** @return a list of targets defined in the build file. */
-  @JsonProperty("targets")
   public abstract ImmutableMap<String, ImmutableMap<String, Object>> getTargets();
 
-  @JsonProperty("includes")
   @Override
   public abstract ImmutableSortedSet<String> getIncludes();
 
-  @JsonProperty("configs")
   @Override
   public abstract ImmutableMap<String, Object> getConfigs();
 
-  @JsonProperty("env")
   @Override
   public abstract Optional<ImmutableMap<String, Optional<String>>> getEnv();
 
   /** @return A list of the glob operations performed with their results. */
-  @JsonProperty("globManifest")
   public abstract ImmutableList<GlobSpecWithResult> getGlobManifest();
 
-  @JsonProperty("errors")
   @Override
   public abstract ImmutableList<ParsingError> getErrors();
 
