@@ -36,6 +36,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -123,7 +124,7 @@ public class JsBundleDescription
       JsBundleDescriptionArg args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
-    ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
+    FlavorSet flavors = buildTarget.getFlavors();
 
     // Source maps are exposed individually using a special flavor
     if (flavors.contains(JsFlavors.SOURCE_MAP)) {
@@ -214,7 +215,7 @@ public class JsBundleDescription
     }
 
     String bundleName =
-        args.computeBundleName(buildTarget.getFlavors(), () -> args.getName() + ".js");
+        args.computeBundleName(buildTarget.getFlavors().getSet(), () -> args.getName() + ".js");
 
     return new JsBundle(
         buildTarget,
@@ -387,9 +388,9 @@ public class JsBundleDescription
       this.targetGraph = targetGraph;
       this.graphBuilder = graphBuilder;
 
-      ImmutableSortedSet<Flavor> bundleFlavors = bundleTarget.getFlavors();
+      FlavorSet bundleFlavors = bundleTarget.getFlavors();
       extraFlavors =
-          bundleFlavors.stream()
+          bundleFlavors.getSet().stream()
               .filter(
                   flavor ->
                       JsLibraryDescription.FLAVOR_DOMAINS.stream()

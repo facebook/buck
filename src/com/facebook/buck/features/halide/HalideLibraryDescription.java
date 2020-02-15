@@ -288,7 +288,7 @@ public class HalideLibraryDescription
 
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     args.checkDuplicateSources(graphBuilder.getSourcePathResolver());
-    ImmutableSet<Flavor> flavors = ImmutableSet.copyOf(buildTarget.getFlavors());
+    ImmutableSet<Flavor> flavors = ImmutableSet.copyOf(buildTarget.getFlavors().getSet());
     // TODO(cjhopman): This description doesn't handle parse time deps correctly.
     CxxPlatform cxxPlatform =
         cxxPlatforms

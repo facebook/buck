@@ -20,7 +20,6 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.support.cli.args.BuckCellArg;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSortedSet;
 
 /**
  * Exposes some {@link com.facebook.buck.core.model.BuildTarget} logic that is only visible for
@@ -47,7 +46,7 @@ public class BuildTargetFactory {
       return UnconfiguredBuildTargetView.of(
               UnconfiguredBuildTarget.of(
                   UnflavoredBuildTarget.of(cellName, BaseName.of(parts[0]), parts[1]),
-                  UnconfiguredBuildTarget.NO_FLAVORS))
+                  FlavorSet.NO_FLAVORS))
           .configure(targetConfiguration);
     }
     return UnconfiguredBuildTargetView.of(
@@ -56,10 +55,10 @@ public class BuildTargetFactory {
         .configure(targetConfiguration);
   }
 
-  private static ImmutableSortedSet<Flavor> splitFlavors(String flavors) {
+  private static FlavorSet splitFlavors(String flavors) {
     return RichStream.from(flavors.split(","))
         .map(InternalFlavor::of)
-        .collect(ImmutableSortedSet.toImmutableSortedSet(UnconfiguredBuildTarget.FLAVOR_ORDERING));
+        .collect(FlavorSet.toFlavorSet());
   }
 
   public static BuildTarget newInstance(String baseName, String shortName) {
@@ -67,7 +66,7 @@ public class BuildTargetFactory {
     return UnconfiguredBuildTargetView.of(
             UnflavoredBuildTarget.of(
                 CanonicalCellName.of(arg.getCellName()), BaseName.of(arg.getBasePath()), shortName),
-            UnconfiguredBuildTarget.NO_FLAVORS)
+            FlavorSet.NO_FLAVORS)
         .configure(UnconfiguredTargetConfiguration.INSTANCE);
   }
 
@@ -76,10 +75,7 @@ public class BuildTargetFactory {
     return UnconfiguredBuildTargetView.of(
             UnflavoredBuildTarget.of(
                 CanonicalCellName.of(arg.getCellName()), BaseName.of(arg.getBasePath()), shortName),
-            RichStream.from(flavors)
-                .collect(
-                    ImmutableSortedSet.toImmutableSortedSet(
-                        UnconfiguredBuildTarget.FLAVOR_ORDERING)))
+            RichStream.from(flavors).collect(FlavorSet.toFlavorSet()))
         .configure(UnconfiguredTargetConfiguration.INSTANCE);
   }
 }

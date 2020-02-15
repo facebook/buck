@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRule;
@@ -45,7 +46,6 @@ import com.facebook.buck.maven.aether.AetherUtil;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 
 public class ScalaLibraryDescription
@@ -89,7 +89,7 @@ public class ScalaLibraryDescription
       BuildTarget buildTarget,
       BuildRuleParams rawParams,
       ScalaLibraryDescriptionArg args) {
-    ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
+    FlavorSet flavors = buildTarget.getFlavors();
 
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 

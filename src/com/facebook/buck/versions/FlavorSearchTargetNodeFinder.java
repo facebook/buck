@@ -86,7 +86,7 @@ abstract class FlavorSearchTargetNodeFinder {
         flavorMapRawBuilder.put(unflavoredTarget, new ArrayList<>());
       }
       Objects.requireNonNull(flavorMapRawBuilder.get(unflavoredTarget))
-          .add(baseTarget.getFlavors());
+          .add(baseTarget.getFlavors().getSet());
     }
     ImmutableMap.Builder<UnflavoredBuildTarget, ImmutableSet<ImmutableSet<Flavor>>>
         flavorMapBuilder = ImmutableMap.builder();

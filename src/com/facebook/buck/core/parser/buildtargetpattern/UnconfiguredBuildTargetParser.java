@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.google.common.base.Splitter;
@@ -98,7 +99,7 @@ public class UnconfiguredBuildTargetParser {
     if (flavorSymbolPos < 0) {
       // assume no flavors
       flavorSymbolPos = target.length();
-      flavors = UnconfiguredBuildTarget.NO_FLAVORS;
+      flavors = FlavorSet.NO_FLAVORS.getSet();
     } else {
       String flavorsString = target.substring(flavorSymbolPos + 1);
       Stream<String> stream =
@@ -114,8 +115,7 @@ public class UnconfiguredBuildTargetParser {
           stream
               // potentially we could intern InternalFlavor object as well
               .map(flavor -> (Flavor) InternalFlavor.of(flavor))
-              .collect(
-                  ImmutableSortedSet.toImmutableSortedSet(UnconfiguredBuildTarget.FLAVOR_ORDERING));
+              .collect(ImmutableSortedSet.toImmutableSortedSet(FlavorSet.FLAVOR_ORDERING));
 
       check(
           !flavors.isEmpty(),
@@ -146,7 +146,8 @@ public class UnconfiguredBuildTargetParser {
         cellName.isEmpty()
             ? CanonicalCellName.rootCell()
             : CanonicalCellName.unsafeOf(Optional.of(cellName));
-    return UnconfiguredBuildTarget.of(canonicalCellName, baseName, targetName, flavors);
+    return UnconfiguredBuildTarget.of(
+        canonicalCellName, baseName, targetName, FlavorSet.copyOf(flavors));
   }
 
   private static void check(boolean condition, String target, String message, Object... args)

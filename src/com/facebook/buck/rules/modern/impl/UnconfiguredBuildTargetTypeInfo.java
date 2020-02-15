@@ -19,8 +19,8 @@ package com.facebook.buck.rules.modern.impl;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.modern.ValueCreator;
@@ -54,7 +54,7 @@ public class UnconfiguredBuildTargetTypeInfo implements ValueTypeInfo<Unconfigur
     visitor.visitString(unflavored.getBaseName().toString());
     visitor.visitString(unflavored.getLocalName());
     Holder.flavorsTypeInfo.visit(
-        value.getFlavors().stream()
+        value.getFlavors().getSet().stream()
             .map(Flavor::getName)
             .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder())),
         visitor);
@@ -70,9 +70,9 @@ public class UnconfiguredBuildTargetTypeInfo implements ValueTypeInfo<Unconfigur
     ImmutableSortedSet<Flavor> flavors =
         Holder.flavorsTypeInfo.createNotNull(creator).stream()
             .map(InternalFlavor::of)
-            .collect(
-                ImmutableSortedSet.toImmutableSortedSet(UnconfiguredBuildTarget.FLAVOR_ORDERING));
+            .collect(ImmutableSortedSet.toImmutableSortedSet(FlavorSet.FLAVOR_ORDERING));
     return UnconfiguredBuildTargetView.of(
-        UnflavoredBuildTarget.of(cellName, BaseName.of(baseName), shortName), flavors);
+        UnflavoredBuildTarget.of(cellName, BaseName.of(baseName), shortName),
+        FlavorSet.copyOf(flavors));
   }
 }

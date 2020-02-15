@@ -210,7 +210,7 @@ public class HaskellLibraryDescription
       boolean hsProfile) {
     Preconditions.checkArgument(
         Sets.intersection(
-                baseTarget.getFlavors(),
+                baseTarget.getFlavors().getSet(),
                 Sets.union(
                     Type.FLAVOR_VALUES,
                     haskellPlatformsProvider.getHaskellPlatforms().getFlavors()))
@@ -391,7 +391,7 @@ public class HaskellLibraryDescription
       boolean hsProfile) {
     Preconditions.checkArgument(
         Sets.intersection(
-                baseTarget.getFlavors(),
+                baseTarget.getFlavors().getSet(),
                 Sets.union(
                     Type.FLAVOR_VALUES,
                     haskellPlatformsProvider.getHaskellPlatforms().getFlavors()))
@@ -524,7 +524,7 @@ public class HaskellLibraryDescription
       boolean hsProfile) {
     Preconditions.checkArgument(
         Sets.intersection(
-                baseTarget.getFlavors(),
+                baseTarget.getFlavors().getSet(),
                 Sets.union(
                     Type.FLAVOR_VALUES,
                     haskellPlatformsProvider.getHaskellPlatforms().getFlavors()))

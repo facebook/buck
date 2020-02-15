@@ -22,13 +22,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
-import com.google.common.collect.Ordering;
 import java.util.Objects;
 import javax.annotation.Nullable;
 
@@ -52,23 +49,11 @@ import javax.annotation.Nullable;
 public class UnconfiguredBuildTarget
     implements Comparable<UnconfiguredBuildTarget>, QueryTarget, DependencyStack.Element {
 
-  private static final Ordering<Iterable<Flavor>> LEXICOGRAPHICAL_ORDERING =
-      Ordering.<Flavor>natural().lexicographical();
-
-  /** Flavors passed to this object should be sorted using this ordering */
-  public static final Ordering<Flavor> FLAVOR_ORDERING = Ordering.natural();
-
-  /** Indicates empty set of flavors */
-  public static final ImmutableSortedSet<Flavor> NO_FLAVORS =
-      ImmutableSortedSet.orderedBy(FLAVOR_ORDERING).build();
-
   private final UnflavoredBuildTarget unflavoredBuildTarget;
-  private final ImmutableSortedSet<Flavor> flavors;
+  private final FlavorSet flavors;
   private final int hash;
 
-  private UnconfiguredBuildTarget(
-      UnflavoredBuildTarget unflavoredBuildTarget, ImmutableSortedSet<Flavor> flavors) {
-    Preconditions.checkArgument(flavors.comparator() == FLAVOR_ORDERING);
+  private UnconfiguredBuildTarget(UnflavoredBuildTarget unflavoredBuildTarget, FlavorSet flavors) {
     this.unflavoredBuildTarget = unflavoredBuildTarget;
     this.flavors = flavors;
     this.hash = Objects.hash(unflavoredBuildTarget, flavors);
@@ -118,7 +103,12 @@ public class UnconfiguredBuildTarget
 
   /** Set of flavors used with that build target. */
   @JsonProperty("flavors")
-  public ImmutableSortedSet<Flavor> getFlavors() {
+  public ImmutableSortedSet<Flavor> getFlavorSet() {
+    return flavors.getSet();
+  }
+
+  @JsonIgnore
+  public FlavorSet getFlavors() {
     return flavors;
   }
 
@@ -146,7 +136,7 @@ public class UnconfiguredBuildTarget
 
   @JsonIgnore
   private String getFlavorsAsString() {
-    return Joiner.on(",").join(getFlavors());
+    return getFlavors().toCommaSeparatedString();
   }
 
   @Override
@@ -181,7 +171,7 @@ public class UnconfiguredBuildTarget
 
     return ComparisonChain.start()
         .compare(this.unflavoredBuildTarget, that.unflavoredBuildTarget)
-        .compare(this.flavors, that.flavors, LEXICOGRAPHICAL_ORDERING)
+        .compare(this.flavors, that.flavors)
         .result();
   }
 
@@ -200,19 +190,19 @@ public class UnconfiguredBuildTarget
 
   /** A constructor */
   public static UnconfiguredBuildTarget of(
-      UnflavoredBuildTarget unflavoredBuildTarget, ImmutableSortedSet<Flavor> flavors) {
+      UnflavoredBuildTarget unflavoredBuildTarget, FlavorSet flavors) {
     return interner.intern(new UnconfiguredBuildTarget(unflavoredBuildTarget, flavors));
   }
 
   /** A constructor */
   private static UnconfiguredBuildTarget of(
-      CellRelativePath cellRelativePath, String name, ImmutableSortedSet<Flavor> flavors) {
+      CellRelativePath cellRelativePath, String name, FlavorSet flavors) {
     return of(UnflavoredBuildTarget.of(cellRelativePath, name), flavors);
   }
 
   /** A constructor */
   public static UnconfiguredBuildTarget of(
-      CanonicalCellName cell, BaseName baseName, String name, ImmutableSortedSet<Flavor> flavors) {
+      CanonicalCellName cell, BaseName baseName, String name, FlavorSet flavors) {
     return of(CellRelativePath.of(cell, baseName.getPath()), name, flavors);
   }
 
@@ -222,11 +212,11 @@ public class UnconfiguredBuildTarget
       @JsonProperty("baseName") String baseName,
       @JsonProperty("name") String name,
       @JsonProperty("flavors") ImmutableSortedSet<Flavor> flavors) {
-    return of(cell, BaseName.of(baseName), name, flavors);
+    return of(cell, BaseName.of(baseName), name, FlavorSet.copyOf(flavors));
   }
 
   public UnconfiguredBuildTarget withoutFlavors() {
-    return of(getCell(), getBaseName(), getName(), NO_FLAVORS);
+    return of(getCell(), getBaseName(), getName(), FlavorSet.NO_FLAVORS);
   }
 
   public UnconfiguredBuildTarget withLocalName(String localName) {

@@ -141,7 +141,7 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
       SourcePath resourcesDir,
       SourcePath miscDirPath) {
 
-    ImmutableSortedSet<Flavor> flavors = getBuildTarget().getFlavors();
+    ImmutableSortedSet<Flavor> flavors = getBuildTarget().getFlavors().getSet();
 
     return JsonBuilder.object()
         .addString(

@@ -187,7 +187,7 @@ public class RustCompileUtils {
               .resolve("rust-incremental")
               .resolve(incremental.get());
 
-      for (Flavor f : target.getFlavors()) {
+      for (Flavor f : target.getFlavors().getSet()) {
         path = path.resolve(f.getName());
       }
       args.add(StringArg.of(String.format("-Cincremental=%s", path)));

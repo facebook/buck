@@ -466,7 +466,8 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
           node.getBuildTarget()
               .withFlavors(
                   Sets.difference(
-                      newNode.getBuildTarget().getFlavors(), node.getBuildTarget().getFlavors())),
+                      newNode.getBuildTarget().getFlavors().getSet(),
+                      node.getBuildTarget().getFlavors().getSet())),
           newNode);
 
       for (TargetNode<?> childNode : env.getDeps(VersionTargetGraphKey.IDENTIFIER).values()) {

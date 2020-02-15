@@ -67,7 +67,8 @@ public class BuildTargetParserTest {
     // Note the sort order.
     assertEquals("//:lib#bar,foo", buildTarget.getFullyQualifiedName());
     assertThat(
-        buildTarget.getFlavors(), hasItems(InternalFlavor.of("foo"), InternalFlavor.of("bar")));
+        buildTarget.getFlavors().getSet(),
+        hasItems(InternalFlavor.of("foo"), InternalFlavor.of("bar")));
   }
 
   @Test

@@ -32,6 +32,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -783,13 +784,12 @@ public class AppleDescriptions {
 
     // TODO(beng): Sort through the changes needed to make project generation work with
     // binary being optional.
-    ImmutableSortedSet<Flavor> flavoredBinaryRuleFlavors =
-        buildTargetWithoutBundleSpecificFlavors.getFlavors();
+    FlavorSet flavoredBinaryRuleFlavors = buildTargetWithoutBundleSpecificFlavors.getFlavors();
     BuildRule flavoredBinaryRule =
         getFlavoredBinaryRule(
             cxxPlatformsProvider,
             targetGraph,
-            flavoredBinaryRuleFlavors,
+            flavoredBinaryRuleFlavors.getSet(),
             defaultPlatform,
             graphBuilder,
             binaryTarget);
@@ -852,7 +852,7 @@ public class AppleDescriptions {
             binaryTarget,
             cxxPlatformsProvider,
             targetGraph,
-            flavoredBinaryRuleFlavors,
+            flavoredBinaryRuleFlavors.getSet(),
             defaultPlatform,
             graphBuilder);
 
@@ -1018,10 +1018,11 @@ public class AppleDescriptions {
     ImmutableSet.Builder<Flavor> binaryFlavorsBuilder = ImmutableSet.builder();
     binaryFlavorsBuilder.addAll(flavors);
     if (!(AppleLibraryDescription.LIBRARY_TYPE.getFlavor(flavors).isPresent())) {
-      binaryFlavorsBuilder.addAll(binary.getFlavors());
+      binaryFlavorsBuilder.addAll(binary.getFlavors().getSet());
     } else {
       binaryFlavorsBuilder.addAll(
-          Sets.difference(binary.getFlavors(), AppleLibraryDescription.LIBRARY_TYPE.getFlavors()));
+          Sets.difference(
+              binary.getFlavors().getSet(), AppleLibraryDescription.LIBRARY_TYPE.getFlavors()));
     }
     BuildTarget buildTarget = binary.withFlavors(binaryFlavorsBuilder.build());
 
@@ -1035,7 +1036,8 @@ public class AppleDescriptions {
     // must be specified.
     if (binaryTargetNode.getDescription() instanceof AppleLibraryDescription
         && (Sets.intersection(
-                    AppleBundleDescription.SUPPORTED_LIBRARY_FLAVORS, buildTarget.getFlavors())
+                    AppleBundleDescription.SUPPORTED_LIBRARY_FLAVORS,
+                    buildTarget.getFlavors().getSet())
                 .size()
             != 1)) {
       throw new HumanReadableException(
@@ -1177,7 +1179,7 @@ public class AppleDescriptions {
   }
 
   public static boolean flavorsDoNotAllowLinkerMapMode(BuildTarget buildTarget) {
-    ImmutableSet<Flavor> flavors = buildTarget.getFlavors();
+    FlavorSet flavors = buildTarget.getFlavors();
     return flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE)
         || flavors.contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)
         || flavors.contains(CxxDescriptionEnhancer.STATIC_FLAVOR)

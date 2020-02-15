@@ -22,11 +22,8 @@ import com.facebook.buck.log.views.JsonViews;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Sets;
 import java.util.Objects;
 import java.util.Set;
 import javax.annotation.concurrent.ThreadSafe;
@@ -69,7 +66,7 @@ public class BuildTarget implements Comparable<BuildTarget>, DependencyStack.Ele
     return unconfiguredBuildTargetView.getUnflavoredBuildTarget();
   }
 
-  public ImmutableSortedSet<Flavor> getFlavors() {
+  public FlavorSet getFlavors() {
     return unconfiguredBuildTargetView.getFlavors();
   }
 
@@ -121,7 +118,7 @@ public class BuildTarget implements Comparable<BuildTarget>, DependencyStack.Ele
   @JsonProperty("flavor")
   @JsonView(JsonViews.MachineReadableLog.class)
   protected String getFlavorsAsString() {
-    return Joiner.on(",").join(getFlavors());
+    return getFlavors().toCommaSeparatedString();
   }
 
   /**
@@ -172,7 +169,8 @@ public class BuildTarget implements Comparable<BuildTarget>, DependencyStack.Ele
   }
 
   public BuildTarget withoutFlavors(Set<Flavor> flavors) {
-    return withFlavors(Sets.difference(getFlavors(), flavors));
+    FlavorSet newFlavors = this.getFlavors().without(flavors);
+    return withFlavors(newFlavors.getSet());
   }
 
   public BuildTarget withoutFlavors(Flavor... flavors) {
@@ -197,7 +195,7 @@ public class BuildTarget implements Comparable<BuildTarget>, DependencyStack.Ele
   }
 
   public BuildTarget withAppendedFlavors(Set<Flavor> flavors) {
-    return withFlavors(Sets.union(getFlavors(), flavors));
+    return withFlavors(getFlavors().withAdded(flavors).getSet());
   }
 
   public BuildTarget withAppendedFlavors(Flavor... flavors) {

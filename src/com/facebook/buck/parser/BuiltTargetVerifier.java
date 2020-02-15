@@ -52,7 +52,7 @@ public class BuiltTargetVerifier {
         // TODO(nga): use proper target configuration
         if (!((Flavored) description)
             .hasFlavors(
-                ImmutableSet.copyOf(target.getFlavors()),
+                ImmutableSet.copyOf(target.getFlavors().getSet()),
                 UnconfiguredTargetConfiguration.INSTANCE)) {
           throw UnexpectedFlavorException.createWithSuggestions((Flavored) description, target);
         }
@@ -62,7 +62,7 @@ public class BuiltTargetVerifier {
                 + "before we can check if it supports flavors: %s",
             unflavoredBuildTargetView, buildRuleType, target.getFlavors());
         ImmutableSet<String> invalidFlavorsStr =
-            target.getFlavors().stream()
+            target.getFlavors().getSet().stream()
                 .map(Flavor::toString)
                 .collect(ImmutableSet.toImmutableSet());
         String invalidFlavorsDisplayStr = String.join(", ", invalidFlavorsStr);

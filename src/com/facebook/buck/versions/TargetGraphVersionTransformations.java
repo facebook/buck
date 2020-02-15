@@ -37,7 +37,7 @@ class TargetGraphVersionTransformations {
   public static boolean isVersionRoot(TargetNode<?> node) {
     return (node.getDescription() instanceof VersionRoot
         && ((VersionRoot<?>) node.getDescription())
-            .isVersionRoot(node.getBuildTarget().getFlavors()));
+            .isVersionRoot(node.getBuildTarget().getFlavors().getSet()));
   }
 
   public static Optional<TargetNode<VersionedAliasDescriptionArg>> getVersionedNode(

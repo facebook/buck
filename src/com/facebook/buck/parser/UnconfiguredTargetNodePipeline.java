@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.impl.Package;
@@ -131,7 +132,7 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
                               cell.getCanonicalName(),
                               from,
                               buildFile.getPath()),
-                          UnconfiguredBuildTarget.NO_FLAVORS);
+                          FlavorSet.NO_FLAVORS);
                   allNodeJobs.add(
                       cache.getJobWithCacheLookup(
                           cell,

@@ -24,6 +24,7 @@ import com.facebook.buck.core.cell.DefaultCellNameResolverProvider;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.graph.transformation.impl.FakeComputationEnvironment;
 import com.facebook.buck.core.model.BaseName;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -93,7 +94,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
             cell.getRootCell().getCanonicalName(),
             BaseName.of("//"),
             "target1",
-            UnconfiguredBuildTarget.NO_FLAVORS);
+            FlavorSet.NO_FLAVORS);
     UnconfiguredTargetNode unconfiguredTargetNode1 =
         ImmutableUnconfiguredTargetNode.of(
             unconfiguredBuildTarget1,
@@ -109,7 +110,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
             cell.getRootCell().getCanonicalName(),
             BaseName.of("//"),
             "target2",
-            UnconfiguredBuildTarget.NO_FLAVORS);
+            FlavorSet.NO_FLAVORS);
     UnconfiguredTargetNode unconfiguredTargetNode2 =
         ImmutableUnconfiguredTargetNode.of(
             unconfiguredBuildTarget2,

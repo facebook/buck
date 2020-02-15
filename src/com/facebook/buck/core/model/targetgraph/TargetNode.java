@@ -22,6 +22,7 @@ import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.HasBuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -121,6 +122,10 @@ public interface TargetNode<T extends ConstructorArg>
    * <p>Note that this method strips away selected versions, and may be buggy because of it.
    */
   TargetNode<T> copyWithFlavors(ImmutableSet<Flavor> flavors);
+
+  default TargetNode<T> copyWithFlavors(FlavorSet flavors) {
+    return copyWithFlavors(flavors.getSet());
+  }
 
   /**
    * This method copies this target node without applying logic in {@link

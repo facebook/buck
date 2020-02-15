@@ -65,7 +65,7 @@ public class BuildTargetFactoryTest {
                     CanonicalCellName.of(Optional.of("xplat")),
                     BaseName.of("//example/base"),
                     "one"),
-                UnconfiguredBuildTarget.NO_FLAVORS)
+                FlavorSet.NO_FLAVORS)
             .configure(UnconfiguredTargetConfiguration.INSTANCE),
         buildTarget);
   }

@@ -27,6 +27,7 @@ import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -222,10 +223,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputation
       BuildTargetToUnconfiguredTargetNodeKey depkey =
           ImmutableBuildTargetToUnconfiguredTargetNodeKey.of(
               UnconfiguredBuildTarget.of(
-                  cell.getCanonicalName(),
-                  BaseName.ofPath(basePath),
-                  target,
-                  UnconfiguredBuildTarget.NO_FLAVORS),
+                  cell.getCanonicalName(), BaseName.ofPath(basePath), target, FlavorSet.NO_FLAVORS),
               key.getPath());
       builder.add(depkey);
     }

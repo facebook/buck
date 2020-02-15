@@ -99,10 +99,10 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
     this.precompiledHeaderRule = precompiledHeaderRule;
     Preconditions.checkArgument(
         !buildTarget.getFlavors().contains(CxxStrip.RULE_FLAVOR)
-            || !StripStyle.FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors()),
+            || !StripStyle.FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors().getSet()),
         "CxxPreprocessAndCompile should not be created with CxxStrip flavors");
     Preconditions.checkArgument(
-        !LinkerMapMode.FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors()),
+        !LinkerMapMode.FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors().getSet()),
         "CxxPreprocessAndCompile %s should not be created with LinkerMapMode flavor (%s)",
         this,
         LinkerMapMode.FLAVOR_DOMAIN);

@@ -23,7 +23,6 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.support.cli.args.BuckCellArg;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import javax.annotation.Nullable;
 
@@ -53,15 +52,12 @@ public class UnconfiguredBuildTargetFactoryForTests {
     if (nameAndFlavor.length != 2) {
       return UnconfiguredBuildTargetView.of(
           UnflavoredBuildTarget.of(cellName, BaseName.of(parts[0]), parts[1]),
-          UnconfiguredBuildTarget.NO_FLAVORS);
+          FlavorSet.NO_FLAVORS);
     }
     String[] flavors = nameAndFlavor[1].split(",");
     return UnconfiguredBuildTargetView.of(
         UnflavoredBuildTarget.of(cellName, BaseName.of(parts[0]), nameAndFlavor[0]),
-        RichStream.from(flavors)
-            .map(InternalFlavor::of)
-            .collect(
-                ImmutableSortedSet.toImmutableSortedSet(UnconfiguredBuildTarget.FLAVOR_ORDERING)));
+        RichStream.from(flavors).map(InternalFlavor::of).collect(FlavorSet.toFlavorSet()));
   }
 
   public static UnconfiguredBuildTargetView newInstance(
@@ -74,7 +70,7 @@ public class UnconfiguredBuildTargetFactoryForTests {
     return UnconfiguredBuildTargetView.of(
         UnflavoredBuildTarget.of(
             CanonicalCellName.of(arg.getCellName()), BaseName.of(arg.getBasePath()), shortName),
-        UnconfiguredBuildTarget.NO_FLAVORS);
+        FlavorSet.NO_FLAVORS);
   }
 
   public static UnconfiguredBuildTargetView newInstance(
@@ -83,8 +79,6 @@ public class UnconfiguredBuildTargetFactoryForTests {
     return UnconfiguredBuildTargetView.of(
         UnflavoredBuildTarget.of(
             CanonicalCellName.of(arg.getCellName()), BaseName.of(arg.getBasePath()), shortName),
-        RichStream.from(flavors)
-            .collect(
-                ImmutableSortedSet.toImmutableSortedSet(UnconfiguredBuildTarget.FLAVOR_ORDERING)));
+        RichStream.from(flavors).collect(FlavorSet.toFlavorSet()));
   }
 }

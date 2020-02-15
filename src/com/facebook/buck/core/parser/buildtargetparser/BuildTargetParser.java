@@ -24,6 +24,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
@@ -138,11 +139,10 @@ class BuildTargetParser {
       ImmutableSortedSet<Flavor> flavors =
           RichStream.from(flavorNames)
               .map(InternalFlavor::of)
-              .collect(
-                  ImmutableSortedSet.toImmutableSortedSet(UnconfiguredBuildTarget.FLAVOR_ORDERING));
+              .collect(ImmutableSortedSet.toImmutableSortedSet(FlavorSet.FLAVOR_ORDERING));
       return flavoredTargetCache.intern(
           UnconfiguredBuildTargetView.of(
-              UnconfiguredBuildTarget.of(unflavoredBuildTarget, flavors)));
+              UnconfiguredBuildTarget.of(unflavoredBuildTarget, FlavorSet.copyOf(flavors))));
     } catch (HumanReadableException e) {
       throw new BuildTargetParseException(
           e,

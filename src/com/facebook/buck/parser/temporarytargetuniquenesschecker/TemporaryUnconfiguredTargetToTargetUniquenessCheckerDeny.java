@@ -19,29 +19,29 @@ package com.facebook.buck.parser.temporarytargetuniquenesschecker;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import java.util.concurrent.ConcurrentHashMap;
 
 /** Deny non-unique targets; use when hashed buck-out disabled. */
 class TemporaryUnconfiguredTargetToTargetUniquenessCheckerDeny
     implements TemporaryUnconfiguredTargetToTargetUniquenessChecker {
 
-  private ConcurrentHashMap<UnconfiguredBuildTargetView, BuildTarget>
-      targetToUnconfiguredBuildTarget = new ConcurrentHashMap<>();
+  private ConcurrentHashMap<UnconfiguredBuildTarget, BuildTarget> targetToUnconfiguredBuildTarget =
+      new ConcurrentHashMap<>();
 
   @Override
   public void addTarget(BuildTarget buildTarget, DependencyStack dependencyStack) {
     BuildTarget prev =
         targetToUnconfiguredBuildTarget.putIfAbsent(
-            buildTarget.getUnconfiguredBuildTargetView(), buildTarget);
+            buildTarget.getUnconfiguredBuildTarget(), buildTarget);
     if (prev != null && !prev.equals(buildTarget)) {
       throw new HumanReadableException(
           dependencyStack,
           "Target %s has more than one configurations (%s and %s) with the same set of flavors %s",
-          buildTarget.getUnconfiguredBuildTargetView(),
+          buildTarget.getUnconfiguredBuildTarget(),
           buildTarget.getTargetConfiguration(),
           prev.getTargetConfiguration(),
-          buildTarget.getUnconfiguredBuildTargetView().getFlavors());
+          buildTarget.getUnconfiguredBuildTarget().getFlavors().getSet());
     }
   }
 }

@@ -25,7 +25,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSortedSet;
 import java.util.Arrays;
 import java.util.Objects;
 import javax.annotation.concurrent.ThreadSafe;
@@ -72,7 +71,7 @@ public class UnconfiguredBuildTargetView
    * @param flavors Flavors that apply to this build target
    */
   public static UnconfiguredBuildTargetView of(
-      UnflavoredBuildTarget unflavoredBuildTargetView, ImmutableSortedSet<Flavor> flavors) {
+      UnflavoredBuildTarget unflavoredBuildTargetView, FlavorSet flavors) {
     return new UnconfiguredBuildTargetView(
         UnconfiguredBuildTarget.of(unflavoredBuildTargetView, flavors));
   }
@@ -83,7 +82,7 @@ public class UnconfiguredBuildTargetView
     // target where the cell name doesn't match the cell path.
     return UnconfiguredBuildTargetView.of(
         UnflavoredBuildTarget.of(CanonicalCellName.unsafeRootCell(), baseName, shortName),
-        UnconfiguredBuildTarget.NO_FLAVORS);
+        FlavorSet.NO_FLAVORS);
   }
 
   /** A build target without flavors. */
@@ -93,7 +92,7 @@ public class UnconfiguredBuildTargetView
 
   /** Set of flavors used with that build target. */
   @JsonIgnore
-  public ImmutableSortedSet<Flavor> getFlavors() {
+  public FlavorSet getFlavors() {
     return data.getFlavors();
   }
 
@@ -162,14 +161,11 @@ public class UnconfiguredBuildTargetView
   @JsonProperty("flavor")
   @JsonView(JsonViews.MachineReadableLog.class)
   private String getFlavorsAsString() {
-    return Joiner.on(",").join(getFlavors());
+    return Joiner.on(",").join(getFlavors().getSet());
   }
 
   private String getFlavorPostfix() {
-    if (getFlavors().isEmpty()) {
-      return "";
-    }
-    return "#" + getFlavorsAsString();
+    return getFlavors().toPostfixString();
   }
 
   /**
@@ -242,20 +238,9 @@ public class UnconfiguredBuildTargetView
    *
    * @param flavors flavors to use when creating a new build target
    */
-  @SuppressWarnings("unchecked")
   public UnconfiguredBuildTargetView withFlavors(Iterable<? extends Flavor> flavors) {
-    ImmutableSortedSet<Flavor> flavorsSet;
-    if (flavors instanceof ImmutableSortedSet
-        && ((ImmutableSortedSet<Flavor>) flavors)
-            .comparator()
-            .equals(UnconfiguredBuildTarget.FLAVOR_ORDERING)) {
-      flavorsSet = (ImmutableSortedSet<Flavor>) flavors;
-    } else {
-      flavorsSet = ImmutableSortedSet.copyOf(UnconfiguredBuildTarget.FLAVOR_ORDERING, flavors);
-    }
-
     return UnconfiguredBuildTargetView.of(
-        UnconfiguredBuildTarget.of(getUnflavoredBuildTarget(), flavorsSet));
+        UnconfiguredBuildTarget.of(getUnflavoredBuildTarget(), FlavorSet.copyOf(flavors)));
   }
 
   /**
@@ -264,7 +249,7 @@ public class UnconfiguredBuildTargetView
    */
   public UnconfiguredBuildTargetView withoutFlavors() {
     return UnconfiguredBuildTargetView.of(
-        UnconfiguredBuildTarget.of(getUnflavoredBuildTarget(), UnconfiguredBuildTarget.NO_FLAVORS));
+        UnconfiguredBuildTarget.of(getUnflavoredBuildTarget(), FlavorSet.NO_FLAVORS));
   }
 
   public UnconfiguredBuildTargetView withUnflavoredBuildTarget(UnflavoredBuildTarget target) {
