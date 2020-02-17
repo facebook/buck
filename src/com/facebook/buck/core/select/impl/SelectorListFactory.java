@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.select.impl;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.select.Selector;
@@ -46,7 +46,7 @@ public class SelectorListFactory {
    *     non-coerced.)
    */
   public SelectorList<Object> create(
-      CellPathResolver cellPathResolver,
+      CellNameResolver cellNameResolver,
       ForwardRelativePath pathRelativeToProjectRoot,
       ListWithSelects listWithSelects)
       throws CoerceFailedException {
@@ -58,7 +58,7 @@ public class SelectorListFactory {
         ImmutableMap<String, Object> rawAttributes = selectorValue.getDictionary();
         builder.add(
             selectorFactory.createSelector(
-                cellPathResolver,
+                cellNameResolver,
                 pathRelativeToProjectRoot,
                 rawAttributes,
                 selectorValue.getNoMatchError()));

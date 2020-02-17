@@ -92,7 +92,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
     if (attrValue instanceof ListWithSelects) {
       try {
         return selectorListFactory.create(
-            cells.getCell(pathRelativeToProjectRoot.getCellName()).getCellPathResolver(),
+            cells.getCell(pathRelativeToProjectRoot.getCellName()).getCellNameResolver(),
             pathRelativeToProjectRoot.getPath(),
             (ListWithSelects) attrValue);
       } catch (CoerceFailedException e) {

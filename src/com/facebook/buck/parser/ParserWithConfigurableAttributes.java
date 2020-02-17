@@ -17,7 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.attr.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -204,7 +204,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
             resolveConfigurableAttributes(
                 state.getSelectorListResolver(),
                 configurationContext,
-                cell.getCellPathResolver(),
+                cell.getCellNameResolver(),
                 buildTarget,
                 state.getSelectorListFactory(),
                 attributeName,
@@ -222,7 +222,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
   private Object resolveConfigurableAttributes(
       SelectorListResolver selectorListResolver,
       SelectableConfigurationContext configurationContext,
-      CellPathResolver cellPathResolver,
+      CellNameResolver cellNameResolver,
       BuildTarget buildTarget,
       SelectorListFactory selectorListFactory,
       String attributeName,
@@ -235,7 +235,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
 
     SelectorList<Object> selectorList =
         selectorListFactory.create(
-            cellPathResolver,
+            cellNameResolver,
             buildTarget.getCellRelativeBasePath().getPath(),
             (ListWithSelects) jsonObject);
 
