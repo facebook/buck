@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Interner;
@@ -230,7 +231,7 @@ public class UnconfiguredBuildTarget
   }
 
   public BuildTarget configure(TargetConfiguration targetConfiguration) {
-    return BuildTarget.of(UnconfiguredBuildTargetView.of(this), targetConfiguration);
+    return BuildTarget.of(this, targetConfiguration);
   }
 
   @JsonIgnore
@@ -256,5 +257,35 @@ public class UnconfiguredBuildTarget
    */
   public UnconfiguredBuildTarget withFlavors(Flavor... flavors) {
     return withFlavors(Arrays.asList(flavors));
+  }
+
+  /**
+   * Creates a new build target by copying all of the information from this build target and
+   * replacing the short name with the given name.
+   *
+   * @param shortName short name of the new build target
+   */
+  public UnconfiguredBuildTarget withShortName(String shortName) {
+    return UnconfiguredBuildTarget.of(
+        UnflavoredBuildTarget.of(
+            getUnflavoredBuildTarget().getCell(),
+            getUnflavoredBuildTarget().getBaseName(),
+            shortName),
+        getFlavors());
+  }
+
+  public UnconfiguredBuildTarget withUnflavoredBuildTarget(UnflavoredBuildTarget target) {
+    return UnconfiguredBuildTarget.of(target, getFlavors());
+  }
+
+  /**
+   * Verifies that this build target has no flavors.
+   *
+   * @return this build target
+   * @throws IllegalStateException if a build target has flavors
+   */
+  public UnconfiguredBuildTarget assertUnflavored() {
+    Preconditions.checkState(!isFlavored(), "%s is flavored.", this);
+    return this;
   }
 }
