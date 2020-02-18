@@ -68,7 +68,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.Closeable;
 import java.io.IOException;
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -116,8 +115,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
   private final AtomicReference<Throwable> firstFailure = new AtomicReference<>();
 
-  private final ConcurrentHashMap<BuildTarget, WeakReference<CachingBuildRuleBuilder>>
-      liveRuleBuilders = new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<BuildTarget, CachingBuildRuleBuilder> liveRuleBuilders =
+      new ConcurrentHashMap<>();
 
   private final CachingBuildEngineDelegate cachingBuildEngineDelegate;
 
@@ -301,11 +300,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   }
 
   private void forEachLiveBuilder(Consumer<CachingBuildRuleBuilder> action) {
-    for (WeakReference<CachingBuildRuleBuilder> value : liveRuleBuilders.values()) {
-      CachingBuildRuleBuilder builder = value.get();
-      if (builder == null) {
-        continue;
-      }
+    for (CachingBuildRuleBuilder builder : liveRuleBuilders.values()) {
       action.accept(builder);
     }
   }
@@ -515,8 +510,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       cachingBuildRuleBuilder.cancel(firstFailure.get());
     }
 
-    WeakReference<CachingBuildRuleBuilder> prev =
-        liveRuleBuilders.put(rule.getBuildTarget(), new WeakReference<>(cachingBuildRuleBuilder));
+    CachingBuildRuleBuilder prev =
+        liveRuleBuilders.put(rule.getBuildTarget(), cachingBuildRuleBuilder);
     Preconditions.checkState(
         prev == null, "rule builder is created again: %s", rule.getBuildTarget());
 
@@ -524,8 +519,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
     future.addListener(
         () -> {
-          WeakReference<CachingBuildRuleBuilder> removed =
-              liveRuleBuilders.remove(rule.getBuildTarget());
+          CachingBuildRuleBuilder removed = liveRuleBuilders.remove(rule.getBuildTarget());
           Preconditions.checkState(
               removed != null, "rule builder must be removed once: %s", rule.getBuildTarget());
         },
