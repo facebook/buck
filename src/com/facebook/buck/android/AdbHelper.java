@@ -52,6 +52,7 @@ import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.CommandThreadFactory;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -64,8 +65,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -266,8 +269,14 @@ public class AdbHelper implements AndroidDevicesHelper {
       getBuckEventBus().post(started);
     }
     AtomicBoolean success = new AtomicBoolean();
+    Set<String> deviceLocales = new HashSet<>();
     try (Scope ignored =
         () -> {
+          ImmutableMap.Builder<String, String> deviceInfo = ImmutableMap.builder();
+          if (!deviceLocales.isEmpty()) {
+            deviceInfo.put(
+                InstallEvent.Finished.DEVICE_INFO_LOCALES, Joiner.on(',').join(deviceLocales));
+          }
           if (!quiet) {
             getBuckEventBus()
                 .post(
@@ -277,9 +286,23 @@ public class AdbHelper implements AndroidDevicesHelper {
                         Optional.empty(),
                         Optional.of(
                             AdbHelper.tryToExtractPackageNameFromManifest(
-                                pathResolver, hasInstallableApk.getApkInfo()))));
+                                pathResolver, hasInstallableApk.getApkInfo())),
+                        deviceInfo.build()));
           }
         }) {
+
+      adbCall(
+          "Get device locale",
+          (device) -> {
+            try {
+              deviceLocales.add(device.getProperty("persist.sys.locale"));
+            } catch (Exception e) {
+              // Don't log.
+            }
+            return true;
+          },
+          true);
+
       Optional<ExopackageInfo> exopackageInfo = hasInstallableApk.getApkInfo().getExopackageInfo();
       if (exopackageInfo.isPresent()) {
         // TODO(dreiss): Support SD installation.
