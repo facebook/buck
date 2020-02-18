@@ -68,6 +68,9 @@ def _get_suspected_java_version_from_java_path(java_path):
 
 
 def _get_java_path_for_highest_minor_version(base_path, desired_major_version):
+    if not os.path.isdir(base_path):
+        return None
+
     max_version = None
     max_dir = None
     regexes = (
