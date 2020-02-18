@@ -1067,6 +1067,11 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
+  public void testBuildAppleLibraryWhereModularSwiftUsesHeaderModuleMap() throws Exception {
+    testModularScenario("headers_modulemap", "Test");
+  }
+
+  @Test
   public void testTargetSDKVersion() throws Exception {
     testModularScenario("target_sdk_version", "Binary");
     testModularScenario("target_sdk_version", "Library");

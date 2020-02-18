@@ -139,6 +139,9 @@ public class CxxPreprocessables {
     switch (headerMode) {
       case SYMLINK_TREE_WITH_HEADER_MAP:
         return HeaderSymlinkTreeWithHeaderMap.create(target, filesystem, root, links);
+      case SYMLINK_TREE_WITH_HEADERS_MODULEMAP:
+        return HeaderSymlinkTreeWithModuleMap.create(
+            target, filesystem, root, links, ModuleMapMode.HEADERS);
       case SYMLINK_TREE_WITH_UMBRELLA_HEADER_MODULEMAP:
         return HeaderSymlinkTreeWithModuleMap.create(
             target, filesystem, root, links, ModuleMapMode.UMBRELLA_HEADER);

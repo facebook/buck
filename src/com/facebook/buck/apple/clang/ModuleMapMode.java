@@ -18,6 +18,9 @@ package com.facebook.buck.apple.clang;
 
 /** Enumerates the module map generation modes that Buck supports. */
 public enum ModuleMapMode {
+  /** Generate a module map with explicit "header" declarations. */
+  HEADERS,
+
   /** Generate a module map that requires an umbrella header. */
   UMBRELLA_HEADER,
 
@@ -32,6 +35,8 @@ public enum ModuleMapMode {
    */
   public boolean shouldGenerateMissingUmbrellaHeader() {
     switch (this) {
+      case HEADERS:
+        return false;
       case UMBRELLA_DIRECTORY:
         return false;
       case UMBRELLA_HEADER:

@@ -3157,19 +3157,22 @@ public class ProjectGenerator {
               moduleName.get(), resolvedContents.keySet(), headerSymlinkTreeRoot);
         }
         boolean containsSwift = !nonSourcePaths.isEmpty();
+        Set<Path> headerPaths = resolvedContents.keySet();
         if (containsSwift) {
           projectFilesystem.writeContentsToPath(
               ModuleMapFactory.createModuleMap(
                       moduleName.get(),
                       moduleMapMode,
-                      UmbrellaHeaderModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER)
+                      UmbrellaHeaderModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER,
+                      headerPaths)
                   .render(),
               headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("module.modulemap"));
           projectFilesystem.writeContentsToPath(
               ModuleMapFactory.createModuleMap(
                       moduleName.get(),
                       moduleMapMode,
-                      UmbrellaHeaderModuleMap.SwiftMode.EXCLUDE_SWIFT_HEADER)
+                      UmbrellaHeaderModuleMap.SwiftMode.EXCLUDE_SWIFT_HEADER,
+                      headerPaths)
                   .render(),
               headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("objc.modulemap"));
 
@@ -3189,7 +3192,10 @@ public class ProjectGenerator {
         } else {
           projectFilesystem.writeContentsToPath(
               ModuleMapFactory.createModuleMap(
-                      moduleName.get(), moduleMapMode, UmbrellaHeaderModuleMap.SwiftMode.NO_SWIFT)
+                      moduleName.get(),
+                      moduleMapMode,
+                      UmbrellaHeaderModuleMap.SwiftMode.NO_SWIFT,
+                      headerPaths)
                   .render(),
               headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("module.modulemap"));
         }

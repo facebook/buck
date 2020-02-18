@@ -35,6 +35,11 @@ public enum HeaderMode implements FlavorConvertible {
   SYMLINK_TREE_WITH_HEADER_MAP,
   /**
    * Creates the tree of symbolic links of headers and creates a module map that references the
+   * symbolic links to the headers. The generated module map will refer to explicit headers.
+   */
+  SYMLINK_TREE_WITH_HEADERS_MODULEMAP,
+  /**
+   * Creates the tree of symbolic links of headers and creates a module map that references the
    * symbolic links to the headers. The generated module map will refer to an umbrella header, with
    * the same name as the library.
    */
@@ -71,6 +76,8 @@ public enum HeaderMode implements FlavorConvertible {
    */
   public static HeaderMode forModuleMapMode(ModuleMapMode moduleMapMode) {
     switch (moduleMapMode) {
+      case HEADERS:
+        return SYMLINK_TREE_WITH_HEADERS_MODULEMAP;
       case UMBRELLA_HEADER:
         return SYMLINK_TREE_WITH_UMBRELLA_HEADER_MODULEMAP;
       case UMBRELLA_DIRECTORY:
@@ -91,6 +98,7 @@ public enum HeaderMode implements FlavorConvertible {
       case SYMLINK_TREE_WITH_HEADER_MAP:
       case HEADER_MAP_ONLY:
         return false;
+      case SYMLINK_TREE_WITH_HEADERS_MODULEMAP:
       case SYMLINK_TREE_WITH_UMBRELLA_HEADER_MODULEMAP:
       case SYMLINK_TREE_WITH_UMBRELLA_DIRECTORY_MODULEMAP:
         return true;
