@@ -57,6 +57,7 @@ import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -74,6 +75,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
@@ -113,8 +115,9 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       Maps.newConcurrentMap();
 
   private final AtomicReference<Throwable> firstFailure = new AtomicReference<>();
-  private final ConcurrentLinkedQueue<WeakReference<CachingBuildRuleBuilder>> ruleBuilders =
-      new ConcurrentLinkedQueue<>();
+
+  private final ConcurrentHashMap<BuildTarget, WeakReference<CachingBuildRuleBuilder>>
+      liveRuleBuilders = new ConcurrentHashMap<>();
 
   private final CachingBuildEngineDelegate cachingBuildEngineDelegate;
 
@@ -293,12 +296,12 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     // TODO(cjhopman): Change this to only accept specific exception types to enforce that we get
     // the information that we want.
     if (firstFailure.compareAndSet(null, failure)) {
-      forEachPendingBuilder(builder -> builder.cancel(failure));
+      forEachLiveBuilder(builder -> builder.cancel(failure));
     }
   }
 
-  private void forEachPendingBuilder(Consumer<CachingBuildRuleBuilder> action) {
-    for (WeakReference<CachingBuildRuleBuilder> value : ruleBuilders) {
+  private void forEachLiveBuilder(Consumer<CachingBuildRuleBuilder> action) {
+    for (WeakReference<CachingBuildRuleBuilder> value : liveRuleBuilders.values()) {
       CachingBuildRuleBuilder builder = value.get();
       if (builder == null) {
         continue;
@@ -508,11 +511,27 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             buildableContext,
             pipelinesRunner,
             customBuildRuleStrategy);
-    ruleBuilders.add(new WeakReference<>(cachingBuildRuleBuilder));
     if (firstFailure.get() != null) {
       cachingBuildRuleBuilder.cancel(firstFailure.get());
     }
-    return cachingBuildRuleBuilder.build();
+
+    WeakReference<CachingBuildRuleBuilder> prev =
+        liveRuleBuilders.put(rule.getBuildTarget(), new WeakReference<>(cachingBuildRuleBuilder));
+    Preconditions.checkState(
+        prev == null, "rule builder is created again: %s", rule.getBuildTarget());
+
+    ListenableFuture<BuildResult> future = cachingBuildRuleBuilder.build();
+
+    future.addListener(
+        () -> {
+          WeakReference<CachingBuildRuleBuilder> removed =
+              liveRuleBuilders.remove(rule.getBuildTarget());
+          Preconditions.checkState(
+              removed != null, "rule builder must be removed once: %s", rule.getBuildTarget());
+        },
+        MoreExecutors.directExecutor());
+
+    return future;
   }
 
   public static class DefaultBuildRuleBuilderDelegate
