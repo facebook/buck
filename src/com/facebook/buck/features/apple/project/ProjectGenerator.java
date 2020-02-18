@@ -477,7 +477,7 @@ public class ProjectGenerator {
   }
 
   public void createXcodeProjects() throws IOException {
-    LOG.debug("Creating projects for targets %s", initialTargets);
+    LOG.debug("Creating projects for %d targets", initialTargets.size());
 
     boolean hasAtLeastOneTarget = false;
     try (SimplePerfEvent.Scope scope =

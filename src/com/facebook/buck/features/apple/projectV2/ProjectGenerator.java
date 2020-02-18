@@ -222,7 +222,7 @@ public class ProjectGenerator {
       XcodeProjectWriteOptions xcodeProjectWriteOptions,
       ListeningExecutorService listeningExecutorService)
       throws IOException, InterruptedException {
-    LOG.debug("Creating projects for targets %s", projectTargets);
+    LOG.debug("Creating projects for %d targets", projectTargets.size());
 
     try (SimplePerfEvent.Scope scope =
         SimplePerfEvent.scope(

@@ -579,7 +579,7 @@ public class XCodeProjectCommandHelper {
 
       ImmutableSet<BuildTarget> requiredBuildTargetsForWorkspace =
           generator.getRequiredBuildTargets();
-      LOG.debug(
+      LOG.verbose(
           "Required build targets for workspace %s: %s",
           inputTarget, requiredBuildTargetsForWorkspace);
 

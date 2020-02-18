@@ -563,7 +563,8 @@ public class WorkspaceAndProjectGenerator {
       if (generator != null) {
         LOG.debug("Already generated project for target %s, skipping", projectDirectory);
       } else {
-        LOG.debug("Generating project for directory %s with targets %s", projectDirectory, rules);
+        LOG.debug(
+            "Generating projects for directory %s with %d targets", projectDirectory, rules.size());
         String projectName;
         Path projectDirectoryName = projectDirectory.getFileName();
         if (projectDirectoryName == null || projectDirectoryName.toString().equals("")) {
@@ -964,7 +965,6 @@ public class WorkspaceAndProjectGenerator {
       boolean includeDependenciesTests,
       ImmutableSet<TargetNode<?>> orderedTargetNodes,
       ImmutableSet<TargetNode<AppleTestDescriptionArg>> extraTestBundleTargets) {
-    LOG.debug("Getting ordered test target nodes for %s", orderedTargetNodes);
     ImmutableSet.Builder<TargetNode<AppleTestDescriptionArg>> testsBuilder = ImmutableSet.builder();
     if (includeProjectTests) {
       Optional<TargetNode<?>> mainTargetNode = Optional.empty();
