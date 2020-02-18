@@ -587,13 +587,13 @@ public class XCodeProjectCommandHelper {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return FocusedModuleTargetMatcher.noFocus();
     }
-    LOG.debug("Selected targets: %s", passedInTargetsSet.toString());
+    LOG.verbose("Selected targets: %s", passedInTargetsSet);
 
     ImmutableSet<UnflavoredBuildTarget> passedInUnflavoredTargetsSet =
         RichStream.from(passedInTargetsSet)
             .map(BuildTarget::getUnflavoredBuildTarget)
             .toImmutableSet();
-    LOG.debug("Selected unflavored targets: %s", passedInUnflavoredTargetsSet.toString());
+    LOG.verbose("Selected unflavored targets: %s", passedInUnflavoredTargetsSet);
     return FocusedModuleTargetMatcher.focusedOn(passedInUnflavoredTargetsSet);
   }
 
