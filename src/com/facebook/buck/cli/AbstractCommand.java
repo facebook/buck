@@ -25,7 +25,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
@@ -362,7 +362,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
    */
   protected ImmutableSet<BuildTargetWithOutputs> matchBuildTargetsWithLabelsFromSpecs(
       ImmutableList<TargetNodeSpec> specs, Set<BuildTarget> buildTargets) {
-    HashMultimap<UnconfiguredBuildTargetView, OutputLabel> buildTargetViewToOutputLabel =
+    HashMultimap<UnconfiguredBuildTarget, OutputLabel> buildTargetViewToOutputLabel =
         HashMultimap.create(specs.size(), 1);
 
     specs.stream()
@@ -371,7 +371,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
         .forEach(
             buildTargetSpec -> {
               buildTargetViewToOutputLabel.put(
-                  buildTargetSpec.getUnconfiguredBuildTargetView(),
+                  buildTargetSpec.getUnconfiguredBuildTargetView().getData(),
                   buildTargetSpec.getUnconfiguredBuildTargetViewWithOutputs().getOutputLabel());
             });
 
@@ -380,7 +380,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
     for (BuildTarget target : buildTargets) {
       boolean mappedTarget = false;
 
-      UnconfiguredBuildTargetView targetView = target.getUnconfiguredBuildTargetView();
+      UnconfiguredBuildTarget targetView = target.getUnconfiguredBuildTarget();
       // HashMultimap creates an empty collection on 'get()' if key is missing, rather than
       // returning null
       if (buildTargetViewToOutputLabel.containsKey(targetView)) {

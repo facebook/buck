@@ -115,7 +115,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactoryTest {
             .build();
     UnconfiguredTargetNode node =
         ImmutableUnconfiguredTargetNode.of(
-            buildTarget.getUnconfiguredBuildTargetView().getData(),
+            buildTarget.getUnconfiguredBuildTarget(),
             RuleType.of("java_library", RuleType.Kind.BUILD),
             attributes,
             ImmutableSet.of(),

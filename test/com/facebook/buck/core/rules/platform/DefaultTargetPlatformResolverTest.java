@@ -115,8 +115,8 @@ public class DefaultTargetPlatformResolverTest {
                       ImmutableSortedSet.of()));
             }
             if (buildTarget
-                .getUnconfiguredBuildTargetView()
-                .equals(constraintValue.getBuildTarget().getUnconfiguredBuildTargetView())) {
+                .getUnconfiguredBuildTarget()
+                .equals(constraintValue.getBuildTarget().getUnconfiguredBuildTarget())) {
               return ruleClass.cast(constraintValue);
             }
             if (buildTarget.equals(constraintSetting)) {

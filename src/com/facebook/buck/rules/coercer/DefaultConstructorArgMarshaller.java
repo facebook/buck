@@ -187,7 +187,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
               filesystem,
               selectorListResolver,
               configurationContext.withTargetConfiguration(nestedTargetConfiguration),
-              buildTarget.getUnconfiguredBuildTargetView().configure(nestedTargetConfiguration),
+              buildTarget.getUnconfiguredBuildTarget().configure(nestedTargetConfiguration),
               dependencyStack,
               nestedTargetConfiguration,
               hostConfiguration,

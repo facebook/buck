@@ -229,7 +229,7 @@ public class AppleConfig implements ConfigView<BuckConfig> {
         delegate.getMaybeUnconfiguredBuildTarget(APPLE_SECTION, codesignField);
     String source = String.format("[%s] %s", APPLE_SECTION, codesignField);
     if (target.isPresent()) {
-      return new BinaryBuildRuleToolProvider(target.get(), source);
+      return new BinaryBuildRuleToolProvider(target.get().getData(), source);
     } else {
       Optional<Path> codesignPath = delegate.getPath(APPLE_SECTION, codesignField);
       Path defaultCodesignPath = Paths.get("/usr/bin/codesign");

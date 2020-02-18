@@ -78,8 +78,7 @@ public class BuildTargetMatcherParserTest {
     assertEquals(
         ImmutableSingletonBuildTargetMatcher.of(
             BuildTargetFactory.newInstance("//test/com/facebook/buck/parser:parser")
-                .getUnconfiguredBuildTargetView()
-                .getData()),
+                .getUnconfiguredBuildTarget()),
         buildTargetPatternParser.parse(
             "//test/com/facebook/buck/parser:parser",
             createCellRoots(filesystem).getCellNameResolver()));
@@ -106,7 +105,7 @@ public class BuildTargetMatcherParserTest {
 
     assertEquals(
         ImmutableSingletonBuildTargetMatcher.of(
-            BuildTargetFactory.newInstance("//:parser").getUnconfiguredBuildTargetView().getData()),
+            BuildTargetFactory.newInstance("//:parser").getUnconfiguredBuildTarget()),
         buildTargetPatternParser.parse(
             "//:parser", createCellRoots(filesystem).getCellNameResolver()));
 
@@ -128,9 +127,7 @@ public class BuildTargetMatcherParserTest {
 
     assertEquals(
         ImmutableSingletonBuildTargetMatcher.of(
-            BuildTargetFactory.newInstance("other//:something")
-                .getUnconfiguredBuildTargetView()
-                .getData()),
+            BuildTargetFactory.newInstance("other//:something").getUnconfiguredBuildTarget()),
         buildTargetPatternParser.parse("other//:something", cellNames.getCellNameResolver()));
     assertEquals(
         ImmutableSubdirectoryBuildTargetMatcher.of(

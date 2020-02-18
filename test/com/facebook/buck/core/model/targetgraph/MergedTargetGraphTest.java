@@ -45,7 +45,7 @@ public class MergedTargetGraphTest {
     TargetNode<?> c2 =
         FakeTargetNodeBuilder.newBuilder(
                 BuildTargetFactory.newInstance("//:c")
-                    .getUnconfiguredBuildTargetView()
+                    .getUnconfiguredBuildTarget()
                     .configure(ConfigurationBuildTargetFactoryForTests.newConfiguration("//:p")))
             .setDeps(b.getBuildTarget())
             .build();

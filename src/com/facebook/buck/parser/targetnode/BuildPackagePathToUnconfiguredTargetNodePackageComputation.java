@@ -204,7 +204,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputation
                     Optional.empty(), SimplePerfEvent.PerfEventId.of("raw_to_targetnode")));
 
     return targetNodeMaybeIncompatible.assertGetTargetNode(dependencyStack).getParseDeps().stream()
-        .map(bt -> bt.getUnconfiguredBuildTargetView().getData())
+        .map(BuildTarget::getUnconfiguredBuildTarget)
         .collect(ImmutableSet.toImmutableSet());
   }
 

@@ -21,7 +21,7 @@ import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.modern.ValueCreator;
 import com.facebook.buck.rules.modern.ValueTypeInfo;
@@ -32,7 +32,7 @@ import java.util.Comparator;
 import java.util.Optional;
 
 /** TypeInfo for BuildTarget values. */
-public class UnconfiguredBuildTargetTypeInfo implements ValueTypeInfo<UnconfiguredBuildTargetView> {
+public class UnconfiguredBuildTargetTypeInfo implements ValueTypeInfo<UnconfiguredBuildTarget> {
   public static final UnconfiguredBuildTargetTypeInfo INSTANCE =
       new UnconfiguredBuildTargetTypeInfo();
 
@@ -47,8 +47,8 @@ public class UnconfiguredBuildTargetTypeInfo implements ValueTypeInfo<Unconfigur
   }
 
   @Override
-  public <E extends Exception> void visit(
-      UnconfiguredBuildTargetView value, ValueVisitor<E> visitor) throws E {
+  public <E extends Exception> void visit(UnconfiguredBuildTarget value, ValueVisitor<E> visitor)
+      throws E {
     UnflavoredBuildTarget unflavored = value.getUnflavoredBuildTarget();
     Holder.cellNameTypeInfo.visit(unflavored.getCell().getLegacyName(), visitor);
     visitor.visitString(unflavored.getBaseName().toString());
@@ -61,8 +61,7 @@ public class UnconfiguredBuildTargetTypeInfo implements ValueTypeInfo<Unconfigur
   }
 
   @Override
-  public <E extends Exception> UnconfiguredBuildTargetView create(ValueCreator<E> creator)
-      throws E {
+  public <E extends Exception> UnconfiguredBuildTarget create(ValueCreator<E> creator) throws E {
     CanonicalCellName cellName =
         CanonicalCellName.of(Holder.cellNameTypeInfo.createNotNull(creator));
     String baseName = creator.createString();
@@ -71,7 +70,7 @@ public class UnconfiguredBuildTargetTypeInfo implements ValueTypeInfo<Unconfigur
         Holder.flavorsTypeInfo.createNotNull(creator).stream()
             .map(InternalFlavor::of)
             .collect(ImmutableSortedSet.toImmutableSortedSet(FlavorSet.FLAVOR_ORDERING));
-    return UnconfiguredBuildTargetView.of(
+    return UnconfiguredBuildTarget.of(
         UnflavoredBuildTarget.of(cellName, BaseName.of(baseName), shortName),
         FlavorSet.copyOf(flavors));
   }

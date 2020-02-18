@@ -64,7 +64,8 @@ public abstract class ToolConfig implements ConfigView<BuckConfig> {
         getDelegate().getMaybeUnconfiguredBuildTarget(section, field);
     if (target.isPresent()) {
       return Optional.of(
-          new BinaryBuildRuleToolProvider(target.get(), String.format("[%s] %s", section, field)));
+          new BinaryBuildRuleToolProvider(
+              target.get().getData(), String.format("[%s] %s", section, field)));
     } else {
       return getPrebuiltTool(section, field, valueToPathMapper).map(ConstantToolProvider::new);
     }

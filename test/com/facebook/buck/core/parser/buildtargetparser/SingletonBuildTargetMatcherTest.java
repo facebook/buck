@@ -33,8 +33,7 @@ public class SingletonBuildTargetMatcherTest {
     SingletonBuildTargetMatcher pattern =
         ImmutableSingletonBuildTargetMatcher.of(
             BuildTargetFactory.newInstance("//src/com/facebook/buck:buck")
-                .getUnconfiguredBuildTargetView()
-                .getData());
+                .getUnconfiguredBuildTarget());
 
     assertTrue(pattern.matches(BuildTargetFactory.newInstance("//src/com/facebook/buck", "buck")));
     assertFalse(

@@ -669,7 +669,7 @@ public class CxxBuckConfig {
     public PreprocessorProvider getPreprocessorProvider() {
       if (getBuildTarget().isPresent()) {
         return new PreprocessorProvider(
-            new BinaryBuildRuleToolProvider(getBuildTarget().get(), getSource()),
+            new BinaryBuildRuleToolProvider(getBuildTarget().get().getData(), getSource()),
             getType().get(),
             getToolType());
       } else {
@@ -685,7 +685,7 @@ public class CxxBuckConfig {
       boolean preferDependencyTree = getPreferDependencyTree().orElse(false);
       if (getBuildTarget().isPresent()) {
         return new CompilerProvider(
-            new BinaryBuildRuleToolProvider(getBuildTarget().get(), getSource()),
+            new BinaryBuildRuleToolProvider(getBuildTarget().get().getData(), getSource()),
             getType().get(),
             getToolType(),
             preferDependencyTree);

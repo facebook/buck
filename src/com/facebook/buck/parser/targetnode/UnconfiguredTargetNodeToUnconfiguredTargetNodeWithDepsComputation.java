@@ -121,7 +121,7 @@ public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation
 
     ImmutableSet<UnconfiguredBuildTarget> deps =
         targetNode.getParseDeps().stream()
-            .map(bt -> bt.getUnconfiguredBuildTargetView().getData())
+            .map(BuildTarget::getUnconfiguredBuildTarget)
             .collect(ImmutableSet.toImmutableSet());
     // END TEMPORARY
 

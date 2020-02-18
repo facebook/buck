@@ -20,7 +20,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.config.ParserConfig;
@@ -72,8 +72,8 @@ public class ResolveAliasHelper {
   static String validateBuildTargetForFullyQualifiedTarget(
       CommandRunnerParams params, String target, PerBuildState parserState) {
 
-    UnconfiguredBuildTargetView buildTarget =
-        params.getBuckConfig().getUnconfiguredBuildTargetForFullyQualifiedTarget(target);
+    UnconfiguredBuildTarget buildTarget =
+        params.getBuckConfig().getUnconfiguredBuildTargetForFullyQualifiedTarget(target).getData();
 
     Cell owningCell = params.getCells().getCell(buildTarget.getCell());
     AbsPath buildFile;
@@ -81,7 +81,7 @@ public class ResolveAliasHelper {
       buildFile =
           owningCell
               .getBuckConfigView(ParserConfig.class)
-              .getAbsolutePathToBuildFile(owningCell, buildTarget.getData());
+              .getAbsolutePathToBuildFile(owningCell, buildTarget);
     } catch (MissingBuildFileException e) {
       throw new HumanReadableException(e);
     }
@@ -96,7 +96,7 @@ public class ResolveAliasHelper {
 
     // Check that the given target is a valid target.
     for (TargetNode<?> candidate : targetNodes) {
-      if (candidate.getBuildTarget().getUnconfiguredBuildTargetView().equals(buildTarget)) {
+      if (candidate.getBuildTarget().getUnconfiguredBuildTarget().equals(buildTarget)) {
         return buildTarget.getFullyQualifiedName();
       }
     }
