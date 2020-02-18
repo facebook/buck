@@ -48,7 +48,7 @@ public class SourcePathTypeCoercerTest {
       new SourcePathTypeCoercer(
           new BuildTargetWithOutputsTypeCoercer(
               new BuildTargetTypeCoercer(
-                  new UnconfiguredBuildTargetTypeCoercer(
+                  new UnconfiguredBuildTargetViewTypeCoercer(
                       new ParsingUnconfiguredBuildTargetViewFactory()))),
           new PathTypeCoercer());
 

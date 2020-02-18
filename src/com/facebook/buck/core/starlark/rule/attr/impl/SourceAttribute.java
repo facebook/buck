@@ -28,7 +28,7 @@ import com.facebook.buck.rules.coercer.BuildTargetWithOutputsTypeCoercer;
 import com.facebook.buck.rules.coercer.PathTypeCoercer;
 import com.facebook.buck.rules.coercer.SourcePathTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercer;
-import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
+import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetViewTypeCoercer;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 
 /**
@@ -44,7 +44,7 @@ public abstract class SourceAttribute extends Attribute<SourcePath> {
       new SourcePathTypeCoercer(
           new BuildTargetWithOutputsTypeCoercer(
               new BuildTargetTypeCoercer(
-                  new UnconfiguredBuildTargetTypeCoercer(
+                  new UnconfiguredBuildTargetViewTypeCoercer(
                       new ParsingUnconfiguredBuildTargetViewFactory()))),
           new PathTypeCoercer());
 

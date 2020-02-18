@@ -21,7 +21,7 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.CellRelativePath;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.google.common.base.Preconditions;
@@ -77,9 +77,10 @@ public abstract class BuildTargetMatcherParser<T> {
       return createWildCardPattern(cellNameResolver, buildTargetPattern);
     }
 
-    UnconfiguredBuildTargetView target =
-        unconfiguredBuildTargetFactory.createWithWildcard(
-            targetWithOutputLabel.getTargetName(), cellNameResolver);
+    UnconfiguredBuildTarget target =
+        unconfiguredBuildTargetFactory
+            .createWithWildcard(targetWithOutputLabel.getTargetName(), cellNameResolver)
+            .getData();
     if (target.getShortNameAndFlavorPostfix().isEmpty()) {
       if (!targetWithOutputLabel.getOutputLabel().isDefault()) {
         throw createOutputLabelParseException(targetWithOutputLabel);
@@ -87,7 +88,7 @@ public abstract class BuildTargetMatcherParser<T> {
       return createForChildren(target.getCellRelativeBasePath());
     } else {
       // TODO(nga): prohibit empty local name in build target
-      if (target.getShortName().isEmpty()) {
+      if (target.getName().isEmpty()) {
         throw new BuildTargetParseException("cannot specify flavors for package matcher");
       }
 
@@ -177,7 +178,7 @@ public abstract class BuildTargetMatcherParser<T> {
     @Override
     public BuildTargetMatcher createForSingleton(
         UnconfiguredBuildTargetWithOutputs targetWithOutputs) {
-      return ImmutableSingletonBuildTargetMatcher.of(targetWithOutputs.getBuildTarget().getData());
+      return ImmutableSingletonBuildTargetMatcher.of(targetWithOutputs.getBuildTarget());
     }
   }
 }

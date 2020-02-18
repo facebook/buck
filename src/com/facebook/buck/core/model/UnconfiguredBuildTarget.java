@@ -26,6 +26,7 @@ import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
+import java.util.Arrays;
 import java.util.Objects;
 import javax.annotation.Nullable;
 
@@ -139,6 +140,11 @@ public class UnconfiguredBuildTarget
     return getFlavors().toCommaSeparatedString();
   }
 
+  @JsonIgnore
+  public String getShortNameAndFlavorPostfix() {
+    return getName() + getFlavorPostfix();
+  }
+
   @Override
   public String toString() {
     return getFullyQualifiedName();
@@ -230,5 +236,25 @@ public class UnconfiguredBuildTarget
   @JsonIgnore
   public boolean isFlavored() {
     return !getFlavors().isEmpty();
+  }
+
+  /**
+   * Creates a new build target by copying all of the information from this build target and using
+   * the provided flavors as flavors in the new build target.
+   *
+   * @param flavors flavors to use when creating a new build target
+   */
+  public UnconfiguredBuildTarget withFlavors(Iterable<? extends Flavor> flavors) {
+    return UnconfiguredBuildTarget.of(getUnflavoredBuildTarget(), FlavorSet.copyOf(flavors));
+  }
+
+  /**
+   * Creates a new build target by copying all of the information from this build target and using
+   * the provided flavors as flavors in the new build target.
+   *
+   * @param flavors flavors to use when creating a new build target
+   */
+  public UnconfiguredBuildTarget withFlavors(Flavor... flavors) {
+    return withFlavors(Arrays.asList(flavors));
   }
 }

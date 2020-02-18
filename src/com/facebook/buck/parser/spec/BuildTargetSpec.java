@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.OutputLabel;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -38,16 +39,15 @@ public abstract class BuildTargetSpec implements TargetNodeSpec {
   /** @return Build target to match with this spec and its output label, if any */
   public abstract UnconfiguredBuildTargetWithOutputs getUnconfiguredBuildTargetViewWithOutputs();
 
-  public UnconfiguredBuildTargetView getUnconfiguredBuildTargetView() {
+  public UnconfiguredBuildTarget getUnconfiguredBuildTarget() {
     return getUnconfiguredBuildTargetViewWithOutputs().getBuildTarget();
   }
 
   /** Returns a {@code BuildTargetSpec} with an empty output label. */
   public static BuildTargetSpec of(
-      UnconfiguredBuildTargetView unconfiguredBuildTargetView, BuildFileSpec buildFileSpec) {
+      UnconfiguredBuildTarget unconfiguredBuildTarget, BuildFileSpec buildFileSpec) {
     return ImmutableBuildTargetSpec.of(
-        UnconfiguredBuildTargetWithOutputs.of(
-            unconfiguredBuildTargetView, OutputLabel.defaultLabel()),
+        UnconfiguredBuildTargetWithOutputs.of(unconfiguredBuildTarget, OutputLabel.defaultLabel()),
         buildFileSpec);
   }
 
@@ -75,7 +75,7 @@ public abstract class BuildTargetSpec implements TargetNodeSpec {
    *
    * @param target Build target to match
    */
-  public static BuildTargetSpec from(UnconfiguredBuildTargetView target) {
+  public static BuildTargetSpec from(UnconfiguredBuildTarget target) {
     // TODO(buck_team): use factory to create specs
     return ImmutableBuildTargetSpec.of(target, BuildFileSpec.fromUnconfiguredBuildTarget(target));
   }
@@ -95,13 +95,13 @@ public abstract class BuildTargetSpec implements TargetNodeSpec {
                     input
                         .getBuildTarget()
                         .getUnflavoredBuildTarget()
-                        .equals(getUnconfiguredBuildTargetView().getUnflavoredBuildTarget()))
+                        .equals(getUnconfiguredBuildTarget().getUnflavoredBuildTarget()))
             .findFirst()
             .orElseThrow(
                 () ->
                     new IllegalStateException(
                         "Cannot find target node for build target "
-                            + getUnconfiguredBuildTargetView()));
+                            + getUnconfiguredBuildTarget()));
     return ImmutableMap.of(firstMatchingNode.getBuildTarget(), firstMatchingNode);
   }
 
@@ -118,17 +118,17 @@ public abstract class BuildTargetSpec implements TargetNodeSpec {
     }
     // TODO(strager): Check this invariant during construction.
     Preconditions.checkState(
-        cell.getCanonicalName().equals(getUnconfiguredBuildTargetView().getCell()));
+        cell.getCanonicalName().equals(getUnconfiguredBuildTarget().getCell()));
 
     // TODO(strager): Check these invariants during construction.
     ForwardRelativePath basePath = buildFileSpec.getCellRelativeBaseName().getPath();
-    if (!basePath.equals(getUnconfiguredBuildTargetView().getCellRelativeBasePath().getPath())) {
+    if (!basePath.equals(getUnconfiguredBuildTarget().getCellRelativeBasePath().getPath())) {
       throw new IllegalStateException(
           String.format(
               "Base path for %s's build target and build file spec should agree: %s vs %s",
               toString(),
               basePath,
-              getUnconfiguredBuildTargetView().getCellRelativeBasePath().getPath()));
+              getUnconfiguredBuildTarget().getCellRelativeBasePath().getPath()));
     }
     if (buildFileSpec.isRecursive()) {
       throw new IllegalStateException(String.format("%s should be non-recursive", toString()));
@@ -137,11 +137,11 @@ public abstract class BuildTargetSpec implements TargetNodeSpec {
     return BuildTargetPattern.of(
         CellRelativePath.of(cell.getCanonicalName(), basePath),
         BuildTargetPattern.Kind.SINGLE,
-        getUnconfiguredBuildTargetView().getShortNameAndFlavorPostfix());
+        getUnconfiguredBuildTarget().getShortNameAndFlavorPostfix());
   }
 
   @Override
   public String toString() {
-    return getUnconfiguredBuildTargetView().getFullyQualifiedName();
+    return getUnconfiguredBuildTarget().getFullyQualifiedName();
   }
 }

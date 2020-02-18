@@ -371,7 +371,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
         .forEach(
             buildTargetSpec -> {
               buildTargetViewToOutputLabel.put(
-                  buildTargetSpec.getUnconfiguredBuildTargetView().getData(),
+                  buildTargetSpec.getUnconfiguredBuildTarget(),
                   buildTargetSpec.getUnconfiguredBuildTargetViewWithOutputs().getOutputLabel());
             });
 

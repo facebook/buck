@@ -29,7 +29,7 @@ import com.facebook.buck.rules.coercer.BuildTargetTypeCoercer;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.ListTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercer;
-import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
+import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetViewTypeCoercer;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -45,7 +45,7 @@ public abstract class DepListAttribute extends Attribute<ImmutableList<BuildTarg
   private static final TypeCoercer<ImmutableList<BuildTarget>> coercer =
       new ListTypeCoercer<>(
           new BuildTargetTypeCoercer(
-              new UnconfiguredBuildTargetTypeCoercer(
+              new UnconfiguredBuildTargetViewTypeCoercer(
                   new ParsingUnconfiguredBuildTargetViewFactory())));
 
   @Override

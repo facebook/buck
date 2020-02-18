@@ -30,7 +30,7 @@ import com.facebook.buck.rules.coercer.PathTypeCoercer;
 import com.facebook.buck.rules.coercer.SortedSetTypeCoercer;
 import com.facebook.buck.rules.coercer.SourcePathTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercer;
-import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
+import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetViewTypeCoercer;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
@@ -49,7 +49,7 @@ public abstract class SourceSortedSetAttribute extends Attribute<ImmutableSorted
           new SourcePathTypeCoercer(
               new BuildTargetWithOutputsTypeCoercer(
                   new BuildTargetTypeCoercer(
-                      new UnconfiguredBuildTargetTypeCoercer(
+                      new UnconfiguredBuildTargetViewTypeCoercer(
                           new ParsingUnconfiguredBuildTargetViewFactory()))),
               new PathTypeCoercer()));
 

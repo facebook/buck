@@ -18,6 +18,7 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -28,10 +29,10 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
  */
 public class UnconfiguredBuildTargetWithOutputsTypeCoercer
     extends TargetWithOutputsTypeCoercer<
-        UnconfiguredBuildTargetView, UnconfiguredBuildTargetWithOutputs> {
+        UnconfiguredBuildTarget, UnconfiguredBuildTargetWithOutputs> {
 
   public UnconfiguredBuildTargetWithOutputsTypeCoercer(
-      TypeCoercer<UnconfiguredBuildTargetView> buildtargetTypeCoercer) {
+      TypeCoercer<UnconfiguredBuildTarget> buildtargetTypeCoercer) {
     super(buildtargetTypeCoercer);
   }
 

@@ -124,7 +124,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
         };
     unconfiguredBuildTargetFactory = new ParsingUnconfiguredBuildTargetViewFactory();
     unconfiguredBuildTargetTypeCoercer =
-        new UnconfiguredBuildTargetTypeCoercer(unconfiguredBuildTargetFactory);
+        new UnconfiguredBuildTargetViewTypeCoercer(unconfiguredBuildTargetFactory);
     TypeCoercer<BuildTarget> buildTargetTypeCoercer =
         new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer);
     TypeCoercer<BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer =

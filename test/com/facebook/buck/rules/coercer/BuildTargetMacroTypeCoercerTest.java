@@ -65,7 +65,7 @@ public class BuildTargetMacroTypeCoercerTest {
   TypeCoercer<BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer =
       new BuildTargetWithOutputsTypeCoercer(
           new BuildTargetTypeCoercer(
-              new UnconfiguredBuildTargetTypeCoercer(
+              new UnconfiguredBuildTargetViewTypeCoercer(
                   new ParsingUnconfiguredBuildTargetViewFactory())));
 
   @Test

@@ -48,7 +48,7 @@ import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
 import com.facebook.buck.rules.coercer.ListTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
+import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetViewTypeCoercer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -144,8 +144,8 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
                     : null);
         if (compatibleConfigs != null) {
           ListTypeCoercer<UnconfiguredBuildTargetView> compatibleWithCoercer =
-              new ListTypeCoercer<UnconfiguredBuildTargetView>(
-                  new UnconfiguredBuildTargetTypeCoercer(
+              new ListTypeCoercer<>(
+                  new UnconfiguredBuildTargetViewTypeCoercer(
                       new ParsingUnconfiguredBuildTargetViewFactory()));
           if (compatibleConfigs instanceof SelectorList<?>) {
             throw new HumanReadableException(

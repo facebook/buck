@@ -44,7 +44,7 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercerTest {
             Optional.empty(),
             new ListTypeCoercer<>(
                 new BuildTargetTypeCoercer(
-                    new UnconfiguredBuildTargetTypeCoercer(
+                    new UnconfiguredBuildTargetViewTypeCoercer(
                         new ParsingUnconfiguredBuildTargetViewFactory()))),
             CppFlagsMacro.class,
             CppFlagsMacro::of);
@@ -72,7 +72,7 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercerTest {
             Optional.of(new PatternTypeCoercer()),
             new ListTypeCoercer<>(
                 new BuildTargetTypeCoercer(
-                    new UnconfiguredBuildTargetTypeCoercer(
+                    new UnconfiguredBuildTargetViewTypeCoercer(
                         new ParsingUnconfiguredBuildTargetViewFactory()))),
             LdflagsStaticMacro.class,
             LdflagsStaticMacro::of);

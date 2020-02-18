@@ -105,7 +105,8 @@ public class CommandLineTargetNodeSpecParserTest {
     assertEquals(
         BuildTargetSpec.from(
             UnconfiguredBuildTargetFactoryForTests.newInstance(
-                filesystem.getRootPath(), "//hello:...")),
+                    filesystem.getRootPath(), "//hello:...")
+                .getData()),
         parseOne(createCell(filesystem), "//hello:..."));
   }
 
@@ -117,21 +118,23 @@ public class CommandLineTargetNodeSpecParserTest {
     assertEquals(
         ImmutableSet.of(
             BuildTargetSpec.from(
-                UnconfiguredBuildTargetFactoryForTests.newInstance("//some:thing"))),
+                UnconfiguredBuildTargetFactoryForTests.newInstance("//some:thing").getData())),
         parser.parse(cell.getRootCell(), "foo"));
     assertEquals(
         ImmutableSet.of(
             BuildTargetSpec.from(
-                UnconfiguredBuildTargetFactoryForTests.newInstance("//some:thing")),
+                UnconfiguredBuildTargetFactoryForTests.newInstance("//some:thing").getData()),
             BuildTargetSpec.from(
-                UnconfiguredBuildTargetFactoryForTests.newInstance("//some/other:thing"))),
+                UnconfiguredBuildTargetFactoryForTests.newInstance("//some/other:thing")
+                    .getData())),
         parser.parse(cell.getRootCell(), "bar"));
     assertEquals(
         ImmutableSet.of(
             BuildTargetSpec.from(
-                UnconfiguredBuildTargetFactoryForTests.newInstance("//some:thing#fl")),
+                UnconfiguredBuildTargetFactoryForTests.newInstance("//some:thing#fl").getData()),
             BuildTargetSpec.from(
-                UnconfiguredBuildTargetFactoryForTests.newInstance("//some/other:thing#fl"))),
+                UnconfiguredBuildTargetFactoryForTests.newInstance("//some/other:thing#fl")
+                    .getData())),
         parser.parse(cell.getRootCell(), "bar#fl"));
   }
 
@@ -239,7 +242,8 @@ public class CommandLineTargetNodeSpecParserTest {
     assertEquals(
         BuildTargetSpec.from(
             UnconfiguredBuildTargetFactoryForTests.newInstance(
-                cells.getRootCell().getRoot(), "//foo/bar:baz")),
+                    cells.getRootCell().getRoot(), "//foo/bar:baz")
+                .getData()),
         parseOne(cells, "//foo/bar:baz"));
 
     assertEquals(
@@ -250,13 +254,15 @@ public class CommandLineTargetNodeSpecParserTest {
     assertEquals(
         BuildTargetSpec.from(
             UnconfiguredBuildTargetFactoryForTests.newInstance(
-                cells.getRootCell().getRoot(), "//foo/bar:bar")),
+                    cells.getRootCell().getRoot(), "//foo/bar:bar")
+                .getData()),
         parseOne(cells, "//foo/bar"));
 
     assertEquals(
         BuildTargetSpec.from(
             UnconfiguredBuildTargetFactoryForTests.newInstance(
-                cells.getRootCell().getRoot(), "//foo:bar")),
+                    cells.getRootCell().getRoot(), "//foo:bar")
+                .getData()),
         parseOne(cells, "//foo:bar"));
 
     assertEquals(
@@ -267,13 +273,15 @@ public class CommandLineTargetNodeSpecParserTest {
     assertEquals(
         BuildTargetSpec.from(
             UnconfiguredBuildTargetFactoryForTests.newInstance(
-                cells.getRootCell().getRoot(), "//foo:foo")),
+                    cells.getRootCell().getRoot(), "//foo:foo")
+                .getData()),
         parseOne(cells, "//foo:foo"));
 
     assertEquals(
         BuildTargetSpec.from(
             UnconfiguredBuildTargetFactoryForTests.newInstance(
-                cells.getRootCell().getRoot(), "//:baz")),
+                    cells.getRootCell().getRoot(), "//:baz")
+                .getData()),
         parseOne(cells, "//:baz"));
 
     assertEquals(
@@ -296,7 +304,8 @@ public class CommandLineTargetNodeSpecParserTest {
     assertEquals(
         BuildTargetSpec.from(
             UnconfiguredBuildTargetFactoryForTests.newInstance(
-                cells.getRootCell().getRoot(), "//subdir/foo/bar:baz")),
+                    cells.getRootCell().getRoot(), "//subdir/foo/bar:baz")
+                .getData()),
         parseOne(cells, "foo/bar:baz"));
 
     assertEquals(
@@ -308,13 +317,15 @@ public class CommandLineTargetNodeSpecParserTest {
     assertEquals(
         BuildTargetSpec.from(
             UnconfiguredBuildTargetFactoryForTests.newInstance(
-                cells.getRootCell().getRoot(), "//subdir/foo/bar:bar")),
+                    cells.getRootCell().getRoot(), "//subdir/foo/bar:bar")
+                .getData()),
         parseOne(cells, "foo/bar"));
 
     assertEquals(
         BuildTargetSpec.from(
             UnconfiguredBuildTargetFactoryForTests.newInstance(
-                cells.getRootCell().getRoot(), "//subdir/foo:bar")),
+                    cells.getRootCell().getRoot(), "//subdir/foo:bar")
+                .getData()),
         parseOne(cells, "foo:bar"));
 
     assertEquals(
@@ -326,13 +337,15 @@ public class CommandLineTargetNodeSpecParserTest {
     assertEquals(
         BuildTargetSpec.from(
             UnconfiguredBuildTargetFactoryForTests.newInstance(
-                cells.getRootCell().getRoot(), "//subdir/foo:foo")),
+                    cells.getRootCell().getRoot(), "//subdir/foo:foo")
+                .getData()),
         parseOne(cells, "foo:foo"));
 
     assertEquals(
         BuildTargetSpec.from(
             UnconfiguredBuildTargetFactoryForTests.newInstance(
-                cells.getRootCell().getRoot(), "//subdir:baz")),
+                    cells.getRootCell().getRoot(), "//subdir:baz")
+                .getData()),
         parseOne(cells, ":baz"));
 
     assertEquals(

@@ -27,7 +27,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.OptionalTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercer;
-import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
+import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetViewTypeCoercer;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -42,7 +42,8 @@ public abstract class UnconfiguredOptionalDepAttribute
 
   private static final TypeCoercer<Optional<UnconfiguredBuildTargetView>> coercer =
       new OptionalTypeCoercer<>(
-          new UnconfiguredBuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetViewFactory()));
+          new UnconfiguredBuildTargetViewTypeCoercer(
+              new ParsingUnconfiguredBuildTargetViewFactory()));
 
   @Override
   public abstract Optional<String> getPreCoercionDefaultValue();

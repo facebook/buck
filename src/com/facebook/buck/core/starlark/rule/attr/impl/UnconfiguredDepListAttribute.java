@@ -28,7 +28,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.ListTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercer;
-import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
+import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetViewTypeCoercer;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -44,7 +44,8 @@ public abstract class UnconfiguredDepListAttribute
 
   private static final TypeCoercer<ImmutableList<UnconfiguredBuildTargetView>> coercer =
       new ListTypeCoercer<>(
-          new UnconfiguredBuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetViewFactory()));
+          new UnconfiguredBuildTargetViewTypeCoercer(
+              new ParsingUnconfiguredBuildTargetViewFactory()));
 
   @Override
   public abstract ImmutableList<String> getPreCoercionDefaultValue();
