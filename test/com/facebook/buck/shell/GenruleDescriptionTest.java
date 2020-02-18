@@ -81,10 +81,9 @@ public class GenruleDescriptionTest {
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     DataTransferObjectDescriptor<GenruleDescriptionArg> builder =
-        knownRuleTypes.getConstructorArgDescriptor(
-            typeCoercerFactory,
-            knownRuleTypes.getRuleType("genrule"),
-            genruleDescription.getConstructorArgType());
+        knownRuleTypes
+            .getDescriptorByNameChecked("genrule", GenruleDescriptionArg.class)
+            .dataTransferObjectDescriptor(typeCoercerFactory);
 
     Map<String, Object> instance =
         ImmutableMap.of(

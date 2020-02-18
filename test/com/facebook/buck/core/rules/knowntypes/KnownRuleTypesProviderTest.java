@@ -74,8 +74,10 @@ public class KnownRuleTypesProviderTest {
     KnownRuleTypes knownRuleTypes = provider.get(cell.getRootCell());
     KnownNativeRuleTypes knownNativeRuleTypes = provider.getNativeRuleTypes(cell.getRootCell());
 
-    assertNotNull(knownRuleTypes.getRuleType("fake"));
+    assertNotNull(knownRuleTypes.getDescriptorByName("fake").getRuleType());
     assertTrue(knownRuleTypes instanceof HybridKnownRuleTypes);
-    assertSame(knownRuleTypes.getRuleType("fake"), knownNativeRuleTypes.getRuleType("fake"));
+    assertSame(
+        knownRuleTypes.getDescriptorByName("fake").getRuleType(),
+        knownNativeRuleTypes.getDescriptorByName("fake").getRuleType());
   }
 }

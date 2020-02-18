@@ -35,7 +35,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.OutputLabel;
-import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
@@ -818,8 +817,7 @@ public class TargetsCommand extends AbstractCommand {
       try {
         KnownRuleTypes knownRuleTypes =
             params.getKnownRuleTypesProvider().get(params.getCells().getRootCell());
-        RuleType type = knownRuleTypes.getRuleType(name);
-        BaseDescription<?> description = knownRuleTypes.getDescription(type);
+        BaseDescription<?> description = knownRuleTypes.getDescriptorByName(name).getDescription();
         descriptionClassesBuilder.add((Class<? extends BaseDescription<?>>) description.getClass());
       } catch (IllegalArgumentException e) {
         params.getBuckEventBus().post(ConsoleEvent.severe("Invalid build rule type: " + name));

@@ -16,37 +16,21 @@
 
 package com.facebook.buck.core.rules.knowntypes;
 
-import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.ConstructorArg;
-import com.facebook.buck.core.model.RuleType;
-import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
-import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.google.common.base.Preconditions;
 
 /** Provides access to rule types and descriptions for both native and user defined rules. */
 public interface KnownRuleTypes {
 
-  /**
-   * Get a {@link RuleType} for either a native or user defined rule, depending on the identifier.
-   *
-   * @param name The identifier from the "buck.type" implicit attribute of a rule instance. For
-   *     native rules, this will be a python identifier. For user defined rules, this may or may not
-   *     be the case.
-   * @return The {@link RuleType} for either a native or a user defined rule.
-   */
-  RuleType getRuleType(String name);
+  /** Get rule type, constructor arg and description object for by rule name. */
+  RuleDescriptor<?> getDescriptorByName(String name);
 
-  /**
-   * Get the Description class for a given {@link RuleType}
-   *
-   * @param ruleType The type of the rule from {@link #getRuleType(String)}
-   * @return The {@link BaseDescription} to use for the given {@link RuleType}
-   */
-  BaseDescription<?> getDescription(RuleType ruleType);
-
-  /**
-   * Get a builder that helps create constructor args for descriptions. This with get either a
-   * reflection based builder, or a skylark builder, depending on {@code RuleType}
-   */
-  <T extends ConstructorArg> DataTransferObjectDescriptor<T> getConstructorArgDescriptor(
-      TypeCoercerFactory typeCoercerFactory, RuleType ruleType, Class<T> dtoClass);
+  /** Safer version of {@link #getDescriptorByName(String)}. */
+  @SuppressWarnings("unchecked")
+  default <T extends ConstructorArg> RuleDescriptor<T> getDescriptorByNameChecked(
+      String name, Class<T> constructorArg) {
+    RuleDescriptor<?> descriptor = getDescriptorByName(name);
+    Preconditions.checkState(descriptor.getDescription().getConstructorArgType() == constructorArg);
+    return (RuleDescriptor<T>) descriptor;
+  }
 }

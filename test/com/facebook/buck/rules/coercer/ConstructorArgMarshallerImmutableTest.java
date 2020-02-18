@@ -32,7 +32,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
-import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.TargetConfigurationTransformer;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
@@ -41,8 +40,6 @@ import com.facebook.buck.core.model.platform.FakeMultiPlatform;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.model.platform.impl.UnconfiguredPlatform;
-import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.select.NonCopyingSelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.Selector;
@@ -62,7 +59,6 @@ import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.DefaultSelectableConfigurationContext;
-import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -88,7 +84,6 @@ public class ConstructorArgMarshallerImmutableTest {
   private Path basePath;
   private ConstructorArgMarshaller marshaller;
   private ProjectFilesystem filesystem;
-  private KnownRuleTypes knownRuleTypes;
 
   @Rule public ExpectedException expected = ExpectedException.none();
 
@@ -97,8 +92,6 @@ public class ConstructorArgMarshallerImmutableTest {
     basePath = Paths.get("example", "path");
     marshaller = new DefaultConstructorArgMarshaller(new DefaultTypeCoercerFactory());
     filesystem = new FakeProjectFilesystem();
-    knownRuleTypes =
-        KnownNativeRuleTypes.of(ImmutableList.of(), ImmutableList.of(), ImmutableList.of());
   }
 
   private <T extends BuildRuleArg> T invokePopulate2(
@@ -136,15 +129,8 @@ public class ConstructorArgMarshallerImmutableTest {
     return result;
   }
 
-  RuleType ruleType(Class<?> dtoClass) {
-    return RuleType.of(
-        CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, dtoClass.getName()),
-        RuleType.Kind.BUILD);
-  }
-
   <T extends ConstructorArg> DataTransferObjectDescriptor<T> builder(Class<T> dtoClass) {
-    return knownRuleTypes.getConstructorArgDescriptor(
-        new DefaultTypeCoercerFactory(), ruleType(dtoClass), dtoClass);
+    return new DefaultTypeCoercerFactory().getConstructorArgDescriptor(dtoClass);
   }
 
   @Test

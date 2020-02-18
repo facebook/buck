@@ -18,7 +18,6 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -37,6 +36,7 @@ import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
+import com.facebook.buck.core.rules.knowntypes.RuleDescriptor;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectorList;
@@ -112,7 +112,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
 
     KnownRuleTypes knownRuleTypes = knownRuleTypesProvider.get(cell);
     RuleType ruleType = unconfiguredTargetNode.getRuleType();
-    BaseDescription<?> description = knownRuleTypes.getDescription(ruleType);
+    RuleDescriptor<?> description = knownRuleTypes.getDescriptorByName(ruleType.getName());
     Cell targetCell = cell.getCell(target.getCell());
 
     SelectableConfigurationContext configurationContext =
@@ -171,8 +171,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
       }
 
       DataTransferObjectDescriptor<? extends ConstructorArg> builder =
-          knownRuleTypes.getConstructorArgDescriptor(
-              typeCoercerFactory, ruleType, description.getConstructorArgType());
+          description.dataTransferObjectDescriptor(typeCoercerFactory);
       constructorArg =
           marshaller.populate(
               targetCell.getCellPathResolver(),
@@ -195,7 +194,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
 
     TargetNode<?> targetNode =
         targetNodeFactory.createFromObject(
-            description,
+            description.getDescription(),
             constructorArg,
             targetCell.getFilesystem(),
             target,

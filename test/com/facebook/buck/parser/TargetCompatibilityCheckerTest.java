@@ -43,7 +43,6 @@ import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.configsetting.ConfigSettingRule;
-import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.core.rules.platform.ConstraintSettingRule;
 import com.facebook.buck.core.rules.platform.ConstraintValueRule;
 import com.facebook.buck.core.rules.platform.RuleBasedConstraintResolver;
@@ -241,17 +240,11 @@ public class TargetCompatibilityCheckerTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     ConstructorArgMarshaller marshaller = new DefaultConstructorArgMarshaller(typeCoercerFactory);
-    KnownNativeRuleTypes knownRuleTypes =
-        KnownNativeRuleTypes.of(
-            ImmutableList.of(new TestRuleRuleDescription()),
-            ImmutableList.of(),
-            ImmutableList.of());
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//:target");
 
     DataTransferObjectDescriptor<TestDescriptionArg> builder =
-        knownRuleTypes.getConstructorArgDescriptor(
-            typeCoercerFactory, knownRuleTypes.getRuleType("test_rule"), TestDescriptionArg.class);
+        typeCoercerFactory.getConstructorArgDescriptor(TestDescriptionArg.class);
 
     return marshaller.populate(
         TestCellPathResolver.get(projectFilesystem),

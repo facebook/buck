@@ -280,8 +280,9 @@ public class TargetNodeTest {
         KnownNativeRuleTypes.of(
             ImmutableList.of(new ExampleDescription()), ImmutableList.of(), ImmutableList.of());
     DataTransferObjectDescriptor<ExampleDescriptionArg> builder =
-        knownRuleTypes.getConstructorArgDescriptor(
-            coercerFactory, knownRuleTypes.getRuleType("example"), ExampleDescriptionArg.class);
+        knownRuleTypes
+            .getDescriptorByNameChecked("example", ExampleDescriptionArg.class)
+            .dataTransferObjectDescriptor(coercerFactory);
     try {
       return marshaller.populate(
           createCellRoots(projectFilesystem),

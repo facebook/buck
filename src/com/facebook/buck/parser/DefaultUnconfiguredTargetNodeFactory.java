@@ -28,6 +28,7 @@ import com.facebook.buck.core.model.targetgraph.impl.ImmutableUnconfiguredTarget
 import com.facebook.buck.core.model.targetgraph.impl.Package;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
+import com.facebook.buck.core.rules.knowntypes.RuleDescriptor;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.impl.SelectorListFactory;
@@ -117,17 +118,17 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
       Map<String, Object> rawAttributes,
       Package pkg) {
     KnownRuleTypes knownRuleTypes = knownRuleTypesProvider.get(cell);
-    RuleType ruleType = parseRuleTypeFromRawRule(knownRuleTypes, rawAttributes);
+    RuleDescriptor<?> descriptor = parseRuleTypeFromRawRule(knownRuleTypes, rawAttributes);
 
-    if (ruleType.getKind() == RuleType.Kind.CONFIGURATION) {
+    if (descriptor.getRuleType().getKind() == RuleType.Kind.CONFIGURATION) {
       assertRawTargetNodeAttributesNotConfigurable(target, rawAttributes);
     }
 
     // Because of the way that the parser works, we know this can never return null.
-    BaseDescription<?> description = knownRuleTypes.getDescription(ruleType);
+    BaseDescription<?> description = descriptor.getDescription();
 
     builtTargetVerifier.verifyBuildTarget(
-        cell, ruleType, buildFile, target, description, rawAttributes);
+        cell, descriptor.getRuleType(), buildFile, target, description, rawAttributes);
 
     String visibilityDefinerDescription = target.getFullyQualifiedName();
 
@@ -159,14 +160,14 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
         convertSelects(rawAttributes, target.getCellRelativeBasePath(), dependencyStack);
 
     return ImmutableUnconfiguredTargetNode.of(
-        target, ruleType, withSelects, visibilityPatterns, withinViewPatterns);
+        target, descriptor.getRuleType(), withSelects, visibilityPatterns, withinViewPatterns);
   }
 
-  private static RuleType parseRuleTypeFromRawRule(
+  private static RuleDescriptor<?> parseRuleTypeFromRawRule(
       KnownRuleTypes knownRuleTypes, Map<String, Object> attributes) {
     String type =
         (String) Objects.requireNonNull(attributes.get(BuckPyFunction.TYPE_PROPERTY_NAME));
-    return knownRuleTypes.getRuleType(type);
+    return knownRuleTypes.getDescriptorByName(type);
   }
 
   private void assertRawTargetNodeAttributesNotConfigurable(
