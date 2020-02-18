@@ -19,6 +19,7 @@ package com.facebook.buck.util.network.hostname;
 import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
@@ -26,6 +27,7 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.sun.jna.Platform;
 import java.io.IOException;
 import org.junit.Test;
 
@@ -38,9 +40,18 @@ public class HostnameFetchingTest {
     assumeThat("hostname returns success", result.getExitCode(), equalTo(0));
     String expectedHostname = result.getStdout().orElse("").trim();
     assumeThat("hostname returns non-empty string", expectedHostname, not(emptyString()));
-    assertThat(
-        "fetched hostname should equal hostname returned from CLI",
-        HostnameFetching.getHostname(),
-        equalTo(expectedHostname));
+    if (Platform.isWindows()) {
+      // hostname only returns the machine name on windows
+      // and there is no option to return the fqdn
+      assertThat(
+          "fetched hostname should equal hostname returned from CLI",
+          HostnameFetching.getHostname(),
+          startsWith(expectedHostname));
+    } else {
+      assertThat(
+          "fetched hostname should equal hostname returned from CLI",
+          HostnameFetching.getHostname(),
+          equalTo(expectedHostname));
+    }
   }
 }

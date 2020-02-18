@@ -52,7 +52,9 @@ public class HostnameFetching {
     IntByReference hostnameBufLen = new IntByReference(hostnameBuf.length);
     boolean result =
         HostnameFetchingWin32Library.INSTANCE.GetComputerNameEx(
-            HostnameFetchingWin32Library.NAME_TYPE_DNS_HOSTNAME, hostnameBuf, hostnameBufLen);
+            HostnameFetchingWin32Library.COMPUTER_NAME_FORMAT__ComputerNameDnsFullyQualified,
+            hostnameBuf,
+            hostnameBufLen);
     if (!result) {
       throw new IOException(
           String.format("Call to GetComputerNameEx failed with code %d", Native.getLastError()));
