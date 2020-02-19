@@ -29,7 +29,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
  *
  * <p>This coercer does not transform the objects, but only provides a way to concatenate elements.
  */
-public class JsonTypeConcatenatingCoercer implements TypeCoercer<Object> {
+public abstract class JsonTypeConcatenatingCoercer implements TypeCoercer<Object> {
 
   private final Class<Object> elementClass;
 
