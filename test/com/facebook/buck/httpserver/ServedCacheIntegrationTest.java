@@ -37,7 +37,7 @@ import com.facebook.buck.core.config.BuckConfigTestUtils;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.TargetConfigurationSerializerForTests;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.BuckEventBus;
@@ -85,7 +85,7 @@ public class ServedCacheIntegrationTest {
   private static final BuildId BUILD_ID = new BuildId("test");
 
   private ProjectFilesystem projectFilesystem;
-  private Function<String, UnconfiguredBuildTargetView> unconfiguredBuildTargetFactory;
+  private Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory;
   private CellPathResolver cellPathResolver;
   private TargetConfigurationSerializer targetConfigurationSerializer;
   private WebServer webServer = null;
@@ -119,8 +119,9 @@ public class ServedCacheIntegrationTest {
         new ParsingUnconfiguredBuildTargetViewFactory();
     unconfiguredBuildTargetFactory =
         target ->
-            parsingUnconfiguredBuildTargetFactory.create(
-                target, cellPathResolver.getCellNameResolver());
+            parsingUnconfiguredBuildTargetFactory
+                .create(target, cellPathResolver.getCellNameResolver())
+                .getData();
     targetConfigurationSerializer = TargetConfigurationSerializerForTests.create(cellPathResolver);
   }
 

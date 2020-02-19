@@ -1167,7 +1167,9 @@ public final class MainRunner {
                     cacheBuckConfig,
                     buildEventBus,
                     target ->
-                        buildTargetFactory.create(target, cellPathResolver.getCellNameResolver()),
+                        buildTargetFactory
+                            .create(target, cellPathResolver.getCellNameResolver())
+                            .getData(),
                     targetConfigurationSerializer,
                     filesystem,
                     executionEnvironment.getWifiSsid(),

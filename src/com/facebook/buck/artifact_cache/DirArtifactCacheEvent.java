@@ -19,7 +19,7 @@ package com.facebook.buck.artifact_cache;
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent.Operation;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.EventKey;
 import com.google.common.collect.ImmutableMap;
@@ -36,7 +36,7 @@ public class DirArtifactCacheEvent {
   public static class DirArtifactCacheEventFactory extends AbstractArtifactCacheEventFactory {
 
     public DirArtifactCacheEventFactory(
-        Function<String, UnconfiguredBuildTargetView> unconfiguredBuildTargetFactory,
+        Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
         TargetConfigurationSerializer targetConfigurationSerializer) {
       super(unconfiguredBuildTargetFactory, targetConfigurationSerializer);
     }

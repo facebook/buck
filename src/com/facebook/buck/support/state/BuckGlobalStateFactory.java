@@ -139,8 +139,9 @@ public class BuckGlobalStateFactory {
           ArtifactCaches.newServedCache(
               new ArtifactCacheBuckConfig(rootCell.getRootCell().getBuckConfig()),
               target ->
-                  unconfiguredBuildTargetFactory.create(
-                      target, rootCell.getRootCell().getCellNameResolver()),
+                  unconfiguredBuildTargetFactory
+                      .create(target, rootCell.getRootCell().getCellNameResolver())
+                      .getData(),
               targetConfigurationSerializer,
               rootCell.getRootCell().getFilesystem());
       if (!initWebServer(webServer, servedCache)) {

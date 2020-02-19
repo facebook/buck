@@ -92,7 +92,8 @@ public class AbstractNetworkCacheTest {
                 .setUnconfiguredBuildTargetFactory(
                     target ->
                         new ParsingUnconfiguredBuildTargetViewFactory()
-                            .create(target, cellPathResolver.getCellNameResolver()))
+                            .create(target, cellPathResolver.getCellNameResolver())
+                            .getData())
                 .setProjectFilesystem(filesystem)
                 .setBuckEventBus(BuckEventBusForTests.newInstance())
                 .setHttpWriteExecutorService(service)
