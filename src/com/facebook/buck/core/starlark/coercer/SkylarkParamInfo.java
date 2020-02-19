@@ -46,7 +46,7 @@ public class SkylarkParamInfo extends AbstractParamInfo {
 
   @Override
   public boolean isOptional() {
-    return attr.getTypeCoercer().getOutputClass().isAssignableFrom(Optional.class);
+    return attr.getTypeCoercer().getOutputType().getRawType().isAssignableFrom(Optional.class);
   }
 
   @Nullable

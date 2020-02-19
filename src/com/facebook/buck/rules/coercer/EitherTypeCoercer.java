@@ -22,6 +22,8 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.types.Either;
+import com.google.common.reflect.TypeParameter;
+import com.google.common.reflect.TypeToken;
 import java.util.Collection;
 import java.util.Map;
 
@@ -29,16 +31,20 @@ import java.util.Map;
 public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Either<Left, Right>> {
   private final TypeCoercer<Left> leftTypeCoercer;
   private final TypeCoercer<Right> rightTypeCoercer;
+  private final TypeToken<Either<Left, Right>> typeToken;
 
   public EitherTypeCoercer(TypeCoercer<Left> leftTypeCoercer, TypeCoercer<Right> rightTypeCoercer) {
     this.leftTypeCoercer = leftTypeCoercer;
     this.rightTypeCoercer = rightTypeCoercer;
+    this.typeToken =
+        new TypeToken<Either<Left, Right>>() {}.where(
+                new TypeParameter<Left>() {}, leftTypeCoercer.getOutputType())
+            .where(new TypeParameter<Right>() {}, rightTypeCoercer.getOutputType());
   }
 
-  @SuppressWarnings("unchecked")
   @Override
-  public Class<Either<Left, Right>> getOutputClass() {
-    return (Class<Either<Left, Right>>) (Class<?>) Either.class;
+  public TypeToken<Either<Left, Right>> getOutputType() {
+    return typeToken;
   }
 
   @Override

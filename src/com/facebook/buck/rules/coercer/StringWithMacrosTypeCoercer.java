@@ -33,6 +33,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Streams;
+import com.google.common.reflect.TypeToken;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -61,8 +62,8 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
   }
 
   @Override
-  public Class<StringWithMacros> getOutputClass() {
-    return StringWithMacros.class;
+  public TypeToken<StringWithMacros> getOutputType() {
+    return TypeToken.of(StringWithMacros.class);
   }
 
   @Override
@@ -203,7 +204,7 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
       Object object)
       throws CoerceFailedException {
     if (!(object instanceof String)) {
-      throw CoerceFailedException.simple(object, getOutputClass());
+      throw CoerceFailedException.simple(object, getOutputType());
     }
     return parse(
         cellRoots,

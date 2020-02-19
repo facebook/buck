@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.reflect.TypeToken;
 
 /** Coercer for {@link BuildTarget} instances that can optionally have output labels. */
 public class BuildTargetWithOutputsTypeCoercer
@@ -32,8 +33,8 @@ public class BuildTargetWithOutputsTypeCoercer
   }
 
   @Override
-  public Class<BuildTargetWithOutputs> getOutputClass() {
-    return BuildTargetWithOutputs.class;
+  public TypeToken<BuildTargetWithOutputs> getOutputType() {
+    return TypeToken.of(BuildTargetWithOutputs.class);
   }
 
   @Override

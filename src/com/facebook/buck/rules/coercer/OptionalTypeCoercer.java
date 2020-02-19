@@ -23,24 +23,28 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
+import com.google.common.reflect.TypeParameter;
+import com.google.common.reflect.TypeToken;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
 public class OptionalTypeCoercer<T> implements TypeCoercer<Optional<T>> {
 
   private final TypeCoercer<T> coercer;
+  private final TypeToken<Optional<T>> typeToken;
 
   public OptionalTypeCoercer(TypeCoercer<T> coercer) {
     Preconditions.checkArgument(
-        !coercer.getOutputClass().isAssignableFrom(Optional.class),
+        !coercer.getOutputType().getRawType().isAssignableFrom(Optional.class),
         "Nested optional fields are ambiguous.");
     this.coercer = coercer;
+    this.typeToken =
+        new TypeToken<Optional<T>>() {}.where(new TypeParameter<T>() {}, coercer.getOutputType());
   }
 
   @Override
-  @SuppressWarnings("unchecked")
-  public Class<Optional<T>> getOutputClass() {
-    return (Class<Optional<T>>) (Class<?>) Optional.class;
+  public TypeToken<Optional<T>> getOutputType() {
+    return typeToken;
   }
 
   @Override

@@ -66,7 +66,7 @@ public abstract class CollectionTypeCoercer<C extends ImmutableCollection<T>, T>
           builder,
           iterable);
     } else {
-      throw CoerceFailedException.simple(object, getOutputClass());
+      throw CoerceFailedException.simple(object, getOutputType().getType());
     }
   }
 

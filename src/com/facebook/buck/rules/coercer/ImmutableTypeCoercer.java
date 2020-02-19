@@ -23,6 +23,7 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.reflect.TypeToken;
 import java.util.Map;
 
 /** A coercer for Immutables using the same flow as Description's args */
@@ -42,8 +43,8 @@ public class ImmutableTypeCoercer<T extends DataTransferObject> implements TypeC
   }
 
   @Override
-  public Class<T> getOutputClass() {
-    return constructorArgDescriptor.objectClass();
+  public TypeToken<T> getOutputType() {
+    return TypeToken.of(constructorArgDescriptor.objectClass());
   }
 
   @Override
@@ -74,20 +75,18 @@ public class ImmutableTypeCoercer<T extends DataTransferObject> implements TypeC
 
     Object builder = constructorArgDescriptor.getBuilderFactory().get();
     if (!(object instanceof Map)) {
-      throw CoerceFailedException.simple(object, getOutputClass(), "expected a dict");
+      throw CoerceFailedException.simple(object, getOutputType(), "expected a dict");
     }
     Map<?, ?> map = (Map<?, ?>) object;
     for (Map.Entry<?, ?> entry : map.entrySet()) {
       Object key = entry.getKey();
       if (!(key instanceof String)) {
-        throw CoerceFailedException.simple(object, getOutputClass(), "keys should be strings");
+        throw CoerceFailedException.simple(object, getOutputType(), "keys should be strings");
       }
       ParamInfo paramInfo = paramInfos.get(key);
       if (paramInfo == null) {
         throw CoerceFailedException.simple(
-            object,
-            getOutputClass(),
-            "parameter '" + key + "' not found on " + paramInfos.keySet());
+            object, getOutputType(), "parameter '" + key + "' not found on " + paramInfos.keySet());
       }
       try {
         paramInfo.set(

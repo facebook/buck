@@ -22,6 +22,8 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.types.Pair;
+import com.google.common.reflect.TypeParameter;
+import com.google.common.reflect.TypeToken;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -33,17 +35,20 @@ public class PatternMatchedCollectionTypeCoercer<T>
 
   TypeCoercer<Pattern> patternTypeCoercer;
   TypeCoercer<T> valueTypeCoercer;
+  private final TypeToken<PatternMatchedCollection<T>> typeToken;
 
   public PatternMatchedCollectionTypeCoercer(
       TypeCoercer<Pattern> patternTypeCoercer, TypeCoercer<T> valueTypeCoercer) {
     this.patternTypeCoercer = patternTypeCoercer;
     this.valueTypeCoercer = valueTypeCoercer;
+    this.typeToken =
+        new TypeToken<PatternMatchedCollection<T>>() {}.where(
+            new TypeParameter<T>() {}, valueTypeCoercer.getOutputType());
   }
 
-  @SuppressWarnings("unchecked")
   @Override
-  public Class<PatternMatchedCollection<T>> getOutputClass() {
-    return (Class<PatternMatchedCollection<T>>) (Class<?>) PatternMatchedCollection.class;
+  public TypeToken<PatternMatchedCollection<T>> getOutputType() {
+    return typeToken;
   }
 
   @Override
@@ -76,14 +81,14 @@ public class PatternMatchedCollectionTypeCoercer<T>
       throws CoerceFailedException {
     if (!(object instanceof List)) {
       throw CoerceFailedException.simple(
-          object, getOutputClass(), "input object should be a list of pairs");
+          object, getOutputType(), "input object should be a list of pairs");
     }
     PatternMatchedCollection.Builder<T> builder = PatternMatchedCollection.builder();
     List<?> list = (List<?>) object;
     for (Object element : list) {
       if (!(element instanceof Collection) || ((Collection<?>) element).size() != 2) {
         throw CoerceFailedException.simple(
-            object, getOutputClass(), "input object should be a list of pairs");
+            object, getOutputType(), "input object should be a list of pairs");
       }
       Iterator<?> pair = ((Collection<?>) element).iterator();
       Pattern platformSelector =

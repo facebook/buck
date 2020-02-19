@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.reflect.TypeToken;
 import java.util.Arrays;
 import java.util.Locale;
 
@@ -32,8 +33,8 @@ public class EnumTypeCoercer<E extends Enum<E>> extends LeafTypeCoercer<E> {
   }
 
   @Override
-  public Class<E> getOutputClass() {
-    return enumClass;
+  public TypeToken<E> getOutputType() {
+    return TypeToken.of(enumClass);
   }
 
   @Override
@@ -60,7 +61,7 @@ public class EnumTypeCoercer<E extends Enum<E>> extends LeafTypeCoercer<E> {
     }
     throw CoerceFailedException.simple(
         object,
-        getOutputClass(),
+        getOutputType(),
         "Allowed values: " + Arrays.toString(enumClass.getEnumConstants()));
   }
 }

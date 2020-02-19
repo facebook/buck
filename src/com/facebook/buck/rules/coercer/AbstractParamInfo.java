@@ -115,7 +115,7 @@ public abstract class AbstractParamInfo implements ParamInfo {
 
   @Override
   public Class<?> getResultClass() {
-    return typeCoercer.getOutputClass();
+    return typeCoercer.getOutputType().getRawType();
   }
 
   @Override

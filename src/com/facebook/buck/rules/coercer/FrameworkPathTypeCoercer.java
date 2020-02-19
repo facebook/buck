@@ -28,6 +28,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.reflect.TypeToken;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
@@ -42,8 +43,8 @@ public class FrameworkPathTypeCoercer implements TypeCoercer<FrameworkPath> {
   }
 
   @Override
-  public Class<FrameworkPath> getOutputClass() {
-    return FrameworkPath.class;
+  public TypeToken<FrameworkPath> getOutputType() {
+    return TypeToken.of(FrameworkPath.class);
   }
 
   @Override
@@ -122,6 +123,6 @@ public class FrameworkPathTypeCoercer implements TypeCoercer<FrameworkPath> {
     }
 
     throw CoerceFailedException.simple(
-        object, getOutputClass(), "input should be either a source tree path or a source path");
+        object, getOutputType(), "input should be either a source tree path or a source path");
   }
 }

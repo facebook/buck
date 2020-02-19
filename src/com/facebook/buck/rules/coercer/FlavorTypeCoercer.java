@@ -22,11 +22,12 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.reflect.TypeToken;
 
 public class FlavorTypeCoercer extends LeafTypeCoercer<Flavor> {
   @Override
-  public Class<Flavor> getOutputClass() {
-    return Flavor.class;
+  public TypeToken<Flavor> getOutputType() {
+    return TypeToken.of(Flavor.class);
   }
 
   @Override
@@ -41,6 +42,6 @@ public class FlavorTypeCoercer extends LeafTypeCoercer<Flavor> {
     if (object instanceof String) {
       return InternalFlavor.of((String) object);
     }
-    throw CoerceFailedException.simple(object, getOutputClass());
+    throw CoerceFailedException.simple(object, getOutputType());
   }
 }

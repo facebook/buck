@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.reflect.TypeToken;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Optional;
@@ -43,8 +44,8 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverage
   }
 
   @Override
-  public Class<NeededCoverageSpec> getOutputClass() {
-    return NeededCoverageSpec.class;
+  public TypeToken<NeededCoverageSpec> getOutputType() {
+    return TypeToken.of(NeededCoverageSpec.class);
   }
 
   @Override
@@ -116,7 +117,7 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverage
 
     throw CoerceFailedException.simple(
         object,
-        getOutputClass(),
+        getOutputType(),
         "input should be a tuple of needed coverage ratio, a build target, and optionally a path");
   }
 
@@ -137,7 +138,7 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverage
     if (!(object instanceof Integer || object instanceof Long || object instanceof Short)) {
       throw CoerceFailedException.simple(
           originalObject,
-          getOutputClass(),
+          getOutputType(),
           "the needed coverage ratio should be an integral number");
     }
 
@@ -152,9 +153,7 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverage
 
     if (intValue < 0 || intValue > 100) {
       throw CoerceFailedException.simple(
-          originalObject,
-          getOutputClass(),
-          "the needed coverage ratio should be in range [0, 100]");
+          originalObject, getOutputType(), "the needed coverage ratio should be in range [0, 100]");
     }
 
     return intValue;

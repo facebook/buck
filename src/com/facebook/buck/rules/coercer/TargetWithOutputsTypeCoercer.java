@@ -41,7 +41,7 @@ abstract class TargetWithOutputsTypeCoercer<T, U> extends LeafTypeCoercer<U> {
       BiFunction<T, OutputLabel, U> returnTypeConstructor, Object object, CoerceParameters params)
       throws CoerceFailedException {
     if (!(object instanceof String)) {
-      throw CoerceFailedException.simple(object, getOutputClass());
+      throw CoerceFailedException.simple(object, getOutputType());
     }
 
     try {

@@ -25,6 +25,8 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.versions.Version;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.reflect.TypeParameter;
+import com.google.common.reflect.TypeToken;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -34,18 +36,21 @@ public class VersionMatchedCollectionTypeCoercer<T>
 
   TypeCoercer<ImmutableMap<BuildTarget, Version>> versionsTypeCoercer;
   TypeCoercer<T> valueTypeCoercer;
+  private final TypeToken<VersionMatchedCollection<T>> typeToken;
 
   public VersionMatchedCollectionTypeCoercer(
       TypeCoercer<ImmutableMap<BuildTarget, Version>> versionsTypeCoercer,
       TypeCoercer<T> valueTypeCoercer) {
     this.versionsTypeCoercer = versionsTypeCoercer;
     this.valueTypeCoercer = valueTypeCoercer;
+    this.typeToken =
+        new TypeToken<VersionMatchedCollection<T>>() {}.where(
+            new TypeParameter<T>() {}, valueTypeCoercer.getOutputType());
   }
 
-  @SuppressWarnings("unchecked")
   @Override
-  public Class<VersionMatchedCollection<T>> getOutputClass() {
-    return (Class<VersionMatchedCollection<T>>) (Class<?>) VersionMatchedCollection.class;
+  public TypeToken<VersionMatchedCollection<T>> getOutputType() {
+    return typeToken;
   }
 
   @Override
@@ -73,14 +78,14 @@ public class VersionMatchedCollectionTypeCoercer<T>
       throws CoerceFailedException {
     if (!(object instanceof List)) {
       throw CoerceFailedException.simple(
-          object, getOutputClass(), "input object should be a list of pairs");
+          object, getOutputType(), "input object should be a list of pairs");
     }
     VersionMatchedCollection.Builder<T> builder = VersionMatchedCollection.builder();
     List<?> list = (List<?>) object;
     for (Object element : list) {
       if (!(element instanceof Collection) || ((Collection<?>) element).size() != 2) {
         throw CoerceFailedException.simple(
-            object, getOutputClass(), "input object should be a list of pairs");
+            object, getOutputType(), "input object should be a list of pairs");
       }
       Iterator<?> pair = ((Collection<?>) element).iterator();
       ImmutableMap<BuildTarget, Version> versionsSelector =

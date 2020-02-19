@@ -21,16 +21,22 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.reflect.TypeParameter;
+import com.google.common.reflect.TypeToken;
 
 public class SetTypeCoercer<T> extends CollectionTypeCoercer<ImmutableSet<T>, T> {
+  private final TypeToken<ImmutableSet<T>> typeToken;
+
   SetTypeCoercer(TypeCoercer<T> elementTypeCoercer) {
     super(elementTypeCoercer);
+    this.typeToken =
+        new TypeToken<ImmutableSet<T>>() {}.where(
+            new TypeParameter<T>() {}, elementTypeCoercer.getOutputType());
   }
 
-  @SuppressWarnings("unchecked")
   @Override
-  public Class<ImmutableSet<T>> getOutputClass() {
-    return (Class<ImmutableSet<T>>) (Class<?>) ImmutableSet.class;
+  public TypeToken<ImmutableSet<T>> getOutputType() {
+    return typeToken;
   }
 
   @Override

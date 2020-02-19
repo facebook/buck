@@ -23,12 +23,13 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.versions.Constraint;
 import com.facebook.buck.versions.ExactConstraint;
 import com.facebook.buck.versions.Version;
+import com.google.common.reflect.TypeToken;
 
 public class ConstraintTypeCoercer extends LeafTypeCoercer<Constraint> {
 
   @Override
-  public Class<Constraint> getOutputClass() {
-    return Constraint.class;
+  public TypeToken<Constraint> getOutputType() {
+    return TypeToken.of(Constraint.class);
   }
 
   @Override
@@ -43,6 +44,6 @@ public class ConstraintTypeCoercer extends LeafTypeCoercer<Constraint> {
     if (object instanceof String) {
       return ExactConstraint.of(Version.of((String) object));
     }
-    throw CoerceFailedException.simple(object, getOutputClass());
+    throw CoerceFailedException.simple(object, getOutputType());
   }
 }

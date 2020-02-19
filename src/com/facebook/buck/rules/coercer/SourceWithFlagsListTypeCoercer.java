@@ -24,6 +24,7 @@ import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.reflect.TypeToken;
 import java.util.List;
 
 public class SourceWithFlagsListTypeCoercer implements TypeCoercer<SourceWithFlagsList> {
@@ -39,8 +40,8 @@ public class SourceWithFlagsListTypeCoercer implements TypeCoercer<SourceWithFla
   }
 
   @Override
-  public Class<SourceWithFlagsList> getOutputClass() {
-    return SourceWithFlagsList.class;
+  public TypeToken<SourceWithFlagsList> getOutputType() {
+    return TypeToken.of(SourceWithFlagsList.class);
   }
 
   @Override

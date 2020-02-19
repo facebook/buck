@@ -21,6 +21,8 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.reflect.TypeParameter;
+import com.google.common.reflect.TypeToken;
 import java.util.Collection;
 import java.util.SortedSet;
 
@@ -29,16 +31,19 @@ public class SortedSetTypeCoercer<T extends Comparable<? super T>>
 
   private final TypeCoercer<T> elementTypeCoercer;
   private final SortedSetConcatable<T> concatable = new SortedSetConcatable<>();
+  private final TypeToken<ImmutableSortedSet<T>> typeToken;
 
   public SortedSetTypeCoercer(TypeCoercer<T> elementTypeCoercer) {
     super(elementTypeCoercer);
     this.elementTypeCoercer = elementTypeCoercer;
+    this.typeToken =
+        new TypeToken<ImmutableSortedSet<T>>() {}.where(
+            new TypeParameter<T>() {}, elementTypeCoercer.getOutputType());
   }
 
-  @SuppressWarnings("unchecked")
   @Override
-  public Class<ImmutableSortedSet<T>> getOutputClass() {
-    return (Class<ImmutableSortedSet<T>>) (Class<?>) ImmutableSortedSet.class;
+  public TypeToken<ImmutableSortedSet<T>> getOutputType() {
+    return typeToken;
   }
 
   protected void fillSortedSet(
@@ -69,7 +74,7 @@ public class SortedSetTypeCoercer<T extends Comparable<? super T>>
         }
       }
     } else {
-      throw CoerceFailedException.simple(object, getOutputClass());
+      throw CoerceFailedException.simple(object, getOutputType());
     }
   }
 

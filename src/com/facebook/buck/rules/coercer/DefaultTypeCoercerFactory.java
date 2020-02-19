@@ -348,7 +348,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
 
       TypeCoercer<?> selectedTypeCoercer = null;
       for (TypeCoercer<?> typeCoercer : nonParameterizedTypeCoercers) {
-        if (rawClass.isAssignableFrom(typeCoercer.getOutputClass())) {
+        if (rawClass.isAssignableFrom(typeCoercer.getOutputType().getRawType())) {
           if (selectedTypeCoercer == null) {
             selectedTypeCoercer = typeCoercer;
           } else {

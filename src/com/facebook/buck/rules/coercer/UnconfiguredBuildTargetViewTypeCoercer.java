@@ -23,6 +23,7 @@ import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.reflect.TypeToken;
 
 /** {@link TypeCoercer} for {@link UnconfiguredBuildTargetView} */
 public class UnconfiguredBuildTargetViewTypeCoercer
@@ -36,8 +37,8 @@ public class UnconfiguredBuildTargetViewTypeCoercer
   }
 
   @Override
-  public Class<UnconfiguredBuildTargetView> getOutputClass() {
-    return UnconfiguredBuildTargetView.class;
+  public TypeToken<UnconfiguredBuildTargetView> getOutputType() {
+    return TypeToken.of(UnconfiguredBuildTargetView.class);
   }
 
   @Override
@@ -50,7 +51,7 @@ public class UnconfiguredBuildTargetViewTypeCoercer
       Object object)
       throws CoerceFailedException {
     if (!(object instanceof String)) {
-      throw CoerceFailedException.simple(object, getOutputClass());
+      throw CoerceFailedException.simple(object, getOutputType());
     }
     String param = (String) object;
 

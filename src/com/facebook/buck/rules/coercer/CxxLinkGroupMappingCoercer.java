@@ -25,6 +25,7 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
+import com.google.common.reflect.TypeToken;
 import java.util.Collection;
 
 /**
@@ -49,8 +50,8 @@ public class CxxLinkGroupMappingCoercer implements TypeCoercer<CxxLinkGroupMappi
   }
 
   @Override
-  public Class<CxxLinkGroupMapping> getOutputClass() {
-    return CxxLinkGroupMapping.class;
+  public TypeToken<CxxLinkGroupMapping> getOutputType() {
+    return TypeToken.of(CxxLinkGroupMapping.class);
   }
 
   @Override
@@ -95,7 +96,7 @@ public class CxxLinkGroupMappingCoercer implements TypeCoercer<CxxLinkGroupMappi
 
     throw CoerceFailedException.simple(
         object,
-        getOutputClass(),
+        getOutputType(),
         "input should be pair of a link group and list of mapping targets");
   }
 }

@@ -23,6 +23,7 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.concat.Concatable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.reflect.TypeToken;
 import javax.annotation.Nullable;
 
 /**
@@ -35,7 +36,7 @@ import javax.annotation.Nullable;
  */
 public interface TypeCoercer<T> extends Concatable<T> {
 
-  Class<T> getOutputClass();
+  TypeToken<T> getOutputType();
 
   /**
    * Returns whether the leaf nodes of this type coercer outputs value that is an instance of the

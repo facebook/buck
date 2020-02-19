@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.reflect.TypeToken;
 
 public class BuildTargetTypeCoercer extends LeafTypeCoercer<BuildTarget> {
 
@@ -33,8 +34,8 @@ public class BuildTargetTypeCoercer extends LeafTypeCoercer<BuildTarget> {
   }
 
   @Override
-  public Class<BuildTarget> getOutputClass() {
-    return BuildTarget.class;
+  public TypeToken<BuildTarget> getOutputType() {
+    return TypeToken.of(BuildTarget.class);
   }
 
   @Override
@@ -47,7 +48,7 @@ public class BuildTargetTypeCoercer extends LeafTypeCoercer<BuildTarget> {
       Object object)
       throws CoerceFailedException {
     if (!(object instanceof String)) {
-      throw CoerceFailedException.simple(object, getOutputClass());
+      throw CoerceFailedException.simple(object, getOutputType());
     }
 
     return unconfiguredBuildTargetTypeCoercer

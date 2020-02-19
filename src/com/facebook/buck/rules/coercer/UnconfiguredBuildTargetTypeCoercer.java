@@ -23,6 +23,7 @@ import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.reflect.TypeToken;
 
 /** {@link TypeCoercer} for {@link UnconfiguredBuildTarget} */
 public class UnconfiguredBuildTargetTypeCoercer extends LeafTypeCoercer<UnconfiguredBuildTarget> {
@@ -35,8 +36,8 @@ public class UnconfiguredBuildTargetTypeCoercer extends LeafTypeCoercer<Unconfig
   }
 
   @Override
-  public Class<UnconfiguredBuildTarget> getOutputClass() {
-    return UnconfiguredBuildTarget.class;
+  public TypeToken<UnconfiguredBuildTarget> getOutputType() {
+    return new TypeToken<UnconfiguredBuildTarget>() {};
   }
 
   @Override
@@ -49,7 +50,7 @@ public class UnconfiguredBuildTargetTypeCoercer extends LeafTypeCoercer<Unconfig
       Object object)
       throws CoerceFailedException {
     if (!(object instanceof String)) {
-      throw CoerceFailedException.simple(object, getOutputClass());
+      throw CoerceFailedException.simple(object, getOutputType());
     }
     String param = (String) object;
 

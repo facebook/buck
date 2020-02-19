@@ -24,7 +24,7 @@ public abstract class LeafTypeCoercer<T> implements TypeCoercer<T> {
   @Override
   public boolean hasElementClass(Class<?>... types) {
     for (Class<?> type : types) {
-      if (type.isAssignableFrom(getOutputClass())) {
+      if (type.isAssignableFrom(getOutputType().getRawType())) {
         return true;
       }
     }

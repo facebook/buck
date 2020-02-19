@@ -23,6 +23,7 @@ import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.reflect.TypeToken;
 
 /**
  * Coercer for {@link UnconfiguredBuildTargetView} instances that can optionally have output labels.
@@ -37,8 +38,8 @@ public class UnconfiguredBuildTargetWithOutputsTypeCoercer
   }
 
   @Override
-  public Class<UnconfiguredBuildTargetWithOutputs> getOutputClass() {
-    return UnconfiguredBuildTargetWithOutputs.class;
+  public TypeToken<UnconfiguredBuildTargetWithOutputs> getOutputType() {
+    return TypeToken.of(UnconfiguredBuildTargetWithOutputs.class);
   }
 
   @Override

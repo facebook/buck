@@ -24,6 +24,7 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.reflect.TypeToken;
 import java.nio.file.Path;
 
 public class SourcePathTypeCoercer extends LeafTypeCoercer<SourcePath> {
@@ -38,8 +39,8 @@ public class SourcePathTypeCoercer extends LeafTypeCoercer<SourcePath> {
   }
 
   @Override
-  public Class<SourcePath> getOutputClass() {
-    return SourcePath.class;
+  public TypeToken<SourcePath> getOutputType() {
+    return TypeToken.of(SourcePath.class);
   }
 
   @Override
@@ -73,7 +74,7 @@ public class SourcePathTypeCoercer extends LeafTypeCoercer<SourcePath> {
               object);
       if (path.isAbsolute()) {
         throw CoerceFailedException.simple(
-            object, getOutputClass(), "SourcePath cannot contain an absolute path");
+            object, getOutputType(), "SourcePath cannot contain an absolute path");
       }
       return PathSourcePath.of(filesystem, path);
     }

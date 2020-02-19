@@ -25,6 +25,7 @@ import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
+import com.google.common.reflect.TypeToken;
 import java.util.Collection;
 
 /** A type coercer to handle source entries with a list of flags. */
@@ -43,8 +44,8 @@ public class SourceWithFlagsTypeCoercer implements TypeCoercer<SourceWithFlags> 
   }
 
   @Override
-  public Class<SourceWithFlags> getOutputClass() {
-    return SourceWithFlags.class;
+  public TypeToken<SourceWithFlags> getOutputType() {
+    return TypeToken.of(SourceWithFlags.class);
   }
 
   @Override
@@ -98,7 +99,7 @@ public class SourceWithFlagsTypeCoercer implements TypeCoercer<SourceWithFlags> 
 
     throw CoerceFailedException.simple(
         object,
-        getOutputClass(),
+        getOutputType(),
         "input should be either a source path or a pair of a source path and a list of flags");
   }
 }

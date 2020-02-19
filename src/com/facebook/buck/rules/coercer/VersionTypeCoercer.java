@@ -21,12 +21,13 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.versions.Version;
+import com.google.common.reflect.TypeToken;
 
 public class VersionTypeCoercer extends LeafTypeCoercer<Version> {
 
   @Override
-  public Class<Version> getOutputClass() {
-    return Version.class;
+  public TypeToken<Version> getOutputType() {
+    return new TypeToken<Version>() {};
   }
 
   @Override
@@ -41,6 +42,6 @@ public class VersionTypeCoercer extends LeafTypeCoercer<Version> {
     if (object instanceof String) {
       return Version.of((String) object);
     }
-    throw CoerceFailedException.simple(object, getOutputClass());
+    throw CoerceFailedException.simple(object, getOutputType());
   }
 }

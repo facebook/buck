@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
+import com.google.common.reflect.TypeToken;
 import java.util.List;
 
 /**
@@ -32,8 +33,8 @@ import java.util.List;
 public class BuildConfigFieldsTypeCoercer extends LeafTypeCoercer<BuildConfigFields> {
 
   @Override
-  public Class<BuildConfigFields> getOutputClass() {
-    return BuildConfigFields.class;
+  public TypeToken<BuildConfigFields> getOutputType() {
+    return TypeToken.of(BuildConfigFields.class);
   }
 
   @Override
@@ -46,7 +47,7 @@ public class BuildConfigFieldsTypeCoercer extends LeafTypeCoercer<BuildConfigFie
       Object object)
       throws CoerceFailedException {
     if (!(object instanceof List)) {
-      throw CoerceFailedException.simple(object, getOutputClass());
+      throw CoerceFailedException.simple(object, getOutputType());
     }
 
     List<?> list = (List<?>) object;

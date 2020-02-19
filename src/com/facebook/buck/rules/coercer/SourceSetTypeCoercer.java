@@ -24,6 +24,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.reflect.TypeToken;
 import java.util.List;
 
 public class SourceSetTypeCoercer extends SourceSetConcatable implements TypeCoercer<SourceSet> {
@@ -37,8 +38,8 @@ public class SourceSetTypeCoercer extends SourceSetConcatable implements TypeCoe
   }
 
   @Override
-  public Class<SourceSet> getOutputClass() {
-    return SourceSet.class;
+  public TypeToken<SourceSet> getOutputType() {
+    return TypeToken.of(SourceSet.class);
   }
 
   @Override

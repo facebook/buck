@@ -22,6 +22,8 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.types.Pair;
+import com.google.common.reflect.TypeParameter;
+import com.google.common.reflect.TypeToken;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -29,17 +31,21 @@ import java.util.Iterator;
 public class PairTypeCoercer<FIRST, SECOND> implements TypeCoercer<Pair<FIRST, SECOND>> {
   private TypeCoercer<FIRST> firstTypeCoercer;
   private TypeCoercer<SECOND> secondTypeCoercer;
+  private final TypeToken<Pair<FIRST, SECOND>> typeToken;
 
   public PairTypeCoercer(
       TypeCoercer<FIRST> firstTypeCoercer, TypeCoercer<SECOND> secondTypeCoercer) {
     this.firstTypeCoercer = firstTypeCoercer;
     this.secondTypeCoercer = secondTypeCoercer;
+    this.typeToken =
+        new TypeToken<Pair<FIRST, SECOND>>() {}.where(
+                new TypeParameter<FIRST>() {}, firstTypeCoercer.getOutputType())
+            .where(new TypeParameter<SECOND>() {}, secondTypeCoercer.getOutputType());
   }
 
-  @SuppressWarnings("unchecked")
   @Override
-  public Class<Pair<FIRST, SECOND>> getOutputClass() {
-    return (Class<Pair<FIRST, SECOND>>) (Class<?>) Pair.class;
+  public TypeToken<Pair<FIRST, SECOND>> getOutputType() {
+    return typeToken;
   }
 
   @Override
@@ -67,7 +73,7 @@ public class PairTypeCoercer<FIRST, SECOND> implements TypeCoercer<Pair<FIRST, S
       Collection<?> collection = (Collection<?>) object;
       if (collection.size() != 2) {
         throw CoerceFailedException.simple(
-            object, getOutputClass(), "input collection should have 2 elements");
+            object, getOutputType(), "input collection should have 2 elements");
       }
       Iterator<?> iterator = collection.iterator();
       FIRST first =
@@ -89,7 +95,7 @@ public class PairTypeCoercer<FIRST, SECOND> implements TypeCoercer<Pair<FIRST, S
       return new Pair<>(first, second);
     } else {
       throw CoerceFailedException.simple(
-          object, getOutputClass(), "input object should be a 2-element collection");
+          object, getOutputType(), "input object should be a 2-element collection");
     }
   }
 }

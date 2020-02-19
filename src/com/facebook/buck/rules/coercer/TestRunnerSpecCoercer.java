@@ -24,6 +24,7 @@ import com.facebook.buck.core.test.rule.TestRunnerSpec;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.reflect.TypeToken;
 import java.util.Map;
 
 /**
@@ -43,8 +44,8 @@ public class TestRunnerSpecCoercer implements TypeCoercer<TestRunnerSpec> {
   }
 
   @Override
-  public Class<TestRunnerSpec> getOutputClass() {
-    return TestRunnerSpec.class;
+  public TypeToken<TestRunnerSpec> getOutputType() {
+    return TypeToken.of(TestRunnerSpec.class);
   }
 
   @Override

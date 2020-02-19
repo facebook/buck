@@ -24,6 +24,7 @@ import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.google.common.reflect.TypeToken;
 import java.util.Map;
 
 /**
@@ -39,8 +40,8 @@ public class ManifestEntriesTypeCoercer extends LeafTypeCoercer<ManifestEntries>
           .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
   @Override
-  public Class<ManifestEntries> getOutputClass() {
-    return ManifestEntries.class;
+  public TypeToken<ManifestEntries> getOutputType() {
+    return TypeToken.of(ManifestEntries.class);
   }
 
   @Override
@@ -53,7 +54,7 @@ public class ManifestEntriesTypeCoercer extends LeafTypeCoercer<ManifestEntries>
       Object object)
       throws CoerceFailedException {
     if (!(object instanceof Map)) {
-      throw CoerceFailedException.simple(object, getOutputClass());
+      throw CoerceFailedException.simple(object, getOutputType());
     }
 
     @SuppressWarnings("unchecked")
@@ -61,7 +62,7 @@ public class ManifestEntriesTypeCoercer extends LeafTypeCoercer<ManifestEntries>
     try {
       return objectMapper.convertValue(value, ManifestEntries.class);
     } catch (IllegalArgumentException e) {
-      throw CoerceFailedException.simple(object, getOutputClass(), e.getLocalizedMessage());
+      throw CoerceFailedException.simple(object, getOutputType(), e.getLocalizedMessage());
     }
   }
 }

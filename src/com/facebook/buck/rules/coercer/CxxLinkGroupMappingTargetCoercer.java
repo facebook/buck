@@ -23,6 +23,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.reflect.TypeToken;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -50,8 +51,8 @@ public class CxxLinkGroupMappingTargetCoercer implements TypeCoercer<CxxLinkGrou
   }
 
   @Override
-  public Class<CxxLinkGroupMappingTarget> getOutputClass() {
-    return CxxLinkGroupMappingTarget.class;
+  public TypeToken<CxxLinkGroupMappingTarget> getOutputType() {
+    return TypeToken.of(CxxLinkGroupMappingTarget.class);
   }
 
   @Override
@@ -120,20 +121,20 @@ public class CxxLinkGroupMappingTargetCoercer implements TypeCoercer<CxxLinkGrou
 
     throw CoerceFailedException.simple(
         object,
-        getOutputClass(),
+        getOutputType(),
         "input should be pair of a build target and traversal, optionally with a label filter");
   }
 
   private String extractLabelRegexString(Object object) throws CoerceFailedException {
     if (!(object instanceof String)) {
       throw CoerceFailedException.simple(
-          object, getOutputClass(), "Third element should be a label regex filter");
+          object, getOutputType(), "Third element should be a label regex filter");
     }
 
     String prefixWithRegex = (String) object;
     if (!prefixWithRegex.startsWith(LABEL_REGEX_PREFIX)) {
       throw CoerceFailedException.simple(
-          object, getOutputClass(), "Label regex filter should start with " + LABEL_REGEX_PREFIX);
+          object, getOutputType(), "Label regex filter should start with " + LABEL_REGEX_PREFIX);
     }
 
     return prefixWithRegex.substring(LABEL_REGEX_PREFIX.length());

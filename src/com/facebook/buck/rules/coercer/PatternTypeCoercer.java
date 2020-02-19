@@ -23,6 +23,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.reflect.TypeToken;
 import java.util.regex.Pattern;
 
 public class PatternTypeCoercer extends LeafTypeCoercer<Pattern> {
@@ -32,8 +33,8 @@ public class PatternTypeCoercer extends LeafTypeCoercer<Pattern> {
           .build(CacheLoader.from(string -> Pattern.compile(string)));
 
   @Override
-  public Class<Pattern> getOutputClass() {
-    return Pattern.class;
+  public TypeToken<Pattern> getOutputType() {
+    return TypeToken.of(Pattern.class);
   }
 
   @Override
@@ -48,7 +49,7 @@ public class PatternTypeCoercer extends LeafTypeCoercer<Pattern> {
     if (object instanceof String) {
       return patternCache.getUnchecked((String) object);
     } else {
-      throw CoerceFailedException.simple(object, getOutputClass());
+      throw CoerceFailedException.simple(object, getOutputType());
     }
   }
 }

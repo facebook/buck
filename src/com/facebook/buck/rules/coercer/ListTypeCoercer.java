@@ -23,20 +23,25 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.concat.Concatable;
 import com.facebook.buck.rules.coercer.concat.ImmutableListConcatable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.reflect.TypeParameter;
+import com.google.common.reflect.TypeToken;
 
 public class ListTypeCoercer<T> extends CollectionTypeCoercer<ImmutableList<T>, T>
     implements Concatable<ImmutableList<T>> {
 
   private final ImmutableListConcatable<T> concatable = new ImmutableListConcatable<>();
+  private final TypeToken<ImmutableList<T>> typeToken;
 
   public ListTypeCoercer(TypeCoercer<T> elementTypeCoercer) {
     super(elementTypeCoercer);
+    this.typeToken =
+        new TypeToken<ImmutableList<T>>() {}.where(
+            new TypeParameter<T>() {}, elementTypeCoercer.getOutputType());
   }
 
-  @SuppressWarnings("unchecked")
   @Override
-  public Class<ImmutableList<T>> getOutputClass() {
-    return (Class<ImmutableList<T>>) (Class<?>) ImmutableList.class;
+  public TypeToken<ImmutableList<T>> getOutputType() {
+    return typeToken;
   }
 
   @Override

@@ -21,6 +21,7 @@ import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.reflect.TypeToken;
 
 /**
  * {@link TypeCoercer} for {@link CxxLinkGroupMappingTarget.Traversal}.
@@ -32,8 +33,8 @@ public class CxxLinkGroupMappingTargetTraversalCoercer
     extends LeafTypeCoercer<CxxLinkGroupMappingTarget.Traversal> {
 
   @Override
-  public Class<CxxLinkGroupMappingTarget.Traversal> getOutputClass() {
-    return CxxLinkGroupMappingTarget.Traversal.class;
+  public TypeToken<CxxLinkGroupMappingTarget.Traversal> getOutputType() {
+    return TypeToken.of(CxxLinkGroupMappingTarget.Traversal.class);
   }
 
   @Override
@@ -46,7 +47,7 @@ public class CxxLinkGroupMappingTargetTraversalCoercer
       Object object)
       throws CoerceFailedException {
     if (!(object instanceof String)) {
-      throw CoerceFailedException.simple(object, getOutputClass());
+      throw CoerceFailedException.simple(object, getOutputType());
     }
 
     String inputString = (String) object;
@@ -58,6 +59,6 @@ public class CxxLinkGroupMappingTargetTraversalCoercer
     }
 
     throw CoerceFailedException.simple(
-        object, getOutputClass(), "Value is not a valid traversal type");
+        object, getOutputType(), "Value is not a valid traversal type");
   }
 }

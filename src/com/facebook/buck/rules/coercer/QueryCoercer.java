@@ -31,6 +31,7 @@ import com.facebook.buck.rules.query.GraphEnhancementQueryEnvironment;
 import com.facebook.buck.rules.query.Query;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.reflect.TypeToken;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -88,8 +89,8 @@ public class QueryCoercer implements TypeCoercer<Query> {
   }
 
   @Override
-  public Class<Query> getOutputClass() {
-    return Query.class;
+  public TypeToken<Query> getOutputType() {
+    return TypeToken.of(Query.class);
   }
 
   @Override
@@ -105,6 +106,6 @@ public class QueryCoercer implements TypeCoercer<Query> {
       return Query.of(
           (String) object, targetConfiguration, BaseName.ofPath(pathRelativeToProjectRoot));
     }
-    throw CoerceFailedException.simple(object, getOutputClass());
+    throw CoerceFailedException.simple(object, getOutputType());
   }
 }

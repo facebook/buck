@@ -16,6 +16,9 @@
 
 package com.facebook.buck.rules.coercer;
 
+import com.google.common.reflect.TypeToken;
+import java.lang.reflect.Type;
+
 public class CoerceFailedException extends Exception {
 
   public CoerceFailedException(String message) {
@@ -26,12 +29,21 @@ public class CoerceFailedException extends Exception {
     super(message, cause);
   }
 
-  public static CoerceFailedException simple(Object object, Class<?> resultType) {
+  public static CoerceFailedException simple(Object object, Type resultType) {
     return new CoerceFailedException(String.format("cannot coerce '%s' to %s", object, resultType));
   }
 
-  public static CoerceFailedException simple(Object object, Class<?> resultType, String detail) {
+  public static CoerceFailedException simple(Object object, TypeToken<?> resultType) {
+    return simple(object, resultType.getType());
+  }
+
+  public static CoerceFailedException simple(Object object, Type resultType, String detail) {
     return new CoerceFailedException(
         String.format("cannot coerce '%s' to %s, %s", object, resultType, detail));
+  }
+
+  public static CoerceFailedException simple(
+      Object object, TypeToken<?> resultType, String detail) {
+    return simple(object, resultType.getType(), detail);
   }
 }

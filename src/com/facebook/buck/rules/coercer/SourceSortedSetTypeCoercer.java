@@ -24,6 +24,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.reflect.TypeToken;
 import java.util.List;
 
 public class SourceSortedSetTypeCoercer extends SourceSortedSetConcatable
@@ -39,8 +40,8 @@ public class SourceSortedSetTypeCoercer extends SourceSortedSetConcatable
   }
 
   @Override
-  public Class<SourceSortedSet> getOutputClass() {
-    return SourceSortedSet.class;
+  public TypeToken<SourceSortedSet> getOutputType() {
+    return TypeToken.of(SourceSortedSet.class);
   }
 
   @Override

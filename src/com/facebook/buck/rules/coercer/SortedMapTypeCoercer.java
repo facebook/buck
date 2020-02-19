@@ -22,22 +22,28 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.reflect.TypeParameter;
+import com.google.common.reflect.TypeToken;
 import java.util.Map;
 
 public class SortedMapTypeCoercer<K extends Comparable<K>, V>
     implements TypeCoercer<ImmutableSortedMap<K, V>> {
   private final TypeCoercer<K> keyTypeCoercer;
   private final TypeCoercer<V> valueTypeCoercer;
+  private final TypeToken<ImmutableSortedMap<K, V>> typeToken;
 
   SortedMapTypeCoercer(TypeCoercer<K> keyTypeCoercer, TypeCoercer<V> valueTypeCoercer) {
     this.keyTypeCoercer = keyTypeCoercer;
     this.valueTypeCoercer = valueTypeCoercer;
+    this.typeToken =
+        new TypeToken<ImmutableSortedMap<K, V>>() {}.where(
+                new TypeParameter<K>() {}, keyTypeCoercer.getOutputType())
+            .where(new TypeParameter<V>() {}, valueTypeCoercer.getOutputType());
   }
 
-  @SuppressWarnings("unchecked")
   @Override
-  public Class<ImmutableSortedMap<K, V>> getOutputClass() {
-    return (Class<ImmutableSortedMap<K, V>>) (Class<?>) ImmutableSortedMap.class;
+  public TypeToken<ImmutableSortedMap<K, V>> getOutputType() {
+    return typeToken;
   }
 
   @Override
@@ -89,7 +95,7 @@ public class SortedMapTypeCoercer<K extends Comparable<K>, V>
 
       return builder.build();
     } else {
-      throw CoerceFailedException.simple(object, getOutputClass());
+      throw CoerceFailedException.simple(object, getOutputType());
     }
   }
 }
