@@ -34,6 +34,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
+import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -91,6 +92,8 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @AddToRuleKey boolean enableProfiling;
 
+  @AddToRuleKey ArchiveContents archiveContents;
+
   @AddToRuleKey(stringify = true)
   Path ghciScriptTemplate;
 
@@ -141,6 +144,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableSet<HaskellPackage> haskellPackages,
       ImmutableSet<HaskellPackage> prebuiltHaskellPackages,
       boolean enableProfiling,
+      ArchiveContents archiveContents,
       Path ghciScriptTemplate,
       ImmutableList<SourcePath> extraScriptTemplates,
       Path ghciIservScriptTemplate,
@@ -165,6 +169,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.haskellPackages = haskellPackages;
     this.prebuiltHaskellPackages = prebuiltHaskellPackages;
     this.enableProfiling = enableProfiling;
+    this.archiveContents = archiveContents;
     this.ghciScriptTemplate = ghciScriptTemplate;
     this.extraScriptTemplates = extraScriptTemplates;
     this.ghciIservScriptTemplate = ghciIservScriptTemplate;
@@ -205,18 +210,8 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableSet<HaskellPackage> haskellPackages,
       ImmutableSet<HaskellPackage> prebuiltHaskellPackages,
       boolean enableProfiling,
-      Path ghciScriptTemplate,
-      ImmutableList<SourcePath> extraScriptTemplates,
-      Path ghciIservScriptTemplate,
-      Path ghciBinutils,
-      Path ghciGhc,
-      Path ghciIServ,
-      Path ghciIServProf,
-      Path ghciLib,
-      Path ghciCxx,
-      Path ghciCc,
-      Path ghciCpp,
-      Path ghciPackager) {
+      HaskellPlatform platform,
+      ImmutableList<SourcePath> extraScriptTemplates) {
 
     ImmutableSet.Builder<BuildRule> extraDeps = ImmutableSet.builder();
 
@@ -249,18 +244,19 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
         haskellPackages,
         prebuiltHaskellPackages,
         enableProfiling,
-        ghciScriptTemplate,
+        platform.getArchiveContents(),
+        platform.getGhciScriptTemplate().get(),
         extraScriptTemplates,
-        ghciIservScriptTemplate,
-        ghciBinutils,
-        ghciGhc,
-        ghciIServ,
-        ghciIServProf,
-        ghciLib,
-        ghciCxx,
-        ghciCc,
-        ghciCpp,
-        ghciPackager);
+        platform.getGhciIservScriptTemplate().get(),
+        platform.getGhciBinutils().get(),
+        platform.getGhciGhc().get(),
+        platform.getGhciIServ().get(),
+        platform.getGhciIServProf().get(),
+        platform.getGhciLib().get(),
+        platform.getGhciCxx().get(),
+        platform.getGhciCc().get(),
+        platform.getGhciCpp().get(),
+        platform.getGhciPackager().get());
   }
 
   private Path getOutputDir() {
@@ -373,27 +369,29 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
               pkgdir,
               CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
 
-      ImmutableSet.Builder<Path> artifacts = ImmutableSet.builder();
-      for (SourcePath lib : pkg.getLibraries()) {
-        artifacts.add(resolver.getRelativePath(lib).getParent());
+      ImmutableSet.Builder<SourcePath> artifacts = ImmutableSet.builder();
+      artifacts.addAll(pkg.getLibraries());
+
+      if (archiveContents == ArchiveContents.THIN) {
+        // this is required because the .a files above are thin archives,
+        // they merely point to the .o files via a relative path.
+        artifacts.addAll(pkg.getObjects());
       }
 
-      // this is required because the .a files above are thin archives,
-      // they merely point to the .o files via a relative path.
-      for (SourcePath obj : pkg.getObjects()) {
-        artifacts.add(resolver.getRelativePath(obj).getParent());
-      }
+      artifacts.addAll(pkg.getInterfaces());
 
-      for (SourcePath iface : pkg.getInterfaces()) {
-        artifacts.add(resolver.getRelativePath(iface).getParent());
-      }
-
-      for (Path artifact : artifacts.build()) {
+      for (SourcePath artifact : artifacts.build()) {
+        Path source = resolver.getRelativePath(artifact);
+        Path destination = pkgdir.resolve(source.getParent().getFileName());
+        steps.addAll(
+            MakeCleanDirectoryStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), destination)));
         steps.add(
             CopyStep.forDirectory(
                 getProjectFilesystem(),
-                artifact,
-                pkgdir,
+                source,
+                destination,
                 CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
       }
 
