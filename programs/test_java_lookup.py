@@ -118,11 +118,16 @@ class TestJavaPath(unittest.TestCase):
         os.mkdir(os.path.join(java_base_path, "adoptopenjdk-9.jdk"))
         os.mkdir(os.path.join(java_base_path, "adoptopenjdk-10.jdk"))
         os.mkdir(os.path.join(java_base_path, "adoptopenjdk-11.jdk"))
+        os.mkdir(os.path.join(java_base_path, "adoptopenjdk-11.0.2.jdk"))
         os.mkdir(os.path.join(java_base_path, "adoptopenjdk-12.jdk"))
 
         self.assertEquals(
             _get_java_path_for_highest_minor_version(java_base_path, 11),
-            os.path.join(java_base_path, "adoptopenjdk-11.jdk"),
+            os.path.join(java_base_path, "adoptopenjdk-11.0.2.jdk"),
+        )
+        self.assertEquals(
+            _get_java_path_for_highest_minor_version(java_base_path, 12),
+            os.path.join(java_base_path, "adoptopenjdk-12.jdk"),
         )
 
     def tearDown(self):
