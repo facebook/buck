@@ -103,9 +103,7 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
 
     ImmutableMap<String, Object> expectAttributes =
         ImmutableMap.<String, Object>builder()
-            .put("buck.type", "java_library")
             .put("name", "c")
-            .put("buck.base_path", "a/b")
             .put("deps", ImmutableList.of("//a/b:d", "//a/b:e"))
             .put(
                 "resources",
@@ -122,8 +120,6 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
                                 ImmutableList.of("//a/b:file3", "//a/b:file4")),
                             ImmutableSet.of(),
                             ""))))
-            .put("visibility", ImmutableList.of("//a/..."))
-            .put("within_view", ImmutableList.of("//b/..."))
             .build();
 
     UnconfiguredTargetNode unconfiguredTargetNode =

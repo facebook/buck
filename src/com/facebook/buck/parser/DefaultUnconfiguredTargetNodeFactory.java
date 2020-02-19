@@ -74,6 +74,11 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
       DependencyStack dependencyStack) {
     ImmutableMap.Builder<String, Object> result = ImmutableMap.builder();
     for (Map.Entry<String, Object> attr : attrs.entrySet()) {
+      if (attr.getKey().startsWith("buck.")
+          || attr.getKey().equals(VisibilityAttributes.VISIBILITY)
+          || attr.getKey().equals(VisibilityAttributes.WITHIN_VIEW)) {
+        continue;
+      }
       result.put(
           attr.getKey(),
           convertSelectorListInAttrValue(
