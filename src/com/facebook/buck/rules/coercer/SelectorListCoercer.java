@@ -61,7 +61,7 @@ public class SelectorListCoercer<T> {
               targetConfiguration,
               hostConfiguration));
     }
-    return new SelectorList<>(elementTypeCoercer, selectors.build());
+    return new SelectorList<>(selectors.build());
   }
 
   private Selector<T> coerceSelector(

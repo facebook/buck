@@ -77,6 +77,6 @@ public class SelectorListFactory {
       }
     }
 
-    return new SelectorList<>(coercer, builder.build());
+    return new SelectorList<>(builder.build());
   }
 }

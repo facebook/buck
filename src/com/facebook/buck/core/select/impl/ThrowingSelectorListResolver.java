@@ -21,6 +21,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.SelectorListResolver;
+import com.facebook.buck.rules.coercer.concat.Concatable;
 import javax.annotation.Nullable;
 
 /** Selector list resolver which throws unconditionally */
@@ -34,6 +35,7 @@ public class ThrowingSelectorListResolver implements SelectorListResolver {
       BuildTarget buildTarget,
       String attributeName,
       SelectorList<T> selectorList,
+      Concatable<T> concatable,
       DependencyStack dependencyStack) {
     throw new IllegalStateException();
   }

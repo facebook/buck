@@ -31,6 +31,7 @@ import com.facebook.buck.core.select.SelectorKey;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.coercer.concat.Concatable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -252,7 +253,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
           buildTarget,
           dependencyStack,
           configurationDeps,
-          info.getName(),
+          info,
           attributeWithSelectableValue);
     } else {
       return info.getTypeCoercer()
@@ -267,17 +268,23 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
   }
 
   @Nullable
+  @SuppressWarnings("unchecked")
   private <T> T configureAttributeValue(
       SelectableConfigurationContext configurationContext,
       SelectorListResolver selectorListResolver,
       BuildTarget buildTarget,
       DependencyStack dependencyStack,
       ImmutableSet.Builder<BuildTarget> configurationDeps,
-      String attributeName,
+      ParamInfo paramInfo,
       SelectorList<T> selectorList) {
     T value =
         selectorListResolver.resolveList(
-            configurationContext, buildTarget, attributeName, selectorList, dependencyStack);
+            configurationContext,
+            buildTarget,
+            paramInfo.getName(),
+            selectorList,
+            (Concatable<T>) paramInfo.getTypeCoercer(),
+            dependencyStack);
     addSelectorListConfigurationDepsToBuilder(configurationDeps, selectorList);
     return value;
   }

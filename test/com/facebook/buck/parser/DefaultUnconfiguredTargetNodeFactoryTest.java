@@ -40,12 +40,10 @@ import com.facebook.buck.parser.api.PackageMetadata;
 import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.parser.syntax.SelectorValue;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
-import com.facebook.buck.rules.coercer.concat.JsonTypeConcatenatingCoercerFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import java.util.List;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
@@ -110,7 +108,6 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
             .put(
                 "resources",
                 new SelectorList<>(
-                    JsonTypeConcatenatingCoercerFactory.createForType(List.class),
                     ImmutableList.of(
                         new Selector<>(
                             ImmutableMap.of(

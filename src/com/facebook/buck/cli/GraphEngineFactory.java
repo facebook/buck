@@ -60,6 +60,7 @@ import com.facebook.buck.parser.targetnode.BuildTargetToUnconfiguredTargetNodeCo
 import com.facebook.buck.parser.targetnode.UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.coercer.concat.Concatable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Closer;
@@ -181,6 +182,7 @@ public class GraphEngineFactory {
                   BuildTarget buildTarget,
                   String attributeName,
                   SelectorList<T> selectorList,
+                  Concatable<T> concatable,
                   DependencyStack dependencyStack) {
                 return selectorList.getSelectors().get(0).getDefaultConditionValue();
               }

@@ -53,7 +53,6 @@ import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.rules.coercer.concat.JsonTypeConcatenatingCoercerFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -61,7 +60,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.Optional;
 import org.junit.Test;
 
@@ -87,7 +85,6 @@ public class UnconfiguredTargetNodeToTargetNodeFactoryTest {
             .build();
     SelectorList<?> selectorList =
         new SelectorList<>(
-            JsonTypeConcatenatingCoercerFactory.createForType(List.class),
             ImmutableList.of(
                 new Selector<>(
                     ImmutableMap.of(

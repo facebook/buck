@@ -57,6 +57,6 @@ public class TestSelectorListFactory {
 
       selectorBuilder.add(new Selector<>(conditions.build(), ImmutableSet.of(), ""));
     }
-    return new SelectorList<>(elementTypeCoercer, selectorBuilder.build());
+    return new SelectorList<>(selectorBuilder.build());
   }
 }

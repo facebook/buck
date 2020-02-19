@@ -43,6 +43,9 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
+import com.facebook.buck.rules.coercer.concat.JsonTypeConcatenatingCoercer;
+import com.facebook.buck.rules.coercer.concat.JsonTypeConcatenatingCoercerFactory;
+import com.facebook.buck.rules.coercer.concat.SingleElementJsonTypeConcatenatingCoercer;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -239,8 +242,19 @@ class ParserWithConfigurableAttributes extends AbstractParser {
             buildTarget.getCellRelativeBasePath().getPath(),
             (ListWithSelects) jsonObject);
 
+    JsonTypeConcatenatingCoercer coercer =
+        JsonTypeConcatenatingCoercerFactory.createForType(((ListWithSelects) jsonObject).getType());
+
+    if (((ListWithSelects) jsonObject).getElements().size() != 1) {
+      if (coercer instanceof SingleElementJsonTypeConcatenatingCoercer) {
+        throw new HumanReadableException(
+            "type '%s' doesn't support select concatenation",
+            ((ListWithSelects) jsonObject).getType().getName());
+      }
+    }
+
     return selectorListResolver.resolveList(
-        configurationContext, buildTarget, attributeName, selectorList, dependencyStack);
+        configurationContext, buildTarget, attributeName, selectorList, coercer, dependencyStack);
   }
 
   @Override

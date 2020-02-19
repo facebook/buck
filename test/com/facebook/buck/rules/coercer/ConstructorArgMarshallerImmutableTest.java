@@ -59,7 +59,6 @@ import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.DefaultSelectableConfigurationContext;
-import com.facebook.buck.rules.coercer.concat.JsonTypeConcatenatingCoercerFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -511,7 +510,6 @@ public class ConstructorArgMarshallerImmutableTest {
                 ImmutableList.of(new TestSelectable(selectableTarget, true))));
     SelectorList<?> selectorList =
         new SelectorList<>(
-            JsonTypeConcatenatingCoercerFactory.createForType(List.class),
             ImmutableList.of(
                 new Selector<>(
                     ImmutableMap.of(
