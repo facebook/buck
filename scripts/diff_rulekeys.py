@@ -617,6 +617,7 @@ def diffAll(
         if left_key == right_key:
             matches += 1
             continue
+
         print("Analyzing", name, "for changes...")
 
         single_result, visited_keys = diffAndReturnSeen(
@@ -677,11 +678,15 @@ def main():
     print("Loading", args.left_log)
     left = RuleKeyStructureInfo(args.left_log)
     print("Loaded", left.size(), "rules")
+    if left.size() == 0:
+        raise Exception("{} has 0 rules.".format(args.left_log))
 
     if not os.path.exists(args.right_log):
         raise Exception(args.right_log + " does not exist")
     print("Loading", args.right_log)
     right = RuleKeyStructureInfo(args.right_log)
+    if right.size() == 0:
+        raise Exception("{} has 0 rules.".format(args.right_log))
     print("Loaded", right.size(), "rules")
 
     print("Comparing rules...")
@@ -719,6 +724,8 @@ def main():
         all_results, matches = diffAll(left, right, args.verbose)
         print("\n".join(all_results))
         print("\nDone comparing, {} rulekeys matched.".format(matches))
+        if len(all_results) != 0:
+            print("Rulekey divergence detected.", file=sys.stderr)
 
 
 if __name__ == "__main__":
