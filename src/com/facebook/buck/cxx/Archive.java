@@ -86,6 +86,7 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
     this.cacheable = cacheable;
   }
 
+  /** @return the {@link Archive} created from the given parameters. */
   public static Archive from(
       BuildTarget target,
       ProjectFilesystem projectFilesystem,
@@ -93,6 +94,7 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
       CxxPlatform platform,
       String outputFileName,
       ImmutableList<SourcePath> inputs,
+      ArchiveContents contents,
       boolean cacheable) {
     return new Archive(
         target,
@@ -102,10 +104,29 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
         platform.getArflags(),
         platform.getRanlib().map(r -> r.resolve(resolver, target.getTargetConfiguration())),
         platform.getRanlibflags(),
-        platform.getArchiveContents(),
+        contents,
         outputFileName,
         inputs,
         cacheable);
+  }
+
+  /** @return the {@link Archive} created from the given parameters. */
+  public static Archive from(
+      BuildTarget target,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleResolver resolver,
+      CxxPlatform platform,
+      String outputFileName,
+      ImmutableList<SourcePath> inputs) {
+    return Archive.from(
+        target,
+        projectFilesystem,
+        resolver,
+        platform,
+        outputFileName,
+        inputs,
+        platform.getArchiveContents(),
+        true);
   }
 
   /** internal buildable implementation */

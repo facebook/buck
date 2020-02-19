@@ -194,7 +194,8 @@ public class HaskellLibraryDescription
         // affect on build efficiency, and since this issue appears to only manifest by a size
         // mismatch with what is embedded in thin archives, just disable caching when using thin
         // archives.
-        /* cacheable */ platform.getCxxPlatform().getArchiveContents() != ArchiveContents.THIN);
+        platform.getArchiveContents(),
+        /* cacheable */ platform.getArchiveContents() != ArchiveContents.THIN);
   }
 
   private Archive requireStaticLibrary(

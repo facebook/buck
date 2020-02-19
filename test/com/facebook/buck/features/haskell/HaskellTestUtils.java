@@ -22,6 +22,7 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
+import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
@@ -47,6 +48,7 @@ class HaskellTestUtils {
           .setShouldCacheLinks(true)
           .setShouldUseArgsfile(false)
           .setSupportExposePackage(false)
+          .setArchiveContents(ArchiveContents.NORMAL)
           .setCxxPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
           .setGhciScriptTemplate(
               () -> {

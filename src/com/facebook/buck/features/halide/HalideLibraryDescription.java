@@ -235,8 +235,7 @@ public class HalideLibraryDescription
             ExplicitBuildTargetSourcePath.of(
                 halideCompileBuildTarget,
                 HalideCompile.objectOutputPath(
-                    halideCompileBuildTarget, projectFilesystem, args.getFunctionName()))),
-        /* cacheable */ true);
+                    halideCompileBuildTarget, projectFilesystem, args.getFunctionName()))));
   }
 
   private Optional<ImmutableList<String>> expandInvocationFlags(

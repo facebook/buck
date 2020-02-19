@@ -345,8 +345,7 @@ public class HaskellDescriptionUtils {
                 graphBuilder,
                 platform.getCxxPlatform(),
                 "libempty.a",
-                emptyCompiledModule.getObjects(),
-                /* cacheable */ true));
+                emptyCompiledModule.getObjects()));
     argsBuilder.add(SourcePathArg.of(emptyArchive.getSourcePathToOutput()));
 
     ImmutableList<Arg> args = argsBuilder.build();

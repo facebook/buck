@@ -772,8 +772,7 @@ public class CxxLibraryFactory {
         graphBuilder,
         cxxPlatform,
         staticLibraryName,
-        ImmutableList.copyOf(objects),
-        /* cacheable */ true);
+        ImmutableList.copyOf(objects));
   }
 
   /** @return a {@link CxxLink} rule which builds a shared library version of this C/C++ library. */
