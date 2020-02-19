@@ -616,7 +616,8 @@ public class ParsePipelineTest {
                   new BuiltTargetVerifier(),
                   cells,
                   new SelectorListFactory(
-                      new SelectorFactory(new ParsingUnconfiguredBuildTargetViewFactory()))));
+                      new SelectorFactory(new ParsingUnconfiguredBuildTargetViewFactory())),
+                  coercerFactory));
       ParserTargetNodeFromUnconfiguredTargetNodeFactory rawTargetNodeToTargetNodeFactory =
           new UnconfiguredTargetNodeToTargetNodeFactory(
               coercerFactory,

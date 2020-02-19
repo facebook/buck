@@ -148,7 +148,8 @@ public class GraphEngineFactory {
             new BuiltTargetVerifier(),
             cells,
             new SelectorListFactory(
-                new SelectorFactory(params.getUnconfiguredBuildTargetFactory())));
+                new SelectorFactory(params.getUnconfiguredBuildTargetFactory())),
+            params.getTypeCoercerFactory());
 
     BuildTargetToUnconfiguredTargetNodeComputation buildTargetToUnconfiguredTargetNodeComputation =
         BuildTargetToUnconfiguredTargetNodeComputation.of(rawTargetNodeFactory, cell);

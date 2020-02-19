@@ -22,7 +22,6 @@ import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.CellRelativePath;
-import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableUnconfiguredTargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.Package;
@@ -36,6 +35,9 @@ import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.function.BuckPyFunction;
 import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
+import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
+import com.facebook.buck.rules.coercer.ParamInfo;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.rules.visibility.parser.VisibilityPatterns;
@@ -56,33 +58,47 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
   private final BuiltTargetVerifier builtTargetVerifier;
   private final Cells cells;
   private final SelectorListFactory selectorListFactory;
+  private final TypeCoercerFactory typeCoercerFactory;
 
   public DefaultUnconfiguredTargetNodeFactory(
       KnownRuleTypesProvider knownRuleTypesProvider,
       BuiltTargetVerifier builtTargetVerifier,
       Cells cells,
-      SelectorListFactory selectorListFactory) {
+      SelectorListFactory selectorListFactory,
+      TypeCoercerFactory typeCoercerFactory) {
     this.knownRuleTypesProvider = knownRuleTypesProvider;
     this.builtTargetVerifier = builtTargetVerifier;
     this.cells = cells;
     this.selectorListFactory = selectorListFactory;
+    this.typeCoercerFactory = typeCoercerFactory;
   }
 
   private ImmutableMap<String, Object> convertSelects(
+      UnconfiguredBuildTarget target,
+      RuleDescriptor<?> descriptor,
       Map<String, Object> attrs,
       CellRelativePath pathRelativeToProjectRoot,
       DependencyStack dependencyStack) {
     ImmutableMap.Builder<String, Object> result = ImmutableMap.builder();
+    DataTransferObjectDescriptor<?> constructorDescriptor =
+        descriptor.dataTransferObjectDescriptor(typeCoercerFactory);
     for (Map.Entry<String, Object> attr : attrs.entrySet()) {
       if (attr.getKey().startsWith("buck.")
           || attr.getKey().equals(VisibilityAttributes.VISIBILITY)
           || attr.getKey().equals(VisibilityAttributes.WITHIN_VIEW)) {
         continue;
       }
+      ParamInfo paramInfo = constructorDescriptor.getParamInfos().get(attr.getKey());
+      Preconditions.checkNotNull(paramInfo, "attr %s", attr.getKey());
       result.put(
           attr.getKey(),
           convertSelectorListInAttrValue(
-              attr.getKey(), attr.getValue(), pathRelativeToProjectRoot, dependencyStack));
+              target,
+              paramInfo,
+              attr.getKey(),
+              attr.getValue(),
+              pathRelativeToProjectRoot,
+              dependencyStack));
     }
     return result.build();
   }
@@ -91,11 +107,21 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
    * Convert attr value {@link ListWithSelects} to {@link SelectorList} or keep it as is otherwise
    */
   private Object convertSelectorListInAttrValue(
+      UnconfiguredBuildTarget buildTarget,
+      ParamInfo paramInfo,
       String attrName,
       Object attrValue,
       CellRelativePath pathRelativeToProjectRoot,
       DependencyStack dependencyStack) {
     if (attrValue instanceof ListWithSelects) {
+      if (!paramInfo.isConfigurable()) {
+        throw new HumanReadableException(
+            dependencyStack,
+            "%s: attribute '%s' cannot be configured using select",
+            buildTarget,
+            attrName);
+      }
+
       try {
         return selectorListFactory.create(
             cells.getCell(pathRelativeToProjectRoot.getCellName()).getCellNameResolver(),
@@ -124,10 +150,6 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
       Package pkg) {
     KnownRuleTypes knownRuleTypes = knownRuleTypesProvider.get(cell);
     RuleDescriptor<?> descriptor = parseRuleTypeFromRawRule(knownRuleTypes, rawAttributes);
-
-    if (descriptor.getRuleType().getKind() == RuleType.Kind.CONFIGURATION) {
-      assertRawTargetNodeAttributesNotConfigurable(target, rawAttributes);
-    }
 
     // Because of the way that the parser works, we know this can never return null.
     BaseDescription<?> description = descriptor.getDescription();
@@ -162,7 +184,8 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
     }
 
     ImmutableMap<String, Object> withSelects =
-        convertSelects(rawAttributes, target.getCellRelativeBasePath(), dependencyStack);
+        convertSelects(
+            target, descriptor, rawAttributes, target.getCellRelativeBasePath(), dependencyStack);
 
     return ImmutableUnconfiguredTargetNode.of(
         target, descriptor.getRuleType(), withSelects, visibilityPatterns, withinViewPatterns);
@@ -173,16 +196,5 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
     String type =
         (String) Objects.requireNonNull(attributes.get(BuckPyFunction.TYPE_PROPERTY_NAME));
     return knownRuleTypes.getDescriptorByName(type);
-  }
-
-  private void assertRawTargetNodeAttributesNotConfigurable(
-      UnconfiguredBuildTarget buildTarget, Map<String, Object> rawTargetNodeAttributes) {
-    for (Map.Entry<String, ?> entry : rawTargetNodeAttributes.entrySet()) {
-      Preconditions.checkState(
-          !(entry.getValue() instanceof SelectorList),
-          "Attribute %s cannot be configurable in %s",
-          entry.getKey(),
-          buildTarget);
-    }
   }
 }

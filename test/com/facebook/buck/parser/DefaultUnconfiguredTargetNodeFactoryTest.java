@@ -39,6 +39,7 @@ import com.facebook.buck.core.select.impl.SelectorListFactory;
 import com.facebook.buck.parser.api.PackageMetadata;
 import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.parser.syntax.SelectorValue;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.JsonTypeConcatenatingCoercerFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -71,7 +72,8 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
             new BuiltTargetVerifier(),
             cell,
             new SelectorListFactory(
-                new SelectorFactory(new ParsingUnconfiguredBuildTargetViewFactory())));
+                new SelectorFactory(new ParsingUnconfiguredBuildTargetViewFactory())),
+            new DefaultTypeCoercerFactory());
   }
 
   @Test
