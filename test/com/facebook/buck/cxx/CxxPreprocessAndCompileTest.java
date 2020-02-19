@@ -61,6 +61,7 @@ import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.modern.SerializationTestHelper;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.PathNormalizer;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
@@ -790,7 +791,8 @@ public class CxxPreprocessAndCompileTest {
             new ToolchainProviderBuilder().build(),
             cellPath -> projectFilesystem);
 
-    ObjectMapper objectMapper = new ObjectMapper();
+    ObjectMapper objectMapper = ObjectMappers.legacyCreate();
+    // TODO(nga): must not configure own mapper
     objectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
     objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
     objectMapper.addMixIn(FileSystem.class, FileSystemMixIn.class);

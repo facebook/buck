@@ -93,14 +93,16 @@ public final class IjModuleGraphFactory {
             .collect(
                 ImmutableListMultimap.toImmutableListMultimap(
                     targetNode ->
-                        projectFilesystem.relativize(
-                            targetNode
-                                .getFilesystem()
-                                .resolve(
-                                    targetNode
-                                        .getBuildTarget()
-                                        .getCellRelativeBasePath()
-                                        .getPath())),
+                        projectFilesystem
+                            .relativize(
+                                targetNode
+                                    .getFilesystem()
+                                    .resolve(
+                                        targetNode
+                                            .getBuildTarget()
+                                            .getCellRelativeBasePath()
+                                            .getPath()))
+                            .getPath(),
                     targetNode -> targetNode));
 
     AggregationTree aggregationTree =

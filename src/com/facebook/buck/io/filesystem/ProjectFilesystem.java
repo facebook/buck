@@ -85,18 +85,21 @@ public interface ProjectFilesystem {
     return resolve(path.toPath(getFileSystem()));
   }
 
+  /**
+   * @return the specified {@code path} resolved against {@link #getRootPath()} to an absolute path.
+   */
   default AbsPath resolve(RelPath path) {
     return AbsPath.of(resolve(path.getPath()));
   }
 
   /** Construct a relative path between the project root and a given path. */
-  Path relativize(Path path);
+  RelPath relativize(Path path);
 
   default RelPath relativize(AbsPath path) {
-    return RelPath.of(relativize(path.getPath()));
+    return relativize(path.getPath());
   }
 
-  /** @return a set of {@link PathMatcher} objects ignored by {@link #isIgnored(Path)} */
+  /** @return a set of {@link PathMatcher} objects ignored by {@link #isIgnored(RelPath)} */
   ImmutableSet<PathMatcher> getBlacklistedPaths();
 
   /** @return A {@link ImmutableSet} of {@link PathMatcher} objects to have buck ignore. */
@@ -236,6 +239,10 @@ public interface ProjectFilesystem {
   /** Allows {@link Files#isDirectory} to be faked in tests. */
   boolean isDirectory(Path child, LinkOption... linkOptions);
 
+  default boolean isDirectory(PathWrapper path, LinkOption... linkOptions) {
+    return isDirectory(path.getPath(), linkOptions);
+  }
+
   /** Allows {@link Files#isExecutable} to be faked in tests. */
   boolean isExecutable(Path child);
 
@@ -246,7 +253,7 @@ public interface ProjectFilesystem {
   /**
    * Returns the files inside {@code pathRelativeToProjectRoot} which match {@code globPattern},
    * ordered in descending last modified time order. This will not obey the results of {@link
-   * #isIgnored(Path)}.
+   * #isIgnored(RelPath)}.
    */
   ImmutableSortedSet<Path> getMtimeSortedMatchingDirectoryContents(
       Path pathRelativeToProjectRoot, String globPattern) throws IOException;
@@ -407,12 +414,7 @@ public interface ProjectFilesystem {
    * @return whether ignoredPaths contains path or any of its ancestors.
    */
   @Deprecated
-  boolean isIgnored(Path path);
-
-  @Deprecated
-  default boolean isIgnored(PathWrapper path) {
-    return isIgnored(path.getPath());
-  }
+  boolean isIgnored(RelPath path);
 
   /**
    * Returns a relative path whose parent directory is guaranteed to exist. The path will be under

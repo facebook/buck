@@ -786,7 +786,12 @@ public class BuildCommand extends AbstractCommand {
                   path ->
                       showFullOutput || showFullJsonOutput
                           ? path
-                          : params.getCells().getRootCell().getFilesystem().relativize(path));
+                          : params
+                              .getCells()
+                              .getRootCell()
+                              .getFilesystem()
+                              .relativize(path)
+                              .getPath());
 
       params.getConsole().getStdOut().flush();
       if (showJsonOutput || showFullJsonOutput) {

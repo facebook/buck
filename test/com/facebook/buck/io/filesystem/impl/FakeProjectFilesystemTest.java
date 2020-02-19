@@ -168,7 +168,7 @@ public class FakeProjectFilesystemTest {
         new SimpleFileVisitor<Path>() {
           @Override
           public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) {
-            filesVisited.add(filesystem.relativize(path));
+            filesVisited.add(filesystem.relativize(path).getPath());
             return FileVisitResult.CONTINUE;
           }
         };

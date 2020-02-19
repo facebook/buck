@@ -452,7 +452,7 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
     try (DirectoryStream<Path> directoryStream =
         getDirectoryContentsStream(resolve(pathRelativeToProjectRoot))) {
       return FluentIterable.from(directoryStream)
-          .transform(absolutePath -> relativize(absolutePath))
+          .transform(absolutePath -> relativize(absolutePath).getPath())
           .toSortedList(Comparator.naturalOrder());
     }
   }
@@ -472,7 +472,8 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
                         || (input.isAbsolute() && input.getParent() == null)) {
                       return false;
                     }
-                    return MorePaths.getParentOrEmpty(input).equals(relativize(absolutePath));
+                    return MorePaths.getParentOrEmpty(input)
+                        .equals(relativize(absolutePath).getPath());
                   })
               .transform(FakeProjectFilesystem.this::resolve);
 

@@ -17,6 +17,8 @@
 package com.facebook.buck.io.filesystem.impl;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.file.MorePosixFilePermissions;
 import com.facebook.buck.io.file.MostFiles;
@@ -96,7 +98,7 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
 
   private final Path edenMagicPathElement;
 
-  private final Path projectRoot;
+  private final AbsPath projectRoot;
   private final BuckPaths buckPaths;
 
   private final ImmutableSet<PathMatcher> blackListedPaths;
@@ -166,7 +168,7 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
       Preconditions.checkArgument(Files.isDirectory(root), "%s must be a directory", root);
     }
 
-    this.projectRoot = MorePaths.normalize(root);
+    this.projectRoot = MorePaths.normalize(AbsPath.of(root));
     this.delegate = delegate;
     this.delegatePair = delegatePair;
     this.ignoreValidityOfPaths = false;
@@ -184,7 +186,7 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
                                     buckPaths)),
                             root))
                     .append(ImmutableSet.of(buckPaths.getTrashDir()))
-                    .transform(RecursiveFileMatcher::of))
+                    .transform(basePath -> RecursiveFileMatcher.of(RelPath.of(basePath))))
             .toSet();
     this.buckPaths = buckPaths;
 
@@ -193,18 +195,18 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
             .filter(RecursiveFileMatcher.class)
             .transform(
                 matcher -> {
-                  Path path = matcher.getPath();
+                  RelPath path = matcher.getPath();
                   ImmutableSet<Path> filtered =
-                      MorePaths.filterForSubpaths(ImmutableSet.of(path), root);
+                      MorePaths.filterForSubpaths(ImmutableSet.of(path.getPath()), root);
                   if (filtered.isEmpty()) {
-                    return path;
+                    return path.getPath();
                   }
                   return Iterables.getOnlyElement(filtered);
                 })
             // TODO(#10068334) So we claim to ignore this path to preserve existing behaviour, but
             // we really don't end up ignoring it in reality (see extractIgnorePaths).
             .append(ImmutableSet.of(buckPaths.getBuckOut()))
-            .transform(RecursiveFileMatcher::of)
+            .transform((Path basePath) -> RecursiveFileMatcher.of(RelPath.of(basePath)))
             .transform(matcher -> (PathMatcher) matcher)
             .append(
                 // RecursiveFileMatcher instances are handled separately above because they all
@@ -279,12 +281,13 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
 
   @Override
   public DefaultProjectFilesystemView asView() {
-    return new DefaultProjectFilesystemView(this, getPath(""), projectRoot, ImmutableMap.of());
+    return new DefaultProjectFilesystemView(
+        this, getPath(""), projectRoot.getPath(), ImmutableMap.of());
   }
 
   @Override
   public final Path getRootPath() {
-    return projectRoot;
+    return projectRoot.getPath();
   }
 
   @Override
@@ -307,7 +310,7 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
 
   /** Construct a relative path between the project root and a given path. */
   @Override
-  public Path relativize(Path path) {
+  public RelPath relativize(Path path) {
     return projectRoot.relativize(path);
   }
 
@@ -329,7 +332,7 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
 
   @Override
   public Path getPathForRelativePath(String pathRelativeToProjectRoot) {
-    return projectRoot.resolve(pathRelativeToProjectRoot);
+    return projectRoot.resolve(pathRelativeToProjectRoot).getPath();
   }
 
   /**
@@ -342,11 +345,12 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
   public Optional<Path> getPathRelativeToProjectRoot(Path path) {
     path = MorePaths.normalize(path);
     if (path.isAbsolute()) {
-      Path configuredBuckOut =
+      AbsPath pathAbs = AbsPath.of(path);
+      AbsPath configuredBuckOut =
           MorePaths.normalize(projectRoot.resolve(buckPaths.getConfiguredBuckOut()));
       // If the path is in the configured buck-out, it's also part of the filesystem.
-      if (path.startsWith(configuredBuckOut) || path.startsWith(projectRoot)) {
-        return Optional.of(MorePaths.relativize(projectRoot, path));
+      if (pathAbs.startsWith(configuredBuckOut) || pathAbs.startsWith(projectRoot)) {
+        return Optional.of(MorePaths.relativize(projectRoot.getPath(), path));
       } else {
         return Optional.empty();
       }
@@ -490,7 +494,7 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
       throws IOException {
     Path rootPath = getPathForRelativePath(pathRelativeToProjectRoot);
     walkFileTreeWithPathMapping(
-        rootPath, visitOptions, fileVisitor, ignoreFilter, path -> relativize(path));
+        rootPath, visitOptions, fileVisitor, ignoreFilter, path -> relativize(path).getPath());
   }
 
   void walkFileTreeWithPathMapping(
@@ -618,7 +622,7 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
     try (DirectoryStream<Path> stream = getDirectoryContentsStream(path)) {
       return FluentIterable.from(stream)
           .filter(input -> !isIgnored(relativize(input)))
-          .transform(absolutePath -> MorePaths.relativize(projectRoot, absolutePath))
+          .transform(absolutePath -> MorePaths.relativize(projectRoot.getPath(), absolutePath))
           .toSortedList(Comparator.naturalOrder());
     }
   }
@@ -636,7 +640,7 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
   /**
    * Returns the files inside {@code pathRelativeToProjectRoot} which match {@code globPattern},
    * ordered in descending last modified time order. This will not obey the results of {@link
-   * #isIgnored(Path)}.
+   * ProjectFilesystem#isIgnored(RelPath)}.
    */
   @Override
   public ImmutableSortedSet<Path> getMtimeSortedMatchingDirectoryContents(
@@ -1086,10 +1090,9 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
    * @return whether ignoredPaths contains path or any of its ancestors.
    */
   @Override
-  public boolean isIgnored(Path path) {
-    Preconditions.checkArgument(!path.isAbsolute());
+  public boolean isIgnored(RelPath path) {
     for (PathMatcher blackListedPath : blackListedPaths) {
-      if (blackListedPath.matches(path)) {
+      if (blackListedPath.matches(path.getPath())) {
         return true;
       }
     }

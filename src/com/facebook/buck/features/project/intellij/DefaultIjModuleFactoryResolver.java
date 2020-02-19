@@ -110,7 +110,9 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
   public Optional<Path> getLibraryAndroidManifestPath(
       TargetNode<AndroidLibraryDescription.CoreArg> targetNode) {
     Optional<SourcePath> manifestPath = targetNode.getConstructorArg().getManifest();
-    return manifestPath.map(sourcePathResolver::getAbsolutePath).map(projectFilesystem::relativize);
+    return manifestPath
+        .map(sourcePathResolver::getAbsolutePath)
+        .map(path -> projectFilesystem.relativize(path).getPath());
   }
 
   @Override

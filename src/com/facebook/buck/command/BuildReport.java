@@ -22,6 +22,7 @@ import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.BuildRule;
@@ -255,7 +256,8 @@ public class BuildReport {
         ImmutableSet.Builder<Path> pathBuilderForLabel =
             ImmutableSet.builderWithExpectedSize(sourcePaths.size());
         for (SourcePath sourcePath : sourcePaths) {
-          pathBuilderForLabel.add(relativizeSourcePathToProjectRoot(projectFilesystem, sourcePath));
+          pathBuilderForLabel.add(
+              relativizeSourcePathToProjectRoot(projectFilesystem, sourcePath).getPath());
         }
         allPathsBuilder.put(outputLabel, pathBuilderForLabel.build());
       }
@@ -281,7 +283,8 @@ public class BuildReport {
           ((HasMultipleOutputs) rule).getSourcePathToOutput(OutputLabel.defaultLabel());
       if (defaultPaths != null && defaultPaths.size() == 1) {
         return relativizeSourcePathToProjectRoot(
-            rule.getProjectFilesystem(), Iterables.getOnlyElement(defaultPaths));
+                rule.getProjectFilesystem(), Iterables.getOnlyElement(defaultPaths))
+            .getPath();
       }
       return null;
     }
@@ -294,10 +297,10 @@ public class BuildReport {
     if (outputFile == null) {
       return null;
     }
-    return relativizeSourcePathToProjectRoot(rule.getProjectFilesystem(), outputFile);
+    return relativizeSourcePathToProjectRoot(rule.getProjectFilesystem(), outputFile).getPath();
   }
 
-  private Path relativizeSourcePathToProjectRoot(
+  private RelPath relativizeSourcePathToProjectRoot(
       ProjectFilesystem projectFilesystem, SourcePath sourcePath) {
     Path relativeOutputPath = pathResolver.getRelativePath(sourcePath);
     Path absoluteOutputPath = projectFilesystem.resolve(relativeOutputPath);

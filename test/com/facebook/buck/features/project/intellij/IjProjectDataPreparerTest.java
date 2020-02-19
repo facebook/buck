@@ -26,6 +26,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
@@ -159,10 +160,10 @@ public class IjProjectDataPreparerTest {
             .addSrc(depPath)
             .build();
 
-    Path depPathToProjectRoot = mainFileSystem.relativize(depFileSystem.resolve(depPath));
+    RelPath depPathToProjectRoot = mainFileSystem.relativize(depFileSystem.resolve(depPath));
     if (packageName != null) {
       mainFileSystem.writeContentsToPath(
-          "package " + packageName + ";\nclass Dep{}", depPathToProjectRoot);
+          "package " + packageName + ";\nclass Dep{}", depPathToProjectRoot.getPath());
     }
 
     TargetNode<?> mainTargetNode =
@@ -191,7 +192,7 @@ public class IjProjectDataPreparerTest {
             ParsingJavaPackageFinder.preparse(
                 javaFileParser,
                 mainFileSystem,
-                ImmutableSet.of(depPathToProjectRoot),
+                ImmutableSet.of(depPathToProjectRoot.getPath()),
                 javaPackageFinder),
             moduleGraph,
             mainFileSystem,

@@ -133,7 +133,7 @@ public class DefaultClassUsageFileWriterTest {
             .getRootPath()
             .getRoot()
             .resolve("AwayCell")
-            .resolve(awayFs.relativize(testTwoJarPath));
+            .resolve(awayFs.relativize(testTwoJarPath).getPath());
     Escaper.Quoter quoter =
         Platform.detect() == Platform.WINDOWS
             ? Escaper.Quoter.DOUBLE_WINDOWS_JAVAC

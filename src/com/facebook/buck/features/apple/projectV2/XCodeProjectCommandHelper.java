@@ -33,6 +33,7 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
@@ -584,10 +585,14 @@ public class XCodeProjectCommandHelper {
           inputTarget, requiredBuildTargetsForWorkspace);
 
       Path absolutePath = workspaceCell.getFilesystem().resolve(result.workspacePath);
-      Path relativePath = cell.getFilesystem().relativize(absolutePath);
+      RelPath relativePath = cell.getFilesystem().relativize(absolutePath);
 
       generationResultsBuilder.add(
-          new Result(inputTarget, relativePath, result.project, requiredBuildTargetsForWorkspace));
+          new Result(
+              inputTarget,
+              relativePath.getPath(),
+              result.project,
+              requiredBuildTargetsForWorkspace));
     }
 
     return generationResultsBuilder.build();

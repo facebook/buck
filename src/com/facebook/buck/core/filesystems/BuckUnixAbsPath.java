@@ -58,4 +58,9 @@ class BuckUnixAbsPath extends BuckUnixPath implements AbsPath {
   public BuckUnixAbsPath getRoot() {
     return (BuckUnixAbsPath) super.getRoot();
   }
+
+  @Override
+  public BuckUnixRelPath relativize(Path obj) {
+    return (BuckUnixRelPath) super.relativize(obj);
+  }
 }

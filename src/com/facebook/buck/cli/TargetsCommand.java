@@ -1288,7 +1288,9 @@ public class TargetsCommand extends AbstractCommand {
 
   private String pathToString(Path path, CommandRunnerParams params) {
     Path formattedPath =
-        isShowFullOutput ? path : params.getCells().getRootCell().getFilesystem().relativize(path);
+        isShowFullOutput
+            ? path
+            : params.getCells().getRootCell().getFilesystem().relativize(path).getPath();
     return formattedPath.toString();
   }
 

@@ -328,7 +328,9 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
     strategyContext
         .getBuildableContext()
         .recordArtifact(
-            rule.getProjectFilesystem().relativize(mbrHelper.getCellPathPrefix().resolve(output)));
+            rule.getProjectFilesystem()
+                .relativize(mbrHelper.getCellPathPrefix().resolve(output))
+                .getPath());
   }
 
   private ListenableFuture<RemoteExecutionActionInfo> computeActionAndUpload(

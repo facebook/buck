@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.features.python.toolchain.impl.PythonPlatformsProviderFactoryUtils;
 import com.facebook.buck.io.ExecutableFinder;
@@ -132,13 +133,14 @@ public class PrebuiltPythonLibraryIntegrationTest {
         ComparatorMatcherBuilder.comparedBy(new VersionStringComparator())
             .greaterThanOrEqualTo("3.7"));
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
-    Path dir =
+    RelPath dir =
         filesystem.relativize(
             workspace.buildAndReturnOutput(
                 "-c", "python.interpreter=" + py3, "//:python_egg#py-default,default,compile"));
     assertThat(
-        filesystem.asView().getFilesUnderPath(dir, EnumSet.noneOf(FileVisitOption.class)).stream()
-            .map(p -> PathFormatter.pathWithUnixSeparators(dir.relativize(p)))
+        filesystem.asView().getFilesUnderPath(dir.getPath(), EnumSet.noneOf(FileVisitOption.class))
+            .stream()
+            .map(p -> PathFormatter.pathWithUnixSeparators(dir.getPath().relativize(p)))
             .collect(ImmutableList.toImmutableList()),
         Matchers.containsInAnyOrder(
             Matchers.matchesRegex("package(/__pycache__)?/file(.cpython-3[0-9])?.pyc"),
@@ -149,7 +151,7 @@ public class PrebuiltPythonLibraryIntegrationTest {
   public void compileOptOut() throws IOException {
     Path py3 = PythonTestUtils.assumeInterpreter("python3");
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
-    Path binPath =
+    RelPath binPath =
         filesystem.relativize(
             workspace.buildAndReturnOutput(
                 "-c",
@@ -161,8 +163,8 @@ public class PrebuiltPythonLibraryIntegrationTest {
                 "//:main_whl_compile_opt_out"));
     assertThat(
         workspace.getProjectFileSystem().asView()
-            .getFilesUnderPath(binPath, EnumSet.noneOf(FileVisitOption.class)).stream()
-            .map(binPath::relativize)
+            .getFilesUnderPath(binPath.getPath(), EnumSet.noneOf(FileVisitOption.class)).stream()
+            .map(p -> binPath.getPath().relativize(p))
             .map(Path::toString)
             .collect(Collectors.toList()),
         Matchers.everyItem(

@@ -17,6 +17,7 @@
 package com.facebook.buck.features.apple.projectV2;
 
 import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -106,16 +107,17 @@ public class BuildConfiguration {
           getXcconfigPath(buildTargetFileSystem, buildTarget, config.getKey());
       // Now we relativize the path based around the project file system in order for relative paths
       // in Xcode to resolve properly (since they are relative to the project).
-      Path xcconfigPath =
+      RelPath xcconfigPath =
           projectFilesystem.relativize(buildTargetFileSystem.resolve(buildTargetXcconfigPath));
 
-      writeBuildConfiguration(projectFilesystem, xcconfigPath, mergedSettings, writeReadOnlyFile);
+      writeBuildConfiguration(
+          projectFilesystem, xcconfigPath.getPath(), mergedSettings, writeReadOnlyFile);
 
       nativeTargetAttributes.addXcconfigs(
-          new XcconfigBaseConfiguration(config.getKey(), xcconfigPath));
+          new XcconfigBaseConfiguration(config.getKey(), xcconfigPath.getPath()));
 
       xcconfigPathsBuilder.add(
-          projectFilesystem.getPathForRelativePath(xcconfigPath).toAbsolutePath());
+          projectFilesystem.getPathForRelativePath(xcconfigPath.getPath()).toAbsolutePath());
     }
   }
 

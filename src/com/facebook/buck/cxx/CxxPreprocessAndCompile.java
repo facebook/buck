@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -332,7 +333,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
       ImmutableList<Arg> arguments =
           compilerDelegate.getArguments(preprocessorDelegateFlags, filesystem.getRootPath());
 
-      Path relativeInputPath = filesystem.relativize(resolver.getAbsolutePath(input));
+      RelPath relativeInputPath = filesystem.relativize(resolver.getAbsolutePath(input));
       Path resolvedOutput = outputPathResolver.resolvePath(output);
 
       return new CxxPreprocessAndCompileStep(
@@ -346,7 +347,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
           CxxSourceTypes.supportsDepFiles(inputType)
               ? preprocessDelegate.map(ignored -> getDepFilePath(resolvedOutput))
               : Optional.empty(),
-          relativeInputPath,
+          relativeInputPath.getPath(),
           inputType,
           new CxxPreprocessAndCompileStep.ToolCommand(
               compilerDelegate.getCommandPrefix(resolver),
@@ -362,7 +363,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
           Optional.of(
               ImmutableCxxLogInfo.of(
                   Optional.ofNullable(targetName),
-                  Optional.ofNullable(relativeInputPath),
+                  Optional.ofNullable(relativeInputPath.getPath()),
                   Optional.ofNullable(resolvedOutput))));
     }
 

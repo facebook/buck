@@ -244,7 +244,7 @@ public abstract class AbstractSourcePathResolver implements SourcePathResolver {
   public ImmutableSortedSet<Path> getRelativePath(
       ProjectFilesystem projectFilesystem, SourcePath sourcePath) {
     return getAbsolutePath(sourcePath).stream()
-        .map(projectFilesystem::relativize)
+        .map(path -> projectFilesystem.relativize(path).getPath())
         .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 

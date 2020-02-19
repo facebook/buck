@@ -108,7 +108,7 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   /** @return path to the header file, relativized against the given project filesystem (cell) */
   public Path getRelativeHeaderPath(ProjectFilesystem relativizedTo) {
-    return relativizedTo.relativize(getAbsoluteHeaderPath());
+    return relativizedTo.relativize(getAbsoluteHeaderPath()).getPath();
   }
 
   private static BuildRuleParams makeBuildRuleParams(ImmutableSortedSet<BuildRule> deps) {

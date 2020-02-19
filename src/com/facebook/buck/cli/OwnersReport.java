@@ -300,7 +300,7 @@ final class OwnersReport {
         // are calling the parser does not make use of its internal caches.
         Map<AbsPath, ImmutableList<TargetNode<?>>> map = new HashMap<>();
         for (Path absolutePath : entry.getValue()) {
-          RelPath cellRelativePath = RelPath.of(cell.getFilesystem().relativize(absolutePath));
+          RelPath cellRelativePath = cell.getFilesystem().relativize(absolutePath);
           ImmutableSet<RelPath> basePaths = getAllBasePathsForPath(buildFileTree, cellRelativePath);
           if (basePaths.isEmpty()) {
             inputWithNoOwners.add(absolutePath);

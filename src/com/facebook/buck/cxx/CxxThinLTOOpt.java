@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -158,7 +159,7 @@ public class CxxThinLTOOpt extends ModernBuildRule<CxxThinLTOOpt.Impl>
       ImmutableList<Arg> arguments =
           compilerDelegate.getArguments(CxxToolFlags.of(), filesystem.getRootPath());
 
-      Path relativeInputPath = filesystem.relativize(resolver.getAbsolutePath(input));
+      RelPath relativeInputPath = filesystem.relativize(resolver.getAbsolutePath(input));
       Path resolvedOutput = outputPathResolver.resolvePath(output);
 
       return new CxxPreprocessAndCompileStep(
@@ -166,7 +167,7 @@ public class CxxThinLTOOpt extends ModernBuildRule<CxxThinLTOOpt.Impl>
           CxxPreprocessAndCompileStep.Operation.COMPILE,
           resolvedOutput,
           Optional.empty(),
-          relativeInputPath,
+          relativeInputPath.getPath(),
           inputType,
           new CxxPreprocessAndCompileStep.ToolCommand(
               compilerDelegate.getCommandPrefix(resolver),
@@ -182,7 +183,7 @@ public class CxxThinLTOOpt extends ModernBuildRule<CxxThinLTOOpt.Impl>
           Optional.of(
               ImmutableCxxLogInfo.of(
                   Optional.ofNullable(targetName),
-                  Optional.ofNullable(relativeInputPath),
+                  Optional.ofNullable(relativeInputPath.getPath()),
                   Optional.ofNullable(resolvedOutput))));
     }
 

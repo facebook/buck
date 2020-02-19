@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehavior;
@@ -31,7 +32,6 @@ import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -236,7 +236,7 @@ public abstract class JavacOptions implements AddsToRuleKey {
             bootclasspath.stream()
                 .map(pathResolver::getAbsolutePath)
                 .map(filesystem::relativize)
-                .map(Path::toString)
+                .map(RelPath::toString)
                 .collect(Collectors.joining(File.pathSeparator));
         optionsConsumer.addOptionValue("bootclasspath", bcp);
       }

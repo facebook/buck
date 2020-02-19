@@ -287,7 +287,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
             .map(
                 input ->
                     getProjectFilesystem()
-                        .relativize(buildContext.getSourcePathResolver().getAbsolutePath(input)))
+                        .relativize(buildContext.getSourcePathResolver().getAbsolutePath(input))
+                        .getPath())
             .collect(ImmutableSet.toImmutableSet());
 
     steps.addAll(

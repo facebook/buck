@@ -26,6 +26,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.PathMatcher;
@@ -64,10 +65,11 @@ abstract class CellImpl implements Cell {
     ImmutableSet.Builder<PathMatcher> ignores =
         ImmutableSet.builderWithExpectedSize(filesystem.getBlacklistedPaths().size() + 1);
     ignores.addAll(filesystem.getBlacklistedPaths());
-    ignores.add(RecursiveFileMatcher.of(filesystem.getBuckPaths().getBuckOut()));
+    ignores.add(RecursiveFileMatcher.of(RelPath.of(filesystem.getBuckPaths().getBuckOut())));
     for (Path subCellRoots : getKnownRootsOfAllCells()) {
       if (!AbsPath.of(subCellRoots).equals(getRoot())) {
-        ignores.add(RecursiveFileMatcher.of(filesystem.relativize(subCellRoots)));
+        ignores.add(
+            RecursiveFileMatcher.of(RelPath.of(filesystem.relativize(subCellRoots).getPath())));
       }
     }
     return filesystem.asView().withView(filesystem.getPath(""), ignores.build());

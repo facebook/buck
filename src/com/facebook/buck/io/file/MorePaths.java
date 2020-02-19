@@ -17,6 +17,7 @@
 package com.facebook.buck.io.file;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.BuckUnixPath;
 import com.facebook.buck.core.filesystems.PathWrapper;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -188,6 +189,11 @@ public class MorePaths {
       path = path.normalize();
     }
     return path;
+  }
+
+  /** Type-safer version of {@link #normalize(Path)}. */
+  public static AbsPath normalize(AbsPath path) {
+    return AbsPath.of(normalize(path.getPath()));
   }
 
   /** Return empty path with the same filesystem as provided path */

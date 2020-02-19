@@ -72,8 +72,12 @@ public interface AbsPath extends PathWrapper {
     return parent != null ? AbsPath.of(parent) : null;
   }
 
+  default RelPath relativize(Path other) {
+    return RelPath.of(this.getPath().relativize(other));
+  }
+
   default RelPath relativize(AbsPath other) {
-    return RelPath.of(this.getPath().relativize(other.getPath()));
+    return relativize(other.getPath());
   }
 
   /**

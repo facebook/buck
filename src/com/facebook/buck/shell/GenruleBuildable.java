@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -480,8 +481,8 @@ public class GenruleBuildable implements Buildable {
     srcs.forEach(
         (name, src) -> {
           Path absolutePath = pathResolver.getAbsolutePath(src);
-          Path target = filesystem.relativize(absolutePath);
-          links.put(filesystem.getPath(name), target);
+          RelPath target = filesystem.relativize(absolutePath);
+          links.put(filesystem.getPath(name), target.getPath());
         });
   }
 
@@ -520,10 +521,10 @@ public class GenruleBuildable implements Buildable {
                 localPath = relativePath;
               }
 
-              Path target = filesystem.relativize(absolutePath);
-              if (!seenTargets.contains(target)) {
-                seenTargets.add(target);
-                links.put(localPath, target);
+              RelPath target = filesystem.relativize(absolutePath);
+              if (!seenTargets.contains(target.getPath())) {
+                seenTargets.add(target.getPath());
+                links.put(localPath, target.getPath());
               }
             });
   }

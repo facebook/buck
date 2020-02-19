@@ -19,6 +19,7 @@ package com.facebook.buck.features.python;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -73,13 +74,14 @@ public class PythonLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "python_library_compile", tmp);
     workspace.setUp();
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
-    Path dir =
+    RelPath dir =
         filesystem.relativize(
             workspace.buildAndReturnOutput(
                 "-c", "python.interpreter=" + py3, "//:lib#py-default,default,compile"));
     assertThat(
-        filesystem.asView().getFilesUnderPath(dir, EnumSet.noneOf(FileVisitOption.class)).stream()
-            .map(p -> PathFormatter.pathWithUnixSeparators(dir.relativize(p)))
+        filesystem.asView().getFilesUnderPath(dir.getPath(), EnumSet.noneOf(FileVisitOption.class))
+            .stream()
+            .map(p -> PathFormatter.pathWithUnixSeparators(dir.getPath().relativize(p)))
             .collect(ImmutableList.toImmutableList()),
         Matchers.containsInAnyOrder(
             Matchers.matchesRegex("(__pycache__/)?foo(.cpython-3[0-9])?.pyc")));
@@ -102,7 +104,7 @@ public class PythonLibraryIntegrationTest {
     // A supplier which uses Buck to compile bytecode and return the content hashes.
     ThrowingSupplier<Map<Path, Sha1HashCode>, IOException> buildAndGetHashes =
         () -> {
-          Path dir =
+          RelPath dir =
               filesystem.relativize(
                   workspace.buildAndReturnOutput(
                       // Generate some randomness to encourage this test to fail if propagated
@@ -113,7 +115,9 @@ public class PythonLibraryIntegrationTest {
                       "//:lib#py-default,default,compile"));
           Map<Path, Sha1HashCode> hashes = new HashMap<>();
           for (Path path :
-              filesystem.asView().getFilesUnderPath(dir, EnumSet.noneOf(FileVisitOption.class))) {
+              filesystem
+                  .asView()
+                  .getFilesUnderPath(dir.getPath(), EnumSet.noneOf(FileVisitOption.class))) {
             hashes.put(path, filesystem.computeSha1(path));
           }
           workspace.getBuildLog().assertTargetBuiltLocally(target);

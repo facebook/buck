@@ -228,7 +228,7 @@ class RobolectricTestHelper {
                           "Path %s is needed to run robolectric test %s, but was not found.",
                           input, buildTarget));
                 }
-                return !projectFilesystem.getDirectoryContents(input).isEmpty();
+                return !projectFilesystem.getDirectoryContents(input.getPath()).isEmpty();
               } catch (IOException e) {
                 LOG.warn(e, "Error filtering path for Robolectric res/assets.");
                 return true;

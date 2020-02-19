@@ -28,6 +28,7 @@ import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.apple.clang.ModuleMapMode;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.description.arg.HasTests;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -796,7 +797,7 @@ class HeaderSearchPaths {
         .toSet();
   }
 
-  private Path getPathToGenDirRelativeToProjectFileSystem(ProjectFilesystem targetFileSystem) {
+  private RelPath getPathToGenDirRelativeToProjectFileSystem(ProjectFilesystem targetFileSystem) {
     // For targets in the cell of the project, this will simply return the normal `buck-out/gen`
     // path. However, for targets in other cells, we need to put them in `buck-out/cell/...` path
     // In order to do this, we need to get the target file system and relativize the path back
@@ -810,7 +811,7 @@ class HeaderSearchPaths {
   }
 
   private Path getPathToHeaderMapsRoot(ProjectFilesystem targetFileSystem) {
-    Path genDirPathForTarget = getPathToGenDirRelativeToProjectFileSystem(targetFileSystem);
+    RelPath genDirPathForTarget = getPathToGenDirRelativeToProjectFileSystem(targetFileSystem);
     return genDirPathForTarget.resolve("_p");
   }
 

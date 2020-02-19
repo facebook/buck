@@ -19,6 +19,7 @@ package com.facebook.buck.features.project.intellij;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.config.DirCacheEntry;
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableSortedSet;
@@ -73,7 +74,7 @@ public class IJProjectCleaner {
             .map(File::getAbsolutePath)
             .map(Paths::get)
             .map(projectFilesystem::relativize)
-            .map(Path::toString)
+            .map(RelPath::toString)
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
   }
 
