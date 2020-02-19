@@ -24,10 +24,6 @@ import java.util.Set;
 
 class MapConcatenatingCoercer extends JsonTypeConcatenatingCoercer {
 
-  MapConcatenatingCoercer() {
-    super(Map.class);
-  }
-
   @Override
   public Object concat(Iterable<Object> elements) {
     @SuppressWarnings("unchecked")

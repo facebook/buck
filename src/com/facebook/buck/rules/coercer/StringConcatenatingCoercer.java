@@ -21,10 +21,6 @@ import javax.annotation.Nullable;
 
 class StringConcatenatingCoercer extends JsonTypeConcatenatingCoercer {
 
-  StringConcatenatingCoercer() {
-    super(String.class);
-  }
-
   @Nullable
   @Override
   public Object concat(Iterable<Object> elements) {

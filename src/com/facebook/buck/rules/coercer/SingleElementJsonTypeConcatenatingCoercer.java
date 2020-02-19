@@ -26,10 +26,6 @@ import javax.annotation.Nullable;
  */
 public class SingleElementJsonTypeConcatenatingCoercer extends JsonTypeConcatenatingCoercer {
 
-  SingleElementJsonTypeConcatenatingCoercer(Class<?> elementClass) {
-    super(elementClass);
-  }
-
   @Nullable
   @Override
   public Object concat(Iterable<Object> elements) {

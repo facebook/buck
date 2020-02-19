@@ -16,11 +16,7 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
-import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.path.ForwardRelativePath;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.coercer.concat.Concatable;
 
 /**
  * The purpose of this {@link TypeCoercer} to be used together with {@link
@@ -29,37 +25,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
  *
  * <p>This coercer does not transform the objects, but only provides a way to concatenate elements.
  */
-public abstract class JsonTypeConcatenatingCoercer implements TypeCoercer<Object> {
-
-  private final Class<Object> elementClass;
-
-  @SuppressWarnings("unchecked")
-  JsonTypeConcatenatingCoercer(Class<?> elementClass) {
-    this.elementClass = (Class<Object>) elementClass;
-  }
-
-  @Override
-  public Class<Object> getOutputClass() {
-    return elementClass;
-  }
-
-  @Override
-  public boolean hasElementClass(Class<?>... types) {
-    return false;
-  }
-
-  @Override
-  public void traverse(CellNameResolver cellRoots, Object object, Traversal traversal) {}
-
-  @Override
-  public Object coerce(
-      CellPathResolver cellRoots,
-      ProjectFilesystem filesystem,
-      ForwardRelativePath pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
-      Object object) {
-    // No transformations here, just return the same object
-    return object;
-  }
+public abstract class JsonTypeConcatenatingCoercer implements Concatable<Object> {
+  protected JsonTypeConcatenatingCoercer() {}
 }

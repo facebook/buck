@@ -49,6 +49,6 @@ public class JsonTypeConcatenatingCoercerFactory {
     if (Integer.class.equals(type)) {
       return new IntConcatenatingCoercer();
     }
-    return new SingleElementJsonTypeConcatenatingCoercer(type);
+    return new SingleElementJsonTypeConcatenatingCoercer();
   }
 }

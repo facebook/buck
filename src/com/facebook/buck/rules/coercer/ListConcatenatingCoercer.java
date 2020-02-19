@@ -23,10 +23,6 @@ import java.util.List;
 /** Concatenate {@link List}s of unknown types. */
 final class ListConcatenatingCoercer extends JsonTypeConcatenatingCoercer {
 
-  ListConcatenatingCoercer() {
-    super(List.class);
-  }
-
   @Override
   public Object concat(Iterable<Object> elements) {
     Iterable<List<Object>> lists = Iterables.transform(elements, List.class::cast);
