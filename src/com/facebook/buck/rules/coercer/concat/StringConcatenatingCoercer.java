@@ -14,21 +14,16 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.rules.coercer;
+package com.facebook.buck.rules.coercer.concat;
 
+import com.google.common.base.Joiner;
 import javax.annotation.Nullable;
 
-/**
- * Coercer to be used when concatenating lists of elements that don't support concatenation.
- *
- * <p>Note that this coercer can be used to produce a result from a list that contains a single
- * element.
- */
-public class SingleElementJsonTypeConcatenatingCoercer extends JsonTypeConcatenatingCoercer {
+class StringConcatenatingCoercer extends JsonTypeConcatenatingCoercer {
 
   @Nullable
   @Override
   public Object concat(Iterable<Object> elements) {
-    return null;
+    return Joiner.on("").join(elements);
   }
 }

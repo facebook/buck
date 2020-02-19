@@ -14,16 +14,21 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.rules.coercer;
+package com.facebook.buck.rules.coercer.concat;
 
-import com.google.common.collect.Streams;
 import javax.annotation.Nullable;
 
-class IntConcatenatingCoercer extends JsonTypeConcatenatingCoercer {
+/**
+ * Coercer to be used when concatenating lists of elements that don't support concatenation.
+ *
+ * <p>Note that this coercer can be used to produce a result from a list that contains a single
+ * element.
+ */
+public class SingleElementJsonTypeConcatenatingCoercer extends JsonTypeConcatenatingCoercer {
 
   @Nullable
   @Override
   public Object concat(Iterable<Object> elements) {
-    return Streams.stream(elements).mapToInt(Integer.class::cast).sum();
+    return null;
   }
 }

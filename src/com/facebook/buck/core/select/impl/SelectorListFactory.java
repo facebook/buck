@@ -24,9 +24,9 @@ import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.parser.syntax.SelectorValue;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
-import com.facebook.buck.rules.coercer.JsonTypeConcatenatingCoercer;
-import com.facebook.buck.rules.coercer.JsonTypeConcatenatingCoercerFactory;
-import com.facebook.buck.rules.coercer.SingleElementJsonTypeConcatenatingCoercer;
+import com.facebook.buck.rules.coercer.concat.JsonTypeConcatenatingCoercer;
+import com.facebook.buck.rules.coercer.concat.JsonTypeConcatenatingCoercerFactory;
+import com.facebook.buck.rules.coercer.concat.SingleElementJsonTypeConcatenatingCoercer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 

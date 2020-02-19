@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.rules.coercer;
+package com.facebook.buck.rules.coercer.concat;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;

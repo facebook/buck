@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.rules.coercer;
+package com.facebook.buck.rules.coercer.concat;
 
-import com.google.common.base.Joiner;
+import com.google.common.collect.Streams;
 import javax.annotation.Nullable;
 
-class StringConcatenatingCoercer extends JsonTypeConcatenatingCoercer {
+class IntConcatenatingCoercer extends JsonTypeConcatenatingCoercer {
 
   @Nullable
   @Override
   public Object concat(Iterable<Object> elements) {
-    return Joiner.on("").join(elements);
+    return Streams.stream(elements).mapToInt(Integer.class::cast).sum();
   }
 }

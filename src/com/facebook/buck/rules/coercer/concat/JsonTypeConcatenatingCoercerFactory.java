@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.rules.coercer;
+package com.facebook.buck.rules.coercer.concat;
 
 import java.util.List;
 import java.util.Map;

@@ -14,25 +14,26 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.rules.coercer;
+package com.facebook.buck.rules.coercer.concat;
 
 import static org.junit.Assert.assertEquals;
 
-import com.google.common.collect.ImmutableMap;
 import java.util.Arrays;
+import java.util.Collections;
 import org.junit.Test;
 
-public class MapConcatenatingCoercerTest {
+public class ListConcatenatingCoercerTest {
+
   @Test
-  public void testConcatCanMergeMaps() {
-    MapConcatenatingCoercer coercer = new MapConcatenatingCoercer();
+  public void testConcatCanMergeLists() {
+    ListConcatenatingCoercer coercer = new ListConcatenatingCoercer();
 
     assertEquals(
-        ImmutableMap.of("a", "a", "b", "b", "c", "c", "d", "d"),
+        Arrays.asList("a", "b", "c", "d"),
         coercer.concat(
             Arrays.asList(
-                ImmutableMap.of("a", "a"),
-                ImmutableMap.of("b", "b", "c", "c"),
-                ImmutableMap.of("d", "d"))));
+                Collections.singletonList("a"),
+                Arrays.asList("b", "c"),
+                Collections.singletonList("d"))));
   }
 }

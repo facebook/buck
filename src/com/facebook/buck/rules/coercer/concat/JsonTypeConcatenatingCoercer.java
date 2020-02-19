@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.rules.coercer;
-
-import com.facebook.buck.rules.coercer.concat.Concatable;
+package com.facebook.buck.rules.coercer.concat;
 
 /**
- * The purpose of this {@link TypeCoercer} to be used together with {@link
- * com.facebook.buck.core.select.impl.SelectorListFactory} to resolve configurable attributes that
- * contain values of JSON-compatible types.
+ * The purpose of this {@link com.facebook.buck.rules.coercer.TypeCoercer} to be used together with
+ * {@link com.facebook.buck.core.select.impl.SelectorListFactory} to resolve configurable attributes
+ * that contain values of JSON-compatible types.
  *
  * <p>This coercer does not transform the objects, but only provides a way to concatenate elements.
  */
