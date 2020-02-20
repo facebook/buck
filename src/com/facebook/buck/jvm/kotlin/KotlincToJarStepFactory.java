@@ -98,7 +98,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   private static final String STUBS_ARG = KAPT3_PLUGIN + "stubs=";
   private static final String LIGHT_ANALYSIS = KAPT3_PLUGIN + "useLightAnalysis=";
   private static final String CORRECT_ERROR_TYPES = KAPT3_PLUGIN + "correctErrorTypes=";
-  private static final String VERBOSE_ARG = KAPT3_PLUGIN + "verbose=";
   private static final String JAVAC_ARG = KAPT3_PLUGIN + "javacArguments=";
   private static final String AP_OPTIONS = KAPT3_PLUGIN + "apoptions=";
   private static final String KAPT_GENERATED = "kapt.kotlin.generated";
@@ -231,7 +230,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                 .add(JAVAC_ARG + encodeOptions(Collections.emptyMap()))
                 .add(LIGHT_ANALYSIS + "true") // TODO: Provide value as argument
                 .add(CORRECT_ERROR_TYPES + "false") // TODO: Provide value as argument
-                .add(VERBOSE_ARG + "true") // TODO: Provide value as argument
                 .build();
 
         annotationProcessingOptionsBuilder
