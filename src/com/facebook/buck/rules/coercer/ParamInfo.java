@@ -23,7 +23,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -136,9 +135,6 @@ public interface ParamInfo extends Comparable<ParamInfo> {
    * <p>This is useful for things like making copies of dtos.
    */
   void setCoercedValue(Object dto, Object value);
-
-  /** Get the {@link Type}s the final coerced type. */
-  Type getGenericParameterType();
 
   /** Traversal interface used when coercing values */
   interface Traversal extends TypeCoercer.Traversal {}

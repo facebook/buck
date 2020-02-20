@@ -185,7 +185,7 @@ public class SkylarkParamInfoTest {
   @Test
   public void returnsEmptyGenericsOnNonGenericCoercer() {
     SkylarkParamInfo info = new SkylarkParamInfo("foo", ImmutableTestIntAttribute.of(1, "", false));
-    assertEquals(Integer.class, info.getGenericParameterType());
+    assertEquals(Integer.class, info.getTypeCoercer().getOutputType().getType());
   }
 
   @Test
@@ -198,8 +198,8 @@ public class SkylarkParamInfoTest {
         new SkylarkParamInfo(
             "foo", ImmutableTestMapStringAttribute.of(ImmutableMap.of(), "", false));
 
-    Type listParamTypes = listInfo.getGenericParameterType();
-    Type mapParamTypes = mapInfo.getGenericParameterType();
+    Type listParamTypes = listInfo.getTypeCoercer().getOutputType().getType();
+    Type mapParamTypes = mapInfo.getTypeCoercer().getOutputType().getType();
 
     assertEquals(new TypeToken<ImmutableList<String>>() {}.getType(), listParamTypes);
     assertEquals(new TypeToken<ImmutableMap<String, Integer>>() {}.getType(), mapParamTypes);

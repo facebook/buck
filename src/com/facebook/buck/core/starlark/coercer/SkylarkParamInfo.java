@@ -20,7 +20,6 @@ import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.rules.coercer.AbstractParamInfo;
 import com.google.common.base.Preconditions;
-import java.lang.reflect.Type;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
@@ -71,10 +70,5 @@ public class SkylarkParamInfo extends AbstractParamInfo {
   public void setCoercedValue(Object dto, Object value) {
     Preconditions.checkArgument(dto instanceof SkylarkDescriptionArgBuilder);
     ((SkylarkDescriptionArgBuilder) dto).setPostCoercionValue(getName(), value);
-  }
-
-  @Override
-  public Type getGenericParameterType() {
-    return attr.getGenericType();
   }
 }

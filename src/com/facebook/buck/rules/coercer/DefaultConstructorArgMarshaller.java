@@ -238,7 +238,8 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
 
       SelectorListCoercer<?> coercer =
           new SelectorListCoercer<>(
-              typeCoercerFactory.typeCoercerForType(info.getGenericParameterType()));
+              typeCoercerFactory.typeCoercerForType(
+                  info.getTypeCoercer().getOutputType().getType()));
       SelectorList<?> attributeWithSelectableValue =
           coercer.coerce(
               cellPathResolver,
