@@ -109,6 +109,11 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
         LinkerMapMode.FLAVOR_DOMAIN);
   }
 
+  @Override
+  public String getType() {
+    return CxxSourceTypes.toName(getBuildable().inputType) + "_preprocess_and_compile";
+  }
+
   /** @return a {@link CxxPreprocessAndCompile} step that compiles the given preprocessed source. */
   public static CxxPreprocessAndCompile compile(
       BuildTarget buildTarget,

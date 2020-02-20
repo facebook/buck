@@ -21,6 +21,7 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.toolchain.CompilerProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
+import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
 
 /** Utilities for working with C-like source types. */
@@ -283,5 +284,12 @@ public class CxxSourceTypes {
     }
 
     return flags.build();
+  }
+
+  /** Normalize the input type to a language name */
+  public static String toName(CxxSource.Type type) {
+    return CaseFormat.UPPER_UNDERSCORE.to(
+        CaseFormat.LOWER_UNDERSCORE,
+        type.toString().replace("_CPP_OUTPUT", "").replace("_WITH_CPP", ""));
   }
 }
