@@ -10,8 +10,9 @@
   ]]></description>
 
   <change-notes><![CDATA[
-<h3>3.9.2</h3>
+<h3>3.9.3</h3>
 <ul>
+  <li>Add new extension point BuckAutoDepsSearchableClassNameContributor</li>
 </ul>
 <h3>3.9.1</h3>
 <ul>
