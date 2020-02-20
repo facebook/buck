@@ -509,5 +509,13 @@
       <extensionPoint area="IDEA_PROJECT"
           name="TargetMetadataTransformer"
           interface="com.facebook.buck.intellij.ideabuck.autodeps.TargetMetadataTransformer" />
+      <extensionPoint area="IDEA_PROJECT"
+          name="BuckAutoDepsSearchableClassNameContributor"
+          interface="com.facebook.buck.intellij.ideabuck.autodeps.BuckAutoDepsSearchableClassNameContributor" />
   </extensionPoints>
+
+  <extensions defaultExtensionNs="intellij.buck.plugin">
+      <BuckAutoDepsSearchableClassNameContributor
+          implementation="com.facebook.buck.intellij.ideabuck.autodeps.DefaultSearchableClassNameContributor" />
+  </extensions>
 </idea-plugin>
