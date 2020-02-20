@@ -27,6 +27,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.ImmutableMap;
 import java.io.PrintStream;
+import java.util.Comparator;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.Argument;
@@ -73,11 +74,11 @@ public class AuditRuleTypeCommand extends AbstractCommand {
     printStream.println("def " + name + " (");
     allParamInfo.values().stream()
         .filter(param -> !param.isOptional())
-        .sorted()
+        .sorted(Comparator.comparing(ParamInfo::getName))
         .forEach(formatPythonFunction(printStream));
     allParamInfo.values().stream()
         .filter(ParamInfo::isOptional)
-        .sorted()
+        .sorted(Comparator.comparing(ParamInfo::getName))
         .forEach(formatPythonFunction(printStream));
     printStream.println("):");
     printStream.println(INDENT + "...");
