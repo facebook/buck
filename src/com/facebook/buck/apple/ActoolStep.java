@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.shell.ShellStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -41,7 +42,7 @@ class ActoolStep extends ShellStep {
   private final AppleAssetCatalogsCompilationOptions compilationOptions;
 
   public ActoolStep(
-      Path workingDirectory,
+      AbsPath workingDirectory,
       String applePlatformName,
       String targetSDKVersion,
       ImmutableMap<String, String> environment,

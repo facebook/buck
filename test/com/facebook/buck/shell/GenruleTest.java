@@ -184,7 +184,7 @@ public class GenruleTest {
         manifestPath);
     BuildContext buildContext =
         FakeBuildContext.withSourcePathResolver(pathResolver)
-            .withBuildCellRootPath(filesystem.getRootPath());
+            .withBuildCellRootPath(filesystem.getRootPath().getPath());
     assertThat(
         pathResolver.filterInputsToCompareToOutput(genrule.getBuildable().srcs.getPaths()),
         Matchers.containsInAnyOrder(

@@ -89,18 +89,25 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
 
     expect(cellResolver.getKnownRoots())
         .andReturn(
-            ImmutableSortedSet.of(rootFilesystem.getRootPath(), otherFilesystem.getRootPath()))
+            ImmutableSortedSet.of(
+                rootFilesystem.getRootPath().getPath(), otherFilesystem.getRootPath().getPath()))
         .anyTimes();
 
     expect(cellResolver.getCanonicalCellName(rootFilesystem.getRootPath()))
         .andReturn(Optional.empty())
         .anyTimes();
+    expect(cellResolver.getCanonicalCellName(rootFilesystem.getRootPath().getPath()))
+        .andReturn(Optional.empty())
+        .anyTimes();
     expect(cellResolver.getCanonicalCellName(otherFilesystem.getRootPath()))
+        .andReturn(Optional.of("other"))
+        .anyTimes();
+    expect(cellResolver.getCanonicalCellName(otherFilesystem.getRootPath().getPath()))
         .andReturn(Optional.of("other"))
         .anyTimes();
 
     expect(cellResolver.getCellPathOrThrow(Optional.empty()))
-        .andReturn(rootFilesystem.getRootPath())
+        .andReturn(rootFilesystem.getRootPath().getPath())
         .anyTimes();
   }
 

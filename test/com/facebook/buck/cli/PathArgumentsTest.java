@@ -24,7 +24,6 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
-import java.nio.file.Path;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -36,7 +35,7 @@ public class PathArgumentsTest {
   public void testGetCanonicalFilesUnderProjectRoot() throws IOException {
     TestDataHelper.createProjectWorkspaceForScenario(this, "path_arguments", tmp).setUp();
 
-    Path projectRoot = tmp.getRoot();
+    AbsPath projectRoot = AbsPath.of(tmp.getRoot());
     ImmutableSet<String> nonCanonicalFilePaths =
         ImmutableSet.of(
             "src/com/facebook/CanonicalRelativePath.txt",
@@ -56,8 +55,8 @@ public class PathArgumentsTest {
         referencedFiles.relativePathsUnderProjectRoot);
     assertEquals(
         ImmutableSet.of(
-            AbsPath.of(projectRoot.resolve("PathNotUnderProjectRoot.txt").toRealPath()),
-            AbsPath.of(projectRoot.resolve("NonExistingPath.txt"))),
+            projectRoot.resolve("PathNotUnderProjectRoot.txt").toRealPath(),
+            projectRoot.resolve("NonExistingPath.txt")),
         referencedFiles.absolutePathsOutsideProjectRootOrNonExistingPaths);
   }
 }

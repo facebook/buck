@@ -348,7 +348,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
         : HybridGlobberFactory.using(
             buildFileParserOptions.getWatchman().createClient(),
             syncCookieState,
-            buildFileParserOptions.getProjectRoot(),
+            buildFileParserOptions.getProjectRoot().getPath(),
             buildFileParserOptions.getWatchman().getProjectWatches());
   }
 }

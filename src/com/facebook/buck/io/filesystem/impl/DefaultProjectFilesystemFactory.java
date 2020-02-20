@@ -76,7 +76,7 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
     ProjectFilesystemDelegatePair delegatePair =
         ProjectFilesystemDelegateFactory.newInstance(root.getPath(), config);
     return new DefaultProjectFilesystem(
-        root.getPath(),
+        root,
         extractIgnorePaths(root.getPath(), config, buckPaths, embeddedCellBuckOutInfo),
         buckPaths,
         delegatePair.getGeneralDelegate(),

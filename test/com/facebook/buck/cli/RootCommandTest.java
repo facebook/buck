@@ -41,7 +41,6 @@ public class RootCommandTest {
             .getFilesystem()
             .getRootPath()
             .normalize()
-            .toAbsolutePath()
             .toString();
 
     assertThat(console.getTextWrittenToStdOut(), containsString(testRoot));

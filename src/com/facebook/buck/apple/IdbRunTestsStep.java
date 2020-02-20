@@ -311,7 +311,7 @@ public class IdbRunTestsStep implements Step {
     ProcessExecutorParams.Builder processExecutorParamsBuilder =
         ProcessExecutorParams.builder()
             .setCommand(runCommand)
-            .setDirectory(filesystem.getRootPath().toAbsolutePath())
+            .setDirectory(filesystem.getRootPath().getPath())
             .setRedirectOutput(ProcessBuilder.Redirect.PIPE);
 
     Console console = context.getConsole();

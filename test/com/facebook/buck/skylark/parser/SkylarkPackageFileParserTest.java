@@ -79,7 +79,7 @@ public class SkylarkPackageFileParserTest {
 
     ProjectBuildFileParserOptions options =
         ProjectBuildFileParserOptions.builder()
-            .setProjectRoot(cell.getRootCell().getRoot().getPath())
+            .setProjectRoot(cell.getRootCell().getRoot())
             .setAllowEmptyGlobs(false)
             .setIgnorePaths(ImmutableSet.of())
             .setBuildFileName("PACKAGE")

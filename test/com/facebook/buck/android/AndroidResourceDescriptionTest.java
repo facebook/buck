@@ -24,6 +24,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -174,7 +175,8 @@ public class AndroidResourceDescriptionTest {
   @Test
   public void testResourceRulesCreateSymlinkTrees() {
     FakeProjectFilesystem filesystem =
-        new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmpFolder.getRoot().toPath());
+        new FakeProjectFilesystem(
+            CanonicalCellName.rootCell(), AbsPath.of(tmpFolder.getRoot().toPath()));
     filesystem.mkdirs(Paths.get("res"));
     filesystem.mkdirs(Paths.get("assets"));
     filesystem.createNewFile(Paths.get("res/file1.txt"));

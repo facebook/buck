@@ -24,6 +24,7 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -264,9 +265,9 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
     String guava = getPathForResourceJar(guavaJar);
     String toolsCommon = getPathForResourceJar(toolsCommonJar);
 
-    Optional<Path> exopackageSymlinkTreePath =
+    Optional<AbsPath> exopackageSymlinkTreePath =
         getExopackageSymlinkTreePathIfNeeded(apk, isExternalRun);
-    Optional<Path> apkUnderTestSymlinkTreePath =
+    Optional<AbsPath> apkUnderTestSymlinkTreePath =
         getApkUnderTest(apk)
             .flatMap(
                 apkUnderTest ->
@@ -276,12 +277,12 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
     AndroidInstrumentationTestJVMArgs jvmArgs =
         ImmutableAndroidInstrumentationTestJVMArgs.builder()
             .setApkUnderTestPath(apkUnderTestPath)
-            .setApkUnderTestExopackageLocalDir(apkUnderTestSymlinkTreePath)
+            .setApkUnderTestExopackageLocalDir(apkUnderTestSymlinkTreePath.map(AbsPath::getPath))
             .setPathToAdbExecutable(pathToAdbExecutable)
             .setDeviceSerial(deviceSerial)
             .setDirectoryForTestResults(directoryForTestResults)
             .setInstrumentationApkPath(instrumentationApkPath)
-            .setExopackageLocalDir(exopackageSymlinkTreePath)
+            .setExopackageLocalDir(exopackageSymlinkTreePath.map(AbsPath::getPath))
             .setTestPackage(packageName)
             .setTargetPackage(targetPackageName)
             .setCodeCoverageEnabled(codeCoverageEnabled)
@@ -444,7 +445,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
         getRequiredPaths(apk, instrumentationApkPath, apkUnderTestPath);
 
     return ExternalTestRunnerTestSpec.builder()
-        .setCwd(getProjectFilesystem().getRootPath())
+        .setCwd(getProjectFilesystem().getRootPath().getPath())
         .setTarget(getBuildTarget())
         .setType("android_instrumentation")
         .setCommand(step.getShellCommandInternal(executionContext))
@@ -462,16 +463,17 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
       HasInstallableApk apkInstance,
       Optional<Path> instrumentationApkPath,
       Optional<Path> apkUnderTestPath) {
-    Optional<Path> exopackageSymlinkTreePath =
+    Optional<AbsPath> exopackageSymlinkTreePath =
         getExopackageSymlinkTreePathIfNeeded(apkInstance, true);
-    Optional<Path> apkUnderTestSymlinkTreePath =
+    Optional<AbsPath> apkUnderTestSymlinkTreePath =
         getApkUnderTest(apkInstance)
             .flatMap(
                 apkUnderTest ->
                     AndroidInstrumentationTest.getExopackageSymlinkTreePathIfNeeded(
                         apkUnderTest, true));
     return ImmutableList.<Optional<Path>>builder().add(apkUnderTestPath).add(instrumentationApkPath)
-        .add(exopackageSymlinkTreePath).add(apkUnderTestSymlinkTreePath).build().stream()
+        .add(exopackageSymlinkTreePath.map(AbsPath::getPath))
+        .add(apkUnderTestSymlinkTreePath.map(AbsPath::getPath)).build().stream()
         .filter(Optional::isPresent)
         .map(Optional::get)
         .collect(ImmutableList.toImmutableList());
@@ -506,9 +508,9 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
    *     exopackage symlink tree is not necessary because we use Buck's internal exopackage support
    *     to do the installation.
    */
-  private static Optional<Path> getExopackageSymlinkTreePathIfNeeded(
+  private static Optional<AbsPath> getExopackageSymlinkTreePathIfNeeded(
       HasInstallableApk apk, boolean isExternalRun) {
-    Optional<Path> exopackageSymlinkTreePath = Optional.empty();
+    Optional<AbsPath> exopackageSymlinkTreePath = Optional.empty();
     // We only need the exo-dir if the apk supports it and we're preparing for an external runner.
     if (isExternalRun && ExopackageInstaller.exopackageEnabled(apk.getApkInfo())) {
       ProjectFilesystem filesystem = apk.getProjectFilesystem();

@@ -68,7 +68,7 @@ public class TestExecutionContext {
         .setCellPathResolver(cellPathResolver)
         .setCells(new TestCellBuilder().setFilesystem(filesystem).build())
         .setProjectFilesystemFactory(new DefaultProjectFilesystemFactory())
-        .setBuildCellRootPath(filesystem.getRootPath());
+        .setBuildCellRootPath(filesystem.getRootPath().getPath());
   }
 
   public static ExecutionContext newInstance() {

@@ -108,7 +108,7 @@ public class WorkerProcessPoolFactory {
         ProcessExecutorParams.builder()
             .setCommand(getCommand(context.getPlatform(), paramsToUse))
             .setEnvironment(getEnvironmentForProcess(context, paramsToUse))
-            .setDirectory(filesystem.getRootPath())
+            .setDirectory(filesystem.getRootPath().getPath())
             .build();
 
     Path workerTmpDir = paramsToUse.getTempDir();

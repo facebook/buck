@@ -27,6 +27,7 @@ import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.OutputLabel;
@@ -90,7 +91,7 @@ public class ExportFileTest {
     List<Step> steps =
         exportFile.getBuildSteps(
             FakeBuildContext.withSourcePathResolver(pathResolver)
-                .withBuildCellRootPath(projectFilesystem.getRootPath()),
+                .withBuildCellRootPath(projectFilesystem.getRootPath().getPath()),
             new FakeBuildableContext());
 
     MoreAsserts.assertSteps(
@@ -120,7 +121,7 @@ public class ExportFileTest {
     List<Step> steps =
         exportFile.getBuildSteps(
             FakeBuildContext.withSourcePathResolver(pathResolver)
-                .withBuildCellRootPath(projectFilesystem.getRootPath()),
+                .withBuildCellRootPath(projectFilesystem.getRootPath().getPath()),
             new FakeBuildableContext());
 
     MoreAsserts.assertSteps(
@@ -152,7 +153,7 @@ public class ExportFileTest {
     List<Step> steps =
         exportFile.getBuildSteps(
             FakeBuildContext.withSourcePathResolver(pathResolver)
-                .withBuildCellRootPath(projectFilesystem.getRootPath()),
+                .withBuildCellRootPath(projectFilesystem.getRootPath().getPath()),
             new FakeBuildableContext());
 
     MoreAsserts.assertSteps(
@@ -224,7 +225,7 @@ public class ExportFileTest {
   public void modifyingTheContentsOfTheFileChangesTheRuleKey() throws Exception {
     Path root = Files.createTempDirectory("root");
     FakeProjectFilesystem filesystem =
-        new FakeProjectFilesystem(CanonicalCellName.rootCell(), root);
+        new FakeProjectFilesystem(CanonicalCellName.rootCell(), AbsPath.of(root));
     Path temp = Paths.get("example_file");
 
     FileHashLoader hashCache =
@@ -344,7 +345,7 @@ public class ExportFileTest {
 
     exportFile.getBuildSteps(
         FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver())
-            .withBuildCellRootPath(projectFilesystem.getRootPath()),
+            .withBuildCellRootPath(projectFilesystem.getRootPath().getPath()),
         new FakeBuildableContext());
   }
 
@@ -370,7 +371,7 @@ public class ExportFileTest {
 
     exportFile.getBuildSteps(
         FakeBuildContext.create(graphBuilder.getSourcePathResolver(), buckEventBus)
-            .withBuildCellRootPath(projectFilesystem.getRootPath()),
+            .withBuildCellRootPath(projectFilesystem.getRootPath().getPath()),
         new FakeBuildableContext());
 
     assertThat(
@@ -396,7 +397,7 @@ public class ExportFileTest {
 
     exportFile.getBuildSteps(
         FakeBuildContext.create(graphBuilder.getSourcePathResolver(), buckEventBus)
-            .withBuildCellRootPath(projectFilesystem.getRootPath()),
+            .withBuildCellRootPath(projectFilesystem.getRootPath().getPath()),
         new FakeBuildableContext());
   }
 }

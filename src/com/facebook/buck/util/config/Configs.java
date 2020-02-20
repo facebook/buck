@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util.config;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -165,6 +166,11 @@ public final class Configs {
     configFileBuilder.addAll(getRepoConfigurationFiles(root));
 
     return configFileBuilder.build();
+  }
+
+  /** Abs-path version of {@link #getDefaultConfigurationFiles(Path)}. */
+  public static ImmutableList<Path> getDefaultConfigurationFiles(AbsPath root) throws IOException {
+    return getDefaultConfigurationFiles(root.getPath());
   }
 
   /**

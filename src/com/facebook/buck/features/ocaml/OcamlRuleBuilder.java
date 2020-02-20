@@ -18,6 +18,7 @@ package com.facebook.buck.features.ocaml;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -437,7 +438,7 @@ public class OcamlRuleBuilder {
                     .resolve(graphBuilder, buildTarget.getTargetConfiguration()))
             .build();
 
-    Path baseDir = projectFilesystem.getRootPath().toAbsolutePath();
+    AbsPath baseDir = projectFilesystem.getRootPath();
     ImmutableMap<Path, ImmutableList<Path>> mlInput = getMLInputWithDeps(baseDir, ocamlContext);
 
     ImmutableList<SourcePath> cInput = getCInput(graphBuilder.getSourcePathResolver(), srcs);
@@ -472,7 +473,7 @@ public class OcamlRuleBuilder {
   }
 
   private static ImmutableMap<Path, ImmutableList<Path>> getMLInputWithDeps(
-      Path baseDir, OcamlBuildContext ocamlContext) {
+      AbsPath baseDir, OcamlBuildContext ocamlContext) {
 
     ImmutableList<String> ocamlDepFlags =
         ImmutableList.<String>builder()
@@ -524,12 +525,12 @@ public class OcamlRuleBuilder {
   }
 
   private static Optional<String> executeProcessAndGetStdout(
-      Path baseDir, ImmutableList<String> cmd) throws IOException, InterruptedException {
+      AbsPath baseDir, ImmutableList<String> cmd) throws IOException, InterruptedException {
     ImmutableSet.Builder<ProcessExecutor.Option> options = ImmutableSet.builder();
     options.add(ProcessExecutor.Option.EXPECTING_STD_OUT);
     ProcessExecutor exe = new DefaultProcessExecutor(Console.createNullConsole());
     ProcessExecutorParams params =
-        ProcessExecutorParams.builder().setCommand(cmd).setDirectory(baseDir).build();
+        ProcessExecutorParams.builder().setCommand(cmd).setDirectory(baseDir.getPath()).build();
     ProcessExecutor.Result result =
         exe.launchAndExecute(
             params,

@@ -33,6 +33,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -482,7 +483,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     JavaLibrary libraryOneRule = (JavaLibrary) graphBuilder.requireRule(libraryOneTarget);
     JavaLibrary parentRule = (JavaLibrary) graphBuilder.requireRule(parentTarget);
 
-    Path root = libraryOneRule.getProjectFilesystem().getRootPath();
+    AbsPath root = libraryOneRule.getProjectFilesystem().getRootPath();
     assertEquals(
         ImmutableSet.of(
             root.resolve(CompilerOutputPaths.getOutputJarPath(libraryOneTarget, filesystem)),
@@ -806,7 +807,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     BuildRule libraryTwo = graphBuilder.requireRule(libraryTwoTarget);
     BuildRule parent = graphBuilder.requireRule(parentTarget);
 
-    Path root = parent.getProjectFilesystem().getRootPath();
+    AbsPath root = parent.getProjectFilesystem().getRootPath();
     assertEquals(
         "A java_library that depends on //:libone should include only libone.jar in its "
             + "classpath when compiling itself.",
@@ -840,7 +841,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     assertEquals(
         "A java_binary that depends on //:parent should include libone.jar, libtwo.jar and "
             + "parent.jar.",
-        ImmutableSet.<Path>builder()
+        ImmutableSet.<AbsPath>builder()
             .add(
                 root.resolve(CompilerOutputPaths.getOutputJarPath(includedTarget, filesystem)),
                 root.resolve(CompilerOutputPaths.getOutputJarPath(nonIncludedTarget, filesystem)),
@@ -1720,8 +1721,10 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     }
   }
 
-  private static ImmutableSet<Path> resolve(
+  private static ImmutableSet<AbsPath> resolve(
       ImmutableSet<SourcePath> paths, SourcePathResolverAdapter resolver) {
-    return paths.stream().map(resolver::getAbsolutePath).collect(ImmutableSet.toImmutableSet());
+    return paths.stream()
+        .map(sourcePath -> AbsPath.of(resolver.getAbsolutePath(sourcePath)))
+        .collect(ImmutableSet.toImmutableSet());
   }
 }

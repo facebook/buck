@@ -142,7 +142,7 @@ public class LocalCellProviderFactory {
                   embeddedCellBuckOutInfo =
                       Optional.of(
                           EmbeddedCellBuckOutInfo.of(
-                              rootFilesystem.resolve(rootFilesystem.getRootPath()),
+                              rootFilesystem.getRootPath().getPath(),
                               rootFilesystem.getBuckPaths(),
                               canonicalCellName));
                 }

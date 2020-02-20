@@ -334,7 +334,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       argBuilder.add(module);
     }
 
-    argBuilder.add("--project_root", options.getProjectRoot().toAbsolutePath().toString());
+    argBuilder.add("--project_root", options.getProjectRoot().toString());
 
     for (ImmutableMap.Entry<String, Path> entry : options.getCellRoots().entrySet()) {
       argBuilder.add("--cell_root", entry.getKey() + "=" + entry.getValue());
@@ -432,7 +432,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
     ImmutableList<Map<String, Object>> values = ImmutableList.of();
     Optional<String> profile = Optional.empty();
     try (AssertScopeExclusiveAccess.Scope scope = assertSingleThreadedParsing.scope()) {
-      AbsPath cellPath = AbsPath.of(options.getProjectRoot().toAbsolutePath());
+      AbsPath cellPath = options.getProjectRoot();
       String watchRoot = cellPath.toString();
       String projectPrefix = "";
       if (options.getWatchman().getProjectWatches().containsKey(cellPath)) {
@@ -491,7 +491,8 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
    *     would return {@code src/bar}.
    */
   private Path getBasePath(Path buildFile) {
-    return MorePaths.getParentOrEmpty(MorePaths.relativize(options.getProjectRoot(), buildFile));
+    return MorePaths.getParentOrEmpty(
+        MorePaths.relativize(options.getProjectRoot().getPath(), buildFile));
   }
 
   @SuppressWarnings("unchecked")

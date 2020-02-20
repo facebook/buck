@@ -129,7 +129,7 @@ public class CxxThinLTOIndex extends ModernBuildRule<CxxThinLTOIndex.Impl>
                       args,
                       linker,
                       targetName.getCell(),
-                      filesystem.getRootPath(),
+                      filesystem.getRootPath().getPath(),
                       context.getSourcePathResolver()))
               .add(
                   new CxxLinkStep(

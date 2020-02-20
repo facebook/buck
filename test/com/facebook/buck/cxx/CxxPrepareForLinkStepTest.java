@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -102,11 +103,11 @@ public class CxxPrepareForLinkStepTest {
   @Test
   public void cxxLinkStepPassesLinkerOptionsViaArgFile() throws IOException, InterruptedException {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
-    Path argFilePath =
+    AbsPath argFilePath =
         projectFilesystem.getRootPath().resolve("cxxLinkStepPassesLinkerOptionsViaArgFile.txt");
-    Path fileListPath =
+    AbsPath fileListPath =
         projectFilesystem.getRootPath().resolve("cxxLinkStepPassesLinkerOptionsViaFileList.txt");
-    Path output = projectFilesystem.getRootPath().resolve("output");
+    AbsPath output = projectFilesystem.getRootPath().resolve("output");
 
     runTestForArgFilePathAndOutputPath(
         argFilePath, fileListPath, output, projectFilesystem.getRootPath());
@@ -115,42 +116,42 @@ public class CxxPrepareForLinkStepTest {
   @Test
   public void cxxLinkStepCreatesDirectoriesIfNeeded() throws IOException, InterruptedException {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
-    Path argFilePath =
+    AbsPath argFilePath =
         projectFilesystem.getRootPath().resolve("unexisting_parent_folder/argfile.txt");
-    Path fileListPath =
+    AbsPath fileListPath =
         projectFilesystem.getRootPath().resolve("unexisting_parent_folder/filelist.txt");
-    Path output = projectFilesystem.getRootPath().resolve("output");
+    AbsPath output = projectFilesystem.getRootPath().resolve("output");
 
-    Files.deleteIfExists(argFilePath);
-    Files.deleteIfExists(fileListPath);
-    Files.deleteIfExists(argFilePath.getParent());
-    Files.deleteIfExists(fileListPath.getParent());
+    Files.deleteIfExists(argFilePath.getPath());
+    Files.deleteIfExists(fileListPath.getPath());
+    Files.deleteIfExists(argFilePath.getParent().getPath());
+    Files.deleteIfExists(fileListPath.getParent().getPath());
 
     runTestForArgFilePathAndOutputPath(
         argFilePath, fileListPath, output, projectFilesystem.getRootPath());
 
     // cleanup after test
-    Files.deleteIfExists(argFilePath);
-    Files.deleteIfExists(argFilePath.getParent());
-    Files.deleteIfExists(fileListPath);
-    Files.deleteIfExists(fileListPath.getParent());
+    Files.deleteIfExists(argFilePath.getPath());
+    Files.deleteIfExists(argFilePath.getParent().getPath());
+    Files.deleteIfExists(fileListPath.getPath());
+    Files.deleteIfExists(fileListPath.getParent().getPath());
   }
 
   @Test
   public void cxxLinkStepEscapesOptionsForArgFile() throws IOException, InterruptedException {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
-    Path argFilePath =
+    AbsPath argFilePath =
         projectFilesystem.getRootPath().resolve("cxxLinkStepEscapesOptionsForArgFile.txt");
-    Path fileListPath =
+    AbsPath fileListPath =
         projectFilesystem.getRootPath().resolve("cxxLinkStepEscapesOptionsForFileList.txt");
-    Path output = projectFilesystem.getRootPath().resolve("output");
+    AbsPath output = projectFilesystem.getRootPath().resolve("output");
 
     runTestForArgFilePathAndOutputPathWithoutFileList(
         argFilePath, fileListPath, output, projectFilesystem.getRootPath());
   }
 
   private void runTestForArgFilePathAndOutputPath(
-      Path argFilePath, Path fileListPath, Path output, Path currentCellPath)
+      AbsPath argFilePath, AbsPath fileListPath, AbsPath output, AbsPath currentCellPath)
       throws IOException, InterruptedException {
     ExecutionContext context = TestExecutionContext.newInstance();
 
@@ -171,24 +172,24 @@ public class CxxPrepareForLinkStepTest {
     // Create our CxxLinkStep to test.
     ImmutableList<Step> steps =
         CxxPrepareForLinkStep.create(
-            argFilePath,
-            fileListPath,
+            argFilePath.getPath(),
+            fileListPath.getPath(),
             ImmutableList.of(StringArg.of("-filelist"), StringArg.of(fileListPath.toString())),
-            output,
+            output.getPath(),
             args,
             CxxPlatformUtils.DEFAULT_PLATFORM
                 .getLd()
                 .resolve(buildRuleResolver, UnconfiguredTargetConfiguration.INSTANCE),
             CanonicalCellName.rootCell(),
-            currentCellPath,
+            currentCellPath.getPath(),
             buildRuleResolver.getSourcePathResolver());
 
     for (Step step : steps) {
       step.execute(context);
     }
 
-    assertThat(Files.exists(argFilePath), Matchers.equalTo(true));
-    assertThat(Files.exists(fileListPath), Matchers.equalTo(true));
+    assertThat(Files.exists(argFilePath.getPath()), Matchers.equalTo(true));
+    assertThat(Files.exists(fileListPath.getPath()), Matchers.equalTo(true));
 
     ImmutableList<String> expectedArgFileContents =
         ImmutableList.<String>builder()
@@ -210,12 +211,12 @@ public class CxxPrepareForLinkStepTest {
     checkContentsOfFile(argFilePath, expectedArgFileContents);
     checkContentsOfFile(fileListPath, expectedFileListContents);
 
-    Files.deleteIfExists(argFilePath);
-    Files.deleteIfExists(fileListPath);
+    Files.deleteIfExists(argFilePath.getPath());
+    Files.deleteIfExists(fileListPath.getPath());
   }
 
   private void runTestForArgFilePathAndOutputPathWithoutFileList(
-      Path argFilePath, Path fileListPath, Path output, Path currentCellPath)
+      AbsPath argFilePath, AbsPath fileListPath, AbsPath output, AbsPath currentCellPath)
       throws IOException, InterruptedException {
     ExecutionContext context = TestExecutionContext.newInstance();
 
@@ -239,24 +240,24 @@ public class CxxPrepareForLinkStepTest {
     // Create our CxxLinkStep to test.
     ImmutableList<Step> steps =
         CxxPrepareForLinkStep.create(
-            argFilePath,
-            fileListPath,
+            argFilePath.getPath(),
+            fileListPath.getPath(),
             ImmutableList.of(),
-            output,
+            output.getPath(),
             args,
             CxxPlatformUtils.DEFAULT_PLATFORM
                 .getLd()
                 .resolve(buildRuleResolver, UnconfiguredTargetConfiguration.INSTANCE),
             CanonicalCellName.rootCell(),
-            currentCellPath,
+            currentCellPath.getPath(),
             buildRuleResolver.getSourcePathResolver());
 
     for (Step step : steps) {
       step.execute(context);
     }
 
-    assertThat(Files.exists(argFilePath), Matchers.equalTo(true));
-    assertThat(Files.exists(fileListPath), Matchers.equalTo(false));
+    assertThat(Files.exists(argFilePath.getPath()), Matchers.equalTo(true));
+    assertThat(Files.exists(fileListPath.getPath()), Matchers.equalTo(false));
 
     boolean isWindows = Platform.detect() == Platform.WINDOWS;
 
@@ -280,11 +281,12 @@ public class CxxPrepareForLinkStepTest {
 
     checkContentsOfFile(argFilePath, expectedArgFileContents);
 
-    Files.deleteIfExists(argFilePath);
+    Files.deleteIfExists(argFilePath.getPath());
   }
 
-  private void checkContentsOfFile(Path file, ImmutableList<String> contents) throws IOException {
-    List<String> fileContents = Files.readAllLines(file, StandardCharsets.UTF_8);
+  private void checkContentsOfFile(AbsPath file, ImmutableList<String> contents)
+      throws IOException {
+    List<String> fileContents = Files.readAllLines(file.getPath(), StandardCharsets.UTF_8);
     assertThat(fileContents, Matchers.equalTo(contents));
   }
 }

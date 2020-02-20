@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -71,7 +72,7 @@ public class QueryTargetsAndOutputsMacroExpanderTest {
   @Before
   public void setUp() {
     cache = new HashMapWithStats<>();
-    filesystem = new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp.getRoot());
+    filesystem = new FakeProjectFilesystem(CanonicalCellName.rootCell(), AbsPath.of(tmp.getRoot()));
     cellNames = TestCellBuilder.createCellRoots(filesystem);
     coercer = new DefaultTypeCoercerFactory().typeCoercerForType(StringWithMacros.class);
 

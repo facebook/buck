@@ -94,7 +94,7 @@ abstract class CellImpl implements Cell {
 
   @Override
   public AbsPath getRoot() {
-    return AbsPath.of(getFilesystem().getRootPath());
+    return getFilesystem().getRootPath();
   }
 
   @Override

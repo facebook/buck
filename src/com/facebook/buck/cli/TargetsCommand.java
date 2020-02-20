@@ -25,6 +25,7 @@ import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.graph.transformation.GraphTransformationEngine;
 import com.facebook.buck.core.graph.transformation.model.ComposedKey;
@@ -298,7 +299,7 @@ public class TargetsCommand extends AbstractCommand {
     return types.get();
   }
 
-  public PathArguments.ReferencedFiles getReferencedFiles(Path projectRoot) throws IOException {
+  public PathArguments.ReferencedFiles getReferencedFiles(AbsPath projectRoot) throws IOException {
     return PathArguments.getCanonicalFilesUnderProjectRoot(projectRoot, referencedFiles.get());
   }
 

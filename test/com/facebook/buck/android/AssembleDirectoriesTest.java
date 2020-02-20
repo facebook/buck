@@ -23,6 +23,7 @@ import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -52,19 +53,19 @@ public class AssembleDirectoriesTest {
     context =
         TestExecutionContext.newBuilder()
             .setCellPathResolver(TestCellPathResolver.get(filesystem))
-            .setBuildCellRootPath(filesystem.getRootPath())
+            .setBuildCellRootPath(filesystem.getRootPath().getPath())
             .build();
   }
 
   @Test
   public void testAssembleFoldersWithRelativePath() throws IOException, InterruptedException {
-    Path tmp = filesystem.getRootPath();
-    Files.createDirectories(tmp.resolve("folder_a"));
-    Files.write(tmp.resolve("folder_a/a.txt"), "".getBytes(UTF_8));
-    Files.write(tmp.resolve("folder_a/b.txt"), "".getBytes(UTF_8));
-    Files.createDirectories(tmp.resolve("folder_b"));
-    Files.write(tmp.resolve("folder_b/c.txt"), "".getBytes(UTF_8));
-    Files.write(tmp.resolve("folder_b/d.txt"), "".getBytes(UTF_8));
+    AbsPath tmp = filesystem.getRootPath();
+    Files.createDirectories(tmp.resolve("folder_a").getPath());
+    Files.write(tmp.resolve("folder_a/a.txt").getPath(), "".getBytes(UTF_8));
+    Files.write(tmp.resolve("folder_a/b.txt").getPath(), "".getBytes(UTF_8));
+    Files.createDirectories(tmp.resolve("folder_b").getPath());
+    Files.write(tmp.resolve("folder_b/c.txt").getPath(), "".getBytes(UTF_8));
+    Files.write(tmp.resolve("folder_b/d.txt").getPath(), "".getBytes(UTF_8));
 
     BuildTarget target = BuildTargetFactory.newInstance("//:output_folder");
     ImmutableList<SourcePath> directories =
@@ -78,7 +79,7 @@ public class AssembleDirectoriesTest {
     ImmutableList<Step> steps =
         assembleDirectories.getBuildSteps(
             FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver())
-                .withBuildCellRootPath(tmp),
+                .withBuildCellRootPath(tmp.getPath()),
             new FakeBuildableContext());
     for (Step step : steps) {
       assertEquals(0, step.execute(context).getExitCode());

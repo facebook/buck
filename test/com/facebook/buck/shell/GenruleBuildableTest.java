@@ -89,7 +89,7 @@ public class GenruleBuildableTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildContext context =
         FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver())
-            .withBuildCellRootPath(filesystem.getRootPath());
+            .withBuildCellRootPath(filesystem.getRootPath().getPath());
     BuildTarget target = BuildTargetFactory.newInstance("//:example");
     Path srcPath = filesystem.getBuckPaths().getGenDir().resolve("example__srcs");
     GenruleBuildable buildable =
@@ -651,7 +651,7 @@ public class GenruleBuildableTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildContext context =
         FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver())
-            .withBuildCellRootPath(fakeProjectFileSystem.getRootPath());
+            .withBuildCellRootPath(fakeProjectFileSystem.getRootPath().getPath());
     OutputPathResolver outputPathResolver =
         new DefaultOutputPathResolver(fakeProjectFileSystem, target);
     Path srcPath = BuildTargetPaths.getGenPath(fakeProjectFileSystem, target, "%s__srcs");
@@ -699,7 +699,7 @@ public class GenruleBuildableTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildContext context =
         FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver())
-            .withBuildCellRootPath(fakeProjectFileSystem.getRootPath());
+            .withBuildCellRootPath(fakeProjectFileSystem.getRootPath().getPath());
     OutputPathResolver outputPathResolver =
         new DefaultOutputPathResolver(fakeProjectFileSystem, target);
     Path srcPath = BuildTargetPaths.getGenPath(fakeProjectFileSystem, target, "%s__srcs");

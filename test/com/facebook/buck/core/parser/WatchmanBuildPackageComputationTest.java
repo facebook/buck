@@ -119,7 +119,7 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
 
     ProjectFilesystemView projectFilesystemView =
         filesystem.asView().withView(Paths.get("project"), ImmutableSet.of());
-    ImmutableSet<Path> watchedProjects = ImmutableSet.of(filesystem.getRootPath());
+    ImmutableSet<Path> watchedProjects = ImmutableSet.of(filesystem.getRootPath().getPath());
 
     thrown.expect(IsInstanceOf.instanceOf(FileSystemNotWatchedException.class));
     getComputationStages("BUCK", projectFilesystemView, watchedProjects);

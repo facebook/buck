@@ -155,7 +155,7 @@ public class ApkGenruleTest {
             .collect(ImmutableSet.toImmutableSet()));
     BuildContext buildContext =
         FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver())
-            .withBuildCellRootPath(projectFilesystem.getRootPath());
+            .withBuildCellRootPath(projectFilesystem.getRootPath().getPath());
     assertThat(
         graphBuilder
             .getSourcePathResolver()

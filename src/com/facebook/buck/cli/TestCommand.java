@@ -408,7 +408,7 @@ public class TestCommand extends BuildCommand {
             .addAllCommand(command)
             .addAllCommand(withDashArguments)
             .setEnvironment(params.getEnvironment())
-            .setDirectory(params.getCells().getRootCell().getFilesystem().getRootPath());
+            .setDirectory(params.getCells().getRootCell().getFilesystem().getRootPath().getPath());
     if (!withDashArguments.contains("--buck-test-info")) {
       builder = builder.addCommand("--buck-test-info", infoFile.toString());
     }

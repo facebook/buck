@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.AbstractCellPathResolver;
 import com.facebook.buck.core.cell.CellName;
 import com.facebook.buck.core.cell.NewCellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.file.MorePaths;
@@ -110,6 +111,10 @@ public abstract class DefaultCellPathResolver extends AbstractCellPathResolver {
             getCellPathsFromConfigRepositoriesSection(root, config.get(REPOSITORIES_SECTION))),
         cellNameResolver,
         newCellPathResolver);
+  }
+
+  public static DefaultCellPathResolver create(AbsPath root, Config config) {
+    return create(root.getPath(), config);
   }
 
   static ImmutableMap<String, Path> getCellPathsFromConfigRepositoriesSection(

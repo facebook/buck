@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -168,7 +169,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
     return Impl.getDepFilePath(getOutputPathResolver().resolvePath(getBuildable().output));
   }
 
-  public Path getRelativeInputPaths(SourcePathResolverAdapter resolver) {
+  private RelPath getRelativeInputPaths(SourcePathResolverAdapter resolver) {
     // For caching purposes, the path passed to the compiler is relativized by the absolute path by
     // the current cell root, so that file references emitted by the compiler would not change if
     // the repo is checked out into different places on disk.
@@ -248,7 +249,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
                 preprocessorDelegate.getHeaderPathNormalizer(context),
                 preprocessorDelegate.getHeaderVerification(),
                 getDepFilePath(),
-                getRelativeInputPaths(context.getSourcePathResolver()),
+                getRelativeInputPaths(context.getSourcePathResolver()).getPath(),
                 output,
                 compilerDelegate.getDependencyTrackingMode(),
                 compilerDelegate.getCompiler().getUseUnixPathSeparator());
@@ -336,7 +337,8 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
               .orElseGet(CxxToolFlags::of);
 
       ImmutableList<Arg> arguments =
-          compilerDelegate.getArguments(preprocessorDelegateFlags, filesystem.getRootPath());
+          compilerDelegate.getArguments(
+              preprocessorDelegateFlags, filesystem.getRootPath().getPath());
 
       RelPath relativeInputPath = filesystem.relativize(resolver.getAbsolutePath(input));
       Path resolvedOutput = outputPathResolver.resolvePath(output);
@@ -398,9 +400,8 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
               new AbstractExecutionStep("verify_cxx_outputs") {
                 @Override
                 public StepExecutionResult execute(ExecutionContext executionContext) {
-                  Path outputPath =
-                      filesystem.getRootPath().toAbsolutePath().resolve(resolvedOutput);
-                  if (!Files.exists(outputPath)) {
+                  AbsPath outputPath = filesystem.getRootPath().resolve(resolvedOutput);
+                  if (!Files.exists(outputPath.getPath())) {
                     LOG.warn(
                         new NoSuchFileException(outputPath.toString()),
                         "Compile step was successful but output file: "

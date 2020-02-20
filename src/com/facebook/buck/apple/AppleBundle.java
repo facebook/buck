@@ -31,6 +31,7 @@ import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -418,7 +419,8 @@ public class AppleBundle extends AbstractBuildRule
 
     Path metadataPath = getMetadataPath();
 
-    Path infoPlistInputPath = context.getSourcePathResolver().getAbsolutePath(infoPlist);
+    AbsPath infoPlistInputPath =
+        AbsPath.of(context.getSourcePathResolver().getAbsolutePath(infoPlist));
     Path infoPlistSubstitutionTempPath =
         BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s.plist");
     Path infoPlistOutputPath = metadataPath.resolve("Info.plist");
@@ -683,7 +685,7 @@ public class AppleBundle extends AbstractBuildRule
 
     // Fall back to getting CODE_SIGN_ENTITLEMENTS from info_plist_substitutions.
     if (!entitlementsPlist.isPresent()) {
-      Path srcRoot =
+      AbsPath srcRoot =
           getProjectFilesystem()
               .getRootPath()
               .resolve(
@@ -704,7 +706,8 @@ public class AppleBundle extends AbstractBuildRule
           entitlementsPlistString.map(
               entitlementsPlistName -> {
                 ProjectFilesystem filesystem = getProjectFilesystem();
-                Path originalEntitlementsPlist = srcRoot.resolve(Paths.get(entitlementsPlistName));
+                AbsPath originalEntitlementsPlist =
+                    srcRoot.resolve(Paths.get(entitlementsPlistName));
                 Path entitlementsPlistWithSubstitutions =
                     BuildTargetPaths.getScratchPath(
                         filesystem, getBuildTarget(), "%s-Entitlements.plist");

@@ -86,7 +86,7 @@ public class OCamlIntegrationTest {
 
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
 
-    Config rawConfig = Configs.createDefaultConfig(filesystem.getRootPath());
+    Config rawConfig = Configs.createDefaultConfig(filesystem.getRootPath().getPath());
 
     BuckConfig buckConfig =
         FakeBuckConfig.builder()

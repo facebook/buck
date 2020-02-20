@@ -157,7 +157,7 @@ public class CxxThinLTOOpt extends ModernBuildRule<CxxThinLTOOpt.Impl>
       SourcePathResolverAdapter resolver = context.getSourcePathResolver();
 
       ImmutableList<Arg> arguments =
-          compilerDelegate.getArguments(CxxToolFlags.of(), filesystem.getRootPath());
+          compilerDelegate.getArguments(CxxToolFlags.of(), filesystem.getRootPath().getPath());
 
       RelPath relativeInputPath = filesystem.relativize(resolver.getAbsolutePath(input));
       Path resolvedOutput = outputPathResolver.resolvePath(output);

@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.util.log.Logger;
@@ -377,9 +378,9 @@ public class FilterResourcesSteps {
    * @see <a href="http://www.imagemagick.org/script/index.php">ImageMagick</a>
    */
   static class ImageMagickScaler implements ImageScaler {
-    private final Path workingDirectory;
+    private final AbsPath workingDirectory;
 
-    public ImageMagickScaler(Path workingDirectory) {
+    public ImageMagickScaler(AbsPath workingDirectory) {
       this.workingDirectory = workingDirectory;
     }
 

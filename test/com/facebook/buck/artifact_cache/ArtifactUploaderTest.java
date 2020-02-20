@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -142,18 +143,20 @@ public class ArtifactUploaderTest {
   public void compressSavesExecutableBit() throws Exception {
     ProjectFilesystem fs = FakeProjectFilesystem.createJavaOnlyFilesystem("/");
 
-    Path out = fs.getRootPath().resolve("out");
-    Path file = fs.getRootPath().resolve("file");
-    fs.writeContentsToPath("foo", file);
+    AbsPath out = fs.getRootPath().resolve("out");
+    AbsPath file = fs.getRootPath().resolve("file");
+    fs.writeContentsToPath("foo", file.getPath());
     Files.setPosixFilePermissions(
-        fs.getPathForRelativePath(file), ImmutableSet.of(PosixFilePermission.OWNER_EXECUTE));
+        fs.getPathForRelativePath(file.getPath()),
+        ImmutableSet.of(PosixFilePermission.OWNER_EXECUTE));
 
     // Compress
-    ArtifactUploader.compress(fs, ImmutableList.of(file), out);
+    ArtifactUploader.compress(fs, ImmutableList.of(file.getPath()), out.getPath());
 
     // Decompress+unarchive, and check that the only file is an executable.
     try (TarArchiveInputStream fin =
-        new TarArchiveInputStream(new ZstdCompressorInputStream(Files.newInputStream(out)))) {
+        new TarArchiveInputStream(
+            new ZstdCompressorInputStream(Files.newInputStream(out.getPath())))) {
       ArrayList<TarArchiveEntry> entries = new ArrayList<>();
 
       TarArchiveEntry entry;

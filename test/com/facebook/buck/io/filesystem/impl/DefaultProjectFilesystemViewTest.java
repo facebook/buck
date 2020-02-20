@@ -58,7 +58,7 @@ public class DefaultProjectFilesystemViewTest {
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     filesystemView =
         new DefaultProjectFilesystemView(
-            filesystem, Paths.get(""), filesystem.getRootPath(), ImmutableMap.of());
+            filesystem, Paths.get(""), filesystem.getRootPath().getPath(), ImmutableMap.of());
   }
 
   @Test
@@ -108,7 +108,7 @@ public class DefaultProjectFilesystemViewTest {
     filesystem.mkdirs(Paths.get("foo"));
     filesystemView =
         new DefaultProjectFilesystemView(
-            filesystem, Paths.get(""), filesystem.getRootPath(), ImmutableMap.of());
+            filesystem, Paths.get(""), filesystem.getRootPath().getPath(), ImmutableMap.of());
 
     assertTrue(filesystemView.isDirectory(Paths.get("foo")));
     assertFalse(filesystemView.isDirectory(Paths.get("bar")));

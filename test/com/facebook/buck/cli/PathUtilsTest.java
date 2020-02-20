@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertFalse;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.OutputLabel;
@@ -73,13 +74,13 @@ public class PathUtilsTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//:foo");
     BuildRule rule = new PathReferenceRule(buildTarget, fileSystem, Paths.get("foo"));
     graphBuilder.addToIndex(rule);
-    Path expected = fileSystem.getRootPath().resolve("foo");
+    AbsPath expected = fileSystem.getRootPath().resolve("foo");
 
     assertThat(
         PathUtils.getUserFacingOutputPath(
                 pathResolver, rule, false, OutputLabel.defaultLabel(), true)
             .get(),
-        Matchers.equalTo(expected));
+        Matchers.equalTo(expected.getPath()));
   }
 
   @Test
@@ -98,12 +99,12 @@ public class PathUtilsTest {
                 OutputLabel.of("qux"),
                 ImmutableSet.of(Paths.get(("qux")))));
     graphBuilder.addToIndex(rule);
-    Path expected = fileSystem.getRootPath().resolve("bar");
+    AbsPath expected = fileSystem.getRootPath().resolve("bar");
 
     assertThat(
         PathUtils.getUserFacingOutputPath(pathResolver, rule, false, OutputLabel.of("bar"), true)
             .get(),
-        Matchers.equalTo(expected));
+        Matchers.equalTo(expected.getPath()));
   }
 
   @Test
@@ -168,12 +169,12 @@ public class PathUtilsTest {
         new PathReferenceRuleWithMultipleOutputs(
             buildTarget, fileSystem, Paths.get("bar"), ImmutableMap.of());
     graphBuilder.addToIndex(rule);
-    Path expected = fileSystem.getRootPath().resolve("bar");
+    AbsPath expected = fileSystem.getRootPath().resolve("bar");
 
     assertThat(
         PathUtils.getUserFacingOutputPath(
                 pathResolver, rule, false, OutputLabel.defaultLabel(), false)
             .get(),
-        Matchers.equalTo(expected));
+        Matchers.equalTo(expected.getPath()));
   }
 }

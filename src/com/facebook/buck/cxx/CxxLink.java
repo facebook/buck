@@ -194,7 +194,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
               .collect(
                   ImmutableSortedMap.toImmutableSortedMap(
                       Ordering.natural(),
-                      root -> MorePaths.normalize(filesystem.getRootPath().resolve(root)),
+                      root -> MorePaths.normalize(filesystem.getRootPath().resolve(root).getPath()),
                       root -> Paths.get(root)));
 
       Builder<Step> stepsBuilder =
@@ -209,7 +209,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
                       args,
                       linker,
                       buildTarget.getCell(),
-                      filesystem.getRootPath(),
+                      filesystem.getRootPath().getPath(),
                       context.getSourcePathResolver()))
               .add(
                   new CxxLinkStep(

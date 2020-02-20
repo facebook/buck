@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.JsonMatcher;
@@ -102,7 +103,7 @@ public class DefaultClassUsageFileWriterTest {
 
     CellPathResolver cellPathResolver =
         TestCellPathResolver.create(
-            homeFs.getRootPath(), ImmutableMap.of("AwayCell", awayFs.getRootPath()));
+            homeFs.getRootPath(), ImmutableMap.of("AwayCell", awayFs.getRootPath().getPath()));
     Path testJarPath = homeFs.getPathForRelativePath("home.jar");
     Path testTwoJarPath = awayFs.getPathForRelativePath("away.jar");
     Path externalJarPath = externalFs.getPathForRelativePath("external.jar");
@@ -128,7 +129,7 @@ public class DefaultClassUsageFileWriterTest {
 
     // The xcell file should appear relative to the "home" filesystem, and the external class
     // which is not under any cell in the project should not appear at all.
-    Path expectedAwayCellPath =
+    AbsPath expectedAwayCellPath =
         homeFs
             .getRootPath()
             .getRoot()

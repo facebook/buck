@@ -34,6 +34,7 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.BuckConfigTestUtils;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.TargetConfigurationSerializerForTests;
@@ -218,7 +219,7 @@ public class ServedCacheIntegrationTest {
     ProjectFilesystem throwingStreamFilesystem =
         new DefaultProjectFilesystem(
             CanonicalCellName.rootCell(),
-            tmpDir.getRoot(),
+            AbsPath.of(tmpDir.getRoot()),
             new DefaultProjectFilesystemDelegate(tmpDir.getRoot()),
             DefaultProjectFilesystemFactory.getWindowsFSInstance(),
             TestProjectFilesystems.BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST) {
@@ -258,7 +259,7 @@ public class ServedCacheIntegrationTest {
     ProjectFilesystem throwingStreamFilesystem =
         new DefaultProjectFilesystem(
             CanonicalCellName.rootCell(),
-            tmpDir.getRoot(),
+            AbsPath.of(tmpDir.getRoot()),
             new DefaultProjectFilesystemDelegate(tmpDir.getRoot()),
             DefaultProjectFilesystemFactory.getWindowsFSInstance(),
             TestProjectFilesystems.BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST) {
@@ -293,7 +294,7 @@ public class ServedCacheIntegrationTest {
     ProjectFilesystem throwingStreamFilesystem =
         new DefaultProjectFilesystem(
             CanonicalCellName.rootCell(),
-            tmpDir.getRoot(),
+            AbsPath.of(tmpDir.getRoot()),
             new DefaultProjectFilesystemDelegate(tmpDir.getRoot()),
             DefaultProjectFilesystemFactory.getWindowsFSInstance(),
             TestProjectFilesystems.BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST) {

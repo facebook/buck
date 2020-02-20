@@ -45,4 +45,8 @@ public class TestProjectFilesystems {
             AbsPath.of(root),
             BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST);
   }
+
+  public static DefaultProjectFilesystem createProjectFilesystem(AbsPath root) {
+    return createProjectFilesystem(root.getPath());
+  }
 }

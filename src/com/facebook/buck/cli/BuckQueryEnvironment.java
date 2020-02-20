@@ -343,7 +343,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
                     cell.getFilesystem(),
                     MorePaths.relativize(
                         rootCell.getFilesystem().getRootPath(),
-                        cell.getFilesystem().resolve(path))))
+                        AbsPath.of(cell.getFilesystem().resolve(path)))))
         .map(QueryFileTarget::of)
         .collect(ImmutableSet.toImmutableSet());
   }
@@ -513,7 +513,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
   @Override
   public ImmutableSet<QueryFileTarget> getBuildFiles(Set<QueryBuildTarget> targets) {
     ProjectFilesystem cellFilesystem = rootCell.getFilesystem();
-    AbsPath rootPath = AbsPath.of(cellFilesystem.getRootPath());
+    AbsPath rootPath = cellFilesystem.getRootPath();
 
     ImmutableSet.Builder<QueryFileTarget> builder =
         ImmutableSet.builderWithExpectedSize(targets.size());

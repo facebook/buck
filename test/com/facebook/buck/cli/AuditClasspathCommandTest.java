@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.android.AndroidBinaryBuilder;
 import com.facebook.buck.android.AndroidLibraryBuilder;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -46,7 +47,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.SortedSet;
@@ -134,7 +134,7 @@ public class AuditClasspathCommandTest {
     auditClasspathCommand.printClasspath(
         params, TargetGraphCreationResult.of(targetGraph, ImmutableSet.of(testAndroidTarget)));
 
-    Path root = projectFilesystem.getRootPath();
+    AbsPath root = projectFilesystem.getRootPath();
     SortedSet<String> expectedPaths =
         Sets.newTreeSet(
             Arrays.asList(
@@ -229,7 +229,7 @@ public class AuditClasspathCommandTest {
             TargetGraphFactory.newInstance(ImmutableSet.of(androidNode, javaNode)),
             ImmutableSet.of(androidTarget, javaTarget)));
 
-    Path root = projectFilesystem.getRootPath();
+    AbsPath root = projectFilesystem.getRootPath();
     ObjectMapper objectMapper = ObjectMappers.legacyCreate();
     String expected =
         String.format(
@@ -295,7 +295,7 @@ public class AuditClasspathCommandTest {
         TargetGraphCreationResult.of(targetGraph, targets));
 
     // Verify output.
-    Path root = projectFilesystem.getRootPath();
+    AbsPath root = projectFilesystem.getRootPath();
     ImmutableSortedSet<String> expectedPaths =
         ImmutableSortedSet.of(
             root.resolve(
@@ -353,7 +353,7 @@ public class AuditClasspathCommandTest {
         TargetGraphCreationResult.of(targetGraph, targets));
 
     // Verify output.
-    Path root = projectFilesystem.getRootPath();
+    AbsPath root = projectFilesystem.getRootPath();
     ObjectMapper objectMapper = ObjectMappers.legacyCreate();
     String expected =
         String.format(

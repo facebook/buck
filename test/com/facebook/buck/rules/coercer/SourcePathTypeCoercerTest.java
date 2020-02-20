@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
@@ -148,9 +149,10 @@ public class SourcePathTypeCoercerTest {
 
   @Test
   public void coerceCrossRepoBuildTarget() throws CoerceFailedException {
-    Path rootPath = projectFilesystem.getRootPath();
-    Path helloRoot = rootPath.resolve("hello");
-    cellRoots = TestCellPathResolver.create(rootPath, ImmutableMap.of("hello", helloRoot));
+    AbsPath rootPath = projectFilesystem.getRootPath();
+    AbsPath helloRoot = rootPath.resolve("hello");
+    cellRoots =
+        TestCellPathResolver.create(rootPath, ImmutableMap.of("hello", helloRoot.getPath()));
 
     SourcePath sourcePath =
         sourcePathTypeCoercer.coerce(

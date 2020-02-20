@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.event.FlushConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.DefaultProjectBuildFileParserFactory;
@@ -125,8 +126,8 @@ public class AuditRulesCommand extends AbstractCommand {
           // Resolve the path specified by the user.
           Path path = Paths.get(pathToBuildFile);
           if (!path.isAbsolute()) {
-            Path root = projectFilesystem.getRootPath();
-            path = root.resolve(path);
+            AbsPath root = projectFilesystem.getRootPath();
+            path = root.resolve(path).getPath();
           }
 
           // Parse the rules from the build file.

@@ -46,7 +46,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
@@ -69,7 +68,7 @@ public class PerBuildStateTest {
 
   private final int threads;
   private final boolean parallelParsing;
-  private Path cellRoot;
+  private AbsPath cellRoot;
   private Cells cell;
   private PerBuildState perBuildState;
 

@@ -911,7 +911,7 @@ public final class MainRunner {
       ProjectFilesystem rootCellProjectFilesystem =
           projectFilesystemFactory.createOrThrow(
               CanonicalCellName.rootCell(),
-              AbsPath.of(cells.getRootCell().getFilesystem().getRootPath()),
+              cells.getRootCell().getFilesystem().getRootPath(),
               BuckPaths.getBuckOutIncludeTargetConfigHashFromRootCellConfig(config));
       BuildBuckConfig buildBuckConfig =
           cells.getRootCell().getBuckConfig().getView(BuildBuckConfig.class);
@@ -1007,7 +1007,8 @@ public final class MainRunner {
                       verbosity);
           DefaultBuckEventBus buildEventBus = new DefaultBuckEventBus(clock, buildId);
           ) {
-        BuckConfigWriter.writeConfig(filesystem.getRootPath(), invocationInfo, buckConfig);
+        BuckConfigWriter.writeConfig(
+            filesystem.getRootPath().getPath(), invocationInfo, buckConfig);
 
         CommonThreadFactoryState commonThreadFactoryState =
             GlobalStateManager.singleton().getThreadToCommandRegister();
@@ -1330,7 +1331,7 @@ public final class MainRunner {
           VersionControlStatsGenerator vcStatsGenerator =
               new VersionControlStatsGenerator(
                   new DelegatingVersionControlCmdLineInterface(
-                      cells.getRootCell().getFilesystem().getRootPath(),
+                      cells.getRootCell().getFilesystem().getRootPath().getPath(),
                       new PrintStreamProcessExecutorFactory(),
                       vcBuckConfig.getHgCmd(),
                       buckConfig.getEnvironment()),
@@ -1733,7 +1734,7 @@ public final class MainRunner {
     }
   }
 
-  private void warnAboutConfigFileOverrides(Path root, CliConfig cliConfig) throws IOException {
+  private void warnAboutConfigFileOverrides(AbsPath root, CliConfig cliConfig) throws IOException {
     if (!cliConfig.getWarnOnConfigFileOverrides()) {
       return;
     }

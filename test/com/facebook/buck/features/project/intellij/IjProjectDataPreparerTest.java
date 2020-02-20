@@ -26,6 +26,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -528,7 +529,7 @@ public class IjProjectDataPreparerTest {
         new FakeProjectFilesystem(
             FakeClock.doNotCare(),
             CanonicalCellName.rootCell(),
-            Paths.get(".").toAbsolutePath(),
+            AbsPath.of(Paths.get(".").toAbsolutePath()),
             paths);
 
     TargetNode<?> guavaTargetNode =

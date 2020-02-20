@@ -18,6 +18,7 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.programrunner.DirectProgramRunner;
 import com.facebook.buck.shell.programrunner.ProgramRunner;
@@ -69,6 +70,11 @@ public abstract class AbstractGenruleStep extends ShellStep {
   public AbstractGenruleStep(
       ProjectFilesystem projectFilesystem, CommandString commandString, Path workingDirectory) {
     this(projectFilesystem, commandString, workingDirectory, new DirectProgramRunner());
+  }
+
+  public AbstractGenruleStep(
+      ProjectFilesystem projectFilesystem, CommandString commandString, AbsPath workingDirectory) {
+    this(projectFilesystem, commandString, workingDirectory.getPath());
   }
 
   @Override

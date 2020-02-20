@@ -28,6 +28,7 @@ import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.apple.clang.ModuleMapMode;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.description.arg.HasTests;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -635,7 +636,7 @@ class HeaderSearchPaths {
         arg.getXcodePublicHeadersSymlinks().orElse(cxxBuckConfig.getPublicHeadersSymlinksEnabled());
     Path headerSymlinkTreeRoot = getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PUBLIC);
 
-    Path basePath;
+    AbsPath basePath;
     if (shouldCreateHeadersSymlinks) {
       basePath = projectFilesystem.getRootPath().resolve(headerSymlinkTreeRoot);
     } else {
@@ -644,13 +645,13 @@ class HeaderSearchPaths {
     ImmutableSortedMap<Path, SourcePath> publicCxxHeaders = getPublicCxxHeaders(targetNode);
     publicCxxHeaders.values().forEach(sourcePath -> sourcePathsToBuildBuilder.add(sourcePath));
     for (Map.Entry<Path, SourcePath> entry : publicCxxHeaders.entrySet()) {
-      Path path;
+      AbsPath path;
       if (shouldCreateHeadersSymlinks) {
         path = basePath.resolve(entry.getKey());
       } else {
         path = basePath.resolve(projectSourcePathResolver.resolveSourcePath(entry.getValue()));
       }
-      headerMapBuilder.add(entry.getKey().toString(), path);
+      headerMapBuilder.add(entry.getKey().toString(), path.getPath());
     }
 
     SwiftAttributes swiftAttributes = swiftAttributeParser.parseSwiftAttributes(targetNode);

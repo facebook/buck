@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -170,7 +171,7 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
       // archives embed relative paths from output to input inside the archive.  If this becomes a
       // limitation, we could make this rule uncacheable and allow thin archives to embed absolute
       // paths.
-      Path rootPath = filesystem.getRootPath();
+      AbsPath rootPath = filesystem.getRootPath();
       for (SourcePath input : inputs) {
         Preconditions.checkState(resolver.getFilesystem(input).getRootPath().equals(rootPath));
       }

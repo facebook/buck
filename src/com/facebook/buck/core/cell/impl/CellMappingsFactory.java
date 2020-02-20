@@ -21,6 +21,7 @@ import com.facebook.buck.core.cell.NewCellPathResolver;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.cell.nameresolver.DefaultCellNameResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.util.config.Config;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -54,6 +55,14 @@ public class CellMappingsFactory {
                 path, ignored -> CanonicalCellName.of(Optional.of(name))));
 
     return DefaultNewCellPathResolver.of(ImmutableMap.copyOf(canonicalNameMap));
+  }
+
+  /**
+   * Creates a {@link NewCellPathResolver} from the root cell's path and config. We currently
+   * require that all cells appear in the root cell's config.
+   */
+  public static NewCellPathResolver create(AbsPath rootPath, Config rootConfig) {
+    return create(rootPath.getPath(), rootConfig);
   }
 
   /** Creates a {@link CellNameResolver} for a cell. */

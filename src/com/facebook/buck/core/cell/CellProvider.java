@@ -18,6 +18,7 @@ package com.facebook.buck.core.cell;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -71,6 +72,10 @@ public final class CellProvider {
       Throwables.throwIfUnchecked(e.getCause());
       throw e;
     }
+  }
+
+  public Cell getCellByPath(AbsPath path) {
+    return getCellByPath(path.getPath());
   }
 
   /** Get cell object by canonicall cell name */

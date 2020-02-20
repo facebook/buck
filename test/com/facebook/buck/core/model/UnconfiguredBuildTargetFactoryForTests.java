@@ -42,7 +42,7 @@ public class UnconfiguredBuildTargetFactoryForTests {
 
   public static UnconfiguredBuildTarget newInstance(
       @Nullable Path root, String fullyQualifiedName) {
-    root = root == null ? new FakeProjectFilesystem().getRootPath() : root;
+    root = root == null ? new FakeProjectFilesystem().getRootPath().getPath() : root;
 
     BuckCellArg arg = BuckCellArg.of(fullyQualifiedName);
     CanonicalCellName cellName = CanonicalCellName.of(arg.getCellName());

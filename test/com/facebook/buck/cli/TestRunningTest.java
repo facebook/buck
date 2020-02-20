@@ -28,6 +28,7 @@ import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.build.engine.impl.FakeBuildEngine;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -247,7 +248,7 @@ public class TestRunningTest {
     ImmutableSet<String> result =
         TestRunning.getPathToSourceFolders(javaLibrary, graphBuilder, defaultJavaPackageFinder);
 
-    Path rootPath = javaLibrary.getProjectFilesystem().getRootPath();
+    AbsPath rootPath = javaLibrary.getProjectFilesystem().getRootPath();
     ImmutableSet<String> expected =
         ImmutableSet.of(
             rootPath.resolve("package/src-gen") + "/", rootPath.resolve("package/src") + "/");

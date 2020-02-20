@@ -126,21 +126,21 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
   @VisibleForTesting
   protected DefaultProjectFilesystem(
       CanonicalCellName cellName,
-      Path root,
+      AbsPath root,
       ProjectFilesystemDelegate delegate,
       @Nullable WindowsFS winFSInstance,
       boolean buckOutIncludeTargetConfigHash) {
     this(
         root,
         ImmutableSet.of(),
-        BuckPaths.createDefaultBuckPaths(cellName, root, buckOutIncludeTargetConfigHash),
+        BuckPaths.createDefaultBuckPaths(cellName, root.getPath(), buckOutIncludeTargetConfigHash),
         delegate,
         new ProjectFilesystemDelegatePair(delegate, delegate),
         winFSInstance);
   }
 
   public DefaultProjectFilesystem(
-      Path root,
+      AbsPath root,
       ImmutableSet<PathMatcher> blackListedPaths,
       BuckPaths buckPaths,
       ProjectFilesystemDelegate delegate,
@@ -155,20 +155,19 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
   }
 
   public DefaultProjectFilesystem(
-      Path root,
+      AbsPath root,
       ImmutableSet<PathMatcher> blackListedPaths,
       BuckPaths buckPaths,
       ProjectFilesystemDelegate delegate,
       ProjectFilesystemDelegatePair delegatePair,
       @Nullable WindowsFS winFSInstance) {
 
-    Preconditions.checkArgument(root.isAbsolute(), "Expected absolute path. Got <%s>.", root);
-
     if (shouldVerifyConstructorArguments()) {
-      Preconditions.checkArgument(Files.isDirectory(root), "%s must be a directory", root);
+      Preconditions.checkArgument(
+          Files.isDirectory(root.getPath()), "%s must be a directory", root);
     }
 
-    this.projectRoot = MorePaths.normalize(AbsPath.of(root));
+    this.projectRoot = MorePaths.normalize(root);
     this.delegate = delegate;
     this.delegatePair = delegatePair;
     this.ignoreValidityOfPaths = false;
@@ -181,10 +180,10 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
                         MorePaths.filterForSubpaths(
                             ImmutableSet.of(
                                 getCacheDir(
-                                    root,
+                                    root.getPath(),
                                     Optional.of(buckPaths.getCacheDir().toString()),
                                     buckPaths)),
-                            root))
+                            root.getPath()))
                     .append(ImmutableSet.of(buckPaths.getTrashDir()))
                     .transform(basePath -> RecursiveFileMatcher.of(RelPath.of(basePath))))
             .toSet();
@@ -197,7 +196,7 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
                 matcher -> {
                   RelPath path = matcher.getPath();
                   ImmutableSet<Path> filtered =
-                      MorePaths.filterForSubpaths(ImmutableSet.of(path.getPath()), root);
+                      MorePaths.filterForSubpaths(ImmutableSet.of(path.getPath()), root.getPath());
                   if (filtered.isEmpty()) {
                     return path.getPath();
                   }
@@ -286,8 +285,8 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
   }
 
   @Override
-  public final Path getRootPath() {
-    return projectRoot.getPath();
+  public final AbsPath getRootPath() {
+    return projectRoot;
   }
 
   @Override
@@ -305,7 +304,7 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
 
   @Override
   public Path resolve(String path) {
-    return MorePaths.normalize(getRootPath().resolve(path).toAbsolutePath());
+    return MorePaths.normalize(getRootPath().resolve(path)).getPath();
   }
 
   /** Construct a relative path between the project root and a given path. */

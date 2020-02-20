@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.toolchain.tool.impl.testutil.SimpleTool;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
@@ -40,8 +41,9 @@ import org.junit.Test;
 /** Test generation of command line flags based on creation parameters */
 public class AaptStepTest {
 
-  private Path basePath = Paths.get("/java/com/facebook/buck/example");
-  private Path proguardConfig = basePath.resolve("mock_proguard.txt");
+  private AbsPath basePath =
+      AbsPath.of(Paths.get("/java/com/facebook/buck/example").toAbsolutePath());
+  private Path proguardConfig = basePath.resolve("mock_proguard.txt").getPath();
 
   private AaptStep buildAaptStep(
       Path pathToGeneratedProguardConfig,
@@ -71,7 +73,7 @@ public class AaptStepTest {
         new TestActionGraphBuilder().getSourcePathResolver(),
         AndroidPlatformTarget.of(
             "android",
-            basePath.resolve("mock_android.jar"),
+            basePath.resolve("mock_android.jar").getPath(),
             Collections.emptyList(),
             () -> new SimpleTool("mock_aapt_bin"),
             new ConstantToolProvider(new SimpleTool("")),
@@ -84,11 +86,11 @@ public class AaptStepTest {
             Paths.get(""),
             Paths.get("")),
         /* workingDirectory */ basePath,
-        /* manifestDirectory */ basePath.resolve("AndroidManifest.xml"),
+        /* manifestDirectory */ basePath.resolve("AndroidManifest.xml").getPath(),
         /* resDirectories */ ImmutableList.of(),
         /* assetsDirectories */ ImmutableSortedSet.of(),
-        /* pathToOutputApk */ basePath.resolve("build").resolve("out.apk"),
-        /* pathToRDotDText */ basePath.resolve("r"),
+        /* pathToOutputApk */ basePath.resolve("build").resolve("out.apk").getPath(),
+        /* pathToRDotDText */ basePath.resolve("r").getPath(),
         pathToGeneratedProguardConfig,
         ImmutableList.of(),
         isCrunchFiles,
@@ -133,8 +135,7 @@ public class AaptStepTest {
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
 
     assertTrue(command.contains("-G"));
-    String proguardConfigPath =
-        MorePaths.pathWithPlatformSeparators("/java/com/facebook/buck/example/mock_proguard.txt");
+    String proguardConfigPath = MorePaths.pathWithPlatformSeparators(proguardConfig);
     assertTrue(command.contains(proguardConfigPath));
   }
 

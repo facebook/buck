@@ -48,16 +48,16 @@ public class PathArguments {
    * /otherproject/src/com/facebook/Test.java will be ignored.
    */
   static ReferencedFiles getCanonicalFilesUnderProjectRoot(
-      Path projectRoot, Iterable<String> nonCanonicalFilePaths) throws IOException {
+      AbsPath projectRoot, Iterable<String> nonCanonicalFilePaths) throws IOException {
     // toRealPath() is used throughout to resolve symlinks or else the Path.startsWith() check will
     // not be reliable.
     ImmutableSet.Builder<RelPath> projectFiles = ImmutableSet.builder();
     ImmutableSet.Builder<AbsPath> nonProjectFiles = ImmutableSet.builder();
-    Path normalizedRoot = projectRoot.toRealPath();
+    AbsPath normalizedRoot = projectRoot.toRealPath();
     for (String filePath : nonCanonicalFilePaths) {
       Path canonicalFullPath = Paths.get(filePath);
       if (!canonicalFullPath.isAbsolute()) {
-        canonicalFullPath = projectRoot.resolve(canonicalFullPath);
+        canonicalFullPath = projectRoot.resolve(canonicalFullPath).getPath();
       }
       if (!canonicalFullPath.toFile().exists()) {
         nonProjectFiles.add(AbsPath.of(canonicalFullPath));
@@ -66,10 +66,10 @@ public class PathArguments {
       canonicalFullPath = canonicalFullPath.toRealPath();
 
       // Ignore files that aren't under project root.
-      if (canonicalFullPath.startsWith(normalizedRoot)) {
+      if (canonicalFullPath.startsWith(normalizedRoot.getPath())) {
         Path relativePath =
             canonicalFullPath.subpath(
-                normalizedRoot.getNameCount(), canonicalFullPath.getNameCount());
+                normalizedRoot.getPath().getNameCount(), canonicalFullPath.getNameCount());
         projectFiles.add(RelPath.of(relativePath));
       } else {
         nonProjectFiles.add(AbsPath.of(canonicalFullPath));

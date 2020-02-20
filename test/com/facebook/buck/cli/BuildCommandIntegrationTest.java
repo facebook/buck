@@ -31,6 +31,7 @@ import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildPaths;
@@ -126,9 +127,9 @@ public class BuildCommandIntegrationTest {
   public void showOutputsForRulesWithMultipleOutputs() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
-    Path expectedPath1 =
+    RelPath expectedPath1 =
         getExpectedOutputPathRelativeToProjectRoot("//:bar_with_multiple_outputs", "bar");
-    Path expectedPath2 =
+    RelPath expectedPath2 =
         getExpectedOutputPathRelativeToProjectRoot("//:bar_with_multiple_outputs", "baz");
 
     ProcessResult runBuckResult =
@@ -600,7 +601,7 @@ public class BuildCommandIntegrationTest {
         RegexMatcher.containsRegex("FINISHED IN .* 0/0 JOBS"));
   }
 
-  private Path getExpectedOutputPathRelativeToProjectRoot(String targetName, String pathName)
+  private RelPath getExpectedOutputPathRelativeToProjectRoot(String targetName, String pathName)
       throws IOException {
     return workspace
         .getProjectFileSystem()

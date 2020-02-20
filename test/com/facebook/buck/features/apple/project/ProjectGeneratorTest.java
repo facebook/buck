@@ -81,6 +81,7 @@ import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.Flavor;
@@ -190,7 +191,7 @@ public class ProjectGeneratorTest {
   private SwiftBuckConfig swiftBuckConfig;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
-  private Path rootPath;
+  private AbsPath rootPath;
 
   @Before
   public void setUp() throws IOException {
@@ -4634,9 +4635,7 @@ public class ProjectGeneratorTest {
     ImmutableMap<String, String> settings =
         getBuildSettings(buildTarget, generatedProject.getTargets().get(0), "Debug");
     assertThat(settings, hasKey("REPO_ROOT"));
-    assertEquals(
-        projectFilesystem.getRootPath().toAbsolutePath().normalize().toString(),
-        settings.get("REPO_ROOT"));
+    assertEquals(projectFilesystem.getRootPath().normalize().toString(), settings.get("REPO_ROOT"));
   }
 
   /**
@@ -6921,12 +6920,7 @@ public class ProjectGeneratorTest {
         ImmutableMap.builder();
     for (Map.Entry<String, Optional<String>> name : sourcesAndFlags.entrySet()) {
       absolutePathFlagMapBuilder.put(
-          projectFilesystem
-              .getRootPath()
-              .resolve(name.getKey())
-              .toAbsolutePath()
-              .normalize()
-              .toString(),
+          projectFilesystem.getRootPath().resolve(name.getKey()).normalize().toString(),
           name.getValue());
     }
     ImmutableMap<String, Optional<String>> absolutePathFlagMap = absolutePathFlagMapBuilder.build();
@@ -6957,7 +6951,7 @@ public class ProjectGeneratorTest {
     ImmutableSet.Builder<String> absoluteSourcesBuilder = ImmutableSet.builder();
     for (String name : sources) {
       absoluteSourcesBuilder.add(
-          projectFilesystem.getRootPath().resolve(name).toAbsolutePath().normalize().toString());
+          projectFilesystem.getRootPath().resolve(name).normalize().toString());
     }
 
     Iterable<PBXBuildPhase> buildPhases =
@@ -6988,12 +6982,7 @@ public class ProjectGeneratorTest {
     ImmutableSet.Builder<String> expectedResourceSetBuilder = ImmutableSet.builder();
     for (String resource : resources) {
       expectedResourceSetBuilder.add(
-          projectFilesystem
-              .getRootPath()
-              .resolve(resource)
-              .toAbsolutePath()
-              .normalize()
-              .toString());
+          projectFilesystem.getRootPath().resolve(resource).normalize().toString());
     }
     ImmutableSet<String> expectedResourceSet = expectedResourceSetBuilder.build();
 

@@ -176,7 +176,7 @@ public class ParserWithConfigurableAttributesTest {
   private Parser parser;
   private TypeCoercerFactory typeCoercerFactory;
   private ProjectFilesystem filesystem;
-  private Path cellRoot;
+  private AbsPath cellRoot;
   private BuckEventBus eventBus;
   private Cell cell;
   private KnownRuleTypesProvider knownRuleTypesProvider;
@@ -428,9 +428,9 @@ public class ParserWithConfigurableAttributesTest {
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage("When parsing ////cake:walk");
 
-    Path buckFile = cellRoot.resolve("BUCK");
+    AbsPath buckFile = cellRoot.resolve("BUCK");
     Files.write(
-        buckFile,
+        buckFile.getPath(),
         "genrule(name = 'cake', out = 'file.txt', cmd = '$(exe ////cake:walk) > $OUT')"
             .getBytes(UTF_8));
 
@@ -443,14 +443,14 @@ public class ParserWithConfigurableAttributesTest {
     thrown.expectMessage("Buck wasn't able to parse");
     thrown.expectMessage(Paths.get("foo/BUCK").toString());
 
-    Path buckFile = cellRoot.resolve("BUCK");
+    AbsPath buckFile = cellRoot.resolve("BUCK");
     Files.write(
-        buckFile,
+        buckFile.getPath(),
         "genrule(name = 'cake', out = 'foo.txt', cmd = '$(exe //foo:bar) > $OUT')".getBytes(UTF_8));
 
     buckFile = cellRoot.resolve("foo/BUCK");
-    Files.createDirectories(buckFile.getParent());
-    Files.write(buckFile, "I do not parse as python".getBytes(UTF_8));
+    Files.createDirectories(buckFile.getParent().getPath());
+    Files.write(buckFile.getPath(), "I do not parse as python".getBytes(UTF_8));
 
     parser.buildTargetGraph(
         parsingContext, ImmutableSet.of(BuildTargetFactory.newInstance("//:cake")));
@@ -462,9 +462,9 @@ public class ParserWithConfigurableAttributesTest {
     thrown.expect(BuildFileParseException.class);
     thrown.expectMessage("Duplicate rule definition 'cake' found.");
 
-    Path buckFile = cellRoot.resolve("BUCK");
+    AbsPath buckFile = cellRoot.resolve("BUCK");
     Files.write(
-        buckFile,
+        buckFile.getPath(),
         ("export_file(name = 'cake', src = 'hello.txt')\n"
                 + "genrule(name = 'cake', out = 'file.txt', cmd = 'touch $OUT')\n")
             .getBytes(UTF_8));
@@ -490,9 +490,10 @@ public class ParserWithConfigurableAttributesTest {
     thrown.expect(BuildFileParseException.class);
     thrown.expectMessage("rules 'name' field must be a string.  Found None.");
 
-    Path buckFile = cellRoot.resolve("BUCK");
+    AbsPath buckFile = cellRoot.resolve("BUCK");
     Files.write(
-        buckFile, ("genrule(name = None, out = 'file.txt', cmd = 'touch $OUT')\n").getBytes(UTF_8));
+        buckFile.getPath(),
+        ("genrule(name = None, out = 'file.txt', cmd = 'touch $OUT')\n").getBytes(UTF_8));
 
     parser.getTargetNodeAssertCompatible(parsingContext, buildTarget, DependencyStack.root());
   }
@@ -587,9 +588,7 @@ public class ParserWithConfigurableAttributesTest {
     filterAllTargetsInProject(parser, parsingContext);
 
     // Process event.
-    parser
-        .getPermState()
-        .invalidateBasedOn(WatchmanOverflowEvent.of(AbsPath.of(filesystem.getRootPath()), ""));
+    parser.getPermState().invalidateBasedOn(WatchmanOverflowEvent.of(filesystem.getRootPath(), ""));
 
     // Call filterAllTargetsInProject to request cached rules.
     filterAllTargetsInProject(parser, parsingContext);
@@ -604,9 +603,7 @@ public class ParserWithConfigurableAttributesTest {
     filterAllTargetsInProject(parser, parsingContext);
 
     // Send overflow event.
-    parser
-        .getPermState()
-        .invalidateBasedOn(WatchmanOverflowEvent.of(AbsPath.of(filesystem.getRootPath()), ""));
+    parser.getPermState().invalidateBasedOn(WatchmanOverflowEvent.of(filesystem.getRootPath(), ""));
 
     // Call filterAllTargetsInProject to request cached rules.
     filterAllTargetsInProject(parser, parsingContext);
@@ -619,7 +616,7 @@ public class ParserWithConfigurableAttributesTest {
         .getPermState()
         .invalidateBasedOn(
             WatchmanPathEvent.of(
-                AbsPath.of(filesystem.getRootPath()),
+                filesystem.getRootPath(),
                 Kind.CREATE,
                 RelPath.of(Paths.get("java/com/facebook/Something.java"))));
 
@@ -661,7 +658,7 @@ public class ParserWithConfigurableAttributesTest {
 
     WatchmanPathEvent event =
         WatchmanPathEvent.of(
-            AbsPath.of(filesystem.getRootPath()),
+            filesystem.getRootPath(),
             Kind.MODIFY,
             RelPath.of(MorePaths.relativize(tempDir.getRoot().toRealPath(), configBuckFile)));
     parser.getPermState().invalidateBasedOn(event);
@@ -714,7 +711,7 @@ public class ParserWithConfigurableAttributesTest {
 
     WatchmanPathEvent event =
         WatchmanPathEvent.of(
-            AbsPath.of(filesystem.getRootPath()),
+            filesystem.getRootPath(),
             Kind.MODIFY,
             RelPath.of(MorePaths.relativize(tempDir.getRoot().toRealPath(), defsFile)));
     parser.getPermState().invalidateBasedOn(event);
@@ -771,7 +768,7 @@ public class ParserWithConfigurableAttributesTest {
         .getPermState()
         .invalidateBasedOn(
             WatchmanPathEvent.of(
-                AbsPath.of(filesystem.getRootPath()),
+                filesystem.getRootPath(),
                 Kind.CREATE,
                 RelPath.of(MorePaths.relativize(tempDir.getRoot().toRealPath(), testBuildFile))));
 
@@ -809,7 +806,7 @@ public class ParserWithConfigurableAttributesTest {
     // Process event.
     WatchmanPathEvent event =
         WatchmanPathEvent.of(
-            AbsPath.of(filesystem.getRootPath()),
+            filesystem.getRootPath(),
             Kind.MODIFY,
             RelPath.of(MorePaths.relativize(tempDir.getRoot().toRealPath(), testBuildFile)));
     parser.getPermState().invalidateBasedOn(event);
@@ -848,7 +845,7 @@ public class ParserWithConfigurableAttributesTest {
     // Process event.
     WatchmanPathEvent event =
         WatchmanPathEvent.of(
-            AbsPath.of(filesystem.getRootPath()),
+            filesystem.getRootPath(),
             Kind.DELETE,
             RelPath.of(MorePaths.relativize(tempDir.getRoot().toRealPath(), testBuildFile)));
     parser.getPermState().invalidateBasedOn(event);
@@ -887,7 +884,7 @@ public class ParserWithConfigurableAttributesTest {
     // Process event.
     WatchmanPathEvent event =
         WatchmanPathEvent.of(
-            AbsPath.of(filesystem.getRootPath()),
+            filesystem.getRootPath(),
             Kind.CREATE,
             RelPath.of(MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByBuildFile)));
     parser.getPermState().invalidateBasedOn(event);
@@ -928,7 +925,7 @@ public class ParserWithConfigurableAttributesTest {
     // Process event.
     WatchmanPathEvent event =
         WatchmanPathEvent.of(
-            AbsPath.of(filesystem.getRootPath()),
+            filesystem.getRootPath(),
             Kind.MODIFY,
             RelPath.of(MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByBuildFile)));
     parser.getPermState().invalidateBasedOn(event);
@@ -967,7 +964,7 @@ public class ParserWithConfigurableAttributesTest {
     // Process event.
     WatchmanPathEvent event =
         WatchmanPathEvent.of(
-            AbsPath.of(filesystem.getRootPath()),
+            filesystem.getRootPath(),
             Kind.DELETE,
             RelPath.of(MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByBuildFile)));
     parser.getPermState().invalidateBasedOn(event);
@@ -1006,7 +1003,7 @@ public class ParserWithConfigurableAttributesTest {
     // Process event.
     WatchmanPathEvent event =
         WatchmanPathEvent.of(
-            AbsPath.of(filesystem.getRootPath()),
+            filesystem.getRootPath(),
             Kind.CREATE,
             RelPath.of(
                 MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByIncludeFile)));
@@ -1046,7 +1043,7 @@ public class ParserWithConfigurableAttributesTest {
     // Process event.
     WatchmanPathEvent event =
         WatchmanPathEvent.of(
-            AbsPath.of(filesystem.getRootPath()),
+            filesystem.getRootPath(),
             Kind.MODIFY,
             RelPath.of(
                 MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByIncludeFile)));
@@ -1086,7 +1083,7 @@ public class ParserWithConfigurableAttributesTest {
     // Process event.
     WatchmanPathEvent event =
         WatchmanPathEvent.of(
-            AbsPath.of(filesystem.getRootPath()),
+            filesystem.getRootPath(),
             Kind.DELETE,
             RelPath.of(
                 MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByIncludeFile)));
@@ -1126,7 +1123,7 @@ public class ParserWithConfigurableAttributesTest {
     // Process event.
     WatchmanPathEvent event =
         WatchmanPathEvent.of(
-            AbsPath.of(filesystem.getRootPath()),
+            filesystem.getRootPath(),
             Kind.CREATE,
             RelPath.of(MorePaths.relativize(tempDir.getRoot().toRealPath(), defaultIncludeFile)));
     parser.getPermState().invalidateBasedOn(event);
@@ -1165,7 +1162,7 @@ public class ParserWithConfigurableAttributesTest {
     // Process event.
     WatchmanPathEvent event =
         WatchmanPathEvent.of(
-            AbsPath.of(filesystem.getRootPath()),
+            filesystem.getRootPath(),
             Kind.MODIFY,
             RelPath.of(MorePaths.relativize(tempDir.getRoot().toRealPath(), defaultIncludeFile)));
     parser.getPermState().invalidateBasedOn(event);
@@ -1204,7 +1201,7 @@ public class ParserWithConfigurableAttributesTest {
     // Process event.
     WatchmanPathEvent event =
         WatchmanPathEvent.of(
-            AbsPath.of(filesystem.getRootPath()),
+            filesystem.getRootPath(),
             Kind.DELETE,
             RelPath.of(MorePaths.relativize(tempDir.getRoot().toRealPath(), defaultIncludeFile)));
     parser.getPermState().invalidateBasedOn(event);
@@ -1244,7 +1241,7 @@ public class ParserWithConfigurableAttributesTest {
     // Process event.
     WatchmanPathEvent event =
         WatchmanPathEvent.of(
-            AbsPath.of(filesystem.getRootPath()),
+            filesystem.getRootPath(),
             Kind.CREATE,
             RelPath.of(Paths.get("java/com/facebook/SomeClass.java")));
     parser.getPermState().invalidateBasedOn(event);
@@ -1297,7 +1294,7 @@ public class ParserWithConfigurableAttributesTest {
     // Process event.
     WatchmanPathEvent event =
         WatchmanPathEvent.of(
-            AbsPath.of(filesystem.getRootPath()),
+            filesystem.getRootPath(),
             Kind.CREATE,
             RelPath.of(Paths.get("java/com/facebook/SomeClass.java")));
     parser.getPermState().invalidateBasedOn(event);
@@ -1336,7 +1333,7 @@ public class ParserWithConfigurableAttributesTest {
     // Process event.
     WatchmanPathEvent event =
         WatchmanPathEvent.of(
-            AbsPath.of(filesystem.getRootPath()),
+            filesystem.getRootPath(),
             Kind.MODIFY,
             RelPath.of(Paths.get("java/com/facebook/SomeClass.java")));
     parser.getPermState().invalidateBasedOn(event);
@@ -1376,7 +1373,7 @@ public class ParserWithConfigurableAttributesTest {
     // Process event.
     WatchmanPathEvent event =
         WatchmanPathEvent.of(
-            AbsPath.of(filesystem.getRootPath()),
+            filesystem.getRootPath(),
             Kind.DELETE,
             RelPath.of(Paths.get("java/com/facebook/SomeClass.java")));
     parser.getPermState().invalidateBasedOn(event);
@@ -1415,7 +1412,7 @@ public class ParserWithConfigurableAttributesTest {
     // Process event.
     WatchmanPathEvent event =
         WatchmanPathEvent.of(
-            AbsPath.of(filesystem.getRootPath()),
+            filesystem.getRootPath(),
             Kind.CREATE,
             RelPath.of(Paths.get("java/com/facebook/MumbleSwp.Java.swp")));
     parser.getPermState().invalidateBasedOn(event);
@@ -1454,7 +1451,7 @@ public class ParserWithConfigurableAttributesTest {
     // Process event.
     WatchmanPathEvent event =
         WatchmanPathEvent.of(
-            AbsPath.of(filesystem.getRootPath()),
+            filesystem.getRootPath(),
             Kind.MODIFY,
             RelPath.of(Paths.get("java/com/facebook/MumbleSwp.Java.swp")));
     parser.getPermState().invalidateBasedOn(event);
@@ -1493,7 +1490,7 @@ public class ParserWithConfigurableAttributesTest {
     // Process event.
     WatchmanPathEvent event =
         WatchmanPathEvent.of(
-            AbsPath.of(filesystem.getRootPath()),
+            filesystem.getRootPath(),
             Kind.DELETE,
             RelPath.of(Paths.get("java/com/facebook/MumbleSwp.Java.swp")));
     parser.getPermState().invalidateBasedOn(event);
@@ -1532,9 +1529,7 @@ public class ParserWithConfigurableAttributesTest {
     // Process event.
     WatchmanPathEvent event =
         WatchmanPathEvent.of(
-            AbsPath.of(filesystem.getRootPath()),
-            Kind.CREATE,
-            RelPath.of(Paths.get("SomeClass.java__backup")));
+            filesystem.getRootPath(), Kind.CREATE, RelPath.of(Paths.get("SomeClass.java__backup")));
     parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
@@ -1571,9 +1566,7 @@ public class ParserWithConfigurableAttributesTest {
     // Process event.
     WatchmanPathEvent event =
         WatchmanPathEvent.of(
-            AbsPath.of(filesystem.getRootPath()),
-            Kind.MODIFY,
-            RelPath.of(Paths.get("SomeClass.java__backup")));
+            filesystem.getRootPath(), Kind.MODIFY, RelPath.of(Paths.get("SomeClass.java__backup")));
     parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
@@ -1610,9 +1603,7 @@ public class ParserWithConfigurableAttributesTest {
     // Process event.
     WatchmanPathEvent event =
         WatchmanPathEvent.of(
-            AbsPath.of(filesystem.getRootPath()),
-            Kind.DELETE,
-            RelPath.of(Paths.get("SomeClass.java__backup")));
+            filesystem.getRootPath(), Kind.DELETE, RelPath.of(Paths.get("SomeClass.java__backup")));
     parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
@@ -1730,15 +1721,11 @@ public class ParserWithConfigurableAttributesTest {
     Files.write(testBarBuckFile, "java_library(name = 'bar')\n".getBytes(UTF_8));
     WatchmanPathEvent deleteEvent =
         WatchmanPathEvent.of(
-            AbsPath.of(filesystem.getRootPath()),
-            Kind.DELETE,
-            RelPath.of(Paths.get("foo").resolve("BUCK")));
+            filesystem.getRootPath(), Kind.DELETE, RelPath.of(Paths.get("foo").resolve("BUCK")));
     parser.getPermState().invalidateBasedOn(deleteEvent);
     WatchmanPathEvent modifyEvent =
         WatchmanPathEvent.of(
-            AbsPath.of(filesystem.getRootPath()),
-            Kind.MODIFY,
-            RelPath.of(Paths.get("bar").resolve("BUCK")));
+            filesystem.getRootPath(), Kind.MODIFY, RelPath.of(Paths.get("bar").resolve("BUCK")));
     parser.getPermState().invalidateBasedOn(modifyEvent);
 
     parser.buildTargetGraph(parsingContext, buildTargets);
@@ -1808,9 +1795,7 @@ public class ParserWithConfigurableAttributesTest {
     Files.delete(testBarJavaFile);
     WatchmanPathEvent deleteEvent =
         WatchmanPathEvent.of(
-            AbsPath.of(filesystem.getRootPath()),
-            Kind.DELETE,
-            RelPath.of(Paths.get("foo/Bar.java")));
+            filesystem.getRootPath(), Kind.DELETE, RelPath.of(Paths.get("foo/Bar.java")));
     parser.getPermState().invalidateBasedOn(deleteEvent);
 
     HashCode updatedHash = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
@@ -1838,14 +1823,10 @@ public class ParserWithConfigurableAttributesTest {
     Files.move(testFooJavaFile, testFooJavaFile.resolveSibling("Bar.java"));
     WatchmanPathEvent deleteEvent =
         WatchmanPathEvent.of(
-            AbsPath.of(filesystem.getRootPath()),
-            Kind.DELETE,
-            RelPath.of(Paths.get("foo/Foo.java")));
+            filesystem.getRootPath(), Kind.DELETE, RelPath.of(Paths.get("foo/Foo.java")));
     WatchmanPathEvent createEvent =
         WatchmanPathEvent.of(
-            AbsPath.of(filesystem.getRootPath()),
-            Kind.CREATE,
-            RelPath.of(Paths.get("foo/Bar.java")));
+            (filesystem.getRootPath()), Kind.CREATE, RelPath.of(Paths.get("foo/Bar.java")));
     parser.getPermState().invalidateBasedOn(deleteEvent);
     parser.getPermState().invalidateBasedOn(createEvent);
 
@@ -1961,9 +1942,7 @@ public class ParserWithConfigurableAttributesTest {
     tempDir.newFile("bar/Baz.java");
     WatchmanPathEvent createEvent =
         WatchmanPathEvent.of(
-            AbsPath.of(filesystem.getRootPath()),
-            Kind.CREATE,
-            RelPath.of(Paths.get("bar/Baz.java")));
+            filesystem.getRootPath(), Kind.CREATE, RelPath.of(Paths.get("bar/Baz.java")));
     parser.getPermState().invalidateBasedOn(createEvent);
 
     {
@@ -2018,9 +1997,7 @@ public class ParserWithConfigurableAttributesTest {
     Files.delete(bazSourceFile);
     WatchmanPathEvent deleteEvent =
         WatchmanPathEvent.of(
-            AbsPath.of(filesystem.getRootPath()),
-            Kind.DELETE,
-            RelPath.of(Paths.get("bar/Baz.java")));
+            filesystem.getRootPath(), Kind.DELETE, RelPath.of(Paths.get("bar/Baz.java")));
     parser.getPermState().invalidateBasedOn(deleteEvent);
 
     {
@@ -2128,10 +2105,10 @@ public class ParserWithConfigurableAttributesTest {
 
   @Test
   public void readConfigReadsConfig() throws Exception {
-    Path buckFile = cellRoot.resolve("BUCK");
+    AbsPath buckFile = cellRoot.resolve("BUCK");
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//", "cake");
     Files.write(
-        buckFile,
+        buckFile.getPath(),
         Joiner.on("")
             .join(
                 ImmutableList.of(
@@ -2158,9 +2135,9 @@ public class ParserWithConfigurableAttributesTest {
 
   @Test
   public void emptyStringBuckConfigEntryDoesNotCauseInvalidation() throws Exception {
-    Path buckFile = cellRoot.resolve("BUCK");
+    AbsPath buckFile = cellRoot.resolve("BUCK");
     Files.write(
-        buckFile,
+        buckFile.getPath(),
         Joiner.on("")
             .join(
                 ImmutableList.of(
@@ -2196,10 +2173,10 @@ public class ParserWithConfigurableAttributesTest {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
-    Path buckFile = cellRoot.resolve("lib/BUCK");
-    Files.createDirectories(buckFile.getParent());
+    AbsPath buckFile = cellRoot.resolve("lib/BUCK");
+    Files.createDirectories(buckFile.getParent().getPath());
     Files.write(
-        buckFile,
+        buckFile.getPath(),
         ("cxx_library("
                 + "  name = 'lib', "
                 + "  srcs=glob(['*.c']), "
@@ -2235,10 +2212,10 @@ public class ParserWithConfigurableAttributesTest {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
-    Path buckFile = cellRoot.resolve("lib/BUCK");
-    Files.createDirectories(buckFile.getParent());
+    AbsPath buckFile = cellRoot.resolve("lib/BUCK");
+    Files.createDirectories(buckFile.getParent().getPath());
     Files.write(
-        buckFile,
+        buckFile.getPath(),
         ("cxx_library(" + "  name = 'lib', " + "  srcs=glob(['*.c']) " + ")").getBytes(UTF_8));
 
     BuckConfig config =
@@ -2277,10 +2254,10 @@ public class ParserWithConfigurableAttributesTest {
     // We depend on Xcode platforms for this test.
     assumeTrue(Platform.detect() == Platform.MACOS);
 
-    Path buckFile = cellRoot.resolve("lib/BUCK");
-    Files.createDirectories(buckFile.getParent());
+    AbsPath buckFile = cellRoot.resolve("lib/BUCK");
+    Files.createDirectories(buckFile.getParent().getPath());
     Files.write(
-        buckFile,
+        buckFile.getPath(),
         ("cxx_library("
                 + "  name = 'lib', "
                 + "  srcs=glob(['*.c']), "
@@ -2321,11 +2298,11 @@ public class ParserWithConfigurableAttributesTest {
 
   @Test
   public void countsParsedBytes() throws Exception {
-    Path buckFile = cellRoot.resolve("lib/BUCK");
-    Files.createDirectories(buckFile.getParent());
+    AbsPath buckFile = cellRoot.resolve("lib/BUCK");
+    Files.createDirectories(buckFile.getParent().getPath());
     byte[] bytes =
         ("genrule(" + "name='gen'," + "out='generated', " + "cmd='touch ${OUT}')").getBytes(UTF_8);
-    Files.write(buckFile, bytes);
+    Files.write(buckFile.getPath(), bytes);
 
     cell = new TestCellBuilder().setFilesystem(filesystem).build().getRootCell();
 
@@ -2379,12 +2356,12 @@ public class ParserWithConfigurableAttributesTest {
   @Test
   public void testVisibilityGetsChecked() throws Exception {
     Path visibilityData = TestDataHelper.getTestDataScenario(this, "visibility");
-    Path visibilityBuckFile = cellRoot.resolve("BUCK");
-    Path visibilitySubBuckFile = cellRoot.resolve("sub/BUCK");
-    Files.createDirectories(visibilityBuckFile.getParent());
-    Files.createDirectories(visibilitySubBuckFile.getParent());
-    Files.copy(visibilityData.resolve("BUCK.fixture"), visibilityBuckFile);
-    Files.copy(visibilityData.resolve("sub/BUCK.fixture"), visibilitySubBuckFile);
+    AbsPath visibilityBuckFile = cellRoot.resolve("BUCK");
+    AbsPath visibilitySubBuckFile = cellRoot.resolve("sub/BUCK");
+    Files.createDirectories(visibilityBuckFile.getParent().getPath());
+    Files.createDirectories(visibilitySubBuckFile.getParent().getPath());
+    Files.copy(visibilityData.resolve("BUCK.fixture"), visibilityBuckFile.getPath());
+    Files.copy(visibilityData.resolve("sub/BUCK.fixture"), visibilitySubBuckFile.getPath());
 
     parser.buildTargetGraph(
         parsingContext, ImmutableSet.of(BuildTargetFactory.newInstance("//:should_pass")));
@@ -2404,9 +2381,9 @@ public class ParserWithConfigurableAttributesTest {
 
   @Test
   public void whenEnvChangesThenCachedRulesAreInvalidated() throws Exception {
-    Path buckFile = cellRoot.resolve("BUCK");
+    AbsPath buckFile = cellRoot.resolve("BUCK");
     Files.write(
-        buckFile,
+        buckFile.getPath(),
         Joiner.on("")
             .join(
                 ImmutableList.of(
@@ -2454,9 +2431,9 @@ public class ParserWithConfigurableAttributesTest {
 
   @Test
   public void whenEnvAddedThenCachedRulesAreInvalidated() throws Exception {
-    Path buckFile = cellRoot.resolve("BUCK");
+    AbsPath buckFile = cellRoot.resolve("BUCK");
     Files.write(
-        buckFile,
+        buckFile.getPath(),
         Joiner.on("")
             .join(
                 ImmutableList.of(
@@ -2496,9 +2473,9 @@ public class ParserWithConfigurableAttributesTest {
 
   @Test
   public void whenEnvRemovedThenCachedRulesAreInvalidated() throws Exception {
-    Path buckFile = cellRoot.resolve("BUCK");
+    AbsPath buckFile = cellRoot.resolve("BUCK");
     Files.write(
-        buckFile,
+        buckFile.getPath(),
         Joiner.on("")
             .join(
                 ImmutableList.of(
@@ -2538,9 +2515,9 @@ public class ParserWithConfigurableAttributesTest {
 
   @Test
   public void whenUnrelatedEnvChangesThenCachedRulesAreNotInvalidated() throws Exception {
-    Path buckFile = cellRoot.resolve("BUCK");
+    AbsPath buckFile = cellRoot.resolve("BUCK");
     Files.write(
-        buckFile,
+        buckFile.getPath(),
         Joiner.on("")
             .join(
                 ImmutableList.of(
@@ -2590,9 +2567,9 @@ public class ParserWithConfigurableAttributesTest {
 
   @Test
   public void testSkylarkSyntaxParsing() throws Exception {
-    Path buckFile = cellRoot.resolve("BUCK");
+    AbsPath buckFile = cellRoot.resolve("BUCK");
     Files.write(
-        buckFile,
+        buckFile.getPath(),
         Joiner.on("\n")
             .join(
                 ImmutableList.of(
@@ -2615,9 +2592,9 @@ public class ParserWithConfigurableAttributesTest {
 
   @Test
   public void testSkylarkIsUsedWithoutPolyglotParsingEnabled() throws Exception {
-    Path buckFile = cellRoot.resolve("BUCK");
+    AbsPath buckFile = cellRoot.resolve("BUCK");
     Files.write(
-        buckFile,
+        buckFile.getPath(),
         Joiner.on("\n")
             .join(
                 ImmutableList.of("genrule(name = type(''), out = 'file.txt', cmd = 'touch $OUT')"))

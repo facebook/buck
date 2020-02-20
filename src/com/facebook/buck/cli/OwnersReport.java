@@ -25,14 +25,12 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.file.MorePaths;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -236,9 +234,6 @@ final class OwnersReport {
 
     OwnersReport build(
         ImmutableMap<Cell, BuildFileTree> buildFileTrees, Iterable<String> arguments) {
-      ProjectFilesystem rootCellFilesystem = rootCell.getFilesystem();
-      Path rootPath = rootCellFilesystem.getRootPath();
-      Preconditions.checkState(rootPath.isAbsolute());
 
       // Order cells by cell path length so that nested cells will resolve to the most specific
       // cell.

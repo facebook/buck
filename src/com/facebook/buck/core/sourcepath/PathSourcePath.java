@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.sourcepath;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
@@ -69,7 +70,8 @@ public abstract class PathSourcePath implements SourcePath {
     PathSourcePath that = (PathSourcePath) other;
 
     return ComparisonChain.start()
-        .compare(getFilesystem().getRootPath(), that.getFilesystem().getRootPath())
+        .compare(
+            getFilesystem().getRootPath(), that.getFilesystem().getRootPath(), AbsPath.comparator())
         .compare(getRelativePath(), that.getRelativePath())
         .result();
   }

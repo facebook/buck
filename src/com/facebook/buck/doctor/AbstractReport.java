@@ -16,6 +16,7 @@
 
 package com.facebook.buck.doctor;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.Optionals;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
@@ -216,17 +217,18 @@ public abstract class AbstractReport {
   }
 
   private ImmutableMap<Path, String> getLocalConfigs() {
-    Path rootPath = filesystem.getRootPath();
+    AbsPath rootPath = filesystem.getRootPath();
     // Grab all local configs that have values set
     ImmutableList<Path> overrideFiles;
     try {
       overrideFiles =
           Configs.getDefaultConfigurationFiles(rootPath).stream()
-              .filter(f -> !f.equals(Configs.getMainConfigurationFile(rootPath)))
+              .filter(f -> !f.equals(Configs.getMainConfigurationFile(rootPath.getPath())))
               .filter(
                   config -> {
                     try {
-                      return Configs.parseConfigFile(rootPath.resolve(config)).values().stream()
+                      return Configs.parseConfigFile(rootPath.resolve(config).getPath()).values()
+                              .stream()
                               .mapToLong(Map::size)
                               .sum()
                           != 0;
@@ -234,7 +236,7 @@ public abstract class AbstractReport {
                       return true;
                     }
                   })
-              .map(p -> p.startsWith(rootPath) ? rootPath.relativize(p) : p)
+              .map(p -> p.startsWith(rootPath.getPath()) ? rootPath.relativize(p).getPath() : p)
               .collect(ImmutableList.toImmutableList());
     } catch (IOException e) {
       LOG.warn("Failed to read override configuration files: %s", e.getMessage());
@@ -256,7 +258,9 @@ public abstract class AbstractReport {
       try {
         localConfigs.put(
             localConfig,
-            new String(Files.readAllBytes(rootPath.resolve(localConfig)), StandardCharsets.UTF_8));
+            new String(
+                Files.readAllBytes(rootPath.resolve(localConfig).getPath()),
+                StandardCharsets.UTF_8));
       } catch (FileNotFoundException e) {
         LOG.debug("%s was not found.", localConfig);
       } catch (IOException e) {
@@ -301,7 +305,7 @@ public abstract class AbstractReport {
   }
 
   private boolean isNoBuckCheckPresent() {
-    return Files.exists(filesystem.getRootPath().resolve(".nobuckcheck"));
+    return Files.exists(filesystem.getRootPath().resolve(".nobuckcheck").getPath());
   }
 
   @VisibleForTesting

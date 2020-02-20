@@ -17,6 +17,7 @@
 package com.facebook.buck.step.fs;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -32,12 +33,12 @@ import java.util.function.Function;
 public class FindAndReplaceStep implements Step {
 
   private final ProjectFilesystem filesystem;
-  private final Path input;
+  private final AbsPath input;
   private final Path output;
   private final Function<String, String> replacer;
 
   public FindAndReplaceStep(
-      ProjectFilesystem filesystem, Path input, Path output, Function<String, String> replacer) {
+      ProjectFilesystem filesystem, AbsPath input, Path output, Function<String, String> replacer) {
     this.filesystem = filesystem;
     this.input = input;
     this.output = output;

@@ -19,6 +19,7 @@ package com.facebook.buck.swift;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -85,7 +86,7 @@ public class SwiftCompile extends AbstractBuildRule {
   private final Path modulePath;
   private final Path moduleObjectPath;
   private final ImmutableList<Path> objectPaths;
-  private final Optional<Path> swiftFileListPath;
+  private final Optional<AbsPath> swiftFileListPath;
 
   @AddToRuleKey private final boolean shouldEmitSwiftdocs;
   private final Path swiftdocPath;
@@ -351,7 +352,7 @@ public class SwiftCompile extends AbstractBuildRule {
     return steps.build();
   }
 
-  private Step makeFileListStep(SourcePathResolverAdapter resolver, Path swiftFileListPath) {
+  private Step makeFileListStep(SourcePathResolverAdapter resolver, AbsPath swiftFileListPath) {
     ImmutableList<String> relativePaths =
         srcs.stream()
             .map(sourcePath -> resolver.getRelativePath(sourcePath).toString())
@@ -360,8 +361,8 @@ public class SwiftCompile extends AbstractBuildRule {
     return new Step() {
       @Override
       public StepExecutionResult execute(ExecutionContext context) throws IOException {
-        if (Files.notExists(swiftFileListPath.getParent())) {
-          Files.createDirectories(swiftFileListPath.getParent());
+        if (Files.notExists(swiftFileListPath.getParent().getPath())) {
+          Files.createDirectories(swiftFileListPath.getParent().getPath());
         }
         MostFiles.writeLinesToFile(relativePaths, swiftFileListPath);
         return StepExecutionResults.SUCCESS;

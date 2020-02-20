@@ -18,6 +18,8 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.util.Verbosity;
@@ -87,7 +89,8 @@ public class NdkBuildStep extends ShellStep {
     // ndk_library.  Absolute paths are machine-specific, but relative ones should be the
     // same everywhere.
 
-    Path relativePathToProject = filesystem.resolve(root).relativize(filesystem.getRootPath());
+    RelPath relativePathToProject =
+        AbsPath.of(filesystem.resolve(root)).relativize(filesystem.getRootPath());
     builder.add(
         "APP_PROJECT_PATH=" + filesystem.resolve(buildArtifactsDirectory) + File.separatorChar,
         "APP_BUILD_SCRIPT=" + filesystem.resolve(makefile),

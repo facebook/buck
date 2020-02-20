@@ -18,6 +18,7 @@ package com.facebook.buck.features.ocaml;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -293,7 +294,7 @@ public class OcamlBuildStep implements Step {
 
   private StepExecutionResult executeMLNativeCompilation(
       ExecutionContext context,
-      Path workingDirectory,
+      AbsPath workingDirectory,
       ImmutableList<Path> sortedInput,
       ImmutableList.Builder<Path> linkerInputs)
       throws IOException, InterruptedException {
@@ -344,7 +345,7 @@ public class OcamlBuildStep implements Step {
 
   private StepExecutionResult executeMLBytecodeCompilation(
       ExecutionContext context,
-      Path workingDirectory,
+      AbsPath workingDirectory,
       ImmutableList<Path> sortedInput,
       ImmutableList.Builder<Path> linkerInputs)
       throws IOException, InterruptedException {
@@ -393,7 +394,7 @@ public class OcamlBuildStep implements Step {
     return StepExecutionResults.SUCCESS;
   }
 
-  private StepExecutionResult generateSources(ExecutionContext context, Path workingDirectory)
+  private StepExecutionResult generateSources(ExecutionContext context, AbsPath workingDirectory)
       throws IOException, InterruptedException {
     for (Step step :
         MakeCleanDirectoryStep.of(

@@ -241,12 +241,12 @@ public class Genrule extends BaseGenrule<GenruleBuildable>
             filesystem.resolve(pathToOutDirectory).toString(),
             filesystem.resolve(pathToPublicOutDirectory).toString(),
             filesystem.resolve(WriteToFileArg.getMacroPath(filesystem, buildTarget)).toString())
-        .addAllowedToReadMetadataPaths(filesystem.getRootPath().toAbsolutePath().toString())
+        .addAllowedToReadMetadataPaths(filesystem.getRootPath().toString())
         .addAllowedToWritePaths(
             filesystem.resolve(pathToTmpDirectory).toString(),
             filesystem.resolve(pathToOutDirectory).toString(),
             filesystem.resolve(pathToPublicOutDirectory).toString())
-        .addDeniedToReadPaths(filesystem.getRootPath().toAbsolutePath().toString())
+        .addDeniedToReadPaths(filesystem.getRootPath().toString())
         .build();
   }
 

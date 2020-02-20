@@ -725,8 +725,7 @@ public class ProjectGenerator {
     ImmutableMap<String, String> appendedConfig = ImmutableMap.of();
     ImmutableMap<String, String> extraSettings = ImmutableMap.of();
     ImmutableMap.Builder<String, String> defaultSettingsBuilder = ImmutableMap.builder();
-    defaultSettingsBuilder.put(
-        "REPO_ROOT", projectFilesystem.getRootPath().toAbsolutePath().normalize().toString());
+    defaultSettingsBuilder.put("REPO_ROOT", projectFilesystem.getRootPath().normalize().toString());
     defaultSettingsBuilder.put("HALIDE_COMPILER_PATH", compilerPath.toString());
 
     // pass the source list to the xcode script
@@ -1764,7 +1763,7 @@ public class ProjectGenerator {
       }
       extraSettingsBuilder.put("USE_HEADERMAP", shouldSetUseHeadermap ? "YES" : "NO");
 
-      Path repoRoot = projectFilesystem.getRootPath().toAbsolutePath().normalize();
+      AbsPath repoRoot = projectFilesystem.getRootPath().normalize();
       defaultSettingsBuilder.put("REPO_ROOT", repoRoot.toString());
       if (hasSwiftVersionArg && containsSwiftCode && isFocusedOnTarget) {
         // We need to be able to control the directory where Xcode places the derived sources, so
@@ -3019,7 +3018,7 @@ public class ProjectGenerator {
     if (shouldCreateHeadersSymlinks) {
       basePath = getCellPathForTarget(targetNode.getBuildTarget()).resolve(headerSymlinkTreeRoot);
     } else {
-      basePath = projectFilesystem.getRootPath();
+      basePath = projectFilesystem.getRootPath().getPath();
     }
     for (Map.Entry<Path, SourcePath> entry : getPublicCxxHeaders(targetNode).entrySet()) {
       Path path;
@@ -3183,15 +3182,15 @@ public class ProjectGenerator {
                   .render(),
               headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("objc.modulemap"));
 
-          Path absoluteModuleRoot =
+          AbsPath absoluteModuleRoot =
               projectFilesystem
                   .getRootPath()
                   .resolve(headerSymlinkTreeRoot.resolve(moduleName.get()));
           VFSOverlay vfsOverlay =
               new VFSOverlay(
                   ImmutableSortedMap.of(
-                      absoluteModuleRoot.resolve("module.modulemap"),
-                      absoluteModuleRoot.resolve("objc.modulemap")));
+                      absoluteModuleRoot.resolve("module.modulemap").getPath(),
+                      absoluteModuleRoot.resolve("objc.modulemap").getPath()));
 
           projectFilesystem.writeContentsToPath(
               vfsOverlay.render(),
@@ -3206,15 +3205,15 @@ public class ProjectGenerator {
                   .render(),
               headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("module.modulemap"));
         }
-        Path absoluteModuleRoot =
+        AbsPath absoluteModuleRoot =
             projectFilesystem
                 .getRootPath()
                 .resolve(headerSymlinkTreeRoot.resolve(moduleName.get()));
         VFSOverlay vfsOverlay =
             new VFSOverlay(
                 ImmutableSortedMap.of(
-                    absoluteModuleRoot.resolve("module.modulemap"),
-                    absoluteModuleRoot.resolve("testing.modulemap")));
+                    absoluteModuleRoot.resolve("module.modulemap").getPath(),
+                    absoluteModuleRoot.resolve("testing.modulemap").getPath()));
 
         projectFilesystem.writeContentsToPath(
             vfsOverlay.render(),
@@ -3686,7 +3685,7 @@ public class ProjectGenerator {
     Path treeRoot = getPathToMergedHeaderMap();
     Path cellRoot =
         MorePaths.relativize(
-            projectFilesystem.getRootPath(), getCellPathForTarget(workspaceTarget.get()));
+            projectFilesystem.getRootPath().getPath(), getCellPathForTarget(workspaceTarget.get()));
     return pathRelativizer.outputDirToRootRelative(cellRoot.resolve(treeRoot));
   }
 

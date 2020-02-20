@@ -18,6 +18,7 @@ package com.facebook.buck.core.cell;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -84,6 +85,11 @@ public interface CellPathResolver {
    * @throws IllegalArgumentException if cell path is not known to the CellPathResolver.
    */
   Optional<String> getCanonicalCellName(Path cellPath);
+
+  /** Abs-path version of {@link #getCanonicalCellName(Path)}. */
+  default Optional<String> getCanonicalCellName(AbsPath cellPath) {
+    return getCanonicalCellName(cellPath.getPath());
+  }
 
   /** @return paths to roots of all cells known to this resolver. */
   ImmutableSortedSet<Path> getKnownRoots();

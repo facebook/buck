@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.cxx.CxxToolchainHelper;
@@ -50,7 +51,7 @@ public class AppleToolchainIntegrationTest {
     workspace.setUp();
     Path output = workspace.buildAndReturnOutput("//:TestApp#iphoneos-arm64");
     assertEquals("signed by codesign\n", workspace.getFileContents(output.resolve("app_signed")));
-    Path sdkPath =
+    AbsPath sdkPath =
         workspace
             .getProjectFileSystem()
             .getRootPath()
@@ -91,8 +92,8 @@ public class AppleToolchainIntegrationTest {
     workspace.setUp();
     Path output = workspace.buildAndReturnOutput("//:TestApp#iphoneos-arm64,iphoneos-armv7");
     assertEquals("signed by codesign\n", workspace.getFileContents(output.resolve("app_signed")));
-    Path rootPath = workspace.getProjectFileSystem().getRootPath();
-    Path sdkPath =
+    AbsPath rootPath = workspace.getProjectFileSystem().getRootPath();
+    AbsPath sdkPath =
         rootPath.resolve(
             BuildTargetPaths.getGenPath(
                 workspace.getProjectFileSystem(),
@@ -149,7 +150,7 @@ public class AppleToolchainIntegrationTest {
     workspace.setUp();
     Path output = workspace.buildAndReturnOutput("//:TestApp#iphoneos-arm64");
     assertEquals("signed by codesign\n", workspace.getFileContents(output.resolve("app_signed")));
-    Path rootPath = workspace.getProjectFileSystem().getRootPath();
+    AbsPath rootPath = workspace.getProjectFileSystem().getRootPath();
     assertEquals(
         String.format(
             "strip:%n"
@@ -181,7 +182,7 @@ public class AppleToolchainIntegrationTest {
         "apple", "toolchain_set_target", "//apple_toolchain:toolchain_swift");
     workspace.setUp();
     Path output = workspace.buildAndReturnOutput("//:TestSwiftBinary#iphoneos-arm64");
-    Path rootPath = workspace.getProjectFileSystem().getRootPath();
+    AbsPath rootPath = workspace.getProjectFileSystem().getRootPath();
     Path swiftLibraryPath =
         BuildTargetPaths.getGenPath(
             workspace.getProjectFileSystem(),
@@ -235,7 +236,7 @@ public class AppleToolchainIntegrationTest {
     workspace.setUp();
     Path output = workspace.buildAndReturnOutput("//:TestApp#iphoneos-arm64");
     assertEquals("signed by codesign\n", workspace.getFileContents(output.resolve("app_signed")));
-    Path sdkPath =
+    AbsPath sdkPath =
         workspace
             .getProjectFileSystem()
             .getRootPath()

@@ -56,7 +56,7 @@ public interface ProjectFilesystem {
    */
   ProjectFilesystemView asView();
 
-  Path getRootPath();
+  AbsPath getRootPath();
 
   default FileSystem getFileSystem() {
     return getRootPath().getFileSystem();
@@ -320,6 +320,10 @@ public interface ProjectFilesystem {
 
   InputStream newFileInputStream(Path pathRelativeToProjectRoot) throws IOException;
 
+  default InputStream newFileInputStream(PathWrapper pathRelativeToProjectRoot) throws IOException {
+    return newFileInputStream(pathRelativeToProjectRoot.getPath());
+  }
+
   /** @param inputStream Source of the bytes. This method does not close this stream. */
   void copyToPath(InputStream inputStream, Path pathRelativeToProjectRoot, CopyOption... options)
       throws IOException;
@@ -377,6 +381,10 @@ public interface ProjectFilesystem {
   void copyFile(Path source, Path target) throws IOException;
 
   void createSymLink(Path symLink, Path realFile, boolean force) throws IOException;
+
+  default void createSymLink(PathWrapper symLink, Path realFile, boolean force) throws IOException {
+    createSymLink(symLink.getPath(), realFile, force);
+  }
 
   /**
    * Returns the set of POSIX file permissions, or the empty set if the underlying file system does

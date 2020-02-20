@@ -1015,7 +1015,7 @@ public class SkylarkProjectBuildFileParserTest {
 
     ProjectBuildFileParserOptions options =
         ProjectBuildFileParserOptions.builder()
-            .setProjectRoot(cell.getRootCell().getRoot().getPath())
+            .setProjectRoot(cell.getRootCell().getRoot())
             .setAllowEmptyGlobs(ParserConfig.DEFAULT_ALLOW_EMPTY_GLOBS)
             .setIgnorePaths(ImmutableSet.of())
             .setBuildFileName("BUCK")

@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -110,7 +111,7 @@ public class Aapt2Compile extends ModernBuildRule<Aapt2Compile.Impl> {
     private final boolean failOnLegacyErrors;
 
     Aapt2CompileStep(
-        Path workingDirectory,
+        AbsPath workingDirectory,
         ImmutableList<String> commandPrefix,
         Path resDirPath,
         Path outputPath,

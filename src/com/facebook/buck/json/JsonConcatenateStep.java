@@ -17,6 +17,7 @@
 package com.facebook.buck.json;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -51,10 +52,10 @@ public class JsonConcatenateStep implements Step {
   public StepExecutionResult execute(ExecutionContext context) throws IOException {
     ImmutableSortedSet<Path> filesToConcatenate =
         inputs.stream()
-            .map(input -> filesystem.getRootPath().resolve(input))
+            .map(input -> filesystem.getRootPath().resolve(input).getPath())
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
-    Path destination = filesystem.getRootPath().resolve(output);
-    new JsonConcatenator(filesToConcatenate, destination, filesystem).concatenate();
+    AbsPath destination = filesystem.getRootPath().resolve(output);
+    new JsonConcatenator(filesToConcatenate, destination.getPath(), filesystem).concatenate();
     return StepExecutionResults.SUCCESS;
   }
 

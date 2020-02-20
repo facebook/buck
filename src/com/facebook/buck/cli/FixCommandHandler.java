@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.doctor.BuildLogHelper;
@@ -179,12 +180,13 @@ public class FixCommandHandler {
     }
 
     Path runPath = commandArgsPath.get();
-    Path repositoryRoot = filesystem.getRootPath();
+    AbsPath repositoryRoot = filesystem.getRootPath();
 
     ImmutableList<String> fixScript =
-        fixConfig.getInterpolatedFixScript(fixConfig.getFixScript().get(), repositoryRoot, fixPath);
+        fixConfig.getInterpolatedFixScript(
+            fixConfig.getFixScript().get(), repositoryRoot.getPath(), fixPath);
 
-    BuckRunSpec runSpec = BuckRunSpec.of(fixScript, environment, repositoryRoot, true);
+    BuckRunSpec runSpec = BuckRunSpec.of(fixScript, environment, repositoryRoot.getPath(), true);
 
     // If the fix command was invoked automatically, make sure to tell users how they can
     // run buck fix on this specific build id manually with the `buck fix` command
@@ -228,7 +230,7 @@ public class FixCommandHandler {
 
       Path specPath =
           BuckFixSpecWriter.writeSpecToLogDir(
-              filesystem.getRootPath(), invocationInfo, fixSpec.getLeft());
+              filesystem.getRootPath().getPath(), invocationInfo, fixSpec.getLeft());
       LOG.info("wrote fix spec file to: %s", specPath);
 
       return Optional.of(fixSpec.getLeft());

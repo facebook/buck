@@ -653,8 +653,7 @@ public class XCodeProjectCommandHelper {
                         + "If you would like to always kill Xcode, use '%s'.\n",
                     cell.getFilesystem()
                         .getRootPath()
-                        .resolve(Configs.DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME)
-                        .toAbsolutePath(),
+                        .resolve(Configs.DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME),
                     getIDEForceKillSectionName(),
                     getIDEForceKillFieldName(),
                     IDEForceKill.NEVER.toString().toLowerCase(),

@@ -117,7 +117,7 @@ class ArchiveStep implements Step {
     env.putAll(environment);
     ProcessExecutorParams params =
         ProcessExecutorParams.builder()
-            .setDirectory(filesystem.getRootPath())
+            .setDirectory(filesystem.getRootPath().getPath())
             .setEnvironment(ImmutableMap.copyOf(env))
             .setCommand(command)
             .build();

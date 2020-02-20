@@ -443,6 +443,6 @@ public class Serializer {
   }
 
   private Optional<String> getCellName(ProjectFilesystem filesystem) {
-    return Objects.requireNonNull(cellMap.get(filesystem.getRootPath()));
+    return Objects.requireNonNull(cellMap.get(filesystem.getRootPath().getPath()));
   }
 }

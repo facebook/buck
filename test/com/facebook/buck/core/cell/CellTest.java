@@ -92,7 +92,7 @@ public class CellTest {
     BuildTarget target = BuildTargetFactory.newInstance("example//does/not:matter");
     Cell other = cell1.getCell(target.getCell());
 
-    assertEquals(cell2Root, other.getFilesystem().getRootPath());
+    assertEquals(cell2Root, other.getFilesystem().getRootPath().getPath());
   }
 
   @Test

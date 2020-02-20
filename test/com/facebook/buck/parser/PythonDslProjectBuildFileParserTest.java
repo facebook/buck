@@ -582,7 +582,7 @@ public class PythonDslProjectBuildFileParserTest {
           String pythonInterpreter, ProcessExecutor processExecutor, BuckEventBus buckEventBus) {
         super(
             ProjectBuildFileParserOptions.builder()
-                .setProjectRoot(projectRoot.getPath())
+                .setProjectRoot(projectRoot)
                 .setPythonInterpreter(pythonInterpreter)
                 .setAllowEmptyGlobs(ParserConfig.DEFAULT_ALLOW_EMPTY_GLOBS)
                 .setIgnorePaths(ImmutableSet.of())

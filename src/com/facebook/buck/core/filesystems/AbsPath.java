@@ -16,10 +16,12 @@
 
 package com.facebook.buck.core.filesystems;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Comparator;
 
 /** Absolute path. */
 public interface AbsPath extends PathWrapper {
@@ -90,5 +92,14 @@ public interface AbsPath extends PathWrapper {
       throw new IllegalStateException("abs path must have a root: " + this);
     }
     return AbsPath.of(root);
+  }
+
+  default File toFile() {
+    return getPath().toFile();
+  }
+
+  /** We cannot implement {@link java.lang.Comparable} directly. */
+  static Comparator<AbsPath> comparator() {
+    return Comparator.comparing(AbsPath::getPath);
   }
 }

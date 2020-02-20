@@ -155,7 +155,7 @@ public final class RunCommand extends AbstractCommand {
                       .putAll(params.getEnvironment())
                       .putAll(executable.getEnvironment(resolver))
                       .build())
-              .setDirectory(params.getCells().getRootCell().getFilesystem().getRootPath())
+              .setDirectory(params.getCells().getRootCell().getFilesystem().getRootPath().getPath())
               .build();
       ForwardingProcessListener processListener =
           new ForwardingProcessListener(
@@ -181,7 +181,10 @@ public final class RunCommand extends AbstractCommand {
               .build();
       BuckRunSpec cmd =
           BuckRunSpec.of(
-              argv, envp, params.getCells().getRootCell().getFilesystem().getRootPath(), false);
+              argv,
+              envp,
+              params.getCells().getRootCell().getFilesystem().getRootPath().getPath(),
+              false);
       Files.write(Paths.get(commandArgsFile), ObjectMappers.WRITER.writeValueAsBytes(cmd));
       return ExitCode.SUCCESS;
     }
