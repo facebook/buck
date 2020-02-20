@@ -18,11 +18,11 @@ package com.facebook.buck.parser.temporarytargetuniquenesschecker;
 
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 
 /**
- * Check there's only one {@link BuildTarget} for {@link UnconfiguredBuildTargetView}. We do that
- * this until we use target configuration in the output path.
+ * Check there's only one {@link BuildTarget} for {@link
+ * com.facebook.buck.core.model.UnconfiguredBuildTarget}. We do that this until we use target
+ * configuration in the output path.
  */
 public interface TemporaryUnconfiguredTargetToTargetUniquenessChecker {
   /**

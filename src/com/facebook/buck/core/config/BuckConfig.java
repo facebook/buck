@@ -196,8 +196,8 @@ public class BuckConfig {
   }
 
   /**
-   * @return the parsed UnconfiguredBuildTargetView in the given section and field, if set and a
-   *     valid build target.
+   * @return the parsed UnconfiguredBuildTarget in the given section and field, if set and a valid
+   *     build target.
    *     <p>This is useful if you use getTool to get the target, if any, but allow filesystem
    *     references.
    */

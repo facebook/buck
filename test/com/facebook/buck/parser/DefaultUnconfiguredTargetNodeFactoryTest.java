@@ -23,8 +23,8 @@ import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.impl.Package;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
@@ -76,7 +76,7 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
 
   @Test
   public void testCreatePopulatesNode() {
-    UnconfiguredBuildTargetView buildTarget =
+    UnconfiguredBuildTarget buildTarget =
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c");
 
     ImmutableMap<String, Object> inputAttributes =
@@ -125,14 +125,14 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
         factory.create(
             cell.getRootCell(),
             cell.getRootCell().getRoot().resolve("a/b/BUCK").getPath(),
-            buildTarget.getData(),
+            buildTarget,
             DependencyStack.root(),
             inputAttributes,
             getPackage());
 
     assertEquals(
         RuleType.of("java_library", RuleType.Kind.BUILD), unconfiguredTargetNode.getRuleType());
-    assertEquals(buildTarget.getData(), unconfiguredTargetNode.getBuildTarget());
+    assertEquals(buildTarget, unconfiguredTargetNode.getBuildTarget());
 
     assertEquals(expectAttributes, unconfiguredTargetNode.getAttributes());
 

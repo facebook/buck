@@ -20,7 +20,6 @@ import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
@@ -35,8 +34,9 @@ import java.util.function.Function;
 import javax.annotation.Nullable;
 
 /**
- * Provides a mechanism for mapping between a {@link UnconfiguredBuildTargetView} and the {@link
- * ConfigurationRule} it represents.
+ * Provides a mechanism for mapping between a {@link
+ * com.facebook.buck.core.model.UnconfiguredBuildTarget} and the {@link ConfigurationRule} it
+ * represents.
  *
  * <p>This resolver performs all computations on the same thread {@link
  * ConfigurationRuleResolver#getRule} was called from.

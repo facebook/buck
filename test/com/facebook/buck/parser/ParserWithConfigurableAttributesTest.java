@@ -2215,8 +2215,7 @@ public class ParserWithConfigurableAttributesTest {
                     .build(),
                 ImmutableList.of(
                     BuildTargetSpec.from(
-                        UnconfiguredBuildTargetFactoryForTests.newInstance("//lib", "lib")
-                            .getData())),
+                        UnconfiguredBuildTargetFactoryForTests.newInstance("//lib", "lib"))),
                 Optional.empty())
             .getBuildTargets();
 
@@ -2262,8 +2261,7 @@ public class ParserWithConfigurableAttributesTest {
                     .build(),
                 ImmutableList.of(
                     BuildTargetSpec.from(
-                        UnconfiguredBuildTargetFactoryForTests.newInstance("//lib", "lib")
-                            .getData())),
+                        UnconfiguredBuildTargetFactoryForTests.newInstance("//lib", "lib"))),
                 Optional.empty())
             .getBuildTargets();
 
@@ -2310,8 +2308,7 @@ public class ParserWithConfigurableAttributesTest {
                     .build(),
                 ImmutableList.of(
                     BuildTargetSpec.from(
-                        UnconfiguredBuildTargetFactoryForTests.newInstance("//lib", "lib")
-                            .getData())),
+                        UnconfiguredBuildTargetFactoryForTests.newInstance("//lib", "lib"))),
                 Optional.empty())
             .getBuildTargets();
 
@@ -2348,7 +2345,7 @@ public class ParserWithConfigurableAttributesTest {
         parsingContext,
         ImmutableList.of(
             BuildTargetSpec.from(
-                UnconfiguredBuildTargetFactoryForTests.newInstance("//lib", "gen").getData())),
+                UnconfiguredBuildTargetFactoryForTests.newInstance("//lib", "gen"))),
         Optional.empty());
 
     // The read bytes are dependent on the serialization format of the parser, and the absolute path
@@ -2364,7 +2361,7 @@ public class ParserWithConfigurableAttributesTest {
         parsingContext,
         ImmutableList.of(
             BuildTargetSpec.from(
-                UnconfiguredBuildTargetFactoryForTests.newInstance("//lib", "gen").getData())),
+                UnconfiguredBuildTargetFactoryForTests.newInstance("//lib", "gen"))),
         Optional.empty());
     assertEquals(0L, Iterables.getOnlyElement(events).getProcessedBytes());
   }

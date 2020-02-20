@@ -50,7 +50,7 @@ public class TargetWithOutputsTypeCoercerTest {
       EXPECTED_UNCONFIGURED_BUILD_TARGET_WITH_OUTPUTS_BI_FUNCTION =
           (bt, ol) ->
               UnconfiguredBuildTargetWithOutputs.of(
-                  UnconfiguredBuildTargetFactoryForTests.newInstance(FILESYSTEM, bt).getData(), ol);
+                  UnconfiguredBuildTargetFactoryForTests.newInstance(FILESYSTEM, bt), ol);
   private static final BiFunction<String, OutputLabel, BuildTargetWithOutputs>
       EXPECTED_BUILD_TARGET_WITH_OUTPUTS_BI_FUNCTION =
           (bt, ol) -> BuildTargetWithOutputs.of(BuildTargetFactory.newInstance(bt), ol);

@@ -20,15 +20,14 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import java.nio.file.Path;
 
-/** Creates {@link UnconfiguredBuildTargetView} from a raw string. */
+/** Creates {@link UnconfiguredBuildTarget} from a raw string. */
 public interface UnconfiguredBuildTargetViewFactory {
 
   /**
-   * Given a fully-qualified target name returns {@link UnconfiguredBuildTargetView}.
+   * Given a fully-qualified target name returns {@link UnconfiguredBuildTarget}.
    *
    * <p>A fully-qualified target name is the target name that uniquely identifies the target.
    *
@@ -42,7 +41,7 @@ public interface UnconfiguredBuildTargetViewFactory {
   UnconfiguredBuildTarget create(String buildTargetName, CellNameResolver cellNameResolver);
 
   /**
-   * Given a target base name and a target name returns {@link UnconfiguredBuildTargetView}.
+   * Given a target base name and a target name returns {@link UnconfiguredBuildTarget}.
    *
    * <p>The target name may either be a fully-qualified name or a relative name. {@code baseName} is
    * used when a relative name is given to correctly resolve the name of the target.
@@ -63,7 +62,7 @@ public interface UnconfiguredBuildTargetViewFactory {
       CellNameResolver cellNameResolver);
 
   /**
-   * Given a target base name and a target name returns {@link UnconfiguredBuildTargetView} with
+   * Given a target base name and a target name returns {@link UnconfiguredBuildTarget} with
    * optionally allowing the short name to be empty.
    *
    * <p>The target name may either be a fully-qualified name or a target name pattern.

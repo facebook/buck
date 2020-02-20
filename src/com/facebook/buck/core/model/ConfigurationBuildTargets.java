@@ -37,29 +37,20 @@ public class ConfigurationBuildTargets {
 
   private ConfigurationBuildTargets() {}
 
-  /**
-   * @return {@link BuildTarget} that corresponds to a given {@link UnconfiguredBuildTargetView}.
-   */
-  public static BuildTarget convert(UnconfiguredBuildTargetView buildTarget) {
-    return buildTarget.configure(ConfigurationForConfigurationTargets.INSTANCE);
-  }
-
   /** @return {@link BuildTarget} that corresponds to a given {@link UnconfiguredBuildTarget}. */
   public static BuildTarget convert(UnconfiguredBuildTarget buildTarget) {
     return buildTarget.configure(ConfigurationForConfigurationTargets.INSTANCE);
   }
 
   /**
-   * Performs conversion similar to {@link #convert(UnconfiguredBuildTargetView)} for an optional
-   * value.
+   * Performs conversion similar to {@link #convert(UnconfiguredBuildTarget)} for an optional value.
    */
   public static Optional<BuildTarget> convert(Optional<UnconfiguredBuildTarget> buildTarget) {
     return buildTarget.map(ConfigurationBuildTargets::convert);
   }
 
   /**
-   * Performs conversion similar to {@link #convert(UnconfiguredBuildTargetView)} for a set of
-   * targets.
+   * Performs conversion similar to {@link #convert(UnconfiguredBuildTarget)} for a set of targets.
    */
   public static ImmutableSet<BuildTarget> convert(
       ImmutableSet<UnconfiguredBuildTarget> buildTargets) {
@@ -68,9 +59,7 @@ public class ConfigurationBuildTargets {
         .collect(ImmutableSet.toImmutableSet());
   }
 
-  /**
-   * Applies conversion similar to {@link #convert(UnconfiguredBuildTargetView)} to values in a map.
-   */
+  /** Applies conversion similar to {@link #convert(UnconfiguredBuildTarget)} to values in a map. */
   public static <T> ImmutableMap<T, BuildTarget> convertValues(
       ImmutableMap<T, UnconfiguredBuildTarget> map) {
     return map.entrySet().stream()
@@ -78,9 +67,7 @@ public class ConfigurationBuildTargets {
             ImmutableMap.toImmutableMap(Map.Entry::getKey, entry -> convert(entry.getValue())));
   }
 
-  /**
-   * Applies conversion similar to {@link #convert(UnconfiguredBuildTargetView)} to values in a map.
-   */
+  /** Applies conversion similar to {@link #convert(UnconfiguredBuildTarget)} to values in a map. */
   public static <T extends Comparable<T>> ImmutableSortedMap<T, BuildTarget> convertValues(
       ImmutableSortedMap<T, UnconfiguredBuildTarget> map) {
     return map.entrySet().stream()

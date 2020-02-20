@@ -35,7 +35,6 @@ public class VisibilityPatternsTest {
         Paths.get("BUCK"),
         () ->
             UnconfiguredBuildTargetFactoryForTests.newInstance("//example/path:three")
-                .getData()
                 .getFullyQualifiedName());
   }
 }

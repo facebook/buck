@@ -21,7 +21,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
@@ -56,7 +55,7 @@ public abstract class BuildTargetSpec implements TargetNodeSpec {
 
   /**
    * Returns a new instance of {@link BuildTargetSpec} and automatically resolve {@link
-   * BuildFileSpec} based on {@link UnconfiguredBuildTargetView} properties. The returned {@link
+   * BuildFileSpec} based on {@link UnconfiguredBuildTarget} properties. The returned {@link
    * BuildTargetSpec} may carry a non-empty output label through {@link
    * UnconfiguredBuildTargetWithOutputs}.
    *
@@ -70,7 +69,7 @@ public abstract class BuildTargetSpec implements TargetNodeSpec {
 
   /**
    * Create new instance of {@link BuildTargetSpec} and automatically resolve {@link BuildFileSpec}
-   * based on {@link UnconfiguredBuildTargetView} properties. The returned {@link BuildTargetSpec}
+   * based on {@link UnconfiguredBuildTarget} properties. The returned {@link BuildTargetSpec}
    * carries an empty output label.
    *
    * @param target Build target to match

@@ -30,8 +30,8 @@ import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.OutputLabel;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -239,7 +239,7 @@ public class BuildTargetMatcherParserTest {
   public void parsesOutputLabel() {
     BuildTargetMatcherParser<TargetNodeSpec> buildTargetPatternParser =
         new BuildTargetMatcherTargetNodeParser();
-    UnconfiguredBuildTargetView unconfiguredBuildTargetView =
+    UnconfiguredBuildTarget unconfiguredBuildTargetView =
         UnconfiguredBuildTargetFactoryForTests.newInstance(
             filesystem, "//test/com/facebook/buck/parser:parser");
 

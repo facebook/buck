@@ -18,7 +18,6 @@ package com.facebook.buck.parser.spec;
 
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /** A specification used by the parser, via {@link TargetNodeSpec}, to match build files. */
@@ -53,10 +52,5 @@ public abstract class BuildFileSpec {
   /** @return a {@link BuildFileSpec} for a specific build target like //foo/bar:baz */
   public static BuildFileSpec fromUnconfiguredBuildTarget(UnconfiguredBuildTarget target) {
     return fromPath(target.getCellRelativeBasePath());
-  }
-
-  /** @return a {@link BuildFileSpec} for a specific build target like //foo/bar:baz */
-  public static BuildFileSpec fromUnconfiguredBuildTarget(UnconfiguredBuildTargetView target) {
-    return fromUnconfiguredBuildTarget(target.getData());
   }
 }

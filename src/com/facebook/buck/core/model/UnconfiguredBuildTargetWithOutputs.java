@@ -72,9 +72,4 @@ public abstract class UnconfiguredBuildTargetWithOutputs
       UnconfiguredBuildTarget buildTarget, OutputLabel outputLabel) {
     return ImmutableUnconfiguredBuildTargetWithOutputs.of(buildTarget, outputLabel);
   }
-
-  public static UnconfiguredBuildTargetWithOutputs of(
-      UnconfiguredBuildTargetView buildTarget, OutputLabel outputLabel) {
-    return of(buildTarget.getData(), outputLabel);
-  }
 }

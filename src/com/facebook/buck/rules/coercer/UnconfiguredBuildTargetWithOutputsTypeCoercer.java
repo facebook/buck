@@ -19,15 +19,12 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.reflect.TypeToken;
 
-/**
- * Coercer for {@link UnconfiguredBuildTargetView} instances that can optionally have output labels.
- */
+/** Coercer for {@link UnconfiguredBuildTarget} instances that can optionally have output labels. */
 public class UnconfiguredBuildTargetWithOutputsTypeCoercer
     extends TargetWithOutputsTypeCoercer<
         UnconfiguredBuildTarget, UnconfiguredBuildTargetWithOutputs> {
