@@ -77,7 +77,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.SortedSet;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -730,7 +729,7 @@ public class AndroidBinaryGraphEnhancer {
       APKModule apkModule,
       Collection<DexProducedFromJavaLibrary> dexes,
       Flavor flavor,
-      OptionalInt group) {
+      Optional<Integer> group) {
     return new PreDexSplitDexGroup(
         originalBuildTarget.withFlavors(flavor),
         projectFilesystem,
@@ -810,7 +809,7 @@ public class AndroidBinaryGraphEnhancer {
                 module,
                 dexFilesToMerge.get(module),
                 InternalFlavor.of(moduleName + "_dexes"),
-                OptionalInt.empty()));
+                Optional.empty()));
       }
     } else {
       ImmutableMultimap<APKModule, DexProducedFromJavaLibrary> moduleDexes =
@@ -828,7 +827,7 @@ public class AndroidBinaryGraphEnhancer {
                   module,
                   dexes,
                   InternalFlavor.of(String.format(ruleNameFormat, i)),
-                  OptionalInt.of(i)));
+                  Optional.of(i)));
           i += 1;
         }
       }
@@ -846,7 +845,7 @@ public class AndroidBinaryGraphEnhancer {
               apkModuleGraph.getRootAPKModule(),
               dexUberRDotJavaParts,
               InternalFlavor.of("r_dot_java_dex"),
-              OptionalInt.of(finalDexGroupIndex));
+              Optional.of(finalDexGroupIndex));
       dexGroupsBuilder.addAll(dexGroupsExceptRDotJava);
       dexGroupsBuilder.add(rDotJavaDex);
     }

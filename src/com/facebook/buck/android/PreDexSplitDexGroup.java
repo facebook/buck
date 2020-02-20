@@ -63,7 +63,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
@@ -92,7 +91,9 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
   @AddToRuleKey final String dexTool;
   @AddToRuleKey final AndroidPlatformTarget androidPlatformTarget;
 
-  private OptionalInt groupIndex;
+  // If this isn't added to the rulekey, it's possible to clobber existing dex files and canary
+  // names if predex inputs match, but groups indices don't
+  @AddToRuleKey private Optional<Integer> groupIndex;
 
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
@@ -113,7 +114,7 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
       ListeningExecutorService dxExecutorService,
       int xzCompressionLevel,
       Optional<String> dxMaxHeapSize,
-      OptionalInt groupIndex) {
+      Optional<Integer> groupIndex) {
     super(buildTarget, projectFilesystem, params);
     this.androidPlatformTarget = androidPlatformTarget;
     this.dexTool = dexTool;
@@ -299,7 +300,7 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
   }
 
   @VisibleForTesting
-  public OptionalInt getGroupIndex() {
+  public Optional<Integer> getGroupIndex() {
     return groupIndex;
   }
 

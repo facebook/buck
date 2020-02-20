@@ -39,7 +39,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
-import java.util.OptionalInt;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -227,7 +226,7 @@ public class PreDexedFilesSorterTest {
               DEX_WEIGHT_LIMIT,
               DexStore.JAR,
               tempDir.newFolder(module.getName(), "secondary").toPath(),
-              OptionalInt.empty());
+              Optional.empty());
       results.put(module.getName(), sorter.sortIntoPrimaryAndSecondaryDexes(filesystem, steps));
     }
     return results.build();
