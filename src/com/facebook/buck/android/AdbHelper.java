@@ -54,6 +54,7 @@ import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Futures;
@@ -295,7 +296,39 @@ public class AdbHelper implements AndroidDevicesHelper {
           "Get device locale",
           (device) -> {
             try {
-              deviceLocales.add(device.getProperty("persist.sys.locale"));
+              // It's a bit tortuous to get the locale; there are 6 separate properties
+              // we need to check to accurately record this.
+
+              // First try "persist.sys" properties, which are the user's chosen language.
+              String locale = device.getProperty("persist.sys.locale");
+              // Try persist.sys.language + persist.sys.country
+              if (Strings.isNullOrEmpty(locale)) {
+                String language = device.getProperty("persist.sys.language");
+                if (!Strings.isNullOrEmpty(language)) {
+                  String country = device.getProperty("persist.sys.country");
+                  if (!Strings.isNullOrEmpty(country)) {
+                    locale = language + "-" + country;
+                  }
+                }
+              }
+              // Next try ro.product.locale properties which are the default system locale
+              if (Strings.isNullOrEmpty(locale)) {
+                locale = device.getProperty("ro.product.locale");
+              }
+              if (Strings.isNullOrEmpty(locale)) {
+                String language = device.getProperty("ro.product.locale.language");
+                String country = device.getProperty("ro.product.locale.region");
+
+                // Default to en-US if all else fails
+                if (Strings.isNullOrEmpty(language)) {
+                  language = "en";
+                }
+                if (Strings.isNullOrEmpty(country)) {
+                  country = "US-presumed";
+                }
+                locale = language = "-" + country;
+              }
+              deviceLocales.add(locale);
             } catch (Exception e) {
               // Don't log.
             }
