@@ -854,9 +854,9 @@ public class WorkspaceAndProjectGenerator {
       return false;
     }
 
-    // Only create schemes for APP_EXTENSION.
+    // Only create schemes for APP_EXTENSION or its subtypes. (e.g. iMesage apps)
     ProductType productType = ProductType.of(bundleArg.getXcodeProductType().get());
-    return productType.equals(ProductTypes.APP_EXTENSION);
+    return productType.toString().startsWith(ProductTypes.APP_EXTENSION.toString());
   }
 
   /**
