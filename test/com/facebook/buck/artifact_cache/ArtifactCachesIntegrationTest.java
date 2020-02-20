@@ -660,9 +660,7 @@ public class ArtifactCachesIntegrationTest {
         cacheConfig,
         buckEventBus,
         target ->
-            unconfiguredBuildTargetFactory
-                .create(target, cellPathResolver.getCellNameResolver())
-                .getData(),
+            unconfiguredBuildTargetFactory.create(target, cellPathResolver.getCellNameResolver()),
         TargetConfigurationSerializerForTests.create(cellPathResolver),
         projectFilesystem,
         Optional.empty(),

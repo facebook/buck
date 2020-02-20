@@ -24,7 +24,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcher;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcherParser;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
@@ -91,7 +91,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
 
   private final CoercedTypeCache coercedTypeCache = new CoercedTypeCache(this);
 
-  private final TypeCoercer<UnconfiguredBuildTargetView> unconfiguredBuildTargetTypeCoercer;
+  private final TypeCoercer<UnconfiguredBuildTarget> unconfiguredBuildTargetTypeCoercer;
   private final TypeCoercer<Pattern> patternTypeCoercer = new PatternTypeCoercer();
 
   private final TypeCoercer<?>[] nonParameterizedTypeCoercers;
@@ -124,7 +124,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
         };
     unconfiguredBuildTargetFactory = new ParsingUnconfiguredBuildTargetViewFactory();
     unconfiguredBuildTargetTypeCoercer =
-        new UnconfiguredBuildTargetViewTypeCoercer(unconfiguredBuildTargetFactory);
+        new UnconfiguredBuildTargetTypeCoercer(unconfiguredBuildTargetFactory);
     TypeCoercer<BuildTarget> buildTargetTypeCoercer =
         new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer);
     TypeCoercer<BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer =

@@ -20,7 +20,7 @@ import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
@@ -31,12 +31,12 @@ import java.util.Optional;
 public class TargetNodeMaybeIncompatible {
   private final Optional<TargetNode<?>> targetNode;
   private final BuildTarget buildTarget;
-  private final ImmutableList<UnconfiguredBuildTargetView> compatibleWith;
+  private final ImmutableList<UnconfiguredBuildTarget> compatibleWith;
 
   private TargetNodeMaybeIncompatible(
       BuildTarget buildTarget,
       Optional<TargetNode<?>> targetNode,
-      ImmutableList<UnconfiguredBuildTargetView> compatibleWith) {
+      ImmutableList<UnconfiguredBuildTarget> compatibleWith) {
     this.buildTarget = buildTarget;
     this.targetNode = targetNode;
     this.compatibleWith = compatibleWith;
@@ -44,13 +44,13 @@ public class TargetNodeMaybeIncompatible {
 
   /** Constructor to create object for a target node which was incompatible. */
   public static TargetNodeMaybeIncompatible ofIncompatible(
-      BuildTarget target, ImmutableList<UnconfiguredBuildTargetView> compatibleWith) {
+      BuildTarget target, ImmutableList<UnconfiguredBuildTarget> compatibleWith) {
     return new TargetNodeMaybeIncompatible(target, Optional.empty(), compatibleWith);
   }
 
   /** Constructor to create object for a compatible target node. */
   public static TargetNodeMaybeIncompatible ofCompatible(TargetNode<?> targetNode) {
-    ImmutableList<UnconfiguredBuildTargetView> compatibleWith = ImmutableList.of();
+    ImmutableList<UnconfiguredBuildTarget> compatibleWith = ImmutableList.of();
     if (targetNode.getConstructorArg() instanceof BuildRuleArg) {
       compatibleWith = ((BuildRuleArg) targetNode.getConstructorArg()).getCompatibleWith();
     }
@@ -82,7 +82,7 @@ public class TargetNodeMaybeIncompatible {
     return buildTarget;
   }
 
-  public ImmutableList<UnconfiguredBuildTargetView> getCompatibleWith() {
+  public ImmutableList<UnconfiguredBuildTarget> getCompatibleWith() {
     return compatibleWith;
   }
 }

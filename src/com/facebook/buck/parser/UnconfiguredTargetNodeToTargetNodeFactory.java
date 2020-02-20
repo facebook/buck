@@ -26,7 +26,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationTransformer;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -48,7 +48,7 @@ import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
 import com.facebook.buck.rules.coercer.ListTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetViewTypeCoercer;
+import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -143,15 +143,15 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
                     ? unconfiguredTargetNode.getAttributes().get("compatible_with")
                     : null);
         if (compatibleConfigs != null) {
-          ListTypeCoercer<UnconfiguredBuildTargetView> compatibleWithCoercer =
+          ListTypeCoercer<UnconfiguredBuildTarget> compatibleWithCoercer =
               new ListTypeCoercer<>(
-                  new UnconfiguredBuildTargetViewTypeCoercer(
+                  new UnconfiguredBuildTargetTypeCoercer(
                       new ParsingUnconfiguredBuildTargetViewFactory()));
           if (compatibleConfigs instanceof SelectorList<?>) {
             throw new HumanReadableException(
                 "%s: attribute 'compatibleWith' cannot be configured using select", target);
           }
-          ImmutableList<UnconfiguredBuildTargetView> coercedCompatibleConfigs =
+          ImmutableList<UnconfiguredBuildTarget> coercedCompatibleConfigs =
               compatibleWithCoercer.coerce(
                   targetCell.getCellPathResolver(),
                   targetCell.getFilesystem(),

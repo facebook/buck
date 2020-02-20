@@ -119,9 +119,8 @@ public class ServedCacheIntegrationTest {
         new ParsingUnconfiguredBuildTargetViewFactory();
     unconfiguredBuildTargetFactory =
         target ->
-            parsingUnconfiguredBuildTargetFactory
-                .create(target, cellPathResolver.getCellNameResolver())
-                .getData();
+            parsingUnconfiguredBuildTargetFactory.create(
+                target, cellPathResolver.getCellNameResolver());
     targetConfigurationSerializer = TargetConfigurationSerializerForTests.create(cellPathResolver);
   }
 

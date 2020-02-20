@@ -23,7 +23,7 @@ import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
@@ -225,11 +225,11 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   public ToolProvider getCodesignProvider() {
     String codesignField = "codesign";
-    Optional<UnconfiguredBuildTargetView> target =
+    Optional<UnconfiguredBuildTarget> target =
         delegate.getMaybeUnconfiguredBuildTarget(APPLE_SECTION, codesignField);
     String source = String.format("[%s] %s", APPLE_SECTION, codesignField);
     if (target.isPresent()) {
-      return new BinaryBuildRuleToolProvider(target.get().getData(), source);
+      return new BinaryBuildRuleToolProvider(target.get(), source);
     } else {
       Optional<Path> codesignPath = delegate.getPath(APPLE_SECTION, codesignField);
       Path defaultCodesignPath = Paths.get("/usr/bin/codesign");

@@ -39,12 +39,12 @@ public class BuildTargetTypeCoercerTest {
   private ProjectFilesystem filesystem = new FakeProjectFilesystem();
   private ForwardRelativePath basePath = ForwardRelativePath.of("java/com/facebook/buck/example");
 
-  private UnconfiguredBuildTargetViewTypeCoercer unconfiguredBuildTargetTypeCoercer;
+  private UnconfiguredBuildTargetTypeCoercer unconfiguredBuildTargetTypeCoercer;
 
   @Before
   public void setUp() {
     unconfiguredBuildTargetTypeCoercer =
-        new UnconfiguredBuildTargetViewTypeCoercer(new ParsingUnconfiguredBuildTargetViewFactory());
+        new UnconfiguredBuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetViewFactory());
   }
 
   @Test

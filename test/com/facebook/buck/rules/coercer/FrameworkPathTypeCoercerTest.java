@@ -34,8 +34,7 @@ public class FrameworkPathTypeCoercerTest {
 
   private final TypeCoercer<BuildTarget> buildTargetTypeCoercer =
       new BuildTargetTypeCoercer(
-          new UnconfiguredBuildTargetViewTypeCoercer(
-              new ParsingUnconfiguredBuildTargetViewFactory()));
+          new UnconfiguredBuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetViewFactory()));
   private final TypeCoercer<BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer =
       new BuildTargetWithOutputsTypeCoercer(buildTargetTypeCoercer);
   private final TypeCoercer<Path> pathTypeCoercer = new PathTypeCoercer();

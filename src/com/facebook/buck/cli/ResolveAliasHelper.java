@@ -73,7 +73,7 @@ public class ResolveAliasHelper {
       CommandRunnerParams params, String target, PerBuildState parserState) {
 
     UnconfiguredBuildTarget buildTarget =
-        params.getBuckConfig().getUnconfiguredBuildTargetForFullyQualifiedTarget(target).getData();
+        params.getBuckConfig().getUnconfiguredBuildTargetForFullyQualifiedTarget(target);
 
     Cell owningCell = params.getCells().getCell(buildTarget.getCell());
     AbsPath buildFile;

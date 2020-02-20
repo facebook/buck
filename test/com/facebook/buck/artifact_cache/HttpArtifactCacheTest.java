@@ -151,8 +151,7 @@ public class HttpArtifactCacheTest {
             .setUnconfiguredBuildTargetFactory(
                 target ->
                     new ParsingUnconfiguredBuildTargetViewFactory()
-                        .create(target, cellPathResolver.getCellNameResolver())
-                        .getData())
+                        .create(target, cellPathResolver.getCellNameResolver()))
             .setProjectFilesystem(projectFilesystem)
             .setBuckEventBus(BUCK_EVENT_BUS)
             .setHttpWriteExecutorService(DIRECT_EXECUTOR_SERVICE)

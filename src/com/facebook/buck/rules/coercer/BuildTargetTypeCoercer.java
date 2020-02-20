@@ -19,17 +19,17 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.reflect.TypeToken;
 
 public class BuildTargetTypeCoercer extends LeafTypeCoercer<BuildTarget> {
 
-  private final TypeCoercer<UnconfiguredBuildTargetView> unconfiguredBuildTargetTypeCoercer;
+  private final TypeCoercer<UnconfiguredBuildTarget> unconfiguredBuildTargetTypeCoercer;
 
   public BuildTargetTypeCoercer(
-      TypeCoercer<UnconfiguredBuildTargetView> unconfiguredBuildTargetTypeCoercer) {
+      TypeCoercer<UnconfiguredBuildTarget> unconfiguredBuildTargetTypeCoercer) {
     this.unconfiguredBuildTargetTypeCoercer = unconfiguredBuildTargetTypeCoercer;
   }
 

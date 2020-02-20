@@ -213,6 +213,15 @@ public class UnconfiguredBuildTarget
     return of(CellRelativePath.of(cell, baseName.getPath()), name, flavors);
   }
 
+  /** Helper for creating a build target in the root cell with no flavors. */
+  public static UnconfiguredBuildTarget of(BaseName baseName, String shortName) {
+    // TODO(buck_team): this is unsafe. It allows us to potentially create an inconsistent build
+    // target where the cell name doesn't match the cell path.
+    return UnconfiguredBuildTarget.of(
+        UnflavoredBuildTarget.of(CanonicalCellName.unsafeRootCell(), baseName, shortName),
+        FlavorSet.NO_FLAVORS);
+  }
+
   @JsonCreator
   static UnconfiguredBuildTarget fromJson(
       @JsonProperty("cell") CanonicalCellName cell,

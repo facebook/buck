@@ -23,7 +23,7 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.rules.schedule.RuleScheduleInfo;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -313,7 +313,7 @@ public class CxxBuckConfig {
       return Optional.empty();
     }
     String source = String.format("[%s] %s", cxxSection, toolType.key);
-    Optional<UnconfiguredBuildTargetView> target =
+    Optional<UnconfiguredBuildTarget> target =
         delegate.getMaybeUnconfiguredBuildTarget(cxxSection, toolType.key);
     Optional<Type> type = delegate.getEnum(cxxSection, toolType.key + "_type", Type.class);
     if (target.isPresent()) {
@@ -623,7 +623,7 @@ public class CxxBuckConfig {
       BuckConfig config, Flavor flavor) {
     String cxxSection = new CxxBuckConfig(config, flavor).cxxSection;
 
-    Optional<UnconfiguredBuildTargetView> toolchainTarget =
+    Optional<UnconfiguredBuildTarget> toolchainTarget =
         config.getMaybeUnconfiguredBuildTarget(cxxSection, TOOLCHAIN_TARGET);
     if (!toolchainTarget.isPresent()) {
       return Optional.empty();
@@ -650,7 +650,7 @@ public class CxxBuckConfig {
 
     public abstract String getSource();
 
-    public abstract Optional<UnconfiguredBuildTargetView> getBuildTarget();
+    public abstract Optional<UnconfiguredBuildTarget> getBuildTarget();
 
     public abstract Optional<PathSourcePath> getPath();
 
@@ -669,7 +669,7 @@ public class CxxBuckConfig {
     public PreprocessorProvider getPreprocessorProvider() {
       if (getBuildTarget().isPresent()) {
         return new PreprocessorProvider(
-            new BinaryBuildRuleToolProvider(getBuildTarget().get().getData(), getSource()),
+            new BinaryBuildRuleToolProvider(getBuildTarget().get(), getSource()),
             getType().get(),
             getToolType());
       } else {
@@ -685,7 +685,7 @@ public class CxxBuckConfig {
       boolean preferDependencyTree = getPreferDependencyTree().orElse(false);
       if (getBuildTarget().isPresent()) {
         return new CompilerProvider(
-            new BinaryBuildRuleToolProvider(getBuildTarget().get().getData(), getSource()),
+            new BinaryBuildRuleToolProvider(getBuildTarget().get(), getSource()),
             getType().get(),
             getToolType(),
             preferDependencyTree);

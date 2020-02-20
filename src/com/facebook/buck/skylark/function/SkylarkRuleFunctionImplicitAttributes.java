@@ -19,7 +19,7 @@ package com.facebook.buck.skylark.function;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasContacts;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.SourceSortedSetAttribute;
@@ -113,10 +113,10 @@ class SkylarkRuleFunctionImplicitAttributes {
     } else if (new TypeToken<ImmutableList<BuildTarget>>() {}.getType()
         .equals(method.getGenericReturnType())) {
       return StringListAttribute.of(ImmutableList.of(), "", false, true);
-    } else if (new TypeToken<ImmutableList<UnconfiguredBuildTargetView>>() {}.getType()
+    } else if (new TypeToken<ImmutableList<UnconfiguredBuildTarget>>() {}.getType()
         .equals(method.getGenericReturnType())) {
       return UnconfiguredDepListAttribute.of(ImmutableList.of(), "", false, true);
-    } else if (new TypeToken<Optional<UnconfiguredBuildTargetView>>() {}.getType()
+    } else if (new TypeToken<Optional<UnconfiguredBuildTarget>>() {}.getType()
         .equals(method.getGenericReturnType())) {
       return UnconfiguredOptionalDepAttribute.of(Optional.empty(), "", false, true);
     } else {

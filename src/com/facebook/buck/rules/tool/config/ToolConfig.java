@@ -19,7 +19,7 @@ package com.facebook.buck.rules.tool.config;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
@@ -60,12 +60,11 @@ public abstract class ToolConfig implements ConfigView<BuckConfig> {
     if (!value.isPresent()) {
       return Optional.empty();
     }
-    Optional<UnconfiguredBuildTargetView> target =
+    Optional<UnconfiguredBuildTarget> target =
         getDelegate().getMaybeUnconfiguredBuildTarget(section, field);
     if (target.isPresent()) {
       return Optional.of(
-          new BinaryBuildRuleToolProvider(
-              target.get().getData(), String.format("[%s] %s", section, field)));
+          new BinaryBuildRuleToolProvider(target.get(), String.format("[%s] %s", section, field)));
     } else {
       return getPrebuiltTool(section, field, valueToPathMapper).map(ConstantToolProvider::new);
     }

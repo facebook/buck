@@ -26,7 +26,6 @@ import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
@@ -92,13 +91,8 @@ public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation
     // to resolve
     // configuration for Target Node (we use empty configuration at this point)
 
-    // Create short living UnconfiguredBuildTargetView
-    // TODO: configure data object directly
-    UnconfiguredBuildTargetView unconfiguredBuildTargetView =
-        UnconfiguredBuildTargetView.of(unconfiguredBuildTarget);
-
     BuildTarget buildTarget =
-        unconfiguredBuildTargetView.configure(UnconfiguredTargetConfiguration.INSTANCE);
+        unconfiguredBuildTarget.configure(UnconfiguredTargetConfiguration.INSTANCE);
 
     // TODO(nga): obtain proper dependency stack
     DependencyStack dependencyStack =

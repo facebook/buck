@@ -27,13 +27,10 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Interner;
-import com.google.common.collect.Interners;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -52,9 +49,6 @@ class BuildTargetParser {
   static final String BUILD_RULE_PREFIX = "//";
   private static final String BUILD_RULE_SEPARATOR = ":";
   private static final Splitter BUILD_RULE_SEPARATOR_SPLITTER = Splitter.on(BUILD_RULE_SEPARATOR);
-
-  private final Interner<UnconfiguredBuildTargetView> flavoredTargetCache =
-      Interners.newWeakInterner();
 
   private final FlavorParser flavorParser = new FlavorParser();
 
@@ -75,7 +69,7 @@ class BuildTargetParser {
    * @param allowWildCards whether to allow a colon at the end of the target name. This is used when
    *     parsing target name patterns.
    */
-  UnconfiguredBuildTargetView parse(
+  UnconfiguredBuildTarget parse(
       String buildTargetName,
       @Nullable BaseName buildTargetBaseName,
       boolean allowWildCards,
@@ -140,9 +134,7 @@ class BuildTargetParser {
           RichStream.from(flavorNames)
               .map(InternalFlavor::of)
               .collect(ImmutableSortedSet.toImmutableSortedSet(FlavorSet.FLAVOR_ORDERING));
-      return flavoredTargetCache.intern(
-          UnconfiguredBuildTargetView.of(
-              UnconfiguredBuildTarget.of(unflavoredBuildTarget, FlavorSet.copyOf(flavors))));
+      return UnconfiguredBuildTarget.of(unflavoredBuildTarget, FlavorSet.copyOf(flavors));
     } catch (HumanReadableException e) {
       throw new BuildTargetParseException(
           e,

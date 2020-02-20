@@ -35,7 +35,7 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystemFactory;
 import com.facebook.buck.rules.coercer.BuildTargetTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercer;
-import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetViewTypeCoercer;
+import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
 import com.facebook.buck.step.impl.TestActionExecutionRunner;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
@@ -72,8 +72,7 @@ public class SkylarkRuleContextAttrTest {
     @Override
     public TypeCoercer<BuildTarget> getTypeCoercer() {
       return new BuildTargetTypeCoercer(
-          new UnconfiguredBuildTargetViewTypeCoercer(
-              new ParsingUnconfiguredBuildTargetViewFactory()));
+          new UnconfiguredBuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetViewFactory()));
     }
 
     @Override

@@ -17,7 +17,7 @@
 package com.facebook.buck.core.starlark.rule.attr.impl;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
@@ -28,7 +28,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.ListTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercer;
-import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetViewTypeCoercer;
+import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -40,12 +40,11 @@ import java.util.List;
  */
 @BuckStyleValue
 public abstract class UnconfiguredDepListAttribute
-    extends Attribute<ImmutableList<UnconfiguredBuildTargetView>> {
+    extends Attribute<ImmutableList<UnconfiguredBuildTarget>> {
 
-  private static final TypeCoercer<ImmutableList<UnconfiguredBuildTargetView>> coercer =
+  private static final TypeCoercer<ImmutableList<UnconfiguredBuildTarget>> coercer =
       new ListTypeCoercer<>(
-          new UnconfiguredBuildTargetViewTypeCoercer(
-              new ParsingUnconfiguredBuildTargetViewFactory()));
+          new UnconfiguredBuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetViewFactory()));
 
   @Override
   public abstract ImmutableList<String> getPreCoercionDefaultValue();
@@ -65,12 +64,12 @@ public abstract class UnconfiguredDepListAttribute
   }
 
   @Override
-  public TypeCoercer<ImmutableList<UnconfiguredBuildTargetView>> getTypeCoercer() {
+  public TypeCoercer<ImmutableList<UnconfiguredBuildTarget>> getTypeCoercer() {
     return coercer;
   }
 
   @Override
-  public void validateCoercedValue(ImmutableList<UnconfiguredBuildTargetView> paths)
+  public void validateCoercedValue(ImmutableList<UnconfiguredBuildTarget> paths)
       throws CoerceFailedException {
     if (!getAllowEmpty() && paths.isEmpty()) {
       throw new CoerceFailedException("List of dep paths may not be empty");

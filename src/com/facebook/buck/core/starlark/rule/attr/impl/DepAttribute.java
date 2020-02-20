@@ -27,7 +27,7 @@ import com.facebook.buck.core.starlark.rule.data.SkylarkDependency;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.coercer.BuildTargetTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercer;
-import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetViewTypeCoercer;
+import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
@@ -38,8 +38,7 @@ public abstract class DepAttribute extends Attribute<BuildTarget> {
 
   private static final TypeCoercer<BuildTarget> coercer =
       new BuildTargetTypeCoercer(
-          new UnconfiguredBuildTargetViewTypeCoercer(
-              new ParsingUnconfiguredBuildTargetViewFactory()));
+          new UnconfiguredBuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetViewFactory()));
 
   @Override
   public abstract Object getPreCoercionDefaultValue();

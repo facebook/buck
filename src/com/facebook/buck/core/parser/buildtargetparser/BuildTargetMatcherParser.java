@@ -78,9 +78,8 @@ public abstract class BuildTargetMatcherParser<T> {
     }
 
     UnconfiguredBuildTarget target =
-        unconfiguredBuildTargetFactory
-            .createWithWildcard(targetWithOutputLabel.getTargetName(), cellNameResolver)
-            .getData();
+        unconfiguredBuildTargetFactory.createWithWildcard(
+            targetWithOutputLabel.getTargetName(), cellNameResolver);
     if (target.getShortNameAndFlavorPostfix().isEmpty()) {
       if (!targetWithOutputLabel.getOutputLabel().isDefault()) {
         throw createOutputLabelParseException(targetWithOutputLabel);

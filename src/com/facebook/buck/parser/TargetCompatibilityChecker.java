@@ -21,7 +21,7 @@ import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
@@ -62,7 +62,7 @@ class TargetCompatibilityChecker {
 
   public static boolean configTargetsMatchPlatform(
       ConfigurationRuleRegistry configurationRuleRegistry,
-      ImmutableList<UnconfiguredBuildTargetView> compatibleConfigTargets,
+      ImmutableList<UnconfiguredBuildTarget> compatibleConfigTargets,
       Platform platform,
       DependencyStack dependencyStack,
       BuckConfig buckConfig) {
@@ -72,7 +72,7 @@ class TargetCompatibilityChecker {
     ConfigurationRuleResolver configurationRuleResolver =
         configurationRuleRegistry.getConfigurationRuleResolver();
     boolean compatible = false;
-    for (UnconfiguredBuildTargetView compatibleConfigTarget : compatibleConfigTargets) {
+    for (UnconfiguredBuildTarget compatibleConfigTarget : compatibleConfigTargets) {
       ConfigSettingRule configSettingRule =
           configurationRuleResolver.getRule(
               ConfigurationBuildTargets.convert(compatibleConfigTarget),

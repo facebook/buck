@@ -22,7 +22,7 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.QueryTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.parser.Parser;
@@ -102,10 +102,10 @@ class TargetPatternEvaluator {
       }
 
       // Check if this is an alias.
-      ImmutableSet<UnconfiguredBuildTargetView> aliasTargets =
+      ImmutableSet<UnconfiguredBuildTarget> aliasTargets =
           AliasConfig.from(buckConfig).getBuildTargetsForAlias(pattern);
       if (!aliasTargets.isEmpty()) {
-        for (UnconfiguredBuildTargetView alias : aliasTargets) {
+        for (UnconfiguredBuildTarget alias : aliasTargets) {
           unresolved.put(alias.getFullyQualifiedName(), pattern);
         }
       } else {

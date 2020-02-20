@@ -19,6 +19,7 @@ package com.facebook.buck.core.parser.buildtargetparser;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BaseName;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import java.nio.file.Path;
@@ -38,7 +39,7 @@ public interface UnconfiguredBuildTargetViewFactory {
    * @see #createForBaseName(BaseName, String, CellNameResolver) for more information about other
    *     types of target names.
    */
-  UnconfiguredBuildTargetView create(String buildTargetName, CellNameResolver cellNameResolver);
+  UnconfiguredBuildTarget create(String buildTargetName, CellNameResolver cellNameResolver);
 
   /**
    * Given a target base name and a target name returns {@link UnconfiguredBuildTargetView}.
@@ -53,10 +54,10 @@ public interface UnconfiguredBuildTargetViewFactory {
    * specified in the target name. The build target contains a {@link
    * CellPathResolver#getCanonicalCellName(Path) canonical cell name}.
    */
-  UnconfiguredBuildTargetView createForBaseName(
+  UnconfiguredBuildTarget createForBaseName(
       BaseName baseName, String buildTargetName, CellNameResolver cellNameResolver);
 
-  UnconfiguredBuildTargetView createForPathRelativeToProjectRoot(
+  UnconfiguredBuildTarget createForPathRelativeToProjectRoot(
       ForwardRelativePath pathRelativeToProjectRoot,
       String buildTargetName,
       CellNameResolver cellNameResolver);
@@ -74,6 +75,6 @@ public interface UnconfiguredBuildTargetViewFactory {
    * specified in the target name. The build target contains a {@link
    * CellPathResolver#getCanonicalCellName(Path) canonical cell name}.
    */
-  UnconfiguredBuildTargetView createWithWildcard(
+  UnconfiguredBuildTarget createWithWildcard(
       String buildTargetName, CellNameResolver cellNameResolver);
 }

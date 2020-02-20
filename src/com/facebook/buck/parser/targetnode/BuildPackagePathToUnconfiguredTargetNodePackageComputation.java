@@ -29,7 +29,6 @@ import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
@@ -182,13 +181,8 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputation
     // THIS SOLUTION IS TEMPORARY and not 100% correct in general, because we have to resolve
     // configuration for Target Node (we use empty configuration at this point)
 
-    // Create short living UnconfiguredBuildTargetView
-    // TODO: configure data object directly
-    UnconfiguredBuildTargetView unconfiguredBuildTargetView =
-        UnconfiguredBuildTargetView.of(unconfiguredTargetNode.getBuildTarget());
-
     BuildTarget buildTarget =
-        unconfiguredBuildTargetView.configure(UnconfiguredTargetConfiguration.INSTANCE);
+        unconfiguredTargetNode.getBuildTarget().configure(UnconfiguredTargetConfiguration.INSTANCE);
 
     // All target nodes are created sequentially from raw target nodes
     // TODO: use RawTargetNodeToTargetNode transformation

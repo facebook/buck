@@ -136,8 +136,7 @@ public class ThriftArtifactCacheTest {
             .setUnconfiguredBuildTargetFactory(
                 target ->
                     new ParsingUnconfiguredBuildTargetViewFactory()
-                        .create(target, cellPathResolver.getCellNameResolver())
-                        .getData())
+                        .create(target, cellPathResolver.getCellNameResolver()))
             .setProjectFilesystem(filesystem)
             .setFetchClient(fetchClient)
             .setStoreClient(storeClient)
@@ -272,8 +271,7 @@ public class ThriftArtifactCacheTest {
             .setUnconfiguredBuildTargetFactory(
                 target ->
                     new ParsingUnconfiguredBuildTargetViewFactory()
-                        .create(target, cellPathResolver.getCellNameResolver())
-                        .getData())
+                        .create(target, cellPathResolver.getCellNameResolver()))
             .setProjectFilesystem(filesystem)
             .setFetchClient(fetchClient)
             .setStoreClient(storeClient)
@@ -402,8 +400,7 @@ public class ThriftArtifactCacheTest {
             .setUnconfiguredBuildTargetFactory(
                 target ->
                     new ParsingUnconfiguredBuildTargetViewFactory()
-                        .create(target, cellPathResolver.getCellNameResolver())
-                        .getData())
+                        .create(target, cellPathResolver.getCellNameResolver()))
             .setProjectFilesystem(filesystem)
             .setFetchClient(fetchClient)
             .setStoreClient(storeClient)
@@ -496,8 +493,7 @@ public class ThriftArtifactCacheTest {
             .setUnconfiguredBuildTargetFactory(
                 target ->
                     new ParsingUnconfiguredBuildTargetViewFactory()
-                        .create(target, cellPathResolver.getCellNameResolver())
-                        .getData())
+                        .create(target, cellPathResolver.getCellNameResolver()))
             .setProjectFilesystem(filesystem)
             .setFetchClient(fetchClient)
             .setStoreClient(storeClient)

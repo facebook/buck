@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.support.cli.config.AliasConfig;
 import com.facebook.buck.util.ExitCode;
@@ -37,8 +37,7 @@ public class AuditAliasCommand extends AbstractCommand {
   public ExitCode runWithoutHelp(CommandRunnerParams params) {
     AliasConfig aliasConfig = AliasConfig.from(params.getBuckConfig());
     if (listAliasesMap) {
-      for (Map.Entry<String, UnconfiguredBuildTargetView> entry :
-          aliasConfig.getAliases().entries()) {
+      for (Map.Entry<String, UnconfiguredBuildTarget> entry : aliasConfig.getAliases().entries()) {
         params
             .getConsole()
             .getStdOut()
@@ -47,8 +46,7 @@ public class AuditAliasCommand extends AbstractCommand {
       return ExitCode.SUCCESS;
     }
     if (listAliases) {
-      for (Map.Entry<String, UnconfiguredBuildTargetView> entry :
-          aliasConfig.getAliases().entries()) {
+      for (Map.Entry<String, UnconfiguredBuildTarget> entry : aliasConfig.getAliases().entries()) {
         params.getConsole().getStdOut().println(entry.getKey());
       }
       return ExitCode.SUCCESS;

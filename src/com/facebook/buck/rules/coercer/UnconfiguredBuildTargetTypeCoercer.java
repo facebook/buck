@@ -55,10 +55,8 @@ public class UnconfiguredBuildTargetTypeCoercer extends LeafTypeCoercer<Unconfig
     String param = (String) object;
 
     try {
-      return unconfiguredBuildTargetFactory
-          .createForPathRelativeToProjectRoot(
-              pathRelativeToProjectRoot, param, cellRoots.getCellNameResolver())
-          .getData();
+      return unconfiguredBuildTargetFactory.createForPathRelativeToProjectRoot(
+          pathRelativeToProjectRoot, param, cellRoots.getCellNameResolver());
     } catch (BuildTargetParseException e) {
       throw new CoerceFailedException(
           String.format(

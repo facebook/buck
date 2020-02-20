@@ -68,7 +68,7 @@ public class TargetWithOutputsTypeCoercerTest {
           {
             new BuildTargetWithOutputsTypeCoercer(
                 new BuildTargetTypeCoercer(
-                    new UnconfiguredBuildTargetViewTypeCoercer(
+                    new UnconfiguredBuildTargetTypeCoercer(
                         new ParsingUnconfiguredBuildTargetViewFactory()))),
             EXPECTED_BUILD_TARGET_WITH_OUTPUTS_BI_FUNCTION
           }
