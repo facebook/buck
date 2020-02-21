@@ -50,7 +50,7 @@ public abstract class AbstractBuildRuleResolver implements BuildRuleResolver {
               } else {
                 throw new HumanReadableException(
                     "Rule for target '%s' is present but not of expected type %s (got %s)",
-                    buildTarget, cls, rule.getClass());
+                    buildTarget.toStringWithConfiguration(), cls, rule.getClass());
               }
             });
   }
