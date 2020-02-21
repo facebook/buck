@@ -24,10 +24,10 @@ import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Resources;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.Comparator;
 import java.util.function.Supplier;
 import org.stringtemplate.v4.AutoIndentWriter;
 import org.stringtemplate.v4.ST;
@@ -76,8 +76,9 @@ public class BuckPyFunction {
     ImmutableList.Builder<StParamInfo> mandatory = ImmutableList.builder();
     ImmutableList.Builder<StParamInfo> optional = ImmutableList.builder();
     for (ParamInfo param :
-        ImmutableSortedSet.copyOf(
-            typeCoercerFactory.getConstructorArgDescriptor(dtoClass).getParamInfos().values())) {
+        typeCoercerFactory.getConstructorArgDescriptor(dtoClass).getParamInfos().values().stream()
+            .sorted(Comparator.comparing(ParamInfo::getName))
+            .collect(ImmutableList.toImmutableList())) {
       if (isSkippable(param)) {
         continue;
       }
