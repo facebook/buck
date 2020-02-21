@@ -619,7 +619,7 @@ public class BuildCommandIntegrationTest {
     workspace.addBuckConfigLocalOption("project", "buck_out_links_to_hashed_paths", "hardlink");
     workspace.setUp();
 
-    ProcessResult runBuckResult = workspace.runBuckBuild("--show-output", "//:binary");
+    ProcessResult runBuckResult = workspace.runBuckBuild("//:binary");
     runBuckResult.assertSuccess();
     BuildTarget target = BuildTargetFactory.newInstance("//:binary");
     Path expected =
@@ -640,7 +640,7 @@ public class BuildCommandIntegrationTest {
     workspace.addBuckConfigLocalOption("project", "buck_out_links_to_hashed_paths", "symlink");
     workspace.setUp();
 
-    ProcessResult runBuckResult = workspace.runBuckBuild("--show-output", "//:binary");
+    ProcessResult runBuckResult = workspace.runBuckBuild("//:binary");
     runBuckResult.assertSuccess();
     BuildTarget target = BuildTargetFactory.newInstance("//:binary");
     Path expected =
@@ -670,9 +670,9 @@ public class BuildCommandIntegrationTest {
                 target)
             .get();
 
-    workspace.runBuckBuild("--show-output", "//:binary").assertSuccess();
+    workspace.runBuckBuild("//:binary").assertSuccess();
     assertTrue(Files.exists(hardlink));
-    workspace.runBuckBuild("--show-output", "//:binary").assertSuccess();
+    workspace.runBuckBuild("//:binary").assertSuccess();
     assertTrue(Files.exists(hardlink));
   }
 
@@ -693,7 +693,7 @@ public class BuildCommandIntegrationTest {
                 target)
             .get();
 
-    workspace.runBuckBuild("--show-output", "//:dir").assertSuccess();
+    workspace.runBuckBuild("//:dir").assertSuccess();
     assertTrue(Files.isSymbolicLink(symlink));
   }
 
@@ -705,7 +705,7 @@ public class BuildCommandIntegrationTest {
 
     String fullyQualifiedName = "//:binary";
 
-    workspace.runBuckBuild("--show-output", fullyQualifiedName).assertSuccess();
+    workspace.runBuckBuild(fullyQualifiedName).assertSuccess();
 
     workspace.addBuckConfigLocalOption("project", "buck_out_include_target_config_hash", "false");
 
