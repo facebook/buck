@@ -104,7 +104,8 @@ public class SkylarkPackageFileParserTest {
                 new RuleFunctionFactory(new DefaultTypeCoercerFactory()),
                 LabelCache.newLabelCache(),
                 knownRuleTypesProvider.getUserDefinedRuleTypes(cell.getRootCell()),
-                options.getPerFeatureProviders()),
+                options.getPerFeatureProviders(),
+                options.getUseFrozenStruct()),
             eventCollector);
   }
 

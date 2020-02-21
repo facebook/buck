@@ -157,6 +157,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
             .setBuildFileImportWhitelist(parserConfig.getBuildFileImportWhitelist())
             .setImplicitNativeRulesState(parserConfig.getImplicitNativeRulesState())
             .setUserDefinedRulesState(parserConfig.getUserDefinedRulesState())
+            .setUseFrozenStruct(parserConfig.getUseFrozenStruct())
             .setWarnAboutDeprecatedSyntax(parserConfig.isWarnAboutDeprecatedSyntax())
             .setPackageImplicitIncludes(parserConfig.getPackageImplicitIncludes())
             .build();
@@ -306,7 +307,8 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
             new RuleFunctionFactory(typeCoercerFactory),
             LabelCache.newLabelCache(),
             knownUserDefinedRuleTypes,
-            buildFileParserOptions.getPerFeatureProviders());
+            buildFileParserOptions.getPerFeatureProviders(),
+            buildFileParserOptions.getUseFrozenStruct());
 
     HumanReadableExceptionAugmentor augmentor;
     try {

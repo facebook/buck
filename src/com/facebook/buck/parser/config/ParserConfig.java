@@ -475,4 +475,10 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
   public int getMissingTargetLevenshteinDistance() {
     return getDelegate().getInteger("parser", "missing_target_levenshtein_distance").orElse(5);
   }
+
+  /** @return Whether to make all values entering `struct()` immutable in Skylark */
+  @Value.Lazy
+  public boolean getUseFrozenStruct() {
+    return getDelegate().getBooleanValue("parser", "use_frozen_struct_in_skylark", false);
+  }
 }

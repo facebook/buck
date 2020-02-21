@@ -89,13 +89,20 @@ public abstract class BuckGlobals {
 
   abstract ImmutableSet<BuiltInProvider<?>> getPerFeatureProviders();
 
+  abstract boolean useFrozenStruct();
+
   /** Always disable implicit native imports in skylark rules, they should utilize native.foo */
   @Lazy
   Environment.GlobalFrame getBuckLoadContextGlobals() {
     ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
     addBuckGlobals(builder);
     builder.put("native", getNativeModule());
-    builder.put("struct", StructProvider.STRUCT);
+    if (useFrozenStruct()) {
+      Runtime.setupSkylarkLibrary(builder, FrozenStructProvider.INSTANCE);
+    } else {
+      builder.put("struct", StructProvider.STRUCT);
+    }
+
     if (getUserDefinedRulesState() == UserDefinedRulesState.ENABLED) {
       Runtime.setupSkylarkLibrary(builder, new SkylarkRuleFunctions(getLabelCache()));
       Runtime.setupSkylarkLibrary(builder, new AttrModule());
@@ -183,7 +190,8 @@ public abstract class BuckGlobals {
       RuleFunctionFactory ruleFunctionFactory,
       LoadingCache<String, Label> labelCache,
       KnownUserDefinedRuleTypes knownUserDefinedRuleTypes,
-      ImmutableSet<BuiltInProvider<?>> perFeatureProviders) {
+      ImmutableSet<BuiltInProvider<?>> perFeatureProviders,
+      boolean useFrozenStruct) {
     return ImmutableBuckGlobals.of(
         skylarkFunctionModule,
         descriptions,
@@ -192,6 +200,7 @@ public abstract class BuckGlobals {
         ruleFunctionFactory,
         labelCache,
         knownUserDefinedRuleTypes,
-        perFeatureProviders);
+        perFeatureProviders,
+        useFrozenStruct);
   }
 }

@@ -110,7 +110,8 @@ public class SkylarkProjectBuildFileParserTestUtils {
             new RuleFunctionFactory(new DefaultTypeCoercerFactory()),
             LabelCache.newLabelCache(),
             knownRuleTypesProvider.getUserDefinedRuleTypes(cell),
-            options.getPerFeatureProviders()),
+            options.getPerFeatureProviders(),
+            options.getUseFrozenStruct()),
         eventHandler,
         NativeGlobber::create);
   }
