@@ -31,6 +31,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.support.build.report.BuildReportConfig;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ErrorLogger;
@@ -57,6 +58,7 @@ public class BuildReport {
   private final Build.BuildExecutionResult buildExecutionResult;
   private final SourcePathResolverAdapter pathResolver;
   private final Cell rootCell;
+  private final boolean removeOutput;
 
   /**
    * @param buildExecutionResult the build result to generate the report for.
@@ -69,6 +71,7 @@ public class BuildReport {
     this.buildExecutionResult = buildExecutionResult;
     this.pathResolver = pathResolver;
     this.rootCell = rootCell;
+    this.removeOutput = rootCell.getBuckConfig().getView(BuildReportConfig.class).getRemoveOutput();
   }
 
   public String generateForConsole(Console console) {
@@ -195,7 +198,9 @@ public class BuildReport {
         // Put both "output" and "outputs" into the build report for backwards compatibility.
         // TODO(irenewchen): Remove "output" after existing parsing uses are removed outside Buck
         // code base.
-        value.put("output", getDefaultOutputPath(rule));
+        if (!removeOutput) {
+          value.put("output", getDefaultOutputPath(rule));
+        }
         value.put("outputs", getMultipleOutputPaths(rule));
       }
       results.put(rule.getFullyQualifiedName(), value);

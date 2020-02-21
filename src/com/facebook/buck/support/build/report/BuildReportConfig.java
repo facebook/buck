@@ -31,15 +31,16 @@ import org.immutables.value.Value;
 public abstract class BuildReportConfig implements ConfigView<BuckConfig> {
 
   private static final String BUILD_REPORT_SECTION = "build_report";
-
   private static final String ENABLED_FIELD = "enable_build_report";
   private static final String ENDPOINT_URL_FIELD = "endpoint_url";
-
   private static final String ENDPOINT_TIMEOUT_MS_FIELD = "endpoint_timeout_ms";
+  private static final String REMOVE_OUTPUT_FIELD = "remove_output";
 
   private static final long DEFAULT_ENDPOINT_TIMEOUT_MS = 30 * 1000;
 
   private static final boolean ENABLED_DEFAULT = false;
+
+  private static final boolean REMOVE_OUTPUT_FIELD_DEFAULT = false;
 
   @Override
   public abstract BuckConfig getDelegate();
@@ -71,5 +72,11 @@ public abstract class BuildReportConfig implements ConfigView<BuckConfig> {
     return getDelegate()
         .getLong(BUILD_REPORT_SECTION, ENDPOINT_TIMEOUT_MS_FIELD)
         .orElse(DEFAULT_ENDPOINT_TIMEOUT_MS);
+  }
+
+  @Value.Lazy
+  public boolean getRemoveOutput() {
+    return getDelegate()
+        .getBooleanValue(BUILD_REPORT_SECTION, REMOVE_OUTPUT_FIELD, REMOVE_OUTPUT_FIELD_DEFAULT);
   }
 }
