@@ -176,6 +176,26 @@ public class BuildCommand extends AbstractCommand {
       usage = "Print the path to the output for each of the built rules relative to the cell.")
   private boolean showOutput;
 
+  /**
+   * Enum with values for `--output-format` CLI parameter. Only applies when --show-outputs is used.
+   */
+  private enum OutputFormat {
+    DEFAULT,
+    FULL,
+    JSON,
+    FULL_JSON,
+  }
+
+  @Option(
+      name = "--output-format",
+      usage =
+          "Output format (default: list).\n"
+              + " default -  output paths are printed relative to the cell.\n"
+              + " full - output paths are printed as absolute paths.\n"
+              + " json - JSON format with relative paths\n"
+              + " full_json - JSON format with absolute paths.\n")
+  private OutputFormat outputFormat = OutputFormat.DEFAULT;
+
   @Option(
       name = SHOW_OUTPUTS_LONG_ARG,
       usage = "Print the path to the outputs for each of the built rules relative to the cell.")
@@ -541,6 +561,12 @@ public class BuildCommand extends AbstractCommand {
         || showJsonOutput
         || showFullJsonOutput
         || showRuleKey) {
+      if (outputFormat != OutputFormat.DEFAULT && !showOutputs) {
+        params
+            .getConsole()
+            .printErrorText(String.format("--output-format can only be used with --show-outputs"));
+        return ExitCode.BUILD_ERROR;
+      }
       showOutputs(params, graphsAndBuildTargets, ruleKeyCacheScope);
     }
     if (outputPathForSingleBuildTarget != null) {

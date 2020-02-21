@@ -713,4 +713,18 @@ public class BuildCommandIntegrationTest {
         workspace.runBuckBuild("--show-output", fullyQualifiedName).assertSuccess().getStderr(),
         Matchers.containsString("100.0% CACHE MISS"));
   }
+
+  @Test
+  public void outputFormatCanOnlyBeUsedWithShowOutputs() throws IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace.setUp();
+
+    ProcessResult runBuckResult =
+        workspace
+            .runBuckBuild("--show-output", "--output-format", "full", "//:bar")
+            .assertFailure();
+    assertThat(
+        runBuckResult.getStderr(),
+        Matchers.containsString("--output-format can only be used with --show-outputs"));
+  }
 }
