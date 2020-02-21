@@ -18,6 +18,7 @@ package com.facebook.buck.core.starlark.rule.names;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -25,6 +26,7 @@ import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
+import com.google.devtools.build.lib.syntax.SkylarkImport;
 import org.junit.Test;
 
 public class UserDefinedRuleNamesTest {
@@ -66,5 +68,21 @@ public class UserDefinedRuleNamesTest {
         expectedWithCell, UserDefinedRuleNames.fromIdentifier("@foo//bar:baz.bzl:some_rule"));
     assertEquals(
         expectedWithoutCell, UserDefinedRuleNames.fromIdentifier("//bar:baz.bzl:some_rule"));
+  }
+
+  @Test
+  public void returnsSkylarkImport() {
+    assertNull(UserDefinedRuleNames.importFromIdentifier("cxx_binary"));
+    assertNull(UserDefinedRuleNames.importFromIdentifier("//foo:"));
+    assertNull(UserDefinedRuleNames.importFromIdentifier("something:invalid"));
+
+    SkylarkImport import1 = UserDefinedRuleNames.importFromIdentifier("//foo:bar.bzl:baz_rule");
+    SkylarkImport import2 =
+        UserDefinedRuleNames.importFromIdentifier("@cell//foo:bar.bzl:baz_rule");
+
+    assertNotNull(import1);
+    assertEquals("//foo:bar.bzl", import1.getImportString());
+    assertNotNull(import2);
+    assertEquals("@cell//foo:bar.bzl", import2.getImportString());
   }
 }
