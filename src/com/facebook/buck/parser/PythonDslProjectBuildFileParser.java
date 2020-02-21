@@ -40,6 +40,7 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.implicit.PackageImplicitIncludesFinder;
 import com.facebook.buck.parser.options.ImplicitNativeRulesState;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
+import com.facebook.buck.parser.options.UserDefinedRulesState;
 import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.parser.syntax.SelectorValue;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -370,6 +371,10 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
 
     if (options.isWarnAboutDeprecatedSyntax()) {
       argBuilder.add("--warn_about_deprecated_syntax");
+    }
+
+    if (options.getUserDefinedRulesState() == UserDefinedRulesState.ENABLED) {
+      argBuilder.add("--enable_user_defined_rules");
     }
 
     return argBuilder.build();

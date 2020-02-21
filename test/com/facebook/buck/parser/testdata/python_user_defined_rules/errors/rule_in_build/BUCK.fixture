@@ -1,0 +1,3 @@
+load("//errors/rule_in_build:example_rule.bzl", "impl")
+
+rule(implementation = impl, attrs = {})

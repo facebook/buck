@@ -140,6 +140,12 @@ class BuckPythonProgram implements AutoCloseable {
               e, "When writing python function for %s.", description.getClass().getName());
         }
       }
+      try {
+        out.write(function.addDefaultAttributes());
+        out.write('\n');
+      } catch (RuntimeException e) {
+        throw new BuckUncheckedExecutionException(e, "When writing UDR python constants.");
+      }
     }
 
     String pathlibDir = PATH_TO_PATHLIB_PY.getParent().toString();

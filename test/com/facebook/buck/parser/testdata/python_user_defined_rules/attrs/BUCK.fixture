@@ -1,0 +1,29 @@
+load("//attrs:attrs.bzl", "attrs_with_defaults_rule", "attrs_with_system_defaults_rule")
+
+attrs_with_system_defaults_rule(name = "system_defaults")
+
+attrs_with_system_defaults_rule(
+    name = "system_defaults_overridden",
+    param_int = 2,
+    param_int_list = [2, 3],
+    param_string = "string2",
+    param_string_list = ["string2", "string3"],
+    param_bool = True,
+)
+
+attrs_with_defaults_rule(name = "defaults")
+
+attrs_with_defaults_rule(
+    name = "defaults_overridden",
+    param_int = 2,
+    param_int_list = [2],
+    param_string = "string2",
+    param_string_list = ["string2", "string3"],
+    param_bool = True,
+    param_source_list = ["src2.txt", "src3.txt"],
+    param_source = "src2.txt",
+    param_dep = ":src2",
+    param_dep_list = [":src2", ":src3"],
+    param_output = "out2.txt",
+    param_output_list = ["out2.txt", "out3.txt"],
+)

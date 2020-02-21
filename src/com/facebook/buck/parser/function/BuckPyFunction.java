@@ -19,15 +19,19 @@ package com.facebook.buck.parser.function;
 import com.facebook.buck.core.description.arg.DataTransferObject;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.visibility.VisibilityAttributes;
+import com.facebook.buck.skylark.function.SkylarkRuleFunctions;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Comparator;
+import java.util.Map;
 import java.util.function.Supplier;
 import org.stringtemplate.v4.AutoIndentWriter;
 import org.stringtemplate.v4.ST;
@@ -115,6 +119,51 @@ public class BuckPyFunction {
       throw new IllegalStateException("ST writer should not throw with StringWriter", e);
     }
     return stringWriter.toString();
+  }
+
+  private static final ImmutableList<String> UDR_IMPLICIT_REQUIRED_ATTRIBUTES =
+      getUdrImplicits(SkylarkRuleFunctions.IMPLICIT_ATTRIBUTES, true);
+  private static final ImmutableList<String> UDR_IMPLICIT_OPTIONAL_ATTRIBUTES =
+      getUdrImplicits(SkylarkRuleFunctions.IMPLICIT_ATTRIBUTES, false);
+  private static final ImmutableList<String> UDR_IMPLICIT_REQUIRED_TEST_ATTRIBUTES =
+      getUdrImplicits(SkylarkRuleFunctions.IMPLICIT_TEST_ATTRIBUTES, true);;
+  private static final ImmutableList<String> UDR_IMPLICIT_OPTIONAL_TEST_ATTRIBUTES =
+      getUdrImplicits(SkylarkRuleFunctions.IMPLICIT_TEST_ATTRIBUTES, false);
+
+  private static ImmutableList<String> getUdrImplicits(
+      ImmutableMap<String, Attribute<?>> implicitAttributes, boolean requiredParams) {
+    return implicitAttributes.entrySet().stream()
+        .filter(e -> e.getValue().getMandatory() == requiredParams)
+        .map(Map.Entry::getKey)
+        .collect(ImmutableList.toImmutableList());
+  }
+
+  /**
+   * Returns a python string containing all of the default rule parameters that should be made
+   * available to user defined rules in the python build file parser
+   */
+  public String addDefaultAttributes() {
+    STGroup group = buckPyFunctionTemplate.get();
+
+    ST st;
+    // STGroup#getInstanceOf may not be thread safe.
+    // See discussion in: https://github.com/antlr/stringtemplate4/issues/61
+    synchronized (group) {
+      st = group.getInstanceOf("buck_py_attrs");
+    }
+
+    st.add("implicit_required_attrs", UDR_IMPLICIT_REQUIRED_ATTRIBUTES);
+    st.add("implicit_optional_attrs", UDR_IMPLICIT_OPTIONAL_ATTRIBUTES);
+    st.add("implicit_required_test_attrs", UDR_IMPLICIT_REQUIRED_TEST_ATTRIBUTES);
+    st.add("implicit_optional_test_attrs", UDR_IMPLICIT_OPTIONAL_TEST_ATTRIBUTES);
+
+    try {
+      StringWriter stringWriter = new StringWriter();
+      st.write(new AutoIndentWriter(stringWriter, "\n"));
+      return stringWriter.toString();
+    } catch (IOException e) {
+      throw new IllegalStateException("ST writer should not throw with StringWriter", e);
+    }
   }
 
   private boolean isSkippable(ParamInfo param) {
