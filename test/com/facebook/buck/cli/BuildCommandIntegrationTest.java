@@ -57,12 +57,16 @@ import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ThriftRuleKeyDeserializer;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ObjectArrays;
 import com.google.common.io.MoreFiles;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -72,12 +76,24 @@ import org.hamcrest.junit.MatcherAssert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+@RunWith(Parameterized.class)
 public class BuildCommandIntegrationTest {
+  private static final ImmutableMap<String, String[]> SHOW_OUTPUT_TO_SHOW_OUTPUTS =
+      ImmutableMap.of("--show-output", new String[] {"--show-outputs"});
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
   @Rule public TemporaryPaths tmp2 = new TemporaryPaths();
   @Rule public ExpectedException expectedThrownException = ExpectedException.none();
+
+  @Parameterized.Parameters
+  public static Collection<Object> data() {
+    return Arrays.asList(new Object[] {false, true});
+  }
+
+  @Parameterized.Parameter public boolean useShowOutputs;
 
   private ProjectWorkspace workspace;
 
@@ -108,17 +124,8 @@ public class BuildCommandIntegrationTest {
   public void showOutput() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
-    ProcessResult runBuckResult = workspace.runBuckBuild("--show-output", "//:bar");
-    runBuckResult.assertSuccess();
-    assertThat(runBuckResult.getStdout(), Matchers.containsString("//:bar buck-out"));
-  }
-
-  @Test
-  public void showOutputsForRulesWithoutMultipleOutputs() throws IOException {
-    // --show-outputs should work the same as --show-output for rules without multiple outputs
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
-    workspace.setUp();
-    ProcessResult runBuckResult = workspace.runBuckBuild("--show-outputs", "//:bar");
+    String[] args = getCommandArgsForShowOutputOrShowOutputs("--show-output", "//:bar");
+    ProcessResult runBuckResult = workspace.runBuckBuild(args);
     runBuckResult.assertSuccess();
     assertThat(runBuckResult.getStdout(), Matchers.containsString("//:bar buck-out"));
   }
@@ -253,8 +260,9 @@ public class BuildCommandIntegrationTest {
   public void showRuleKeyAndOutput() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
-    ProcessResult runBuckResult =
-        workspace.runBuckBuild("--show-output", "--show-rulekey", "//:bar");
+    String[] args =
+        getCommandArgsForShowOutputOrShowOutputs("--show-output", "--show-rulekey", "//:bar");
+    ProcessResult runBuckResult = workspace.runBuckBuild(args);
     runBuckResult.assertSuccess();
 
     Pattern pattern = Pattern.compile("\\b[0-9a-f]{5,40}\\b"); // sha
@@ -564,7 +572,9 @@ public class BuildCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "buck_out_config_target_hash", tmp);
     workspace.setUp();
 
-    ProcessResult runBuckResult = workspace.runBuckBuild("--show-output", "//:binary");
+    String[] args = getCommandArgsForShowOutputOrShowOutputs("--show-output", "//:binary");
+    ProcessResult runBuckResult = workspace.runBuckBuild(args);
+
     BuildTarget target = BuildTargetFactory.newInstance("//:binary");
     runBuckResult.assertSuccess();
     String expected =
@@ -726,5 +736,14 @@ public class BuildCommandIntegrationTest {
     assertThat(
         runBuckResult.getStderr(),
         Matchers.containsString("--output-format can only be used with --show-outputs"));
+  }
+
+  private String[] getCommandArgsForShowOutputOrShowOutputs(
+      String showOutputCommand, String... args) {
+    if (useShowOutputs) {
+      return ObjectArrays.concat(
+          SHOW_OUTPUT_TO_SHOW_OUTPUTS.get(showOutputCommand), args, String.class);
+    }
+    return ObjectArrays.concat(showOutputCommand, args);
   }
 }
