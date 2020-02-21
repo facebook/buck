@@ -97,13 +97,14 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       Object attribute = attributes.get(info.getName());
       if (attribute == null) {
         /**
-         * Rather than doing this logic in the parser, we do it here. This is to save on the amount
-         * of raw JSON that would otherwise be used constantly duplicating common values between
-         * different instances of a given rule. See {@link
-         * com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule#call(Object[],
-         * FuncallExpression, Environment)} where we create a dictionary of attributes. If this
-         * shortcut in the coercion becomes an issue, we can move the logic to the parser, but it
-         * may result in slower parse times.
+         * For any implicit attributes that were missing, grab their default values from the
+         * parameter map. The two places that this can happen are:
+         *
+         * <p>- The parser omitted the value because it was 'None'.
+         *
+         * <p>- The value is '_' prefixed. As that value is defined at rule definition time and not
+         * unique for each target, we do not serialize it in the RawTargetNode, and instead use the
+         * single in-memory value.
          */
         attribute = info.getImplicitPreCoercionValue();
         if (attribute == null) {

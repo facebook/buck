@@ -284,7 +284,9 @@ public class SkylarkParamInfoTest {
     SkylarkParamInfo implicitInfo =
         new SkylarkParamInfo("_implicit_baz", rule.getAttrs().get("baz"));
 
-    assertNull(info.getImplicitPreCoercionValue());
+    assertEquals(
+        rule.getAttrs().get("baz").getPreCoercionDefaultValue(),
+        info.getImplicitPreCoercionValue());
     assertEquals("default", implicitInfo.getImplicitPreCoercionValue());
   }
 }

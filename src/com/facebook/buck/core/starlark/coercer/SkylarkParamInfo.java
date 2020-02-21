@@ -61,7 +61,7 @@ public class SkylarkParamInfo extends AbstractParamInfo {
   @Nullable
   @Override
   public Object getImplicitPreCoercionValue() {
-    return this.getName().startsWith("_") ? attr.getPreCoercionDefaultValue() : null;
+    return attr.getPreCoercionDefaultValue();
   }
 
   @Override

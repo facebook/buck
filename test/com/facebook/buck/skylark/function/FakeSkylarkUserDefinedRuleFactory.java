@@ -35,6 +35,7 @@ import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.FunctionSignature;
 import com.google.devtools.build.lib.syntax.Runtime;
+import java.util.Map;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
@@ -83,6 +84,15 @@ public class FakeSkylarkUserDefinedRuleFactory {
       String label,
       Function<SkylarkRuleContext, Object> callable)
       throws EvalException, LabelSyntaxException {
+    return createRuleFromCallable(exportedName, ImmutableMap.of(attrName, attr), label, callable);
+  }
+
+  public static SkylarkUserDefinedRule createRuleFromCallable(
+      String exportedName,
+      ImmutableMap<String, Attribute<?>> attrs,
+      String label,
+      Function<SkylarkRuleContext, Object> callable)
+      throws EvalException, LabelSyntaxException {
     FunctionSignature signature = FunctionSignature.of(1, 0, 0, false, false, "ctx");
     BaseFunction implementation =
         new BaseFunction("unconfigured", signature) {
@@ -99,7 +109,8 @@ public class FakeSkylarkUserDefinedRuleFactory {
             implementation,
             IMPLICIT_ATTRIBUTES,
             HIDDEN_IMPLICIT_ATTRIBUTES,
-            ImmutableMap.of(attrName, attr),
+            attrs.entrySet().stream()
+                .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue)),
             false,
             false);
     ret.export(Label.parseAbsolute(label, ImmutableMap.of()), exportedName);
