@@ -578,7 +578,17 @@ public class HaskellDescriptionUtils {
         haskellPackages.build(),
         prebuiltHaskellPackages.build(),
         hsProfile,
-        platform,
-        argExtraScriptTemplates);
+        platform.getGhciScriptTemplate().get(),
+        argExtraScriptTemplates,
+        platform.getGhciIservScriptTemplate().get(),
+        platform.getGhciBinutils().get(),
+        platform.getGhciGhc().get(),
+        platform.getGhciIServ().get(),
+        platform.getGhciIServProf().get(),
+        platform.getGhciLib().get(),
+        platform.getGhciCxx().get(),
+        platform.getGhciCc().get(),
+        platform.getGhciCpp().get(),
+        platform.getGhciPackager().get());
   }
 }
