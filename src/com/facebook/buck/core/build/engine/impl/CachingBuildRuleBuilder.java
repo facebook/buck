@@ -183,7 +183,6 @@ class CachingBuildRuleBuilder {
 
   // These fields contain data that may be computed during a build.
 
-  private volatile ListenableFuture<Unit> uploadCompleteFuture = Futures.immediateFuture(Unit.UNIT);
   private volatile boolean depsAreAvailable;
   private final Optional<BuildRuleStrategy> customBuildRuleStrategy;
 
@@ -325,7 +324,6 @@ class CachingBuildRuleBuilder {
         .setStatus(BuildRuleStatus.SUCCESS)
         .setSuccessOptional(successType)
         .setCacheResult(cacheResult)
-        .setUploadCompleteFuture(uploadCompleteFuture)
         .setStrategyResult(strategyResult)
         .build();
   }
@@ -713,7 +711,8 @@ class CachingBuildRuleBuilder {
                       buildTimeMs);
               this.buildRuleScopeManager.setManifestStoreResult(manifestStoreResult);
               if (manifestStoreResult.getStoreFuture().isPresent()) {
-                uploadCompleteFuture = manifestStoreResult.getStoreFuture().get();
+                buildRuleBuilderDelegate.addAsyncCallback(
+                    manifestStoreResult.getStoreFuture().get());
               }
             }
           }
@@ -765,7 +764,7 @@ class CachingBuildRuleBuilder {
           buildTimestampsMillis == null
               ? -1
               : buildTimestampsMillis.getSecond() - buildTimestampsMillis.getFirst();
-      uploadCompleteFuture = buildCacheArtifactUploader.uploadToCache(success, buildTimeMs);
+      buildCacheArtifactUploader.uploadToCache(success, buildTimeMs).get();
     } catch (Throwable t) {
       eventBus.post(ThrowableConsoleEvent.create(t, "Error uploading to cache for %s.", rule));
     }
