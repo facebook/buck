@@ -31,6 +31,7 @@ import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -82,7 +83,11 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class BuildCommandIntegrationTest {
   private static final ImmutableMap<String, String[]> SHOW_OUTPUT_TO_SHOW_OUTPUTS =
-      ImmutableMap.of("--show-output", new String[] {"--show-outputs"});
+      ImmutableMap.of(
+          "--show-output",
+          new String[] {"--show-outputs"},
+          "--show-full-output",
+          new String[] {"--show-outputs", "--output-format", "full"});
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
   @Rule public TemporaryPaths tmp2 = new TemporaryPaths();
@@ -178,13 +183,60 @@ public class BuildCommandIntegrationTest {
   public void showFullOutput() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
-    ProcessResult runBuckResult = workspace.runBuckBuild("--show-full-output", "//:bar");
+
+    String[] args = getCommandArgsForShowOutputOrShowOutputs("--show-full-output", "//:bar");
+    ProcessResult runBuckResult = workspace.runBuckBuild(args);
+
     runBuckResult.assertSuccess();
     Path expectedRootDirectory = tmp.getRoot();
     String expectedOutputDirectory = expectedRootDirectory.resolve("buck-out/").toString();
     String stdout = runBuckResult.getStdout();
     assertThat(stdout, Matchers.containsString("//:bar "));
     assertThat(stdout, Matchers.containsString(expectedOutputDirectory));
+  }
+
+  @Test
+  public void showFullOutputsForRulesWithMultipleOutputs() throws IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace.setUp();
+    AbsPath expectedPath1 =
+        AbsPath.of(tmp.getRoot())
+            .resolve(
+                getExpectedOutputPathRelativeToProjectRoot("//:bar_with_multiple_outputs", "bar"));
+    AbsPath expectedPath2 =
+        AbsPath.of(tmp.getRoot())
+            .resolve(
+                getExpectedOutputPathRelativeToProjectRoot("//:bar_with_multiple_outputs", "baz"));
+
+    ProcessResult runBuckResult =
+        workspace
+            .runBuckBuild(
+                "--show-outputs",
+                "--output-format",
+                "full",
+                "//:bar_with_multiple_outputs[output1]")
+            .assertSuccess();
+    assertThat(
+        runBuckResult.getStdout(),
+        Matchers.containsString(
+            String.format("//:bar_with_multiple_outputs[output1] %s", expectedPath1)));
+    assertFalse(
+        runBuckResult
+            .getStdout()
+            .contains(String.format("//:bar_with_multiple_outputs[output2] %s", expectedPath2)));
+
+    runBuckResult =
+        workspace
+            .runBuckBuild(
+                "--show-outputs",
+                "--output-format",
+                "full",
+                "//:bar_with_multiple_outputs[output2]")
+            .assertSuccess();
+    assertThat(
+        runBuckResult.getStdout(),
+        Matchers.containsString(
+            String.format("//:bar_with_multiple_outputs[output2] %s", expectedPath2)));
   }
 
   @Test

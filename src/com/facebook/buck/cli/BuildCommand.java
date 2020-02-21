@@ -810,7 +810,7 @@ public class BuildCommand extends AbstractCommand {
                   showOutputs)
               .map(
                   path ->
-                      showFullOutput || showFullJsonOutput
+                      isShowOutputsPathAbsolute()
                           ? path
                           : params
                               .getCells()
@@ -842,6 +842,13 @@ public class BuildCommand extends AbstractCommand {
       String output = stringWriter.getBuffer().toString();
       params.getConsole().getStdOut().println(output);
     }
+  }
+
+  private boolean isShowOutputsPathAbsolute() {
+    return showFullOutput
+        || showFullJsonOutput
+        || showOutputs
+            && (outputFormat == OutputFormat.FULL || outputFormat == OutputFormat.FULL_JSON);
   }
 
   private String getOutputPathToShow(Optional<Path> path) {
