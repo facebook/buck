@@ -28,7 +28,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 /** Represents a single field that can be represented in buck build files. */
-public interface ParamInfo extends Comparable<ParamInfo> {
+public interface ParamInfo {
 
   /** @return the user-facing name of this parameter */
   String getName();

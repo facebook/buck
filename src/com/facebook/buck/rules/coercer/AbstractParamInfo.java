@@ -187,29 +187,4 @@ public abstract class AbstractParamInfo implements ParamInfo {
   public boolean hasElementTypes(Class<?>... types) {
     return typeCoercer.hasElementClass(types);
   }
-
-  /** Only valid when comparing {@link AbstractParamInfo} instances from the same description. */
-  @Override
-  public int compareTo(ParamInfo that) {
-    if (this == that) {
-      return 0;
-    }
-
-    return this.getName().compareTo(that.getName());
-  }
-
-  @Override
-  public int hashCode() {
-    return name.hashCode();
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (!(obj instanceof AbstractParamInfo)) {
-      return false;
-    }
-
-    ParamInfo that = (ParamInfo) obj;
-    return name.equals(that.getName());
-  }
 }
