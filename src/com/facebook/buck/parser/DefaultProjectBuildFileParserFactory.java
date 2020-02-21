@@ -33,10 +33,12 @@ import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.json.TargetCountVerificationParserDecorator;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.api.Syntax;
+import com.facebook.buck.parser.api.UserDefinedRuleLoader;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.config.ParserConfig.SkylarkGlobHandler;
 import com.facebook.buck.parser.decorators.EventReportingProjectBuildFileParser;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
+import com.facebook.buck.parser.options.UserDefinedRulesState;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.skylark.function.SkylarkBuildModule;
 import com.facebook.buck.skylark.io.GlobberFactory;
@@ -192,7 +194,18 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
     // Python parser we wrap it with ConcurrentParser to get thread safety
 
     if (parserConfig.isPolyglotParsingEnabled()) {
-
+      SkylarkProjectBuildFileParser skylark =
+          newSkylarkParser(
+              cell,
+              typeCoercerFactory,
+              knownRuleTypesProvider.getUserDefinedRuleTypes(cell),
+              eventBus,
+              buildFileParserOptions,
+              parserConfig.getSkylarkGlobHandler());
+      Optional<UserDefinedRuleLoader> udrLoader = Optional.empty();
+      if (parserConfig.getUserDefinedRulesState() == UserDefinedRulesState.ENABLED) {
+        udrLoader = Optional.of(skylark);
+      }
       parser =
           HybridProjectBuildFileParser.using(
               ImmutableMap.of(
@@ -203,15 +216,10 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
                       console,
                       eventBus,
                       buildFileParserOptions,
-                      threadSafe),
+                      threadSafe,
+                      udrLoader),
                   Syntax.SKYLARK,
-                  newSkylarkParser(
-                      cell,
-                      typeCoercerFactory,
-                      knownRuleTypesProvider.getUserDefinedRuleTypes(cell),
-                      eventBus,
-                      buildFileParserOptions,
-                      parserConfig.getSkylarkGlobHandler())),
+                  skylark),
               defaultBuildFileSyntax);
     } else {
       switch (defaultBuildFileSyntax) {
@@ -228,7 +236,13 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
         case PYTHON_DSL:
           parser =
               newPythonParser(
-                  cell, typeCoercerFactory, console, eventBus, buildFileParserOptions, threadSafe);
+                  cell,
+                  typeCoercerFactory,
+                  console,
+                  eventBus,
+                  buildFileParserOptions,
+                  threadSafe,
+                  Optional.empty());
           break;
         default:
           throw new HumanReadableException(
@@ -250,7 +264,8 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
       Console console,
       BuckEventBus eventBus,
       ProjectBuildFileParserOptions buildFileParserOptions,
-      boolean threadSafe) {
+      boolean threadSafe,
+      Optional<UserDefinedRuleLoader> udrLoader) {
     Supplier<ProjectBuildFileParser> parserSupplier =
         () ->
             new PythonDslProjectBuildFileParser(
@@ -259,7 +274,8 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
                 cell.getBuckConfig().getEnvironment(),
                 eventBus,
                 new DefaultProcessExecutor(console),
-                processedBytes);
+                processedBytes,
+                udrLoader);
     if (!threadSafe) {
       return parserSupplier.get();
     }

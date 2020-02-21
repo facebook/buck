@@ -33,6 +33,7 @@ import com.facebook.buck.json.BuildFilePythonResult;
 import com.facebook.buck.json.BuildFileSyntaxError;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
+import com.facebook.buck.parser.api.UserDefinedRuleLoader;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.parser.events.ParseBuckProfilerReportEvent;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -117,6 +118,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   private final ProcessExecutor processExecutor;
   private final AssertScopeExclusiveAccess assertSingleThreadedParsing;
   private final Optional<AtomicLong> processedBytes;
+  private final Optional<UserDefinedRuleLoader> userDefinedRulesParser;
 
   private boolean isInitialized;
   private boolean isClosed;
@@ -132,8 +134,10 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       ImmutableMap<String, String> environment,
       BuckEventBus buckEventBus,
       ProcessExecutor processExecutor,
-      Optional<AtomicLong> processedBytes) {
+      Optional<AtomicLong> processedBytes,
+      Optional<UserDefinedRuleLoader> userDefinedRulesParser) {
     this.processedBytes = processedBytes;
+    this.userDefinedRulesParser = userDefinedRulesParser;
     this.buckPythonProgram = null;
     this.options = options;
     this.typeCoercerFactory = typeCoercerFactory;
@@ -382,7 +386,10 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       throws BuildFileParseException, InterruptedException {
     LOG.verbose("Started parsing build file %s", buildFile);
     try {
-      return getAllRulesInternal(buildFile);
+      BuildFileManifest manifest = getAllRulesInternal(buildFile);
+      userDefinedRulesParser.ifPresent(
+          parser -> parser.loadExtensionsForUserDefinedRules(currentBuildFile.get(), manifest));
+      return manifest;
     } catch (IOException e) {
       MoreThrowables.propagateIfInterrupt(e);
       throw BuildFileParseException.createForBuildFileParseError(buildFile, e);

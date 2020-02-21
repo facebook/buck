@@ -258,7 +258,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
         implicitlyLoadedSymbols);
   }
 
-  private Label createContainingLabel(String basePath) {
+  protected Label createContainingLabel(String basePath) {
     return Label.createUnvalidated(
         PackageIdentifier.create(
             RepositoryName.createFromValidStrippedName(options.getCellName()),
@@ -403,7 +403,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   }
 
   /** Loads all extensions identified by corresponding {@link SkylarkImport}s. */
-  private ImmutableList<ExtensionData> loadExtensions(
+  protected ImmutableList<ExtensionData> loadExtensions(
       Label containingLabel, ImmutableList<SkylarkImport> skylarkImports)
       throws BuildFileParseException, IOException, InterruptedException {
     Set<SkylarkImport> processed = new HashSet<>(skylarkImports.size());

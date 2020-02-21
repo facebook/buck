@@ -127,6 +127,7 @@ public class ResolverIntegrationTest {
             ImmutableMap.of(),
             BuckEventBusForTests.newInstance(),
             new DefaultProcessExecutor(new TestConsole()),
+            Optional.empty(),
             Optional.empty());
   }
 
