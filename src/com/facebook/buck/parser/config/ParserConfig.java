@@ -20,8 +20,11 @@ import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.rules.analysis.config.RuleAnalysisComputationMode;
+import com.facebook.buck.core.rules.analysis.config.RuleAnalysisConfig;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.watchman.WatchmanWatcher;
@@ -428,14 +431,38 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
 
   /**
    * @return whether to enable user-defined rule in .bzl files and export various symbols (such as
-   *     rule()) into the evaluation context. This is in progress work, and experimental at this
-   *     time.
+   *     rule()) into the evaluation context. This is disabled if {@link
+   *     com.facebook.buck.core.rules.analysis.impl.RuleAnalysisComputation} is also disabled. This
+   *     is in progress work, and experimental at this time.
    */
   @Value.Lazy
   public UserDefinedRulesState getUserDefinedRulesState() {
-    return getDelegate()
-        .getEnum("parser", "user_defined_rules", UserDefinedRulesState.class)
-        .orElse(UserDefinedRulesState.DISABLED);
+    boolean ragEnabled =
+        getDelegate().getView(RuleAnalysisConfig.class).getComputationMode()
+            != RuleAnalysisComputationMode.DISABLED;
+    boolean canParseUdr =
+        isPolyglotParsingEnabled() || getDefaultBuildFileSyntax() == Syntax.SKYLARK;
+    UserDefinedRulesState configuredValue =
+        getDelegate()
+            .getEnum("parser", "user_defined_rules", UserDefinedRulesState.class)
+            .orElse(UserDefinedRulesState.DISABLED);
+    if (ragEnabled && canParseUdr) {
+      return configuredValue;
+    } else {
+      if (configuredValue == UserDefinedRulesState.ENABLED) {
+        if (!ragEnabled) {
+          throw new HumanReadableException(
+              "User defined rules are configured as enabled, but rule analysis is disabled. "
+                  + "Disable UDR with -c parser.user_defined_rules=DISABLED");
+        }
+        if (!canParseUdr) {
+          throw new HumanReadableException(
+              "User defined rules are configured as enabled, but parser is not either polyglot, "
+                  + "or only skylark. Disable UDR with -c parser.user_defined_rules=DISABLED");
+        }
+      }
+      return UserDefinedRulesState.DISABLED;
+    }
   }
 
   /** @return Whether to enable parsing of PACKAGE files and apply their attributes to nodes. */

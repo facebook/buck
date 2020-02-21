@@ -55,9 +55,14 @@ public class KnownRuleTypesProviderTest {
         FakeBuckConfig.builder()
             .setSections(
                 ImmutableMap.of(
+                    "rule_analysis",
+                    ImmutableMap.of("mode", "PROVIDER_COMPATIBLE"),
                     "parser",
                     ImmutableMap.of(
-                        "user_defined_rules", enableUserDefinedRules ? "enabled" : "disabled")))
+                        "default_build_file_syntax",
+                        "SKYLARK",
+                        "user_defined_rules",
+                        enableUserDefinedRules ? "enabled" : "disabled")))
             .build();
     return new TestCellBuilder().setBuckConfig(config).build().getRootCell();
   }
