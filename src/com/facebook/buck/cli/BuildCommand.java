@@ -820,9 +820,9 @@ public class BuildCommand extends AbstractCommand {
                               .getPath());
 
       params.getConsole().getStdOut().flush();
-      if (showJsonOutput || showFullJsonOutput) {
+      if (isShowOutputsPathJsonFormat()) {
         sortedJsonOutputs.put(
-            rule.getFullyQualifiedName(), outputPath.map(Object::toString).orElse(""));
+            targetWithOutputs.toString(), outputPath.map(Object::toString).orElse(""));
       } else {
         params
             .getConsole()
@@ -835,7 +835,7 @@ public class BuildCommand extends AbstractCommand {
       }
     }
 
-    if (showJsonOutput || showFullJsonOutput) {
+    if (isShowOutputsPathJsonFormat()) {
       // Print the build rule information as JSON.
       StringWriter stringWriter = new StringWriter();
       ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValue(stringWriter, sortedJsonOutputs);
@@ -849,6 +849,13 @@ public class BuildCommand extends AbstractCommand {
         || showFullJsonOutput
         || showOutputs
             && (outputFormat == OutputFormat.FULL || outputFormat == OutputFormat.FULL_JSON);
+  }
+
+  private boolean isShowOutputsPathJsonFormat() {
+    return showJsonOutput
+        || showFullJsonOutput
+        || showOutputs
+            && (outputFormat == OutputFormat.JSON || outputFormat == OutputFormat.FULL_JSON);
   }
 
   private String getOutputPathToShow(Optional<Path> path) {

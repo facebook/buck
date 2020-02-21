@@ -21,6 +21,7 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeFalse;
@@ -57,6 +58,8 @@ import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ThriftRuleKeyDeserializer;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.json.ObjectMappers;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ObjectArrays;
@@ -87,7 +90,11 @@ public class BuildCommandIntegrationTest {
           "--show-output",
           new String[] {"--show-outputs"},
           "--show-full-output",
-          new String[] {"--show-outputs", "--output-format", "full"});
+          new String[] {"--show-outputs", "--output-format", "full"},
+          "--show-json-output",
+          new String[] {"--show-outputs", "--output-format", "json"},
+          "--show-full-json-output",
+          new String[] {"--show-outputs", "--output-format", "full_json"});
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
   @Rule public TemporaryPaths tmp2 = new TemporaryPaths();
@@ -244,10 +251,14 @@ public class BuildCommandIntegrationTest {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
-    ProcessResult runBuckResult =
-        workspace.runBuckBuild("--show-json-output", "//:foo", "//:bar", "//:ex ample");
-    runBuckResult.assertSuccess();
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
+
+    String[] args =
+        getCommandArgsForShowOutputOrShowOutputs(
+            "--show-json-output", "//:foo", "//:bar", "//:ex ample");
+    ProcessResult runBuckResult = workspace.runBuckBuild(args);
+
+    runBuckResult.assertSuccess();
     assertThat(
         runBuckResult.getStdout(),
         Matchers.containsString(
@@ -262,13 +273,56 @@ public class BuildCommandIntegrationTest {
   }
 
   @Test
+  public void showJsonOutputsForRulesWithMultipleOutputs() throws IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace.setUp();
+    RelPath expectedPath1 =
+        getExpectedOutputPathRelativeToProjectRoot("//:bar_with_multiple_outputs", "bar");
+    RelPath expectedPath2 =
+        getExpectedOutputPathRelativeToProjectRoot("//:bar_with_multiple_outputs", "baz");
+
+    ProcessResult runBuckResult =
+        workspace
+            .runBuckBuild(
+                "--show-outputs",
+                "--output-format",
+                "json",
+                "//:bar_with_multiple_outputs[output1]")
+            .assertSuccess();
+    JsonNode observed =
+        ObjectMappers.READER.readTree(ObjectMappers.createParser(runBuckResult.getStdout()));
+
+    JsonNode path = observed.get("//:bar_with_multiple_outputs[output1]");
+    assertEquals(expectedPath1.toString(), path.asText());
+    assertNull(observed.get("//:bar_with_multiple_outputs[output2]"));
+
+    runBuckResult =
+        workspace
+            .runBuckBuild(
+                "--show-outputs",
+                "--output-format",
+                "json",
+                "//:bar_with_multiple_outputs[output2]")
+            .assertSuccess();
+    observed = ObjectMappers.READER.readTree(ObjectMappers.createParser(runBuckResult.getStdout()));
+
+    path = observed.get("//:bar_with_multiple_outputs[output2]");
+    assertEquals(expectedPath2.toString(), path.asText());
+  }
+
+  @Test
   public void showFullJsonOutput() throws IOException {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "just_build/sub folder", tmp);
     workspace.setUp();
-    ProcessResult runBuckResult =
-        workspace.runBuckBuild("--show-full-json-output", "//:bar", "//:foo", "//:ex ample");
+    ProjectFilesystem projectFilesystem = workspace.getProjectFileSystem();
+
+    String[] args =
+        getCommandArgsForShowOutputOrShowOutputs(
+            "--show-full-json-output", "//:bar", "//:foo", "//:ex ample");
+    ProcessResult runBuckResult = workspace.runBuckBuild(args);
+
     runBuckResult.assertSuccess();
     Path expectedRootDirectory = tmp.getRoot();
     assertThat(
@@ -278,19 +332,55 @@ public class BuildCommandIntegrationTest {
                 "{\n  \"//:bar\" : \"%s/bar\",\n  \"//:ex ample\" : \"%s/example\",\n  \"//:foo\" : \"%s/foo\"\n}",
                 expectedRootDirectory.resolve(
                     BuildTargetPaths.getGenPath(
-                        workspace.getProjectFileSystem(),
-                        BuildTargetFactory.newInstance("//:bar"),
-                        "%s")),
+                        projectFilesystem, BuildTargetFactory.newInstance("//:bar"), "%s")),
                 expectedRootDirectory.resolve(
                     BuildTargetPaths.getGenPath(
-                        workspace.getProjectFileSystem(),
-                        BuildTargetFactory.newInstance("//:ex ample"),
-                        "%s")),
+                        projectFilesystem, BuildTargetFactory.newInstance("//:ex ample"), "%s")),
                 expectedRootDirectory.resolve(
                     BuildTargetPaths.getGenPath(
-                        workspace.getProjectFileSystem(),
-                        BuildTargetFactory.newInstance("//:foo"),
-                        "%s")))));
+                        projectFilesystem, BuildTargetFactory.newInstance("//:foo"), "%s")))));
+  }
+
+  @Test
+  public void showFullJsonOutputsForRulesWithMultipleOutputs() throws IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace.setUp();
+    AbsPath expectedPath1 =
+        AbsPath.of(tmp.getRoot())
+            .resolve(
+                getExpectedOutputPathRelativeToProjectRoot("//:bar_with_multiple_outputs", "bar"));
+    AbsPath expectedPath2 =
+        AbsPath.of(tmp.getRoot())
+            .resolve(
+                getExpectedOutputPathRelativeToProjectRoot("//:bar_with_multiple_outputs", "baz"));
+
+    ProcessResult runBuckResult =
+        workspace
+            .runBuckBuild(
+                "--show-outputs",
+                "--output-format",
+                "full_json",
+                "//:bar_with_multiple_outputs[output1]")
+            .assertSuccess();
+    JsonNode observed =
+        ObjectMappers.READER.readTree(ObjectMappers.createParser(runBuckResult.getStdout()));
+
+    JsonNode path = observed.get("//:bar_with_multiple_outputs[output1]");
+    assertEquals(expectedPath1.toString(), path.asText());
+    assertNull(observed.get("//:bar_with_multiple_outputs[output2]"));
+
+    runBuckResult =
+        workspace
+            .runBuckBuild(
+                "--show-outputs",
+                "--output-format",
+                "full_json",
+                "//:bar_with_multiple_outputs[output2]")
+            .assertSuccess();
+    observed = ObjectMappers.READER.readTree(ObjectMappers.createParser(runBuckResult.getStdout()));
+
+    path = observed.get("//:bar_with_multiple_outputs[output2]");
+    assertEquals(expectedPath2.toString(), path.asText());
   }
 
   @Test
