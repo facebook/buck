@@ -19,8 +19,8 @@ package com.facebook.buck.rules.macros;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -58,13 +58,13 @@ public class ExecutableMacroExpanderTest {
 
   private ProjectFilesystem filesystem;
   private ActionGraphBuilder graphBuilder;
-  private CellPathResolver cellPathResolver;
+  private CellNameResolver cellNameResolver;
   private StringWithMacrosConverter converter;
 
   @Before
   public void setUp() {
     filesystem = new FakeProjectFilesystem();
-    cellPathResolver = TestCellBuilder.createCellRoots(filesystem);
+    cellNameResolver = TestCellBuilder.createCellRoots(filesystem).getCellNameResolver();
     graphBuilder = new TestActionGraphBuilder();
   }
 
@@ -72,7 +72,7 @@ public class ExecutableMacroExpanderTest {
     converter =
         StringWithMacrosConverter.of(
             buildTarget,
-            cellPathResolver.getCellNameResolver(),
+            cellNameResolver,
             graphBuilder,
             ImmutableList.of(new ExecutableMacroExpander<>(ExecutableMacro.class)));
   }
@@ -142,7 +142,7 @@ public class ExecutableMacroExpanderTest {
         new DefaultTypeCoercerFactory()
             .typeCoercerForType(TypeToken.of(StringWithMacros.class))
             .coerce(
-                cellPathResolver,
+                cellNameResolver,
                 filesystem,
                 rule.getBuildTarget().getCellRelativeBasePath().getPath(),
                 UnconfiguredTargetConfiguration.INSTANCE,

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
@@ -64,6 +64,7 @@ public interface ConstructorArgMarshaller {
    * if none is set. This is typically {@link Optional#empty()}, but in the case of collections is
    * an empty collection.
    *
+   * @param cellNameResolver
    * @param hostConfiguration
    * @param declaredDeps A builder to be populated with the declared dependencies.
    * @param attributes configured attributes that cannot contain selectable values (instances of
@@ -71,7 +72,7 @@ public interface ConstructorArgMarshaller {
    * @return The fully populated DTO.
    */
   <T extends ConstructorArg> T populate(
-      CellPathResolver cellPathResolver,
+      CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       SelectorListResolver selectorListResolver,
       TargetConfigurationTransformer targetConfigurationTransformer,

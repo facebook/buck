@@ -52,7 +52,7 @@ public class BuildTargetTypeCoercerTest {
     BuildTarget seen =
         new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer)
             .coerce(
-                createCellRoots(filesystem),
+                createCellRoots(filesystem).getCellNameResolver(),
                 filesystem,
                 basePath,
                 UnconfiguredTargetConfiguration.INSTANCE,
@@ -68,7 +68,7 @@ public class BuildTargetTypeCoercerTest {
     thrown.expectMessage(containsString("Unable to find the target //foo::bar."));
     new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer)
         .coerce(
-            createCellRoots(filesystem),
+            createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -81,7 +81,7 @@ public class BuildTargetTypeCoercerTest {
     BuildTarget seen =
         new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer)
             .coerce(
-                createCellRoots(filesystem),
+                createCellRoots(filesystem).getCellNameResolver(),
                 filesystem,
                 basePath,
                 UnconfiguredTargetConfiguration.INSTANCE,
@@ -96,7 +96,7 @@ public class BuildTargetTypeCoercerTest {
     BuildTarget seen =
         new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer)
             .coerce(
-                createCellRoots(filesystem),
+                createCellRoots(filesystem).getCellNameResolver(),
                 filesystem,
                 basePath,
                 UnconfiguredTargetConfiguration.INSTANCE,
@@ -111,7 +111,7 @@ public class BuildTargetTypeCoercerTest {
     BuildTarget seen =
         new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer)
             .coerce(
-                createCellRoots(filesystem),
+                createCellRoots(filesystem).getCellNameResolver(),
                 filesystem,
                 basePath,
                 UnconfiguredTargetConfiguration.INSTANCE,
@@ -126,7 +126,7 @@ public class BuildTargetTypeCoercerTest {
     BuildTarget seen =
         new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer)
             .coerce(
-                createCellRoots(filesystem),
+                createCellRoots(filesystem).getCellNameResolver(),
                 filesystem,
                 basePath,
                 UnconfiguredTargetConfiguration.INSTANCE,

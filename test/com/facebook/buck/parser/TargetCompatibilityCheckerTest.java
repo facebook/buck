@@ -247,7 +247,7 @@ public class TargetCompatibilityCheckerTest {
         typeCoercerFactory.getConstructorArgDescriptor(TestDescriptionArg.class);
 
     return marshaller.populate(
-        TestCellPathResolver.get(projectFilesystem),
+        TestCellPathResolver.get(projectFilesystem).getCellNameResolver(),
         projectFilesystem,
         new ThrowingSelectorListResolver(),
         new ThrowingTargetConfigurationTransformer(),

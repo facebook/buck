@@ -78,7 +78,7 @@ public class BuildTargetMacroTypeCoercerTest {
             MyBuildTargetMacro::new);
     MyBuildTargetMacro macro =
         coercer.coerce(
-            TestCellPathResolver.get(new FakeProjectFilesystem()),
+            TestCellPathResolver.get(new FakeProjectFilesystem()).getCellNameResolver(),
             new FakeProjectFilesystem(),
             ForwardRelativePath.of(""),
             targetConfiguration,
@@ -106,7 +106,7 @@ public class BuildTargetMacroTypeCoercerTest {
             MyBuildTargetMacro::new);
     MyBuildTargetMacro macro =
         coercer.coerce(
-            TestCellPathResolver.get(new FakeProjectFilesystem()),
+            TestCellPathResolver.get(new FakeProjectFilesystem()).getCellNameResolver(),
             new FakeProjectFilesystem(),
             ForwardRelativePath.of(""),
             targetConfiguration,
@@ -126,7 +126,7 @@ public class BuildTargetMacroTypeCoercerTest {
             MyBuildTargetMacro::new);
     MyBuildTargetMacro macro =
         coercer.coerce(
-            TestCellPathResolver.get(new FakeProjectFilesystem()),
+            TestCellPathResolver.get(new FakeProjectFilesystem()).getCellNameResolver(),
             new FakeProjectFilesystem(),
             ForwardRelativePath.of(""),
             targetConfiguration,

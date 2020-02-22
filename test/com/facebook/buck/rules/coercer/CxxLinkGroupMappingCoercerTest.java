@@ -63,7 +63,7 @@ public class CxxLinkGroupMappingCoercerTest {
 
     CxxLinkGroupMapping mapping =
         coercer.coerce(
-            createCellRoots(filesystem),
+            createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,

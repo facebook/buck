@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -41,7 +41,8 @@ import org.openjdk.jmh.runner.RunnerException;
 public class StringWithMacrosTypeCoercerBenchmark {
 
   private ProjectFilesystem filesystem = new FakeProjectFilesystem();
-  private CellPathResolver cellPathResolver = TestCellPathResolver.get(filesystem);
+  private CellNameResolver cellNameResolver =
+      TestCellPathResolver.get(filesystem).getCellNameResolver();
   private ForwardRelativePath basePath = ForwardRelativePath.of("");
 
   private StringWithMacrosTypeCoercer coercer =
@@ -51,7 +52,7 @@ public class StringWithMacrosTypeCoercerBenchmark {
   @BenchmarkMode(Mode.AverageTime)
   public StringWithMacros coerce() throws Exception {
     return coercer.coerce(
-        cellPathResolver,
+        cellNameResolver,
         filesystem,
         basePath,
         UnconfiguredTargetConfiguration.INSTANCE,

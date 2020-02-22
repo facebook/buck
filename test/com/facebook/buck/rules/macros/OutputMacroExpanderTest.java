@@ -20,8 +20,8 @@ import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -47,16 +47,16 @@ public class OutputMacroExpanderTest {
 
   private ProjectFilesystem filesystem;
   private ActionGraphBuilder graphBuilder;
-  private CellPathResolver cellPathResolver;
+  private CellNameResolver cellNameResolver;
   private StringWithMacrosConverter converter;
 
   private ActionGraphBuilder setup(ProjectFilesystem projectFilesystem, BuildTarget buildTarget) {
-    cellPathResolver = TestCellBuilder.createCellRoots(projectFilesystem);
+    cellNameResolver = TestCellBuilder.createCellRoots(projectFilesystem).getCellNameResolver();
     graphBuilder = new TestActionGraphBuilder();
     converter =
         StringWithMacrosConverter.of(
             buildTarget,
-            cellPathResolver.getCellNameResolver(),
+            cellNameResolver,
             graphBuilder,
             ImmutableList.of(new OutputMacroExpander()));
     return graphBuilder;
@@ -87,7 +87,7 @@ public class OutputMacroExpanderTest {
   @Test
   public void missingLocationArgumentThrows() throws Exception {
     filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem("/some_root");
-    cellPathResolver = TestCellBuilder.createCellRoots(filesystem);
+    cellNameResolver = TestCellBuilder.createCellRoots(filesystem).getCellNameResolver();
 
     thrown.expect(CoerceFailedException.class);
     thrown.expectMessage(
@@ -98,7 +98,7 @@ public class OutputMacroExpanderTest {
     new DefaultTypeCoercerFactory()
         .typeCoercerForType(TypeToken.of(StringWithMacros.class))
         .coerce(
-            cellPathResolver,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -111,7 +111,7 @@ public class OutputMacroExpanderTest {
         new DefaultTypeCoercerFactory()
             .typeCoercerForType(TypeToken.of(StringWithMacros.class))
             .coerce(
-                cellPathResolver,
+                cellNameResolver,
                 filesystem,
                 rule.getBuildTarget().getCellRelativeBasePath().getPath(),
                 UnconfiguredTargetConfiguration.INSTANCE,

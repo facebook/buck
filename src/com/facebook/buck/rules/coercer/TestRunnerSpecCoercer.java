@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -58,7 +57,7 @@ public class TestRunnerSpecCoercer implements TypeCoercer<Object, TestRunnerSpec
 
   @Override
   public TestRunnerSpec coerce(
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
@@ -77,7 +76,7 @@ public class TestRunnerSpecCoercer implements TypeCoercer<Object, TestRunnerSpec
   }
 
   private Object coerceRecursively(
-      CellPathResolver cellRoots,
+      CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
@@ -86,7 +85,7 @@ public class TestRunnerSpecCoercer implements TypeCoercer<Object, TestRunnerSpec
       throws CoerceFailedException {
     if (object instanceof Map) {
       return mapTypeCoercer.coerce(
-          cellRoots,
+          cellNameResolver,
           filesystem,
           pathRelativeToProjectRoot,
           targetConfiguration,
@@ -95,7 +94,7 @@ public class TestRunnerSpecCoercer implements TypeCoercer<Object, TestRunnerSpec
     }
     if (object instanceof Iterable) {
       return listTypeCoercer.coerce(
-          cellRoots,
+          cellNameResolver,
           filesystem,
           pathRelativeToProjectRoot,
           targetConfiguration,
@@ -106,7 +105,7 @@ public class TestRunnerSpecCoercer implements TypeCoercer<Object, TestRunnerSpec
       return object;
     }
     return macrosTypeCoercer.coerce(
-        cellRoots,
+        cellNameResolver,
         filesystem,
         pathRelativeToProjectRoot,
         targetConfiguration,

@@ -54,7 +54,7 @@ public class FrameworkPathTypeCoercerTest {
   @Test(expected = HumanReadableException.class)
   public void shouldRejectUnknownBuildSettingsInFrameworkEntries() throws CoerceFailedException {
     frameworkPathTypeCoercer.coerce(
-        createCellRoots(projectFilesystem),
+        createCellRoots(projectFilesystem).getCellNameResolver(),
         projectFilesystem,
         pathRelativeToProjectRoot,
         UnconfiguredTargetConfiguration.INSTANCE,

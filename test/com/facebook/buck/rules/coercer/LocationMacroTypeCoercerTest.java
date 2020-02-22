@@ -18,8 +18,8 @@ package com.facebook.buck.rules.coercer;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
@@ -36,9 +36,10 @@ import org.junit.Test;
 
 public class LocationMacroTypeCoercerTest {
 
-  private static final ProjectFilesystem FILESYSTEM = new FakeProjectFilesystem();
-  private static final CellPathResolver CELL_PATH_RESOLVER = TestCellPathResolver.get(FILESYSTEM);
-  private static final ForwardRelativePath BASE_PATH = ForwardRelativePath.of("");
+  private final ProjectFilesystem FILESYSTEM = new FakeProjectFilesystem();
+  private final CellNameResolver CELL_PATH_RESOLVER =
+      TestCellPathResolver.get(FILESYSTEM).getCellNameResolver();
+  private final ForwardRelativePath BASE_PATH = ForwardRelativePath.of("");
 
   private UnconfiguredBuildTargetTypeCoercer unconfiguredBuildTargetFactory;
   private LocationMacroTypeCoercer coercer;

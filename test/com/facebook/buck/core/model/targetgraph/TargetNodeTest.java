@@ -285,7 +285,7 @@ public class TargetNodeTest {
             .dataTransferObjectDescriptor(coercerFactory);
     try {
       return marshaller.populate(
-          createCellRoots(projectFilesystem),
+          createCellRoots(projectFilesystem).getCellNameResolver(),
           projectFilesystem,
           new ThrowingSelectorListResolver(),
           new ThrowingTargetConfigurationTransformer(),

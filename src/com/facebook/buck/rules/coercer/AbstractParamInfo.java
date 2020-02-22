@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.model.BuildTarget;
@@ -136,7 +135,7 @@ public abstract class AbstractParamInfo<T> implements ParamInfo<T> {
 
   @Override
   public void setFromParams(
-      CellPathResolver cellRoots,
+      CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
       TargetConfiguration targetConfiguration,
@@ -145,7 +144,7 @@ public abstract class AbstractParamInfo<T> implements ParamInfo<T> {
       Map<String, ?> instance)
       throws ParamInfoException {
     set(
-        cellRoots,
+        cellNameResolver,
         filesystem,
         buildTarget.getCellRelativeBasePath().getPath(),
         targetConfiguration,
@@ -156,7 +155,7 @@ public abstract class AbstractParamInfo<T> implements ParamInfo<T> {
 
   @Override
   public void set(
-      CellPathResolver cellRoots,
+      CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
@@ -171,7 +170,7 @@ public abstract class AbstractParamInfo<T> implements ParamInfo<T> {
       setCoercedValue(
           dto,
           typeCoercer.coerce(
-              cellRoots,
+              cellNameResolver,
               filesystem,
               pathRelativeToProjectRoot,
               targetConfiguration,

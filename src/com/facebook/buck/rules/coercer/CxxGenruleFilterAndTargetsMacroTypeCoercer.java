@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -70,7 +69,7 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercer<M extends CxxGenruleFilt
 
   @Override
   public M coerce(
-      CellPathResolver cellRoots,
+      CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
@@ -93,7 +92,7 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercer<M extends CxxGenruleFilt
               patternTypeCoercer
                   .get()
                   .coerce(
-                      cellRoots,
+                      cellNameResolver,
                       filesystem,
                       pathRelativeToProjectRoot,
                       targetConfiguration,
@@ -104,7 +103,7 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercer<M extends CxxGenruleFilt
     // Parse build target args.
     ImmutableList<BuildTarget> targets =
         buildTargetsTypeCoercer.coerce(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             pathRelativeToProjectRoot,
             targetConfiguration,

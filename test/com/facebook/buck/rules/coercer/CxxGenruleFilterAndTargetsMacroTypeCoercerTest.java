@@ -50,7 +50,7 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercerTest {
             CppFlagsMacro::of);
     CppFlagsMacro result =
         coercer.coerce(
-            createCellRoots(filesystem),
+            createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -78,7 +78,7 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercerTest {
             LdflagsStaticMacro::of);
     LdflagsStaticMacro result =
         coercer.coerce(
-            createCellRoots(filesystem),
+            createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,

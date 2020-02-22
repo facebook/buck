@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.model.BuildTarget;
@@ -98,7 +97,7 @@ public interface ParamInfo<T> {
   T get(Object dto);
 
   void setFromParams(
-      CellPathResolver cellRoots,
+      CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
       TargetConfiguration targetConfiguration,
@@ -110,7 +109,7 @@ public interface ParamInfo<T> {
   /**
    * Sets a single property of the {@code dto}, coercing types as necessary.
    *
-   * @param cellRoots
+   * @param cellNameResolver
    * @param filesystem {@link ProjectFilesystem} used to ensure {@link Path}s exist.
    * @param pathRelativeToProjectRoot The path relative to the project root that this DTO is for.
    * @param hostConfiguration
@@ -118,7 +117,7 @@ public interface ParamInfo<T> {
    * @param value The value, which may be coerced depending on the type on {@code dto}.
    */
   void set(
-      CellPathResolver cellRoots,
+      CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,

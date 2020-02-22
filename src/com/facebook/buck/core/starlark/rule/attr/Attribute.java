@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.starlark.rule.attr;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -118,7 +118,7 @@ public abstract class Attribute<CoercedType> implements AttributeHolder {
   /**
    * Get the coerced value for this attribute.
    *
-   * @param cellRoots The cell roots
+   * @param cellNameResolver The cell roots
    * @param projectFilesystem The project file system
    * @param pathRelativeToProjectRoot The path relative to the project root
    * @param targetConfiguration The configuration for this target
@@ -127,7 +127,7 @@ public abstract class Attribute<CoercedType> implements AttributeHolder {
    * @throws CoerceFailedException if the value could not be coerced
    */
   public CoercedType getValue(
-      CellPathResolver cellRoots,
+      CellNameResolver cellNameResolver,
       ProjectFilesystem projectFilesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
@@ -137,7 +137,7 @@ public abstract class Attribute<CoercedType> implements AttributeHolder {
     CoercedType coercedValue =
         getTypeCoercer()
             .coerce(
-                cellRoots,
+                cellNameResolver,
                 projectFilesystem,
                 pathRelativeToProjectRoot,
                 targetConfiguration,

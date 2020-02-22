@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetOutputLabelParser;
@@ -49,7 +49,7 @@ abstract class TargetWithOutputsTypeCoercer<T, U> extends LeafTypeCoercer<U> {
           BuildTargetOutputLabelParser.getBuildTargetNameWithOutputLabel((String) object);
       T coerced =
           coercer.coerce(
-              params.getCellRoots(),
+              params.getCellNameResolver(),
               params.getFilesystem(),
               params.getPathRelativeToProjectRoot(),
               params.getTargetConfiguration(),
@@ -64,7 +64,7 @@ abstract class TargetWithOutputsTypeCoercer<T, U> extends LeafTypeCoercer<U> {
   /** Wrapper for values needed for perform coercion. */
   @BuckStyleValue
   abstract static class CoerceParameters {
-    abstract CellPathResolver getCellRoots();
+    abstract CellNameResolver getCellNameResolver();
 
     abstract ProjectFilesystem getFilesystem();
 

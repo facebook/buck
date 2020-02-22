@@ -50,7 +50,7 @@ public class OptionalTypeCoercerTest {
         new OptionalTypeCoercer<>(new IdentityTypeCoercer<>(Unit.class));
     Optional<Unit> result =
         coercer.coerce(
-            TestCellBuilder.createCellRoots(FILESYSTEM),
+            TestCellBuilder.createCellRoots(FILESYSTEM).getCellNameResolver(),
             FILESYSTEM,
             PATH_RELATIVE_TO_PROJECT_ROOT,
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -65,7 +65,7 @@ public class OptionalTypeCoercerTest {
         new OptionalTypeCoercer<>(new IdentityTypeCoercer<>(Unit.class));
     Optional<Unit> result =
         coercer.coerce(
-            TestCellBuilder.createCellRoots(FILESYSTEM),
+            TestCellBuilder.createCellRoots(FILESYSTEM).getCellNameResolver(),
             FILESYSTEM,
             PATH_RELATIVE_TO_PROJECT_ROOT,
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -79,7 +79,7 @@ public class OptionalTypeCoercerTest {
     OptionalTypeCoercer<String> coercer = new OptionalTypeCoercer<>(new StringTypeCoercer());
     Optional<String> result =
         coercer.coerce(
-            TestCellBuilder.createCellRoots(FILESYSTEM),
+            TestCellBuilder.createCellRoots(FILESYSTEM).getCellNameResolver(),
             FILESYSTEM,
             PATH_RELATIVE_TO_PROJECT_ROOT,
             UnconfiguredTargetConfiguration.INSTANCE,

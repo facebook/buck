@@ -42,7 +42,7 @@ public class EitherTypeCoercerTest {
 
     Either<Pair<String, String>, String> seen =
         coercer.coerce(
-            createCellRoots(filesystem),
+            createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,

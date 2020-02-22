@@ -18,8 +18,8 @@ package com.facebook.buck.rules.coercer;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -38,9 +38,10 @@ import org.junit.Test;
 
 public class LocationPlatformMacroTypeCoercerTest {
 
-  private static final ProjectFilesystem FILESYSTEM = new FakeProjectFilesystem();
-  private static final CellPathResolver CELL_PATH_RESOLVER = TestCellPathResolver.get(FILESYSTEM);
-  private static final ForwardRelativePath BASE_PATH = ForwardRelativePath.of("");
+  private final ProjectFilesystem filesystem = new FakeProjectFilesystem();
+  private final CellNameResolver cellNameResolver =
+      TestCellPathResolver.get(filesystem).getCellNameResolver();
+  private final ForwardRelativePath basePath = ForwardRelativePath.of("");
 
   private UnconfiguredBuildTargetTypeCoercer unconfiguredBuildTargetFactory;
   private LocationPlatformMacroTypeCoercer coercer;
@@ -59,9 +60,9 @@ public class LocationPlatformMacroTypeCoercerTest {
   public void target() throws CoerceFailedException {
     assertThat(
         coercer.coerce(
-            CELL_PATH_RESOLVER,
-            FILESYSTEM,
-            BASE_PATH,
+            cellNameResolver,
+            filesystem,
+            basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableList.of("//:test")),
@@ -72,9 +73,9 @@ public class LocationPlatformMacroTypeCoercerTest {
                 ImmutableSet.of())));
     assertThat(
         coercer.coerce(
-            CELL_PATH_RESOLVER,
-            FILESYSTEM,
-            BASE_PATH,
+            cellNameResolver,
+            filesystem,
+            basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableList.of("//:test[foo]")),
@@ -89,9 +90,9 @@ public class LocationPlatformMacroTypeCoercerTest {
   public void targetWithFlavors() throws CoerceFailedException {
     assertThat(
         coercer.coerce(
-            CELL_PATH_RESOLVER,
-            FILESYSTEM,
-            BASE_PATH,
+            cellNameResolver,
+            filesystem,
+            basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
             UnconfiguredTargetConfiguration.INSTANCE,
             ImmutableList.of("//:test", "flavor1", "flavor2")),
@@ -105,9 +106,9 @@ public class LocationPlatformMacroTypeCoercerTest {
   @Test(expected = CoerceFailedException.class)
   public void invalidTarget() throws CoerceFailedException {
     coercer.coerce(
-        CELL_PATH_RESOLVER,
-        FILESYSTEM,
-        BASE_PATH,
+        cellNameResolver,
+        filesystem,
+        basePath,
         UnconfiguredTargetConfiguration.INSTANCE,
         UnconfiguredTargetConfiguration.INSTANCE,
         ImmutableList.of("not a target"));
@@ -116,9 +117,9 @@ public class LocationPlatformMacroTypeCoercerTest {
   @Test(expected = CoerceFailedException.class)
   public void tooFewArgs() throws CoerceFailedException {
     coercer.coerce(
-        CELL_PATH_RESOLVER,
-        FILESYSTEM,
-        BASE_PATH,
+        cellNameResolver,
+        filesystem,
+        basePath,
         UnconfiguredTargetConfiguration.INSTANCE,
         UnconfiguredTargetConfiguration.INSTANCE,
         ImmutableList.of());

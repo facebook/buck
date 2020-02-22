@@ -153,7 +153,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
           }
           ImmutableList<UnconfiguredBuildTarget> coercedCompatibleConfigs =
               compatibleWithCoercer.coerce(
-                  targetCell.getCellPathResolver(),
+                  targetCell.getCellNameResolver(),
                   targetCell.getFilesystem(),
                   target.getCellRelativeBasePath().getPath(),
                   target.getTargetConfiguration(),
@@ -174,7 +174,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
           description.dataTransferObjectDescriptor(typeCoercerFactory);
       constructorArg =
           marshaller.populate(
-              targetCell.getCellPathResolver(),
+              targetCell.getCellNameResolver(),
               targetCell.getFilesystem(),
               selectorListResolver,
               targetConfigurationTransformer,

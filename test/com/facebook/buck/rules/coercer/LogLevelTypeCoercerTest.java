@@ -43,7 +43,7 @@ public class LogLevelTypeCoercerTest {
     Level expected = Level.WARNING;
     Level actual =
         coercer.coerce(
-            createCellRoots(filesystem),
+            createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             pathFromRoot,
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -56,7 +56,7 @@ public class LogLevelTypeCoercerTest {
   @Test(expected = CoerceFailedException.class)
   public void throwsWhenCoercingUnknownLogLevel() throws CoerceFailedException {
     coercer.coerce(
-        createCellRoots(filesystem),
+        createCellRoots(filesystem).getCellNameResolver(),
         filesystem,
         pathFromRoot,
         UnconfiguredTargetConfiguration.INSTANCE,

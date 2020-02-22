@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -47,7 +47,7 @@ public class SortedSetTypeCoercer<T extends Comparable<? super T>>
   }
 
   protected void fillSortedSet(
-      CellPathResolver cellRoots,
+      CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
@@ -61,7 +61,7 @@ public class SortedSetTypeCoercer<T extends Comparable<? super T>>
         // if any element failed, the entire collection fails
         T coercedElement =
             elementTypeCoercer.coerce(
-                cellRoots,
+                cellNameResolver,
                 filesystem,
                 pathRelativeToProjectRoot,
                 targetConfiguration,
@@ -80,7 +80,7 @@ public class SortedSetTypeCoercer<T extends Comparable<? super T>>
 
   @Override
   public ImmutableSortedSet<T> coerce(
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,

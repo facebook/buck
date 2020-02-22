@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.select.Selector;
@@ -42,7 +42,7 @@ public class SelectorListCoercer<T> {
   }
 
   public SelectorList<T> coerce(
-      CellPathResolver cellRoots,
+      CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
@@ -55,7 +55,7 @@ public class SelectorListCoercer<T> {
       selectors.add(
           coerceSelector(
               selector,
-              cellRoots,
+              cellNameResolver,
               filesystem,
               pathRelativeToProjectRoot,
               targetConfiguration,
@@ -66,7 +66,7 @@ public class SelectorListCoercer<T> {
 
   private Selector<T> coerceSelector(
       Selector<?> input,
-      CellPathResolver cellPathResolver,
+      CellNameResolver cellNameResolver,
       ProjectFilesystem projectFilesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
@@ -77,7 +77,7 @@ public class SelectorListCoercer<T> {
       conditions.put(
           entry.getKey(),
           elementTypeCoercer.coerce(
-              cellPathResolver,
+              cellNameResolver,
               projectFilesystem,
               pathRelativeToProjectRoot,
               targetConfiguration,

@@ -105,7 +105,7 @@ public class ConstructorArgMarshallerImmutableTest {
     ImmutableSet.Builder<BuildTarget> configurationDeps = ImmutableSet.builder();
     T result =
         marshaller.populate(
-            createCellRoots(filesystem),
+            createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             new ThrowingSelectorListResolver(),
             new ThrowingTargetConfigurationTransformer(),
@@ -543,7 +543,7 @@ public class ConstructorArgMarshallerImmutableTest {
 
     DtoWithString dto =
         marshaller.populate(
-            createCellRoots(filesystem),
+            createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             selectorListResolver,
             targetConfigurationTransformer,
@@ -571,7 +571,7 @@ public class ConstructorArgMarshallerImmutableTest {
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
     DtoWithString dto =
         marshaller.populate(
-            createCellRoots(filesystem),
+            createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             selectorListResolver,
             targetConfigurationTransformer,
@@ -597,7 +597,7 @@ public class ConstructorArgMarshallerImmutableTest {
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
     BuildTarget dep = BuildTargetFactory.newInstance("//a/b:c");
     marshaller.populate(
-        createCellRoots(filesystem),
+        createCellRoots(filesystem).getCellNameResolver(),
         filesystem,
         selectorListResolver,
         targetConfigurationTransformer,
@@ -621,7 +621,7 @@ public class ConstructorArgMarshallerImmutableTest {
             (configuration, dependencyStack) -> UnconfiguredPlatform.INSTANCE);
     DtoWithOptionalSetOfStrings dto =
         marshaller.populate(
-            createCellRoots(filesystem),
+            createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             selectorListResolver,
             targetConfigurationTransformer,
@@ -668,7 +668,7 @@ public class ConstructorArgMarshallerImmutableTest {
 
     DtoWithSplit dto =
         marshaller.populate(
-            createCellRoots(filesystem),
+            createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             selectorListResolver,
             targetConfigurationTransformer,
@@ -703,7 +703,7 @@ public class ConstructorArgMarshallerImmutableTest {
             ConfigurationBuildTargetFactoryForTests.newInstance("//:p"));
     DtoWithExec d =
         marshaller.populate(
-            createCellRoots(filesystem),
+            createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             selectorListResolver,
             targetConfigurationTransformer,

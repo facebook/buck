@@ -19,9 +19,9 @@ package com.facebook.buck.rules.query;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -66,7 +66,7 @@ public class QueryOutputsMacroExpanderTest {
 
   private ProjectFilesystem filesystem;
   private ActionGraphBuilder graphBuilder;
-  private CellPathResolver cellNames;
+  private CellNameResolver cellNameResolver;
   private BuildRule rule;
   private BuildRule dep;
   private HashMapWithStats<Macro, Object> cache;
@@ -77,7 +77,7 @@ public class QueryOutputsMacroExpanderTest {
   public void setUp() {
     cache = new HashMapWithStats<>();
     filesystem = new FakeProjectFilesystem(CanonicalCellName.rootCell(), AbsPath.of(tmp.getRoot()));
-    cellNames = TestCellBuilder.createCellRoots(filesystem);
+    cellNameResolver = TestCellBuilder.createCellRoots(filesystem).getCellNameResolver();
     TargetNode<?> depNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//exciting:dep"), filesystem)
@@ -107,7 +107,7 @@ public class QueryOutputsMacroExpanderTest {
     converter =
         StringWithMacrosConverter.of(
             ruleNode.getBuildTarget(),
-            cellNames.getCellNameResolver(),
+            cellNameResolver,
             graphBuilder,
             ImmutableList.of(new QueryOutputsMacroExpander(TargetGraph.EMPTY)),
             Optional.empty(),
@@ -197,7 +197,7 @@ public class QueryOutputsMacroExpanderTest {
         new DefaultTypeCoercerFactory()
             .typeCoercerForType(TypeToken.of(StringWithMacros.class))
             .coerce(
-                cellNames,
+                cellNameResolver,
                 filesystem,
                 rule.getBuildTarget().getCellRelativeBasePath().getPath(),
                 UnconfiguredTargetConfiguration.INSTANCE,

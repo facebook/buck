@@ -25,8 +25,8 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.DataTransferObject;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -65,7 +65,8 @@ import org.junit.rules.ExpectedException;
 public class TypeCoercerTest {
   private final TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
   private final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-  private final CellPathResolver cellRoots = TestCellPathResolver.get(filesystem);
+  private final CellNameResolver cellNameResolver =
+      TestCellPathResolver.get(filesystem).getCellNameResolver();
 
   @Rule public ExpectedException exception = ExpectedException.none();
 
@@ -81,7 +82,7 @@ public class TypeCoercerTest {
             "bar", ImmutableList.of(6, 7));
     Object result =
         coercer.coerce(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -100,7 +101,7 @@ public class TypeCoercerTest {
         ImmutableList.of(ImmutableList.of(4, 4, 5), ImmutableList.of(6, 7));
     Object result =
         coercer.coerce(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -120,7 +121,7 @@ public class TypeCoercerTest {
     ImmutableList<String> input = ImmutableList.of("a", "c", "b", "a");
     Object result =
         coercer.coerce(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -139,7 +140,7 @@ public class TypeCoercerTest {
     ImmutableList<String> input = ImmutableList.of("a", "b", "c");
     Object result =
         coercer.coerce(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -157,7 +158,7 @@ public class TypeCoercerTest {
     ImmutableMap<String, String> input = ImmutableMap.of("a", "b");
     Object result =
         coercer.coerce(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -198,7 +199,7 @@ public class TypeCoercerTest {
             "bar", ImmutableList.of(":bar", "//foo:foo"));
 
     TestTraversal traversal = new TestTraversal();
-    coercer.traverse(cellRoots.getCellNameResolver(), input, traversal);
+    coercer.traverse(cellNameResolver, input, traversal);
 
     Matcher<Iterable<?>> matcher =
         Matchers.contains(
@@ -250,7 +251,7 @@ public class TypeCoercerTest {
     assertEquals(
         Either.ofLeft(inputSet),
         coercer.coerce(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -259,7 +260,7 @@ public class TypeCoercerTest {
     assertEquals(
         Either.ofRight(inputMap),
         coercer.coerce(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -280,7 +281,7 @@ public class TypeCoercerTest {
     Either<?, ?> either =
         (Either<?, ?>)
             coercer.coerce(
-                cellRoots,
+                cellNameResolver,
                 filesystem,
                 ForwardRelativePath.of(""),
                 UnconfiguredTargetConfiguration.INSTANCE,
@@ -301,7 +302,7 @@ public class TypeCoercerTest {
     Either<?, ?> either =
         (Either<?, ?>)
             coercer.coerce(
-                cellRoots,
+                cellNameResolver,
                 filesystem,
                 ForwardRelativePath.of(""),
                 UnconfiguredTargetConfiguration.INSTANCE,
@@ -324,7 +325,7 @@ public class TypeCoercerTest {
     assertEquals(
         Either.ofLeft(inputString),
         coercer.coerce(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -333,7 +334,7 @@ public class TypeCoercerTest {
     assertEquals(
         Either.ofRight(inputList),
         coercer.coerce(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -351,7 +352,7 @@ public class TypeCoercerTest {
 
     TestTraversal traversal = new TestTraversal();
     Either<String, List<String>> input = Either.ofRight(ImmutableList.of("foo"));
-    coercer.traverse(cellRoots.getCellNameResolver(), input, traversal);
+    coercer.traverse(cellNameResolver, input, traversal);
     assertThat(
         traversal.getObjects(),
         Matchers.contains(
@@ -361,7 +362,7 @@ public class TypeCoercerTest {
 
     traversal = new TestTraversal();
     Either<String, List<String>> input2 = Either.ofLeft("foo");
-    coercer.traverse(cellRoots.getCellNameResolver(), input2, traversal);
+    coercer.traverse(cellNameResolver, input2, traversal);
     assertThat(traversal.getObjects(), hasSize(1));
     assertThat(traversal.getObjects().get(0), sameInstance("foo"));
   }
@@ -389,7 +390,7 @@ public class TypeCoercerTest {
     assertEquals(
         new Pair<>(Paths.get("foo.m"), "-foo -bar"),
         coercer.coerce(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -417,7 +418,7 @@ public class TypeCoercerTest {
 
     TestTraversal traversal = new TestTraversal();
     Pair<Path, String> input = new Pair<>(Paths.get("foo"), "bar");
-    coercer.traverse(cellRoots.getCellNameResolver(), input, traversal);
+    coercer.traverse(cellNameResolver, input, traversal);
     assertThat(
         traversal.getObjects(),
         Matchers.contains(
@@ -434,7 +435,7 @@ public class TypeCoercerTest {
     ImmutableList<String> input = ImmutableList.of("foo.m", "bar.m");
     Object result =
         coercer.coerce(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -459,7 +460,7 @@ public class TypeCoercerTest {
             ImmutableList.of("bar.m", ImmutableList.of("-fobjc-arc")));
     Object result =
         coercer.coerce(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -486,7 +487,7 @@ public class TypeCoercerTest {
             ImmutableList.of("Group2/blech.m", ImmutableList.of("-fobjc-arc")));
     Object result =
         coercer.coerce(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -515,7 +516,7 @@ public class TypeCoercerTest {
             ImmutableList.of(100, "//:target", "some/path.py"));
     Object result =
         coercer.coerce(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -539,7 +540,7 @@ public class TypeCoercerTest {
 
     try {
       coercer.coerce(
-          cellRoots,
+          cellNameResolver,
           filesystem,
           ForwardRelativePath.of(""),
           UnconfiguredTargetConfiguration.INSTANCE,
@@ -554,7 +555,7 @@ public class TypeCoercerTest {
 
     try {
       coercer.coerce(
-          cellRoots,
+          cellNameResolver,
           filesystem,
           ForwardRelativePath.of(""),
           UnconfiguredTargetConfiguration.INSTANCE,
@@ -569,7 +570,7 @@ public class TypeCoercerTest {
 
     try {
       coercer.coerce(
-          cellRoots,
+          cellNameResolver,
           filesystem,
           ForwardRelativePath.of(""),
           UnconfiguredTargetConfiguration.INSTANCE,
@@ -584,7 +585,7 @@ public class TypeCoercerTest {
 
     try {
       coercer.coerce(
-          cellRoots,
+          cellNameResolver,
           filesystem,
           ForwardRelativePath.of(""),
           UnconfiguredTargetConfiguration.INSTANCE,
@@ -606,7 +607,7 @@ public class TypeCoercerTest {
 
     Object result =
         coercer.coerce(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -626,7 +627,7 @@ public class TypeCoercerTest {
 
     Object result =
         coercer.coerce(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -646,7 +647,7 @@ public class TypeCoercerTest {
 
     Object result =
         coercer.coerce(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -677,7 +678,7 @@ public class TypeCoercerTest {
         ImmutableList.of(TestEnum.PINK, TestEnum.PINK, TestEnum.white, TestEnum.white);
     Object result =
         coercer.coerce(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -700,7 +701,7 @@ public class TypeCoercerTest {
 
     Object result =
         coercer.coerce(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -730,7 +731,7 @@ public class TypeCoercerTest {
 
     try {
       coercer.coerce(
-          cellRoots,
+          cellNameResolver,
           filesystem,
           ForwardRelativePath.of(""),
           UnconfiguredTargetConfiguration.INSTANCE,
@@ -753,7 +754,7 @@ public class TypeCoercerTest {
     TypeCoercer<Object, ?> coercer = typeCoercerFactory.typeCoercerForType(TypeToken.of(type));
     try {
       coercer.coerce(
-          cellRoots,
+          cellNameResolver,
           filesystem,
           ForwardRelativePath.of(""),
           UnconfiguredTargetConfiguration.INSTANCE,
@@ -847,7 +848,7 @@ public class TypeCoercerTest {
                 "default2", "red"));
     Object result =
         coercer.coerce(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -875,7 +876,7 @@ public class TypeCoercerTest {
         typeCoercerFactory.typeCoercerForType(TypeToken.of(SomeImmutable.class));
     ImmutableMap<String, Object> map = ImmutableMap.of("wrong_key", ImmutableMap.of());
     coercer.coerce(
-        cellRoots,
+        cellNameResolver,
         filesystem,
         ForwardRelativePath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,

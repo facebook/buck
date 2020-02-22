@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -39,7 +39,7 @@ class LocationMacroTypeCoercer extends AbstractLocationMacroTypeCoercer<Location
 
   @Override
   public LocationMacro coerce(
-      CellPathResolver cellRoots,
+      CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
@@ -52,7 +52,7 @@ class LocationMacroTypeCoercer extends AbstractLocationMacroTypeCoercer<Location
     }
     BuildTargetWithOutputs targetWithOutputs =
         coerceTarget(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             pathRelativeToProjectRoot,
             targetConfiguration,

@@ -84,7 +84,7 @@ public class TargetWithOutputsTypeCoercerTest {
   public void canCoerceBuildTargetWithoutAlias() throws CoerceFailedException {
     Object seen =
         testCoercer.coerce(
-            createCellRoots(FILESYSTEM),
+            createCellRoots(FILESYSTEM).getCellNameResolver(),
             FILESYSTEM,
             BASE_PATH,
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -98,7 +98,7 @@ public class TargetWithOutputsTypeCoercerTest {
   public void canCoerceBuildTargetCoercerWithAlias() throws CoerceFailedException {
     Object seen =
         testCoercer.coerce(
-            createCellRoots(FILESYSTEM),
+            createCellRoots(FILESYSTEM).getCellNameResolver(),
             FILESYSTEM,
             BASE_PATH,
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -114,7 +114,7 @@ public class TargetWithOutputsTypeCoercerTest {
     thrown.expectMessage(containsString("Output label cannot be empty"));
 
     testCoercer.coerce(
-        createCellRoots(FILESYSTEM),
+        createCellRoots(FILESYSTEM).getCellNameResolver(),
         FILESYSTEM,
         BASE_PATH,
         UnconfiguredTargetConfiguration.INSTANCE,
@@ -128,7 +128,7 @@ public class TargetWithOutputsTypeCoercerTest {
     thrown.expectMessage(containsString("Could not parse output label for //foo:bar[whee"));
 
     testCoercer.coerce(
-        createCellRoots(FILESYSTEM),
+        createCellRoots(FILESYSTEM).getCellNameResolver(),
         FILESYSTEM,
         BASE_PATH,
         UnconfiguredTargetConfiguration.INSTANCE,
@@ -140,7 +140,7 @@ public class TargetWithOutputsTypeCoercerTest {
   public void canCoerceFlavoredTarget() throws CoerceFailedException {
     Object seen =
         testCoercer.coerce(
-            createCellRoots(FILESYSTEM),
+            createCellRoots(FILESYSTEM).getCellNameResolver(),
             FILESYSTEM,
             BASE_PATH,
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -154,7 +154,7 @@ public class TargetWithOutputsTypeCoercerTest {
   public void canCoerceMultipleFlavors() throws CoerceFailedException {
     Object seen =
         testCoercer.coerce(
-            createCellRoots(FILESYSTEM),
+            createCellRoots(FILESYSTEM).getCellNameResolver(),
             FILESYSTEM,
             BASE_PATH,
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -170,7 +170,7 @@ public class TargetWithOutputsTypeCoercerTest {
     thrown.expectMessage(containsString("Output label must come last in //foo:bar[whee]#src"));
 
     testCoercer.coerce(
-        createCellRoots(FILESYSTEM),
+        createCellRoots(FILESYSTEM).getCellNameResolver(),
         FILESYSTEM,
         BASE_PATH,
         UnconfiguredTargetConfiguration.INSTANCE,
@@ -182,7 +182,7 @@ public class TargetWithOutputsTypeCoercerTest {
   public void canCoerceFlavorsWithoutAlias() throws CoerceFailedException {
     Object seen =
         testCoercer.coerce(
-            createCellRoots(FILESYSTEM),
+            createCellRoots(FILESYSTEM).getCellNameResolver(),
             FILESYSTEM,
             BASE_PATH,
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -196,7 +196,7 @@ public class TargetWithOutputsTypeCoercerTest {
   public void canCoerceShortTarget() throws CoerceFailedException {
     Object seen =
         testCoercer.coerce(
-            createCellRoots(FILESYSTEM),
+            createCellRoots(FILESYSTEM).getCellNameResolver(),
             FILESYSTEM,
             BASE_PATH,
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -212,7 +212,7 @@ public class TargetWithOutputsTypeCoercerTest {
   public void canCoerceShortTargetWithAlias() throws CoerceFailedException {
     Object seen =
         testCoercer.coerce(
-            createCellRoots(FILESYSTEM),
+            createCellRoots(FILESYSTEM).getCellNameResolver(),
             FILESYSTEM,
             BASE_PATH,
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -227,7 +227,7 @@ public class TargetWithOutputsTypeCoercerTest {
   public void canCoerceShortTargetWithFlavorAndAlias() throws CoerceFailedException {
     Object seen =
         testCoercer.coerce(
-            createCellRoots(FILESYSTEM),
+            createCellRoots(FILESYSTEM).getCellNameResolver(),
             FILESYSTEM,
             BASE_PATH,
             UnconfiguredTargetConfiguration.INSTANCE,

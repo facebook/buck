@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
@@ -74,7 +73,7 @@ public final class BuildTargetMacroTypeCoercer<M extends BuildTargetMacro>
 
   @Override
   public M coerce(
-      CellPathResolver cellRoots,
+      CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
@@ -87,7 +86,7 @@ public final class BuildTargetMacroTypeCoercer<M extends BuildTargetMacro>
     }
     BuildTargetWithOutputs target =
         buildTargetWithOutputsTypeCoercer.coerce(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             pathRelativeToProjectRoot,
             targetOrHost == TargetOrHost.TARGET ? targetConfiguration : hostConfiguration,

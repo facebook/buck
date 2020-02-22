@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -26,7 +25,6 @@ import com.google.common.reflect.TypeToken;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Optional;
-import javax.annotation.Nonnull;
 
 /** A type coercer to handle needed coverage specification for python_test. */
 public class NeededCoverageSpecTypeCoercer implements TypeCoercer<Object, NeededCoverageSpec> {
@@ -67,7 +65,7 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<Object, Needed
 
   @Override
   public NeededCoverageSpec coerce(
-      CellPathResolver cellRoots,
+      CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
@@ -84,7 +82,7 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<Object, Needed
         Iterator<?> iter = collection.iterator();
         int neededRatioPercentage =
             coerceNeededRatio(
-                cellRoots,
+                cellNameResolver,
                 filesystem,
                 pathRelativeToProjectRoot,
                 targetConfiguration,
@@ -93,7 +91,7 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<Object, Needed
                 iter.next());
         BuildTarget buildTarget =
             buildTargetTypeCoercer.coerce(
-                cellRoots,
+                cellNameResolver,
                 filesystem,
                 pathRelativeToProjectRoot,
                 targetConfiguration,
@@ -104,7 +102,7 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<Object, Needed
           pathName =
               Optional.of(
                   pathNameTypeCoercer.coerce(
-                      cellRoots,
+                      cellNameResolver,
                       filesystem,
                       pathRelativeToProjectRoot,
                       targetConfiguration,
@@ -121,9 +119,8 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<Object, Needed
         "input should be a tuple of needed coverage ratio, a build target, and optionally a path");
   }
 
-  @Nonnull
   private int coerceNeededRatio(
-      CellPathResolver cellRoots,
+      CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
@@ -144,7 +141,7 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<Object, Needed
 
     int intValue =
         intTypeCoercer.coerce(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             pathRelativeToProjectRoot,
             targetConfiguration,

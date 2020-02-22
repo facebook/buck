@@ -48,7 +48,7 @@ public class TestSelectorListFactory {
         conditions.put(
             key,
             elementTypeCoercer.coerce(
-                TestCellPathResolver.get(projectFilesystem),
+                TestCellPathResolver.get(projectFilesystem).getCellNameResolver(),
                 projectFilesystem,
                 ForwardRelativePath.of(""),
                 UnconfiguredTargetConfiguration.INSTANCE,

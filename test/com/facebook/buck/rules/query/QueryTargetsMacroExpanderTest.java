@@ -19,9 +19,9 @@ package com.facebook.buck.rules.query;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -61,7 +61,7 @@ public class QueryTargetsMacroExpanderTest {
   private QueryTargetsMacroExpander expander;
   private ProjectFilesystem filesystem;
   private ActionGraphBuilder graphBuilder;
-  private CellPathResolver cellNames;
+  private CellNameResolver cellNameResolver;
   private BuildRule rule;
   private HashMapWithStats<Macro, Object> cache;
   private StringWithMacrosConverter converter;
@@ -71,7 +71,7 @@ public class QueryTargetsMacroExpanderTest {
     cache = new HashMapWithStats<>();
     expander = new QueryTargetsMacroExpander(TargetGraph.EMPTY);
     filesystem = new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp.getRoot());
-    cellNames = TestCellBuilder.createCellRoots(filesystem);
+    cellNameResolver = TestCellBuilder.createCellRoots(filesystem).getCellNameResolver();
     TargetNode<?> depNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//exciting:dep"), filesystem)
@@ -93,7 +93,7 @@ public class QueryTargetsMacroExpanderTest {
     converter =
         StringWithMacrosConverter.of(
             ruleNode.getBuildTarget(),
-            cellNames.getCellNameResolver(),
+            cellNameResolver,
             graphBuilder,
             ImmutableList.of(expander),
             Optional.empty(),
@@ -148,7 +148,7 @@ public class QueryTargetsMacroExpanderTest {
         new DefaultTypeCoercerFactory()
             .typeCoercerForType(TypeToken.of(StringWithMacros.class))
             .coerce(
-                cellNames,
+                cellNameResolver,
                 filesystem,
                 rule.getBuildTarget().getCellRelativeBasePath().getPath(),
                 UnconfiguredTargetConfiguration.INSTANCE,

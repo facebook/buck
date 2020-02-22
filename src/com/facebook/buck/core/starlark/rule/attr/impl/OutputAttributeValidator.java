@@ -17,7 +17,6 @@
 package com.facebook.buck.core.starlark.rule.attr.impl;
 
 import com.facebook.buck.core.artifact.Artifact;
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.actions.ActionRegistry;
@@ -34,10 +33,12 @@ class OutputAttributeValidator {
   /**
    * Validates that a coerced value is a string, and registers it with {@code registry}
    *
-   * @param coercedValue the value that came from {@link OutputAttribute#getValue(CellPathResolver,
+   * @param coercedValue the value that came from {@link
+   *     OutputAttribute#getValue(com.facebook.buck.core.cell.nameresolver.CellNameResolver,
    *     ProjectFilesystem, ForwardRelativePath, TargetConfiguration, TargetConfiguration, Object)}
-   *     or {@link OutputListAttribute#getValue(CellPathResolver, ProjectFilesystem,
-   *     ForwardRelativePath, TargetConfiguration, TargetConfiguration, Object)}
+   *     or {@link
+   *     OutputListAttribute#getValue(com.facebook.buck.core.cell.nameresolver.CellNameResolver,
+   *     ProjectFilesystem, ForwardRelativePath, TargetConfiguration, TargetConfiguration, Object)}
    * @param registry the registry to declare artifacts against
    * @return the declared artifact
    * @throws IllegalArgumentException if {@code coercedValue} is not a {@link String}

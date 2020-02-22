@@ -18,8 +18,8 @@ package com.facebook.buck.rules.coercer;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
@@ -43,7 +43,7 @@ import org.junit.rules.ExpectedException;
 
 public class SourcePathTypeCoercerTest {
   private FakeProjectFilesystem projectFilesystem;
-  private CellPathResolver cellRoots;
+  private CellNameResolver cellRoots;
   private final ForwardRelativePath pathRelativeToProjectRoot = ForwardRelativePath.of("");
   private final SourcePathTypeCoercer sourcePathTypeCoercer =
       new SourcePathTypeCoercer(
@@ -56,7 +56,7 @@ public class SourcePathTypeCoercerTest {
   @Before
   public void setUp() {
     projectFilesystem = new FakeProjectFilesystem();
-    cellRoots = TestCellPathResolver.get(projectFilesystem);
+    cellRoots = TestCellPathResolver.get(projectFilesystem).getCellNameResolver();
   }
 
   @Before
@@ -152,7 +152,8 @@ public class SourcePathTypeCoercerTest {
     AbsPath rootPath = projectFilesystem.getRootPath();
     AbsPath helloRoot = rootPath.resolve("hello");
     cellRoots =
-        TestCellPathResolver.create(rootPath, ImmutableMap.of("hello", helloRoot.getPath()));
+        TestCellPathResolver.create(rootPath, ImmutableMap.of("hello", helloRoot.getPath()))
+            .getCellNameResolver();
 
     SourcePath sourcePath =
         sourcePathTypeCoercer.coerce(

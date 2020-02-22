@@ -88,7 +88,7 @@ public class BuilderParamInfoTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     getParamInfo()
         .set(
-            TestCellPathResolver.get(filesystem),
+            TestCellPathResolver.get(filesystem).getCellNameResolver(),
             filesystem,
             ForwardRelativePath.of("doesnotexist"),
             UnconfiguredTargetConfiguration.INSTANCE,

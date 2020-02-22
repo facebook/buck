@@ -102,7 +102,7 @@ public class GenruleDescriptionTest {
     ImmutableSet.Builder<VisibilityPattern> withinViewPatterns = ImmutableSet.builder();
     GenruleDescriptionArg constructorArg =
         marshaller.populate(
-            createCellRoots(projectFilesystem),
+            createCellRoots(projectFilesystem).getCellNameResolver(),
             projectFilesystem,
             new ThrowingSelectorListResolver(),
             new ThrowingTargetConfigurationTransformer(),

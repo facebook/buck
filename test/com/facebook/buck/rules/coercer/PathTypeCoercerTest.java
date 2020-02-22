@@ -50,7 +50,7 @@ public class PathTypeCoercerTest {
 
     String invalidPath = "";
     pathTypeCoercer.coerce(
-        createCellRoots(filesystem),
+        createCellRoots(filesystem).getCellNameResolver(),
         filesystem,
         pathRelativeToProjectRoot,
         UnconfiguredTargetConfiguration.INSTANCE,
@@ -67,7 +67,7 @@ public class PathTypeCoercerTest {
     expectedException.expectCause(Matchers.instanceOf(InvalidPathException.class));
 
     pathTypeCoercer.coerce(
-        createCellRoots(filesystem),
+        createCellRoots(filesystem).getCellNameResolver(),
         filesystem,
         pathRelativeToProjectRoot,
         UnconfiguredTargetConfiguration.INSTANCE,
@@ -83,7 +83,7 @@ public class PathTypeCoercerTest {
     expectedException.expectMessage("Path cannot contain an absolute path");
 
     pathTypeCoercer.coerce(
-        createCellRoots(filesystem),
+        createCellRoots(filesystem).getCellNameResolver(),
         filesystem,
         pathRelativeToProjectRoot,
         UnconfiguredTargetConfiguration.INSTANCE,
@@ -99,7 +99,7 @@ public class PathTypeCoercerTest {
     expectedException.expectMessage("Path cannot point to above repository root");
 
     pathTypeCoercer.coerce(
-        createCellRoots(filesystem),
+        createCellRoots(filesystem).getCellNameResolver(),
         filesystem,
         ForwardRelativePath.of("foo"),
         UnconfiguredTargetConfiguration.INSTANCE,
@@ -112,7 +112,7 @@ public class PathTypeCoercerTest {
     String missingPath = "hello";
     new PathTypeCoercer()
         .coerce(
-            createCellRoots(filesystem),
+            createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             pathRelativeToProjectRoot,
             UnconfiguredTargetConfiguration.INSTANCE,

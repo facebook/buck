@@ -18,8 +18,8 @@ package com.facebook.buck.rules.coercer;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.test.rule.TestRunnerSpec;
@@ -45,14 +45,15 @@ public class TestRunnerSpecCoercerTest {
       new TestRunnerSpecCoercer(stringWithMacrosTypeCoercer);
 
   private final ProjectFilesystem filesystem = new FakeProjectFilesystem();
-  private final CellPathResolver cellPathResolver = TestCellPathResolver.get(filesystem);
+  private final CellNameResolver cellNameResolver =
+      TestCellPathResolver.get(filesystem).getCellNameResolver();
   private final ForwardRelativePath basePath = ForwardRelativePath.of("");
 
   @Test
   public void coerceMapWithMacros() throws CoerceFailedException {
     TestRunnerSpec spec =
         coercer.coerce(
-            cellPathResolver,
+            cellNameResolver,
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -72,7 +73,7 @@ public class TestRunnerSpecCoercerTest {
   public void coerceListWithMacros() throws CoerceFailedException {
     TestRunnerSpec spec =
         coercer.coerce(
-            cellPathResolver,
+            cellNameResolver,
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -94,7 +95,7 @@ public class TestRunnerSpecCoercerTest {
   public void coerceNestedWithMacros() throws CoerceFailedException {
     TestRunnerSpec spec =
         coercer.coerce(
-            cellPathResolver,
+            cellNameResolver,
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -120,7 +121,7 @@ public class TestRunnerSpecCoercerTest {
   public void coerceNumbers() throws CoerceFailedException {
     TestRunnerSpec spec =
         coercer.coerce(
-            cellPathResolver,
+            cellNameResolver,
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -141,7 +142,7 @@ public class TestRunnerSpecCoercerTest {
   public void coerceBooleans() throws CoerceFailedException {
     TestRunnerSpec spec =
         coercer.coerce(
-            cellPathResolver,
+            cellNameResolver,
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -163,7 +164,7 @@ public class TestRunnerSpecCoercerTest {
     expectedException.expect(CoerceFailedException.class);
 
     coercer.coerce(
-        cellPathResolver,
+        cellNameResolver,
         filesystem,
         basePath,
         UnconfiguredTargetConfiguration.INSTANCE,
@@ -176,7 +177,7 @@ public class TestRunnerSpecCoercerTest {
     expectedException.expect(CoerceFailedException.class);
 
     coercer.coerce(
-        cellPathResolver,
+        cellNameResolver,
         filesystem,
         basePath,
         UnconfiguredTargetConfiguration.INSTANCE,

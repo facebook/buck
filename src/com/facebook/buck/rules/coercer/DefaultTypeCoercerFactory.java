@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.DataTransferObject;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMapping;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
@@ -108,7 +108,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
         new IdentityTypeCoercer<BuildTargetMatcher>(BuildTargetMatcher.class) {
           @Override
           public BuildTargetMatcher coerce(
-              CellPathResolver cellRoots,
+              CellNameResolver cellNameResolver,
               ProjectFilesystem filesystem,
               ForwardRelativePath pathRelativeToProjectRoot,
               TargetConfiguration targetConfiguration,
@@ -120,7 +120,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
             // TODO(csarbora): make this work for all types of BuildTargetPatterns
             // probably differentiate them by inheritance
             return BuildTargetMatcherParser.forVisibilityArgument()
-                .parse((String) object, cellRoots.getCellNameResolver());
+                .parse((String) object, cellNameResolver);
           }
         };
     unconfiguredBuildTargetFactory = new ParsingUnconfiguredBuildTargetViewFactory();

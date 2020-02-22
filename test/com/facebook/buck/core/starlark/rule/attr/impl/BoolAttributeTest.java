@@ -18,8 +18,8 @@ package com.facebook.buck.core.starlark.rule.attr.impl;
 
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -31,7 +31,8 @@ import org.junit.rules.ExpectedException;
 public class BoolAttributeTest {
 
   private final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-  private final CellPathResolver cellRoots = TestCellPathResolver.get(filesystem);
+  private final CellNameResolver cellNameResolver =
+      TestCellPathResolver.get(filesystem).getCellNameResolver();
 
   @Rule public ExpectedException expected = ExpectedException.none();
 
@@ -41,7 +42,7 @@ public class BoolAttributeTest {
     BoolAttribute attr = ImmutableBoolAttribute.of(false, "", true);
     boolean coerced =
         attr.getValue(
-            cellRoots,
+            cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -58,7 +59,7 @@ public class BoolAttributeTest {
     BoolAttribute attr = ImmutableBoolAttribute.of(false, "", true);
 
     attr.getValue(
-        cellRoots,
+        cellNameResolver,
         filesystem,
         ForwardRelativePath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,

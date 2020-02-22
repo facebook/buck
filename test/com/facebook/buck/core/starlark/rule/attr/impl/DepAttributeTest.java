@@ -19,8 +19,8 @@ package com.facebook.buck.core.starlark.rule.attr.impl;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.artifact.Artifact;
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -53,7 +53,8 @@ import org.junit.rules.ExpectedException;
 public class DepAttributeTest {
 
   private final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-  private final CellPathResolver cellRoots = TestCellPathResolver.get(filesystem);
+  private final CellNameResolver cellRoots =
+      TestCellPathResolver.get(filesystem).getCellNameResolver();
   private final TestActionExecutionRunner runner =
       new TestActionExecutionRunner(
           new FakeProjectFilesystemFactory(),

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
@@ -73,7 +72,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
 
   @Override
   public <T extends ConstructorArg> T populate(
-      CellPathResolver cellPathResolver,
+      CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       SelectorListResolver selectorListResolver,
       TargetConfigurationTransformer targetConfigurationTransformer,
@@ -124,7 +123,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
             "coercer must support concatenation to do split configuration: " + info.getName());
         attributeValue =
             createAttributeWithConfigurationTransformation(
-                cellPathResolver,
+                cellNameResolver,
                 filesystem,
                 selectorListResolver,
                 targetConfigurationTransformer,
@@ -140,7 +139,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       } else {
         attributeValue =
             createAttribute(
-                cellPathResolver,
+                cellNameResolver,
                 filesystem,
                 selectorListResolver,
                 configurationContext,
@@ -158,15 +157,14 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       }
     }
     T dto = constructorArgDescriptor.build(builder, buildTarget);
-    collectDeclaredDeps(
-        cellPathResolver.getCellNameResolver(), allParamInfo.get("deps"), declaredDeps, dto);
+    collectDeclaredDeps(cellNameResolver, allParamInfo.get("deps"), declaredDeps, dto);
     return dto;
   }
 
   @SuppressWarnings("unchecked")
   @Nullable
   private Object createAttributeWithConfigurationTransformation(
-      CellPathResolver cellPathResolver,
+      CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       SelectorListResolver selectorListResolver,
       TargetConfigurationTransformer targetConfigurationTransformer,
@@ -185,7 +183,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
         targetConfigurationTransformer.transform(targetConfiguration, dependencyStack)) {
       Object configuredAttributeValue =
           createAttribute(
-              cellPathResolver,
+              cellNameResolver,
               filesystem,
               selectorListResolver,
               configurationContext.withTargetConfiguration(nestedTargetConfiguration),
@@ -207,7 +205,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
 
   @Nullable
   private Object createAttribute(
-      CellPathResolver cellPathResolver,
+      CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       SelectorListResolver selectorListResolver,
       SelectableConfigurationContext configurationContext,
@@ -242,7 +240,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
               typeCoercerFactory.typeCoercerForType(info.getTypeCoercer().getOutputType()));
       SelectorList<?> attributeWithSelectableValue =
           coercer.coerce(
-              cellPathResolver,
+              cellNameResolver,
               filesystem,
               buildTarget.getCellRelativeBasePath().getPath(),
               targetConfiguration,
@@ -259,7 +257,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
     } else {
       return info.getTypeCoercer()
           .coerce(
-              cellPathResolver,
+              cellNameResolver,
               filesystem,
               buildTarget.getCellRelativeBasePath().getPath(),
               targetConfiguration,

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -47,7 +46,7 @@ public abstract class CollectionTypeCoercer<C extends ImmutableCollection<T>, T>
 
   /** Helper method to add coerced elements to the builder. */
   protected void fill(
-      CellPathResolver cellRoots,
+      CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
@@ -58,7 +57,7 @@ public abstract class CollectionTypeCoercer<C extends ImmutableCollection<T>, T>
     if (object instanceof Collection) {
       Iterable<?> iterable = (Iterable<?>) object;
       fill(
-          cellRoots,
+          cellNameResolver,
           filesystem,
           pathRelativeToProjectRoot,
           targetConfiguration,
@@ -72,7 +71,7 @@ public abstract class CollectionTypeCoercer<C extends ImmutableCollection<T>, T>
 
   /** Populates collection builder with coerced elements from {@code iterable}. */
   private void fill(
-      CellPathResolver cellRoots,
+      CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
@@ -84,7 +83,7 @@ public abstract class CollectionTypeCoercer<C extends ImmutableCollection<T>, T>
       // if any element failed, the entire collection fails
       T coercedElement =
           elementTypeCoercer.coerce(
-              cellRoots,
+              cellNameResolver,
               filesystem,
               pathRelativeToProjectRoot,
               targetConfiguration,

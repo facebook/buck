@@ -216,7 +216,7 @@ public class SkylarkParamInfoTest {
     SkylarkParamInfo<?> info = new SkylarkParamInfo<>("baz", rule.getAttrs().get("baz"));
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     info.set(
-        TestCellPathResolver.get(filesystem),
+        TestCellPathResolver.get(filesystem).getCellNameResolver(),
         filesystem,
         ForwardRelativePath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
@@ -240,7 +240,7 @@ public class SkylarkParamInfoTest {
     expected.expectMessage("parameter 'baz': cannot coerce '7' to class java.lang.String");
 
     info.set(
-        TestCellPathResolver.get(filesystem),
+        TestCellPathResolver.get(filesystem).getCellNameResolver(),
         filesystem,
         ForwardRelativePath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
@@ -258,7 +258,7 @@ public class SkylarkParamInfoTest {
     SkylarkParamInfo<?> info = new SkylarkParamInfo<>("baz", rule.getAttrs().get("baz"));
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     info.setFromParams(
-        TestCellPathResolver.get(filesystem),
+        TestCellPathResolver.get(filesystem).getCellNameResolver(),
         filesystem,
         BuildTargetFactory.newInstance("//foo:bar"),
         UnconfiguredTargetConfiguration.INSTANCE,

@@ -41,7 +41,7 @@ public class UriTypeCoercerTest {
     URI uri =
         new UriTypeCoercer()
             .coerce(
-                cellRoots,
+                cellRoots.getCellNameResolver(),
                 filesystem,
                 pathFromRoot,
                 UnconfiguredTargetConfiguration.INSTANCE,
@@ -57,7 +57,7 @@ public class UriTypeCoercerTest {
     URI uri =
         new UriTypeCoercer()
             .coerce(
-                cellRoots,
+                cellRoots.getCellNameResolver(),
                 filesystem,
                 pathFromRoot,
                 UnconfiguredTargetConfiguration.INSTANCE,
@@ -73,7 +73,7 @@ public class UriTypeCoercerTest {
     URI uri =
         new UriTypeCoercer()
             .coerce(
-                cellRoots,
+                cellRoots.getCellNameResolver(),
                 filesystem,
                 pathFromRoot,
                 UnconfiguredTargetConfiguration.INSTANCE,
@@ -87,7 +87,7 @@ public class UriTypeCoercerTest {
   public void shouldThrowAMeaningfulExceptionIfURICannotBeCoerced() throws CoerceFailedException {
     new UriTypeCoercer()
         .coerce(
-            cellRoots,
+            cellRoots.getCellNameResolver(),
             filesystem,
             pathFromRoot,
             UnconfiguredTargetConfiguration.INSTANCE,

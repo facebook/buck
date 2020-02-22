@@ -18,8 +18,8 @@ package com.facebook.buck.core.starlark.rule;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
@@ -120,9 +120,10 @@ public class SkylarkDescriptionArgTest {
     DefaultConstructorArgMarshaller marshaller =
         new DefaultConstructorArgMarshaller(new DefaultTypeCoercerFactory());
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    CellPathResolver cellPathResolver =
+    CellNameResolver cellNameResolver =
         DefaultCellPathResolver.create(
-            filesystem.getRootPath(), FakeBuckConfig.builder().build().getConfig());
+                filesystem.getRootPath(), FakeBuckConfig.builder().build().getConfig())
+            .getCellNameResolver();
     SelectorListResolver selectorListResolver =
         new DefaultSelectorListResolver(new TestSelectableResolver());
     TargetConfigurationTransformer targetConfigurationTransformer =
@@ -156,7 +157,7 @@ public class SkylarkDescriptionArgTest {
 
     SkylarkDescriptionArg populated1 =
         marshaller.populate(
-            cellPathResolver,
+            cellNameResolver,
             filesystem,
             selectorListResolver,
             targetConfigurationTransformer,
@@ -171,7 +172,7 @@ public class SkylarkDescriptionArgTest {
 
     SkylarkDescriptionArg populated2 =
         marshaller.populate(
-            cellPathResolver,
+            cellNameResolver,
             filesystem,
             selectorListResolver,
             targetConfigurationTransformer,
