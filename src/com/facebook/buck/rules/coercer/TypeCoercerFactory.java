@@ -24,18 +24,6 @@ public interface TypeCoercerFactory {
   TypeCoercer<Object, ?> typeCoercerForType(Type type);
 
   /**
-   * Returns {@link TypeCoercer} for a {@link java.lang.reflect.ParameterizedType} that have the
-   * given raw type and type arguments.
-   *
-   * @param typeName name of the {@link java.lang.reflect.ParameterizedType}. Used for reporting
-   *     only.
-   * @param rawType raw type of the {@link java.lang.reflect.ParameterizedType}
-   * @param actualTypeArguments type arguments of {@link java.lang.reflect.ParameterizedType}
-   */
-  TypeCoercer<Object, ?> typeCoercerForParameterizedType(
-      String typeName, Type rawType, Type[] actualTypeArguments);
-
-  /**
    * Returns an unpopulated DTO object, and the build method which must be called with it when it is
    * finished being populated.
    */

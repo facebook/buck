@@ -381,8 +381,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
     }
   }
 
-  @Override
-  public TypeCoercer<Object, ?> typeCoercerForParameterizedType(
+  private TypeCoercer<Object, ?> typeCoercerForParameterizedType(
       String typeName, Type rawType, Type[] actualTypeArguments) {
     if (!(rawType instanceof Class<?>)) {
       throw new RuntimeException("expected raw type to be a class for type: " + typeName);
