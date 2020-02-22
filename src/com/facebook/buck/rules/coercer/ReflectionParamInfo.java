@@ -36,7 +36,7 @@ import javax.annotation.Nullable;
  * Represents a single field that can be represented in buck build files, backed by an Immutable
  * DescriptionArg class
  */
-public class ReflectionParamInfo extends AbstractParamInfo {
+public class ReflectionParamInfo<T> extends AbstractParamInfo<T> {
 
   private final Method setter;
   /**
@@ -54,7 +54,7 @@ public class ReflectionParamInfo extends AbstractParamInfo {
   @SuppressWarnings("PMD.EmptyCatchBlock")
   private ReflectionParamInfo(
       String name,
-      TypeCoercer<?> typeCoercer,
+      TypeCoercer<T> typeCoercer,
       Method setter,
       Method closestGetterOnAbstractClassOrInterface,
       Method concreteGetter,
@@ -91,7 +91,7 @@ public class ReflectionParamInfo extends AbstractParamInfo {
       new MapMaker().weakValues().makeMap();
 
   /** Create an instance of {@link ReflectionParamInfo} */
-  public static ReflectionParamInfo of(TypeCoercerFactory typeCoercerFactory, Method setter) {
+  public static ReflectionParamInfo<?> of(TypeCoercerFactory typeCoercerFactory, Method setter) {
     StaticInfo staticInfo =
         staticInfoCache.computeIfAbsent(setter, ReflectionParamInfo::computeSetterInfo);
 
@@ -99,7 +99,7 @@ public class ReflectionParamInfo extends AbstractParamInfo {
       TypeCoercer<?> typeCoercer =
           typeCoercerFactory.typeCoercerForType(staticInfo.setterParameterType);
 
-      return new ReflectionParamInfo(
+      return new ReflectionParamInfo<>(
           staticInfo.name,
           typeCoercer,
           setter,
@@ -206,10 +206,11 @@ public class ReflectionParamInfo extends AbstractParamInfo {
   }
 
   @Override
-  public Object get(Object dto) {
+  @SuppressWarnings("unchecked")
+  public T get(Object dto) {
     Method getter = this.concreteGetter;
     try {
-      return getter.invoke(dto);
+      return (T) getter.invoke(dto);
     } catch (InvocationTargetException | IllegalAccessException e) {
       throw new IllegalStateException(
           String.format(

@@ -30,16 +30,14 @@ import java.util.Map;
 public class ImmutableTypeCoercer<T extends DataTransferObject> implements TypeCoercer<T> {
 
   private final DataTransferObjectDescriptor<T> constructorArgDescriptor;
-  private final ImmutableMap<String, ParamInfo> paramInfos;
+  private final ImmutableMap<String, ParamInfo<?>> paramInfos;
 
   ImmutableTypeCoercer(DataTransferObjectDescriptor<T> constructorArgDescriptor) {
     this.constructorArgDescriptor = constructorArgDescriptor;
     // Translate keys from lowerCamel to lower_hyphen
     this.paramInfos =
         constructorArgDescriptor.getParamInfos().values().stream()
-            .collect(
-                ImmutableMap.toImmutableMap(
-                    paramInfo -> paramInfo.getPythonName(), paramInfo -> paramInfo));
+            .collect(ImmutableMap.toImmutableMap(ParamInfo::getPythonName, paramInfo -> paramInfo));
   }
 
   @Override
@@ -55,7 +53,7 @@ public class ImmutableTypeCoercer<T extends DataTransferObject> implements TypeC
   @Override
   public void traverse(CellNameResolver cellRoots, T object, Traversal traversal) {
     traversal.traverse(object);
-    for (ParamInfo paramInfo : paramInfos.values()) {
+    for (ParamInfo<?> paramInfo : paramInfos.values()) {
       @SuppressWarnings("unchecked")
       TypeCoercer<Object> paramTypeCoercer = (TypeCoercer<Object>) paramInfo.getTypeCoercer();
       Object fieldValue = paramInfo.get(object);
@@ -83,7 +81,7 @@ public class ImmutableTypeCoercer<T extends DataTransferObject> implements TypeC
       if (!(key instanceof String)) {
         throw CoerceFailedException.simple(object, getOutputType(), "keys should be strings");
       }
-      ParamInfo paramInfo = paramInfos.get(key);
+      ParamInfo<?> paramInfo = paramInfos.get(key);
       if (paramInfo == null) {
         throw CoerceFailedException.simple(
             object, getOutputType(), "parameter '" + key + "' not found on " + paramInfos.keySet());

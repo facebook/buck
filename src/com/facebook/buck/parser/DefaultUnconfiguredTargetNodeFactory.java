@@ -88,7 +88,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
           || attr.getKey().equals(VisibilityAttributes.WITHIN_VIEW)) {
         continue;
       }
-      ParamInfo paramInfo = constructorDescriptor.getParamInfos().get(attr.getKey());
+      ParamInfo<?> paramInfo = constructorDescriptor.getParamInfos().get(attr.getKey());
       Preconditions.checkNotNull(paramInfo, "attr %s", attr.getKey());
       result.put(
           attr.getKey(),
@@ -108,7 +108,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
    */
   private Object convertSelectorListInAttrValue(
       UnconfiguredBuildTarget buildTarget,
-      ParamInfo paramInfo,
+      ParamInfo<?> paramInfo,
       String attrName,
       Object attrValue,
       CellRelativePath pathRelativeToProjectRoot,

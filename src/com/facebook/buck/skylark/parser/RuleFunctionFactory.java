@@ -86,7 +86,7 @@ public class RuleFunctionFactory {
                         .getPackageFragment()
                         .getPathString())
                 .put("buck.type", name);
-        ImmutableMap<String, ParamInfo> allParamInfo =
+        ImmutableMap<String, ParamInfo<?>> allParamInfo =
             typeCoercerFactory
                 .getConstructorArgDescriptor(
                     (Class<? extends ConstructorArg>) ruleClass.getConstructorArgType())
@@ -110,11 +110,11 @@ public class RuleFunctionFactory {
    */
   private void throwOnMissingRequiredAttribute(
       Map<String, Object> kwargs,
-      ImmutableMap<String, ParamInfo> allParamInfo,
+      ImmutableMap<String, ParamInfo<?>> allParamInfo,
       String name,
       FuncallExpression ast)
       throws EvalException {
-    ImmutableList<ParamInfo> missingAttributes =
+    ImmutableList<ParamInfo<?>> missingAttributes =
         allParamInfo.values().stream()
             .filter(param -> !param.isOptional() && !kwargs.containsKey(param.getPythonName()))
             .collect(ImmutableList.toImmutableList());
@@ -142,7 +142,7 @@ public class RuleFunctionFactory {
   private void populateAttributes(
       Map<String, Object> kwargs,
       ImmutableMap.Builder<String, Object> builder,
-      ImmutableMap<String, ParamInfo> allParamInfo) {
+      ImmutableMap<String, ParamInfo<?>> allParamInfo) {
     for (Map.Entry<String, Object> kwargEntry : kwargs.entrySet()) {
       String paramName =
           CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, kwargEntry.getKey());

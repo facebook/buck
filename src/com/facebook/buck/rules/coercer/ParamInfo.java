@@ -28,13 +28,13 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 /** Represents a single field that can be represented in buck build files. */
-public interface ParamInfo {
+public interface ParamInfo<T> {
 
   /** @return the user-facing name of this parameter */
   String getName();
 
   /** @return the {@link TypeCoercer} that converts raw values to the correct type for this param */
-  TypeCoercer<?> getTypeCoercer();
+  TypeCoercer<T> getTypeCoercer();
 
   /** @return Whether the coerced type is Optional or not */
   boolean isOptional();
@@ -95,7 +95,7 @@ public interface ParamInfo {
   Object getImplicitPreCoercionValue();
 
   /** @return the value of this param as set on dto. */
-  Object get(Object dto);
+  T get(Object dto);
 
   void setFromParams(
       CellPathResolver cellRoots,

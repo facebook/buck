@@ -498,7 +498,7 @@ public class SkylarkUserDefinedRuleTest {
             false,
             false);
 
-    ImmutableMap<String, ParamInfo> paramInfos = rule.getAllParamInfo();
+    ImmutableMap<String, ParamInfo<?>> paramInfos = rule.getAllParamInfo();
 
     assertEquals(ImmutableSet.of("name", "arg1"), paramInfos.keySet());
 

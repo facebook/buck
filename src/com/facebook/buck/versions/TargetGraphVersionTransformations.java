@@ -49,7 +49,7 @@ class TargetGraphVersionTransformations {
   public static ImmutableMap<BuildTarget, Optional<Constraint>> getVersionedDeps(
       TypeCoercerFactory typeCoercerFactory, TargetNode<?> node) {
     ConstructorArg constructorArg = node.getConstructorArg();
-    ParamInfo versionedDepsParam =
+    ParamInfo<?> versionedDepsParam =
         typeCoercerFactory
             .getConstructorArgDescriptor(constructorArg.getClass())
             .getParamInfos()

@@ -32,13 +32,13 @@ import javax.annotation.Nullable;
  * Represents a single field that can be represented in buck build files. This base class implements
  * some common logic that is used by both all subclasses
  */
-public abstract class AbstractParamInfo implements ParamInfo {
+public abstract class AbstractParamInfo<T> implements ParamInfo<T> {
 
   private final String name;
-  private final TypeCoercer<?> typeCoercer;
+  private final TypeCoercer<T> typeCoercer;
 
   /** Create an instance of {@link AbstractParamInfo} */
-  public AbstractParamInfo(String name, TypeCoercer<?> typeCoercer) {
+  public AbstractParamInfo(String name, TypeCoercer<T> typeCoercer) {
     this.name = name;
     this.typeCoercer = typeCoercer;
   }
@@ -49,7 +49,7 @@ public abstract class AbstractParamInfo implements ParamInfo {
   }
 
   @Override
-  public TypeCoercer<?> getTypeCoercer() {
+  public TypeCoercer<T> getTypeCoercer() {
     return typeCoercer;
   }
 
@@ -123,13 +123,12 @@ public abstract class AbstractParamInfo implements ParamInfo {
     traverseHelper(cellNameResolver, typeCoercer, traversal, dto);
   }
 
-  @SuppressWarnings("unchecked")
-  private <U> void traverseHelper(
+  private void traverseHelper(
       CellNameResolver cellPathResolver,
-      TypeCoercer<U> typeCoercer,
+      TypeCoercer<T> typeCoercer,
       Traversal traversal,
       Object dto) {
-    U object = (U) get(dto);
+    T object = get(dto);
     if (object != null) {
       typeCoercer.traverse(cellPathResolver, object, traversal);
     }

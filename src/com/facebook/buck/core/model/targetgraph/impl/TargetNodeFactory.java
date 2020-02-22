@@ -156,7 +156,7 @@ public class TargetNodeFactory implements NodeCopier {
         ImmutableSortedSet.naturalOrder();
     ImmutableSet.Builder<ForwardRelativePath> pathsBuilder = ImmutableSet.builder();
 
-    ImmutableMap<String, ParamInfo> paramInfos;
+    ImmutableMap<String, ParamInfo<?>> paramInfos;
     if (constructorArg instanceof SkylarkDescriptionArg) {
       paramInfos = ((SkylarkDescriptionArg) constructorArg).getAllParamInfo();
     } else {
@@ -170,7 +170,7 @@ public class TargetNodeFactory implements NodeCopier {
     CellNameResolver cellNameResolver = cellNames.cellNameResolverForCell(buildTarget.getCell());
 
     // Scan the input to find possible BuildTargetPaths, necessary for loading dependent rules.
-    for (ParamInfo info : paramInfos.values()) {
+    for (ParamInfo<?> info : paramInfos.values()) {
       if (info.isDep()
           && info.isInput()
           && info.hasElementTypes(BuildTarget.class, SourcePath.class, Path.class)
@@ -241,7 +241,7 @@ public class TargetNodeFactory implements NodeCopier {
       CellNameResolver cellRoots,
       ImmutableSet.Builder<BuildTarget> depsBuilder,
       ImmutableSet.Builder<ForwardRelativePath> pathsBuilder,
-      ParamInfo info,
+      ParamInfo<?> info,
       ConstructorArg constructorArg)
       throws NoSuchBuildTargetException {
     // We'll make no test for optionality here. Let's assume it's done elsewhere.

@@ -28,9 +28,9 @@ import javax.annotation.Nullable;
  * This is used to get/set user specified attributes on {@link
  * com.facebook.buck.core.starlark.rule.SkylarkDescriptionArg}
  */
-public class SkylarkParamInfo extends AbstractParamInfo {
+public class SkylarkParamInfo<T> extends AbstractParamInfo<T> {
 
-  private final Attribute<?> attr;
+  private final Attribute<T> attr;
 
   /**
    * Create an instance of {@link SkylarkParamInfo}
@@ -38,7 +38,7 @@ public class SkylarkParamInfo extends AbstractParamInfo {
    * @param name the user facing name of this attribute
    * @param attr the attribute used to get coercion information, constraints, etc for this param
    */
-  public SkylarkParamInfo(String name, Attribute<?> attr) {
+  public SkylarkParamInfo(String name, Attribute<T> attr) {
     super(name, attr.getTypeCoercer());
     this.attr = attr;
   }
@@ -65,9 +65,10 @@ public class SkylarkParamInfo extends AbstractParamInfo {
   }
 
   @Override
-  public Object get(Object dto) {
+  @SuppressWarnings("unchecked")
+  public T get(Object dto) {
     Preconditions.checkArgument(dto instanceof SkylarkDescriptionArgBuilder);
-    return ((SkylarkDescriptionArgBuilder) dto).getPostCoercionValue(getName());
+    return (T) ((SkylarkDescriptionArgBuilder) dto).getPostCoercionValue(getName());
   }
 
   @Override

@@ -79,7 +79,7 @@ public class BuckPyFunction {
   public String toPythonFunction(RuleType type, Class<? extends DataTransferObject> dtoClass) {
     ImmutableList.Builder<StParamInfo> mandatory = ImmutableList.builder();
     ImmutableList.Builder<StParamInfo> optional = ImmutableList.builder();
-    for (ParamInfo param :
+    for (ParamInfo<?> param :
         typeCoercerFactory.getConstructorArgDescriptor(dtoClass).getParamInfos().values().stream()
             .sorted(Comparator.comparing(ParamInfo::getName))
             .collect(ImmutableList.toImmutableList())) {
@@ -166,7 +166,7 @@ public class BuckPyFunction {
     }
   }
 
-  private boolean isSkippable(ParamInfo param) {
+  private boolean isSkippable(ParamInfo<?> param) {
     if ("name".equals(param.getName())) {
       if (!String.class.equals(param.getResultClass())) {
         throw new HumanReadableException("'name' parameter must be a java.lang.String");
@@ -193,7 +193,7 @@ public class BuckPyFunction {
     public final String pythonName;
     public final boolean optional;
 
-    public StParamInfo(ParamInfo info) {
+    public StParamInfo(ParamInfo<?> info) {
       this.name = info.getName();
       this.pythonName = info.getPythonName();
       this.optional = info.isOptional();

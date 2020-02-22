@@ -65,7 +65,7 @@ public class AuditRuleTypeCommand extends AbstractCommand {
   static void printPythonFunction(
       Console console, BaseDescription<?> description, TypeCoercerFactory typeCoercerFactory) {
     PrintStream printStream = console.getStdOut();
-    ImmutableMap<String, ParamInfo> allParamInfo =
+    ImmutableMap<String, ParamInfo<?>> allParamInfo =
         typeCoercerFactory
             .getConstructorArgDescriptor(
                 (Class<? extends ConstructorArg>) description.getConstructorArgType())
@@ -84,7 +84,7 @@ public class AuditRuleTypeCommand extends AbstractCommand {
     printStream.println(INDENT + "...");
   }
 
-  private static Consumer<ParamInfo> formatPythonFunction(PrintStream printStream) {
+  private static Consumer<ParamInfo<?>> formatPythonFunction(PrintStream printStream) {
     return param ->
         printStream.println(
             INDENT + param.getPythonName() + (param.isOptional() ? " = None" : "") + ",");

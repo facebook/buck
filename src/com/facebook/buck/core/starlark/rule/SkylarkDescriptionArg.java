@@ -135,7 +135,7 @@ public class SkylarkDescriptionArg implements SkylarkDescriptionArgBuilder, Buil
     return Preconditions.checkNotNull(defaultTargetPlatform);
   }
 
-  public ImmutableMap<String, ParamInfo> getAllParamInfo() {
+  public ImmutableMap<String, ParamInfo<?>> getAllParamInfo() {
     return rule.getAllParamInfo();
   }
 

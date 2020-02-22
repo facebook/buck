@@ -55,7 +55,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
 
   private void collectDeclaredDeps(
       CellNameResolver cellNameResolver,
-      @Nullable ParamInfo deps,
+      @Nullable ParamInfo<?> deps,
       ImmutableSet.Builder<BuildTarget> declaredDeps,
       Object dto) {
     if (deps != null && deps.isDep()) {
@@ -87,13 +87,13 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       Map<String, ?> attributes)
       throws CoerceFailedException {
 
-    ImmutableMap<String, ParamInfo> allParamInfo = constructorArgDescriptor.getParamInfos();
+    ImmutableMap<String, ParamInfo<?>> allParamInfo = constructorArgDescriptor.getParamInfos();
 
     boolean isConfigurationRule =
         ConfigurationRuleArg.class.isAssignableFrom(constructorArgDescriptor.objectClass());
 
     Object builder = constructorArgDescriptor.getBuilderFactory().get();
-    for (ParamInfo info : allParamInfo.values()) {
+    for (ParamInfo<?> info : allParamInfo.values()) {
       Object attribute = attributes.get(info.getName());
       if (attribute == null) {
         /**
@@ -176,7 +176,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       DependencyStack dependencyStack,
       TargetConfiguration targetConfiguration,
       ImmutableSet.Builder<BuildTarget> configurationDeps,
-      ParamInfo info,
+      ParamInfo<?> info,
       boolean isConfigurationRule,
       Object attribute)
       throws CoerceFailedException {
@@ -216,7 +216,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       TargetConfiguration targetConfiguration,
       TargetConfiguration hostConfiguration,
       ImmutableSet.Builder<BuildTarget> configurationDeps,
-      ParamInfo info,
+      ParamInfo<?> info,
       boolean isConfigurationRule,
       Object attribute)
       throws CoerceFailedException {
@@ -277,7 +277,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       BuildTarget buildTarget,
       DependencyStack dependencyStack,
       ImmutableSet.Builder<BuildTarget> configurationDeps,
-      ParamInfo paramInfo,
+      ParamInfo<?> paramInfo,
       SelectorList<T> selectorList) {
     T value =
         selectorListResolver.resolveList(
