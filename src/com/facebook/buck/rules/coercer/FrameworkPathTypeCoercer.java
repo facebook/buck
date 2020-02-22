@@ -34,11 +34,12 @@ import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Optional;
 
-public class FrameworkPathTypeCoercer implements TypeCoercer<FrameworkPath> {
+/** Coerce to {@link com.facebook.buck.rules.coercer.FrameworkPath}. */
+public class FrameworkPathTypeCoercer implements TypeCoercer<Object, FrameworkPath> {
 
-  private final TypeCoercer<SourcePath> sourcePathTypeCoercer;
+  private final TypeCoercer<Object, SourcePath> sourcePathTypeCoercer;
 
-  public FrameworkPathTypeCoercer(TypeCoercer<SourcePath> sourcePathTypeCoercer) {
+  public FrameworkPathTypeCoercer(TypeCoercer<Object, SourcePath> sourcePathTypeCoercer) {
     this.sourcePathTypeCoercer = sourcePathTypeCoercer;
   }
 

@@ -29,15 +29,15 @@ import java.util.Optional;
 import javax.annotation.Nonnull;
 
 /** A type coercer to handle needed coverage specification for python_test. */
-public class NeededCoverageSpecTypeCoercer implements TypeCoercer<NeededCoverageSpec> {
-  private final TypeCoercer<Integer> intTypeCoercer;
-  private final TypeCoercer<BuildTarget> buildTargetTypeCoercer;
-  private final TypeCoercer<String> pathNameTypeCoercer;
+public class NeededCoverageSpecTypeCoercer implements TypeCoercer<Object, NeededCoverageSpec> {
+  private final TypeCoercer<Object, Integer> intTypeCoercer;
+  private final TypeCoercer<Object, BuildTarget> buildTargetTypeCoercer;
+  private final TypeCoercer<Object, String> pathNameTypeCoercer;
 
   NeededCoverageSpecTypeCoercer(
-      TypeCoercer<Integer> intTypeCoercer,
-      TypeCoercer<BuildTarget> buildTargetTypeCoercer,
-      TypeCoercer<String> pathNameTypeCoercer) {
+      TypeCoercer<Object, Integer> intTypeCoercer,
+      TypeCoercer<Object, BuildTarget> buildTargetTypeCoercer,
+      TypeCoercer<Object, String> pathNameTypeCoercer) {
     this.intTypeCoercer = intTypeCoercer;
     this.buildTargetTypeCoercer = buildTargetTypeCoercer;
     this.pathNameTypeCoercer = pathNameTypeCoercer;

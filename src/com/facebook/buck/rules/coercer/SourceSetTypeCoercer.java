@@ -27,12 +27,15 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.TypeToken;
 import java.util.List;
 
-public class SourceSetTypeCoercer extends SourceSetConcatable implements TypeCoercer<SourceSet> {
-  private final TypeCoercer<ImmutableSet<SourcePath>> unnamedHeadersTypeCoercer;
-  private final TypeCoercer<ImmutableMap<String, SourcePath>> namedHeadersTypeCoercer;
+/** Coerce to {@link com.facebook.buck.rules.coercer.SourceSet}. */
+public class SourceSetTypeCoercer extends SourceSetConcatable
+    implements TypeCoercer<Object, SourceSet> {
+  private final TypeCoercer<Object, ImmutableSet<SourcePath>> unnamedHeadersTypeCoercer;
+  private final TypeCoercer<Object, ImmutableMap<String, SourcePath>> namedHeadersTypeCoercer;
 
   SourceSetTypeCoercer(
-      TypeCoercer<String> stringTypeCoercer, TypeCoercer<SourcePath> sourcePathTypeCoercer) {
+      TypeCoercer<Object, String> stringTypeCoercer,
+      TypeCoercer<Object, SourcePath> sourcePathTypeCoercer) {
     this.unnamedHeadersTypeCoercer = new SetTypeCoercer<>(sourcePathTypeCoercer);
     this.namedHeadersTypeCoercer = new MapTypeCoercer<>(stringTypeCoercer, sourcePathTypeCoercer);
   }

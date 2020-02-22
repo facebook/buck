@@ -34,7 +34,7 @@ public interface ParamInfo<T> {
   String getName();
 
   /** @return the {@link TypeCoercer} that converts raw values to the correct type for this param */
-  TypeCoercer<T> getTypeCoercer();
+  TypeCoercer<Object, T> getTypeCoercer();
 
   /** @return Whether the coerced type is Optional or not */
   boolean isOptional();

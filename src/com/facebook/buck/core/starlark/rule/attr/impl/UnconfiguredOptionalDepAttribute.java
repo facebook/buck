@@ -40,7 +40,7 @@ import java.util.Optional;
 public abstract class UnconfiguredOptionalDepAttribute
     extends Attribute<Optional<UnconfiguredBuildTarget>> {
 
-  private static final TypeCoercer<Optional<UnconfiguredBuildTarget>> coercer =
+  private static final TypeCoercer<Object, Optional<UnconfiguredBuildTarget>> coercer =
       new OptionalTypeCoercer<>(
           new UnconfiguredBuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetViewFactory()));
 
@@ -62,7 +62,7 @@ public abstract class UnconfiguredOptionalDepAttribute
   }
 
   @Override
-  public TypeCoercer<Optional<UnconfiguredBuildTarget>> getTypeCoercer() {
+  public TypeCoercer<Object, Optional<UnconfiguredBuildTarget>> getTypeCoercer() {
     return coercer;
   }
 

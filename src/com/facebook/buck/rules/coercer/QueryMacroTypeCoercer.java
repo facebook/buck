@@ -30,12 +30,12 @@ import java.util.function.Function;
 /** A type coercer for macros accepting a single {@link Query} arg. */
 class QueryMacroTypeCoercer<M extends QueryMacro> implements MacroTypeCoercer<M> {
 
-  private final TypeCoercer<Query> queryCoercer;
+  private final TypeCoercer<Object, Query> queryCoercer;
   private final Class<M> mClass;
   private final Function<Query, M> factory;
 
   public QueryMacroTypeCoercer(
-      TypeCoercer<Query> queryCoercer, Class<M> mClass, Function<Query, M> factory) {
+      TypeCoercer<Object, Query> queryCoercer, Class<M> mClass, Function<Query, M> factory) {
     this.queryCoercer = queryCoercer;
     this.mClass = mClass;
     this.factory = factory;

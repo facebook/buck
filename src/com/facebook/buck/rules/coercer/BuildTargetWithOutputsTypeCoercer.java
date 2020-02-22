@@ -28,7 +28,8 @@ import com.google.common.reflect.TypeToken;
 public class BuildTargetWithOutputsTypeCoercer
     extends TargetWithOutputsTypeCoercer<BuildTarget, BuildTargetWithOutputs> {
 
-  public BuildTargetWithOutputsTypeCoercer(TypeCoercer<BuildTarget> buildtargetTypeCoercer) {
+  public BuildTargetWithOutputsTypeCoercer(
+      TypeCoercer<Object, BuildTarget> buildtargetTypeCoercer) {
     super(buildtargetTypeCoercer);
   }
 

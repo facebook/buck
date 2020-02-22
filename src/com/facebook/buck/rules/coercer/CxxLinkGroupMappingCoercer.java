@@ -34,15 +34,15 @@ import java.util.Collection;
  * <p>This {@link TypeCoercer} is used to convert a single link group mapping entry (i.e., single
  * element in the list of <code>link_group_map</code> to a {@link CxxLinkGroupMapping}.
  */
-public class CxxLinkGroupMappingCoercer implements TypeCoercer<CxxLinkGroupMapping> {
-  private final TypeCoercer<String> linkGroupTypeCoercer;
-  private final TypeCoercer<ImmutableList<CxxLinkGroupMappingTarget>> mappingTargetsCoercer;
-  private final TypeCoercer<Pair<String, ImmutableList<CxxLinkGroupMappingTarget>>>
+public class CxxLinkGroupMappingCoercer implements TypeCoercer<Object, CxxLinkGroupMapping> {
+  private final TypeCoercer<Object, String> linkGroupTypeCoercer;
+  private final TypeCoercer<Object, ImmutableList<CxxLinkGroupMappingTarget>> mappingTargetsCoercer;
+  private final TypeCoercer<Object, Pair<String, ImmutableList<CxxLinkGroupMappingTarget>>>
       buildTargetWithTraversalTypeCoercer;
 
   public CxxLinkGroupMappingCoercer(
-      TypeCoercer<String> linkGroupTypeCoercer,
-      TypeCoercer<ImmutableList<CxxLinkGroupMappingTarget>> mappingTargetCoercer) {
+      TypeCoercer<Object, String> linkGroupTypeCoercer,
+      TypeCoercer<Object, ImmutableList<CxxLinkGroupMappingTarget>> mappingTargetCoercer) {
     this.linkGroupTypeCoercer = linkGroupTypeCoercer;
     this.mappingTargetsCoercer = mappingTargetCoercer;
     this.buildTargetWithTraversalTypeCoercer =

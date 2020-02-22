@@ -36,7 +36,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 /** Coercer for {@link Query}s. */
-public class QueryCoercer implements TypeCoercer<Query> {
+public class QueryCoercer implements TypeCoercer<Object, Query> {
 
   private final TypeCoercerFactory typeCoercerFactory;
   private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;

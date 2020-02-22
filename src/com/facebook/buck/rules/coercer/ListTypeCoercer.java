@@ -32,7 +32,7 @@ public class ListTypeCoercer<T> extends CollectionTypeCoercer<ImmutableList<T>, 
   private final ImmutableListConcatable<T> concatable = new ImmutableListConcatable<>();
   private final TypeToken<ImmutableList<T>> typeToken;
 
-  public ListTypeCoercer(TypeCoercer<T> elementTypeCoercer) {
+  public ListTypeCoercer(TypeCoercer<Object, T> elementTypeCoercer) {
     super(elementTypeCoercer);
     this.typeToken =
         new TypeToken<ImmutableList<T>>() {}.where(

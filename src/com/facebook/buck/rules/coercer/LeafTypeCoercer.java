@@ -19,7 +19,7 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 
 /** Superclass of coercers for non-collection/map types. */
-public abstract class LeafTypeCoercer<T> implements TypeCoercer<T> {
+public abstract class LeafTypeCoercer<T> implements TypeCoercer<Object, T> {
 
   @Override
   public boolean hasElementClass(Class<?>... types) {

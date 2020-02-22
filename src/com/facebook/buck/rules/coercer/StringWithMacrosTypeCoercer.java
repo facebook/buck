@@ -40,7 +40,8 @@ import java.util.Objects;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
-public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros> {
+/** Coerce to {@link com.facebook.buck.rules.macros.StringWithMacros}. */
+public class StringWithMacrosTypeCoercer implements TypeCoercer<Object, StringWithMacros> {
 
   private final ImmutableMap<String, Class<? extends Macro>> macros;
   private final ImmutableMap<Class<? extends Macro>, MacroTypeCoercer<? extends Macro>> coercers;

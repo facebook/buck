@@ -29,14 +29,15 @@ import com.google.common.reflect.TypeToken;
 import java.util.Collection;
 
 /** A type coercer to handle source entries with a list of flags. */
-public class SourceWithFlagsTypeCoercer implements TypeCoercer<SourceWithFlags> {
-  private final TypeCoercer<SourcePath> sourcePathTypeCoercer;
-  private final TypeCoercer<ImmutableList<String>> flagsTypeCoercer;
-  private final TypeCoercer<Pair<SourcePath, ImmutableList<String>>> sourcePathWithFlagsTypeCoercer;
+public class SourceWithFlagsTypeCoercer implements TypeCoercer<Object, SourceWithFlags> {
+  private final TypeCoercer<Object, SourcePath> sourcePathTypeCoercer;
+  private final TypeCoercer<Object, ImmutableList<String>> flagsTypeCoercer;
+  private final TypeCoercer<Object, Pair<SourcePath, ImmutableList<String>>>
+      sourcePathWithFlagsTypeCoercer;
 
   SourceWithFlagsTypeCoercer(
-      TypeCoercer<SourcePath> sourcePathTypeCoercer,
-      TypeCoercer<ImmutableList<String>> flagsTypeCoercer) {
+      TypeCoercer<Object, SourcePath> sourcePathTypeCoercer,
+      TypeCoercer<Object, ImmutableList<String>> flagsTypeCoercer) {
     this.sourcePathTypeCoercer = sourcePathTypeCoercer;
     this.flagsTypeCoercer = flagsTypeCoercer;
     this.sourcePathWithFlagsTypeCoercer =

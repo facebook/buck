@@ -28,12 +28,13 @@ import java.util.Collection;
 import java.util.Map;
 
 /** Coerces a type to either type, trying the left type before the right. */
-public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Either<Left, Right>> {
-  private final TypeCoercer<Left> leftTypeCoercer;
-  private final TypeCoercer<Right> rightTypeCoercer;
+public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Object, Either<Left, Right>> {
+  private final TypeCoercer<Object, Left> leftTypeCoercer;
+  private final TypeCoercer<Object, Right> rightTypeCoercer;
   private final TypeToken<Either<Left, Right>> typeToken;
 
-  public EitherTypeCoercer(TypeCoercer<Left> leftTypeCoercer, TypeCoercer<Right> rightTypeCoercer) {
+  public EitherTypeCoercer(
+      TypeCoercer<Object, Left> leftTypeCoercer, TypeCoercer<Object, Right> rightTypeCoercer) {
     this.leftTypeCoercer = leftTypeCoercer;
     this.rightTypeCoercer = rightTypeCoercer;
     this.typeToken =
@@ -72,7 +73,7 @@ public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Either<Left, 
     MAP,
   }
 
-  private static <T> Type getCoercerType(TypeCoercer<T> coercer) {
+  private static <T> Type getCoercerType(TypeCoercer<Object, T> coercer) {
     if (coercer instanceof MapTypeCoercer || coercer instanceof SortedMapTypeCoercer) {
       return Type.MAP;
     } else if (coercer instanceof CollectionTypeCoercer || coercer instanceof PairTypeCoercer) {

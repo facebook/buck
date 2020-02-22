@@ -27,12 +27,13 @@ import com.google.common.reflect.TypeToken;
 import java.util.Map;
 
 public class SortedMapTypeCoercer<K extends Comparable<K>, V>
-    implements TypeCoercer<ImmutableSortedMap<K, V>> {
-  private final TypeCoercer<K> keyTypeCoercer;
-  private final TypeCoercer<V> valueTypeCoercer;
+    implements TypeCoercer<Object, ImmutableSortedMap<K, V>> {
+  private final TypeCoercer<Object, K> keyTypeCoercer;
+  private final TypeCoercer<Object, V> valueTypeCoercer;
   private final TypeToken<ImmutableSortedMap<K, V>> typeToken;
 
-  SortedMapTypeCoercer(TypeCoercer<K> keyTypeCoercer, TypeCoercer<V> valueTypeCoercer) {
+  SortedMapTypeCoercer(
+      TypeCoercer<Object, K> keyTypeCoercer, TypeCoercer<Object, V> valueTypeCoercer) {
     this.keyTypeCoercer = keyTypeCoercer;
     this.valueTypeCoercer = valueTypeCoercer;
     this.typeToken =

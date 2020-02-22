@@ -38,7 +38,7 @@ import java.util.List;
 @BuckStyleValue
 public abstract class OutputListAttribute extends Attribute<ImmutableList<String>> {
 
-  private static final TypeCoercer<ImmutableList<String>> coercer =
+  private static final TypeCoercer<Object, ImmutableList<String>> coercer =
       new ListTypeCoercer<>(new StringTypeCoercer());
 
   @Override
@@ -59,7 +59,7 @@ public abstract class OutputListAttribute extends Attribute<ImmutableList<String
   }
 
   @Override
-  public TypeCoercer<ImmutableList<String>> getTypeCoercer() {
+  public TypeCoercer<Object, ImmutableList<String>> getTypeCoercer() {
     return coercer;
   }
 

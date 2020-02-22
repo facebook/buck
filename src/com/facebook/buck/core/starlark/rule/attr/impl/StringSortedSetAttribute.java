@@ -29,7 +29,7 @@ import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 @BuckStyleValue
 public abstract class StringSortedSetAttribute extends Attribute<ImmutableSortedSet<String>> {
 
-  private static final TypeCoercer<ImmutableSortedSet<String>> coercer =
+  private static final TypeCoercer<Object, ImmutableSortedSet<String>> coercer =
       new SortedSetTypeCoercer<>(new StringTypeCoercer());
 
   @Override
@@ -50,7 +50,7 @@ public abstract class StringSortedSetAttribute extends Attribute<ImmutableSorted
   }
 
   @Override
-  public TypeCoercer<ImmutableSortedSet<String>> getTypeCoercer() {
+  public TypeCoercer<Object, ImmutableSortedSet<String>> getTypeCoercer() {
     return coercer;
   }
 

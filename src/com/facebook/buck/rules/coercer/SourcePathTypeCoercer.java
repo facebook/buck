@@ -28,12 +28,12 @@ import com.google.common.reflect.TypeToken;
 import java.nio.file.Path;
 
 public class SourcePathTypeCoercer extends LeafTypeCoercer<SourcePath> {
-  private final TypeCoercer<BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer;
-  private final TypeCoercer<Path> pathTypeCoercer;
+  private final TypeCoercer<Object, BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer;
+  private final TypeCoercer<Object, Path> pathTypeCoercer;
 
   public SourcePathTypeCoercer(
-      TypeCoercer<BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer,
-      TypeCoercer<Path> pathTypeCoercer) {
+      TypeCoercer<Object, BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer,
+      TypeCoercer<Object, Path> pathTypeCoercer) {
     this.buildTargetWithOutputsTypeCoercer = buildTargetWithOutputsTypeCoercer;
     this.pathTypeCoercer = pathTypeCoercer;
   }

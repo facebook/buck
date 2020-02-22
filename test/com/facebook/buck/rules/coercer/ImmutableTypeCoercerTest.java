@@ -45,8 +45,8 @@ public class ImmutableTypeCoercerTest {
             .build();
 
     ImmutableList.Builder<BuildTarget> collectedTargets = ImmutableList.builder();
-    TypeCoercer<DtoWithImmutableAttribute> typeCoercer =
-        (TypeCoercer<DtoWithImmutableAttribute>)
+    TypeCoercer<Object, DtoWithImmutableAttribute> typeCoercer =
+        (TypeCoercer<Object, DtoWithImmutableAttribute>)
             new DefaultTypeCoercerFactory().typeCoercerForType(dto.getClass());
     typeCoercer.traverse(
         TestCellPathResolver.get(new FakeProjectFilesystem()).getCellNameResolver(),

@@ -33,8 +33,9 @@ import javax.annotation.Nullable;
  * rule args.
  *
  * @param <T> resulting type
+ * @param <U> input type
  */
-public interface TypeCoercer<T> extends Concatable<T> {
+public interface TypeCoercer<U, T> extends Concatable<T> {
 
   TypeToken<T> getOutputType();
 
@@ -59,7 +60,7 @@ public interface TypeCoercer<T> extends Concatable<T> {
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       TargetConfiguration hostConfiguration,
-      Object object)
+      U object)
       throws CoerceFailedException;
 
   /**

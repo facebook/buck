@@ -27,7 +27,7 @@ import com.google.common.reflect.TypeToken;
 import java.util.Map;
 
 /** A coercer for Immutables using the same flow as Description's args */
-public class ImmutableTypeCoercer<T extends DataTransferObject> implements TypeCoercer<T> {
+public class ImmutableTypeCoercer<T extends DataTransferObject> implements TypeCoercer<Object, T> {
 
   private final DataTransferObjectDescriptor<T> constructorArgDescriptor;
   private final ImmutableMap<String, ParamInfo<?>> paramInfos;
@@ -55,7 +55,8 @@ public class ImmutableTypeCoercer<T extends DataTransferObject> implements TypeC
     traversal.traverse(object);
     for (ParamInfo<?> paramInfo : paramInfos.values()) {
       @SuppressWarnings("unchecked")
-      TypeCoercer<Object> paramTypeCoercer = (TypeCoercer<Object>) paramInfo.getTypeCoercer();
+      TypeCoercer<Object, Object> paramTypeCoercer =
+          (TypeCoercer<Object, Object>) paramInfo.getTypeCoercer();
       Object fieldValue = paramInfo.get(object);
       paramTypeCoercer.traverse(cellRoots, fieldValue, traversal);
     }

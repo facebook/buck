@@ -45,7 +45,7 @@ import java.util.List;
 @BuckStyleValue
 public abstract class SourceListAttribute extends Attribute<ImmutableList<SourcePath>> {
 
-  private static final TypeCoercer<ImmutableList<SourcePath>> coercer =
+  private static final TypeCoercer<Object, ImmutableList<SourcePath>> coercer =
       new ListTypeCoercer<>(
           new SourcePathTypeCoercer(
               new BuildTargetWithOutputsTypeCoercer(
@@ -72,7 +72,7 @@ public abstract class SourceListAttribute extends Attribute<ImmutableList<Source
   }
 
   @Override
-  public TypeCoercer<ImmutableList<SourcePath>> getTypeCoercer() {
+  public TypeCoercer<Object, ImmutableList<SourcePath>> getTypeCoercer() {
     return coercer;
   }
 

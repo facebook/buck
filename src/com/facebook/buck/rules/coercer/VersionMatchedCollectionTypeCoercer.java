@@ -32,15 +32,15 @@ import java.util.Iterator;
 import java.util.List;
 
 public class VersionMatchedCollectionTypeCoercer<T>
-    implements TypeCoercer<VersionMatchedCollection<T>> {
+    implements TypeCoercer<Object, VersionMatchedCollection<T>> {
 
-  TypeCoercer<ImmutableMap<BuildTarget, Version>> versionsTypeCoercer;
-  TypeCoercer<T> valueTypeCoercer;
+  TypeCoercer<Object, ImmutableMap<BuildTarget, Version>> versionsTypeCoercer;
+  TypeCoercer<Object, T> valueTypeCoercer;
   private final TypeToken<VersionMatchedCollection<T>> typeToken;
 
   public VersionMatchedCollectionTypeCoercer(
-      TypeCoercer<ImmutableMap<BuildTarget, Version>> versionsTypeCoercer,
-      TypeCoercer<T> valueTypeCoercer) {
+      TypeCoercer<Object, ImmutableMap<BuildTarget, Version>> versionsTypeCoercer,
+      TypeCoercer<Object, T> valueTypeCoercer) {
     this.versionsTypeCoercer = versionsTypeCoercer;
     this.valueTypeCoercer = valueTypeCoercer;
     this.typeToken =

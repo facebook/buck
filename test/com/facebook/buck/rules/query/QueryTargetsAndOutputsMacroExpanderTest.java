@@ -64,7 +64,7 @@ public class QueryTargetsAndOutputsMacroExpanderTest {
   private ProjectFilesystem filesystem;
   private ActionGraphBuilder graphBuilder;
   private CellPathResolver cellNames;
-  private TypeCoercer<?> coercer;
+  private TypeCoercer<Object, ?> coercer;
   private BuildRule rule;
   private StringWithMacrosConverter converter;
   private HashMapWithStats<Macro, Object> cache;

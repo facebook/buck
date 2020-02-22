@@ -28,12 +28,13 @@ import com.google.common.reflect.TypeToken;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
-public class OptionalTypeCoercer<T> implements TypeCoercer<Optional<T>> {
+/** Coerce to {@link java.util.Optional}. */
+public class OptionalTypeCoercer<T> implements TypeCoercer<Object, Optional<T>> {
 
-  private final TypeCoercer<T> coercer;
+  private final TypeCoercer<Object, T> coercer;
   private final TypeToken<Optional<T>> typeToken;
 
-  public OptionalTypeCoercer(TypeCoercer<T> coercer) {
+  public OptionalTypeCoercer(TypeCoercer<Object, T> coercer) {
     Preconditions.checkArgument(
         !coercer.getOutputType().getRawType().isAssignableFrom(Optional.class),
         "Nested optional fields are ambiguous.");

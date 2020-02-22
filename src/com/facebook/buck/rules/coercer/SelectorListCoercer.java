@@ -35,9 +35,9 @@ import java.util.Map;
  */
 public class SelectorListCoercer<T> {
 
-  private final TypeCoercer<T> elementTypeCoercer;
+  private final TypeCoercer<Object, T> elementTypeCoercer;
 
-  public SelectorListCoercer(TypeCoercer<T> elementTypeCoercer) {
+  public SelectorListCoercer(TypeCoercer<Object, T> elementTypeCoercer) {
     this.elementTypeCoercer = elementTypeCoercer;
   }
 

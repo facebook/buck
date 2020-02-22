@@ -30,9 +30,9 @@ import com.google.common.collect.ImmutableList;
 class QueryTargetsAndOutputsMacroTypeCoercer
     implements MacroTypeCoercer<QueryTargetsAndOutputsMacro> {
 
-  private final TypeCoercer<Query> queryCoercer;
+  private final TypeCoercer<Object, Query> queryCoercer;
 
-  public QueryTargetsAndOutputsMacroTypeCoercer(TypeCoercer<Query> queryCoercer) {
+  public QueryTargetsAndOutputsMacroTypeCoercer(TypeCoercer<Object, Query> queryCoercer) {
     this.queryCoercer = queryCoercer;
   }
 

@@ -91,19 +91,19 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
 
   private final CoercedTypeCache coercedTypeCache = new CoercedTypeCache(this);
 
-  private final TypeCoercer<UnconfiguredBuildTarget> unconfiguredBuildTargetTypeCoercer;
-  private final TypeCoercer<Pattern> patternTypeCoercer = new PatternTypeCoercer();
+  private final TypeCoercer<Object, UnconfiguredBuildTarget> unconfiguredBuildTargetTypeCoercer;
+  private final TypeCoercer<Object, Pattern> patternTypeCoercer = new PatternTypeCoercer();
 
-  private final TypeCoercer<?>[] nonParameterizedTypeCoercers;
+  private final TypeCoercer<?, ?>[] nonParameterizedTypeCoercers;
   private final ParsingUnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
 
   public DefaultTypeCoercerFactory() {
-    TypeCoercer<String> stringTypeCoercer = new StringTypeCoercer();
-    TypeCoercer<Flavor> flavorTypeCoercer = new FlavorTypeCoercer();
+    TypeCoercer<Object, String> stringTypeCoercer = new StringTypeCoercer();
+    TypeCoercer<Object, Flavor> flavorTypeCoercer = new FlavorTypeCoercer();
     // This has no implementation, but is here so that constructor succeeds so that it can be
     // queried. This is only used for the visibility field, which is not actually handled by the
     // coercer.
-    TypeCoercer<BuildTargetMatcher> buildTargetPatternTypeCoercer =
+    TypeCoercer<Object, BuildTargetMatcher> buildTargetPatternTypeCoercer =
         new IdentityTypeCoercer<BuildTargetMatcher>(BuildTargetMatcher.class) {
           @Override
           public BuildTargetMatcher coerce(
@@ -125,35 +125,36 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
     unconfiguredBuildTargetFactory = new ParsingUnconfiguredBuildTargetViewFactory();
     unconfiguredBuildTargetTypeCoercer =
         new UnconfiguredBuildTargetTypeCoercer(unconfiguredBuildTargetFactory);
-    TypeCoercer<BuildTarget> buildTargetTypeCoercer =
+    TypeCoercer<Object, BuildTarget> buildTargetTypeCoercer =
         new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer);
-    TypeCoercer<BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer =
+    TypeCoercer<Object, BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer =
         new BuildTargetWithOutputsTypeCoercer(buildTargetTypeCoercer);
     PathTypeCoercer pathTypeCoercer = new PathTypeCoercer();
-    TypeCoercer<SourcePath> sourcePathTypeCoercer =
+    TypeCoercer<Object, SourcePath> sourcePathTypeCoercer =
         new SourcePathTypeCoercer(buildTargetWithOutputsTypeCoercer, pathTypeCoercer);
-    TypeCoercer<SourceWithFlags> sourceWithFlagsTypeCoercer =
+    TypeCoercer<Object, SourceWithFlags> sourceWithFlagsTypeCoercer =
         new SourceWithFlagsTypeCoercer(
             sourcePathTypeCoercer, new ListTypeCoercer<>(stringTypeCoercer));
-    TypeCoercer<Integer> intTypeCoercer = new NumberTypeCoercer<>(Integer.class);
-    TypeCoercer<Double> doubleTypeCoercer = new NumberTypeCoercer<>(Double.class);
-    TypeCoercer<Boolean> booleanTypeCoercer = new IdentityTypeCoercer<>(Boolean.class);
-    TypeCoercer<NeededCoverageSpec> neededCoverageSpecTypeCoercer =
+    TypeCoercer<Object, Integer> intTypeCoercer = new NumberTypeCoercer<>(Integer.class);
+    TypeCoercer<Object, Double> doubleTypeCoercer = new NumberTypeCoercer<>(Double.class);
+    TypeCoercer<Object, Boolean> booleanTypeCoercer = new IdentityTypeCoercer<>(Boolean.class);
+    TypeCoercer<Object, NeededCoverageSpec> neededCoverageSpecTypeCoercer =
         new NeededCoverageSpecTypeCoercer(
             intTypeCoercer, buildTargetTypeCoercer, stringTypeCoercer);
-    TypeCoercer<Query> queryTypeCoercer = new QueryCoercer(this, unconfiguredBuildTargetFactory);
-    TypeCoercer<ImmutableList<BuildTarget>> buildTargetsTypeCoercer =
+    TypeCoercer<Object, Query> queryTypeCoercer =
+        new QueryCoercer(this, unconfiguredBuildTargetFactory);
+    TypeCoercer<Object, ImmutableList<BuildTarget>> buildTargetsTypeCoercer =
         new ListTypeCoercer<>(buildTargetTypeCoercer);
-    TypeCoercer<CxxLinkGroupMappingTarget.Traversal> linkGroupMappingTraversalCoercer =
+    TypeCoercer<Object, CxxLinkGroupMappingTarget.Traversal> linkGroupMappingTraversalCoercer =
         new CxxLinkGroupMappingTargetTraversalCoercer();
-    TypeCoercer<CxxLinkGroupMappingTarget> linkGroupMappingTargetCoercer =
+    TypeCoercer<Object, CxxLinkGroupMappingTarget> linkGroupMappingTargetCoercer =
         new CxxLinkGroupMappingTargetCoercer(
             buildTargetTypeCoercer, linkGroupMappingTraversalCoercer, patternTypeCoercer);
-    TypeCoercer<ImmutableList<CxxLinkGroupMappingTarget>> linkGroupMappingTargetsCoercer =
+    TypeCoercer<Object, ImmutableList<CxxLinkGroupMappingTarget>> linkGroupMappingTargetsCoercer =
         new ListTypeCoercer<>(linkGroupMappingTargetCoercer);
-    TypeCoercer<CxxLinkGroupMapping> linkGroupMappingCoercer =
+    TypeCoercer<Object, CxxLinkGroupMapping> linkGroupMappingCoercer =
         new CxxLinkGroupMappingCoercer(stringTypeCoercer, linkGroupMappingTargetsCoercer);
-    TypeCoercer<StringWithMacros> stringWithMacrosCoercer =
+    TypeCoercer<Object, StringWithMacros> stringWithMacrosCoercer =
         StringWithMacrosTypeCoercer.from(
             ImmutableMap.<String, Class<? extends Macro>>builder()
                 .put("classpath", ClasspathMacro.class)
@@ -277,7 +278,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                     LdflagsStaticPicFilterMacro::of),
                 new ZeroArgMacroTypeCoercer<>(PlatformNameMacro.class, PlatformNameMacro.of())));
     nonParameterizedTypeCoercers =
-        new TypeCoercer<?>[] {
+        new TypeCoercer<?, ?>[] {
           // special classes
           pathTypeCoercer,
           flavorTypeCoercer,
@@ -324,7 +325,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
 
   @Override
   @SuppressWarnings("unchecked")
-  public TypeCoercer<?> typeCoercerForType(Type type) {
+  public TypeCoercer<Object, ?> typeCoercerForType(Type type) {
     if (type instanceof TypeVariable) {
       type = ((TypeVariable<?>) type).getBounds()[0];
       if (Object.class.equals(type)) {
@@ -346,8 +347,8 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
         return new EnumTypeCoercer<>(rawClass);
       }
 
-      TypeCoercer<?> selectedTypeCoercer = null;
-      for (TypeCoercer<?> typeCoercer : nonParameterizedTypeCoercers) {
+      TypeCoercer<?, ?> selectedTypeCoercer = null;
+      for (TypeCoercer<?, ?> typeCoercer : nonParameterizedTypeCoercers) {
         if (rawClass.isAssignableFrom(typeCoercer.getOutputType().getRawType())) {
           if (selectedTypeCoercer == null) {
             selectedTypeCoercer = typeCoercer;
@@ -365,7 +366,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                 getConstructorArgDescriptor((Class<? extends DataTransferObject>) rawClass));
       }
       if (selectedTypeCoercer != null) {
-        return selectedTypeCoercer;
+        return (TypeCoercer<Object, ?>) selectedTypeCoercer;
       } else {
         throw new IllegalArgumentException("no type coercer for type: " + type);
       }
@@ -381,7 +382,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
   }
 
   @Override
-  public TypeCoercer<?> typeCoercerForParameterizedType(
+  public TypeCoercer<Object, ?> typeCoercerForParameterizedType(
       String typeName, Type rawType, Type[] actualTypeArguments) {
     if (!(rawType instanceof Class<?>)) {
       throw new RuntimeException("expected raw type to be a class for type: " + typeName);
@@ -450,14 +451,14 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
     return coercedTypeCache.getConstructorArgDescriptor(dtoType);
   }
 
-  private <T extends Comparable<T>> TypeCoercer<T> typeCoercerForComparableType(Type type) {
+  private <T extends Comparable<T>> TypeCoercer<Object, T> typeCoercerForComparableType(Type type) {
     Preconditions.checkState(
         type instanceof Class && Comparable.class.isAssignableFrom((Class<?>) type),
         "type '%s' should be a class implementing Comparable",
         type);
 
     @SuppressWarnings("unchecked")
-    TypeCoercer<T> typeCoercer = (TypeCoercer<T>) typeCoercerForType(type);
+    TypeCoercer<Object, T> typeCoercer = (TypeCoercer<Object, T>) typeCoercerForType(type);
     return typeCoercer;
   }
 

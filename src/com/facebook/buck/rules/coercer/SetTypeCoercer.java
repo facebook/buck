@@ -27,7 +27,7 @@ import com.google.common.reflect.TypeToken;
 public class SetTypeCoercer<T> extends CollectionTypeCoercer<ImmutableSet<T>, T> {
   private final TypeToken<ImmutableSet<T>> typeToken;
 
-  SetTypeCoercer(TypeCoercer<T> elementTypeCoercer) {
+  SetTypeCoercer(TypeCoercer<Object, T> elementTypeCoercer) {
     super(elementTypeCoercer);
     this.typeToken =
         new TypeToken<ImmutableSet<T>>() {}.where(

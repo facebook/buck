@@ -201,7 +201,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
         valuesForConcatenation.add(configuredAttributeValue);
       }
     }
-    TypeCoercer<Object> coercer = (TypeCoercer<Object>) info.getTypeCoercer();
+    TypeCoercer<Object, Object> coercer = (TypeCoercer<Object, Object>) info.getTypeCoercer();
     return coercer.concat(valuesForConcatenation.build());
   }
 

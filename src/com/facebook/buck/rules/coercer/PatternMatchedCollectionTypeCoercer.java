@@ -31,14 +31,14 @@ import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 public class PatternMatchedCollectionTypeCoercer<T>
-    implements TypeCoercer<PatternMatchedCollection<T>> {
+    implements TypeCoercer<Object, PatternMatchedCollection<T>> {
 
-  TypeCoercer<Pattern> patternTypeCoercer;
-  TypeCoercer<T> valueTypeCoercer;
+  TypeCoercer<Object, Pattern> patternTypeCoercer;
+  TypeCoercer<Object, T> valueTypeCoercer;
   private final TypeToken<PatternMatchedCollection<T>> typeToken;
 
   public PatternMatchedCollectionTypeCoercer(
-      TypeCoercer<Pattern> patternTypeCoercer, TypeCoercer<T> valueTypeCoercer) {
+      TypeCoercer<Object, Pattern> patternTypeCoercer, TypeCoercer<Object, T> valueTypeCoercer) {
     this.patternTypeCoercer = patternTypeCoercer;
     this.valueTypeCoercer = valueTypeCoercer;
     this.typeToken =

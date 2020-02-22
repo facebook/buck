@@ -69,7 +69,7 @@ public class SkylarkParamInfoTest {
     public abstract boolean getMandatory();
 
     @Override
-    public TypeCoercer<Integer> getTypeCoercer() {
+    public TypeCoercer<Object, Integer> getTypeCoercer() {
       return new NumberTypeCoercer<>(Integer.class);
     }
 
@@ -92,7 +92,7 @@ public class SkylarkParamInfoTest {
     public abstract boolean getMandatory();
 
     @Override
-    public TypeCoercer<Optional<Integer>> getTypeCoercer() {
+    public TypeCoercer<Object, Optional<Integer>> getTypeCoercer() {
       return new OptionalTypeCoercer<>(new NumberTypeCoercer<>(Integer.class));
     }
 
@@ -114,7 +114,7 @@ public class SkylarkParamInfoTest {
     public abstract boolean getMandatory();
 
     @Override
-    public TypeCoercer<ImmutableList<String>> getTypeCoercer() {
+    public TypeCoercer<Object, ImmutableList<String>> getTypeCoercer() {
       return new ListTypeCoercer<>(new StringTypeCoercer());
     }
 
@@ -136,7 +136,7 @@ public class SkylarkParamInfoTest {
     public abstract boolean getMandatory();
 
     @Override
-    public TypeCoercer<ImmutableMap<String, Integer>> getTypeCoercer() {
+    public TypeCoercer<Object, ImmutableMap<String, Integer>> getTypeCoercer() {
       return new MapTypeCoercer<>(new StringTypeCoercer(), new NumberTypeCoercer<>(Integer.class));
     }
 

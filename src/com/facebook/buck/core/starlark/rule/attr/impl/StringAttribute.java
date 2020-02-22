@@ -28,7 +28,7 @@ import java.util.List;
 @BuckStyleValue
 public abstract class StringAttribute extends Attribute<String> {
 
-  private static final TypeCoercer<String> coercer = new StringTypeCoercer();
+  private static final TypeCoercer<Object, String> coercer = new StringTypeCoercer();
 
   @Override
   public abstract String getPreCoercionDefaultValue();
@@ -48,7 +48,7 @@ public abstract class StringAttribute extends Attribute<String> {
   }
 
   @Override
-  public TypeCoercer<String> getTypeCoercer() {
+  public TypeCoercer<Object, String> getTypeCoercer() {
     return coercer;
   }
 

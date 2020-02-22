@@ -27,13 +27,15 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.reflect.TypeToken;
 import java.util.List;
 
-public class SourceWithFlagsListTypeCoercer implements TypeCoercer<SourceWithFlagsList> {
-  private final TypeCoercer<ImmutableSortedSet<SourceWithFlags>> unnamedSourcesTypeCoercer;
-  private final TypeCoercer<ImmutableSortedMap<String, SourceWithFlags>> namedSourcesTypeCoercer;
+/** Coerce to {@link com.facebook.buck.rules.coercer.SourceWithFlagsList}. */
+public class SourceWithFlagsListTypeCoercer implements TypeCoercer<Object, SourceWithFlagsList> {
+  private final TypeCoercer<Object, ImmutableSortedSet<SourceWithFlags>> unnamedSourcesTypeCoercer;
+  private final TypeCoercer<Object, ImmutableSortedMap<String, SourceWithFlags>>
+      namedSourcesTypeCoercer;
 
   SourceWithFlagsListTypeCoercer(
-      TypeCoercer<String> stringTypeCoercer,
-      TypeCoercer<SourceWithFlags> sourceWithFlagsTypeCoercer) {
+      TypeCoercer<Object, String> stringTypeCoercer,
+      TypeCoercer<Object, SourceWithFlags> sourceWithFlagsTypeCoercer) {
     this.unnamedSourcesTypeCoercer = new SortedSetTypeCoercer<>(sourceWithFlagsTypeCoercer);
     this.namedSourcesTypeCoercer =
         new SortedMapTypeCoercer<>(stringTypeCoercer, sourceWithFlagsTypeCoercer);

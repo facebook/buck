@@ -28,10 +28,10 @@ import com.facebook.buck.rules.macros.BaseLocationMacro;
 abstract class AbstractLocationMacroTypeCoercer<T extends BaseLocationMacro>
     implements MacroTypeCoercer<T> {
 
-  private final TypeCoercer<BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer;
+  private final TypeCoercer<Object, BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer;
 
   public AbstractLocationMacroTypeCoercer(
-      TypeCoercer<BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer) {
+      TypeCoercer<Object, BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer) {
     this.buildTargetWithOutputsTypeCoercer = buildTargetWithOutputsTypeCoercer;
   }
 

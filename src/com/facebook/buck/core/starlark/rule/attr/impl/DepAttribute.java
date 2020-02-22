@@ -36,7 +36,7 @@ import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 @BuckStyleValue
 public abstract class DepAttribute extends Attribute<BuildTarget> {
 
-  private static final TypeCoercer<BuildTarget> coercer =
+  private static final TypeCoercer<Object, BuildTarget> coercer =
       new BuildTargetTypeCoercer(
           new UnconfiguredBuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetViewFactory()));
 
@@ -55,7 +55,7 @@ public abstract class DepAttribute extends Attribute<BuildTarget> {
   }
 
   @Override
-  public TypeCoercer<BuildTarget> getTypeCoercer() {
+  public TypeCoercer<Object, BuildTarget> getTypeCoercer() {
     return coercer;
   }
 

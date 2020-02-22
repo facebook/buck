@@ -31,7 +31,7 @@ class LocationPlatformMacroTypeCoercer
     extends AbstractLocationMacroTypeCoercer<LocationPlatformMacro> {
 
   public LocationPlatformMacroTypeCoercer(
-      TypeCoercer<BuildTargetWithOutputs> buildTargetTypeCoercer) {
+      TypeCoercer<Object, BuildTargetWithOutputs> buildTargetTypeCoercer) {
     super(buildTargetTypeCoercer);
   }
 

@@ -30,12 +30,14 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
 
-public class MapTypeCoercer<K, V> implements TypeCoercer<ImmutableMap<K, V>> {
-  private final TypeCoercer<K> keyTypeCoercer;
-  private final TypeCoercer<V> valueTypeCoercer;
+/** Coerce to {@link com.google.common.collect.ImmutableMap}. */
+public class MapTypeCoercer<K, V> implements TypeCoercer<Object, ImmutableMap<K, V>> {
+  private final TypeCoercer<Object, K> keyTypeCoercer;
+  private final TypeCoercer<Object, V> valueTypeCoercer;
   private final TypeToken<ImmutableMap<K, V>> typeToken;
 
-  public MapTypeCoercer(TypeCoercer<K> keyTypeCoercer, TypeCoercer<V> valueTypeCoercer) {
+  public MapTypeCoercer(
+      TypeCoercer<Object, K> keyTypeCoercer, TypeCoercer<Object, V> valueTypeCoercer) {
     this.keyTypeCoercer = keyTypeCoercer;
     this.valueTypeCoercer = valueTypeCoercer;
     this.typeToken =

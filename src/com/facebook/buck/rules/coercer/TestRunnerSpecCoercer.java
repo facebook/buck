@@ -31,13 +31,13 @@ import java.util.Map;
  * Coerces a freeform JSON as a {@link TestRunnerSpec}, which is basically a JSON containing {@link
  * StringWithMacros}
  */
-public class TestRunnerSpecCoercer implements TypeCoercer<TestRunnerSpec> {
+public class TestRunnerSpecCoercer implements TypeCoercer<Object, TestRunnerSpec> {
 
-  private final TypeCoercer<StringWithMacros> macrosTypeCoercer;
-  private final TypeCoercer<ImmutableMap<StringWithMacros, TestRunnerSpec>> mapTypeCoercer;
+  private final TypeCoercer<Object, StringWithMacros> macrosTypeCoercer;
+  private final TypeCoercer<Object, ImmutableMap<StringWithMacros, TestRunnerSpec>> mapTypeCoercer;
   private final ListTypeCoercer<TestRunnerSpec> listTypeCoercer;
 
-  public TestRunnerSpecCoercer(TypeCoercer<StringWithMacros> macrosTypeCoercer) {
+  public TestRunnerSpecCoercer(TypeCoercer<Object, StringWithMacros> macrosTypeCoercer) {
     this.macrosTypeCoercer = macrosTypeCoercer;
     this.mapTypeCoercer = new MapTypeCoercer<>(macrosTypeCoercer, this);
     this.listTypeCoercer = new ListTypeCoercer<>(this);

@@ -34,7 +34,7 @@ import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 @BuckStyleValue
 public abstract class OutputAttribute extends Attribute<String> {
 
-  private static final TypeCoercer<String> coercer = new StringTypeCoercer();
+  private static final TypeCoercer<Object, String> coercer = new StringTypeCoercer();
 
   @Override
   public abstract Object getPreCoercionDefaultValue();
@@ -51,7 +51,7 @@ public abstract class OutputAttribute extends Attribute<String> {
   }
 
   @Override
-  public TypeCoercer<String> getTypeCoercer() {
+  public TypeCoercer<Object, String> getTypeCoercer() {
     return coercer;
   }
 

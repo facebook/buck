@@ -40,7 +40,7 @@ public class ManifestEntriesTypeCoercerTest {
   @Before
   public void setUp() {
     DefaultTypeCoercerFactory factory = new DefaultTypeCoercerFactory();
-    TypeCoercer<?> typeCoercer = factory.typeCoercerForType(ManifestEntries.class);
+    TypeCoercer<Object, ?> typeCoercer = factory.typeCoercerForType(ManifestEntries.class);
     assertTrue(typeCoercer instanceof ManifestEntriesTypeCoercer);
     manifestEntriesTypeCoercer = (ManifestEntriesTypeCoercer) typeCoercer;
   }

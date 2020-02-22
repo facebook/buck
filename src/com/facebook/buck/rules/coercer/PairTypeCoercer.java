@@ -28,13 +28,13 @@ import java.util.Collection;
 import java.util.Iterator;
 
 /** Coerces from a 2-element collection into a pair. */
-public class PairTypeCoercer<FIRST, SECOND> implements TypeCoercer<Pair<FIRST, SECOND>> {
-  private TypeCoercer<FIRST> firstTypeCoercer;
-  private TypeCoercer<SECOND> secondTypeCoercer;
+public class PairTypeCoercer<FIRST, SECOND> implements TypeCoercer<Object, Pair<FIRST, SECOND>> {
+  private TypeCoercer<Object, FIRST> firstTypeCoercer;
+  private TypeCoercer<Object, SECOND> secondTypeCoercer;
   private final TypeToken<Pair<FIRST, SECOND>> typeToken;
 
   public PairTypeCoercer(
-      TypeCoercer<FIRST> firstTypeCoercer, TypeCoercer<SECOND> secondTypeCoercer) {
+      TypeCoercer<Object, FIRST> firstTypeCoercer, TypeCoercer<Object, SECOND> secondTypeCoercer) {
     this.firstTypeCoercer = firstTypeCoercer;
     this.secondTypeCoercer = secondTypeCoercer;
     this.typeToken =

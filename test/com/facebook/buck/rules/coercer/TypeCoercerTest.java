@@ -72,7 +72,7 @@ public class TypeCoercerTest {
   public void coercingStringMapOfIntListsShouldBeIdentity()
       throws CoerceFailedException, NoSuchFieldException {
     Type type = TestFields.class.getField("stringMapOfLists").getGenericType();
-    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+    TypeCoercer<Object, ?> coercer = typeCoercerFactory.typeCoercerForType(type);
 
     ImmutableMap<String, ImmutableList<Integer>> input =
         ImmutableMap.of(
@@ -93,7 +93,7 @@ public class TypeCoercerTest {
   public void coercingNestedListOfSetsShouldActuallyCreateSets()
       throws CoerceFailedException, NoSuchFieldException {
     Type type = TestFields.class.getField("listOfSets").getGenericType();
-    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+    TypeCoercer<Object, ?> coercer = typeCoercerFactory.typeCoercerForType(type);
 
     ImmutableList<ImmutableList<Integer>> input =
         ImmutableList.of(ImmutableList.of(4, 4, 5), ImmutableList.of(6, 7));
@@ -114,7 +114,7 @@ public class TypeCoercerTest {
   public void coercingSortedSetsShouldActuallyCreateSortedSets()
       throws CoerceFailedException, NoSuchFieldException {
     Type type = TestFields.class.getField("sortedSetOfStrings").getGenericType();
-    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+    TypeCoercer<Object, ?> coercer = typeCoercerFactory.typeCoercerForType(type);
 
     ImmutableList<String> input = ImmutableList.of("a", "c", "b", "a");
     Object result =
@@ -133,7 +133,7 @@ public class TypeCoercerTest {
   public void shouldAllowListTypeToBeSuperclassOfResult()
       throws CoerceFailedException, NoSuchFieldException {
     Type type = TestFields.class.getField("superclassOfImmutableList").getGenericType();
-    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+    TypeCoercer<Object, ?> coercer = typeCoercerFactory.typeCoercerForType(type);
 
     ImmutableList<String> input = ImmutableList.of("a", "b", "c");
     Object result =
@@ -151,7 +151,7 @@ public class TypeCoercerTest {
   public void shouldAllowMapTypeToBeSuperclassOfResult()
       throws CoerceFailedException, NoSuchFieldException {
     Type type = TestFields.class.getField("superclassOfImmutableMap").getGenericType();
-    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+    TypeCoercer<Object, ?> coercer = typeCoercerFactory.typeCoercerForType(type);
 
     ImmutableMap<String, String> input = ImmutableMap.of("a", "b");
     Object result =
@@ -187,8 +187,8 @@ public class TypeCoercerTest {
   public void traverseShouldVisitEveryObject() throws NoSuchFieldException {
     Type type = TestFields.class.getField("stringMapOfLists").getGenericType();
     @SuppressWarnings("unchecked")
-    TypeCoercer<ImmutableMap<String, ImmutableList<String>>> coercer =
-        (TypeCoercer<ImmutableMap<String, ImmutableList<String>>>)
+    TypeCoercer<Object, ImmutableMap<String, ImmutableList<String>>> coercer =
+        (TypeCoercer<Object, ImmutableMap<String, ImmutableList<String>>>)
             typeCoercerFactory.typeCoercerForType(type);
 
     ImmutableMap<String, ImmutableList<String>> input =
@@ -217,7 +217,7 @@ public class TypeCoercerTest {
   @Test
   public void hasElementTypesForContainers() throws NoSuchFieldException {
     Type type = TestFields.class.getField("stringMapOfLists").getGenericType();
-    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+    TypeCoercer<Object, ?> coercer = typeCoercerFactory.typeCoercerForType(type);
 
     assertTrue(coercer.hasElementClass(String.class));
     assertTrue(coercer.hasElementClass(Integer.class));
@@ -229,7 +229,7 @@ public class TypeCoercerTest {
   @Test
   public void hasElementTypesForPrimitives() throws NoSuchFieldException {
     Type type = TestFields.class.getField("primitiveString").getGenericType();
-    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+    TypeCoercer<Object, ?> coercer = typeCoercerFactory.typeCoercerForType(type);
 
     assertTrue(coercer.hasElementClass(String.class));
     assertFalse(coercer.hasElementClass(Integer.class));
@@ -238,7 +238,7 @@ public class TypeCoercerTest {
   @Test
   public void coerceToEitherLeftOrRight() throws NoSuchFieldException, CoerceFailedException {
     Type type = TestFields.class.getField("eitherStringSetOrStringToStringMap").getGenericType();
-    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+    TypeCoercer<Object, ?> coercer = typeCoercerFactory.typeCoercerForType(type);
 
     Set<String> inputSet = ImmutableSet.of("a", "b", "x");
     Map<String, String> inputMap =
@@ -270,7 +270,7 @@ public class TypeCoercerTest {
   public void coercedEitherThrowsOnAccessingMissingLeft()
       throws NoSuchFieldException, CoerceFailedException {
     Type type = TestFields.class.getField("eitherStringSetOrStringToStringMap").getGenericType();
-    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+    TypeCoercer<Object, ?> coercer = typeCoercerFactory.typeCoercerForType(type);
 
     Map<String, String> inputMap =
         ImmutableMap.of(
@@ -294,7 +294,7 @@ public class TypeCoercerTest {
   public void coercedEitherThrowsOnAccessingMissingRight()
       throws NoSuchFieldException, CoerceFailedException {
     Type type = TestFields.class.getField("eitherStringSetOrStringToStringMap").getGenericType();
-    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+    TypeCoercer<Object, ?> coercer = typeCoercerFactory.typeCoercerForType(type);
 
     Set<String> inputSet = ImmutableSet.of("a", "b", "x");
     Either<?, ?> either =
@@ -315,7 +315,7 @@ public class TypeCoercerTest {
   public void coerceToEitherLeftOrRightWithCollections()
       throws NoSuchFieldException, CoerceFailedException {
     Type type = TestFields.class.getField("eitherStringOrStringList").getGenericType();
-    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+    TypeCoercer<Object, ?> coercer = typeCoercerFactory.typeCoercerForType(type);
 
     String inputString = "a_string";
     ImmutableList<String> inputList = ImmutableList.of("a", "b");
@@ -344,8 +344,9 @@ public class TypeCoercerTest {
   public void traverseWithEitherAndContainer() throws NoSuchFieldException {
     Type type = TestFields.class.getField("eitherStringOrStringList").getGenericType();
     @SuppressWarnings("unchecked")
-    TypeCoercer<Either<String, List<String>>> coercer =
-        (TypeCoercer<Either<String, List<String>>>) typeCoercerFactory.typeCoercerForType(type);
+    TypeCoercer<Object, Either<String, List<String>>> coercer =
+        (TypeCoercer<Object, Either<String, List<String>>>)
+            typeCoercerFactory.typeCoercerForType(type);
 
     TestTraversal traversal = new TestTraversal();
     Either<String, List<String>> input = Either.ofRight(ImmutableList.of("foo"));
@@ -381,7 +382,7 @@ public class TypeCoercerTest {
   public void pairTypeCoercerCanCoerceFromTwoElementLists()
       throws NoSuchFieldException, CoerceFailedException {
     Type type = TestFields.class.getField("pairOfPathsAndStrings").getGenericType();
-    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+    TypeCoercer<Object, ?> coercer = typeCoercerFactory.typeCoercerForType(type);
 
     ImmutableList<?> input = ImmutableList.of("foo.m", "-foo -bar");
     assertEquals(
@@ -398,7 +399,7 @@ public class TypeCoercerTest {
   @Test
   public void hasElementTypesForPair() throws NoSuchFieldException {
     Type type = TestFields.class.getField("pairOfPathsAndStrings").getGenericType();
-    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+    TypeCoercer<Object, ?> coercer = typeCoercerFactory.typeCoercerForType(type);
 
     assertTrue(coercer.hasElementClass(String.class));
     assertTrue(coercer.hasElementClass(Path.class));
@@ -409,8 +410,8 @@ public class TypeCoercerTest {
   public void traverseWithPair() throws NoSuchFieldException {
     Type type = TestFields.class.getField("pairOfPathsAndStrings").getGenericType();
     @SuppressWarnings("unchecked")
-    TypeCoercer<Pair<Path, String>> coercer =
-        (TypeCoercer<Pair<Path, String>>) typeCoercerFactory.typeCoercerForType(type);
+    TypeCoercer<Object, Pair<Path, String>> coercer =
+        (TypeCoercer<Object, Pair<Path, String>>) typeCoercerFactory.typeCoercerForType(type);
 
     TestTraversal traversal = new TestTraversal();
     Pair<Path, String> input = new Pair<>(Paths.get("foo"), "bar");
@@ -426,7 +427,7 @@ public class TypeCoercerTest {
   @Test
   public void coercingAppleSourcePaths() throws NoSuchFieldException, CoerceFailedException {
     Type type = TestFields.class.getField("listOfSourcesWithFlags").getGenericType();
-    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+    TypeCoercer<Object, ?> coercer = typeCoercerFactory.typeCoercerForType(type);
 
     ImmutableList<String> input = ImmutableList.of("foo.m", "bar.m");
     Object result =
@@ -448,7 +449,7 @@ public class TypeCoercerTest {
   public void coercingAppleSourcePathsWithFlags()
       throws NoSuchFieldException, CoerceFailedException {
     Type type = TestFields.class.getField("listOfSourcesWithFlags").getGenericType();
-    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+    TypeCoercer<Object, ?> coercer = typeCoercerFactory.typeCoercerForType(type);
 
     ImmutableList<?> input =
         ImmutableList.of(
@@ -473,7 +474,7 @@ public class TypeCoercerTest {
   public void coercingHeterogeneousAppleSourceGroups()
       throws NoSuchFieldException, CoerceFailedException {
     Type type = TestFields.class.getField("listOfSourcesWithFlags").getGenericType();
-    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+    TypeCoercer<Object, ?> coercer = typeCoercerFactory.typeCoercerForType(type);
 
     ImmutableList<?> input =
         ImmutableList.of(
@@ -503,7 +504,7 @@ public class TypeCoercerTest {
   @Test
   public void coerceToNeededCoverageSpec() throws NoSuchFieldException, CoerceFailedException {
     Type type = TestFields.class.getField("listOfNeededCoverageSpecs").getGenericType();
-    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+    TypeCoercer<Object, ?> coercer = typeCoercerFactory.typeCoercerForType(type);
 
     ImmutableList<?> input =
         ImmutableList.of(
@@ -532,7 +533,7 @@ public class TypeCoercerTest {
   @Test
   public void invalidCoverageResultsInError() throws NoSuchFieldException {
     Type type = TestFields.class.getField("listOfNeededCoverageSpecs").getGenericType();
-    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+    TypeCoercer<Object, ?> coercer = typeCoercerFactory.typeCoercerForType(type);
 
     try {
       coercer.coerce(
@@ -598,7 +599,7 @@ public class TypeCoercerTest {
   @Test
   public void coerceToEnumShouldWorkInList() throws NoSuchFieldException, CoerceFailedException {
     Type type = TestFields.class.getField("listOfTestEnums").getGenericType();
-    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+    TypeCoercer<Object, ?> coercer = typeCoercerFactory.typeCoercerForType(type);
     ImmutableList<String> input = ImmutableList.of("PURPLE", "RED", "RED", "PURPLE");
 
     Object result =
@@ -618,7 +619,7 @@ public class TypeCoercerTest {
   @Test
   public void coerceToEnumShouldWorkInSet() throws NoSuchFieldException, CoerceFailedException {
     Type type = TestFields.class.getField("setOfTestEnums").getGenericType();
-    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+    TypeCoercer<Object, ?> coercer = typeCoercerFactory.typeCoercerForType(type);
     ImmutableSet<String> input = ImmutableSet.of("PURPLE", "PINK", "RED");
 
     Object result =
@@ -638,7 +639,7 @@ public class TypeCoercerTest {
   public void coerceToEnumsShouldWorkWithUpperAndLowerCaseValues()
       throws NoSuchFieldException, CoerceFailedException {
     Type type = TestFields.class.getField("listOfTestEnums").getGenericType();
-    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+    TypeCoercer<Object, ?> coercer = typeCoercerFactory.typeCoercerForType(type);
     ImmutableList<String> input = ImmutableList.of("grey", "YELLOW", "red", "PURPLE");
 
     Object result =
@@ -658,7 +659,7 @@ public class TypeCoercerTest {
   @Test
   public void coerceFromTurkishIsShouldWork() throws NoSuchFieldException, CoerceFailedException {
     Type type = TestFields.class.getField("listOfTestEnums").getGenericType();
-    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+    TypeCoercer<Object, ?> coercer = typeCoercerFactory.typeCoercerForType(type);
     String pinkWithLowercaseTurkishI = "p\u0131nk";
     String pinkWithUppercaseTurkishI = "P\u0130NK";
     String whiteWithLowercaseTurkishI = "wh\u0131te";
@@ -686,7 +687,7 @@ public class TypeCoercerTest {
   @Test
   public void coerceToTurkishIsShouldWork() throws NoSuchFieldException, CoerceFailedException {
     Type type = TestFields.class.getField("listOfTestEnums").getGenericType();
-    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+    TypeCoercer<Object, ?> coercer = typeCoercerFactory.typeCoercerForType(type);
     String violetWithLowerCaseTurkishI = "v\u0131olet";
     String violetWithUpperCaseTurkishI = "V\u0130OLET";
     ImmutableList<String> input =
@@ -710,7 +711,7 @@ public class TypeCoercerTest {
   public void invalidSourcePathShouldGiveSpecificErrorMsg()
       throws NoSuchFieldException, IOException {
     Type type = TestFields.class.getField("setOfSourcePaths").getGenericType();
-    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+    TypeCoercer<Object, ?> coercer = typeCoercerFactory.typeCoercerForType(type);
 
     Path baratheon = Paths.get("Baratheon.java");
     Path lannister = Paths.get("Lannister.java");
@@ -747,7 +748,7 @@ public class TypeCoercerTest {
 
   private CoerceFailedException getCoerceException(Type type, Object object) {
     // First just coerce the raw type and save the coercion exception that gets thrown.
-    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(type);
+    TypeCoercer<Object, ?> coercer = typeCoercerFactory.typeCoercerForType(type);
     try {
       coercer.coerce(
           cellRoots,
@@ -832,7 +833,7 @@ public class TypeCoercerTest {
 
   @Test
   public void canCoerceImmutableType() throws Exception {
-    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(SomeImmutable.class);
+    TypeCoercer<Object, ?> coercer = typeCoercerFactory.typeCoercerForType(SomeImmutable.class);
     ImmutableMap<String, Object> map =
         ImmutableMap.of(
             "another_immutable",
@@ -867,7 +868,7 @@ public class TypeCoercerTest {
   public void cantCoerceImmutableType() throws Exception {
     exception.expectMessage("another_immutable");
     exception.expect(CoerceFailedException.class);
-    TypeCoercer<?> coercer = typeCoercerFactory.typeCoercerForType(SomeImmutable.class);
+    TypeCoercer<Object, ?> coercer = typeCoercerFactory.typeCoercerForType(SomeImmutable.class);
     ImmutableMap<String, Object> map = ImmutableMap.of("wrong_key", ImmutableMap.of());
     coercer.coerce(
         cellRoots,

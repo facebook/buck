@@ -44,7 +44,7 @@ public abstract class BoolAttribute extends Attribute<Boolean> {
   }
 
   @Override
-  public TypeCoercer<Boolean> getTypeCoercer() {
+  public TypeCoercer<Object, Boolean> getTypeCoercer() {
     return coercer;
   }
 

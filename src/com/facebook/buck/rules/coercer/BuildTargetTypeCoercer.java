@@ -26,10 +26,10 @@ import com.google.common.reflect.TypeToken;
 
 public class BuildTargetTypeCoercer extends LeafTypeCoercer<BuildTarget> {
 
-  private final TypeCoercer<UnconfiguredBuildTarget> unconfiguredBuildTargetTypeCoercer;
+  private final TypeCoercer<Object, UnconfiguredBuildTarget> unconfiguredBuildTargetTypeCoercer;
 
   public BuildTargetTypeCoercer(
-      TypeCoercer<UnconfiguredBuildTarget> unconfiguredBuildTargetTypeCoercer) {
+      TypeCoercer<Object, UnconfiguredBuildTarget> unconfiguredBuildTargetTypeCoercer) {
     this.unconfiguredBuildTargetTypeCoercer = unconfiguredBuildTargetTypeCoercer;
   }
 

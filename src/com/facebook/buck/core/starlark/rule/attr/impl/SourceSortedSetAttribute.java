@@ -44,7 +44,7 @@ import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 @BuckStyleValue
 public abstract class SourceSortedSetAttribute extends Attribute<ImmutableSortedSet<SourcePath>> {
 
-  private static final TypeCoercer<ImmutableSortedSet<SourcePath>> coercer =
+  private static final TypeCoercer<Object, ImmutableSortedSet<SourcePath>> coercer =
       new SortedSetTypeCoercer<>(
           new SourcePathTypeCoercer(
               new BuildTargetWithOutputsTypeCoercer(
@@ -71,7 +71,7 @@ public abstract class SourceSortedSetAttribute extends Attribute<ImmutableSorted
   }
 
   @Override
-  public TypeCoercer<ImmutableSortedSet<SourcePath>> getTypeCoercer() {
+  public TypeCoercer<Object, ImmutableSortedSet<SourcePath>> getTypeCoercer() {
     return coercer;
   }
 

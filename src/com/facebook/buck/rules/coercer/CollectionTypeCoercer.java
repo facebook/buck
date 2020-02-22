@@ -25,10 +25,10 @@ import com.google.common.collect.ImmutableCollection;
 import java.util.Collection;
 
 public abstract class CollectionTypeCoercer<C extends ImmutableCollection<T>, T>
-    implements TypeCoercer<C> {
-  private final TypeCoercer<T> elementTypeCoercer;
+    implements TypeCoercer<Object, C> {
+  private final TypeCoercer<Object, T> elementTypeCoercer;
 
-  CollectionTypeCoercer(TypeCoercer<T> elementTypeCoercer) {
+  CollectionTypeCoercer(TypeCoercer<Object, T> elementTypeCoercer) {
     this.elementTypeCoercer = elementTypeCoercer;
   }
 

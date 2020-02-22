@@ -29,11 +29,11 @@ import java.util.SortedSet;
 public class SortedSetTypeCoercer<T extends Comparable<? super T>>
     extends CollectionTypeCoercer<ImmutableSortedSet<T>, T> {
 
-  private final TypeCoercer<T> elementTypeCoercer;
+  private final TypeCoercer<Object, T> elementTypeCoercer;
   private final SortedSetConcatable<T> concatable = new SortedSetConcatable<>();
   private final TypeToken<ImmutableSortedSet<T>> typeToken;
 
-  public SortedSetTypeCoercer(TypeCoercer<T> elementTypeCoercer) {
+  public SortedSetTypeCoercer(TypeCoercer<Object, T> elementTypeCoercer) {
     super(elementTypeCoercer);
     this.elementTypeCoercer = elementTypeCoercer;
     this.typeToken =

@@ -29,7 +29,7 @@ import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 @BuckStyleValue
 public abstract class IntListAttribute extends Attribute<ImmutableList<Integer>> {
 
-  private static final TypeCoercer<ImmutableList<Integer>> coercer =
+  private static final TypeCoercer<Object, ImmutableList<Integer>> coercer =
       new ListTypeCoercer<>(new NumberTypeCoercer<>(Integer.class));
 
   @Override
@@ -50,7 +50,7 @@ public abstract class IntListAttribute extends Attribute<ImmutableList<Integer>>
   }
 
   @Override
-  public TypeCoercer<ImmutableList<Integer>> getTypeCoercer() {
+  public TypeCoercer<Object, ImmutableList<Integer>> getTypeCoercer() {
     return coercer;
   }
 

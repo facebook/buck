@@ -48,7 +48,7 @@ public abstract class IntAttribute extends Attribute<Integer> {
   }
 
   @Override
-  public TypeCoercer<Integer> getTypeCoercer() {
+  public TypeCoercer<Object, Integer> getTypeCoercer() {
     return coercer;
   }
 

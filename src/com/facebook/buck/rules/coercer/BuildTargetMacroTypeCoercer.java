@@ -37,13 +37,13 @@ public final class BuildTargetMacroTypeCoercer<M extends BuildTargetMacro>
     HOST,
   }
 
-  private final TypeCoercer<BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer;
+  private final TypeCoercer<Object, BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer;
   private final Class<M> mClass;
   private final TargetOrHost targetOrHost;
   private final Function<BuildTargetWithOutputs, M> factory;
 
   public BuildTargetMacroTypeCoercer(
-      TypeCoercer<BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer,
+      TypeCoercer<Object, BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer,
       Class<M> mClass,
       TargetOrHost targetOrHost,
       Function<BuildTargetWithOutputs, M> factory) {

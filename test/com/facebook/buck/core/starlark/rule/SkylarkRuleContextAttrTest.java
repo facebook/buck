@@ -70,7 +70,7 @@ public class SkylarkRuleContextAttrTest {
     }
 
     @Override
-    public TypeCoercer<BuildTarget> getTypeCoercer() {
+    public TypeCoercer<Object, BuildTarget> getTypeCoercer() {
       return new BuildTargetTypeCoercer(
           new UnconfiguredBuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetViewFactory()));
     }

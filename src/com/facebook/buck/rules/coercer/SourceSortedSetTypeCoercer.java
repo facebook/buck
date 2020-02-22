@@ -28,12 +28,13 @@ import com.google.common.reflect.TypeToken;
 import java.util.List;
 
 public class SourceSortedSetTypeCoercer extends SourceSortedSetConcatable
-    implements TypeCoercer<SourceSortedSet> {
-  private final TypeCoercer<ImmutableSortedSet<SourcePath>> unnamedHeadersTypeCoercer;
-  private final TypeCoercer<ImmutableSortedMap<String, SourcePath>> namedHeadersTypeCoercer;
+    implements TypeCoercer<Object, SourceSortedSet> {
+  private final TypeCoercer<Object, ImmutableSortedSet<SourcePath>> unnamedHeadersTypeCoercer;
+  private final TypeCoercer<Object, ImmutableSortedMap<String, SourcePath>> namedHeadersTypeCoercer;
 
   SourceSortedSetTypeCoercer(
-      TypeCoercer<String> stringTypeCoercer, TypeCoercer<SourcePath> sourcePathTypeCoercer) {
+      TypeCoercer<Object, String> stringTypeCoercer,
+      TypeCoercer<Object, SourcePath> sourcePathTypeCoercer) {
     this.unnamedHeadersTypeCoercer = new SortedSetTypeCoercer<>(sourcePathTypeCoercer);
     this.namedHeadersTypeCoercer =
         new SortedMapTypeCoercer<>(stringTypeCoercer, sourcePathTypeCoercer);

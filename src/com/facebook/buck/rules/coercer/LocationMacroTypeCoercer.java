@@ -27,7 +27,8 @@ import com.google.common.collect.ImmutableList;
 /** Coerces `$(location ...)` macros into {@link LocationMacro}. */
 class LocationMacroTypeCoercer extends AbstractLocationMacroTypeCoercer<LocationMacro> {
 
-  public LocationMacroTypeCoercer(TypeCoercer<BuildTargetWithOutputs> buildTargetTypeCoercer) {
+  public LocationMacroTypeCoercer(
+      TypeCoercer<Object, BuildTargetWithOutputs> buildTargetTypeCoercer) {
     super(buildTargetTypeCoercer);
   }
 

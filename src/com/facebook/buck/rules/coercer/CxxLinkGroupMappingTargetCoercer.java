@@ -34,17 +34,18 @@ import java.util.regex.Pattern;
  * <p>This {@link TypeCoercer} is used to convert a single link group mapping (e.g., <code>
  * ("//Some:Target", "tree")</code>) to a {@link CxxLinkGroupMappingTarget}.
  */
-public class CxxLinkGroupMappingTargetCoercer implements TypeCoercer<CxxLinkGroupMappingTarget> {
-  private final TypeCoercer<BuildTarget> buildTargetTypeCoercer;
-  private final TypeCoercer<CxxLinkGroupMappingTarget.Traversal> traversalCoercer;
-  private final TypeCoercer<Pattern> patternTypeCoercer;
+public class CxxLinkGroupMappingTargetCoercer
+    implements TypeCoercer<Object, CxxLinkGroupMappingTarget> {
+  private final TypeCoercer<Object, BuildTarget> buildTargetTypeCoercer;
+  private final TypeCoercer<Object, CxxLinkGroupMappingTarget.Traversal> traversalCoercer;
+  private final TypeCoercer<Object, Pattern> patternTypeCoercer;
 
   private static final String LABEL_REGEX_PREFIX = "label:";
 
   public CxxLinkGroupMappingTargetCoercer(
-      TypeCoercer<BuildTarget> buildTargetTypeCoercer,
-      TypeCoercer<CxxLinkGroupMappingTarget.Traversal> traversalCoercer,
-      TypeCoercer<Pattern> patternTypeCoercer) {
+      TypeCoercer<Object, BuildTarget> buildTargetTypeCoercer,
+      TypeCoercer<Object, CxxLinkGroupMappingTarget.Traversal> traversalCoercer,
+      TypeCoercer<Object, Pattern> patternTypeCoercer) {
     this.buildTargetTypeCoercer = buildTargetTypeCoercer;
     this.traversalCoercer = traversalCoercer;
     this.patternTypeCoercer = patternTypeCoercer;
