@@ -42,6 +42,7 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.reflect.TypeToken;
 import java.nio.file.Paths;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -146,16 +147,15 @@ public class QueryPathsMacroExpanderTest {
       BuildRule rule)
       throws CoerceFailedException {
     StringWithMacros stringWithMacros =
-        (StringWithMacros)
-            new DefaultTypeCoercerFactory()
-                .typeCoercerForType(StringWithMacros.class)
-                .coerce(
-                    cellPathResolver,
-                    filesystem,
-                    rule.getBuildTarget().getCellRelativeBasePath().getPath(),
-                    UnconfiguredTargetConfiguration.INSTANCE,
-                    UnconfiguredTargetConfiguration.INSTANCE,
-                    input);
+        new DefaultTypeCoercerFactory()
+            .typeCoercerForType(TypeToken.of(StringWithMacros.class))
+            .coerce(
+                cellPathResolver,
+                filesystem,
+                rule.getBuildTarget().getCellRelativeBasePath().getPath(),
+                UnconfiguredTargetConfiguration.INSTANCE,
+                UnconfiguredTargetConfiguration.INSTANCE,
+                input);
     Arg arg = converter.convert(stringWithMacros);
     return Arg.stringify(arg, graphBuilder.getSourcePathResolver());
   }

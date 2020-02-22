@@ -23,6 +23,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.MapMaker;
+import com.google.common.reflect.TypeToken;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -97,7 +98,7 @@ public class ReflectionParamInfo<T> extends AbstractParamInfo<T> {
 
     try {
       TypeCoercer<Object, ?> typeCoercer =
-          typeCoercerFactory.typeCoercerForType(staticInfo.setterParameterType);
+          typeCoercerFactory.typeCoercerForType(TypeToken.of(staticInfo.setterParameterType));
 
       return new ReflectionParamInfo<>(
           staticInfo.name,

@@ -49,6 +49,7 @@ import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.testutil.HashMapWithStats;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
+import com.google.common.reflect.TypeToken;
 import java.nio.file.Paths;
 import java.util.Optional;
 import org.hamcrest.Matchers;
@@ -193,16 +194,15 @@ public class QueryOutputsMacroExpanderTest {
 
   private String coerceAndStringify(String input, BuildRule rule) throws CoerceFailedException {
     StringWithMacros stringWithMacros =
-        (StringWithMacros)
-            new DefaultTypeCoercerFactory()
-                .typeCoercerForType(StringWithMacros.class)
-                .coerce(
-                    cellNames,
-                    filesystem,
-                    rule.getBuildTarget().getCellRelativeBasePath().getPath(),
-                    UnconfiguredTargetConfiguration.INSTANCE,
-                    UnconfiguredTargetConfiguration.INSTANCE,
-                    input);
+        new DefaultTypeCoercerFactory()
+            .typeCoercerForType(TypeToken.of(StringWithMacros.class))
+            .coerce(
+                cellNames,
+                filesystem,
+                rule.getBuildTarget().getCellRelativeBasePath().getPath(),
+                UnconfiguredTargetConfiguration.INSTANCE,
+                UnconfiguredTargetConfiguration.INSTANCE,
+                input);
     Arg arg = converter.convert(stringWithMacros);
     return Arg.stringify(arg, graphBuilder.getSourcePathResolver());
   }

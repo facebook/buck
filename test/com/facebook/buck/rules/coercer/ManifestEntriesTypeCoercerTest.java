@@ -26,6 +26,7 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.reflect.TypeToken;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -40,7 +41,8 @@ public class ManifestEntriesTypeCoercerTest {
   @Before
   public void setUp() {
     DefaultTypeCoercerFactory factory = new DefaultTypeCoercerFactory();
-    TypeCoercer<Object, ?> typeCoercer = factory.typeCoercerForType(ManifestEntries.class);
+    TypeCoercer<Object, ManifestEntries> typeCoercer =
+        factory.typeCoercerForType(TypeToken.of(ManifestEntries.class));
     assertTrue(typeCoercer instanceof ManifestEntriesTypeCoercer);
     manifestEntriesTypeCoercer = (ManifestEntriesTypeCoercer) typeCoercer;
   }

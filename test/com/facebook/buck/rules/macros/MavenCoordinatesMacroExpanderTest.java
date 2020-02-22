@@ -40,6 +40,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.google.common.collect.ImmutableList;
+import com.google.common.reflect.TypeToken;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -160,16 +161,15 @@ public class MavenCoordinatesMacroExpanderTest {
       BuildRule rule)
       throws CoerceFailedException {
     StringWithMacros stringWithMacros =
-        (StringWithMacros)
-            new DefaultTypeCoercerFactory()
-                .typeCoercerForType(StringWithMacros.class)
-                .coerce(
-                    cellPathResolver,
-                    filesystem,
-                    rule.getBuildTarget().getCellRelativeBasePath().getPath(),
-                    UnconfiguredTargetConfiguration.INSTANCE,
-                    UnconfiguredTargetConfiguration.INSTANCE,
-                    input);
+        new DefaultTypeCoercerFactory()
+            .typeCoercerForType(TypeToken.of(StringWithMacros.class))
+            .coerce(
+                cellPathResolver,
+                filesystem,
+                rule.getBuildTarget().getCellRelativeBasePath().getPath(),
+                UnconfiguredTargetConfiguration.INSTANCE,
+                UnconfiguredTargetConfiguration.INSTANCE,
+                input);
     Arg arg = converter.convert(stringWithMacros);
     return Arg.stringify(arg, graphBuilder.getSourcePathResolver());
   }

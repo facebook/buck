@@ -35,6 +35,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.google.common.collect.ImmutableList;
+import com.google.common.reflect.TypeToken;
 import java.nio.file.Path;
 import org.junit.Rule;
 import org.junit.Test;
@@ -95,7 +96,7 @@ public class AbsoluteOutputMacroExpanderTest {
             containsString("expected exactly one argument (found 1)")));
 
     new DefaultTypeCoercerFactory()
-        .typeCoercerForType(StringWithMacros.class)
+        .typeCoercerForType(TypeToken.of(StringWithMacros.class))
         .coerce(
             cellPathResolver,
             filesystem,
@@ -107,16 +108,15 @@ public class AbsoluteOutputMacroExpanderTest {
 
   private String coerceAndStringify(String input, BuildRule rule) throws CoerceFailedException {
     StringWithMacros stringWithMacros =
-        (StringWithMacros)
-            new DefaultTypeCoercerFactory()
-                .typeCoercerForType(StringWithMacros.class)
-                .coerce(
-                    cellPathResolver,
-                    filesystem,
-                    rule.getBuildTarget().getCellRelativeBasePath().getPath(),
-                    UnconfiguredTargetConfiguration.INSTANCE,
-                    UnconfiguredTargetConfiguration.INSTANCE,
-                    input);
+        new DefaultTypeCoercerFactory()
+            .typeCoercerForType(TypeToken.of(StringWithMacros.class))
+            .coerce(
+                cellPathResolver,
+                filesystem,
+                rule.getBuildTarget().getCellRelativeBasePath().getPath(),
+                UnconfiguredTargetConfiguration.INSTANCE,
+                UnconfiguredTargetConfiguration.INSTANCE,
+                input);
     Arg arg = converter.convert(stringWithMacros);
     return Arg.stringify(arg, graphBuilder.getSourcePathResolver());
   }

@@ -17,11 +17,11 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.description.arg.DataTransferObject;
-import java.lang.reflect.Type;
+import com.google.common.reflect.TypeToken;
 
 public interface TypeCoercerFactory {
 
-  TypeCoercer<Object, ?> typeCoercerForType(Type type);
+  <T> TypeCoercer<Object, T> typeCoercerForType(TypeToken<T> type);
 
   /**
    * Returns an unpopulated DTO object, and the build method which must be called with it when it is

@@ -47,6 +47,7 @@ import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.testutil.HashMapWithStats;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
+import com.google.common.reflect.TypeToken;
 import java.nio.file.Paths;
 import java.util.Optional;
 import org.hamcrest.Matchers;
@@ -64,7 +65,7 @@ public class QueryTargetsAndOutputsMacroExpanderTest {
   private ProjectFilesystem filesystem;
   private ActionGraphBuilder graphBuilder;
   private CellPathResolver cellNames;
-  private TypeCoercer<Object, ?> coercer;
+  private TypeCoercer<Object, StringWithMacros> coercer;
   private BuildRule rule;
   private StringWithMacrosConverter converter;
   private HashMapWithStats<Macro, Object> cache;
@@ -74,7 +75,8 @@ public class QueryTargetsAndOutputsMacroExpanderTest {
     cache = new HashMapWithStats<>();
     filesystem = new FakeProjectFilesystem(CanonicalCellName.rootCell(), AbsPath.of(tmp.getRoot()));
     cellNames = TestCellBuilder.createCellRoots(filesystem);
-    coercer = new DefaultTypeCoercerFactory().typeCoercerForType(StringWithMacros.class);
+    coercer =
+        new DefaultTypeCoercerFactory().typeCoercerForType(TypeToken.of(StringWithMacros.class));
 
     TargetNode<?> depNode =
         JavaLibraryBuilder.createBuilder(
