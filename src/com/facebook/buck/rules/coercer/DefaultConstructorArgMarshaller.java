@@ -30,7 +30,6 @@ import com.facebook.buck.core.select.SelectorKey;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.coercer.concat.Concatable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -192,7 +191,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
   }
 
   @Nullable
-  private Object createAttribute(
+  private <T> T createAttribute(
       CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       SelectorListResolver selectorListResolver,
@@ -202,7 +201,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       TargetConfiguration targetConfiguration,
       TargetConfiguration hostConfiguration,
       ImmutableSet.Builder<BuildTarget> configurationDeps,
-      ParamInfo<?> info,
+      ParamInfo<T> info,
       boolean isConfigurationRule,
       Object attribute)
       throws CoerceFailedException {
@@ -223,8 +222,8 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
             "%s: attribute '%s' cannot be configured using select", buildTarget, info.getName());
       }
 
-      SelectorListCoercer<?> coercer = new SelectorListCoercer<>(info.getTypeCoercer());
-      SelectorList<?> attributeWithSelectableValue =
+      SelectorListCoercer<T> coercer = new SelectorListCoercer<>(info.getTypeCoercer());
+      SelectorList<T> attributeWithSelectableValue =
           coercer.coerce(
               cellNameResolver,
               filesystem,
@@ -253,14 +252,13 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
   }
 
   @Nullable
-  @SuppressWarnings("unchecked")
   private <T> T configureAttributeValue(
       SelectableConfigurationContext configurationContext,
       SelectorListResolver selectorListResolver,
       BuildTarget buildTarget,
       DependencyStack dependencyStack,
       ImmutableSet.Builder<BuildTarget> configurationDeps,
-      ParamInfo<?> paramInfo,
+      ParamInfo<T> paramInfo,
       SelectorList<T> selectorList) {
     T value =
         selectorListResolver.resolveList(
@@ -268,7 +266,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
             buildTarget,
             paramInfo.getName(),
             selectorList,
-            (Concatable<T>) paramInfo.getTypeCoercer(),
+            paramInfo.getTypeCoercer(),
             dependencyStack);
     addSelectorListConfigurationDepsToBuilder(configurationDeps, selectorList);
     return value;
