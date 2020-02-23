@@ -988,7 +988,7 @@ public class TargetsCommand extends AbstractCommand {
     try (PerBuildState state =
         new PerBuildStateFactory(
                 params.getTypeCoercerFactory(),
-                new DefaultConstructorArgMarshaller(params.getTypeCoercerFactory()),
+                new DefaultConstructorArgMarshaller(),
                 params.getKnownRuleTypesProvider(),
                 new ParserPythonInterpreterProvider(
                     params.getCells().getRootCell().getBuckConfig(), params.getExecutableFinder()),
@@ -1402,7 +1402,7 @@ public class TargetsCommand extends AbstractCommand {
     try (PerBuildState state =
         new PerBuildStateFactory(
                 params.getTypeCoercerFactory(),
-                new DefaultConstructorArgMarshaller(params.getTypeCoercerFactory()),
+                new DefaultConstructorArgMarshaller(),
                 params.getKnownRuleTypesProvider(),
                 new ParserPythonInterpreterProvider(
                     params.getCells().getRootCell().getBuckConfig(), params.getExecutableFinder()),

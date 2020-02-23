@@ -55,7 +55,7 @@ public class TestParserFactory {
         cell,
         new PerBuildStateFactory(
             typeCoercerFactory,
-            new DefaultConstructorArgMarshaller(typeCoercerFactory),
+            new DefaultConstructorArgMarshaller(),
             knownRuleTypesProvider,
             new ParserPythonInterpreterProvider(parserConfig, new ExecutableFinder()),
             WatchmanFactory.NULL_WATCHMAN,

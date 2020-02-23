@@ -524,8 +524,7 @@ public class ParsePipelineTest {
       this.cells = new Cells(this.workspace.asCell());
 
       TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory();
-      ConstructorArgMarshaller constructorArgMarshaller =
-          new DefaultConstructorArgMarshaller(coercerFactory);
+      ConstructorArgMarshaller constructorArgMarshaller = new DefaultConstructorArgMarshaller();
 
       this.daemonicParserState = new DaemonicParserState(NUM_THREADS);
 

@@ -216,7 +216,7 @@ public class ParserWithConfigurableAttributesTest {
     try (PerBuildState state =
         new PerBuildStateFactory(
                 typeCoercerFactory,
-                new DefaultConstructorArgMarshaller(typeCoercerFactory),
+                new DefaultConstructorArgMarshaller(),
                 knownRuleTypesProvider,
                 new ParserPythonInterpreterProvider(cell.getBuckConfig(), executableFinder),
                 WatchmanFactory.NULL_WATCHMAN,
@@ -2715,7 +2715,7 @@ public class ParserWithConfigurableAttributesTest {
     try (PerBuildState state =
         new PerBuildStateFactory(
                 typeCoercerFactory,
-                new DefaultConstructorArgMarshaller(typeCoercerFactory),
+                new DefaultConstructorArgMarshaller(),
                 knownRuleTypesProvider,
                 new ParserPythonInterpreterProvider(cell.getBuckConfig(), executableFinder),
                 WatchmanFactory.NULL_WATCHMAN,

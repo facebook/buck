@@ -1898,7 +1898,7 @@ public final class MainRunner {
     return ImmutableParserAndCaches.of(
         ParserFactory.create(
             typeCoercerFactory,
-            new DefaultConstructorArgMarshaller(typeCoercerFactory),
+            new DefaultConstructorArgMarshaller(),
             knownRuleTypesProvider,
             new ParserPythonInterpreterProvider(parserConfig, executableFinder),
             buckGlobalState.getDaemonicParserState(),

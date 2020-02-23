@@ -164,7 +164,7 @@ public class GraphEngineFactory {
         new UnconfiguredTargetNodeToTargetNodeFactory(
             params.getTypeCoercerFactory(),
             params.getKnownRuleTypesProvider(),
-            new DefaultConstructorArgMarshaller(params.getTypeCoercerFactory()),
+            new DefaultConstructorArgMarshaller(),
             new TargetNodeFactory(
                 params.getTypeCoercerFactory(),
                 new DefaultCellNameResolverProvider(

@@ -112,7 +112,7 @@ public class TargetGraphHashingTest {
     PerBuildState parserState =
         new PerBuildStateFactory(
                 typeCoercerFactory,
-                new DefaultConstructorArgMarshaller(typeCoercerFactory),
+                new DefaultConstructorArgMarshaller(),
                 knownRuleTypesProvider,
                 new ParserPythonInterpreterProvider(cell.getBuckConfig(), new ExecutableFinder()),
                 WatchmanFactory.NULL_WATCHMAN,

@@ -239,7 +239,7 @@ public class TargetCompatibilityCheckerTest {
   private ConstructorArg createTargetNodeArg(Map<String, Object> rawNode) throws Exception {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-    ConstructorArgMarshaller marshaller = new DefaultConstructorArgMarshaller(typeCoercerFactory);
+    ConstructorArgMarshaller marshaller = new DefaultConstructorArgMarshaller();
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//:target");
 

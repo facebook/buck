@@ -117,7 +117,7 @@ public class QueryCommandTest {
     PerBuildState perBuildState =
         new PerBuildStateFactory(
                 typeCoercerFactory,
-                new DefaultConstructorArgMarshaller(typeCoercerFactory),
+                new DefaultConstructorArgMarshaller(),
                 params.getKnownRuleTypesProvider(),
                 new ParserPythonInterpreterProvider(
                     cell.getRootCell().getBuckConfig(), new ExecutableFinder()),

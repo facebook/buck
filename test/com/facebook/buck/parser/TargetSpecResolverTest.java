@@ -105,7 +105,7 @@ public class TargetSpecResolverTest {
     cell = new TestCellBuilder().setFilesystem(filesystem).build();
     eventBus = BuckEventBusForTests.newInstance();
     typeCoercerFactory = new DefaultTypeCoercerFactory();
-    constructorArgMarshaller = new DefaultConstructorArgMarshaller(typeCoercerFactory);
+    constructorArgMarshaller = new DefaultConstructorArgMarshaller();
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
     KnownRuleTypesProvider knownRuleTypesProvider =
         TestKnownRuleTypesProvider.create(pluginManager);

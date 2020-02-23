@@ -117,8 +117,7 @@ public class SkylarkDescriptionArgTest {
   @Test
   public void defaultValuesUsedWhenMarshalling()
       throws LabelSyntaxException, EvalException, CoerceFailedException {
-    DefaultConstructorArgMarshaller marshaller =
-        new DefaultConstructorArgMarshaller(new DefaultTypeCoercerFactory());
+    DefaultConstructorArgMarshaller marshaller = new DefaultConstructorArgMarshaller();
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     CellNameResolver cellNameResolver =
         DefaultCellPathResolver.create(

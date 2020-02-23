@@ -96,7 +96,7 @@ public class GenruleDescriptionTest {
             "cmd",
             "$(exe //bin:executable) $(location :arg)");
     ProjectFilesystem projectFilesystem = new AllExistingProjectFilesystem();
-    ConstructorArgMarshaller marshaller = new DefaultConstructorArgMarshaller(typeCoercerFactory);
+    ConstructorArgMarshaller marshaller = new DefaultConstructorArgMarshaller();
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
     ImmutableSet.Builder<VisibilityPattern> visibilityPatterns = ImmutableSet.builder();
     ImmutableSet.Builder<VisibilityPattern> withinViewPatterns = ImmutableSet.builder();

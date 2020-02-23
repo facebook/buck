@@ -120,7 +120,7 @@ public class BuckQueryEnvironmentTest {
     PerBuildStateFactory perBuildStateFactory =
         new PerBuildStateFactory(
             typeCoercerFactory,
-            new DefaultConstructorArgMarshaller(typeCoercerFactory),
+            new DefaultConstructorArgMarshaller(),
             knownRuleTypesProvider,
             new ParserPythonInterpreterProvider(parserConfig, executableFinder),
             WatchmanFactory.NULL_WATCHMAN,

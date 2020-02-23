@@ -274,7 +274,7 @@ public class TargetNodeTest {
   private static ExampleDescriptionArg createPopulatedConstructorArg(
       BuildTarget buildTarget, Map<String, Object> instance) throws NoSuchBuildTargetException {
     DefaultTypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory();
-    ConstructorArgMarshaller marshaller = new DefaultConstructorArgMarshaller(coercerFactory);
+    ConstructorArgMarshaller marshaller = new DefaultConstructorArgMarshaller();
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     KnownNativeRuleTypes knownRuleTypes =
         KnownNativeRuleTypes.of(

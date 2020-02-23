@@ -40,18 +40,6 @@ import javax.annotation.Nullable;
 
 public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller {
 
-  private final TypeCoercerFactory typeCoercerFactory;
-
-  /**
-   * Constructor. {@code pathFromProjectRootToBuildFile} is the path relative to the project root to
-   * the build file that has called the build rule's function in buck.py. This is used for resolving
-   * additional paths to ones relative to the project root, and to allow {@link BuildTarget}
-   * instances to be fully qualified.
-   */
-  public DefaultConstructorArgMarshaller(TypeCoercerFactory typeCoercerFactory) {
-    this.typeCoercerFactory = typeCoercerFactory;
-  }
-
   private void collectDeclaredDeps(
       CellNameResolver cellNameResolver,
       @Nullable ParamInfo<?> deps,
@@ -235,9 +223,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
             "%s: attribute '%s' cannot be configured using select", buildTarget, info.getName());
       }
 
-      SelectorListCoercer<?> coercer =
-          new SelectorListCoercer<>(
-              typeCoercerFactory.typeCoercerForType(info.getTypeCoercer().getOutputType()));
+      SelectorListCoercer<?> coercer = new SelectorListCoercer<>(info.getTypeCoercer());
       SelectorList<?> attributeWithSelectableValue =
           coercer.coerce(
               cellNameResolver,

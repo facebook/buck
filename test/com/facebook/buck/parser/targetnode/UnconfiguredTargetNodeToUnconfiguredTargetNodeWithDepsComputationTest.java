@@ -63,7 +63,7 @@ public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputationTe
         new UnconfiguredTargetNodeToTargetNodeFactory(
             typeCoercerFactory,
             TestKnownRuleTypesProvider.create(BuckPluginManagerFactory.createPluginManager()),
-            new DefaultConstructorArgMarshaller(typeCoercerFactory),
+            new DefaultConstructorArgMarshaller(),
             new TargetNodeFactory(typeCoercerFactory, new DefaultCellNameResolverProvider(cell)),
             new NoopPackageBoundaryChecker(),
             (file, targetNode) -> {},
