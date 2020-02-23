@@ -22,7 +22,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.TestCellPathResolver;
-import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.starlark.rule.SkylarkDescriptionArg;
@@ -247,27 +246,6 @@ public class SkylarkParamInfoTest {
         UnconfiguredTargetConfiguration.INSTANCE,
         arg,
         7);
-  }
-
-  @Test
-  public void setsProperlyFromMapOfParams()
-      throws ParamInfoException, LabelSyntaxException, EvalException {
-
-    SkylarkUserDefinedRule rule = FakeSkylarkUserDefinedRuleFactory.createSimpleRule();
-    SkylarkDescriptionArg arg = new SkylarkDescriptionArg(rule);
-    SkylarkParamInfo<?> info = new SkylarkParamInfo<>("baz", rule.getAttrs().get("baz"));
-    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-    info.setFromParams(
-        TestCellPathResolver.get(filesystem).getCellNameResolver(),
-        filesystem,
-        BuildTargetFactory.newInstance("//foo:bar"),
-        UnconfiguredTargetConfiguration.INSTANCE,
-        UnconfiguredTargetConfiguration.INSTANCE,
-        arg,
-        ImmutableMap.of("baz", "foo"));
-
-    assertEquals("foo", info.get(arg));
-    assertEquals("foo", arg.getPostCoercionValue("baz"));
   }
 
   @Test

@@ -18,12 +18,10 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.Hint;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import java.nio.file.Path;
-import java.util.Map;
 import javax.annotation.Nullable;
 
 /** Represents a single field that can be represented in buck build files. */
@@ -95,16 +93,6 @@ public interface ParamInfo<T> {
 
   /** @return the value of this param as set on dto. */
   T get(Object dto);
-
-  void setFromParams(
-      CellNameResolver cellNameResolver,
-      ProjectFilesystem filesystem,
-      BuildTarget buildTarget,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
-      Object arg,
-      Map<String, ?> instance)
-      throws ParamInfoException;
 
   /**
    * Sets a single property of the {@code dto}, coercing types as necessary.

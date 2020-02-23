@@ -18,13 +18,11 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.Hint;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
-import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
@@ -131,26 +129,6 @@ public abstract class AbstractParamInfo<T> implements ParamInfo<T> {
     if (object != null) {
       typeCoercer.traverse(cellPathResolver, object, traversal);
     }
-  }
-
-  @Override
-  public void setFromParams(
-      CellNameResolver cellNameResolver,
-      ProjectFilesystem filesystem,
-      BuildTarget buildTarget,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
-      Object arg,
-      Map<String, ?> instance)
-      throws ParamInfoException {
-    set(
-        cellNameResolver,
-        filesystem,
-        buildTarget.getCellRelativeBasePath().getPath(),
-        targetConfiguration,
-        hostConfiguration,
-        arg,
-        instance.get(name));
   }
 
   @Override
