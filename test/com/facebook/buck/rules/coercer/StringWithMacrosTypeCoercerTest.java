@@ -35,7 +35,6 @@ import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.util.Arrays;
 import java.util.Collections;
 import org.hamcrest.Matchers;
@@ -54,8 +53,7 @@ public class StringWithMacrosTypeCoercerTest {
 
   @Test
   public void plainString() throws CoerceFailedException {
-    StringWithMacrosTypeCoercer coercer =
-        StringWithMacrosTypeCoercer.from(ImmutableMap.of(), ImmutableList.of());
+    StringWithMacrosTypeCoercer coercer = StringWithMacrosTypeCoercer.builder().build();
     assertThat(
         coercer.coerce(
             cellNameResolver,
@@ -70,8 +68,9 @@ public class StringWithMacrosTypeCoercerTest {
   @Test
   public void embeddedMacro() throws CoerceFailedException {
     StringWithMacrosTypeCoercer coercer =
-        StringWithMacrosTypeCoercer.from(
-            ImmutableMap.of("test", TestMacro.class), ImmutableList.of(new TestMacroTypeCoercer()));
+        StringWithMacrosTypeCoercer.builder()
+            .put("test", TestMacro.class, new TestMacroTypeCoercer())
+            .build();
     assertThat(
         coercer.coerce(
             cellNameResolver,
@@ -119,8 +118,9 @@ public class StringWithMacrosTypeCoercerTest {
   @Test
   public void failedMacroNotFound() throws CoerceFailedException {
     StringWithMacrosTypeCoercer coercer =
-        StringWithMacrosTypeCoercer.from(
-            ImmutableMap.of("test", TestMacro.class), ImmutableList.of(new TestMacroTypeCoercer()));
+        StringWithMacrosTypeCoercer.builder()
+            .put("test", TestMacro.class, new TestMacroTypeCoercer())
+            .build();
     thrown.expect(CoerceFailedException.class);
     thrown.expectMessage(
         containsString("Macro 'testnotfound' not found when expanding '$(testnotfound arg)'"));
@@ -136,9 +136,9 @@ public class StringWithMacrosTypeCoercerTest {
   @Test
   public void failedMacroArgument() throws CoerceFailedException {
     StringWithMacrosTypeCoercer coercer =
-        StringWithMacrosTypeCoercer.from(
-            ImmutableMap.of("test", TestMacro.class),
-            ImmutableList.of(new TestFailMacroTypeCoercer()));
+        StringWithMacrosTypeCoercer.builder()
+            .put("test", TestMacro.class, new TestFailMacroTypeCoercer())
+            .build();
     thrown.expect(CoerceFailedException.class);
     thrown.expectMessage(containsString("The macro '$(test arg)' could not be expanded:\nfailed"));
     coercer.coerce(
@@ -153,11 +153,10 @@ public class StringWithMacrosTypeCoercerTest {
   @Test
   public void multipleMacros() throws CoerceFailedException {
     StringWithMacrosTypeCoercer coercer =
-        StringWithMacrosTypeCoercer.from(
-            ImmutableMap.of(
-                "test1", TestMacro.class,
-                "test2", TestMacro.class),
-            ImmutableList.of(new TestMacroTypeCoercer()));
+        StringWithMacrosTypeCoercer.builder()
+            .put("test1", TestMacro.class, new TestMacroTypeCoercer())
+            .put("test2", Test2Macro.class, new Test2MacroTypeCoercer())
+            .build();
     assertThat(
         coercer.coerce(
             cellNameResolver,
@@ -169,14 +168,16 @@ public class StringWithMacrosTypeCoercerTest {
         Matchers.equalTo(
             StringWithMacrosUtils.format(
                 "first %s second %s",
-                new TestMacro(ImmutableList.of("arg1")), new TestMacro(ImmutableList.of("arg2")))));
+                new TestMacro(ImmutableList.of("arg1")),
+                new Test2Macro(ImmutableList.of("arg2")))));
   }
 
   @Test
   public void outputToFile() throws CoerceFailedException {
     StringWithMacrosTypeCoercer coercer =
-        StringWithMacrosTypeCoercer.from(
-            ImmutableMap.of("test", TestMacro.class), ImmutableList.of(new TestMacroTypeCoercer()));
+        StringWithMacrosTypeCoercer.builder()
+            .put("test", TestMacro.class, new TestMacroTypeCoercer())
+            .build();
     assertThat(
         coercer.coerce(
             cellNameResolver,
@@ -194,8 +195,9 @@ public class StringWithMacrosTypeCoercerTest {
   @Test
   public void escaping() throws CoerceFailedException {
     StringWithMacrosTypeCoercer coercer =
-        StringWithMacrosTypeCoercer.from(
-            ImmutableMap.of("test", TestMacro.class), ImmutableList.of(new TestMacroTypeCoercer()));
+        StringWithMacrosTypeCoercer.builder()
+            .put("test", TestMacro.class, new TestMacroTypeCoercer())
+            .build();
     assertThat(
         coercer.coerce(
             cellNameResolver,
@@ -215,8 +217,9 @@ public class StringWithMacrosTypeCoercerTest {
   @Test
   public void testConcatCombinesStrings() throws CoerceFailedException {
     StringWithMacrosTypeCoercer coercer =
-        StringWithMacrosTypeCoercer.from(
-            ImmutableMap.of("test", TestMacro.class), ImmutableList.of(new TestMacroTypeCoercer()));
+        StringWithMacrosTypeCoercer.builder()
+            .put("test", TestMacro.class, new TestMacroTypeCoercer())
+            .build();
 
     StringWithMacros string1 =
         coercer.coerce(
@@ -301,8 +304,9 @@ public class StringWithMacrosTypeCoercerTest {
   @Test
   public void testConcatCombinesTwoStrings() throws CoerceFailedException {
     StringWithMacrosTypeCoercer coercer =
-        StringWithMacrosTypeCoercer.from(
-            ImmutableMap.of("test", TestMacro.class), ImmutableList.of(new TestMacroTypeCoercer()));
+        StringWithMacrosTypeCoercer.builder()
+            .put("test", TestMacro.class, new TestMacroTypeCoercer())
+            .build();
 
     StringWithMacros string1 =
         coercer.coerce(
@@ -335,8 +339,9 @@ public class StringWithMacrosTypeCoercerTest {
   @Test
   public void testConcatOfOneStringReturnsTheSameString() throws CoerceFailedException {
     StringWithMacrosTypeCoercer coercer =
-        StringWithMacrosTypeCoercer.from(
-            ImmutableMap.of("test", TestMacro.class), ImmutableList.of(new TestMacroTypeCoercer()));
+        StringWithMacrosTypeCoercer.builder()
+            .put("test", TestMacro.class, new TestMacroTypeCoercer())
+            .build();
 
     StringWithMacros string1 =
         coercer.coerce(
@@ -360,8 +365,7 @@ public class StringWithMacrosTypeCoercerTest {
 
   @Test
   public void testConcatOfEmptyStringReturnsEmptyString() {
-    StringWithMacrosTypeCoercer coercer =
-        StringWithMacrosTypeCoercer.from(ImmutableMap.of(), ImmutableList.of());
+    StringWithMacrosTypeCoercer coercer = StringWithMacrosTypeCoercer.builder().build();
 
     assertTrue(
         coercer
@@ -373,8 +377,9 @@ public class StringWithMacrosTypeCoercerTest {
   @Test
   public void testConcatCombinesStringInTheMiddle() throws CoerceFailedException {
     StringWithMacrosTypeCoercer coercer =
-        StringWithMacrosTypeCoercer.from(
-            ImmutableMap.of("test", TestMacro.class), ImmutableList.of(new TestMacroTypeCoercer()));
+        StringWithMacrosTypeCoercer.builder()
+            .put("test", TestMacro.class, new TestMacroTypeCoercer())
+            .build();
 
     StringWithMacros string1 =
         coercer.coerce(
@@ -445,6 +450,38 @@ public class StringWithMacrosTypeCoercerTest {
     }
   }
 
+  static class Test2Macro implements Macro {
+    private final ImmutableList<String> args;
+
+    Test2Macro(ImmutableList<String> args) {
+      this.args = args;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+
+      Test2Macro testMacro = (Test2Macro) o;
+
+      return args.equals(testMacro.args);
+    }
+
+    @Override
+    public Class<? extends Macro> getMacroClass() {
+      return TestMacro.class;
+    }
+
+    @Override
+    public int hashCode() {
+      return args.hashCode();
+    }
+  }
+
   static class TestMacroTypeCoercer implements MacroTypeCoercer<TestMacro> {
 
     @Override
@@ -469,6 +506,33 @@ public class StringWithMacrosTypeCoercerTest {
         TargetConfiguration hostConfiguration,
         ImmutableList<String> args) {
       return new TestMacro(args);
+    }
+  }
+
+  static class Test2MacroTypeCoercer implements MacroTypeCoercer<Test2Macro> {
+
+    @Override
+    public boolean hasElementClass(Class<?>[] types) {
+      return false;
+    }
+
+    @Override
+    public Class<Test2Macro> getOutputClass() {
+      return Test2Macro.class;
+    }
+
+    @Override
+    public void traverse(CellNameResolver cellRoots, Test2Macro macro, Traversal traversal) {}
+
+    @Override
+    public Test2Macro coerce(
+        CellNameResolver cellNameResolver,
+        ProjectFilesystem filesystem,
+        ForwardRelativePath pathRelativeToProjectRoot,
+        TargetConfiguration targetConfiguration,
+        TargetConfiguration hostConfiguration,
+        ImmutableList<String> args) {
+      return new Test2Macro(args);
     }
   }
 

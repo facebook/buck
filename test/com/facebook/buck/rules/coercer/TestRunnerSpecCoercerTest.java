@@ -37,9 +37,12 @@ public class TestRunnerSpecCoercerTest {
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
   private final StringWithMacrosTypeCoercer stringWithMacrosTypeCoercer =
-      StringWithMacrosTypeCoercer.from(
-          ImmutableMap.of("test", StringWithMacrosTypeCoercerTest.TestMacro.class),
-          ImmutableList.of(new StringWithMacrosTypeCoercerTest.TestMacroTypeCoercer()));;
+      StringWithMacrosTypeCoercer.builder()
+          .put(
+              "test",
+              StringWithMacrosTypeCoercerTest.TestMacro.class,
+              new StringWithMacrosTypeCoercerTest.TestMacroTypeCoercer())
+          .build();
 
   private final TestRunnerSpecCoercer coercer =
       new TestRunnerSpecCoercer(stringWithMacrosTypeCoercer);

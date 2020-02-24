@@ -54,13 +54,6 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<Object, StringWi
     this.coercers = coercers;
   }
 
-  static StringWithMacrosTypeCoercer from(
-      ImmutableMap<String, Class<? extends Macro>> macros,
-      ImmutableList<MacroTypeCoercer<? extends Macro>> coercers) {
-    return new StringWithMacrosTypeCoercer(
-        macros, Maps.uniqueIndex(coercers, MacroTypeCoercer::getOutputClass));
-  }
-
   @Override
   public TypeToken<StringWithMacros> getOutputType() {
     return TypeToken.of(StringWithMacros.class);
@@ -250,5 +243,33 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<Object, StringWi
       parts.add(Either.ofLeft(string.toString()));
       string.setLength(0);
     }
+  }
+
+  /** Builder of {@link StringWithMacrosTypeCoercer}. */
+  static class Builder {
+
+    private Builder() {}
+
+    private ImmutableMap.Builder<String, Class<? extends Macro>> macros = ImmutableMap.builder();
+    private ImmutableList.Builder<MacroTypeCoercer<? extends Macro>> macroCoercers =
+        ImmutableList.builder();
+
+    public <M extends Macro> Builder put(
+        String macro, Class<M> macroClass, MacroTypeCoercer<M> coercer) {
+      macros.put(macro, macroClass);
+      macroCoercers.add(coercer);
+      return this;
+    }
+
+    StringWithMacrosTypeCoercer build() {
+      return new StringWithMacrosTypeCoercer(
+          this.macros.build(),
+          Maps.uniqueIndex(this.macroCoercers.build(), MacroTypeCoercer::getOutputClass));
+    }
+  }
+
+  /** New {@link Builder}. */
+  static Builder builder() {
+    return new Builder();
   }
 }
