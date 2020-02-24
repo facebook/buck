@@ -22,6 +22,7 @@ import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.NewCellPathResolver;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.ToolchainProviderFactory;
@@ -34,7 +35,6 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 import org.pf4j.PluginManager;
 
 /**
@@ -47,7 +47,7 @@ import org.pf4j.PluginManager;
 public class RootCellFactory {
 
   public static Cell create(
-      ImmutableSortedSet<Path> knownRoots,
+      ImmutableSortedSet<AbsPath> knownRoots,
       CellProvider cellProvider,
       NewCellPathResolver newCellPathResolver,
       CellPathResolver rootCellCellPathResolver,

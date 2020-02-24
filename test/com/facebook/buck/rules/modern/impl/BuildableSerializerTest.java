@@ -27,6 +27,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -89,8 +90,9 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
 
     expect(cellResolver.getKnownRoots())
         .andReturn(
-            ImmutableSortedSet.of(
-                rootFilesystem.getRootPath().getPath(), otherFilesystem.getRootPath().getPath()))
+            ImmutableSortedSet.orderedBy(AbsPath.comparator())
+                .add(rootFilesystem.getRootPath(), otherFilesystem.getRootPath())
+                .build())
         .anyTimes();
 
     expect(cellResolver.getCanonicalCellName(rootFilesystem.getRootPath()))

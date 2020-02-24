@@ -47,6 +47,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheLoader;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -176,7 +177,8 @@ public class LocalCellProviderFactory {
                 // TODO(13777679): cells in other watchman roots do not work correctly.
 
                 return ImmutableCellImpl.of(
-                    cellPathResolver.getKnownRoots(),
+                    cellPathResolver.getKnownRoots().stream()
+                        .collect(ImmutableSortedSet.toImmutableSortedSet(AbsPath.comparator())),
                     canonicalCellName,
                     cellFilesystem,
                     buckConfig,

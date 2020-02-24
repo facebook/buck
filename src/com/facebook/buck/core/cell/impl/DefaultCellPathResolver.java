@@ -77,7 +77,7 @@ public abstract class DefaultCellPathResolver extends AbstractCellPathResolver {
 
   @Value.Lazy
   @Override
-  public ImmutableSortedSet<Path> getKnownRoots() {
+  public ImmutableSortedSet<AbsPath> getKnownRoots() {
     return super.getKnownRoots();
   }
 

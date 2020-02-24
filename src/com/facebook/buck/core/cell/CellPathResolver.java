@@ -92,5 +92,5 @@ public interface CellPathResolver {
   }
 
   /** @return paths to roots of all cells known to this resolver. */
-  ImmutableSortedSet<Path> getKnownRoots();
+  ImmutableSortedSet<AbsPath> getKnownRoots();
 }

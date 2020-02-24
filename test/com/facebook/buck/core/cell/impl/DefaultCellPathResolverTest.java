@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.CellName;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.util.CreateSymlinksForTests;
 import com.facebook.buck.util.config.ConfigBuilder;
 import com.facebook.buck.util.environment.Platform;
@@ -230,7 +231,11 @@ public class DefaultCellPathResolverTest {
             "a", a,
             "root", root));
 
-    assertEquals(cellPathResolver.getKnownRoots(), ImmutableSortedSet.of(i, afg, abcde, a, root));
+    assertEquals(
+        cellPathResolver.getKnownRoots(),
+        ImmutableSortedSet.orderedBy(AbsPath.comparator())
+            .add(AbsPath.of(i), AbsPath.of(afg), AbsPath.of(abcde), AbsPath.of(a), AbsPath.of(root))
+            .build());
   }
 
   @Test
@@ -246,7 +251,9 @@ public class DefaultCellPathResolverTest {
 
     assertEquals(
         cellPathResolver.getKnownRoots(),
-        ImmutableSortedSet.of(vfs.getPath("/foo/root"), vfs.getPath("/foo/cell")));
+        ImmutableSortedSet.orderedBy(AbsPath.comparator())
+            .add(AbsPath.of(vfs.getPath("/foo/root")), AbsPath.of(vfs.getPath("/foo/cell")))
+            .build());
   }
 
   @Test

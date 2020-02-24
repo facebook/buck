@@ -47,7 +47,7 @@ abstract class CellImpl implements Cell {
 
   @Override
   @Value.Auxiliary
-  public abstract ImmutableSortedSet<Path> getKnownRootsOfAllCells();
+  public abstract ImmutableSortedSet<AbsPath> getKnownRootsOfAllCells();
 
   @Override
   @Value.Auxiliary
@@ -66,8 +66,8 @@ abstract class CellImpl implements Cell {
         ImmutableSet.builderWithExpectedSize(filesystem.getBlacklistedPaths().size() + 1);
     ignores.addAll(filesystem.getBlacklistedPaths());
     ignores.add(RecursiveFileMatcher.of(RelPath.of(filesystem.getBuckPaths().getBuckOut())));
-    for (Path subCellRoots : getKnownRootsOfAllCells()) {
-      if (!AbsPath.of(subCellRoots).equals(getRoot())) {
+    for (AbsPath subCellRoots : getKnownRootsOfAllCells()) {
+      if (!subCellRoots.equals(getRoot())) {
         ignores.add(
             RecursiveFileMatcher.of(RelPath.of(filesystem.relativize(subCellRoots).getPath())));
       }
@@ -104,7 +104,7 @@ abstract class CellImpl implements Cell {
 
   @Override
   public Cell getCell(Path cellPath) {
-    if (!getKnownRootsOfAllCells().contains(cellPath)) {
+    if (!getKnownRootsOfAllCells().contains(AbsPath.of(cellPath))) {
       throw new HumanReadableException(
           "Unable to find repository rooted at %s. Known roots are:\n  %s",
           cellPath, Joiner.on(",\n  ").join(getKnownRootsOfAllCells()));
@@ -120,6 +120,7 @@ abstract class CellImpl implements Cell {
   @Override
   public ImmutableList<Cell> getAllCells() {
     return RichStream.from(getKnownRootsOfAllCells())
+        .map(AbsPath::getPath)
         .concat(RichStream.of(getRoot().getPath()))
         .distinct()
         .map(getCellProvider()::getCellByPath)

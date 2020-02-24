@@ -37,7 +37,7 @@ import java.nio.file.Path;
  */
 public interface Cell {
 
-  ImmutableSortedSet<Path> getKnownRootsOfAllCells();
+  ImmutableSortedSet<AbsPath> getKnownRootsOfAllCells();
 
   CanonicalCellName getCanonicalName();
 

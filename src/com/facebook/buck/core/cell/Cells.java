@@ -53,11 +53,11 @@ public class Cells {
   /** @return Path of the topmost cell's path that roots all other cells */
   public AbsPath getSuperRootPath() {
     AbsPath cellRoot = getRootCell().getRoot();
-    ImmutableSortedSet<Path> allRoots = getRootCell().getKnownRootsOfAllCells();
+    ImmutableSortedSet<AbsPath> allRoots = getRootCell().getKnownRootsOfAllCells();
     AbsPath path = cellRoot.getRoot();
 
     // check if supercell is a root folder, like '/' or 'C:\'
-    if (allRoots.contains(path.getPath())) {
+    if (allRoots.contains(path)) {
       return path;
     }
 
@@ -65,7 +65,7 @@ public class Cells {
     // cell paths. So just try to find the cell with the shortest common path.
     for (Path next : cellRoot.getPath()) {
       path = path.resolve(next);
-      if (allRoots.contains(path.getPath())) {
+      if (allRoots.contains(path)) {
         return path;
       }
     }
