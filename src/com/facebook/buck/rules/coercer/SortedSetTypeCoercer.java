@@ -23,19 +23,15 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.reflect.TypeParameter;
 import com.google.common.reflect.TypeToken;
-import java.util.Collection;
-import java.util.SortedSet;
 
 public class SortedSetTypeCoercer<T extends Comparable<? super T>>
     extends CollectionTypeCoercer<ImmutableSortedSet<T>, T> {
 
-  private final TypeCoercer<Object, T> elementTypeCoercer;
   private final SortedSetConcatable<T> concatable = new SortedSetConcatable<>();
   private final TypeToken<ImmutableSortedSet<T>> typeToken;
 
   public SortedSetTypeCoercer(TypeCoercer<Object, T> elementTypeCoercer) {
     super(elementTypeCoercer);
-    this.elementTypeCoercer = elementTypeCoercer;
     this.typeToken =
         new TypeToken<ImmutableSortedSet<T>>() {}.where(
             new TypeParameter<T>() {}, elementTypeCoercer.getOutputType());
@@ -44,38 +40,6 @@ public class SortedSetTypeCoercer<T extends Comparable<? super T>>
   @Override
   public TypeToken<ImmutableSortedSet<T>> getOutputType() {
     return typeToken;
-  }
-
-  protected void fillSortedSet(
-      CellNameResolver cellNameResolver,
-      ProjectFilesystem filesystem,
-      ForwardRelativePath pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
-      SortedSet<T> builder,
-      Object object)
-      throws CoerceFailedException {
-
-    if (object instanceof Collection) {
-      for (Object element : (Iterable<?>) object) {
-        // if any element failed, the entire collection fails
-        T coercedElement =
-            elementTypeCoercer.coerce(
-                cellNameResolver,
-                filesystem,
-                pathRelativeToProjectRoot,
-                targetConfiguration,
-                hostConfiguration,
-                element);
-        boolean alreadyExists = !builder.add(coercedElement);
-        if (alreadyExists) {
-          throw new CoerceFailedException(
-              String.format("duplicate element \"%s\"", coercedElement));
-        }
-      }
-    } else {
-      throw CoerceFailedException.simple(object, getOutputType());
-    }
   }
 
   @Override
