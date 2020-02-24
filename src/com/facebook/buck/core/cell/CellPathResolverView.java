@@ -17,6 +17,7 @@
 package com.facebook.buck.core.cell;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
@@ -79,7 +80,7 @@ public final class CellPathResolverView extends AbstractCellPathResolver {
   }
 
   @Override
-  public ImmutableMap<String, Path> getCellPathsByRootCellExternalName() {
+  public ImmutableMap<String, AbsPath> getCellPathsByRootCellExternalName() {
     return ImmutableMap.copyOf(
         Maps.filterKeys(
             delegate.getCellPathsByRootCellExternalName(), declaredCellNames::contains));

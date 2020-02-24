@@ -34,7 +34,7 @@ import javax.annotation.Nullable;
 public final class CellProvider {
 
   private final NewCellPathResolver newCellPathResolver;
-  private final LoadingCache<Path, Cell> cells;
+  private final LoadingCache<AbsPath, Cell> cells;
 
   /**
    * Create a cell provider with a specific cell loader, and optionally a special factory function
@@ -45,20 +45,20 @@ public final class CellProvider {
    */
   public CellProvider(
       NewCellPathResolver newCellPathResolver,
-      Function<CellProvider, CacheLoader<Path, Cell>> cellCacheLoader,
+      Function<CellProvider, CacheLoader<AbsPath, Cell>> cellCacheLoader,
       @Nullable Function<CellProvider, Cell> rootCellLoader) {
     this.newCellPathResolver = newCellPathResolver;
     this.cells = CacheBuilder.newBuilder().build(cellCacheLoader.apply(this));
     if (rootCellLoader != null) {
       Cell rootCell = rootCellLoader.apply(this);
-      cells.put(rootCell.getRoot().getPath(), rootCell);
+      cells.put(rootCell.getRoot(), rootCell);
     }
   }
 
   // TODO(cjhopman): Shouldn't this be based on CanonicalCellName instead?
   public Cell getCellByPath(Path path) {
     try {
-      return cells.get(path);
+      return cells.get(AbsPath.of(path));
     } catch (ExecutionException e) {
       if (e.getCause() instanceof IOException) {
         throw new HumanReadableException(e.getCause(), "Failed to load Cell at: %s", path);
@@ -88,7 +88,7 @@ public final class CellProvider {
     return new Cells(getCellByCanonicalCellName(CanonicalCellName.rootCell()));
   }
 
-  public ImmutableMap<Path, Cell> getLoadedCells() {
+  public ImmutableMap<AbsPath, Cell> getLoadedCells() {
     return ImmutableMap.copyOf(cells.asMap());
   }
 }

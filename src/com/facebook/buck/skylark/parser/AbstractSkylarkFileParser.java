@@ -16,6 +16,7 @@
 
 package com.facebook.buck.skylark.parser;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
@@ -785,7 +786,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     }
     // Skylark repositories have an "@" prefix, but Buck roots do not, so ignore it
     String repositoryName = repository.getName().substring(1);
-    @Nullable Path repositoryPath = options.getCellRoots().get(repositoryName);
+    @Nullable AbsPath repositoryPath = options.getCellRoots().get(repositoryName);
     if (repositoryPath == null) {
       throw BuildFileParseException.createForUnknownParseError(
           skylarkImport.getImportString() + " references an unknown repository " + repositoryName);

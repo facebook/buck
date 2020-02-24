@@ -33,7 +33,7 @@ public final class TestCellPathResolver {
 
   /** Utility for creating a simple DefaultCellPathResolver from a root path and cell mappings. */
   public static DefaultCellPathResolver create(
-      Path rootPath, ImmutableMap<String, Path> cellMappings) {
+      AbsPath rootPath, ImmutableMap<String, Path> cellMappings) {
     Config config =
         new Config(
             RawConfig.of(
@@ -48,8 +48,8 @@ public final class TestCellPathResolver {
 
   /** Utility for creating a simple DefaultCellPathResolver from a root path and cell mappings. */
   public static DefaultCellPathResolver create(
-      AbsPath rootPath, ImmutableMap<String, Path> cellMappings) {
-    return create(rootPath.getPath(), cellMappings);
+      Path rootPath, ImmutableMap<String, Path> cellMappings) {
+    return create(AbsPath.of(rootPath), cellMappings);
   }
 
   /** Utility to create a DefaultCellPathResolver for a root path with no other cells. */

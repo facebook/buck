@@ -75,7 +75,7 @@ import java.util.stream.Stream;
  */
 public class IsolationChecker {
   private final SourcePathResolverAdapter pathResolver;
-  private final ImmutableMap<Path, Optional<String>> cellMap;
+  private final ImmutableMap<AbsPath, Optional<String>> cellMap;
   private final FailureReporter reporter;
   private final Path rootCellPath;
 
@@ -96,8 +96,7 @@ public class IsolationChecker {
     this.rootCellPath = cellResolver.getCellPathOrThrow(Optional.empty());
     this.cellMap =
         cellResolver.getKnownRoots().stream()
-            .collect(
-                ImmutableMap.toImmutableMap(AbsPath::getPath, cellResolver::getCanonicalCellName));
+            .collect(ImmutableMap.toImmutableMap(p -> p, cellResolver::getCanonicalCellName));
     this.reporter = reporter;
   }
 
@@ -141,9 +140,9 @@ public class IsolationChecker {
 
   private boolean isInRepo(Path path) {
     Path cellPath = rootCellPath;
-    for (Entry<Path, Optional<String>> candidate : cellMap.entrySet()) {
-      if (path.startsWith(candidate.getKey())) {
-        cellPath = candidate.getKey();
+    for (Entry<AbsPath, Optional<String>> candidate : cellMap.entrySet()) {
+      if (path.startsWith(candidate.getKey().getPath())) {
+        cellPath = candidate.getKey().getPath();
       }
     }
     return path.startsWith(cellPath);

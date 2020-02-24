@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellConfig;
 import com.facebook.buck.core.cell.CellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.log.LogConfigSetup;
 import com.facebook.buck.parser.ParsingContext;
@@ -28,7 +29,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.PrintStream;
-import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
@@ -59,7 +59,7 @@ public interface Command {
 
   String getShortDescription();
 
-  CellConfig getConfigOverrides(ImmutableMap<CellName, Path> cellMapping);
+  CellConfig getConfigOverrides(ImmutableMap<CellName, AbsPath> cellMapping);
 
   /** @return how we want logging to be configured for the the command. */
   LogConfigSetup getLogConfig();

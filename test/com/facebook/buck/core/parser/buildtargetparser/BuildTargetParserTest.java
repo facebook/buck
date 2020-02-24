@@ -196,10 +196,11 @@ public class BuildTargetParserTest {
 
   @Test
   public void testParseWithRepoName() {
-    Path localRepoRoot = Paths.get("/opt/local/repo");
+    Path localRepoRoot = Paths.get("/opt/local/repo").toAbsolutePath();
     CellPathResolver cellRoots =
         TestCellPathResolver.create(
-            Paths.get("/opt/local/rootcell"), ImmutableMap.of("localreponame", localRepoRoot));
+            Paths.get("/opt/local/rootcell").toAbsolutePath(),
+            ImmutableMap.of("localreponame", localRepoRoot));
     String targetStr = "localreponame//foo/bar:baz";
 
     UnconfiguredBuildTarget buildTarget =
@@ -211,10 +212,11 @@ public class BuildTargetParserTest {
 
   @Test
   public void atPrefixOfCellsIsSupportedAndIgnored() {
-    Path localRepoRoot = Paths.get("/opt/local/repo");
+    Path localRepoRoot = Paths.get("/opt/local/repo").toAbsolutePath();
     CellPathResolver cellRoots =
         TestCellPathResolver.create(
-            Paths.get("/opt/local/rootcell"), ImmutableMap.of("localreponame", localRepoRoot));
+            Paths.get("/opt/local/rootcell").toAbsolutePath(),
+            ImmutableMap.of("localreponame", localRepoRoot));
     String targetStr = "@localreponame//foo/bar:baz";
 
     UnconfiguredBuildTarget buildTarget =
@@ -241,10 +243,11 @@ public class BuildTargetParserTest {
 
   @Test
   public void testIncludesTargetNameInMissingCellErrorMessage() {
-    Path localRepoRoot = Paths.get("/opt/local/repo");
+    Path localRepoRoot = Paths.get("/opt/local/repo").toAbsolutePath();
     CellPathResolver cellRoots =
         TestCellPathResolver.create(
-            Paths.get("/opt/local/rootcell"), ImmutableMap.of("localreponame", localRepoRoot));
+            Paths.get("/opt/local/rootcell").toAbsolutePath(),
+            ImmutableMap.of("localreponame", localRepoRoot));
 
     exception.expect(BuildTargetParseException.class);
     // It contains the target

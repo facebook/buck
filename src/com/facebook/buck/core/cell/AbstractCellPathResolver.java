@@ -34,7 +34,6 @@ public abstract class AbstractCellPathResolver implements CellPathResolver {
     return ImmutableSortedSet.orderedBy(AbsPath.comparator().reversed())
         .addAll(
             getCellPathsByRootCellExternalName().values().stream()
-                .map(AbsPath::of)
                 .collect(ImmutableList.toImmutableList()))
         .add(AbsPath.of(getCellPathOrThrow(Optional.empty())))
         .build();

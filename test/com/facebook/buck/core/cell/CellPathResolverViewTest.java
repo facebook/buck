@@ -57,8 +57,8 @@ public class CellPathResolverViewTest {
 
     Assert.assertEquals(
         ImmutableMap.of(
-            "b", filesystem.resolve("foo/b"),
-            "c", filesystem.resolve("foo/c")),
+            "b", AbsPath.of(filesystem.resolve("foo/b")),
+            "c", AbsPath.of(filesystem.resolve("foo/c"))),
         view.getCellPathsByRootCellExternalName());
   }
 

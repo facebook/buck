@@ -341,7 +341,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
 
     argBuilder.add("--project_root", options.getProjectRoot().toString());
 
-    for (ImmutableMap.Entry<String, Path> entry : options.getCellRoots().entrySet()) {
+    for (Map.Entry<String, AbsPath> entry : options.getCellRoots().entrySet()) {
       argBuilder.add("--cell_root", entry.getKey() + "=" + entry.getValue());
     }
 

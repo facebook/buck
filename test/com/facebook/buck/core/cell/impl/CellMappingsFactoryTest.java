@@ -105,7 +105,7 @@ public class CellMappingsFactoryTest {
 
     CellNameResolver rootNameResolver =
         CellMappingsFactory.createCellNameResolver(
-            root.getPath(), rootConfig.getConfig(), newCellPathResolver);
+            root, rootConfig.getConfig(), newCellPathResolver);
 
     assertEquals(CanonicalCellName.rootCell(), rootNameResolver.getName(Optional.empty()));
     assertEquals(
@@ -142,7 +142,7 @@ public class CellMappingsFactoryTest {
 
     CellNameResolver otherNameResolver =
         CellMappingsFactory.createCellNameResolver(
-            root.resolve("repo1").getPath(), otherConfig.getConfig(), newCellPathResolver);
+            root.resolve("repo1"), otherConfig.getConfig(), newCellPathResolver);
 
     assertEquals(
         CanonicalCellName.of(Optional.of("cell1")), otherNameResolver.getName(Optional.empty()));

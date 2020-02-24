@@ -75,7 +75,7 @@ public interface Cell {
   ImmutableList<Cell> getAllCells();
 
   /** @return all loaded {@link Cell}s that are children of this {@link Cell}. */
-  ImmutableMap<Path, Cell> getLoadedCells();
+  ImmutableMap<AbsPath, Cell> getLoadedCells();
 
   CellPathResolver getCellPathResolver();
 

@@ -18,6 +18,7 @@ package com.facebook.buck.io.watchman;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.FakeExecutableFinder;
 import com.facebook.buck.io.watchman.WatchmanFactory.InitialWatchmanClientFactory;
 import com.facebook.buck.testutil.TestConsole;
@@ -44,7 +45,7 @@ import org.junit.Test;
 public class WatchmanFactoryTest {
 
   private String root = Paths.get("/some/root").toAbsolutePath().toString();
-  private ImmutableSet<Path> rootPaths = ImmutableSet.of(Paths.get(root));
+  private ImmutableSet<AbsPath> rootPaths = ImmutableSet.of(AbsPath.get(root));
   private String exe = Paths.get("/opt/bin/watchman").toAbsolutePath().toString();
   private FakeExecutableFinder finder = new FakeExecutableFinder(Paths.get(exe));
   private ImmutableMap<String, String> env = ImmutableMap.of();

@@ -30,6 +30,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
@@ -1070,10 +1071,10 @@ public class SkylarkProjectBuildFileParserTest {
     Path directory = projectFilesystem.resolve("src").resolve("test");
     Files.createDirectories(directory);
     Path buildFile = directory.resolve("BUCK");
-    Path anotherCell = projectFilesystem.resolve("tp2");
-    Path extensionDirectory = anotherCell.resolve("ext");
-    Files.createDirectories(extensionDirectory);
-    Path extensionFile = extensionDirectory.resolve("build_rules.bzl");
+    AbsPath anotherCell = AbsPath.of(projectFilesystem.resolve("tp2"));
+    AbsPath extensionDirectory = anotherCell.resolve("ext");
+    Files.createDirectories(extensionDirectory.getPath());
+    AbsPath extensionFile = extensionDirectory.resolve("build_rules.bzl");
 
     ProjectBuildFileParserOptions options =
         ProjectBuildFileParserOptions.builder()
@@ -1114,7 +1115,8 @@ public class SkylarkProjectBuildFileParserTest {
         Arrays.asList(
             "load('@tp2//ext:build_rules.bzl', 'get_name')",
             "prebuilt_jar(name='foo', binary_jar=get_name())"));
-    Files.write(extensionFile, Collections.singletonList("def get_name():\n  return 'jar'"));
+    Files.write(
+        extensionFile.getPath(), Collections.singletonList("def get_name():\n  return 'jar'"));
     Map<String, Object> rule = getSingleRule(buildFile);
     assertThat(rule.get("name"), equalTo("foo"));
     assertThat(rule.get("binaryJar"), equalTo("jar"));

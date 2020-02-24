@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.cell;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.RawConfig;
@@ -29,7 +30,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimaps;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -68,14 +68,14 @@ public abstract class CellConfig {
    * @param pathMapping a map containing paths to all of the cells we want to query.
    * @return 'Path'->override map
    */
-  public ImmutableMap<Path, RawConfig> getOverridesByPath(ImmutableMap<CellName, Path> pathMapping)
-      throws InvalidCellOverrideException {
+  public ImmutableMap<AbsPath, RawConfig> getOverridesByPath(
+      ImmutableMap<CellName, AbsPath> pathMapping) throws InvalidCellOverrideException {
 
     ImmutableSet<CellName> relativeNamesOfCellsWithOverrides =
         FluentIterable.from(getValues().keySet())
             .filter(Predicates.not(CellName.ALL_CELLS_SPECIAL_NAME::equals))
             .toSet();
-    ImmutableSet.Builder<Path> pathsWithOverrides = ImmutableSet.builder();
+    ImmutableSet.Builder<AbsPath> pathsWithOverrides = ImmutableSet.builder();
     for (CellName cellWithOverride : relativeNamesOfCellsWithOverrides) {
       if (!pathMapping.containsKey(cellWithOverride)) {
         throw new InvalidCellOverrideException(
@@ -84,10 +84,10 @@ public abstract class CellConfig {
       pathsWithOverrides.add(pathMapping.get(cellWithOverride));
     }
 
-    ImmutableMultimap<Path, CellName> pathToRelativeName =
+    ImmutableMultimap<AbsPath, CellName> pathToRelativeName =
         Multimaps.index(pathMapping.keySet(), Functions.forMap(pathMapping));
 
-    for (Path pathWithOverrides : pathsWithOverrides.build()) {
+    for (AbsPath pathWithOverrides : pathsWithOverrides.build()) {
       ImmutableList<CellName> namesForPath =
           RichStream.from(pathToRelativeName.get(pathWithOverrides))
               .filter(name -> name.getLegacyName().isPresent())
@@ -102,10 +102,10 @@ public abstract class CellConfig {
       }
     }
 
-    Map<Path, RawConfig> overridesByPath = new HashMap<>();
-    for (Map.Entry<CellName, Path> entry : pathMapping.entrySet()) {
+    Map<AbsPath, RawConfig> overridesByPath = new HashMap<>();
+    for (Map.Entry<CellName, AbsPath> entry : pathMapping.entrySet()) {
       CellName cellRelativeName = entry.getKey();
-      Path cellPath = entry.getValue();
+      AbsPath cellPath = entry.getValue();
       RawConfig configFromOtherRelativeName = overridesByPath.get(cellPath);
       RawConfig config = getForCell(cellRelativeName);
       if (configFromOtherRelativeName != null) {

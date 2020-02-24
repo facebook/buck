@@ -221,8 +221,8 @@ public class BuildTargetMatcherParserTest {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     CellPathResolver rootCellPathResolver =
         TestCellPathResolver.create(
-            filesystem.getPath("root").normalize(),
-            ImmutableMap.of("localreponame", filesystem.getPath("localrepo").normalize()));
+            filesystem.resolve("root").normalize(),
+            ImmutableMap.of("localreponame", filesystem.resolve("localrepo").normalize()));
 
     exception.expect(BuildTargetParseException.class);
     // It contains the pattern

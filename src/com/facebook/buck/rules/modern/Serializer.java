@@ -87,7 +87,7 @@ public class Serializer {
   private final ConcurrentHashMap<AddsToRuleKey, Either<HashCode, byte[]>> cache =
       new ConcurrentHashMap<>();
   private final SourcePathRuleFinder ruleFinder;
-  private final ImmutableMap<Path, Optional<String>> cellMap;
+  private final ImmutableMap<AbsPath, Optional<String>> cellMap;
   private final Delegate delegate;
   private final Path rootCellPath;
 
@@ -109,8 +109,7 @@ public class Serializer {
     this.rootCellPath = cellResolver.getCellPathOrThrow(Optional.empty());
     this.cellMap =
         cellResolver.getKnownRoots().stream()
-            .collect(
-                ImmutableMap.toImmutableMap(AbsPath::getPath, cellResolver::getCanonicalCellName));
+            .collect(ImmutableMap.toImmutableMap(p -> p, cellResolver::getCanonicalCellName));
   }
 
   /**
@@ -322,9 +321,9 @@ public class Serializer {
         stream.writeBoolean(true);
         Path cellPath = rootCellPath;
         Optional<String> cellName = Optional.empty();
-        for (Map.Entry<Path, Optional<String>> candidate : cellMap.entrySet()) {
-          if (path.startsWith(candidate.getKey())) {
-            cellPath = candidate.getKey();
+        for (Map.Entry<AbsPath, Optional<String>> candidate : cellMap.entrySet()) {
+          if (path.startsWith(candidate.getKey().getPath())) {
+            cellPath = candidate.getKey().getPath();
             cellName = candidate.getValue();
           }
         }
@@ -445,6 +444,6 @@ public class Serializer {
   }
 
   private Optional<String> getCellName(ProjectFilesystem filesystem) {
-    return Objects.requireNonNull(cellMap.get(filesystem.getRootPath().getPath()));
+    return Objects.requireNonNull(cellMap.get(filesystem.getRootPath()));
   }
 }

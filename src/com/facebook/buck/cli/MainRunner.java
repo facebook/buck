@@ -572,21 +572,21 @@ public final class MainRunner {
     }
   }
 
-  private ImmutableMap<CellName, Path> getCellMapping(AbsPath canonicalRootPath)
+  private ImmutableMap<CellName, AbsPath> getCellMapping(AbsPath canonicalRootPath)
       throws IOException {
     return DefaultCellPathResolver.bootstrapPathMapping(
-        canonicalRootPath.getPath(), Configs.createDefaultConfig(canonicalRootPath.getPath()));
+        canonicalRootPath, Configs.createDefaultConfig(canonicalRootPath.getPath()));
   }
 
-  private Config setupDefaultConfig(ImmutableMap<CellName, Path> cellMapping, BuckCommand command)
-      throws IOException {
-    Path rootPath =
+  private Config setupDefaultConfig(
+      ImmutableMap<CellName, AbsPath> cellMapping, BuckCommand command) throws IOException {
+    AbsPath rootPath =
         Objects.requireNonNull(
             cellMapping.get(CellName.ROOT_CELL_NAME), "Root cell should be implicitly added");
     RawConfig rootCellConfigOverrides;
 
     try {
-      ImmutableMap<Path, RawConfig> overridesByPath =
+      ImmutableMap<AbsPath, RawConfig> overridesByPath =
           command.getConfigOverrides(cellMapping).getOverridesByPath(cellMapping);
       rootCellConfigOverrides =
           Optional.ofNullable(overridesByPath.get(rootPath)).orElse(RawConfig.of());
@@ -597,16 +597,18 @@ public final class MainRunner {
     if (commandMode == CommandMode.TEST) {
       // test mode: we skip looking into /etc and /home for config files for determinism
       return Configs.createDefaultConfig(
-          rootPath, Configs.getRepoConfigurationFiles(rootPath), rootCellConfigOverrides);
+          rootPath.getPath(),
+          Configs.getRepoConfigurationFiles(rootPath.getPath()),
+          rootCellConfigOverrides);
     }
 
-    return Configs.createDefaultConfig(rootPath, rootCellConfigOverrides);
+    return Configs.createDefaultConfig(rootPath.getPath(), rootCellConfigOverrides);
   }
 
-  private ImmutableSet<Path> getProjectWatchList(
+  private ImmutableSet<AbsPath> getProjectWatchList(
       AbsPath canonicalRootPath, BuckConfig buckConfig, DefaultCellPathResolver cellPathResolver) {
-    return ImmutableSet.<Path>builder()
-        .add(canonicalRootPath.getPath())
+    return ImmutableSet.<AbsPath>builder()
+        .add(canonicalRootPath)
         .addAll(
             buckConfig.getView(ParserConfig.class).getWatchCells()
                 ? cellPathResolver.getPathMapping().values()
@@ -632,7 +634,7 @@ public final class MainRunner {
 
     // Setup filesystem and buck config.
     AbsPath canonicalRootPath = AbsPath.of(projectRoot.toRealPath()).normalize();
-    ImmutableMap<CellName, Path> rootCellMapping = getCellMapping(canonicalRootPath);
+    ImmutableMap<CellName, AbsPath> rootCellMapping = getCellMapping(canonicalRootPath);
     ImmutableList<String> args =
         BuckArgsMethods.expandAtFiles(unexpandedCommandLineArgs, rootCellMapping);
 
@@ -743,7 +745,7 @@ public final class MainRunner {
         warnAboutConfigFileOverrides(filesystem.getRootPath(), cliConfig);
       }
 
-      ImmutableSet<Path> projectWatchList =
+      ImmutableSet<AbsPath> projectWatchList =
           getProjectWatchList(canonicalRootPath, buckConfig, cellPathResolver);
 
       Verbosity verbosity = VerbosityParser.parse(args);
@@ -2020,7 +2022,7 @@ public final class MainRunner {
   private static Watchman buildWatchman(
       Optional<NGContext> context,
       ParserConfig parserConfig,
-      ImmutableSet<Path> projectWatchList,
+      ImmutableSet<AbsPath> projectWatchList,
       ImmutableMap<String, String> clientEnvironment,
       Console console,
       Clock clock)

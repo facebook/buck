@@ -128,7 +128,7 @@ abstract class CellImpl implements Cell {
   }
 
   @Override
-  public ImmutableMap<Path, Cell> getLoadedCells() {
+  public ImmutableMap<AbsPath, Cell> getLoadedCells() {
     return getCellProvider().getLoadedCells();
   }
 

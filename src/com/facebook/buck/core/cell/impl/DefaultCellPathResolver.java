@@ -46,10 +46,10 @@ public abstract class DefaultCellPathResolver extends AbstractCellPathResolver {
 
   public static final String REPOSITORIES_SECTION = "repositories";
 
-  public abstract Path getRoot();
+  public abstract AbsPath getRoot();
 
   @Override
-  public abstract ImmutableMap<String, Path> getCellPathsByRootCellExternalName();
+  public abstract ImmutableMap<String, AbsPath> getCellPathsByRootCellExternalName();
 
   @Override
   public abstract CellNameResolver getCellNameResolver();
@@ -64,14 +64,14 @@ public abstract class DefaultCellPathResolver extends AbstractCellPathResolver {
         .collect(
             Collectors.collectingAndThen(
                 Collectors.toMap(
-                    Map.Entry::getValue,
+                    t -> t.getValue().getPath(),
                     Map.Entry::getKey,
                     BinaryOperator.minBy(Comparator.<String>naturalOrder())),
                 ImmutableMap::copyOf));
   }
 
   @Value.Lazy
-  public ImmutableMap<CellName, Path> getPathMapping() {
+  public ImmutableMap<CellName, AbsPath> getPathMapping() {
     return bootstrapPathMapping(getRoot(), getCellPathsByRootCellExternalName());
   }
 
@@ -81,16 +81,16 @@ public abstract class DefaultCellPathResolver extends AbstractCellPathResolver {
     return super.getKnownRoots();
   }
 
-  private static ImmutableMap<String, ? extends Path> sortCellPaths(
-      Map<String, ? extends Path> cellPaths) {
+  private static ImmutableMap<String, AbsPath> sortCellPaths(Map<String, AbsPath> cellPaths) {
     return cellPaths.entrySet().stream()
-        .sorted(Comparator.comparing(Map.Entry::getValue))
+        .sorted(Comparator.comparing(Map.Entry::getValue, AbsPath.comparator()))
+        // TODO(nga): this does not sort anything
         .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));
   }
 
   public static DefaultCellPathResolver create(
-      Path root,
-      Map<String, ? extends Path> cellPaths,
+      AbsPath root,
+      Map<String, AbsPath> cellPaths,
       CellNameResolver cellNameResolver,
       NewCellPathResolver newCellPathResolver) {
     return ImmutableDefaultCellPathResolver.of(
@@ -101,7 +101,7 @@ public abstract class DefaultCellPathResolver extends AbstractCellPathResolver {
    * Creates a DefaultCellPathResolver using the mappings in the provided {@link Config}. This is
    * the preferred way to create a DefaultCellPathResolver.
    */
-  public static DefaultCellPathResolver create(Path root, Config config) {
+  public static DefaultCellPathResolver create(AbsPath root, Config config) {
     NewCellPathResolver newCellPathResolver = CellMappingsFactory.create(root, config);
     CellNameResolver cellNameResolver =
         CellMappingsFactory.createCellNameResolver(root, config, newCellPathResolver);
@@ -113,12 +113,8 @@ public abstract class DefaultCellPathResolver extends AbstractCellPathResolver {
         newCellPathResolver);
   }
 
-  public static DefaultCellPathResolver create(AbsPath root, Config config) {
-    return create(root.getPath(), config);
-  }
-
-  static ImmutableMap<String, Path> getCellPathsFromConfigRepositoriesSection(
-      Path root, ImmutableMap<String, String> repositoriesSection) {
+  static ImmutableMap<String, AbsPath> getCellPathsFromConfigRepositoriesSection(
+      AbsPath root, ImmutableMap<String, String> repositoriesSection) {
     return ImmutableMap.copyOf(
         Maps.transformValues(
             repositoriesSection,
@@ -132,17 +128,17 @@ public abstract class DefaultCellPathResolver extends AbstractCellPathResolver {
    *
    * @return Map of cell name to path.
    */
-  private static ImmutableMap<CellName, Path> bootstrapPathMapping(
-      Path root, ImmutableMap<String, Path> cellPaths) {
-    ImmutableMap.Builder<CellName, Path> builder = ImmutableMap.builder();
+  private static ImmutableMap<CellName, AbsPath> bootstrapPathMapping(
+      AbsPath root, ImmutableMap<String, AbsPath> cellPaths) {
+    ImmutableMap.Builder<CellName, AbsPath> builder = ImmutableMap.builder();
     // Add the implicit empty root cell
     builder.put(CellName.ROOT_CELL_NAME, root);
-    HashSet<Path> seenPaths = new HashSet<>();
+    HashSet<AbsPath> seenPaths = new HashSet<>();
 
     ImmutableSortedSet<String> sortedCellNames =
         ImmutableSortedSet.<String>naturalOrder().addAll(cellPaths.keySet()).build();
     for (String cellName : sortedCellNames) {
-      Path cellRoot =
+      AbsPath cellRoot =
           Objects.requireNonNull(
               cellPaths.get(cellName),
               "cellName is derived from the map, get() should always return a value.");
@@ -160,7 +156,7 @@ public abstract class DefaultCellPathResolver extends AbstractCellPathResolver {
     return builder.build();
   }
 
-  public static ImmutableMap<CellName, Path> bootstrapPathMapping(Path root, Config config) {
+  public static ImmutableMap<CellName, AbsPath> bootstrapPathMapping(AbsPath root, Config config) {
     return bootstrapPathMapping(
         root, getCellPathsFromConfigRepositoriesSection(root, config.get(REPOSITORIES_SECTION)));
   }
@@ -168,15 +164,16 @@ public abstract class DefaultCellPathResolver extends AbstractCellPathResolver {
   @Override
   public Optional<Path> getCellPath(Optional<String> cellName) {
     if (cellName.isPresent()) {
-      return Optional.ofNullable(getCellPathsByRootCellExternalName().get(cellName.get()));
+      return Optional.ofNullable(getCellPathsByRootCellExternalName().get(cellName.get()))
+          .map(AbsPath::getPath);
     } else {
-      return Optional.of(getRoot());
+      return Optional.of(getRoot().getPath());
     }
   }
 
   @Override
   public Optional<String> getCanonicalCellName(Path cellPath) {
-    if (cellPath.equals(getRoot())) {
+    if (cellPath.equals(getRoot().getPath())) {
       return Optional.empty();
     } else {
       String name = getExternalNamesInRootCell().get(cellPath);

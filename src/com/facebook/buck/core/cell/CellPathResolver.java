@@ -71,7 +71,7 @@ public interface CellPathResolver {
    * @return absolute paths to all cells this resolver knows about. The key is the name of the cell
    *     in the root cell's config (this is not necessarily the canonical name).
    */
-  ImmutableMap<String, Path> getCellPathsByRootCellExternalName();
+  ImmutableMap<String, AbsPath> getCellPathsByRootCellExternalName();
 
   /**
    * Returns a cell name that can be used to refer to the cell at the given path.

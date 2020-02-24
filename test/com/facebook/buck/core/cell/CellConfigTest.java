@@ -18,9 +18,9 @@ package com.facebook.buck.core.cell;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.util.config.RawConfig;
 import com.google.common.collect.ImmutableMap;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -41,24 +41,24 @@ public class CellConfigTest {
             .put(CellName.of("cell"), section, "cell", "cell")
             .build();
 
-    ImmutableMap<Path, RawConfig> overridesByPath =
+    ImmutableMap<AbsPath, RawConfig> overridesByPath =
         cellConfig.getOverridesByPath(
             ImmutableMap.of(
                 CellName.ROOT_CELL_NAME,
-                Paths.get("root"),
+                AbsPath.of(Paths.get("root").toAbsolutePath()),
                 CellName.of("cell"),
-                Paths.get("cell")));
+                AbsPath.of(Paths.get("cell").toAbsolutePath())));
 
     assertThat(
         overridesByPath,
         Matchers.equalTo(
             ImmutableMap.of(
-                Paths.get("root"),
+                AbsPath.of(Paths.get("root").toAbsolutePath()),
                 RawConfig.builder()
                     .put(section, "root_cell", "root")
                     .put(section, "all_cells", "all")
                     .build(),
-                Paths.get("cell"),
+                AbsPath.of(Paths.get("cell").toAbsolutePath()),
                 RawConfig.builder()
                     .put(section, "cell", "cell")
                     .put(section, "all_cells", "all")
@@ -77,11 +77,11 @@ public class CellConfigTest {
     cellConfig.getOverridesByPath(
         ImmutableMap.of(
             CellName.ROOT_CELL_NAME,
-            Paths.get("root"),
+            AbsPath.of(Paths.get("root").toAbsolutePath()),
             CellName.of("firstpath"),
-            Paths.get("cell"),
+            AbsPath.of(Paths.get("cell").toAbsolutePath()),
             CellName.of("secondpath"),
-            Paths.get("cell")));
+            AbsPath.of(Paths.get("cell").toAbsolutePath())));
   }
 
   @Test
@@ -93,13 +93,13 @@ public class CellConfigTest {
     cellConfig.getOverridesByPath(
         ImmutableMap.of(
             CellName.ROOT_CELL_NAME,
-            Paths.get("root"),
+            AbsPath.of(Paths.get("root").toAbsolutePath()),
             CellName.of("ok"),
-            Paths.get("cell"),
+            AbsPath.of(Paths.get("cell").toAbsolutePath()),
             CellName.of("firstpath"),
-            Paths.get("bad"),
+            AbsPath.of(Paths.get("bad").toAbsolutePath()),
             CellName.of("secondpath"),
-            Paths.get("bad")));
+            AbsPath.of(Paths.get("bad").toAbsolutePath())));
   }
 
   @Test
@@ -113,8 +113,8 @@ public class CellConfigTest {
     cellConfig.getOverridesByPath(
         ImmutableMap.of(
             CellName.ROOT_CELL_NAME,
-            Paths.get("root"),
+            AbsPath.of(Paths.get("root").toAbsolutePath()),
             CellName.of("somecell"),
-            Paths.get("cell")));
+            AbsPath.of(Paths.get("cell").toAbsolutePath())));
   }
 }
