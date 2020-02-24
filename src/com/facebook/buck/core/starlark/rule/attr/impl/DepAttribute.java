@@ -17,7 +17,6 @@
 package com.facebook.buck.core.starlark.rule.attr.impl;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.providers.Provider;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
@@ -25,11 +24,10 @@ import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.PostCoercionTransform;
 import com.facebook.buck.core.starlark.rule.data.SkylarkDependency;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
-import com.facebook.buck.rules.coercer.BuildTargetTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercer;
-import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
+import com.google.common.reflect.TypeToken;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 
 /** Represents a single dependency. This is exposed to users as a {@link ProviderInfoCollection} */
@@ -37,8 +35,7 @@ import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 public abstract class DepAttribute extends Attribute<BuildTarget> {
 
   private static final TypeCoercer<Object, BuildTarget> coercer =
-      new BuildTargetTypeCoercer(
-          new UnconfiguredBuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetViewFactory()));
+      TypeCoercerFactoryForStarlark.typeCoercerForType(TypeToken.of(BuildTarget.class));
 
   @Override
   public abstract Object getPreCoercionDefaultValue();

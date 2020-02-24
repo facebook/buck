@@ -19,8 +19,8 @@ package com.facebook.buck.core.starlark.rule.attr.impl;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
-import com.facebook.buck.rules.coercer.StringTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercer;
+import com.google.common.reflect.TypeToken;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import java.util.List;
 
@@ -28,7 +28,8 @@ import java.util.List;
 @BuckStyleValue
 public abstract class StringAttribute extends Attribute<String> {
 
-  private static final TypeCoercer<Object, String> coercer = new StringTypeCoercer();
+  private static final TypeCoercer<Object, String> coercer =
+      TypeCoercerFactoryForStarlark.typeCoercerForType(TypeToken.of(String.class));
 
   @Override
   public abstract String getPreCoercionDefaultValue();

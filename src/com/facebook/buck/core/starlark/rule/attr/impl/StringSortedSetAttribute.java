@@ -19,10 +19,9 @@ package com.facebook.buck.core.starlark.rule.attr.impl;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
-import com.facebook.buck.rules.coercer.SortedSetTypeCoercer;
-import com.facebook.buck.rules.coercer.StringTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.reflect.TypeToken;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 
 /** Class that represents a sorted set of uniq strings */
@@ -30,7 +29,8 @@ import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 public abstract class StringSortedSetAttribute extends Attribute<ImmutableSortedSet<String>> {
 
   private static final TypeCoercer<Object, ImmutableSortedSet<String>> coercer =
-      new SortedSetTypeCoercer<>(new StringTypeCoercer());
+      TypeCoercerFactoryForStarlark.typeCoercerForType(
+          new TypeToken<ImmutableSortedSet<String>>() {});
 
   @Override
   public abstract ImmutableSortedSet<String> getPreCoercionDefaultValue();
