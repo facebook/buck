@@ -370,6 +370,7 @@ public class AppleDescriptions {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
+      Optional<String> productType,
       ApplePlatform applePlatform,
       String targetSDKVersion,
       Tool actool,
@@ -445,6 +446,7 @@ public class AppleDescriptions {
             assetCatalogDirs,
             appIcon,
             launchImage,
+            productType,
             appleAssetCatalogsCompilationOptions,
             MERGED_ASSET_CATALOG_NAME));
   }
@@ -627,6 +629,7 @@ public class AppleDescriptions {
       Optional<String> codesignAdhocIdentity,
       Optional<Boolean> ibtoolModuleFlag,
       Optional<ImmutableList<String>> ibtoolFlags,
+      Optional<String> productType,
       Duration codesignTimeout,
       boolean copySwiftStdlibToFrameworks,
       boolean cacheStrips,
@@ -707,6 +710,7 @@ public class AppleDescriptions {
             buildTargetWithoutBundleSpecificFlavors,
             projectFilesystem,
             graphBuilder,
+            productType,
             appleCxxPlatform.getAppleSdk().getApplePlatform(),
             appleCxxPlatform.getMinVersion(),
             appleCxxPlatform.getActool(),

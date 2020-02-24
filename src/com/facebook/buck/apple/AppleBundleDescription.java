@@ -193,6 +193,7 @@ public class AppleBundleDescription
         args.getCodesignIdentity(),
         args.getIbtoolModuleFlag(),
         args.getIbtoolFlags(),
+        args.getXcodeProductType(),
         appleConfig.getCodesignTimeout(),
         swiftBuckConfig.getCopyStdlibToFrameworks(),
         cxxBuckConfig.shouldCacheStrip(),
