@@ -106,7 +106,7 @@ public class HaskellDescriptionUtils {
     ExplicitCxxToolFlags.Builder preprocessorFlagsBuilder = CxxToolFlags.explicitBuilder();
 
     preprocessorFlagsBuilder.setPlatformFlags(
-        StringArg.from(CxxSourceTypes.getPlatformPreprocessFlags(cxxPlatform, CxxSource.Type.C)));
+        CxxSourceTypes.getPlatformPreprocessFlags(cxxPlatform, CxxSource.Type.C));
     for (CxxPreprocessorInput preprocessorInput : cxxPreprocessorInputs) {
       builder
           .addAllIncludes(preprocessorInput.getIncludes())

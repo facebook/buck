@@ -299,8 +299,8 @@ public abstract class CxxSourceRuleFactory {
     return getCxxPlatform().getCompilerDebugPathSanitizer().sanitizer(Optional.empty());
   }
 
-  private ImmutableList<Arg> sanitizedArgs(Iterable<String> flags) {
-    return SanitizedArg.from(getSanitizeFunction(), flags);
+  private ImmutableList<Arg> sanitizedArgs(Iterable<Arg> flags) {
+    return SanitizedArg.fromArgs(getSanitizeFunction(), flags);
   }
 
   private ImmutableList<Arg> getPlatformPreprocessorFlags(CxxSource.Type type) {
@@ -359,7 +359,7 @@ public abstract class CxxSourceRuleFactory {
             // Add custom compiler flags.
             .addAllRuleFlags(getRuleCompileFlags(source.getType()))
             // Add custom per-file flags.
-            .addAllRuleFlags(sanitizedArgs(source.getFlags()))
+            .addAllRuleFlags(sanitizedArgs(StringArg.from(source.getFlags())))
             .addRuleFlags(new CxxThinLTOIndexArg(thinIndicesRoot, source.getPath()))
             .build();
 
@@ -406,7 +406,7 @@ public abstract class CxxSourceRuleFactory {
             // Add custom compiler flags.
             .addAllRuleFlags(getRuleCompileFlags(source.getType()))
             // Add custom per-file flags.
-            .addAllRuleFlags(sanitizedArgs(source.getFlags()))
+            .addAllRuleFlags(sanitizedArgs(StringArg.from(source.getFlags())))
             .build();
 
     CompilerDelegate compilerDelegate =
@@ -454,7 +454,7 @@ public abstract class CxxSourceRuleFactory {
         .addAllPlatformFlags(getPlatformPreprocessorFlags(type))
         .addAllRuleFlags(rulePreprocessorFlags.apply(type))
         // Add custom per-file flags.
-        .addAllRuleFlags(sanitizedArgs(sourceFlags))
+        .addAllRuleFlags(sanitizedArgs(StringArg.from(sourceFlags)))
         .build();
   }
 
@@ -474,7 +474,7 @@ public abstract class CxxSourceRuleFactory {
         // Add in the platform specific compiler flags.
         .addAllPlatformFlags(getPlatformCompileFlags(outputType))
         .addAllRuleFlags(getRuleCompileFlags(outputType))
-        .addAllRuleFlags(sanitizedArgs(sourceFlags))
+        .addAllRuleFlags(sanitizedArgs(StringArg.from(sourceFlags)))
         .build();
   }
 

@@ -111,7 +111,7 @@ public class CxxLinkableEnhancer {
 
     // Pass any platform specific or extra linker flags.
     argsBuilder.addAll(
-        SanitizedArg.from(
+        SanitizedArg.fromArgs(
             cxxPlatform.getCompilerDebugPathSanitizer().sanitizer(Optional.empty()),
             cxxPlatform.getLdflags()));
 
@@ -138,7 +138,7 @@ public class CxxLinkableEnhancer {
     }
 
     // Add all arguments needed to link in the C/C++ platform runtime.
-    argsBuilder.addAll(StringArg.from(cxxPlatform.getRuntimeLdflags().get(runtimeDepType)));
+    argsBuilder.addAll(cxxPlatform.getRuntimeLdflags().get(runtimeDepType));
 
     ImmutableList<Arg> ldArgs = argsBuilder.build();
 
@@ -190,14 +190,14 @@ public class CxxLinkableEnhancer {
 
     // Pass any platform specific or extra linker flags.
     argsBuilder.addAll(
-        SanitizedArg.from(
+        SanitizedArg.fromArgs(
             cxxPlatform.getCompilerDebugPathSanitizer().sanitizer(Optional.empty()),
             cxxPlatform.getLdflags()));
 
     argsBuilder.addAll(args);
 
     // Add all arguments needed to link in the C/C++ platform runtime.
-    argsBuilder.addAll(StringArg.from(cxxPlatform.getRuntimeLdflags().get(runtimeDepType)));
+    argsBuilder.addAll(cxxPlatform.getRuntimeLdflags().get(runtimeDepType));
 
     ImmutableList<Arg> ldArgs = argsBuilder.build();
     ImmutableMap<String, Path> allExtraOutputs = extraOutputs;

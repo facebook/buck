@@ -30,6 +30,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.impl.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.toolchain.impl.LegacyToolchainProvider;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
@@ -86,7 +87,7 @@ public class OcamlToolchainFactory implements ToolchainFactory<OcamlToolchain> {
         .setCxxCompiler(cxxPlatform.getCxx())
         .setCPreprocessor(cxxPlatform.getCpp())
         .setCFlags(
-            ImmutableList.<String>builder()
+            ImmutableList.<Arg>builder()
                 .addAll(cxxPlatform.getCppflags())
                 .addAll(cxxPlatform.getCflags())
                 .addAll(cxxPlatform.getAsflags())

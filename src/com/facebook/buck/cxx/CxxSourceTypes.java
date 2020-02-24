@@ -21,6 +21,7 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.toolchain.CompilerProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
+import com.facebook.buck.rules.args.Arg;
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
 
@@ -113,10 +114,10 @@ public class CxxSourceTypes {
   }
 
   /** @return the platform-specific preprocessor flags for the given {@link CxxPlatform}. */
-  public static ImmutableList<String> getPlatformPreprocessFlags(
+  public static ImmutableList<Arg> getPlatformPreprocessFlags(
       CxxPlatform cxxPlatform, CxxSource.Type type) {
 
-    ImmutableList.Builder<String> flags = ImmutableList.builder();
+    ImmutableList.Builder<Arg> flags = ImmutableList.builder();
 
     switch (type) {
       case ASSEMBLER_WITH_CPP:
@@ -246,10 +247,10 @@ public class CxxSourceTypes {
   }
 
   /** @return the platform-specific compiler flags for the given {@link CxxPlatform}. */
-  public static ImmutableList<String> getPlatformCompilerFlags(
+  public static ImmutableList<Arg> getPlatformCompilerFlags(
       CxxPlatform cxxPlatform, CxxSource.Type type) {
 
-    ImmutableList.Builder<String> flags = ImmutableList.builder();
+    ImmutableList.Builder<Arg> flags = ImmutableList.builder();
 
     switch (type) {
       case ASSEMBLER:

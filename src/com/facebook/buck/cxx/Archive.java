@@ -61,9 +61,9 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
       Archiver archiver,
-      ImmutableList<String> archiverFlags,
+      ImmutableList<Arg> archiverFlags,
       Optional<Tool> ranlib,
-      ImmutableList<String> ranlibFlags,
+      ImmutableList<Arg> ranlibFlags,
       ArchiveContents contents,
       String outputFileName,
       ImmutableList<SourcePath> inputs,
@@ -134,18 +134,18 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
   static class Impl implements Buildable {
 
     @AddToRuleKey private final Archiver archiver;
-    @AddToRuleKey private final ImmutableList<String> archiverFlags;
+    @AddToRuleKey private final ImmutableList<Arg> archiverFlags;
     @AddToRuleKey private final Optional<Tool> ranlib;
-    @AddToRuleKey private final ImmutableList<String> ranlibFlags;
+    @AddToRuleKey private final ImmutableList<Arg> ranlibFlags;
     @AddToRuleKey private final ArchiveContents contents;
     @AddToRuleKey private final OutputPath output;
     @AddToRuleKey private final ImmutableList<SourcePath> inputs;
 
     Impl(
         Archiver archiver,
-        ImmutableList<String> archiverFlags,
+        ImmutableList<Arg> archiverFlags,
         Optional<Tool> ranlib,
-        ImmutableList<String> ranlibFlags,
+        ImmutableList<Arg> ranlibFlags,
         ArchiveContents contents,
         String outputFileName,
         ImmutableList<SourcePath> inputs) {
@@ -185,7 +185,7 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
                   filesystem,
                   archiver.getEnvironment(resolver),
                   archiver.getCommandPrefix(resolver),
-                  archiverFlags,
+                  Arg.stringify(archiverFlags, resolver),
                   archiver.getArchiveOptions(contents == ArchiveContents.THIN),
                   outputPath,
                   inputs.stream()
@@ -201,7 +201,7 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
                 filesystem,
                 tool.getEnvironment(resolver),
                 tool.getCommandPrefix(resolver),
-                ranlibFlags,
+                Arg.stringify(ranlibFlags, resolver),
                 outputPath));
       }
 

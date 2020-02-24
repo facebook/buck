@@ -43,6 +43,8 @@ import com.facebook.buck.cxx.toolchain.SymbolNameTool;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -116,19 +118,19 @@ public class CxxPlatforms {
       PreprocessorProvider cpp,
       PreprocessorProvider cxxpp,
       LinkerProvider ld,
-      Iterable<String> ldFlags,
-      ImmutableMultimap<Linker.LinkableDepType, String> runtimeLdflags,
+      Iterable<Arg> ldFlags,
+      ImmutableMultimap<Linker.LinkableDepType, Arg> runtimeLdflags,
       Tool strip,
       ArchiverProvider ar,
       ArchiveContents archiveContents,
       Optional<ToolProvider> ranlib,
       SymbolNameTool nm,
-      ImmutableList<String> asflags,
-      ImmutableList<String> asppflags,
-      ImmutableList<String> cflags,
-      ImmutableList<String> cppflags,
-      ImmutableList<String> cxxflags,
-      ImmutableList<String> cxxppflags,
+      ImmutableList<Arg> asflags,
+      ImmutableList<Arg> asppflags,
+      ImmutableList<Arg> cflags,
+      ImmutableList<Arg> cppflags,
+      ImmutableList<Arg> cxxflags,
+      ImmutableList<Arg> cxxppflags,
       String sharedLibraryExtension,
       String sharedLibraryVersionedExtensionFormat,
       String staticLibraryExtension,
@@ -284,21 +286,21 @@ public class CxxPlatforms {
 
   public static void addToolFlagsFromConfig(CxxBuckConfig config, CxxPlatform.Builder builder) {
     builder
-        .addAllAsflags(config.getAsflags().orElse(DEFAULT_ASFLAGS))
-        .addAllAsppflags(config.getAsppflags().orElse(DEFAULT_ASPPFLAGS))
-        .addAllCflags(config.getCflags().orElse(DEFAULT_CFLAGS))
-        .addAllCxxflags(config.getCxxflags().orElse(DEFAULT_CXXFLAGS))
-        .addAllCppflags(config.getCppflags().orElse(DEFAULT_CPPFLAGS))
-        .addAllCxxppflags(config.getCxxppflags().orElse(DEFAULT_CXXPPFLAGS))
-        .addAllCudaflags(config.getCudaflags().orElse(DEFAULT_CUDAFLAGS))
-        .addAllCudappflags(config.getCudappflags().orElse(DEFAULT_CUDAPPFLAGS))
-        .addAllHipflags(config.getHipflags().orElse(DEFAULT_HIPFLAGS))
-        .addAllHipppflags(config.getHipppflags().orElse(DEFAULT_HIPPPFLAGS))
-        .addAllAsmflags(config.getAsmflags().orElse(DEFAULT_ASMFLAGS))
-        .addAllAsmppflags(config.getAsmppflags().orElse(DEFAULT_ASMPPFLAGS))
-        .addAllLdflags(config.getLdflags().orElse(DEFAULT_LDFLAGS))
-        .addAllArflags(config.getArflags().orElse(DEFAULT_ARFLAGS))
-        .addAllRanlibflags(config.getRanlibflags().orElse(DEFAULT_RANLIBFLAGS));
+        .addAllAsflags(StringArg.from(config.getAsflags().orElse(DEFAULT_ASFLAGS)))
+        .addAllAsppflags(StringArg.from(config.getAsppflags().orElse(DEFAULT_ASPPFLAGS)))
+        .addAllCflags(StringArg.from(config.getCflags().orElse(DEFAULT_CFLAGS)))
+        .addAllCxxflags(StringArg.from(config.getCxxflags().orElse(DEFAULT_CXXFLAGS)))
+        .addAllCppflags(StringArg.from(config.getCppflags().orElse(DEFAULT_CPPFLAGS)))
+        .addAllCxxppflags(StringArg.from(config.getCxxppflags().orElse(DEFAULT_CXXPPFLAGS)))
+        .addAllCudaflags(StringArg.from(config.getCudaflags().orElse(DEFAULT_CUDAFLAGS)))
+        .addAllCudappflags(StringArg.from(config.getCudappflags().orElse(DEFAULT_CUDAPPFLAGS)))
+        .addAllHipflags(StringArg.from(config.getHipflags().orElse(DEFAULT_HIPFLAGS)))
+        .addAllHipppflags(StringArg.from(config.getHipppflags().orElse(DEFAULT_HIPPPFLAGS)))
+        .addAllAsmflags(StringArg.from(config.getAsmflags().orElse(DEFAULT_ASMFLAGS)))
+        .addAllAsmppflags(StringArg.from(config.getAsmppflags().orElse(DEFAULT_ASMPPFLAGS)))
+        .addAllLdflags(StringArg.from(config.getLdflags().orElse(DEFAULT_LDFLAGS)))
+        .addAllArflags(StringArg.from(config.getArflags().orElse(DEFAULT_ARFLAGS)))
+        .addAllRanlibflags(StringArg.from(config.getRanlibflags().orElse(DEFAULT_RANLIBFLAGS)));
   }
 
   /** Returns the configured default cxx platform. */

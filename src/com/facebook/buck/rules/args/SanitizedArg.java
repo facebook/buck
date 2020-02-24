@@ -111,4 +111,24 @@ public class SanitizedArg implements Arg {
     }
     return converted.build();
   }
+
+  /**
+   * Create a list of SanitizedArg from list of Arg by applying the given sanitizer StringArg and
+   * filtering empty StringArg.
+   */
+  public static ImmutableList<Arg> fromArgs(
+      Function<? super String, String> sanitizer, Iterable<Arg> args) {
+    ImmutableList.Builder<Arg> converted = ImmutableList.builder();
+    for (Arg arg : args) {
+      if (arg instanceof StringArg) {
+        String argValue = ((StringArg) arg).getArg();
+        if (!argValue.isEmpty()) {
+          converted.add(create(sanitizer, argValue));
+        }
+      } else {
+        converted.add(arg);
+      }
+    }
+    return converted.build();
+  }
 }

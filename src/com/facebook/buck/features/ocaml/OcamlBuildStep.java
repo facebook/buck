@@ -196,7 +196,7 @@ public class OcamlBuildStep implements Step {
 
     ImmutableList.Builder<Arg> cCompileFlags = ImmutableList.builder();
     cCompileFlags.addAll(ocamlContext.getCCompileFlags());
-    cCompileFlags.addAll(StringArg.from(ocamlContext.getCommonCFlags()));
+    cCompileFlags.addAll(ocamlContext.getCommonCFlags());
 
     CxxPreprocessorInput cxxPreprocessorInput = ocamlContext.getCxxPreprocessorInput();
 
@@ -231,7 +231,7 @@ public class OcamlBuildStep implements Step {
 
     ImmutableList.Builder<Arg> flags = ImmutableList.builder();
     flags.addAll(ocamlContext.getFlags());
-    flags.addAll(StringArg.from(ocamlContext.getCommonCLinkerFlags()));
+    flags.addAll(ocamlContext.getCommonCLinkerFlags());
 
     OcamlLinkStep linkStep =
         OcamlLinkStep.create(
@@ -258,7 +258,7 @@ public class OcamlBuildStep implements Step {
 
     ImmutableList.Builder<Arg> flags = ImmutableList.builder();
     flags.addAll(ocamlContext.getFlags());
-    flags.addAll(StringArg.from(ocamlContext.getCommonCLinkerFlags()));
+    flags.addAll(ocamlContext.getCommonCLinkerFlags());
 
     OcamlLinkStep linkStep =
         OcamlLinkStep.create(

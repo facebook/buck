@@ -21,10 +21,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
 
@@ -45,10 +49,14 @@ public class DefaultCxxPlatformsTest {
                                 "cxxflags", "-std=c++11",
                                 "cxxppflags", "-DCXXFOO")))
                     .build()));
-    assertThat(cxxPlatform.getCflags(), containsInAnyOrder("-std=gnu11"));
-    assertThat(cxxPlatform.getCppflags(), containsInAnyOrder("-DCFOO"));
-    assertThat(cxxPlatform.getCxxflags(), containsInAnyOrder("-std=c++11"));
-    assertThat(cxxPlatform.getCxxppflags(), containsInAnyOrder("-DCXXFOO"));
+    BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
+    SourcePathResolverAdapter resolver = ruleResolver.getSourcePathResolver();
+    assertThat(Arg.stringify(cxxPlatform.getCflags(), resolver), containsInAnyOrder("-std=gnu11"));
+    assertThat(Arg.stringify(cxxPlatform.getCppflags(), resolver), containsInAnyOrder("-DCFOO"));
+    assertThat(
+        Arg.stringify(cxxPlatform.getCxxflags(), resolver), containsInAnyOrder("-std=c++11"));
+    assertThat(
+        Arg.stringify(cxxPlatform.getCxxppflags(), resolver), containsInAnyOrder("-DCXXFOO"));
   }
 
   @Test

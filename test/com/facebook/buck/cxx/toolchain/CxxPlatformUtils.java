@@ -23,6 +23,8 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
@@ -94,6 +96,8 @@ public class CxxPlatformUtils {
           .setPublicHeadersSymlinksEnabled(true)
           .setPrivateHeadersSymlinksEnabled(true)
           .build();
+  public static final SourcePathResolverAdapter DEFAULT_PATH_RESOLVER =
+      new SourcePathResolverAdapter(DefaultSourcePathResolver.from(new TestActionGraphBuilder()));
 
   public static final CxxPlatform buildPlatformWithLdArgs(ImmutableList<String> ldArgs) {
     CommandTool.Builder commandToolBuilder = new CommandTool.Builder();

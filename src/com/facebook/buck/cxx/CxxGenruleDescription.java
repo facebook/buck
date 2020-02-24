@@ -63,6 +63,7 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.args.ToolArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
+import com.facebook.buck.rules.macros.ArgExpander;
 import com.facebook.buck.rules.macros.CcFlagsMacro;
 import com.facebook.buck.rules.macros.CcMacro;
 import com.facebook.buck.rules.macros.CppFlagsMacro;
@@ -98,7 +99,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Streams;
 import java.nio.file.Path;
@@ -109,6 +109,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenruleDescriptionArg>
     implements Flavored,
@@ -228,15 +229,21 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
             CxxMacro.class,
             cxxPlatform.getCxx().resolve(resolver, buildTarget.getTargetConfiguration())));
 
-    ImmutableList<String> asflags = cxxPlatform.getAsflags();
-    ImmutableList<String> cflags = cxxPlatform.getCflags();
-    ImmutableList<String> cxxflags = cxxPlatform.getCxxflags();
+    ImmutableList<Arg> asflags = cxxPlatform.getAsflags();
+    ImmutableList<Arg> cflags = cxxPlatform.getCflags();
+    ImmutableList<Arg> cxxflags = cxxPlatform.getCxxflags();
     expanders.add(
-        new StringExpander<>(
-            CcFlagsMacro.class, StringArg.of(shquoteJoin(Iterables.concat(cflags, asflags)))));
+        new ArgExpander<>(
+            CcFlagsMacro.class,
+            new ShQuoteJoinArg(
+                Stream.concat(cflags.stream(), asflags.stream())
+                    .collect(ImmutableList.toImmutableList()))));
     expanders.add(
-        new StringExpander<>(
-            CxxFlagsMacro.class, StringArg.of(shquoteJoin(Iterables.concat(cxxflags, asflags)))));
+        new ArgExpander<>(
+            CxxFlagsMacro.class,
+            new ShQuoteJoinArg(
+                Stream.concat(cxxflags.stream(), asflags.stream())
+                    .collect(ImmutableList.toImmutableList()))));
 
     expanders.add(
         new CxxPreprocessorFlagsExpander<>(CppFlagsMacro.class, cxxPlatform, CxxSource.Type.C));
@@ -440,7 +447,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       PreprocessorFlags.Builder ppFlagsBuilder = PreprocessorFlags.builder();
       ExplicitCxxToolFlags.Builder toolFlagsBuilder = CxxToolFlags.explicitBuilder();
       toolFlagsBuilder.setPlatformFlags(
-          StringArg.from(CxxSourceTypes.getPlatformPreprocessFlags(cxxPlatform, sourceType)));
+          CxxSourceTypes.getPlatformPreprocessFlags(cxxPlatform, sourceType));
       for (CxxPreprocessorInput input : transitivePreprocessorInput) {
         ppFlagsBuilder.addAllIncludes(input.getIncludes());
         ppFlagsBuilder.addAllFrameworkPaths(input.getFrameworks());
@@ -618,7 +625,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     private ImmutableList<Arg> getLinkerArgs(
         ActionGraphBuilder graphBuilder, ImmutableList<BuildRule> rules, Optional<Pattern> filter) {
       ImmutableList.Builder<Arg> args = ImmutableList.builder();
-      args.addAll(StringArg.from(cxxPlatform.getLdflags()));
+      args.addAll(cxxPlatform.getLdflags());
       if (depType == Linker.LinkableDepType.SHARED) {
         args.addAll(getSharedLinkArgs(graphBuilder, rules));
       }

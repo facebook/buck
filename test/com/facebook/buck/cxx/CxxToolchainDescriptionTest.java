@@ -39,6 +39,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxToolProvider;
 import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceParams;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
@@ -129,8 +130,10 @@ public class CxxToolchainDescriptionTest {
     assertEquals(Optional.empty(), platform.getHip());
     assertEquals(Optional.empty(), platform.getHippp());
 
-    assertEquals(ImmutableList.of("-Wl,--build-id", "linker", "flags"), platform.getLdflags());
-    assertEquals(ImmutableList.of("c", "flags"), platform.getCflags());
+    assertEquals(
+        ImmutableList.of("-Wl,--build-id", "linker", "flags"),
+        Arg.stringify(platform.getLdflags(), resolver));
+    assertEquals(ImmutableList.of("c", "flags"), Arg.stringify(platform.getCflags(), resolver));
   }
 
   private void assertIsBinaryTool(SourcePathResolverAdapter resolver, Tool expected, Tool other) {

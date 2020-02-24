@@ -23,6 +23,7 @@ import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
+import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -39,72 +40,72 @@ public interface CxxPlatform extends FlavorConvertible {
 
   CompilerProvider getAs();
 
-  ImmutableList<String> getAsflags();
+  ImmutableList<Arg> getAsflags();
 
   PreprocessorProvider getAspp();
 
-  ImmutableList<String> getAsppflags();
+  ImmutableList<Arg> getAsppflags();
 
   CompilerProvider getCc();
 
-  ImmutableList<String> getCflags();
+  ImmutableList<Arg> getCflags();
 
   CompilerProvider getCxx();
 
-  ImmutableList<String> getCxxflags();
+  ImmutableList<Arg> getCxxflags();
 
   PreprocessorProvider getCpp();
 
-  ImmutableList<String> getCppflags();
+  ImmutableList<Arg> getCppflags();
 
   PreprocessorProvider getCxxpp();
 
-  ImmutableList<String> getCxxppflags();
+  ImmutableList<Arg> getCxxppflags();
 
   Optional<PreprocessorProvider> getCudapp();
 
-  ImmutableList<String> getCudappflags();
+  ImmutableList<Arg> getCudappflags();
 
   Optional<CompilerProvider> getCuda();
 
-  ImmutableList<String> getCudaflags();
+  ImmutableList<Arg> getCudaflags();
 
   // HIP is the compiler for AMD rocm tool chain
   Optional<PreprocessorProvider> getHippp();
 
-  ImmutableList<String> getHipppflags();
+  ImmutableList<Arg> getHipppflags();
 
   Optional<CompilerProvider> getHip();
 
-  ImmutableList<String> getHipflags();
+  ImmutableList<Arg> getHipflags();
 
   Optional<PreprocessorProvider> getAsmpp();
 
-  ImmutableList<String> getAsmppflags();
+  ImmutableList<Arg> getAsmppflags();
 
   Optional<CompilerProvider> getAsm();
 
-  ImmutableList<String> getAsmflags();
+  ImmutableList<Arg> getAsmflags();
 
   LinkerProvider getLd();
 
-  ImmutableList<String> getLdflags();
+  ImmutableList<Arg> getLdflags();
 
-  ImmutableMultimap<Linker.LinkableDepType, String> getRuntimeLdflags();
+  ImmutableMultimap<Linker.LinkableDepType, Arg> getRuntimeLdflags();
 
   Tool getStrip();
 
-  ImmutableList<String> getStripFlags();
+  ImmutableList<Arg> getStripFlags();
 
   ArchiverProvider getAr();
 
   ArchiveContents getArchiveContents();
 
-  ImmutableList<String> getArflags();
+  ImmutableList<Arg> getArflags();
 
   Optional<ToolProvider> getRanlib();
 
-  ImmutableList<String> getRanlibflags();
+  ImmutableList<Arg> getRanlibflags();
 
   SymbolNameTool getSymbolNameTool();
 
@@ -178,21 +179,21 @@ public interface CxxPlatform extends FlavorConvertible {
     return builder().from(this).setFlavor(flavor).build();
   }
 
-  default CxxPlatform withAsflags(ImmutableList<String> asFlags) {
+  default CxxPlatform withAsflags(ImmutableList<Arg> asFlags) {
     if (getAsflags().equals(asFlags)) {
       return this;
     }
     return builder().from(this).setAsflags(asFlags).build();
   }
 
-  default CxxPlatform withCppflags(ImmutableList<String> cppFlags) {
+  default CxxPlatform withCppflags(ImmutableList<Arg> cppFlags) {
     if (getCppflags().equals(cppFlags)) {
       return this;
     }
     return builder().from(this).setCppflags(cppFlags).build();
   }
 
-  default CxxPlatform withCflags(ImmutableList<String> cFlags) {
+  default CxxPlatform withCflags(ImmutableList<Arg> cFlags) {
     if (getCflags().equals(cFlags)) {
       return this;
     }
@@ -217,14 +218,14 @@ public interface CxxPlatform extends FlavorConvertible {
         .build();
   }
 
-  default CxxPlatform withCxxppflags(ImmutableList<String> cxxppflags) {
+  default CxxPlatform withCxxppflags(ImmutableList<Arg> cxxppflags) {
     if (getCxxppflags().equals(cxxppflags)) {
       return this;
     }
     return builder().from(this).setCxxppflags(cxxppflags).build();
   }
 
-  default CxxPlatform withCxxflags(ImmutableList<String> cxxFlags) {
+  default CxxPlatform withCxxflags(ImmutableList<Arg> cxxFlags) {
     if (getCxxflags().equals(cxxFlags)) {
       return this;
     }

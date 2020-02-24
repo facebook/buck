@@ -20,6 +20,8 @@ import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.util.stream.RichStream;
@@ -159,15 +161,25 @@ public class CxxFlags {
     }
   }
 
-  /** Expand flag macros in all CxxPlatform flags. */
+  /** Expand flag macros in all CxxPlatform StringArg flags. */
   public static CxxPlatform.Builder translateCxxPlatformFlags(
       CxxPlatform.Builder cxxPlatformBuilder,
       CxxPlatform cxxPlatform,
       ImmutableMap<String, String> flagMacros) {
     Function<String, String> translateFunction =
         new CxxFlags.TranslateMacrosFunction(ImmutableSortedMap.copyOf(flagMacros));
-    Function<ImmutableList<String>, ImmutableList<String>> expandMacros =
-        flags -> flags.stream().map(translateFunction).collect(ImmutableList.toImmutableList());
+    Function<ImmutableList<Arg>, ImmutableList<Arg>> expandMacros =
+        flags -> {
+          ImmutableList.Builder<Arg> expandedFlags = new ImmutableList.Builder<>();
+          for (Arg flag : flags) {
+            if (flag instanceof StringArg) {
+              expandedFlags.add(StringArg.of(translateFunction.apply(((StringArg) flag).getArg())));
+            } else {
+              expandedFlags.add(flag);
+            }
+          }
+          return expandedFlags.build();
+        };
     cxxPlatformBuilder.setAsflags(expandMacros.apply(cxxPlatform.getAsflags()));
     cxxPlatformBuilder.setAsppflags(expandMacros.apply(cxxPlatform.getAsppflags()));
     cxxPlatformBuilder.setCflags(expandMacros.apply(cxxPlatform.getCflags()));

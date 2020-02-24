@@ -26,6 +26,7 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
@@ -39,6 +40,8 @@ import com.facebook.buck.io.FakeExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.AllExistingProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
@@ -56,9 +59,9 @@ public class OcamlToolchainFactoryTest {
     UnresolvedCxxPlatform cxxPlatform =
         new StaticUnresolvedCxxPlatform(
             CxxPlatformUtils.DEFAULT_PLATFORM
-                .withAsflags(ImmutableList.of("-asflag"))
-                .withCppflags(ImmutableList.of("-cppflag"))
-                .withCflags(ImmutableList.of("-cflag")));
+                .withAsflags(ImmutableList.of(StringArg.of("-asflag")))
+                .withCppflags(ImmutableList.of(StringArg.of("-cppflag")))
+                .withCflags(ImmutableList.of(StringArg.of("-cflag"))));
     ToolchainProvider toolchainProvider =
         new ToolchainProviderBuilder()
             .withToolchain(
@@ -82,8 +85,10 @@ public class OcamlToolchainFactoryTest {
     Optional<OcamlToolchain> toolchain =
         factory.createToolchain(
             toolchainProvider, toolchainCreationContext, UnconfiguredTargetConfiguration.INSTANCE);
+    BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
+    SourcePathResolverAdapter resolver = ruleResolver.getSourcePathResolver();
     assertThat(
-        toolchain.get().getDefaultOcamlPlatform().getCFlags(),
+        Arg.stringify(toolchain.get().getDefaultOcamlPlatform().getCFlags(), resolver),
         Matchers.contains("-cppflag", "-cflag", "-asflag"));
   }
 

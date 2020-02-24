@@ -2792,10 +2792,10 @@ public class ProjectGenerator {
       TargetNode<?> targetNode, Map<String, String> appendedConfig) {
     if (targetNode.getDescription() instanceof CxxLibraryDescription) {
       return CxxPlatformXcodeConfigGenerator.getCxxXcodeTargetBuildConfigurationsFromCxxPlatform(
-          defaultCxxPlatform, appendedConfig);
+          defaultCxxPlatform, appendedConfig, defaultPathResolver);
     } else {
       return CxxPlatformXcodeConfigGenerator.getAppleXcodeTargetBuildConfigurationsFromCxxPlatform(
-          defaultCxxPlatform, appendedConfig);
+          defaultCxxPlatform, appendedConfig, defaultPathResolver);
     }
   }
 
