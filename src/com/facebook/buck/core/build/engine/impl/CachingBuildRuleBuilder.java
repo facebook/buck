@@ -855,7 +855,7 @@ class CachingBuildRuleBuilder {
               return pipelinesRunner.runPipelineStartingAt(
                   buildRuleBuildContext, (SupportsPipelining<?>) rule, service);
             } else {
-              buildRuleSteps.runWithDefaultExecutor();
+              service.submit(buildRuleSteps::runWithDefaultExecutor);
               return buildRuleSteps.future;
             }
           }
@@ -903,7 +903,7 @@ class CachingBuildRuleBuilder {
       this.strategyResult = customBuildRuleStrategy.get().build(rule, strategyContext);
       future = strategyResult.getBuildResult();
     } else {
-      future = Futures.submitAsync(strategyContext::runWithDefaultBehavior, service);
+      future = strategyContext.runWithDefaultBehavior();
     }
 
     return Futures.transform(
