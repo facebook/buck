@@ -275,7 +275,7 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
                   uploader.uploadFile(args.getRuleDiagGraphFilePath(), TRACE_KIND_RULE_DIAG_GRAPH);
                 } else {
                   LOG.debug(
-                      "Not uploading %. %s doesn't exist.",
+                      "Not uploading %s. %s doesn't exist.",
                       TRACE_KIND_RULE_DIAG_GRAPH, args.getRuleDiagGraphFilePath().toString());
                 }
                 if (args.getRuleDiagKeyFilePath().toFile().exists()) {
