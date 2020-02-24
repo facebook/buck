@@ -22,7 +22,12 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.everyItem;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.CompositeArg;
+import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
@@ -31,6 +36,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -185,5 +192,44 @@ public class CxxFlagsTest {
             ImmutableList.of(
                 StringWithMacrosUtils.format("-Iexpansion"),
                 StringWithMacrosUtils.format("-Fexpansion"))));
+  }
+
+  @Test
+  public void macroExpansionsInFlagsToArgs() {
+    Arg expansionArg = SourcePathArg.of(FakeSourcePath.of("test.file"));
+    Arg stringArg = StringArg.of("test-arg");
+    ImmutableMap<String, Arg> flagMacros =
+        ImmutableMap.of("MACRO", expansionArg, "FLAG", stringArg);
+    Function<Arg, Arg> translateFunction =
+        new CxxFlags.TranslateMacrosArgsFunction(ImmutableSortedMap.copyOf(flagMacros));
+    Function<ImmutableList<Arg>, ImmutableList<Arg>> expandMacros =
+        flags -> flags.stream().map(translateFunction).collect(ImmutableList.toImmutableList());
+    ImmutableList<Arg> flags =
+        ImmutableList.copyOf(
+            StringArg.from(
+                ImmutableList.of(
+                    "arg",
+                    "-flag",
+                    "$MACRO",
+                    "abc$MACRO",
+                    "$MACROabc",
+                    "abc$MACRO/abc",
+                    "$macro/abc",
+                    "$FLAG$MACROabc",
+                    "$MACROabc$FLAG")));
+    assertThat(
+        expandMacros.apply(flags),
+        equalTo(
+            ImmutableList.of(
+                StringArg.of("arg"),
+                StringArg.of("-flag"),
+                expansionArg,
+                CompositeArg.of(ImmutableList.of(StringArg.of("abc"), expansionArg)),
+                CompositeArg.of(ImmutableList.of(expansionArg, StringArg.of("abc"))),
+                CompositeArg.of(
+                    ImmutableList.of(StringArg.of("abc"), expansionArg, StringArg.of("/abc"))),
+                StringArg.of("$macro/abc"),
+                CompositeArg.of(ImmutableList.of(stringArg, expansionArg, StringArg.of("abc"))),
+                CompositeArg.of(ImmutableList.of(expansionArg, StringArg.of("abc"), stringArg)))));
   }
 }

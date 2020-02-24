@@ -21,6 +21,7 @@ import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.CompositeArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.macros.StringWithMacros;
@@ -33,6 +34,8 @@ import com.google.common.collect.Iterables;
 import java.util.Collection;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class CxxFlags {
 
@@ -139,7 +142,7 @@ public class CxxFlags {
     return langFlags.build();
   }
 
-  /** Function for translating cxx arg macros. */
+  /** Function for translating cxx flag macros. */
   public static class TranslateMacrosFunction implements AddsToRuleKeyFunction<String, String> {
 
     @CustomFieldBehavior(DefaultFieldSerialization.class)
@@ -161,25 +164,62 @@ public class CxxFlags {
     }
   }
 
+  /** Function for translating cxx flag macros in list of Arg. */
+  public static class TranslateMacrosArgsFunction implements AddsToRuleKeyFunction<Arg, Arg> {
+
+    @CustomFieldBehavior(DefaultFieldSerialization.class)
+    private final ImmutableSortedMap<String, Arg> flagMacros;
+
+    private final Pattern macrosPattern;
+
+    public TranslateMacrosArgsFunction(ImmutableSortedMap<String, Arg> flagMacros) {
+      this.flagMacros = flagMacros;
+      this.macrosPattern =
+          Pattern.compile(
+              String.join(
+                  "|",
+                  flagMacros.keySet().stream()
+                      .map(macro -> "\\$" + macro)
+                      .collect(ImmutableList.toImmutableList())));
+    }
+
+    @Override
+    public Arg apply(Arg flag) {
+      if (!(flag instanceof StringArg)) {
+        return flag;
+      }
+      String argValue = ((StringArg) flag).getArg();
+      Matcher matcher = macrosPattern.matcher(argValue);
+      int startPos = 0;
+      ImmutableList.Builder<Arg> argBuilder = new ImmutableList.Builder<>();
+      while (matcher.find()) {
+        if (matcher.start() > startPos) {
+          argBuilder.add(StringArg.of(argValue.substring(startPos, matcher.start())));
+        }
+        // Get macro value. Take macro name without $ sign.
+        argBuilder.add(flagMacros.get(argValue.substring(matcher.start() + 1, matcher.end())));
+        startPos = matcher.end();
+      }
+      if (startPos < argValue.length()) {
+        argBuilder.add(StringArg.of(argValue.substring(startPos)));
+      }
+      ImmutableList<Arg> compositeArgParts = argBuilder.build();
+      if (compositeArgParts.size() == 1) {
+        return compositeArgParts.get(0);
+      }
+      return CompositeArg.of(compositeArgParts);
+    }
+  }
+
   /** Expand flag macros in all CxxPlatform StringArg flags. */
-  public static CxxPlatform.Builder translateCxxPlatformFlags(
+  public static void translateCxxPlatformFlags(
       CxxPlatform.Builder cxxPlatformBuilder,
       CxxPlatform cxxPlatform,
-      ImmutableMap<String, String> flagMacros) {
-    Function<String, String> translateFunction =
-        new CxxFlags.TranslateMacrosFunction(ImmutableSortedMap.copyOf(flagMacros));
+      ImmutableMap<String, Arg> flagMacros) {
+    Function<Arg, Arg> translateFunction =
+        new CxxFlags.TranslateMacrosArgsFunction(ImmutableSortedMap.copyOf(flagMacros));
     Function<ImmutableList<Arg>, ImmutableList<Arg>> expandMacros =
-        flags -> {
-          ImmutableList.Builder<Arg> expandedFlags = new ImmutableList.Builder<>();
-          for (Arg flag : flags) {
-            if (flag instanceof StringArg) {
-              expandedFlags.add(StringArg.of(translateFunction.apply(((StringArg) flag).getArg())));
-            } else {
-              expandedFlags.add(flag);
-            }
-          }
-          return expandedFlags.build();
-        };
+        flags -> flags.stream().map(translateFunction).collect(ImmutableList.toImmutableList());
     cxxPlatformBuilder.setAsflags(expandMacros.apply(cxxPlatform.getAsflags()));
     cxxPlatformBuilder.setAsppflags(expandMacros.apply(cxxPlatform.getAsppflags()));
     cxxPlatformBuilder.setCflags(expandMacros.apply(cxxPlatform.getCflags()));
@@ -196,6 +236,5 @@ public class CxxFlags {
     cxxPlatformBuilder.setStripFlags(expandMacros.apply(cxxPlatform.getStripFlags()));
     cxxPlatformBuilder.setArflags(expandMacros.apply(cxxPlatform.getArflags()));
     cxxPlatformBuilder.setRanlibflags(expandMacros.apply(cxxPlatform.getRanlibflags()));
-    return cxxPlatformBuilder;
   }
 }
