@@ -222,15 +222,19 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
             "%s: attribute '%s' cannot be configured using select", buildTarget, info.getName());
       }
 
-      SelectorListCoercer<T> coercer = new SelectorListCoercer<>(info.getTypeCoercer());
       SelectorList<T> attributeWithSelectableValue =
-          coercer.coerce(
-              cellNameResolver,
-              filesystem,
-              buildTarget.getCellRelativeBasePath().getPath(),
-              targetConfiguration,
-              hostConfiguration,
-              (SelectorList<?>) attribute);
+          ((SelectorList<?>) attribute)
+              .mapValuesThrowing(
+                  v -> {
+                    return info.getTypeCoercer()
+                        .coerce(
+                            cellNameResolver,
+                            filesystem,
+                            buildTarget.getCellRelativeBasePath().getPath(),
+                            targetConfiguration,
+                            hostConfiguration,
+                            v);
+                  });
       return configureAttributeValue(
           configurationContext,
           selectorListResolver,
