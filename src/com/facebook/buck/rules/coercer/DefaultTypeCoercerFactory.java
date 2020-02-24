@@ -16,23 +16,18 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.DataTransferObject;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMapping;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcher;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcherParser;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.util.immutables.RuleArg;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.AbsoluteOutputMacro;
 import com.facebook.buck.rules.macros.CcFlagsMacro;
 import com.facebook.buck.rules.macros.CcMacro;
@@ -105,24 +100,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
     // queried. This is only used for the visibility field, which is not actually handled by the
     // coercer.
     TypeCoercer<Object, BuildTargetMatcher> buildTargetPatternTypeCoercer =
-        new IdentityTypeCoercer<BuildTargetMatcher>(BuildTargetMatcher.class) {
-          @Override
-          public BuildTargetMatcher coerce(
-              CellNameResolver cellNameResolver,
-              ProjectFilesystem filesystem,
-              ForwardRelativePath pathRelativeToProjectRoot,
-              TargetConfiguration targetConfiguration,
-              TargetConfiguration hostConfiguration,
-              Object object) {
-            // This is only actually used directly by ConstructorArgMarshaller, for parsing the
-            // groups list. It's also queried (but not actually used) when Descriptions declare
-            // deps fields.
-            // TODO(csarbora): make this work for all types of BuildTargetPatterns
-            // probably differentiate them by inheritance
-            return BuildTargetMatcherParser.forVisibilityArgument()
-                .parse((String) object, cellNameResolver);
-          }
-        };
+        new BuildTargetMatcherTypeCoercer();
     unconfiguredBuildTargetFactory = new ParsingUnconfiguredBuildTargetViewFactory();
     unconfiguredBuildTargetTypeCoercer =
         new UnconfiguredBuildTargetTypeCoercer(unconfiguredBuildTargetFactory);
