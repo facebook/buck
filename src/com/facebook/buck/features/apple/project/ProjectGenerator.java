@@ -3163,7 +3163,10 @@ public class ProjectGenerator {
               moduleName.get(), resolvedContents.keySet(), headerSymlinkTreeRoot);
         }
         boolean containsSwift = !nonSourcePaths.isEmpty();
-        Set<Path> headerPaths = resolvedContents.keySet();
+        Set<Path> headerPaths =
+            resolvedContents.keySet().stream()
+                .map(path -> headerSymlinkTreeRoot.relativize(path))
+                .collect(ImmutableSet.toImmutableSet());
         if (containsSwift) {
           projectFilesystem.writeContentsToPath(
               ModuleMapFactory.createModuleMap(

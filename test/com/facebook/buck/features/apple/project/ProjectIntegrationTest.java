@@ -578,6 +578,23 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testBuckProjectWithSwiftDependencyOnModularHeadersObjectiveCLibrary()
+      throws IOException, InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "headers_modulemap", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("project", "//:Test");
+    result.assertSuccess();
+
+    runXcodebuild(workspace, "Test.xcworkspace", "Test");
+  }
+
+  @Test
   @Ignore("Currently failing")
   public void testBuckProjectUsingDefaultPlatformAttributePropagatesFlavor() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);

@@ -1,0 +1,8 @@
+[apple]
+  modulemap_mode = headers
+
+[cxx]
+  default_platform = iphonesimulator-x86_64
+
+[project]
+  ide=xcode
