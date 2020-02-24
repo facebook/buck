@@ -69,7 +69,7 @@ public class TargetNodeMaybeIncompatible {
     throw new HumanReadableException(
         dependencyStack,
         "Build target %s is restricted to contraints in \"compatible_with\""
-            + "that do not match the target platform."
+            + " that do not match the target platform "
             + compatibles,
         buildTarget);
   }
