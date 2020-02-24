@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.select;
 
+import com.facebook.buck.util.function.ThrowingFunction;
 import com.google.common.collect.ImmutableList;
 import java.util.Objects;
 
@@ -52,6 +53,18 @@ public final class SelectorList<T> {
    */
   public ImmutableList<Selector<T>> getSelectors() {
     return selectors;
+  }
+
+  /** Transform all items with given function. */
+  public <U, E extends Exception> SelectorList<U> mapValuesThrowing(
+      ThrowingFunction<T, U, E> function) throws E {
+    ImmutableList.Builder<Selector<U>> selectors =
+        ImmutableList.builderWithExpectedSize(this.selectors.size());
+    for (Selector<T> selector : this.selectors) {
+      selectors.add(selector.mapValuesThrowing(function));
+    }
+
+    return new SelectorList<>(selectors.build());
   }
 
   @Override
