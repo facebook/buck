@@ -23,9 +23,6 @@ public enum ModuleMapMode {
 
   /** Generate a module map that requires an umbrella header. */
   UMBRELLA_HEADER,
-
-  /** Generate a module map that uses the library's headers in an umbrella directory. */
-  UMBRELLA_DIRECTORY,
   ;
 
   /**
@@ -36,8 +33,6 @@ public enum ModuleMapMode {
   public boolean shouldGenerateMissingUmbrellaHeader() {
     switch (this) {
       case HEADERS:
-        return false;
-      case UMBRELLA_DIRECTORY:
         return false;
       case UMBRELLA_HEADER:
         return true;

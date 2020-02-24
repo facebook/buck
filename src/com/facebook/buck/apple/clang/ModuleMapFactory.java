@@ -62,8 +62,6 @@ public class ModuleMapFactory {
         return new HeadersModuleMap(moduleName, headerNames);
       case UMBRELLA_HEADER:
         return new UmbrellaHeaderModuleMap(moduleName, swiftMode);
-      case UMBRELLA_DIRECTORY:
-        return new UmbrellaDirectoryModuleMap(moduleName);
     }
 
     throw new RuntimeException();

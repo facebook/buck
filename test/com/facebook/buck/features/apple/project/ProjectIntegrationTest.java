@@ -578,42 +578,6 @@ public class ProjectIntegrationTest {
   }
 
   @Test
-  public void
-      testBuckProjectWithSwiftDependencyOnModularObjectiveCLibraryAndUmbrellaDirectoryModuleMap()
-          throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
-    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
-
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "umbrella_directory_modulemap", temporaryFolder);
-    workspace.setUp();
-
-    ProcessResult result = workspace.runBuckCommand("project", "//:Test");
-    result.assertSuccess();
-
-    runXcodebuild(workspace, "Test.xcworkspace", "Test");
-  }
-
-  @Test
-  public void
-      testBuckProjectWithSwiftDependencyOnModularObjectiveCLibraryAndPerLibraryUmbrellaDirectoryModuleMap()
-          throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
-    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
-
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "umbrella_directory_modulemap_per_library", temporaryFolder);
-    workspace.setUp();
-
-    ProcessResult result = workspace.runBuckCommand("project", "//:Test");
-    result.assertSuccess();
-
-    runXcodebuild(workspace, "Test.xcworkspace", "Test");
-  }
-
-  @Test
   @Ignore("Currently failing")
   public void testBuckProjectUsingDefaultPlatformAttributePropagatesFlavor() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
