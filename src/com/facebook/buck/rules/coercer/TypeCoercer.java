@@ -21,6 +21,7 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.concat.Concatable;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
 import javax.annotation.Nullable;
@@ -79,5 +80,16 @@ public interface TypeCoercer<U, T> extends Concatable<T> {
 
   interface Traversal {
     void traverse(Object object);
+  }
+
+  /** Runtime checked cast. */
+  @SuppressWarnings("unchecked")
+  default <S> TypeCoercer<U, S> checkOutputAssignableTo(TypeToken<S> type) {
+    Preconditions.checkState(
+        this.getOutputType().wrap().isSubtypeOf(type.wrap()),
+        "actual output type %s must be a assignable to %s",
+        this.getOutputType(),
+        type);
+    return (TypeCoercer<U, S>) this;
   }
 }

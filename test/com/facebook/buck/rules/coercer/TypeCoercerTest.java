@@ -937,8 +937,9 @@ public class TypeCoercerTest {
     public Object object;
     public ImmutableMap<String, ImmutableList<BuildTarget>> stringMapOfListOfBuildTargets;
     public String primitiveString;
-    public Either<String, List<String>> eitherStringOrStringList;
-    public Either<Set<String>, Map<String, String>> eitherStringSetOrStringToStringMap;
+    public Either<String, ImmutableList<String>> eitherStringOrStringList;
+    public Either<ImmutableSet<String>, ImmutableMap<String, String>>
+        eitherStringSetOrStringToStringMap;
     public Pair<Path, String> pairOfPathsAndStrings;
     public ImmutableList<SourceWithFlags> listOfSourcesWithFlags;
     public ImmutableList<TestEnum> listOfTestEnums;
@@ -961,5 +962,25 @@ public class TypeCoercerTest {
     PINK,
     white,
     VIOLET
+  }
+
+  @Test
+  public void checkOutputAssignableTo() {
+    IdentityTypeCoercer<String> stringCoercer = new IdentityTypeCoercer<>(String.class);
+    IdentityTypeCoercer<CharSequence> charSequenceCoercer =
+        new IdentityTypeCoercer<>(CharSequence.class);
+
+    // upcast is fine
+    stringCoercer.checkOutputAssignableTo(TypeToken.of(Object.class));
+    stringCoercer.checkOutputAssignableTo(TypeToken.of(CharSequence.class));
+
+    // this is also upcast
+    new ListTypeCoercer<>(new IdentityTypeCoercer<>(String.class))
+        .checkOutputAssignableTo(new TypeToken<ImmutableList<? extends String>>() {});
+
+    exception.expect(RuntimeException.class);
+
+    // but downcast is not
+    charSequenceCoercer.checkOutputAssignableTo(TypeToken.of(String.class));
   }
 }

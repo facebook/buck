@@ -72,8 +72,13 @@ public class APKModuleGraph implements AddsToRuleKey {
 
   private final TargetGraph targetGraph;
   @AddToRuleKey private final BuildTarget target;
-  @AddToRuleKey private final Optional<Map<String, List<BuildTarget>>> suppliedSeedConfigMap;
-  @AddToRuleKey private final Optional<Map<String, List<String>>> appModuleDependencies;
+
+  @AddToRuleKey
+  private final Optional<ImmutableMap<String, ImmutableList<BuildTarget>>> suppliedSeedConfigMap;
+
+  @AddToRuleKey
+  private final Optional<ImmutableMap<String, ImmutableList<String>>> appModuleDependencies;
+
   @AddToRuleKey private final Optional<List<BuildTarget>> blacklistedModules;
   @AddToRuleKey private final Set<String> modulesWithResources;
   private final Optional<Set<BuildTarget>> seedTargets;
@@ -122,8 +127,8 @@ public class APKModuleGraph implements AddsToRuleKey {
   private final Supplier<ImmutableMultimap<BuildTarget, String>> sharedSeedsSupplier =
       MoreSuppliers.memoize(this::generateSharedSeeds);
 
-  private final Supplier<Optional<Map<String, List<BuildTarget>>>> configMapSupplier =
-      MoreSuppliers.memoize(this::generateSeedConfigMap);
+  private final Supplier<Optional<ImmutableMap<String, ImmutableList<BuildTarget>>>>
+      configMapSupplier = MoreSuppliers.memoize(this::generateSeedConfigMap);
 
   /**
    * Constructor for the {@code APKModule} graph generator object that produces a graph with only a
@@ -155,8 +160,8 @@ public class APKModuleGraph implements AddsToRuleKey {
    * @param target The root target to use to traverse the graph
    */
   public APKModuleGraph(
-      Optional<Map<String, List<BuildTarget>>> seedConfigMap,
-      Optional<Map<String, List<String>>> appModuleDependencies,
+      Optional<ImmutableMap<String, ImmutableList<BuildTarget>>> seedConfigMap,
+      Optional<ImmutableMap<String, ImmutableList<String>>> appModuleDependencies,
       Optional<List<BuildTarget>> blacklistedModules,
       Set<String> modulesWithResources,
       TargetGraph targetGraph,
@@ -220,19 +225,19 @@ public class APKModuleGraph implements AddsToRuleKey {
     return Optional.of(targets);
   }
 
-  private Optional<Map<String, List<BuildTarget>>> generateSeedConfigMap() {
+  private Optional<ImmutableMap<String, ImmutableList<BuildTarget>>> generateSeedConfigMap() {
     if (suppliedSeedConfigMap.isPresent()) {
       return suppliedSeedConfigMap;
     }
     if (!seedTargets.isPresent()) {
       return Optional.empty();
     }
-    HashMap<String, List<BuildTarget>> seedConfigMapMutable = new HashMap<>();
+    HashMap<String, ImmutableList<BuildTarget>> seedConfigMapMutable = new HashMap<>();
     for (BuildTarget seedTarget : seedTargets.get()) {
       String moduleName = generateNameFromTarget(seedTarget);
       seedConfigMapMutable.put(moduleName, ImmutableList.of(seedTarget));
     }
-    ImmutableMap<String, List<BuildTarget>> seedConfigMapImmutable =
+    ImmutableMap<String, ImmutableList<BuildTarget>> seedConfigMapImmutable =
         ImmutableMap.copyOf(seedConfigMapMutable);
     return Optional.of(seedConfigMapImmutable);
   }
@@ -269,7 +274,7 @@ public class APKModuleGraph implements AddsToRuleKey {
     return modulesSupplier.get();
   }
 
-  public Optional<Map<String, List<BuildTarget>>> getSeedConfigMap() {
+  public Optional<ImmutableMap<String, ImmutableList<BuildTarget>>> getSeedConfigMap() {
     verifyNoSharedSeeds();
     return configMapSupplier.get();
   }
@@ -372,7 +377,7 @@ public class APKModuleGraph implements AddsToRuleKey {
     MutableDirectedGraph<String> declaredDependencyGraph = new MutableDirectedGraph<>();
 
     if (appModuleDependencies.isPresent()) {
-      for (Map.Entry<String, List<String>> moduleDependencies :
+      for (Map.Entry<String, ImmutableList<String>> moduleDependencies :
           appModuleDependencies.get().entrySet()) {
         for (String moduleDep : moduleDependencies.getValue()) {
           declaredDependencyGraph.addEdge(moduleDependencies.getKey(), moduleDep);
@@ -447,7 +452,8 @@ public class APKModuleGraph implements AddsToRuleKey {
   private Multimap<BuildTarget, String> mapTargetsToContainingModules() {
     Multimap<BuildTarget, String> targetToContainingApkModuleNameMap =
         MultimapBuilder.treeKeys().treeSetValues().build();
-    for (Map.Entry<String, List<BuildTarget>> seedConfig : getSeedConfigMap().get().entrySet()) {
+    for (Map.Entry<String, ImmutableList<BuildTarget>> seedConfig :
+        getSeedConfigMap().get().entrySet()) {
       String seedModuleName = seedConfig.getKey();
       for (BuildTarget seedTarget : seedConfig.getValue()) {
         targetToContainingApkModuleNameMap.put(seedTarget, seedModuleName);
@@ -638,13 +644,14 @@ public class APKModuleGraph implements AddsToRuleKey {
   }
 
   private ImmutableMultimap<BuildTarget, String> generateSharedSeeds() {
-    Optional<Map<String, List<BuildTarget>>> seedConfigMap = configMapSupplier.get();
+    Optional<ImmutableMap<String, ImmutableList<BuildTarget>>> seedConfigMap =
+        configMapSupplier.get();
     HashMultimap<BuildTarget, String> sharedSeedMapBuilder = HashMultimap.create();
     if (!seedConfigMap.isPresent()) {
       return ImmutableMultimap.copyOf(sharedSeedMapBuilder);
     }
     // first: invert the seedConfigMap to get BuildTarget -> Seeds
-    for (Map.Entry<String, List<BuildTarget>> entry : seedConfigMap.get().entrySet()) {
+    for (Map.Entry<String, ImmutableList<BuildTarget>> entry : seedConfigMap.get().entrySet()) {
       for (BuildTarget buildTarget : entry.getValue()) {
         sharedSeedMapBuilder.put(buildTarget, entry.getKey());
       }
