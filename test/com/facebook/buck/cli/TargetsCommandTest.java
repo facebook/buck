@@ -40,6 +40,7 @@ import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwar
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -75,6 +76,7 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -154,11 +156,18 @@ public class TargetsCommandTest {
 
   @Test
   public void testJsonOutputForBuildTarget() throws IOException, BuildFileParseException {
+    String targetName = "//:test-library";
     // run `buck targets` on the build file and parse the observed JSON.
-    SortedSet<TargetNode<?>> nodes = buildTargetNodes("//:test-library");
+    SortedSet<TargetNode<?>> nodes = buildTargetNodes(targetName);
 
     targetsCommand.printJsonForTargets(
-        params, executor, nodes, ImmutableMap.of(), ImmutableSet.of());
+        params,
+        executor,
+        nodes,
+        ImmutableSetMultimap.of(
+            BuildTargetFactory.newInstance(targetName), OutputLabel.defaultLabel()),
+        ImmutableMap.of(),
+        ImmutableSet.of());
     String observedOutput = console.getTextWrittenToStdOut();
     JsonNode observed = ObjectMappers.READER.readTree(ObjectMappers.createParser(observedOutput));
 
@@ -227,7 +236,12 @@ public class TargetsCommandTest {
     // nonexistent target should not exist.
     SortedSet<TargetNode<?>> buildRules = buildTargetNodes("//:nonexistent");
     targetsCommand.printJsonForTargets(
-        params, executor, buildRules, ImmutableMap.of(), ImmutableSet.of());
+        params,
+        executor,
+        buildRules,
+        ImmutableSetMultimap.of(),
+        ImmutableMap.of(),
+        ImmutableSet.of());
 
     String output = console.getTextWrittenToStdOut();
     assertEquals("[" + System.lineSeparator() + "]" + System.lineSeparator(), output);

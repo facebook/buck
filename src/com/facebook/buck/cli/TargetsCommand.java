@@ -104,8 +104,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
@@ -492,11 +494,6 @@ public class TargetsCommand extends AbstractCommand {
           params.getConsole().getAnsi(),
           params.getBuckEventBus());
     }
-    if (isShowOutputs && shouldUseJsonFormat()) {
-      // TODO(irenewchen): Support printing JSON results with output labels
-      throw new HumanReadableException(
-          "JSON printing not supported yet with multiple outputs. Use --show-outputs without --json");
-    }
     Optional<ImmutableSet<Class<? extends BaseDescription<?>>>> descriptionClasses =
         getDescriptionClassFromParams(params);
     if (!descriptionClasses.isPresent()) {
@@ -551,26 +548,24 @@ public class TargetsCommand extends AbstractCommand {
                     .getAll(targetGraphAndBuildTargetsForShowRules.getBuildTargets())));
 
     if (shouldUseJsonFormat()) {
-      // TODO(irenewchen): Support printing JSON results with output labels
-      ImmutableMap<BuildTarget, TargetResult> noOutputLabelsShowRulesResult =
-          showRulesResult.entrySet().stream()
-              .collect(
-                  ImmutableMap.toImmutableMap(
-                      e -> {
-                        // Non-default output labels shouldn't be able to appear here, but add
-                        // another assertion just in case
-                        Preconditions.checkState(
-                            e.getKey().getOutputLabel().isDefault(),
-                            "JSON printing not supported yet with named outputs. Use --show-outputs without --json");
-                        return e.getKey().getBuildTarget();
-                      },
-                      Map.Entry::getValue));
+      ImmutableSetMultimap.Builder<BuildTarget, OutputLabel> builder =
+          ImmutableSetMultimap.builder();
+      for (BuildTargetWithOutputs buildTargetWithOutputs : showRulesResult.keySet()) {
+        builder.put(
+            buildTargetWithOutputs.getBuildTarget(), buildTargetWithOutputs.getOutputLabel());
+      }
+      ImmutableSetMultimap<BuildTarget, OutputLabel> targetToAllLabels = builder.build();
       Iterable<TargetNode<?>> matchingNodes =
           targetGraphAndBuildTargetsForShowRules
               .getTargetGraph()
-              .getAll(noOutputLabelsShowRulesResult.keySet());
+              .getAll(targetToAllLabels.keySet());
       printJsonForTargets(
-          params, executor, matchingNodes, noOutputLabelsShowRulesResult, outputAttributes.get());
+          params,
+          executor,
+          matchingNodes,
+          targetToAllLabels,
+          showRulesResult,
+          outputAttributes.get());
     } else {
       printShowRules(showRulesResult, params);
     }
@@ -723,7 +718,12 @@ public class TargetsCommand extends AbstractCommand {
       throws BuildFileParseException {
     if (shouldUseJsonFormat()) {
       printJsonForTargets(
-          params, executor, matchingNodes.values(), ImmutableMap.of(), outputAttributes.get());
+          params,
+          executor,
+          matchingNodes.values(),
+          ImmutableSetMultimap.of(),
+          ImmutableMap.of(),
+          outputAttributes.get());
     } else if (print0) {
       printTargets(matchingNodes.keySet(), "\0", params.getConsole().getStdOut());
     } else {
@@ -846,10 +846,12 @@ public class TargetsCommand extends AbstractCommand {
         builder.add(cellPath.toString());
       }
       @Nullable
-      String outputPathForLabel =
+      ImmutableSet<String> outputPathForLabel =
           targetResult.getOutputPathsByLabels().get(entry.getKey().getOutputLabel());
-      if (outputPathForLabel != null) {
-        builder.add(outputPathForLabel);
+      if (outputPathForLabel != null && !outputPathForLabel.isEmpty()) {
+        // TODO(irenewchen): Should loop through the set of strings and construct one line per
+        // String
+        builder.add(Iterables.getOnlyElement(outputPathForLabel));
       }
       targetResult.getGeneratedSourcePath().ifPresent(builder::add);
       targetResult.getTargetHash().ifPresent(builder::add);
@@ -974,7 +976,8 @@ public class TargetsCommand extends AbstractCommand {
       CommandRunnerParams params,
       ListeningExecutorService executor,
       Iterable<TargetNode<?>> targetNodes,
-      ImmutableMap<BuildTarget, TargetResult> targetResults,
+      ImmutableSetMultimap<BuildTarget, OutputLabel> targetToAllLabels,
+      ImmutableMap<BuildTargetWithOutputs, TargetResult> targetResults,
       ImmutableSet<String> outputAttributes)
       throws BuildFileParseException {
     PatternsMatcher attributesPatternsMatcher =
@@ -1023,15 +1026,21 @@ public class TargetsCommand extends AbstractCommand {
           continue;
         }
 
-        @Nullable TargetResult targetResult = targetResults.get(targetNode.getBuildTarget());
-        if (targetResult != null) {
-          for (TargetResultFieldName field : TargetResultFieldName.values()) {
-            Optional<String> fieldResult = field.getter.apply(targetResult);
-            if (fieldResult.isPresent()) {
-              targetNodeAttributes.put(field.name, fieldResult.get());
+        for (OutputLabel outputLabel : targetToAllLabels.get(targetNode.getBuildTarget())) {
+          @Nullable
+          TargetResult targetResult =
+              targetResults.get(
+                  BuildTargetWithOutputs.of(targetNode.getBuildTarget(), outputLabel));
+          if (targetResult != null) {
+            for (TargetResultFieldName field : TargetResultFieldName.values()) {
+              Optional<?> fieldResult = field.getter.apply(targetResult);
+              if (fieldResult.isPresent()) {
+                targetNodeAttributes.put(field.name, fieldResult.get());
+              }
             }
           }
         }
+
         targetNodeAttributes.put(
             "fully_qualified_name", targetNode.getBuildTarget().getFullyQualifiedName());
         if (isShowCellPath) {
@@ -1267,12 +1276,14 @@ public class TargetsCommand extends AbstractCommand {
             .map(path -> pathToString(path, params))
             .ifPresent(
                 path -> {
-                  // Need to call both #setOutputPath and #putOutputPathsByLabels because JSON uses
-                  // the former while default output path printing to console uses the latter
+                  // Need to call both #setOutputPath and #putOutputPathsByLabels because
+                  // buck.outputPath for JSON printing uses getOutputPath. This can be removed after
+                  // client usages stop parsing buck.outputPath
                   if (targetWithOutputs.getOutputLabel().isDefault()) {
                     builder.setOutputPath(path);
                   }
-                  builder.putOutputPathsByLabels(targetWithOutputs.getOutputLabel(), path);
+                  builder.putOutputPathsByLabels(
+                      targetWithOutputs.getOutputLabel(), ImmutableSet.of(path));
                 });
         // If the output dir is requested, also calculate the generated src dir
         if (rule instanceof JavaLibrary) {
@@ -1586,7 +1597,7 @@ public class TargetsCommand extends AbstractCommand {
 
     public abstract Optional<String> getOutputPath();
 
-    public abstract ImmutableMap<OutputLabel, String> getOutputPathsByLabels();
+    public abstract ImmutableMap<OutputLabel, ImmutableSet<String>> getOutputPathsByLabels();
 
     public abstract Optional<String> getGeneratedSourcePath();
 
@@ -1595,21 +1606,31 @@ public class TargetsCommand extends AbstractCommand {
     public abstract Optional<String> getTargetHash();
 
     public abstract Optional<String> getRuleType();
+
+    /**
+     * Wrapper method for {@link #getOutputPathsByLabels} to make the return type {@link Optional}
+     * so empty lists and empty maps won't be printed in the JSON output. {@link
+     * #getOutputPathsByLabels} isn't Optional to make it easy to interact with while building (i.e.
+     * to have access to #putOutputPathsByLabels from codegen).
+     */
+    public Optional<ImmutableMap<OutputLabel, ImmutableSet<String>>> getOutputPaths() {
+      ImmutableMap<OutputLabel, ImmutableSet<String>> result = getOutputPathsByLabels();
+      return result.isEmpty() ? Optional.empty() : Optional.of(result);
+    }
   }
 
-  // TODO(irenewchen): Support multiple outputs in JSON printing for targets command. Need to add
-  // another enum here. Can't directly use #getOutputPathsByLabels() because it's not a String
   private enum TargetResultFieldName {
     OUTPUT_PATH("buck.outputPath", TargetResult::getOutputPath),
     GEN_SRC_PATH("buck.generatedSourcePath", TargetResult::getGeneratedSourcePath),
     TARGET_HASH("buck.targetHash", TargetResult::getTargetHash),
     RULE_KEY("buck.ruleKey", TargetResult::getRuleKey),
-    RULE_TYPE("buck.ruleType", TargetResult::getRuleType);
+    RULE_TYPE("buck.ruleType", TargetResult::getRuleType),
+    OUTPUT_PATHS("buck.outputPaths", TargetResult::getOutputPaths);
 
     private String name;
-    private Function<TargetResult, Optional<String>> getter;
+    private Function<TargetResult, Optional<?>> getter;
 
-    TargetResultFieldName(String name, Function<TargetResult, Optional<String>> getter) {
+    TargetResultFieldName(String name, Function<TargetResult, Optional<?>> getter) {
       this.name = name;
       this.getter = getter;
     }

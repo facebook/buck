@@ -28,6 +28,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeFalse;
@@ -94,6 +95,10 @@ public class TargetsCommandIntegrationTest {
   private static final String INCOMPATIBLE_OPTIONS_MSG2 =
       "option \"--show-rulekey (--show_rulekey)\" cannot be used with the option(s) [--show-target-hash]";
 
+  private static final String OUTPUT_PREFIX_PLACEHOLDER = "<OUTPUT_PREFIX>";
+
+  private static final String BUCKOUT_REGEX = "buck-out(.*[\\\\/])";
+
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Rule public ExpectedException thrown = ExpectedException.none();
@@ -115,12 +120,9 @@ public class TargetsCommandIntegrationTest {
 
   private static void assertJsonMatchesWithOutputPlaceholder(String expectedJson, String actualJson)
       throws IOException {
-    String outputPrefixPlaceholder = "<OUTPUT_PREFIX>";
-    String regex = "buck-out(.*[\\\\/])";
-
     assertJsonMatches(
-        expectedJson.replaceAll(regex, outputPrefixPlaceholder),
-        actualJson.replaceAll(regex, outputPrefixPlaceholder));
+        expectedJson.replaceAll(BUCKOUT_REGEX, OUTPUT_PREFIX_PLACEHOLDER),
+        actualJson.replaceAll(BUCKOUT_REGEX, OUTPUT_PREFIX_PLACEHOLDER));
   }
 
   @Test
@@ -209,6 +211,25 @@ public class TargetsCommandIntegrationTest {
   }
 
   @Test
+  public void showOutputsWithJsonForMultipleNamedOutputs() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_paths", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace
+            .runBuckCommand("targets", "--show-outputs", "--json", "//:test_multiple_outputs[out2]")
+            .assertSuccess();
+    assertOutputPaths("{\"out2\" : [\"<OUTPUT_PREFIX>out2.txt\"]}", result);
+
+    result =
+        workspace
+            .runBuckCommand("targets", "--show-outputs", "--json", "//:test_multiple_outputs[out1]")
+            .assertSuccess();
+    assertOutputPaths("{\"out1\" : [\"<OUTPUT_PREFIX>out1.txt\"]}", result);
+  }
+
+  @Test
   public void showOutputsForMultipleDefaultOutputs() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "output_paths", tmp);
@@ -220,6 +241,29 @@ public class TargetsCommandIntegrationTest {
             .assertSuccess();
     assertThat(result.getStdout(), containsString("//:test_multiple_outputs"));
     assertThat(result.getStdout(), not(containsString("buck-out")));
+  }
+
+  @Test
+  public void showOutputsWithJsonForEmptyDefaultOutputs() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_paths", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace
+            .runBuckCommand("targets", "--show-outputs", "--json", "//:test_multiple_outputs")
+            .assertSuccess();
+    JsonNode observed =
+        ObjectMappers.READER.readTree(ObjectMappers.createParser(result.getStdout()));
+
+    assertTrue(observed.isArray());
+    JsonNode targetNode = observed.get(0);
+
+    // Empty outputs should not print output paths
+    JsonNode cellPath = targetNode.get("buck.outputPath");
+    assertNull(cellPath);
+    cellPath = targetNode.get("buck.outputPaths");
+    assertNull(cellPath);
   }
 
   @Test
@@ -924,18 +968,13 @@ public class TargetsCommandIntegrationTest {
   }
 
   @Test
-  public void jsonWithShowOutputsFails() throws IOException {
+  public void showOutputsWithJsonForSingleDefaultOutput() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "output_path", tmp);
     workspace.setUp();
     ProcessResult result =
-        workspace.runBuckCommand("targets", "--json", "--show-outputs", "//:test");
-
-    result.assertFailure();
-    assertThat(
-        result.getStderr(),
-        containsString(
-            "JSON printing not supported yet with multiple outputs. Use --show-outputs without --json"));
+        workspace.runBuckCommand("targets", "--json", "--show-outputs", "//:test").assertSuccess();
+    assertOutputPaths("{\"DEFAULT\" : [\"<OUTPUT_PREFIX>test-output\"]}", result);
   }
 
   @Test
@@ -1562,5 +1601,24 @@ public class TargetsCommandIntegrationTest {
         GlobalCliOptions.REUSE_CURRENT_CONFIG_ARG + " not provided",
         result.getStderr(),
         not(containsString(warningMessage)));
+  }
+
+  private static String replaceHashInPath(String toReplace) {
+    return toReplace.replaceAll(BUCKOUT_REGEX, OUTPUT_PREFIX_PLACEHOLDER);
+  }
+
+  private static String removeNewLinesAndSpaces(String s) {
+    return s.replaceAll(System.lineSeparator(), "").replaceAll(" ", "");
+  }
+
+  private static void assertOutputPaths(String expected, ProcessResult result) throws IOException {
+    JsonNode observed =
+        ObjectMappers.READER.readTree(ObjectMappers.createParser(result.getStdout()));
+    JsonNode targetNode = observed.get(0);
+    assertTrue(targetNode.isObject());
+    JsonNode outputPaths = targetNode.get("buck.outputPaths");
+    assertEquals(
+        removeNewLinesAndSpaces(expected),
+        removeNewLinesAndSpaces(replaceHashInPath(outputPaths.toString())));
   }
 }

@@ -3,6 +3,9 @@
   "buck.base_path":"",
   "buck.direct_dependencies":[],
   "buck.output_path":"buck-out/gen/another-test/test-output",
+  "buck.output_paths" : {
+    "DEFAULT" : [ "<OUTPUT_PREFIX>test-output" ]
+  },
   "buck.rule_type":"genrule",
   "buck.type":"genrule",
   "fully_qualified_name": "//:another-test",
@@ -14,6 +17,9 @@
   "buck.direct_dependencies":["//:plugin"],
   "buck.generated_source_path":"buck-out/annotation/__java_lib_gen__",
   "buck.output_path":"buck-out/gen/lib__java_lib__output/java_lib.jar",
+  "buck.output_paths" : {
+      "DEFAULT" : [ "<OUTPUT_PREFIX>java_lib.jar" ]
+  },
   "buck.rule_type":"default_java_library",
   "buck.type":"java_library",
   "fully_qualified_name": "//:java_lib",
@@ -34,6 +40,9 @@
   "buck.base_path":"",
   "buck.direct_dependencies":[],
   "buck.output_path":"buck-out/gen/test/test-output",
+  "buck.output_paths" : {
+      "DEFAULT" : [ "<OUTPUT_PREFIX>test-output" ]
+  },
   "buck.rule_type":"genrule",
   "buck.type":"genrule",
   "fully_qualified_name": "//:test",
