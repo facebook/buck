@@ -23,7 +23,6 @@ import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.parser.syntax.SelectorValue;
-import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.concat.JsonTypeConcatenatingCoercer;
 import com.facebook.buck.rules.coercer.concat.JsonTypeConcatenatingCoercerFactory;
 import com.facebook.buck.rules.coercer.concat.SingleElementJsonTypeConcatenatingCoercer;
@@ -48,8 +47,7 @@ public class SelectorListFactory {
   public SelectorList<Object> create(
       CellNameResolver cellNameResolver,
       ForwardRelativePath pathRelativeToProjectRoot,
-      ListWithSelects listWithSelects)
-      throws CoerceFailedException {
+      ListWithSelects listWithSelects) {
     ImmutableList.Builder<Selector<Object>> builder =
         ImmutableList.builderWithExpectedSize(listWithSelects.getElements().size());
     for (Object element : listWithSelects.getElements()) {

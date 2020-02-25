@@ -34,7 +34,6 @@ import com.facebook.buck.core.select.impl.SelectorListFactory;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.function.BuckPyFunction;
 import com.facebook.buck.parser.syntax.ListWithSelects;
-import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -122,19 +121,10 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
             attrName);
       }
 
-      try {
-        return selectorListFactory.create(
-            cells.getCell(pathRelativeToProjectRoot.getCellName()).getCellNameResolver(),
-            pathRelativeToProjectRoot.getPath(),
-            (ListWithSelects) attrValue);
-      } catch (CoerceFailedException e) {
-        throw new HumanReadableException(
-            e,
-            dependencyStack,
-            "failed to coerce list with selects for attr %s: %s",
-            attrName,
-            e.getMessage());
-      }
+      return selectorListFactory.create(
+          cells.getCell(pathRelativeToProjectRoot.getCellName()).getCellNameResolver(),
+          pathRelativeToProjectRoot.getPath(),
+          (ListWithSelects) attrValue);
     } else {
       return attrValue;
     }
