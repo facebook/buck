@@ -65,12 +65,14 @@ public class XcodeWorkspaceConfigDescription
   }
 
   public static ImmutableMap<SchemeActionType, String> getActionConfigNamesFromArg(
-      XcodeWorkspaceConfigDescriptionArg arg) {
+      Optional<XcodeWorkspaceConfigDescriptionArg> arg) {
     // Start out with the default action config names..
     Map<SchemeActionType, String> newActionConfigNames =
         new HashMap<>(SchemeActionType.DEFAULT_CONFIG_NAMES);
     // And override them with any provided in the "action_config_names" map.
-    newActionConfigNames.putAll(arg.getActionConfigNames());
+    if (arg.isPresent()) {
+      newActionConfigNames.putAll(arg.get().getActionConfigNames());
+    }
 
     return ImmutableMap.copyOf(newActionConfigNames);
   }
