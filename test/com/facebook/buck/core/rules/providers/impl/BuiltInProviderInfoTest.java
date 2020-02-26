@@ -18,10 +18,15 @@ package com.facebook.buck.core.rules.providers.impl;
 
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.rules.providers.annotations.ImmutableInfo;
+import com.facebook.buck.core.starlark.compatible.BuckSkylarkTypes;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
+import com.facebook.buck.core.starlark.compatible.TestMutableEnv;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -38,6 +43,7 @@ import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParserInputSource;
 import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
+import com.google.devtools.build.lib.syntax.SkylarkList;
 import com.google.devtools.build.lib.syntax.StringLiteral;
 import com.google.devtools.build.lib.vfs.PathFragment;
 import java.lang.reflect.InvocationTargetException;
@@ -175,6 +181,25 @@ public class BuiltInProviderInfoTest {
 
     public String getSomeComputedValue() {
       return "bleh";
+    }
+  }
+
+  @ImmutableInfo(args = {"str_list", "other_list", "val"})
+  public abstract static class SomeInfoWithMutableAndImmutable
+      extends BuiltInProviderInfo<SomeInfoWithMutableAndImmutable> {
+    public static final BuiltInProvider<SomeInfoWithMutableAndImmutable> PROVIDER =
+        BuiltInProvider.of(ImmutableSomeInfoWithMutableAndImmutable.class);
+
+    public abstract SkylarkList<String> strList();
+
+    public abstract ImmutableList<Object> otherList();
+
+    public abstract String val();
+
+    public static SomeInfoWithMutableAndImmutable instantiateFromSkylark(
+        SkylarkList<String> strList, SkylarkList<Object> otherList, String val) {
+      return new ImmutableSomeInfoWithMutableAndImmutable(
+          strList, otherList.getImmutableList(), val);
     }
   }
 
@@ -459,5 +484,37 @@ public class BuiltInProviderInfoTest {
         SomeInfoWithNonAbstractMethod.PROVIDER.createInfo("some string");
 
     assertEquals(ImmutableSet.of("some_val"), providerInfo.getFieldNames());
+  }
+
+  @Test
+  public void isImmutableWorks() throws EvalException, InterruptedException {
+
+    String buildFile =
+        "SomeInfoWithMutableAndImmutable("
+            + "val='foo', str_list=mutable_list, other_list=[1,mutable_list])";
+
+    SomeInfoWithMutableAndImmutable out;
+
+    try (TestMutableEnv env =
+        new TestMutableEnv(
+            ImmutableMap.of(
+                "SomeInfoWithMutableAndImmutable", SomeInfoWithMutableAndImmutable.PROVIDER))) {
+      SkylarkList.MutableList<Integer> mutableList =
+          SkylarkList.MutableList.of(env.getEnv(), 1, 2, 3);
+      env.getEnv().updateAndExport("mutable_list", mutableList);
+
+      out = (SomeInfoWithMutableAndImmutable) BuildFileAST.eval(env.getEnv(), buildFile);
+
+      assertNotNull(out);
+      assertFalse(out.isImmutable());
+      assertFalse(BuckSkylarkTypes.isImmutable(out.strList()));
+      assertFalse(BuckSkylarkTypes.isImmutable(out.otherList()));
+      assertTrue(BuckSkylarkTypes.isImmutable(out.val()));
+    }
+
+    assertTrue(out.isImmutable());
+    assertTrue(BuckSkylarkTypes.isImmutable(out.strList()));
+    assertTrue(BuckSkylarkTypes.isImmutable(out.otherList()));
+    assertTrue(BuckSkylarkTypes.isImmutable(out.val()));
   }
 }
