@@ -165,6 +165,19 @@ public class BuiltInProviderInfoTest {
     }
   }
 
+  @ImmutableInfo(args = {"some_val"})
+  public abstract static class SomeInfoWithNonAbstractMethod
+      extends BuiltInProviderInfo<SomeInfoWithNonAbstractMethod> {
+    public static final BuiltInProvider<SomeInfoWithNonAbstractMethod> PROVIDER =
+        BuiltInProvider.of(ImmutableSomeInfoWithNonAbstractMethod.class);
+
+    public abstract String someVal();
+
+    public String getSomeComputedValue() {
+      return "bleh";
+    }
+  }
+
   @Test
   public void someInfoProviderCreatesCorrectInfo()
       throws IllegalAccessException, InstantiationException, InvocationTargetException,
@@ -437,5 +450,14 @@ public class BuiltInProviderInfoTest {
     thrown.expect(EvalException.class);
     thrown.expectMessage("cannot be None");
     BuildFileAST.eval(env, "SomeInfoWithNoneable(noneable_val=None, val=None)");
+  }
+
+  @Test
+  public void fieldNamesComeFromAbstractMethodsOnly()
+      throws IllegalAccessException, InstantiationException, InvocationTargetException {
+    SomeInfoWithNonAbstractMethod providerInfo =
+        SomeInfoWithNonAbstractMethod.PROVIDER.createInfo("some string");
+
+    assertEquals(ImmutableSet.of("some_val"), providerInfo.getFieldNames());
   }
 }
