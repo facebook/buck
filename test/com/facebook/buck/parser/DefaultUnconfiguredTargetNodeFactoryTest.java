@@ -28,6 +28,7 @@ import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.targetgraph.impl.Package;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
@@ -104,7 +105,11 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
     ImmutableMap<String, Object> expectAttributes =
         ImmutableMap.<String, Object>builder()
             .put("name", "c")
-            .put("deps", ImmutableList.of("//a/b:d", "//a/b:e"))
+            .put(
+                "deps",
+                ImmutableList.of(
+                    UnconfiguredBuildTargetParser.parse("//a/b:d"),
+                    UnconfiguredBuildTargetParser.parse("//a/b:e")))
             .put(
                 "resources",
                 new SelectorList<>(

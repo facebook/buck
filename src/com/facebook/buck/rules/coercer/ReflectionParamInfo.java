@@ -224,8 +224,10 @@ public class ReflectionParamInfo<T> extends AbstractParamInfo<T> {
   public void setCoercedValue(Object dto, Object value) {
     try {
       setter.invoke(dto, value);
-    } catch (IllegalAccessException | InvocationTargetException e) {
-      throw new RuntimeException(e);
+    } catch (Exception e) {
+      throw new RuntimeException(
+          "failed to invoke setter " + setter + " with value of type " + value.getClass().getName(),
+          e);
     }
   }
 

@@ -89,19 +89,19 @@ public class UnconfiguredTargetNodeToTargetNodeFactoryTest {
                 new Selector<>(
                     ImmutableMap.of(
                         SelectorKey.DEFAULT,
-                        "1",
+                        Optional.of("1"),
                         new SelectorKey(
                             ConfigurationBuildTargetFactoryForTests.newInstance("//x:y")),
-                        "2"),
+                        Optional.of("2")),
                     ImmutableSet.of(),
                     ""),
                 new Selector<>(
                     ImmutableMap.of(
                         SelectorKey.DEFAULT,
-                        "8",
+                        Optional.of("8"),
                         new SelectorKey(
                             ConfigurationBuildTargetFactoryForTests.newInstance("//x:y")),
-                        "9"),
+                        Optional.of("9")),
                     ImmutableSet.of(),
                     "")));
     ImmutableMap<String, Object> attributes =

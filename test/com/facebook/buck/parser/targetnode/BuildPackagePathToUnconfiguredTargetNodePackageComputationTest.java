@@ -18,6 +18,7 @@ package com.facebook.buck.parser.targetnode;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.DefaultCellNameResolverProvider;
@@ -36,6 +37,7 @@ import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDeps;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDepsPackage;
+import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.select.TestSelectableResolver;
@@ -53,6 +55,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Paths;
 import java.util.Optional;
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
@@ -88,7 +91,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
             "buck.base_path",
             "",
             "deps",
-            ImmutableSortedSet.of(":target2"));
+            ImmutableList.of(UnconfiguredBuildTargetParser.parse("//:target2")));
     UnconfiguredBuildTarget unconfiguredBuildTarget1 =
         UnconfiguredBuildTarget.of(
             cell.getRootCell().getCanonicalName(),
@@ -152,7 +155,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
     ImmutableMap<String, UnconfiguredTargetNodeWithDeps> allTargets =
         unconfiguredTargetNodeWithDepsPackage.getUnconfiguredTargetNodesWithDeps();
 
-    assertEquals(2, allTargets.size());
+    assertThat(allTargets.entrySet(), Matchers.hasSize(2));
 
     UnconfiguredTargetNodeWithDeps target1 = allTargets.get("target1");
     assertNotNull(target1);

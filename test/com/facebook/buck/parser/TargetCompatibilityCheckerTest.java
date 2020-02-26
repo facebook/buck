@@ -166,7 +166,8 @@ public class TargetCompatibilityCheckerTest {
         createTargetNodeArg(
             ImmutableMap.of(
                 "compatibleWith",
-                ImmutableList.of(nonCompatibleConfigSetting.getBuildTarget().toString())));
+                ImmutableList.of(
+                    nonCompatibleConfigSetting.getBuildTarget().getUnconfiguredBuildTarget())));
     assertFalse(
         TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
             configurationRuleRegistry,
@@ -183,8 +184,8 @@ public class TargetCompatibilityCheckerTest {
             ImmutableMap.of(
                 "compatibleWith",
                 ImmutableList.of(
-                    compatibleConfigSetting.getBuildTarget().toString(),
-                    nonCompatibleConfigSetting.getBuildTarget().toString())));
+                    compatibleConfigSetting.getBuildTarget().getUnconfiguredBuildTarget(),
+                    nonCompatibleConfigSetting.getBuildTarget().getUnconfiguredBuildTarget())));
     assertTrue(
         TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
             configurationRuleRegistry,
@@ -200,7 +201,10 @@ public class TargetCompatibilityCheckerTest {
         createTargetNodeArg(
             ImmutableMap.of(
                 "compatibleWith",
-                ImmutableList.of(compatibleConfigSettingWithValues.getBuildTarget().toString())));
+                ImmutableList.of(
+                    compatibleConfigSettingWithValues
+                        .getBuildTarget()
+                        .getUnconfiguredBuildTarget())));
 
     BuckConfig compatibleBuckConfig =
         FakeBuckConfig.builder()
@@ -221,7 +225,10 @@ public class TargetCompatibilityCheckerTest {
         createTargetNodeArg(
             ImmutableMap.of(
                 "compatibleWith",
-                ImmutableList.of(compatibleConfigSettingWithValues.getBuildTarget().toString())));
+                ImmutableList.of(
+                    compatibleConfigSettingWithValues
+                        .getBuildTarget()
+                        .getUnconfiguredBuildTarget())));
 
     BuckConfig incompatibleBuckConfig =
         FakeBuckConfig.builder()

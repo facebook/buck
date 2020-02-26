@@ -36,6 +36,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.ThrowingTargetConfigurationTransformer;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
+import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -98,13 +99,15 @@ public class TargetNodeTest {
             "name",
             TARGET_THREE.getShortName(),
             "deps",
-            depsStrings,
+            depsTargets.stream()
+                .map(BuildTarget::getUnconfiguredBuildTarget)
+                .collect(ImmutableList.toImmutableList()),
             "sourcePaths",
             ImmutableList.of("//example/path:two", "//example/path:four", "MyClass.java"),
             "appleSource",
-            "//example/path:five",
+            Optional.of("//example/path:five"),
             "source",
-            "AnotherClass.java");
+            Optional.of("AnotherClass.java"));
 
     TargetNode<ExampleDescriptionArg> targetNode =
         createTargetNode(
@@ -154,7 +157,8 @@ public class TargetNodeTest {
   @Test
   public void invalidArgumentsThrowAnException() {
     ImmutableMap<String, Object> rawNode =
-        ImmutableMap.of("name", TARGET_THREE.getShortName(), "cmd", "$(query_outputs '123')");
+        ImmutableMap.of(
+            "name", TARGET_THREE.getShortName(), "cmd", Optional.of("$(query_outputs '123')"));
 
     try {
       createTargetNode(
@@ -238,11 +242,11 @@ public class TargetNodeTest {
             "deps",
             ImmutableList.of(),
             "string",
-            "//example/path:one",
+            Optional.of("//example/path:one"),
             "target",
-            "//example/path:two",
+            Optional.of(UnconfiguredBuildTargetParser.parse("//example/path:two")),
             "sourcePaths",
-            ImmutableSortedSet.of());
+            ImmutableList.of());
 
     return createTargetNode(cellNames, buildTarget, ImmutableSet.of(), rawNode, Sets.newHashSet());
   }

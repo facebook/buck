@@ -33,6 +33,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationTransformer;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
 import com.facebook.buck.core.model.impl.ThrowingTargetConfigurationTransformer;
@@ -40,6 +41,7 @@ import com.facebook.buck.core.model.platform.FakeMultiPlatform;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.model.platform.impl.UnconfiguredPlatform;
+import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser;
 import com.facebook.buck.core.select.NonCopyingSelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.Selector;
@@ -161,8 +163,8 @@ public class ConstructorArgMarshallerImmutableTest {
         invokePopulate(
             DtoWithBuildTargets.class,
             ImmutableMap.<String, Object>of(
-                "target", "//cake:walk",
-                "local", ":fish"));
+                "target", UnconfiguredBuildTargetParser.parse("//cake:walk"),
+                "local", UnconfiguredBuildTargetParser.parse("//example/path:fish")));
 
     assertEquals(BuildTargetFactory.newInstance("//cake:walk"), built.getTarget());
     assertEquals(BuildTargetFactory.newInstance("//example/path:fish"), built.getLocal());
@@ -211,7 +213,9 @@ public class ConstructorArgMarshallerImmutableTest {
         invokePopulate(
             DtoWithImmutableSortedSet.class,
             ImmutableMap.<String, Object>of(
-                "stuff", ImmutableList.of("//please/go:here", ":there")));
+                "stuff",
+                ImmutableList.of(
+                    t1.getUnconfiguredBuildTarget(), t2.getUnconfiguredBuildTarget())));
 
     assertEquals(ImmutableSortedSet.of(t2, t1), built.getStuff());
   }
@@ -240,10 +244,10 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @Test
   public void onlyFieldNamedDepsAreConsideredDeclaredDeps() throws Exception {
-    String dep = "//is/a/declared:dep";
-    String notDep = "//is/not/a/declared:dep";
+    UnconfiguredBuildTarget dep = UnconfiguredBuildTargetParser.parse("//is/a/declared:dep");
+    UnconfiguredBuildTarget notDep = UnconfiguredBuildTargetParser.parse("//is/not/a/declared:dep");
 
-    BuildTarget declaredDep = BuildTargetFactory.newInstance(dep);
+    BuildTarget declaredDep = dep.configure(UnconfiguredTargetConfiguration.INSTANCE);
 
     Map<String, Object> args = new HashMap<>();
     args.put("deps", ImmutableList.of(dep));
@@ -259,7 +263,7 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @Test
   public void fieldsWithIsDepEqualsFalseHintAreNotTreatedAsDeps() throws Exception {
-    String dep = "//should/be:ignored";
+    UnconfiguredBuildTarget dep = UnconfiguredBuildTargetParser.parse("//should/be:ignored");
     Map<String, Object> args = ImmutableMap.of("deps", ImmutableList.of(dep));
 
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
@@ -267,7 +271,8 @@ public class ConstructorArgMarshallerImmutableTest {
     DtoWithFakeDeps built = invokePopulate2(DtoWithFakeDeps.class, args, declaredDeps);
 
     assertEquals(ImmutableSet.of(), declaredDeps.build());
-    assertEquals(ImmutableSet.of(BuildTargetFactory.newInstance(dep)), built.getDeps());
+    assertEquals(
+        ImmutableSet.of(dep.configure(UnconfiguredTargetConfiguration.INSTANCE)), built.getDeps());
   }
 
   @Test
@@ -322,26 +327,6 @@ public class ConstructorArgMarshallerImmutableTest {
     assertEquals("not secrets", built.getString());
   }
 
-  @Test(expected = CoerceFailedException.class)
-  public void shouldBeAnErrorToAttemptToSetASingleValueToACollection() throws Exception {
-    invokePopulate(
-        DtoWithString.class, ImmutableMap.<String, Object>of("string", ImmutableList.of("a", "b")));
-  }
-
-  @Test(expected = CoerceFailedException.class)
-  public void shouldBeAnErrorToAttemptToSetACollectionToASingleValue() throws Exception {
-    invokePopulate(
-        DtoWithSetOfStrings.class,
-        ImmutableMap.<String, Object>of("strings", "isn't going to happen"));
-  }
-
-  @Test(expected = CoerceFailedException.class)
-  public void shouldBeAnErrorToSetTheWrongTypeOfValueInACollection() throws Exception {
-    invokePopulate(
-        DtoWithSetOfStrings.class,
-        ImmutableMap.<String, Object>of("strings", ImmutableSet.of(true, false)));
-  }
-
   @Test
   public void shouldNormalizePaths() throws Exception {
     DtoWithPath built =
@@ -357,9 +342,12 @@ public class ConstructorArgMarshallerImmutableTest {
         invokePopulate(
             DtoWithBuildTargetList.class,
             ImmutableMap.<String, Object>of(
-                "single", "//com/example:cheese",
-                "sameBuildFileTarget", ":cake",
-                "targets", ImmutableList.of(":cake", "//com/example:cheese")));
+                "single", UnconfiguredBuildTargetParser.parse("//com/example:cheese"),
+                "sameBuildFileTarget", UnconfiguredBuildTargetParser.parse("//example/path:cake"),
+                "targets",
+                    ImmutableList.of(
+                        UnconfiguredBuildTargetParser.parse("//example/path:cake"),
+                        UnconfiguredBuildTargetParser.parse("//com/example:cheese"))));
 
     BuildTarget cheese = BuildTargetFactory.newInstance("//com/example:cheese");
     BuildTarget cake = BuildTargetFactory.newInstance("//example/path:cake");
@@ -376,15 +364,15 @@ public class ConstructorArgMarshallerImmutableTest {
     ImmutableMap<String, Object> args =
         ImmutableMap.<String, Object>builder()
             .put("required", "cheese")
-            .put("notRequired", "cake")
+            .put("notRequired", Optional.of("cake"))
             // Long because that's what comes from python.
-            .put("num", 42L)
-            .put("optionalLong", 88L)
+            .put("num", 42)
+            .put("optionalLong", Optional.of(88L))
             .put("needed", true)
             // Skipping optional boolean.
             .put("aSrcPath", ":path")
             .put("aPath", "./File.java")
-            .put("notAPath", "./NotFile.java")
+            .put("notAPath", Optional.of("./NotFile.java"))
             .build();
     DtoWithVariousTypes built = invokePopulate(DtoWithVariousTypes.class, args);
 
@@ -433,7 +421,7 @@ public class ConstructorArgMarshallerImmutableTest {
     Map<String, Object> args = new HashMap<>();
     args.put("something", "bar");
     args.put("things", ImmutableList.of("qux", "quz"));
-    args.put("more", 1234L);
+    args.put("more", 1234);
     args.put("beGood", false);
     DtoWithDefaultValues built = invokePopulate(DtoWithDefaultValues.class, args);
 
@@ -608,7 +596,8 @@ public class ConstructorArgMarshallerImmutableTest {
         builder(DtoWithDepsAndNotDeps.class),
         declaredDeps,
         ImmutableSet.builder(),
-        ImmutableMap.<String, Object>of("deps", ImmutableList.of("//a/b:c"), "name", "myname"));
+        ImmutableMap.<String, Object>of(
+            "deps", ImmutableList.of(dep.getUnconfiguredBuildTarget()), "name", "myname"));
     assertEquals(ImmutableSet.of(dep), declaredDeps.build());
   }
 
@@ -679,7 +668,11 @@ public class ConstructorArgMarshallerImmutableTest {
             builder(DtoWithSplit.class),
             ImmutableSet.builder(),
             ImmutableSet.builder(),
-            ImmutableMap.of("deps", ImmutableList.of("//a/b:c"), "name", "testtesttest"));
+            ImmutableMap.of(
+                "deps",
+                ImmutableList.of(UnconfiguredBuildTargetParser.parse("//a/b:c")),
+                "name",
+                "testtesttest"));
 
     assertEquals(3, dto.getDeps().size());
     assertEquals(

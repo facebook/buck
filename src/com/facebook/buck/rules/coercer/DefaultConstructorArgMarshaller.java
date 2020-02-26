@@ -58,6 +58,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public <T extends ConstructorArg> T populate(
       CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
@@ -92,7 +93,16 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
          * unique for each target, we do not serialize it in the RawTargetNode, and instead use the
          * single in-memory value.
          */
-        attribute = info.getImplicitPreCoercionValue();
+        Object implicitPreCoercionValue = info.getImplicitPreCoercionValue();
+        if (implicitPreCoercionValue != null) {
+          attribute =
+              info.getTypeCoercer()
+                  .coerceToUnconfigured(
+                      cellNameResolver,
+                      filesystem,
+                      buildTarget.getCellRelativeBasePath().getPath(),
+                      implicitPreCoercionValue);
+        }
         if (attribute == null) {
           continue;
         }
@@ -120,7 +130,8 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
                 dependencyStack,
                 paramTargetConfiguration,
                 configurationDeps,
-                info,
+                (ParamInfo<Object>) info,
+                (TypeCoercer<Object, Object>) info.getTypeCoercer(),
                 isConfigurationRule,
                 attribute);
       } else {
@@ -135,7 +146,8 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
                 paramTargetConfiguration,
                 hostConfiguration,
                 configurationDeps,
-                info,
+                (ParamInfo<Object>) info,
+                (TypeCoercer<Object, Object>) info.getTypeCoercer(),
                 isConfigurationRule,
                 attribute);
       }
@@ -148,9 +160,8 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
     return dto;
   }
 
-  @SuppressWarnings("unchecked")
   @Nullable
-  private Object createAttributeWithConfigurationTransformation(
+  private <U, T> T createAttributeWithConfigurationTransformation(
       CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       SelectorListResolver selectorListResolver,
@@ -161,14 +172,15 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       DependencyStack dependencyStack,
       TargetConfiguration targetConfiguration,
       ImmutableSet.Builder<BuildTarget> configurationDeps,
-      ParamInfo<?> info,
+      ParamInfo<T> info,
+      TypeCoercer<U, T> coercer,
       boolean isConfigurationRule,
       Object attribute)
       throws CoerceFailedException {
-    ImmutableList.Builder<Object> valuesForConcatenation = ImmutableList.builder();
+    ImmutableList.Builder<T> valuesForConcatenation = ImmutableList.builder();
     for (TargetConfiguration nestedTargetConfiguration :
         targetConfigurationTransformer.transform(targetConfiguration, dependencyStack)) {
-      Object configuredAttributeValue =
+      T configuredAttributeValue =
           createAttribute(
               cellNameResolver,
               filesystem,
@@ -180,18 +192,19 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
               hostConfiguration,
               configurationDeps,
               info,
+              coercer,
               isConfigurationRule,
               attribute);
       if (configuredAttributeValue != null) {
         valuesForConcatenation.add(configuredAttributeValue);
       }
     }
-    TypeCoercer<Object, Object> coercer = (TypeCoercer<Object, Object>) info.getTypeCoercer();
     return coercer.concat(valuesForConcatenation.build());
   }
 
   @Nullable
-  private <T> T createAttribute(
+  @SuppressWarnings("unchecked")
+  private <U, T> T createAttribute(
       CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       SelectorListResolver selectorListResolver,
@@ -202,6 +215,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       TargetConfiguration hostConfiguration,
       ImmutableSet.Builder<BuildTarget> configurationDeps,
       ParamInfo<T> info,
+      TypeCoercer<U, T> coercer,
       boolean isConfigurationRule,
       Object attribute)
       throws CoerceFailedException {
@@ -223,18 +237,18 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       }
 
       SelectorList<T> attributeWithSelectableValue =
-          ((SelectorList<?>) attribute)
+          ((SelectorList<U>) attribute)
               .mapValuesThrowing(
-                  v -> {
-                    return info.getTypeCoercer()
-                        .coerceBoth(
-                            cellNameResolver,
-                            filesystem,
-                            buildTarget.getCellRelativeBasePath().getPath(),
-                            targetConfiguration,
-                            hostConfiguration,
-                            v);
-                  });
+                  v ->
+                      coerce(
+                          cellNameResolver,
+                          filesystem,
+                          buildTarget,
+                          targetConfiguration,
+                          hostConfiguration,
+                          info,
+                          coercer,
+                          v));
       return configureAttributeValue(
           configurationContext,
           selectorListResolver,
@@ -244,14 +258,44 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
           info,
           attributeWithSelectableValue);
     } else {
-      return info.getTypeCoercer()
-          .coerceBoth(
-              cellNameResolver,
-              filesystem,
-              buildTarget.getCellRelativeBasePath().getPath(),
-              targetConfiguration,
-              hostConfiguration,
-              attribute);
+      return coerce(
+          cellNameResolver,
+          filesystem,
+          buildTarget,
+          targetConfiguration,
+          hostConfiguration,
+          info,
+          coercer,
+          (U) attribute);
+    }
+  }
+
+  private <U, T> T coerce(
+      CellNameResolver cellNameResolver,
+      ProjectFilesystem filesystem,
+      BuildTarget buildTarget,
+      TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
+      ParamInfo<T> paramInfo,
+      TypeCoercer<U, T> coercer,
+      U attribute)
+      throws CoerceFailedException {
+    try {
+      return coercer.coerce(
+          cellNameResolver,
+          filesystem,
+          buildTarget.getCellRelativeBasePath().getPath(),
+          targetConfiguration,
+          hostConfiguration,
+          attribute);
+    } catch (ClassCastException e) {
+      // diagnostics for tests, this should not happen in production
+      throw new RuntimeException(
+          String.format(
+              "invorrect value in configured graph, "
+                  + "param: %s, value type: %s, expected unconfigured type: %s",
+              paramInfo.getName(), attribute.getClass().getName(), coercer.getUnconfiguredType()),
+          e);
     }
   }
 

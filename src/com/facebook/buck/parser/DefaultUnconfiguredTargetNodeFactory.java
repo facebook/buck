@@ -89,6 +89,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
   }
 
   private ImmutableMap<String, Object> convertSelects(
+      Cell cell,
       UnconfiguredBuildTarget target,
       RuleDescriptor<?> descriptor,
       Map<String, Object> attrs,
@@ -108,6 +109,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
       result.put(
           attr.getKey(),
           convertSelectorListInAttrValue(
+              cell,
               target,
               paramInfo,
               attr.getKey(),
@@ -122,27 +124,48 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
    * Convert attr value {@link ListWithSelects} to {@link SelectorList} or keep it as is otherwise
    */
   private Object convertSelectorListInAttrValue(
+      Cell cell,
       UnconfiguredBuildTarget buildTarget,
       ParamInfo<?> paramInfo,
       String attrName,
       Object attrValue,
       CellRelativePath pathRelativeToProjectRoot,
       DependencyStack dependencyStack) {
-    if (attrValue instanceof ListWithSelects) {
-      if (!paramInfo.isConfigurable()) {
-        throw new HumanReadableException(
-            dependencyStack,
-            "%s: attribute '%s' cannot be configured using select",
-            buildTarget,
-            attrName);
-      }
+    try {
+      if (attrValue instanceof ListWithSelects) {
+        if (!paramInfo.isConfigurable()) {
+          throw new HumanReadableException(
+              dependencyStack,
+              "%s: attribute '%s' cannot be configured using select",
+              buildTarget,
+              attrName);
+        }
 
-      return selectorListFactory.create(
-          cells.getCell(pathRelativeToProjectRoot.getCellName()).getCellNameResolver(),
-          pathRelativeToProjectRoot.getPath(),
-          (ListWithSelects) attrValue);
-    } else {
-      return attrValue;
+        SelectorList<Object> selectorList =
+            selectorListFactory.create(
+                cells.getCell(pathRelativeToProjectRoot.getCellName()).getCellNameResolver(),
+                pathRelativeToProjectRoot.getPath(),
+                (ListWithSelects) attrValue);
+        return selectorList.mapValuesThrowing(
+            v ->
+                paramInfo
+                    .getTypeCoercer()
+                    .coerceToUnconfigured(
+                        cell.getCellNameResolver(),
+                        cell.getFilesystem(),
+                        pathRelativeToProjectRoot.getPath(),
+                        v));
+      } else {
+        return paramInfo
+            .getTypeCoercer()
+            .coerceToUnconfigured(
+                cell.getCellNameResolver(),
+                cell.getFilesystem(),
+                pathRelativeToProjectRoot.getPath(),
+                attrValue);
+      }
+    } catch (CoerceFailedException e) {
+      throw new HumanReadableException(e, dependencyStack, e.getMessage());
     }
   }
 
@@ -189,7 +212,12 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
 
     ImmutableMap<String, Object> withSelects =
         convertSelects(
-            target, descriptor, rawAttributes, target.getCellRelativeBasePath(), dependencyStack);
+            cell,
+            target,
+            descriptor,
+            rawAttributes,
+            target.getCellRelativeBasePath(),
+            dependencyStack);
 
     Optional<UnconfiguredBuildTarget> defaultTargetPlatform = Optional.empty();
     Object rawDefaultTargetPlatform = rawAttributes.get("defaultTargetPlatform");
