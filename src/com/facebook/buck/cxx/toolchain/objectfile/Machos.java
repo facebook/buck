@@ -22,7 +22,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Ints;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
@@ -210,7 +209,6 @@ public class Machos {
     byte[] stringTableBytes = new byte[stringTableSize];
     map.position(stringTableOffset);
     map.get(stringTableBytes);
-    ByteBuffer stringTable = ByteBuffer.wrap(stringTableBytes);
 
     map.position(symbolTableOffset);
 
@@ -237,8 +235,7 @@ public class Machos {
         if (strings.containsKey(stringTableIndex)) {
           newStringTableIndex = strings.get(stringTableIndex);
         } else {
-          stringTable.position(stringTableIndex);
-          String string = ObjectFileScrubbers.getAsciiString(stringTable);
+          String string = ObjectFileScrubbers.getAsciiString(stringTableBytes, stringTableIndex);
           if (type == N_OSO) {
             for (Map.Entry<Path, Path> root : cellRoots.entrySet()) {
               String rootPrefix = root.getKey() + "/";

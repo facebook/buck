@@ -171,16 +171,13 @@ public class ObjectFileScrubbers {
     return Shorts.fromBytes(b2, b1);
   }
 
-  public static String getAsciiString(ByteBuffer buffer) {
-    int position = buffer.position();
-    int length = 0;
-    do {
-      length++;
-    } while (buffer.get() != 0x00);
-    byte[] bytes = new byte[length - 1];
-    buffer.position(position);
-    buffer.get(bytes, 0, length - 1);
-    return new String(bytes, Charsets.US_ASCII);
+  /** Reads a NULL-terminated string from a byte buffer. */
+  public static String getAsciiString(byte[] buffer, int startPosition) {
+    int nullCharPosition = startPosition;
+    while (buffer[nullCharPosition] != 0x0) {
+      nullCharPosition++;
+    }
+    return new String(buffer, startPosition, nullCharPosition - startPosition, Charsets.US_ASCII);
   }
 
   private static void putSpaceLeftPaddedString(ByteBuffer buffer, int len, String value) {
