@@ -923,6 +923,8 @@ class BuckTool(object):
             # Save pid of running daemon
             self._buck_project.save_buckd_pid(process.pid)
 
+            logging.info("Buck daemon started.")
+
             return True
 
     def _get_repository(self):
