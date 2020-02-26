@@ -139,18 +139,6 @@ public class ObjectFileScrubbers {
     return bytes;
   }
 
-  public static int getOctalStringAsInt(ByteBuffer buffer, int len) {
-    byte[] bytes = getBytes(buffer, len);
-    String str = new String(bytes, Charsets.US_ASCII);
-    return Integer.parseInt(str.trim(), 8);
-  }
-
-  public static int getDecimalStringAsInt(ByteBuffer buffer, int len) {
-    byte[] bytes = getBytes(buffer, len);
-    String str = new String(bytes, Charsets.US_ASCII);
-    return Integer.parseInt(str.trim());
-  }
-
   public static long getDecimalStringAsLong(ByteBuffer buffer, int len) {
     byte[] bytes = getBytes(buffer, len);
     String str = new String(bytes, Charsets.US_ASCII).trim();
