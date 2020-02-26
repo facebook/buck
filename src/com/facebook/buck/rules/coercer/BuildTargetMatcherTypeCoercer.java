@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcher;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcherParser;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -25,27 +24,25 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.reflect.TypeToken;
 
 /** Coercer to {@link com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcher}. */
-class BuildTargetMatcherTypeCoercer extends LeafTypeCoercer<BuildTargetMatcher> {
+class BuildTargetMatcherTypeCoercer extends LeafUnconfiguredOnlyCoercer<BuildTargetMatcher> {
 
   @Override
-  public TypeToken<BuildTargetMatcher> getOutputType() {
+  public TypeToken<BuildTargetMatcher> getUnconfiguredType() {
     return TypeToken.of(BuildTargetMatcher.class);
   }
 
   @Override
-  public BuildTargetMatcher coerce(
-      CellNameResolver cellNameResolver,
+  public BuildTargetMatcher coerceToUnconfigured(
+      CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
-      Object object) {
+      Object object)
+      throws CoerceFailedException {
     // This is only actually used directly by ConstructorArgMarshaller, for parsing the
     // groups list. It's also queried (but not actually used) when Descriptions declare
     // deps fields.
     // TODO(csarbora): make this work for all types of BuildTargetPatterns
     // probably differentiate them by inheritance
-    return BuildTargetMatcherParser.forVisibilityArgument()
-        .parse((String) object, cellNameResolver);
+    return BuildTargetMatcherParser.forVisibilityArgument().parse((String) object, cellRoots);
   }
 }

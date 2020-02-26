@@ -101,7 +101,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
     // This has no implementation, but is here so that constructor succeeds so that it can be
     // queried. This is only used for the visibility field, which is not actually handled by the
     // coercer.
-    TypeCoercer<Object, BuildTargetMatcher> buildTargetPatternTypeCoercer =
+    TypeCoercer<BuildTargetMatcher, BuildTargetMatcher> buildTargetPatternTypeCoercer =
         new BuildTargetMatcherTypeCoercer();
     unconfiguredBuildTargetFactory = new ParsingUnconfiguredBuildTargetViewFactory();
     unconfiguredBuildTargetTypeCoercer =
