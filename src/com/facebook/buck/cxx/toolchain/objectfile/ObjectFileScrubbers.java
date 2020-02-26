@@ -218,17 +218,35 @@ public class ObjectFileScrubbers {
   }
 
   public static void putLittleEndianLong(ByteBuffer buffer, long value) {
-    byte[] bytes = Longs.toByteArray(value);
-    byte[] flipped = {
-      bytes[7], bytes[6], bytes[5], bytes[4], bytes[3], bytes[2], bytes[1], bytes[0]
-    };
-    buffer.put(flipped);
+    byte bytes0 = (byte) (value >>> 0);
+    byte bytes1 = (byte) (value >>> 8);
+    byte bytes2 = (byte) (value >>> 16);
+    byte bytes3 = (byte) (value >>> 24);
+    byte bytes4 = (byte) (value >>> 32);
+    byte bytes5 = (byte) (value >>> 40);
+    byte bytes6 = (byte) (value >>> 48);
+    byte bytes7 = (byte) (value >>> 56);
+
+    buffer.put(bytes0);
+    buffer.put(bytes1);
+    buffer.put(bytes2);
+    buffer.put(bytes3);
+    buffer.put(bytes4);
+    buffer.put(bytes5);
+    buffer.put(bytes6);
+    buffer.put(bytes7);
   }
 
   public static void putLittleEndianInt(ByteBuffer buffer, int value) {
-    byte[] bytes = Ints.toByteArray(value);
-    byte[] flipped = {bytes[3], bytes[2], bytes[1], bytes[0]};
-    buffer.put(flipped);
+    byte bytes0 = (byte) (value >>> 0);
+    byte bytes1 = (byte) (value >>> 8);
+    byte bytes2 = (byte) (value >>> 16);
+    byte bytes3 = (byte) (value >>> 24);
+
+    buffer.put(bytes0);
+    buffer.put(bytes1);
+    buffer.put(bytes2);
+    buffer.put(bytes3);
   }
 
   public static void putAsciiString(ByteBuffer buffer, String string) {
