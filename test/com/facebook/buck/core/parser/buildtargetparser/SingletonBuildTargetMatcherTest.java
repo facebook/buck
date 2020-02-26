@@ -35,11 +35,21 @@ public class SingletonBuildTargetMatcherTest {
             BuildTargetFactory.newInstance("//src/com/facebook/buck:buck")
                 .getUnconfiguredBuildTarget());
 
-    assertTrue(pattern.matches(BuildTargetFactory.newInstance("//src/com/facebook/buck", "buck")));
+    assertTrue(
+        pattern.matches(
+            BuildTargetFactory.newInstance("//src/com/facebook/buck", "buck")
+                .getUnconfiguredBuildTarget()));
     assertFalse(
-        pattern.matches(BuildTargetFactory.newInstance("//src/com/facebook/buck", "otherTarget")));
-    assertFalse(pattern.matches(BuildTargetFactory.newInstance("//src/com/facebook/foo", "foo")));
+        pattern.matches(
+            BuildTargetFactory.newInstance("//src/com/facebook/buck", "otherTarget")
+                .getUnconfiguredBuildTarget()));
     assertFalse(
-        pattern.matches(BuildTargetFactory.newInstance("//src/com/facebook/buck/bar", "bar")));
+        pattern.matches(
+            BuildTargetFactory.newInstance("//src/com/facebook/foo", "foo")
+                .getUnconfiguredBuildTarget()));
+    assertFalse(
+        pattern.matches(
+            BuildTargetFactory.newInstance("//src/com/facebook/buck/bar", "bar")
+                .getUnconfiguredBuildTarget()));
   }
 }

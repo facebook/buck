@@ -419,9 +419,13 @@ public class IjProjectCommandHelper {
         .filter(
             test ->
                 (includePatterns.isEmpty()
-                        || includePatterns.stream().anyMatch(pattern -> pattern.matches(test)))
+                        || includePatterns.stream()
+                            .anyMatch(
+                                pattern -> pattern.matches(test.getUnconfiguredBuildTarget())))
                     && (excludePatterns.isEmpty()
-                        || excludePatterns.stream().noneMatch(pattern -> pattern.matches(test))))
+                        || excludePatterns.stream()
+                            .noneMatch(
+                                pattern -> pattern.matches(test.getUnconfiguredBuildTarget()))))
         .toImmutableSet();
   }
 

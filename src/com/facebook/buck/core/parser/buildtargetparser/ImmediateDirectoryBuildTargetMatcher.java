@@ -16,8 +16,8 @@
 
 package com.facebook.buck.core.parser.buildtargetparser;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CellRelativePath;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /** A pattern matches build targets that are all in the same directory. */
@@ -31,7 +31,7 @@ abstract class ImmediateDirectoryBuildTargetMatcher implements BuildTargetMatche
    *     false.
    */
   @Override
-  public boolean matches(BuildTarget target) {
+  public boolean matches(UnconfiguredBuildTarget target) {
     return getCellRelativeBasePath().equals(target.getCellRelativeBasePath());
   }
 

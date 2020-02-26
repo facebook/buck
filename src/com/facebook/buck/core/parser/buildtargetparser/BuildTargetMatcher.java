@@ -16,12 +16,12 @@
 
 package com.facebook.buck.core.parser.buildtargetparser;
 
-import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 
 /** A pattern that matches one or more build targets. */
 public interface BuildTargetMatcher {
 
-  boolean matches(BuildTarget target);
+  boolean matches(UnconfiguredBuildTarget target);
 
   /**
    * Value used in a build file to specify this pattern, devoid of any {@link
