@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 
-import com.facebook.buck.core.starlark.compatible.FakeMutableSkylarkObject;
 import com.facebook.buck.core.starlark.compatible.TestMutableEnv;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -117,23 +116,6 @@ public class UserDefinedProviderTest {
   }
 
   @Test
-  public void callFailsIfMutableObjectIsProvided()
-      throws LabelSyntaxException, InterruptedException, EvalException {
-    UserDefinedProvider provider = new UserDefinedProvider(location, new String[] {"foo"});
-    provider.export(Label.parseAbsolute("//package:file.bzl", ImmutableMap.of()), "FooInfo");
-
-    try (TestMutableEnv env = new TestMutableEnv()) {
-      thrown.expect(EvalException.class);
-      thrown.expectMessage("in field foo in FooInfo was still mutable");
-      provider.call(
-          ImmutableList.of(),
-          ImmutableMap.of("foo", new FakeMutableSkylarkObject()),
-          null,
-          env.getEnv());
-    }
-  }
-
-  @Test
   public void callGetsNoneForValuesNotProvided()
       throws InterruptedException, EvalException, LabelSyntaxException {
     UserDefinedProvider provider =
@@ -158,7 +140,7 @@ public class UserDefinedProviderTest {
   }
 
   @Test
-  public void callReturnsCorrectUserDefiendProviderInfo()
+  public void callReturnsCorrectUserDefinedProviderInfo()
       throws LabelSyntaxException, InterruptedException, EvalException {
     UserDefinedProvider provider =
         new UserDefinedProvider(location, new String[] {"foo", "bar", "baz"});

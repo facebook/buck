@@ -24,6 +24,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkValue;
 import com.google.devtools.build.lib.syntax.ClassObject;
+import com.google.devtools.build.lib.syntax.EvalUtils;
+import java.util.Objects;
 import javax.annotation.Nullable;
 
 /**
@@ -35,6 +37,7 @@ public class UserDefinedProviderInfo
 
   private final Provider<UserDefinedProviderInfo> provider;
   private final ImmutableMap<String, Object> fieldValues;
+  private boolean immutable = false;
 
   /**
    * Create an instance of {@link UserDefinedProviderInfo}
@@ -96,10 +99,13 @@ public class UserDefinedProviderInfo
 
   @Override
   public boolean isImmutable() {
-    /**
-     * This is guaranteed by {@link UserDefinedProvider#call(Object[], FuncallExpression,
-     * Environment)}
-     */
-    return true;
+    // Once something's gone immutable, it cannot be made mutable again.
+    if (immutable) {
+      return true;
+    }
+    immutable =
+        fieldValues.values().stream()
+            .allMatch(o -> EvalUtils.isImmutable(Objects.requireNonNull(o)));
+    return immutable;
   }
 }

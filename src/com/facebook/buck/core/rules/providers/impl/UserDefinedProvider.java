@@ -17,8 +17,6 @@
 package com.facebook.buck.core.rules.providers.impl;
 
 import com.facebook.buck.core.rules.providers.Provider;
-import com.facebook.buck.core.starlark.compatible.BuckSkylarkTypes;
-import com.facebook.buck.core.starlark.compatible.MutableObjectException;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
@@ -123,8 +121,7 @@ public class UserDefinedProvider extends BaseFunction
   }
 
   @Override
-  protected Object call(Object[] args, @Nullable FuncallExpression ast, Environment env)
-      throws EvalException, InterruptedException {
+  protected Object call(Object[] args, @Nullable FuncallExpression ast, Environment env) {
     Verify.verify(isExported, "Tried to call a Provider before exporting it");
 
     ImmutableList<String> fieldNames =
@@ -134,15 +131,7 @@ public class UserDefinedProvider extends BaseFunction
     ImmutableMap.Builder<String, Object> builder =
         ImmutableMap.builderWithExpectedSize(args.length);
     for (int i = 0; i < fieldNames.size(); i++) {
-      try {
-        builder.put(fieldNames.get(i), BuckSkylarkTypes.asDeepImmutable(args[i]));
-      } catch (MutableObjectException e) {
-        throw new EvalException(
-            location,
-            String.format(
-                "Value %s in field %s in %s was still mutable",
-                e.getMutableObject(), fieldNames.get(i), getName()));
-      }
+      builder.put(fieldNames.get(i), args[i]);
     }
     return new UserDefinedProviderInfo(this, builder.build());
   }

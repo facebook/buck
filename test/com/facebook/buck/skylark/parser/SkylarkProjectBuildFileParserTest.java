@@ -698,37 +698,6 @@ public class SkylarkProjectBuildFileParserTest {
   }
 
   @Test
-  public void cannotPassStructWithMutableFieldsToProvider()
-      throws IOException, InterruptedException {
-    parser =
-        createParserWithOptions(
-            new PrintingEventHandler(EventKind.ALL_EVENTS),
-            SkylarkProjectBuildFileParserTestUtils.getDefaultParserOptions(
-                    cell.getRootCell(), knownRuleTypesProvider)
-                .setUserDefinedRulesState(UserDefinedRulesState.ENABLED)
-                .build());
-    Path directory = projectFilesystem.resolve("src").resolve("test");
-    Files.createDirectories(directory);
-    Path buildFile = directory.resolve("BUCK");
-    Path extensionFile = directory.resolve("build_rules.bzl");
-    Files.write(
-        buildFile,
-        Arrays.asList(
-            "load('//src/test:build_rules.bzl', 'jar')",
-            "prebuilt_jar(name='foo', binary_jar=jar)"));
-    Files.write(
-        extensionFile,
-        Arrays.asList(
-            "s = struct(data=[\"v1\",\"v2\", \"v3\"])",
-            "Info = provider(fields=['data'])",
-            "s = Info(data=s)",
-            "jar=s.data.data[0]"));
-
-    thrown.expect(BuildFileParseException.class);
-    getSingleRule(buildFile);
-  }
-
-  @Test
   public void canPassFrozenStructWithMutableFieldsToProvider()
       throws IOException, InterruptedException {
     parser =
