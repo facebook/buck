@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.ConstructorArg;
@@ -30,6 +31,7 @@ import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationTransformer;
@@ -42,6 +44,7 @@ import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.model.platform.impl.UnconfiguredPlatform;
 import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.select.NonCopyingSelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.Selector;
@@ -57,6 +60,8 @@ import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.UnconfiguredSourcePath;
+import com.facebook.buck.core.sourcepath.UnconfiguredSourcePathFactoryForTests;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -184,8 +189,12 @@ public class ConstructorArgMarshallerImmutableTest {
         invokePopulate(
             DtoWithSourcePaths.class,
             ImmutableMap.<String, Object>of(
-                "filePath", "cheese.txt",
-                "targetPath", ":peas"));
+                "filePath",
+                UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath(
+                    "example/path/cheese.txt"),
+                "targetPath",
+                UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath(
+                    "//example/path:peas")));
 
     assertEquals(
         PathSourcePath.of(projectFilesystem, Paths.get("example/path/cheese.txt")),
@@ -339,7 +348,9 @@ public class ConstructorArgMarshallerImmutableTest {
             .put("optionalLong", Optional.of(88L))
             .put("needed", true)
             // Skipping optional boolean.
-            .put("aSrcPath", ":path")
+            .put(
+                "aSrcPath",
+                UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath("//example/path:path"))
             .put("aPath", Paths.get("./File.java"))
             .put("notAPath", Optional.of(Paths.get("example/path/NotFile.java")))
             .build();
@@ -406,7 +417,15 @@ public class ConstructorArgMarshallerImmutableTest {
         invokePopulate(
             DtoWithSetOfSourcePaths.class,
             ImmutableMap.<String, Object>of(
-                "srcs", ImmutableList.of("main.py", "lib/__init__.py", "lib/manifest.py")));
+                "srcs",
+                ImmutableList.of("main.py", "lib/__init__.py", "lib/manifest.py").stream()
+                    .map(
+                        p ->
+                            new UnconfiguredSourcePath.Path(
+                                CellRelativePath.of(
+                                    CanonicalCellName.rootCell(),
+                                    ForwardRelativePath.of("example/path/" + p))))
+                    .collect(ImmutableList.toImmutableList())));
 
     ImmutableSet<String> observedValues =
         built.getSrcs().stream()
@@ -676,7 +695,11 @@ public class ConstructorArgMarshallerImmutableTest {
             builder(DtoWithExec.class),
             ImmutableSet.builder(),
             ImmutableSet.builder(),
-            ImmutableMap.of("name", TARGET.getShortName(), "compiler", "//tools:compiler"));
+            ImmutableMap.of(
+                "name",
+                TARGET.getShortName(),
+                "compiler",
+                UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath("//tools:compiler")));
     BuildTargetSourcePath compiler = (BuildTargetSourcePath) d.getCompiler();
     assertEquals(execConfiguration, compiler.getTarget().getTargetConfiguration());
   }

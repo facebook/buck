@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.UnconfiguredSourcePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import java.nio.file.Path;
 import org.junit.Before;
@@ -39,7 +40,7 @@ public class FrameworkPathTypeCoercerTest {
                   new UnconfiguredBuildTargetTypeCoercer(
                       new ParsingUnconfiguredBuildTargetViewFactory())));
   private final TypeCoercer<Path, Path> pathTypeCoercer = new PathTypeCoercer();
-  private final TypeCoercer<String, SourcePath> sourcePathTypeCoercer =
+  private final TypeCoercer<UnconfiguredSourcePath, SourcePath> sourcePathTypeCoercer =
       new SourcePathTypeCoercer(buildTargetWithOutputsTypeCoercer, pathTypeCoercer);
   private final TypeCoercer<Object, FrameworkPath> frameworkPathTypeCoercer =
       new FrameworkPathTypeCoercer(sourcePathTypeCoercer);

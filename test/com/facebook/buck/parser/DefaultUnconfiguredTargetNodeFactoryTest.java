@@ -37,6 +37,7 @@ import com.facebook.buck.core.select.SelectorKey;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.impl.SelectorFactory;
 import com.facebook.buck.core.select.impl.SelectorListFactory;
+import com.facebook.buck.core.sourcepath.UnconfiguredSourcePathFactoryForTests;
 import com.facebook.buck.parser.api.PackageMetadata;
 import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.parser.syntax.SelectorValue;
@@ -118,10 +119,18 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
                             ImmutableMap.of(
                                 new SelectorKey(
                                     ConfigurationBuildTargetFactoryForTests.newInstance("//c:a")),
-                                ImmutableList.of("//a/b:file1", "//a/b:file2"),
+                                ImmutableList.of(
+                                    UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath(
+                                        "//a/b:file1"),
+                                    UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath(
+                                        "//a/b:file2")),
                                 new SelectorKey(
                                     ConfigurationBuildTargetFactoryForTests.newInstance("//c:b")),
-                                ImmutableList.of("//a/b:file3", "//a/b:file4")),
+                                ImmutableList.of(
+                                    UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath(
+                                        "//a/b:file3"),
+                                    UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath(
+                                        "//a/b:file4"))),
                             ImmutableSet.of(),
                             ""))))
             .build();

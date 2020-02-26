@@ -48,6 +48,7 @@ import com.facebook.buck.core.select.impl.ThrowingSelectableConfigurationContext
 import com.facebook.buck.core.select.impl.ThrowingSelectorListResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
+import com.facebook.buck.core.sourcepath.UnconfiguredSourcePathFactoryForTests;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -103,7 +104,11 @@ public class TargetNodeTest {
                 .map(BuildTarget::getUnconfiguredBuildTarget)
                 .collect(ImmutableList.toImmutableList()),
             "sourcePaths",
-            ImmutableList.of("//example/path:two", "//example/path:four", "MyClass.java"),
+            ImmutableList.of(
+                UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath("//example/path:two"),
+                UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath("//example/path:four"),
+                UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath(
+                    "example/path/MyClass.java")),
             "appleSource",
             Optional.of("//example/path:five"),
             "source",

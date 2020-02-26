@@ -23,6 +23,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.UnconfiguredSourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -36,9 +37,10 @@ import java.util.Optional;
 /** Coerce to {@link com.facebook.buck.rules.coercer.FrameworkPath}. */
 public class FrameworkPathTypeCoercer implements TypeCoercer<Object, FrameworkPath> {
 
-  private final TypeCoercer<String, SourcePath> sourcePathTypeCoercer;
+  private final TypeCoercer<UnconfiguredSourcePath, SourcePath> sourcePathTypeCoercer;
 
-  public FrameworkPathTypeCoercer(TypeCoercer<String, SourcePath> sourcePathTypeCoercer) {
+  public FrameworkPathTypeCoercer(
+      TypeCoercer<UnconfiguredSourcePath, SourcePath> sourcePathTypeCoercer) {
     this.sourcePathTypeCoercer = sourcePathTypeCoercer;
   }
 

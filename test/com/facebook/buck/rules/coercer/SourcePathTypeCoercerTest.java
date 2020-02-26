@@ -70,7 +70,7 @@ public class SourcePathTypeCoercerTest {
     projectFilesystem.touch(Paths.get(path));
 
     SourcePath sourcePath =
-        sourcePathTypeCoercer.coerce(
+        sourcePathTypeCoercer.coerceBoth(
             cellRoots,
             projectFilesystem,
             pathRelativeToProjectRoot,
@@ -82,9 +82,25 @@ public class SourcePathTypeCoercerTest {
   }
 
   @Test
+  public void coercePathRelativeToBasePath() throws CoerceFailedException, IOException {
+    projectFilesystem.touch(Paths.get("foo/bar/hello.a"));
+
+    SourcePath sourcePath =
+        sourcePathTypeCoercer.coerceBoth(
+            cellRoots,
+            projectFilesystem,
+            ForwardRelativePath.of("foo/bar"),
+            UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            "hello.a");
+
+    assertEquals(PathSourcePath.of(projectFilesystem, Paths.get("foo/bar/hello.a")), sourcePath);
+  }
+
+  @Test
   public void coerceAbsoluteBuildTarget() throws CoerceFailedException {
     SourcePath sourcePath =
-        sourcePathTypeCoercer.coerce(
+        sourcePathTypeCoercer.coerceBoth(
             cellRoots,
             projectFilesystem,
             pathRelativeToProjectRoot,
@@ -99,7 +115,7 @@ public class SourcePathTypeCoercerTest {
   @Test
   public void coerceAbsoluteBuildTargetWithOutputLabel() throws CoerceFailedException {
     SourcePath sourcePath =
-        sourcePathTypeCoercer.coerce(
+        sourcePathTypeCoercer.coerceBoth(
             cellRoots,
             projectFilesystem,
             pathRelativeToProjectRoot,
@@ -117,7 +133,7 @@ public class SourcePathTypeCoercerTest {
   @Test
   public void coerceRelativeBuildTarget() throws CoerceFailedException {
     SourcePath sourcePath =
-        sourcePathTypeCoercer.coerce(
+        sourcePathTypeCoercer.coerceBoth(
             cellRoots,
             projectFilesystem,
             pathRelativeToProjectRoot,
@@ -132,7 +148,7 @@ public class SourcePathTypeCoercerTest {
   @Test
   public void coerceRelativeBuildTargetWithOutputLabel() throws CoerceFailedException {
     SourcePath sourcePath =
-        sourcePathTypeCoercer.coerce(
+        sourcePathTypeCoercer.coerceBoth(
             cellRoots,
             projectFilesystem,
             pathRelativeToProjectRoot,
@@ -156,7 +172,7 @@ public class SourcePathTypeCoercerTest {
             .getCellNameResolver();
 
     SourcePath sourcePath =
-        sourcePathTypeCoercer.coerce(
+        sourcePathTypeCoercer.coerceBoth(
             cellRoots,
             projectFilesystem,
             pathRelativeToProjectRoot,
@@ -180,7 +196,7 @@ public class SourcePathTypeCoercerTest {
     exception.expect(CoerceFailedException.class);
     exception.expectMessage("Path cannot contain an absolute path");
 
-    sourcePathTypeCoercer.coerce(
+    sourcePathTypeCoercer.coerceBoth(
         cellRoots,
         projectFilesystem,
         pathRelativeToProjectRoot,

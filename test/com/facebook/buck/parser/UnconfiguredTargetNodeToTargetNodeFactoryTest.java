@@ -46,6 +46,7 @@ import com.facebook.buck.core.select.TestSelectable;
 import com.facebook.buck.core.select.TestSelectableResolver;
 import com.facebook.buck.core.select.impl.DefaultSelectorListResolver;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.UnconfiguredSourcePathFactoryForTests;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
@@ -107,7 +108,11 @@ public class UnconfiguredTargetNodeToTargetNodeFactoryTest {
     ImmutableMap<String, Object> attributes =
         ImmutableMap.<String, Object>builder()
             .put("name", "c")
-            .put("srcs", ImmutableList.of("src1", "src2"))
+            .put(
+                "srcs",
+                ImmutableList.of(
+                    UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath("a/b/src1"),
+                    UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath("a/b/src2")))
             .put("source", selectorList)
             .build();
     UnconfiguredTargetNode node =

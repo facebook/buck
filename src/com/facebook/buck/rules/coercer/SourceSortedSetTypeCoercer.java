@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.UnconfiguredSourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
@@ -29,15 +30,16 @@ import java.util.List;
 
 public class SourceSortedSetTypeCoercer extends SourceSortedSetConcatable
     implements TypeCoercer<Object, SourceSortedSet> {
-  private final TypeCoercer<ImmutableList<String>, ImmutableSortedSet<SourcePath>>
+  private final TypeCoercer<ImmutableList<UnconfiguredSourcePath>, ImmutableSortedSet<SourcePath>>
       unnamedHeadersTypeCoercer;
   private final TypeCoercer<
-          ImmutableSortedMap<String, String>, ImmutableSortedMap<String, SourcePath>>
+          ImmutableSortedMap<String, UnconfiguredSourcePath>,
+          ImmutableSortedMap<String, SourcePath>>
       namedHeadersTypeCoercer;
 
   SourceSortedSetTypeCoercer(
       TypeCoercer<String, String> stringTypeCoercer,
-      TypeCoercer<String, SourcePath> sourcePathTypeCoercer) {
+      TypeCoercer<UnconfiguredSourcePath, SourcePath> sourcePathTypeCoercer) {
     this.unnamedHeadersTypeCoercer = new SortedSetTypeCoercer<>(sourcePathTypeCoercer);
     this.namedHeadersTypeCoercer =
         new SortedMapTypeCoercer<>(stringTypeCoercer, sourcePathTypeCoercer);

@@ -26,6 +26,7 @@ import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcher;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
+import com.facebook.buck.core.sourcepath.UnconfiguredSourcePath;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.rules.macros.AbsoluteOutputMacro;
 import com.facebook.buck.rules.macros.CcFlagsMacro;
@@ -111,7 +112,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
         new BuildTargetWithOutputsTypeCoercer(
             new UnconfiguredBuildTargetWithOutputsTypeCoercer(unconfiguredBuildTargetTypeCoercer));
     TypeCoercer<Path, Path> pathTypeCoercer = new PathTypeCoercer();
-    TypeCoercer<String, SourcePath> sourcePathTypeCoercer =
+    TypeCoercer<UnconfiguredSourcePath, SourcePath> sourcePathTypeCoercer =
         new SourcePathTypeCoercer(buildTargetWithOutputsTypeCoercer, pathTypeCoercer);
     TypeCoercer<Object, SourceWithFlags> sourceWithFlagsTypeCoercer =
         new SourceWithFlagsTypeCoercer(

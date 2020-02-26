@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.UnconfiguredSourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -29,14 +30,15 @@ import java.util.List;
 /** Coerce to {@link com.facebook.buck.rules.coercer.SourceSet}. */
 public class SourceSetTypeCoercer extends SourceSetConcatable
     implements TypeCoercer<Object, SourceSet> {
-  private final TypeCoercer<ImmutableSet<String>, ImmutableSet<SourcePath>>
+  private final TypeCoercer<ImmutableSet<UnconfiguredSourcePath>, ImmutableSet<SourcePath>>
       unnamedHeadersTypeCoercer;
-  private final TypeCoercer<ImmutableMap<String, String>, ImmutableMap<String, SourcePath>>
+  private final TypeCoercer<
+          ImmutableMap<String, UnconfiguredSourcePath>, ImmutableMap<String, SourcePath>>
       namedHeadersTypeCoercer;
 
   SourceSetTypeCoercer(
       TypeCoercer<String, String> stringTypeCoercer,
-      TypeCoercer<String, SourcePath> sourcePathTypeCoercer) {
+      TypeCoercer<UnconfiguredSourcePath, SourcePath> sourcePathTypeCoercer) {
     this.unnamedHeadersTypeCoercer = new SetTypeCoercer<>(sourcePathTypeCoercer);
     this.namedHeadersTypeCoercer = new MapTypeCoercer<>(stringTypeCoercer, sourcePathTypeCoercer);
   }

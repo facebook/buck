@@ -21,6 +21,7 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
+import com.facebook.buck.core.sourcepath.UnconfiguredSourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
@@ -29,14 +30,15 @@ import java.util.Collection;
 
 /** A type coercer to handle source entries with a list of flags. */
 public class SourceWithFlagsTypeCoercer implements TypeCoercer<Object, SourceWithFlags> {
-  private final TypeCoercer<String, SourcePath> sourcePathTypeCoercer;
+  private final TypeCoercer<UnconfiguredSourcePath, SourcePath> sourcePathTypeCoercer;
   private final TypeCoercer<ImmutableList<String>, ImmutableList<String>> flagsTypeCoercer;
   private final TypeCoercer<
-          Pair<String, ImmutableList<String>>, Pair<SourcePath, ImmutableList<String>>>
+          Pair<UnconfiguredSourcePath, ImmutableList<String>>,
+          Pair<SourcePath, ImmutableList<String>>>
       sourcePathWithFlagsTypeCoercer;
 
   SourceWithFlagsTypeCoercer(
-      TypeCoercer<String, SourcePath> sourcePathTypeCoercer,
+      TypeCoercer<UnconfiguredSourcePath, SourcePath> sourcePathTypeCoercer,
       TypeCoercer<ImmutableList<String>, ImmutableList<String>> flagsTypeCoercer) {
     this.sourcePathTypeCoercer = sourcePathTypeCoercer;
     this.flagsTypeCoercer = flagsTypeCoercer;
