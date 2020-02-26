@@ -276,8 +276,7 @@ public class HostInfoTest {
             ruleFunctionFactory,
             LabelCache.newLabelCache(),
             new KnownUserDefinedRuleTypes(),
-            options.getPerFeatureProviders(),
-            options.getUseFrozenStruct()),
+            options.getPerFeatureProviders()),
         eventHandler,
         NativeGlobber::create);
   }

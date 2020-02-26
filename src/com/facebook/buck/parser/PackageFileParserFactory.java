@@ -109,8 +109,7 @@ public class PackageFileParserFactory implements FileParserFactory<PackageFileMa
             new RuleFunctionFactory(typeCoercerFactory),
             LabelCache.newLabelCache(),
             knownRuleTypesProvider.getUserDefinedRuleTypes(cell),
-            buildFileParserOptions.getPerFeatureProviders(),
-            buildFileParserOptions.getUseFrozenStruct());
+            buildFileParserOptions.getPerFeatureProviders());
 
     HumanReadableExceptionAugmentor augmentor;
     try {

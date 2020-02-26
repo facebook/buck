@@ -105,11 +105,6 @@ public abstract class ProjectBuildFileParserOptions {
     return true;
   }
 
-  @Value.Default
-  public boolean getUseFrozenStruct() {
-    return false;
-  }
-
   public static Builder builder() {
     return new Builder();
   }
