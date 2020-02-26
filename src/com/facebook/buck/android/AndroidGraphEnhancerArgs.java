@@ -202,4 +202,9 @@ public interface AndroidGraphEnhancerArgs
   default boolean isSkipProguard() {
     return false;
   }
+
+  @Value.Default
+  default ImmutableSet<String> getExtraFilteredResources() {
+    return ImmutableSet.of();
+  }
 }

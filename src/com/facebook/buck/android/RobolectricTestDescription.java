@@ -273,6 +273,7 @@ public class RobolectricTestDescription
                 ImmutableList.of(),
                 androidPlatformTarget.getAndroidJar(),
                 false,
+                ImmutableSet.of(),
                 ImmutableSet.of());
 
         graphBuilder.addToIndex(aapt2Link);

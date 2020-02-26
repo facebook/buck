@@ -213,7 +213,8 @@ public class AndroidBinaryGraphEnhancer {
       boolean useProtoFormat,
       AndroidNativeTargetConfigurationMatcher androidNativeTargetConfigurationMatcher,
       boolean failOnLegacyAapt2Errors,
-      boolean useAapt2LocaleFiltering) {
+      boolean useAapt2LocaleFiltering,
+      ImmutableSet<String> extraFilteredResources) {
     this.ignoreAaptProguardConfig = ignoreAaptProguardConfig;
     this.androidPlatformTarget = androidPlatformTarget;
     Preconditions.checkArgument(originalParams.getExtraDeps().get().isEmpty());
@@ -291,7 +292,8 @@ public class AndroidBinaryGraphEnhancer {
             apkModuleGraph,
             useProtoFormat,
             failOnLegacyAapt2Errors,
-            useAapt2LocaleFiltering);
+            useAapt2LocaleFiltering,
+            extraFilteredResources);
     this.apkModuleGraph = apkModuleGraph;
     this.dxConfig = dxConfig;
     this.nonPreDexedDexBuildableArgs = nonPreDexedDexBuildableArgs;
