@@ -74,6 +74,7 @@ public class MapTypeCoercer<KU, VU, K, V>
     }
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public ImmutableMap<KU, VU> coerceToUnconfigured(
       CellNameResolver cellRoots,
@@ -82,6 +83,8 @@ public class MapTypeCoercer<KU, VU, K, V>
       Object object)
       throws CoerceFailedException {
     if (object instanceof Map) {
+      boolean identity = true;
+
       ImmutableMap.Builder<KU, VU> builder = ImmutableMap.builder();
 
       for (Map.Entry<?, ?> entry : ((Map<?, ?>) object).entrySet()) {
@@ -92,6 +95,12 @@ public class MapTypeCoercer<KU, VU, K, V>
             valueTypeCoercer.coerceToUnconfigured(
                 cellRoots, filesystem, pathRelativeToProjectRoot, entry.getValue());
         builder.put(key, value);
+
+        identity &= key == entry.getKey() && value == entry.getValue();
+      }
+
+      if (identity && object instanceof ImmutableMap<?, ?>) {
+        return (ImmutableMap<KU, VU>) object;
       }
 
       return builder.build();
@@ -101,6 +110,13 @@ public class MapTypeCoercer<KU, VU, K, V>
   }
 
   @Override
+  public boolean unconfiguredToConfiguredCoercionIsIdentity() {
+    return keyTypeCoercer.unconfiguredToConfiguredCoercionIsIdentity()
+        && valueTypeCoercer.unconfiguredToConfiguredCoercionIsIdentity();
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
   public ImmutableMap<K, V> coerce(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
@@ -109,6 +125,12 @@ public class MapTypeCoercer<KU, VU, K, V>
       TargetConfiguration hostConfiguration,
       ImmutableMap<KU, VU> object)
       throws CoerceFailedException {
+    if (unconfiguredToConfiguredCoercionIsIdentity()) {
+      return (ImmutableMap<K, V>) object;
+    }
+
+    boolean identity = true;
+
     ImmutableMap.Builder<K, V> builder = ImmutableMap.builder();
 
     for (Map.Entry<KU, VU> entry : object.entrySet()) {
@@ -129,6 +151,12 @@ public class MapTypeCoercer<KU, VU, K, V>
               hostConfiguration,
               entry.getValue());
       builder.put(key, value);
+
+      identity &= key == entry.getKey() && value == entry.getValue();
+    }
+
+    if (identity) {
+      return (ImmutableMap<K, V>) object;
     }
 
     return builder.build();
