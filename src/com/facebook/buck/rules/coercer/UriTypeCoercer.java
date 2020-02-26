@@ -17,27 +17,25 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.reflect.TypeToken;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class UriTypeCoercer extends LeafTypeCoercer<URI> {
+/** Coerce to {@link java.net.URI}. */
+class UriTypeCoercer extends LeafUnconfiguredOnlyCoercer<URI> {
 
   @Override
-  public TypeToken<URI> getOutputType() {
+  public TypeToken<URI> getUnconfiguredType() {
     return TypeToken.of(URI.class);
   }
 
   @Override
-  public URI coerce(
+  public URI coerceToUnconfigured(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
 

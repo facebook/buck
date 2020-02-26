@@ -17,33 +17,30 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.reflect.TypeToken;
 import java.util.Arrays;
 import java.util.Locale;
 
-public class EnumTypeCoercer<E extends Enum<E>> extends LeafTypeCoercer<E> {
+/** Coerce a string to java enum. */
+public class EnumTypeCoercer<E extends Enum<E>> extends LeafUnconfiguredOnlyCoercer<E> {
   private final Class<E> enumClass;
 
-  @SuppressWarnings("unchecked")
-  public EnumTypeCoercer(Class<?> e) {
-    this.enumClass = (Class<E>) e;
+  public EnumTypeCoercer(Class<E> e) {
+    this.enumClass = e;
   }
 
   @Override
-  public TypeToken<E> getOutputType() {
+  public TypeToken<E> getUnconfiguredType() {
     return TypeToken.of(enumClass);
   }
 
   @Override
-  public E coerce(
+  public E coerceToUnconfigured(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     if (object instanceof String) {

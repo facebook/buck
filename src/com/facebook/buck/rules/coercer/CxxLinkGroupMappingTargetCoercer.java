@@ -38,14 +38,14 @@ public class CxxLinkGroupMappingTargetCoercer
     implements TypeCoercer<Object, CxxLinkGroupMappingTarget> {
   private final TypeCoercer<UnconfiguredBuildTarget, BuildTarget> buildTargetTypeCoercer;
   private final TypeCoercer<Object, CxxLinkGroupMappingTarget.Traversal> traversalCoercer;
-  private final TypeCoercer<Object, Pattern> patternTypeCoercer;
+  private final TypeCoercer<Pattern, Pattern> patternTypeCoercer;
 
   private static final String LABEL_REGEX_PREFIX = "label:";
 
   public CxxLinkGroupMappingTargetCoercer(
       TypeCoercer<UnconfiguredBuildTarget, BuildTarget> buildTargetTypeCoercer,
       TypeCoercer<Object, CxxLinkGroupMappingTarget.Traversal> traversalCoercer,
-      TypeCoercer<Object, Pattern> patternTypeCoercer) {
+      TypeCoercer<Pattern, Pattern> patternTypeCoercer) {
     this.buildTargetTypeCoercer = buildTargetTypeCoercer;
     this.traversalCoercer = traversalCoercer;
     this.patternTypeCoercer = patternTypeCoercer;
@@ -122,7 +122,7 @@ public class CxxLinkGroupMappingTargetCoercer
           String regexString = extractLabelRegexString(objects[2]);
           labelPattern =
               Optional.of(
-                  patternTypeCoercer.coerce(
+                  patternTypeCoercer.coerceBoth(
                       cellRoots,
                       filesystem,
                       pathRelativeToProjectRoot,

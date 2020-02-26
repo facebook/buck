@@ -40,7 +40,7 @@ public class UriTypeCoercerTest {
     URI expected = new URI("http://example.org");
     URI uri =
         new UriTypeCoercer()
-            .coerce(
+            .coerceBoth(
                 cellRoots.getCellNameResolver(),
                 filesystem,
                 pathFromRoot,
@@ -56,7 +56,7 @@ public class UriTypeCoercerTest {
     URI expected = new URI("https://example.org");
     URI uri =
         new UriTypeCoercer()
-            .coerce(
+            .coerceBoth(
                 cellRoots.getCellNameResolver(),
                 filesystem,
                 pathFromRoot,
@@ -72,7 +72,7 @@ public class UriTypeCoercerTest {
     URI expected = new URI("mvn:org.hamcrest:hamcrest-core:jar:1.3");
     URI uri =
         new UriTypeCoercer()
-            .coerce(
+            .coerceBoth(
                 cellRoots.getCellNameResolver(),
                 filesystem,
                 pathFromRoot,
@@ -86,7 +86,7 @@ public class UriTypeCoercerTest {
   @Test(expected = CoerceFailedException.class)
   public void shouldThrowAMeaningfulExceptionIfURICannotBeCoerced() throws CoerceFailedException {
     new UriTypeCoercer()
-        .coerce(
+        .coerceBoth(
             cellRoots.getCellNameResolver(),
             filesystem,
             pathFromRoot,

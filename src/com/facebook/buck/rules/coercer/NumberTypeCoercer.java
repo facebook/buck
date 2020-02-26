@@ -17,22 +17,16 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.reflect.TypeToken;
 
 /** Coerces numbers with rounding/truncation/extension. */
-public class NumberTypeCoercer<T extends Number> extends LeafTypeNewCoercer<T, T> {
+public class NumberTypeCoercer<T extends Number> extends LeafUnconfiguredOnlyCoercer<T> {
   private final Class<T> type;
 
   public NumberTypeCoercer(Class<T> type) {
     this.type = type;
-  }
-
-  @Override
-  public TypeToken<T> getOutputType() {
-    return TypeToken.of(type);
   }
 
   @Override
@@ -53,18 +47,6 @@ public class NumberTypeCoercer<T extends Number> extends LeafTypeNewCoercer<T, T
       return castedNumber;
     }
     throw CoerceFailedException.simple(object, getOutputType());
-  }
-
-  @Override
-  public T coerce(
-      CellNameResolver cellRoots,
-      ProjectFilesystem filesystem,
-      ForwardRelativePath pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
-      T object)
-      throws CoerceFailedException {
-    return object;
   }
 
   /** Cast the number to the correct subtype. */

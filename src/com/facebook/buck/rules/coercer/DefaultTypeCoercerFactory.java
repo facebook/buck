@@ -89,7 +89,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
 
   private final TypeCoercer<UnconfiguredBuildTarget, UnconfiguredBuildTarget>
       unconfiguredBuildTargetTypeCoercer;
-  private final TypeCoercer<Object, Pattern> patternTypeCoercer = new PatternTypeCoercer();
+  private final TypeCoercer<Pattern, Pattern> patternTypeCoercer = new PatternTypeCoercer();
 
   private final TypeCoercer<Object, ?>[] nonParameterizedTypeCoercers;
   private final ParsingUnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
@@ -370,7 +370,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
       Class<?> rawClass = Primitives.wrap((Class<?>) type);
 
       if (rawClass.isEnum()) {
-        return new EnumTypeCoercer<>(rawClass);
+        return enumCoercer(rawClass);
       }
 
       TypeCoercer<Object, ?> selectedTypeCoercer = null;
@@ -405,6 +405,11 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
     } else {
       throw new IllegalArgumentException("Cannot create type coercer for type: " + type);
     }
+  }
+
+  @SuppressWarnings("unchecked")
+  private <E extends Enum<E>> TypeCoercer<?, ?> enumCoercer(Class<?> rawClass) {
+    return new EnumTypeCoercer<>((Class<E>) rawClass);
   }
 
   private TypeCoercer<?, ?> typeCoercerForParameterizedType(

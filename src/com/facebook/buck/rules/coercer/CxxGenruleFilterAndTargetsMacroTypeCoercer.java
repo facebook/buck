@@ -34,14 +34,14 @@ import java.util.regex.Pattern;
 public class CxxGenruleFilterAndTargetsMacroTypeCoercer<M extends CxxGenruleFilterAndTargetsMacro>
     implements MacroTypeCoercer<M> {
 
-  private final Optional<TypeCoercer<Object, Pattern>> patternTypeCoercer;
+  private final Optional<TypeCoercer<Pattern, Pattern>> patternTypeCoercer;
   private final TypeCoercer<ImmutableList<UnconfiguredBuildTarget>, ImmutableList<BuildTarget>>
       buildTargetsTypeCoercer;
   private final Class<M> clazz;
   private final BiFunction<Optional<Pattern>, ImmutableList<BuildTarget>, M> factory;
 
   public CxxGenruleFilterAndTargetsMacroTypeCoercer(
-      Optional<TypeCoercer<Object, Pattern>> patternTypeCoercer,
+      Optional<TypeCoercer<Pattern, Pattern>> patternTypeCoercer,
       TypeCoercer<ImmutableList<UnconfiguredBuildTarget>, ImmutableList<BuildTarget>>
           buildTargetsTypeCoercer,
       Class<M> clazz,
@@ -94,7 +94,7 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercer<M extends CxxGenruleFilt
           Optional.of(
               patternTypeCoercer
                   .get()
-                  .coerce(
+                  .coerceBoth(
                       cellNameResolver,
                       filesystem,
                       pathRelativeToProjectRoot,
