@@ -34,6 +34,7 @@ public class PerfCommand extends AbstractContainerCommand {
     @SubCommand(name = "rk", impl = PerfRuleKeyCommand.class),
     @SubCommand(name = "manifest", impl = PerfManifestCommand.class),
     @SubCommand(name = "mbr", impl = PerfMbrCommand.class),
+    @SubCommand(name = "stat", impl = PerfStatCommand.class),
   })
   @SuppressFieldNotInitialized
   Command subcommand;
