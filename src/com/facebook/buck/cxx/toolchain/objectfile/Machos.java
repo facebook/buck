@@ -58,6 +58,8 @@ public class Machos {
 
   static final String LINKEDIT = "__LINKEDIT";
 
+  private static final int NO_VALUE_MARKER = -1;
+
   private Machos() {}
 
   static void setUuidIfPresent(MappedByteBuffer map, byte[] uuid) throws MachoException {
@@ -216,7 +218,7 @@ public class Machos {
 
     boolean is64bit = header.getIs64Bit();
     Map<byte[], byte[]> replacementPathMap = generateReplacementMap(cellRoots);
-    Map<Integer, Integer> strings = new HashMap<>();
+    IntIntMap strings = new IntIntMap4a(symbolTableCount, 0.75f, NO_VALUE_MARKER);
     for (int i = 0; i < symbolTableCount; i++) {
       // Each LC_SYMTAB entry consists of the following fields:
       // - String Index: 4 bytes (offset into the string table)
@@ -229,10 +231,8 @@ public class Machos {
       byte type = map.get();
 
       if (stringTableIndex >= 2) {
-        int newStringTableIndex;
-        if (strings.containsKey(stringTableIndex)) {
-          newStringTableIndex = strings.get(stringTableIndex);
-        } else {
+        int newStringTableIndex = strings.get(stringTableIndex);
+        if (newStringTableIndex == NO_VALUE_MARKER) {
           ByteBuffer charByteBuffer =
               ObjectFileScrubbers.getCharByteBuffer(stringTableBytes, stringTableIndex);
 
