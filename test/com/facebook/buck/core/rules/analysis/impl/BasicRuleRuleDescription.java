@@ -172,23 +172,25 @@ public class BasicRuleRuleDescription implements RuleDescription<BasicRuleDescri
       return SkylarkDict.empty();
     }
     ImmutableMap<String, ImmutableSet<String>> namedOuts = args.getNamedOuts().get();
-    Mutability mutability = Mutability.create("test");
-    Environment env =
-        Environment.builder(mutability)
-            .setGlobals(BazelLibrary.GLOBALS)
-            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-            .build();
-    SkylarkDict<String, Set<Artifact>> dict = SkylarkDict.of(env);
+    SkylarkDict<String, Set<Artifact>> dict;
+    try (Mutability mutability = Mutability.create("test")) {
+      Environment env =
+          Environment.builder(mutability)
+              .setGlobals(BazelLibrary.GLOBALS)
+              .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
+              .build();
+      dict = SkylarkDict.of(env);
 
-    for (Map.Entry<String, ImmutableSet<String>> labelsToNamedOutnames : namedOuts.entrySet()) {
-      try {
-        dict.put(
-            labelsToNamedOutnames.getKey(),
-            declareArtifacts(actionRegistry, labelsToNamedOutnames.getValue()),
-            Location.BUILTIN,
-            mutability);
-      } catch (EvalException e) {
-        throw new HumanReadableException("Invalid name %s", labelsToNamedOutnames.getKey());
+      for (Map.Entry<String, ImmutableSet<String>> labelsToNamedOutnames : namedOuts.entrySet()) {
+        try {
+          dict.put(
+              labelsToNamedOutnames.getKey(),
+              declareArtifacts(actionRegistry, labelsToNamedOutnames.getValue()),
+              Location.BUILTIN,
+              mutability);
+        } catch (EvalException e) {
+          throw new HumanReadableException("Invalid name %s", labelsToNamedOutnames.getKey());
+        }
       }
     }
     return dict;

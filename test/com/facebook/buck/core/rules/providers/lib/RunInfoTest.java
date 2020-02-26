@@ -145,28 +145,29 @@ public class RunInfoTest {
 
   @Test
   public void usesDefaultSkylarkValues() throws InterruptedException, EvalException {
-    Mutability mutability = Mutability.create("providertest");
-    Environment env =
-        Environment.builder(mutability)
-            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-            .setGlobals(
-                Environment.GlobalFrame.createForBuiltins(
-                    ImmutableMap.of(RunInfo.PROVIDER.getName(), RunInfo.PROVIDER)))
-            .build();
+    try (Mutability mutability = Mutability.create("providertest")) {
+      Environment env =
+          Environment.builder(mutability)
+              .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
+              .setGlobals(
+                  Environment.GlobalFrame.createForBuiltins(
+                      ImmutableMap.of(RunInfo.PROVIDER.getName(), RunInfo.PROVIDER)))
+              .build();
 
-    FuncallExpression ast = new FuncallExpression(new Identifier("RunInfo"), ImmutableList.of());
-    ast.setLocation(Location.BUILTIN);
+      FuncallExpression ast = new FuncallExpression(new Identifier("RunInfo"), ImmutableList.of());
+      ast.setLocation(Location.BUILTIN);
 
-    Object raw = ast.eval(env);
-    assertTrue(raw instanceof RunInfo);
-    RunInfo runInfo = (RunInfo) raw;
+      Object raw = ast.eval(env);
+      assertTrue(raw instanceof RunInfo);
+      RunInfo runInfo = (RunInfo) raw;
 
-    CommandLine cli =
-        new ExecCompatibleCommandLineBuilder(new ArtifactFilesystem(new FakeProjectFilesystem()))
-            .build(runInfo.args());
+      CommandLine cli =
+          new ExecCompatibleCommandLineBuilder(new ArtifactFilesystem(new FakeProjectFilesystem()))
+              .build(runInfo.args());
 
-    assertEquals(ImmutableList.of(), cli.getCommandLineArgs());
-    assertEquals(ImmutableMap.of(), cli.getEnvironmentVariables());
+      assertEquals(ImmutableList.of(), cli.getCommandLineArgs());
+      assertEquals(ImmutableMap.of(), cli.getEnvironmentVariables());
+    }
   }
 
   @Test

@@ -219,23 +219,26 @@ public class BuiltInProviderInfoTest {
     assertEquals("c", someInfo3.str());
     assertEquals(3, someInfo3.myInfo());
 
-    Mutability mutability = Mutability.create("providertest");
-    Environment env =
-        Environment.builder(mutability)
-            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-            .setGlobals(
-                Environment.GlobalFrame.createForBuiltins(
-                    ImmutableMap.of(SomeInfo.PROVIDER.getName(), SomeInfo.PROVIDER)))
-            .build();
+    Object o;
+    try (Mutability mutability = Mutability.create("providertest")) {
+      Environment env =
+          Environment.builder(mutability)
+              .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
+              .setGlobals(
+                  Environment.GlobalFrame.createForBuiltins(
+                      ImmutableMap.of(SomeInfo.PROVIDER.getName(), SomeInfo.PROVIDER)))
+              .build();
 
-    FuncallExpression ast =
-        new FuncallExpression(
-            new Identifier("SomeInfo"),
-            ImmutableList.of(
-                new Argument.Keyword(new Identifier("str"), new StringLiteral("d")),
-                new Argument.Keyword(new Identifier("my_info"), new IntegerLiteral(4))));
+      FuncallExpression ast =
+          new FuncallExpression(
+              new Identifier("SomeInfo"),
+              ImmutableList.of(
+                  new Argument.Keyword(new Identifier("str"), new StringLiteral("d")),
+                  new Argument.Keyword(new Identifier("my_info"), new IntegerLiteral(4))));
 
-    Object o = ast.eval(env);
+      o = ast.eval(env);
+    }
+
     assertThat(o, Matchers.instanceOf(SomeInfo.class));
     SomeInfo someInfo4 = (SomeInfo) o;
     assertEquals("d", someInfo4.str());
@@ -287,73 +290,78 @@ public class BuiltInProviderInfoTest {
   @Test
   public void defaultValuesWorkInStarlarkContext() throws InterruptedException, EvalException {
 
-    Mutability mutability = Mutability.create("test");
-    Environment env =
-        Environment.builder(mutability)
-            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-            .setGlobals(
-                Environment.GlobalFrame.createForBuiltins(
-                    ImmutableMap.of(
-                        ImmutableSomeInfo.PROVIDER.getName(), ImmutableSomeInfo.PROVIDER)))
-            .build();
+    try (Mutability mutability = Mutability.create("test")) {
+      Environment env =
+          Environment.builder(mutability)
+              .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
+              .setGlobals(
+                  Environment.GlobalFrame.createForBuiltins(
+                      ImmutableMap.of(
+                          ImmutableSomeInfo.PROVIDER.getName(), ImmutableSomeInfo.PROVIDER)))
+              .build();
 
-    FuncallExpression ast =
-        new FuncallExpression(
-            new Identifier(ImmutableSomeInfo.PROVIDER.getName()),
-            ImmutableList.of(
-                new Argument.Keyword(new Identifier("my_info"), new IntegerLiteral(2))));
+      FuncallExpression ast =
+          new FuncallExpression(
+              new Identifier(ImmutableSomeInfo.PROVIDER.getName()),
+              ImmutableList.of(
+                  new Argument.Keyword(new Identifier("my_info"), new IntegerLiteral(2))));
 
-    assertEquals(new ImmutableSomeInfo("default value", 2), ast.eval(env));
+      assertEquals(new ImmutableSomeInfo("default value", 2), ast.eval(env));
+    }
   }
 
   @Test
   public void infoWithNoDefaultValueOnAnnotationWorks() throws InterruptedException, EvalException {
 
-    Mutability mutability = Mutability.create("test");
-    Environment env =
-        Environment.builder(mutability)
-            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-            .setGlobals(
-                Environment.GlobalFrame.createForBuiltins(
-                    ImmutableMap.of(
-                        InfoWithNoDefaultValOnAnnotation.PROVIDER.getName(),
-                        InfoWithNoDefaultValOnAnnotation.PROVIDER)))
-            .build();
+    try (Mutability mutability = Mutability.create("test")) {
+      Environment env =
+          Environment.builder(mutability)
+              .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
+              .setGlobals(
+                  Environment.GlobalFrame.createForBuiltins(
+                      ImmutableMap.of(
+                          InfoWithNoDefaultValOnAnnotation.PROVIDER.getName(),
+                          InfoWithNoDefaultValOnAnnotation.PROVIDER)))
+              .build();
 
-    FuncallExpression ast =
-        new FuncallExpression(
-            new Identifier(ImmutableInfoWithNoDefaultValOnAnnotation.PROVIDER.getName()),
-            ImmutableList.of(new Argument.Keyword(new Identifier("val"), new IntegerLiteral(2))));
+      FuncallExpression ast =
+          new FuncallExpression(
+              new Identifier(ImmutableInfoWithNoDefaultValOnAnnotation.PROVIDER.getName()),
+              ImmutableList.of(new Argument.Keyword(new Identifier("val"), new IntegerLiteral(2))));
 
-    assertEquals(new ImmutableInfoWithNoDefaultValOnAnnotation(2), ast.eval(env));
+      assertEquals(new ImmutableInfoWithNoDefaultValOnAnnotation(2), ast.eval(env));
+    }
   }
 
   @Test
   public void instantiatesFromStaticMethodIfPresent() throws InterruptedException, EvalException {
-    Mutability mutability = Mutability.create("providertest");
-    Environment env =
-        Environment.builder(mutability)
-            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-            .setGlobals(
-                Environment.GlobalFrame.createForBuiltins(
-                    ImmutableMap.of(
-                        SomeInfoWithInstantiate.PROVIDER.getName(),
-                        SomeInfoWithInstantiate.PROVIDER)))
-            .build();
+    Object o;
+    try (Mutability mutability = Mutability.create("providertest")) {
+      Environment env =
+          Environment.builder(mutability)
+              .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
+              .setGlobals(
+                  Environment.GlobalFrame.createForBuiltins(
+                      ImmutableMap.of(
+                          SomeInfoWithInstantiate.PROVIDER.getName(),
+                          SomeInfoWithInstantiate.PROVIDER)))
+              .build();
 
-    FuncallExpression ast =
-        new FuncallExpression(
-            new Identifier("SomeInfoWithInstantiate"),
-            ImmutableList.of(
-                new Argument.Keyword(
-                    new Identifier("str_list"),
-                    new DictionaryLiteral(
-                        ImmutableList.of(
-                            new DictionaryLiteral.DictionaryEntryLiteral(
-                                new StringLiteral("d"), new StringLiteral("d_value"))))),
-                new Argument.Keyword(new Identifier("my_info"), new IntegerLiteral(4))));
+      FuncallExpression ast =
+          new FuncallExpression(
+              new Identifier("SomeInfoWithInstantiate"),
+              ImmutableList.of(
+                  new Argument.Keyword(
+                      new Identifier("str_list"),
+                      new DictionaryLiteral(
+                          ImmutableList.of(
+                              new DictionaryLiteral.DictionaryEntryLiteral(
+                                  new StringLiteral("d"), new StringLiteral("d_value"))))),
+                  new Argument.Keyword(new Identifier("my_info"), new IntegerLiteral(4))));
 
-    Object o = ast.eval(env);
+      o = ast.eval(env);
+    }
+
     assertThat(o, Matchers.instanceOf(SomeInfoWithInstantiate.class));
     SomeInfoWithInstantiate someInfo4 = (SomeInfoWithInstantiate) o;
     assertEquals(ImmutableList.of("d"), someInfo4.str_list());
@@ -363,24 +371,27 @@ public class BuiltInProviderInfoTest {
   @Test
   public void instantiatesFromStaticMethodWithDefaultValuesIfPresent()
       throws InterruptedException, EvalException {
-    Mutability mutability = Mutability.create("providertest");
-    Environment env =
-        Environment.builder(mutability)
-            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-            .setGlobals(
-                Environment.GlobalFrame.createForBuiltins(
-                    ImmutableMap.of(
-                        SomeInfoWithInstantiate.PROVIDER.getName(),
-                        SomeInfoWithInstantiate.PROVIDER)))
-            .build();
+    Object o;
+    try (Mutability mutability = Mutability.create("providertest")) {
+      Environment env =
+          Environment.builder(mutability)
+              .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
+              .setGlobals(
+                  Environment.GlobalFrame.createForBuiltins(
+                      ImmutableMap.of(
+                          SomeInfoWithInstantiate.PROVIDER.getName(),
+                          SomeInfoWithInstantiate.PROVIDER)))
+              .build();
 
-    FuncallExpression ast =
-        new FuncallExpression(
-            new Identifier("SomeInfoWithInstantiate"),
-            ImmutableList.of(
-                new Argument.Keyword(new Identifier("my_info"), new IntegerLiteral(4))));
+      FuncallExpression ast =
+          new FuncallExpression(
+              new Identifier("SomeInfoWithInstantiate"),
+              ImmutableList.of(
+                  new Argument.Keyword(new Identifier("my_info"), new IntegerLiteral(4))));
 
-    Object o = ast.eval(env);
+      o = ast.eval(env);
+    }
+
     assertThat(o, Matchers.instanceOf(SomeInfoWithInstantiate.class));
     SomeInfoWithInstantiate someInfo4 = (SomeInfoWithInstantiate) o;
     assertEquals(ImmutableList.of("foo"), someInfo4.str_list());
@@ -390,54 +401,57 @@ public class BuiltInProviderInfoTest {
   @Test
   public void validatesTypesWhenInstantiatingFromStaticMethod()
       throws InterruptedException, EvalException {
-    Mutability mutability = Mutability.create("providertest");
-    Environment env =
-        Environment.builder(mutability)
-            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-            .setGlobals(
-                Environment.GlobalFrame.createForBuiltins(
-                    ImmutableMap.of(
-                        SomeInfoWithInstantiate.PROVIDER.getName(),
-                        SomeInfoWithInstantiate.PROVIDER)))
-            .build();
+    try (Mutability mutability = Mutability.create("providertest")) {
+      Environment env =
+          Environment.builder(mutability)
+              .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
+              .setGlobals(
+                  Environment.GlobalFrame.createForBuiltins(
+                      ImmutableMap.of(
+                          SomeInfoWithInstantiate.PROVIDER.getName(),
+                          SomeInfoWithInstantiate.PROVIDER)))
+              .build();
 
-    FuncallExpression ast =
-        new FuncallExpression(
-            new Identifier("SomeInfoWithInstantiate"),
-            ImmutableList.of(
-                new Argument.Keyword(
-                    new Identifier("my_info"), new StringLiteral("not a number"))));
+      FuncallExpression ast =
+          new FuncallExpression(
+              new Identifier("SomeInfoWithInstantiate"),
+              ImmutableList.of(
+                  new Argument.Keyword(
+                      new Identifier("my_info"), new StringLiteral("not a number"))));
 
-    thrown.expect(EvalException.class);
-    thrown.expectMessage("expected value of type 'int'");
-    ast.eval(env);
+      thrown.expect(EvalException.class);
+      thrown.expectMessage("expected value of type 'int'");
+      ast.eval(env);
+    }
   }
 
   @Test
   public void passesLocationWhenInstantiatingFromStaticMethod()
       throws InterruptedException, EvalException {
-    Mutability mutability = Mutability.create("providertest");
     Location location =
         Location.fromPathAndStartColumn(
             PathFragment.create("foo/bar.bzl"), 0, 0, new Location.LineAndColumn(1, 1));
+    Object o;
+    try (Mutability mutability = Mutability.create("providertest")) {
 
-    Environment env =
-        Environment.builder(mutability)
-            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-            .setGlobals(
-                Environment.GlobalFrame.createForBuiltins(
-                    ImmutableMap.of(
-                        SomeInfoWithInstantiateAndLocation.PROVIDER.getName(),
-                        SomeInfoWithInstantiateAndLocation.PROVIDER)))
-            .build();
+      Environment env =
+          Environment.builder(mutability)
+              .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
+              .setGlobals(
+                  Environment.GlobalFrame.createForBuiltins(
+                      ImmutableMap.of(
+                          SomeInfoWithInstantiateAndLocation.PROVIDER.getName(),
+                          SomeInfoWithInstantiateAndLocation.PROVIDER)))
+              .build();
 
-    Object o =
-        BuildFileAST.parseSkylarkFileWithoutImports(
-                ParserInputSource.create(
-                    "SomeInfoWithInstantiateAndLocation(my_info=1)",
-                    PathFragment.create("foo/bar.bzl")),
-                env.getEventHandler())
-            .eval(env);
+      o =
+          BuildFileAST.parseSkylarkFileWithoutImports(
+                  ParserInputSource.create(
+                      "SomeInfoWithInstantiateAndLocation(my_info=1)",
+                      PathFragment.create("foo/bar.bzl")),
+                  env.getEventHandler())
+              .eval(env);
+    }
 
     assertThat(o, Matchers.instanceOf(SomeInfoWithInstantiateAndLocation.class));
     SomeInfoWithInstantiateAndLocation someInfo = (SomeInfoWithInstantiateAndLocation) o;
@@ -449,32 +463,33 @@ public class BuiltInProviderInfoTest {
 
   @Test
   public void allowsNoneAsAParamToStaticMethod() throws InterruptedException, EvalException {
-    Mutability mutability = Mutability.create("providertest");
+    try (Mutability mutability = Mutability.create("providertest")) {
 
-    Environment env =
-        Environment.builder(mutability)
-            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-            .setGlobals(
-                Environment.GlobalFrame.createForBuiltins(
-                    ImmutableMap.of(
-                        SomeInfoWithNoneable.PROVIDER.getName(),
-                        SomeInfoWithNoneable.PROVIDER,
-                        "None",
-                        Runtime.NONE)))
-            .build();
+      Environment env =
+          Environment.builder(mutability)
+              .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
+              .setGlobals(
+                  Environment.GlobalFrame.createForBuiltins(
+                      ImmutableMap.of(
+                          SomeInfoWithNoneable.PROVIDER.getName(),
+                          SomeInfoWithNoneable.PROVIDER,
+                          "None",
+                          Runtime.NONE)))
+              .build();
 
-    Object none = BuildFileAST.eval(env, "SomeInfoWithNoneable(noneable_val=None, val=1)");
-    Object strValue = BuildFileAST.eval(env, "SomeInfoWithNoneable(noneable_val=\"foo\", val=1)");
+      Object none = BuildFileAST.eval(env, "SomeInfoWithNoneable(noneable_val=None, val=1)");
+      Object strValue = BuildFileAST.eval(env, "SomeInfoWithNoneable(noneable_val=\"foo\", val=1)");
 
-    assertThat(none, Matchers.instanceOf(SomeInfoWithNoneable.class));
-    assertThat(strValue, Matchers.instanceOf(SomeInfoWithNoneable.class));
+      assertThat(none, Matchers.instanceOf(SomeInfoWithNoneable.class));
+      assertThat(strValue, Matchers.instanceOf(SomeInfoWithNoneable.class));
 
-    assertEquals(Runtime.NONE, ((SomeInfoWithNoneable) none).noneableVal());
-    assertEquals("foo", ((SomeInfoWithNoneable) strValue).noneableVal());
+      assertEquals(Runtime.NONE, ((SomeInfoWithNoneable) none).noneableVal());
+      assertEquals("foo", ((SomeInfoWithNoneable) strValue).noneableVal());
 
-    thrown.expect(EvalException.class);
-    thrown.expectMessage("cannot be None");
-    BuildFileAST.eval(env, "SomeInfoWithNoneable(noneable_val=None, val=None)");
+      thrown.expect(EvalException.class);
+      thrown.expectMessage("cannot be None");
+      BuildFileAST.eval(env, "SomeInfoWithNoneable(noneable_val=None, val=None)");
+    }
   }
 
   @Test

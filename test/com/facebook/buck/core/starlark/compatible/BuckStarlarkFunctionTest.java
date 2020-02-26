@@ -108,21 +108,22 @@ public class BuckStarlarkFunctionTest {
           }
         };
 
-    Mutability mutability = Mutability.create("test");
-    Environment env =
-        Environment.builder(mutability)
-            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-            .setGlobals(
-                Environment.GlobalFrame.createForBuiltins(
-                    ImmutableMap.of(function.getMethodDescriptor().getName(), function)))
-            .build();
+    try (Mutability mutability = Mutability.create("test")) {
+      Environment env =
+          Environment.builder(mutability)
+              .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
+              .setGlobals(
+                  Environment.GlobalFrame.createForBuiltins(
+                      ImmutableMap.of(function.getMethodDescriptor().getName(), function)))
+              .build();
 
-    FuncallExpression ast =
-        new FuncallExpression(
-            new Identifier("toStr"),
-            ImmutableList.of(new Argument.Keyword(new Identifier("num"), new IntegerLiteral(1))));
+      FuncallExpression ast =
+          new FuncallExpression(
+              new Identifier("toStr"),
+              ImmutableList.of(new Argument.Keyword(new Identifier("num"), new IntegerLiteral(1))));
 
-    assertEquals("1", ast.eval(env));
+      assertEquals("1", ast.eval(env));
+    }
   }
 
   @Test
@@ -135,21 +136,22 @@ public class BuckStarlarkFunctionTest {
           }
         };
 
-    Mutability mutability = Mutability.create("test");
-    Environment env =
-        Environment.builder(mutability)
-            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-            .setGlobals(
-                Environment.GlobalFrame.createForBuiltins(
-                    ImmutableMap.of(function.getMethodDescriptor().getName(), function)))
-            .build();
+    try (Mutability mutability = Mutability.create("test")) {
+      Environment env =
+          Environment.builder(mutability)
+              .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
+              .setGlobals(
+                  Environment.GlobalFrame.createForBuiltins(
+                      ImmutableMap.of(function.getMethodDescriptor().getName(), function)))
+              .build();
 
-    FuncallExpression ast =
-        new FuncallExpression(
-            new Identifier("toStr"),
-            ImmutableList.of(new Argument.Keyword(new Identifier("num"), new IntegerLiteral(1))));
+      FuncallExpression ast =
+          new FuncallExpression(
+              new Identifier("toStr"),
+              ImmutableList.of(new Argument.Keyword(new Identifier("num"), new IntegerLiteral(1))));
 
-    assertEquals("1", ast.eval(env));
+      assertEquals("1", ast.eval(env));
+    }
   }
 
   @Test
@@ -165,33 +167,34 @@ public class BuckStarlarkFunctionTest {
           }
         };
 
-    Mutability mutability = Mutability.create("test");
-    Environment env =
-        Environment.builder(mutability)
-            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-            .setGlobals(
-                Environment.GlobalFrame.createForBuiltins(
-                    ImmutableMap.of(function.getMethodDescriptor().getName(), function)))
-            .build();
+    try (Mutability mutability = Mutability.create("test")) {
+      Environment env =
+          Environment.builder(mutability)
+              .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
+              .setGlobals(
+                  Environment.GlobalFrame.createForBuiltins(
+                      ImmutableMap.of(function.getMethodDescriptor().getName(), function)))
+              .build();
 
-    FuncallExpression ast =
-        new FuncallExpression(
-            new Identifier("myFoo"),
-            ImmutableList.of(
-                new Argument.Positional(new IntegerLiteral(100)),
-                new Argument.Keyword(new Identifier("numNoDefault"), new IntegerLiteral(10))));
+      FuncallExpression ast =
+          new FuncallExpression(
+              new Identifier("myFoo"),
+              ImmutableList.of(
+                  new Argument.Positional(new IntegerLiteral(100)),
+                  new Argument.Keyword(new Identifier("numNoDefault"), new IntegerLiteral(10))));
 
-    assertEquals("111", ast.eval(env));
+      assertEquals("111", ast.eval(env));
 
-    ast =
-        new FuncallExpression(
-            new Identifier("myFoo"),
-            ImmutableList.of(
-                new Argument.Positional(new IntegerLiteral(100)),
-                new Argument.Keyword(new Identifier("numNoDefault"), new IntegerLiteral(10)),
-                new Argument.Keyword(new Identifier("numWithDefault"), new IntegerLiteral(5))));
+      ast =
+          new FuncallExpression(
+              new Identifier("myFoo"),
+              ImmutableList.of(
+                  new Argument.Positional(new IntegerLiteral(100)),
+                  new Argument.Keyword(new Identifier("numNoDefault"), new IntegerLiteral(10)),
+                  new Argument.Keyword(new Identifier("numWithDefault"), new IntegerLiteral(5))));
 
-    assertEquals("115", ast.eval(env));
+      assertEquals("115", ast.eval(env));
+    }
   }
 
   @Test
@@ -235,26 +238,30 @@ public class BuckStarlarkFunctionTest {
           }
         };
 
-    Mutability mutability = Mutability.create("test");
-    Environment env =
-        Environment.builder(mutability)
-            .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-            .setGlobals(
-                Environment.GlobalFrame.createForBuiltins(
-                    ImmutableMap.of(
-                        function.getMethodDescriptor().getName(), function, "None", Runtime.NONE)))
-            .build();
+    try (Mutability mutability = Mutability.create("test")) {
+      Environment env =
+          Environment.builder(mutability)
+              .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
+              .setGlobals(
+                  Environment.GlobalFrame.createForBuiltins(
+                      ImmutableMap.of(
+                          function.getMethodDescriptor().getName(),
+                          function,
+                          "None",
+                          Runtime.NONE)))
+              .build();
 
-    Object none = BuildFileAST.eval(env, "withNone(noneable=None, non_noneable=1)[1]");
-    Object defaultNone = BuildFileAST.eval(env, "withNone(non_noneable=1)[1]");
-    Object nonNull = BuildFileAST.eval(env, "withNone(noneable=2, non_noneable=1)[1]");
+      Object none = BuildFileAST.eval(env, "withNone(noneable=None, non_noneable=1)[1]");
+      Object defaultNone = BuildFileAST.eval(env, "withNone(non_noneable=1)[1]");
+      Object nonNull = BuildFileAST.eval(env, "withNone(noneable=2, non_noneable=1)[1]");
 
-    assertEquals(Runtime.NONE, none);
-    assertEquals(Runtime.NONE, defaultNone);
-    assertEquals(2, nonNull);
+      assertEquals(Runtime.NONE, none);
+      assertEquals(Runtime.NONE, defaultNone);
+      assertEquals(2, nonNull);
 
-    expectedException.expect(EvalException.class);
-    expectedException.expectMessage("cannot be None");
-    BuildFileAST.eval(env, "withNone(noneable=2, non_noneable=None)[1]");
+      expectedException.expect(EvalException.class);
+      expectedException.expectMessage("cannot be None");
+      BuildFileAST.eval(env, "withNone(noneable=2, non_noneable=None)[1]");
+    }
   }
 }
