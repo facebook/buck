@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.util.Optional;
 
 /** Immutable implementation of {@link UnconfiguredTargetNode}. */
 @BuckStylePrehashedValue
@@ -55,6 +56,10 @@ public abstract class ImmutableUnconfiguredTargetNode implements UnconfiguredTar
   public abstract ImmutableSet<VisibilityPattern> getWithinViewPatterns();
 
   @Override
+  @JsonProperty("defaultTargetPlatform")
+  public abstract Optional<UnconfiguredBuildTarget> getDefaultTargetPlatform();
+
+  @Override
   @JsonProperty("compatibleWith")
   public abstract ImmutableList<UnconfiguredBuildTarget> getCompatibleWith();
 
@@ -64,8 +69,15 @@ public abstract class ImmutableUnconfiguredTargetNode implements UnconfiguredTar
       ImmutableMap<String, Object> attributes,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
       ImmutableSet<VisibilityPattern> withinViewPatterns,
+      Optional<UnconfiguredBuildTarget> defaultTargetPlatform,
       ImmutableList<UnconfiguredBuildTarget> compatibleWith) {
     return ImmutableImmutableUnconfiguredTargetNode.of(
-        buildTarget, ruleType, attributes, visibilityPatterns, withinViewPatterns, compatibleWith);
+        buildTarget,
+        ruleType,
+        attributes,
+        visibilityPatterns,
+        withinViewPatterns,
+        defaultTargetPlatform,
+        compatibleWith);
   }
 }

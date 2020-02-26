@@ -26,7 +26,6 @@ import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransfo
 import com.facebook.buck.core.model.platform.impl.ThrowingPlatformResolver;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
-import com.facebook.buck.core.model.tc.factory.TargetConfigurationFactory;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rules.config.impl.ConfigurationRuleSelectableResolver;
@@ -225,9 +224,7 @@ public class PerBuildStateFactory {
             "nonresolving_raw_target_node_parse_pipeline",
             enableSpeculativeParsing,
             nonResolvingRawTargetNodeToTargetNodeFactory,
-            parserConfig.getRequireTargetPlatform(),
-            new TargetConfigurationFactory(
-                unconfiguredBuildTargetFactory, cells.getRootCell().getCellPathResolver()));
+            parserConfig.getRequireTargetPlatform());
 
     ConfigurationRuleRegistry configurationRuleRegistry =
         ConfigurationRuleRegistryFactory.createRegistry(
@@ -280,9 +277,7 @@ public class PerBuildStateFactory {
             "configured_raw_target_node_parse_pipeline",
             enableSpeculativeParsing,
             unconfiguredTargetNodeToTargetNodeFactory,
-            parserConfig.getRequireTargetPlatform(),
-            new TargetConfigurationFactory(
-                unconfiguredBuildTargetFactory, cells.getRootCell().getCellPathResolver())) {
+            parserConfig.getRequireTargetPlatform()) {
           @Override
           public void close() {
             super.close();

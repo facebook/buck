@@ -98,6 +98,7 @@ public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputationTe
             rawAttributes1,
             ImmutableSet.of(),
             ImmutableSet.of(),
+            Optional.empty(),
             ImmutableList.of());
 
     UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation computation =

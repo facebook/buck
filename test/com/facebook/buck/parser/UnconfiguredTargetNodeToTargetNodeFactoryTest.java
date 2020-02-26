@@ -117,6 +117,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactoryTest {
             attributes,
             ImmutableSet.of(),
             ImmutableSet.of(),
+            Optional.empty(),
             ImmutableList.of());
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     BuildTarget selectableTarget = ConfigurationBuildTargetFactoryForTests.newInstance("//x:y");

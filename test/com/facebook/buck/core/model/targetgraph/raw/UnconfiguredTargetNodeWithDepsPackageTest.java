@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Optional;
 import org.junit.Test;
 
 public class UnconfiguredTargetNodeWithDepsPackageTest {
@@ -60,6 +61,7 @@ public class UnconfiguredTargetNodeWithDepsPackageTest {
             rawAttributes1,
             ImmutableSet.of(),
             ImmutableSet.of(),
+            Optional.empty(),
             ImmutableList.of());
 
     ImmutableMap<String, Object> rawAttributes2 =
@@ -75,6 +77,7 @@ public class UnconfiguredTargetNodeWithDepsPackageTest {
             rawAttributes2,
             ImmutableSet.of(),
             ImmutableSet.of(),
+            Optional.empty(),
             ImmutableList.of());
 
     UnconfiguredTargetNodeWithDeps unconfiguredTargetNodeWithDeps1 =

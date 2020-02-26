@@ -102,6 +102,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
             rawAttributes1,
             ImmutableSet.of(),
             ImmutableSet.of(),
+            Optional.empty(),
             ImmutableList.of());
 
     ImmutableMap<String, Object> rawAttributes2 =
@@ -119,6 +120,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
             rawAttributes2,
             ImmutableSet.of(),
             ImmutableSet.of(),
+            Optional.empty(),
             ImmutableList.of());
 
     BuildFileManifest buildFileManifest =

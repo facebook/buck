@@ -50,6 +50,7 @@ import com.google.common.reflect.TypeToken;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Creates {@link UnconfiguredTargetNode} instances from raw data coming in form the {@link
@@ -63,6 +64,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
   private final SelectorListFactory selectorListFactory;
   private final TypeCoercerFactory typeCoercerFactory;
   private final TypeCoercer<ImmutableList<UnconfiguredBuildTarget>, ?> compatibleWithCoercer;
+  private final TypeCoercer<UnconfiguredBuildTarget, ?> defaultTargetPlatformCoercer;
 
   public DefaultUnconfiguredTargetNodeFactory(
       KnownRuleTypesProvider knownRuleTypesProvider,
@@ -80,6 +82,10 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
             .typeCoercerForType(new TypeToken<ImmutableList<UnconfiguredBuildTarget>>() {})
             .checkUnconfiguredAssignableTo(
                 new TypeToken<ImmutableList<UnconfiguredBuildTarget>>() {});
+    this.defaultTargetPlatformCoercer =
+        typeCoercerFactory
+            .typeCoercerForType(TypeToken.of(UnconfiguredBuildTarget.class))
+            .checkUnconfiguredAssignableTo(TypeToken.of(UnconfiguredBuildTarget.class));
   }
 
   private ImmutableMap<String, Object> convertSelects(
@@ -185,6 +191,22 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
         convertSelects(
             target, descriptor, rawAttributes, target.getCellRelativeBasePath(), dependencyStack);
 
+    Optional<UnconfiguredBuildTarget> defaultTargetPlatform = Optional.empty();
+    Object rawDefaultTargetPlatform = rawAttributes.get("defaultTargetPlatform");
+    if (rawDefaultTargetPlatform != null && !rawDefaultTargetPlatform.equals("")) {
+      try {
+        defaultTargetPlatform =
+            Optional.of(
+                defaultTargetPlatformCoercer.coerceToUnconfigured(
+                    cell.getCellNameResolver(),
+                    cell.getFilesystem(),
+                    target.getCellRelativeBasePath().getPath(),
+                    rawDefaultTargetPlatform));
+      } catch (CoerceFailedException e) {
+        throw new HumanReadableException(dependencyStack, e.getMessage(), e);
+      }
+    }
+
     ImmutableList<UnconfiguredBuildTarget> compatibleWith = ImmutableList.of();
 
     // TODO(nga): UDR populate `compatible_with` while native rules populate `compatibleWith`
@@ -209,6 +231,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
         withSelects,
         visibilityPatterns,
         withinViewPatterns,
+        defaultTargetPlatform,
         compatibleWith);
   }
 

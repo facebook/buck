@@ -17,13 +17,14 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.HumanReadableExceptions;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
+import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
@@ -31,7 +32,6 @@ import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
-import com.facebook.buck.core.model.tc.factory.TargetConfigurationFactory;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
@@ -77,7 +77,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
       allNodeCache = new ConcurrentHashMap<>();
   private final Scope perfEventScope;
   private final SimplePerfEvent.PerfEventId perfEventId;
-  private final TargetConfigurationFactory targetConfigurationFactory;
+
   /**
    * minimum duration time for performance events to be logged (for use with {@link
    * SimplePerfEvent}s). This is on the base class to make it simpler to enable verbose tracing for
@@ -95,15 +95,13 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
       String pipelineName,
       boolean speculativeDepsTraversal,
       ParserTargetNodeFromUnconfiguredTargetNodeFactory rawTargetNodeToTargetNodeFactory,
-      boolean requireTargetPlatform,
-      TargetConfigurationFactory targetConfigurationFactory) {
+      boolean requireTargetPlatform) {
     this.executorService = executorService;
     this.unconfiguredTargetNodePipeline = unconfiguredTargetNodePipeline;
     this.targetConfigurationDetector = targetConfigurationDetector;
     this.speculativeDepsTraversal = speculativeDepsTraversal;
     this.rawTargetNodeToTargetNodeFactory = rawTargetNodeToTargetNodeFactory;
     this.requireTargetPlatform = requireTargetPlatform;
-    this.targetConfigurationFactory = targetConfigurationFactory;
     this.minimumPerfEventTimeMs = LOG.isVerboseEnabled() ? 0 : 10;
     this.perfEventScope =
         SimplePerfEvent.scope(eventBus, SimplePerfEvent.PerfEventId.of(pipelineName));
@@ -321,14 +319,11 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
     }
 
     // We use `default_target_platform` only when global platform is not specified
-    String defaultTargetPlatform =
-        (String)
-            unconfiguredTargetNode
-                .getAttributes()
-                .get(BuildRuleArg.DEFAULT_TARGET_PLATFORM_PARAM_NAME);
-    if (defaultTargetPlatform != null && !defaultTargetPlatform.isEmpty()) {
-      return targetConfigurationFactory.createForBaseName(
-          unconfiguredTarget.getBaseName(), defaultTargetPlatform);
+    Optional<UnconfiguredBuildTarget> defaultTargetPlatform =
+        unconfiguredTargetNode.getDefaultTargetPlatform();
+    if (defaultTargetPlatform.isPresent()) {
+      return RuleBasedTargetConfiguration.of(
+          ConfigurationBuildTargets.convert(defaultTargetPlatform.get()));
     }
 
     // Use detector when neither global configuration is specified

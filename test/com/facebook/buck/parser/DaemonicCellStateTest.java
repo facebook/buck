@@ -111,6 +111,7 @@ public class DaemonicCellStateTest {
         ImmutableMap.of(),
         ImmutableSet.of(),
         ImmutableSet.of(),
+        Optional.empty(),
         ImmutableList.of());
   }
 
