@@ -214,26 +214,21 @@ public class Machos {
 
     map.position(symbolTableOffset);
 
+    boolean is64bit = header.getIs64Bit();
     Map<byte[], byte[]> replacementPathMap = generateReplacementMap(cellRoots);
     Map<Integer, Integer> strings = new HashMap<>();
     for (int i = 0; i < symbolTableCount; i++) {
+      // Each LC_SYMTAB entry consists of the following fields:
+      // - String Index: 4 bytes (offset into the string table)
+      // - Type: 1 byte
+      // - Section: 1 byte
+      // - Description: 2 bytes
+      // - Value: 8 bytes on 64bit, 4 bytes on 32bit
       int stringTableIndexPosition = map.position();
       int stringTableIndex = ObjectFileScrubbers.getLittleEndianInt(map);
       byte type = map.get();
-      /* section */ map.get();
-      /* description */ ObjectFileScrubbers.getLittleEndianShort(map);
-      int valuePosition = map.position();
-      if (header.getIs64Bit()) {
-        /* value */ ObjectFileScrubbers.getLittleEndianLong(map);
-      } else {
-        /* value */ ObjectFileScrubbers.getLittleEndianInt(map);
-      }
-      if (stringTableIndex < 2) {
-        continue;
-      }
 
-      int position = map.position();
-      try {
+      if (stringTableIndex >= 2) {
         int newStringTableIndex;
         if (strings.containsKey(stringTableIndex)) {
           newStringTableIndex = strings.get(stringTableIndex);
@@ -248,9 +243,10 @@ public class Machos {
               charByteBuffer = maybeRewrittenCharByteBuffer.get();
             }
 
+            int valuePosition = stringTableIndexPosition + 8;
             map.position(valuePosition);
             int lastModifiedValue = ObjectFileCommonModificationDate.COMMON_MODIFICATION_TIME_STAMP;
-            if (header.getIs64Bit()) {
+            if (is64bit) {
               ObjectFileScrubbers.putLittleEndianLong(map, lastModifiedValue);
             } else {
               ObjectFileScrubbers.putLittleEndianInt(map, lastModifiedValue);
@@ -265,9 +261,11 @@ public class Machos {
         }
         map.position(stringTableIndexPosition);
         ObjectFileScrubbers.putLittleEndianInt(map, newStringTableIndex);
-      } finally {
-        map.position(position);
       }
+
+      int symtabEntrySize = 4 + 1 + 1 + 2 + (is64bit ? 8 : 4);
+      int nextSymtabEntryOffset = stringTableIndexPosition + symtabEntrySize;
+      map.position(nextSymtabEntryOffset);
     }
 
     map.position(stringTableSizePosition);
