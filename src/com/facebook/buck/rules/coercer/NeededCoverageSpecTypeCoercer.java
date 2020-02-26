@@ -19,6 +19,7 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.reflect.TypeToken;
@@ -29,12 +30,12 @@ import java.util.Optional;
 /** A type coercer to handle needed coverage specification for python_test. */
 public class NeededCoverageSpecTypeCoercer implements TypeCoercer<Object, NeededCoverageSpec> {
   private final TypeCoercer<Integer, Integer> intTypeCoercer;
-  private final TypeCoercer<Object, BuildTarget> buildTargetTypeCoercer;
+  private final TypeCoercer<UnconfiguredBuildTarget, BuildTarget> buildTargetTypeCoercer;
   private final TypeCoercer<String, String> pathNameTypeCoercer;
 
   NeededCoverageSpecTypeCoercer(
       TypeCoercer<Integer, Integer> intTypeCoercer,
-      TypeCoercer<Object, BuildTarget> buildTargetTypeCoercer,
+      TypeCoercer<UnconfiguredBuildTarget, BuildTarget> buildTargetTypeCoercer,
       TypeCoercer<String, String> pathNameTypeCoercer) {
     this.intTypeCoercer = intTypeCoercer;
     this.buildTargetTypeCoercer = buildTargetTypeCoercer;
@@ -105,7 +106,7 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<Object, Needed
                 object,
                 iter.next());
         BuildTarget buildTarget =
-            buildTargetTypeCoercer.coerce(
+            buildTargetTypeCoercer.coerceBoth(
                 cellNameResolver,
                 filesystem,
                 pathRelativeToProjectRoot,

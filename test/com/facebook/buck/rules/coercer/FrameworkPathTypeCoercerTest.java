@@ -21,6 +21,7 @@ import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -32,7 +33,7 @@ import org.junit.Test;
 
 public class FrameworkPathTypeCoercerTest {
 
-  private final TypeCoercer<Object, BuildTarget> buildTargetTypeCoercer =
+  private final TypeCoercer<UnconfiguredBuildTarget, BuildTarget> buildTargetTypeCoercer =
       new BuildTargetTypeCoercer(
           new UnconfiguredBuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetViewFactory()));
   private final TypeCoercer<Object, BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer =

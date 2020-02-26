@@ -87,7 +87,8 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
 
   private final CoercedTypeCache coercedTypeCache = new CoercedTypeCache(this);
 
-  private final TypeCoercer<Object, UnconfiguredBuildTarget> unconfiguredBuildTargetTypeCoercer;
+  private final TypeCoercer<UnconfiguredBuildTarget, UnconfiguredBuildTarget>
+      unconfiguredBuildTargetTypeCoercer;
   private final TypeCoercer<Object, Pattern> patternTypeCoercer = new PatternTypeCoercer();
 
   private final TypeCoercer<Object, ?>[] nonParameterizedTypeCoercers;
@@ -105,7 +106,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
     unconfiguredBuildTargetFactory = new ParsingUnconfiguredBuildTargetViewFactory();
     unconfiguredBuildTargetTypeCoercer =
         new UnconfiguredBuildTargetTypeCoercer(unconfiguredBuildTargetFactory);
-    TypeCoercer<Object, BuildTarget> buildTargetTypeCoercer =
+    BuildTargetTypeCoercer buildTargetTypeCoercer =
         new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer);
     TypeCoercer<Object, BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer =
         new BuildTargetWithOutputsTypeCoercer(buildTargetTypeCoercer);
@@ -123,8 +124,8 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
             intTypeCoercer, buildTargetTypeCoercer, stringTypeCoercer);
     TypeCoercer<Object, Query> queryTypeCoercer =
         new QueryCoercer(this, unconfiguredBuildTargetFactory);
-    TypeCoercer<ImmutableList<Object>, ImmutableList<BuildTarget>> buildTargetsTypeCoercer =
-        new ListTypeCoercer<>(buildTargetTypeCoercer);
+    TypeCoercer<ImmutableList<UnconfiguredBuildTarget>, ImmutableList<BuildTarget>>
+        buildTargetsTypeCoercer = new ListTypeCoercer<>(buildTargetTypeCoercer);
     TypeCoercer<Object, CxxLinkGroupMappingTarget.Traversal> linkGroupMappingTraversalCoercer =
         new CxxLinkGroupMappingTargetTraversalCoercer();
     TypeCoercer<Object, CxxLinkGroupMappingTarget> linkGroupMappingTargetCoercer =

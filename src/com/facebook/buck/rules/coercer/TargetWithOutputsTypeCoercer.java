@@ -30,9 +30,9 @@ import java.util.function.BiFunction;
  * resulting object is of type U.
  */
 abstract class TargetWithOutputsTypeCoercer<T, U> extends LeafTypeCoercer<U> {
-  private final TypeCoercer<Object, T> coercer;
+  private final TypeCoercer<?, T> coercer;
 
-  TargetWithOutputsTypeCoercer(TypeCoercer<Object, T> coercer) {
+  TargetWithOutputsTypeCoercer(TypeCoercer<?, T> coercer) {
     this.coercer = coercer;
   }
 
@@ -48,7 +48,7 @@ abstract class TargetWithOutputsTypeCoercer<T, U> extends LeafTypeCoercer<U> {
       BuildTargetOutputLabelParser.TargetWithOutputLabel targetWithOutputLabel =
           BuildTargetOutputLabelParser.getBuildTargetNameWithOutputLabel((String) object);
       T coerced =
-          coercer.coerce(
+          coercer.coerceBoth(
               params.getCellNameResolver(),
               params.getFilesystem(),
               params.getPathRelativeToProjectRoot(),

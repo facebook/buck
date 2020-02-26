@@ -51,7 +51,7 @@ public class BuildTargetTypeCoercerTest {
   public void canCoerceAnUnflavoredFullyQualifiedTarget() throws CoerceFailedException {
     BuildTarget seen =
         new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer)
-            .coerce(
+            .coerceBoth(
                 createCellRoots(filesystem).getCellNameResolver(),
                 filesystem,
                 basePath,
@@ -67,7 +67,7 @@ public class BuildTargetTypeCoercerTest {
     thrown.expect(CoerceFailedException.class);
     thrown.expectMessage(containsString("Unable to find the target //foo::bar."));
     new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer)
-        .coerce(
+        .coerceBoth(
             createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             basePath,
@@ -80,7 +80,7 @@ public class BuildTargetTypeCoercerTest {
   public void shouldCoerceAShortTarget() throws CoerceFailedException {
     BuildTarget seen =
         new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer)
-            .coerce(
+            .coerceBoth(
                 createCellRoots(filesystem).getCellNameResolver(),
                 filesystem,
                 basePath,
@@ -95,7 +95,7 @@ public class BuildTargetTypeCoercerTest {
   public void shouldCoerceATargetWithASingleFlavor() throws CoerceFailedException {
     BuildTarget seen =
         new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer)
-            .coerce(
+            .coerceBoth(
                 createCellRoots(filesystem).getCellNameResolver(),
                 filesystem,
                 basePath,
@@ -110,7 +110,7 @@ public class BuildTargetTypeCoercerTest {
   public void shouldCoerceMultipleFlavors() throws CoerceFailedException {
     BuildTarget seen =
         new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer)
-            .coerce(
+            .coerceBoth(
                 createCellRoots(filesystem).getCellNameResolver(),
                 filesystem,
                 basePath,
@@ -125,7 +125,7 @@ public class BuildTargetTypeCoercerTest {
   public void shouldCoerceAShortTargetWithASingleFlavor() throws CoerceFailedException {
     BuildTarget seen =
         new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer)
-            .coerce(
+            .coerceBoth(
                 createCellRoots(filesystem).getCellNameResolver(),
                 filesystem,
                 basePath,

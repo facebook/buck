@@ -30,7 +30,7 @@ public class UnconfiguredBuildTargetWithOutputsTypeCoercer
         UnconfiguredBuildTarget, UnconfiguredBuildTargetWithOutputs> {
 
   public UnconfiguredBuildTargetWithOutputsTypeCoercer(
-      TypeCoercer<Object, UnconfiguredBuildTarget> buildtargetTypeCoercer) {
+      TypeCoercer<?, UnconfiguredBuildTarget> buildtargetTypeCoercer) {
     super(buildtargetTypeCoercer);
   }
 

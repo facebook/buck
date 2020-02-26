@@ -19,6 +19,7 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.CxxGenruleFilterAndTargetsMacro;
@@ -34,14 +35,15 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercer<M extends CxxGenruleFilt
     implements MacroTypeCoercer<M> {
 
   private final Optional<TypeCoercer<Object, Pattern>> patternTypeCoercer;
-  private final TypeCoercer<ImmutableList<Object>, ImmutableList<BuildTarget>>
+  private final TypeCoercer<ImmutableList<UnconfiguredBuildTarget>, ImmutableList<BuildTarget>>
       buildTargetsTypeCoercer;
   private final Class<M> clazz;
   private final BiFunction<Optional<Pattern>, ImmutableList<BuildTarget>, M> factory;
 
   public CxxGenruleFilterAndTargetsMacroTypeCoercer(
       Optional<TypeCoercer<Object, Pattern>> patternTypeCoercer,
-      TypeCoercer<ImmutableList<Object>, ImmutableList<BuildTarget>> buildTargetsTypeCoercer,
+      TypeCoercer<ImmutableList<UnconfiguredBuildTarget>, ImmutableList<BuildTarget>>
+          buildTargetsTypeCoercer,
       Class<M> clazz,
       BiFunction<Optional<Pattern>, ImmutableList<BuildTarget>, M> factory) {
     this.patternTypeCoercer = patternTypeCoercer;

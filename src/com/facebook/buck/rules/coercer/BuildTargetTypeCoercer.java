@@ -24,12 +24,16 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.reflect.TypeToken;
 
-public class BuildTargetTypeCoercer extends LeafTypeCoercer<BuildTarget> {
+/** Coerce to {@link com.facebook.buck.core.model.BuildTarget}. */
+public class BuildTargetTypeCoercer
+    extends LeafTypeNewCoercer<UnconfiguredBuildTarget, BuildTarget> {
 
-  private final TypeCoercer<Object, UnconfiguredBuildTarget> unconfiguredBuildTargetTypeCoercer;
+  private final TypeCoercer<UnconfiguredBuildTarget, UnconfiguredBuildTarget>
+      unconfiguredBuildTargetTypeCoercer;
 
   public BuildTargetTypeCoercer(
-      TypeCoercer<Object, UnconfiguredBuildTarget> unconfiguredBuildTargetTypeCoercer) {
+      TypeCoercer<UnconfiguredBuildTarget, UnconfiguredBuildTarget>
+          unconfiguredBuildTargetTypeCoercer) {
     this.unconfiguredBuildTargetTypeCoercer = unconfiguredBuildTargetTypeCoercer;
   }
 
@@ -39,26 +43,33 @@ public class BuildTargetTypeCoercer extends LeafTypeCoercer<BuildTarget> {
   }
 
   @Override
+  public TypeToken<UnconfiguredBuildTarget> getUnconfiguredType() {
+    return TypeToken.of(UnconfiguredBuildTarget.class);
+  }
+
+  @Override
+  public UnconfiguredBuildTarget coerceToUnconfigured(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      Object object)
+      throws CoerceFailedException {
+    if (!(object instanceof String)) {
+      throw CoerceFailedException.simple(object, getOutputType());
+    }
+    return unconfiguredBuildTargetTypeCoercer.coerceToUnconfigured(
+        cellRoots, filesystem, pathRelativeToProjectRoot, object);
+  }
+
+  @Override
   public BuildTarget coerce(
       CellNameResolver cellRoots,
       ProjectFilesystem alsoUnused,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       TargetConfiguration hostConfiguration,
-      Object object)
+      UnconfiguredBuildTarget object)
       throws CoerceFailedException {
-    if (!(object instanceof String)) {
-      throw CoerceFailedException.simple(object, getOutputType());
-    }
-
-    return unconfiguredBuildTargetTypeCoercer
-        .coerce(
-            cellRoots,
-            alsoUnused,
-            pathRelativeToProjectRoot,
-            targetConfiguration,
-            hostConfiguration,
-            object)
-        .configure(targetConfiguration);
+    return object.configure(targetConfiguration);
   }
 }

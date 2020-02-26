@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -41,7 +42,7 @@ public class CxxLinkGroupMappingTargetCoercerTest {
       TypeCoercer<Object, CxxLinkGroupMappingTarget.Traversal> traversalTypeCoercer) {
     UnconfiguredBuildTargetTypeCoercer unconfigured =
         new UnconfiguredBuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetViewFactory());
-    TypeCoercer<Object, BuildTarget> buildTargetTypeCoercer =
+    TypeCoercer<UnconfiguredBuildTarget, BuildTarget> buildTargetTypeCoercer =
         new BuildTargetTypeCoercer(unconfigured);
     return new CxxLinkGroupMappingTargetCoercer(
         buildTargetTypeCoercer, traversalTypeCoercer, new PatternTypeCoercer());

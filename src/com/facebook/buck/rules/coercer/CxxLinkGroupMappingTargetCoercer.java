@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.reflect.TypeToken;
@@ -35,14 +36,14 @@ import java.util.regex.Pattern;
  */
 public class CxxLinkGroupMappingTargetCoercer
     implements TypeCoercer<Object, CxxLinkGroupMappingTarget> {
-  private final TypeCoercer<Object, BuildTarget> buildTargetTypeCoercer;
+  private final TypeCoercer<UnconfiguredBuildTarget, BuildTarget> buildTargetTypeCoercer;
   private final TypeCoercer<Object, CxxLinkGroupMappingTarget.Traversal> traversalCoercer;
   private final TypeCoercer<Object, Pattern> patternTypeCoercer;
 
   private static final String LABEL_REGEX_PREFIX = "label:";
 
   public CxxLinkGroupMappingTargetCoercer(
-      TypeCoercer<Object, BuildTarget> buildTargetTypeCoercer,
+      TypeCoercer<UnconfiguredBuildTarget, BuildTarget> buildTargetTypeCoercer,
       TypeCoercer<Object, CxxLinkGroupMappingTarget.Traversal> traversalCoercer,
       TypeCoercer<Object, Pattern> patternTypeCoercer) {
     this.buildTargetTypeCoercer = buildTargetTypeCoercer;
@@ -101,7 +102,7 @@ public class CxxLinkGroupMappingTargetCoercer
       if (2 <= collection.size() && collection.size() <= 3) {
         Object[] objects = collection.toArray();
         BuildTarget buildTarget =
-            buildTargetTypeCoercer.coerce(
+            buildTargetTypeCoercer.coerceBoth(
                 cellRoots,
                 filesystem,
                 pathRelativeToProjectRoot,
