@@ -1,0 +1,53 @@
+load("//build_rules:csharp_binary.bzl", "csharp_binary")
+
+SYSTEM_DEPS = [
+    "mscorlib.dll",
+    "System.Data.dll",
+    "System.Core.dll",
+]
+
+FRAMEWORK = "net45"
+
+# Simple binary without any dependencies
+csharp_binary(
+    name = "simple_bin",
+    srcs = ["SimpleBin.cs"],
+    system_assemblies = ["mscorlib.dll"],
+)
+
+# Uses CSharpLibrary that is built into Buck
+csharp_library(
+    name = "lib1",
+    srcs = ["Lib1.cs"],
+    framework_ver = FRAMEWORK,
+    deps = SYSTEM_DEPS,
+)
+
+csharp_library(
+    name = "lib2",
+    srcs = ["Lib2.cs"],
+    framework_ver = FRAMEWORK,
+    deps = SYSTEM_DEPS,
+)
+
+csharp_binary(
+    name = "main",
+    deps = [
+        ":lib1",
+        ":lib2",
+    ],
+    srcs = ["Program.cs"],
+)
+
+csharp_binary(
+    name = "alternate",
+    deps = [
+        ":lib1",
+        ":lib2",
+        ":program",
+        ":alternate_program",
+    ],
+    srcs = ["Program.cs", "AlternateProgram.cs"],
+    # Need to specify 'main' because we have two Main classes
+    main = "ConsoleApp1.AlternateProgram",
+)

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.features.dotnet;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
@@ -205,5 +206,54 @@ public class CsharpLibraryIntegrationTest {
       patchedEnv.put("PATH", String.format("%s;%s", cscExe.getParent(), defaultEnv.get("PATH")));
       return ImmutableMap.copyOf(patchedEnv);
     }
+  }
+
+  @Test
+  public void cSharpBinaryRuns() throws IOException {
+    setUp("csharp_udr");
+
+    assumeTrue(ruleAnalysisComputationMode != RuleAnalysisComputationMode.DISABLED);
+
+    String result1 =
+        workspace
+            .runBuckCommand(env, "run", "//csharp_binary/src:simple_bin", "--", "foo", "bar baz")
+            .assertSuccess()
+            .getStdout();
+
+    String result2 =
+        workspace
+            .runBuckCommand(
+                env,
+                "run",
+                "//csharp_binary/src:main",
+                "--",
+                "format_string_1: {0}",
+                "<replacement>")
+            .assertSuccess()
+            .getStdout();
+    String result3 =
+        workspace
+            .runBuckCommand(
+                env,
+                "run",
+                "//csharp_binary/src:alternate",
+                "--",
+                "format_string_1: {0}",
+                "<replacement>")
+            .assertSuccess()
+            .getStdout();
+
+    assertEquals(
+        ImmutableList.of("foo", "bar baz"), ImmutableList.copyOf(result1.trim().split("\\r?\\n")));
+    assertEquals(
+        ImmutableList.of(
+            "Lib1.format: format_string_1: <replacement>",
+            "Lib2.format: format_string_1: <replacement>"),
+        ImmutableList.copyOf(result2.trim().split("\\r?\\n")));
+    assertEquals(
+        ImmutableList.of(
+            "Lib2.format: format_string_1: <replacement>",
+            "Lib1.format: format_string_1: <replacement>"),
+        ImmutableList.copyOf(result3.trim().split("\\r?\\n")));
   }
 }

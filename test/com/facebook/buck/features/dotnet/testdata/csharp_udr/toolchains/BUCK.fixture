@@ -1,0 +1,7 @@
+# Expose a target that describes the built-in .NET toolchain that can be used
+# in csharp_binary. Configurations here are loaded from .buckconfig
+legacy_toolchain(
+    name = "dotnet",
+    toolchain_name = "dotnet-toolchain",
+    visibility = ["PUBLIC"],
+)
