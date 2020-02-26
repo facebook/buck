@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.reflect.TypeParameter;
 import com.google.common.reflect.TypeToken;
+import java.util.Collection;
 
 /** Coerce to {@link com.google.common.collect.ImmutableSortedSet}. */
 public class SortedSetTypeCoercer<U, T extends Comparable<? super T>>
@@ -53,6 +54,7 @@ public class SortedSetTypeCoercer<U, T extends Comparable<? super T>>
     return typeTokenUnconfigured;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public ImmutableList<U> coerceToUnconfigured(
       CellNameResolver cellRoots,
@@ -60,9 +62,28 @@ public class SortedSetTypeCoercer<U, T extends Comparable<? super T>>
       ForwardRelativePath pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
-    ImmutableList.Builder<U> builder = ImmutableList.builder();
-    fillUnconfigured(cellRoots, filesystem, pathRelativeToProjectRoot, builder, object);
-    return builder.build();
+    if (object instanceof Collection) {
+      boolean identity = true;
+
+      ImmutableList.Builder<U> builder = ImmutableList.builder();
+      for (Object element : (Collection<?>) object) {
+        // if any element failed, the entire collection fails
+        U coercedElement =
+            elementTypeCoercer.coerceToUnconfigured(
+                cellRoots, filesystem, pathRelativeToProjectRoot, element);
+        builder.add(coercedElement);
+
+        identity &= element == coercedElement;
+      }
+
+      if (identity && object instanceof ImmutableList<?>) {
+        return (ImmutableList<U>) object;
+      }
+
+      return builder.build();
+    } else {
+      throw CoerceFailedException.simple(object, getOutputType().getType());
+    }
   }
 
   @Override
