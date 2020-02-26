@@ -188,15 +188,6 @@ public class ObjectFileScrubbers {
     dest.put((byte) 0x0); // NULL terminating character
   }
 
-  /** Reads a NULL-terminated string from a byte buffer. */
-  public static String getAsciiString(byte[] buffer, int startPosition) {
-    int nullCharPosition = startPosition;
-    while (buffer[nullCharPosition] != 0x0) {
-      nullCharPosition++;
-    }
-    return new String(buffer, startPosition, nullCharPosition - startPosition, Charsets.US_ASCII);
-  }
-
   private static void putSpaceLeftPaddedString(ByteBuffer buffer, int len, String value) {
     Preconditions.checkState(value.length() <= len);
     value = Strings.padStart(value, len, ' ');

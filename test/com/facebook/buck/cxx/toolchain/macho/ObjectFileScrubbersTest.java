@@ -17,11 +17,21 @@
 package com.facebook.buck.cxx.toolchain.macho;
 
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.cxx.toolchain.objectfile.Machos;
 import com.facebook.buck.cxx.toolchain.objectfile.ObjectFileScrubbers;
+import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableMap;
 import java.nio.ByteBuffer;
+import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.Optional;
 import org.junit.Test;
 
 public class ObjectFileScrubbersTest {
@@ -83,7 +93,7 @@ public class ObjectFileScrubbersTest {
 
   @Test
   public void getCStringBufferNonEmptyString() {
-    byte[] stringBytes = "TestString".getBytes();
+    byte[] stringBytes = "TestString".getBytes(Charsets.UTF_8);
     byte[] nullTermStringBytes = new byte[stringBytes.length + 1];
     System.arraycopy(stringBytes, 0, nullTermStringBytes, 0, stringBytes.length);
     nullTermStringBytes[stringBytes.length] = 0x0;
@@ -109,7 +119,7 @@ public class ObjectFileScrubbersTest {
 
   @Test
   public void putCStringBufferNonEmptyString() {
-    byte[] stringBytes = "TestString".getBytes();
+    byte[] stringBytes = "TestString".getBytes(Charsets.UTF_8);
     byte[] nullTermStringBytes = new byte[stringBytes.length + 1];
     ObjectFileScrubbers.putCharByteBuffer(
         ByteBuffer.wrap(nullTermStringBytes), 0, ByteBuffer.wrap(stringBytes));
@@ -129,5 +139,96 @@ public class ObjectFileScrubbersTest {
 
     // Check that terminating NULL char exists
     assertThat(nullTermStringBytes[0], equalTo((byte) 0));
+  }
+
+  @Test
+  public void emptyReplacementValue() {
+    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+
+    Map<byte[], byte[]> map =
+        Machos.generateReplacementMap(ImmutableMap.of(Paths.get("/Users/fb/repo"), Paths.get("")));
+    assertThat(map.size(), equalTo(1));
+
+    byte[] expectedSearchPrefix = "/Users/fb/repo/".getBytes(Charsets.UTF_8);
+    byte[] expectedReplacementPrefix = "./".getBytes(Charsets.UTF_8);
+
+    Map.Entry<byte[], byte[]> mapEntry = map.entrySet().iterator().next();
+    assertThat(expectedSearchPrefix, equalTo(mapEntry.getKey()));
+    assertThat(expectedReplacementPrefix, equalTo(mapEntry.getValue()));
+  }
+
+  @Test
+  public void nonEmptyReplacementValue() {
+    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+
+    Map<byte[], byte[]> map =
+        Machos.generateReplacementMap(
+            ImmutableMap.of(Paths.get("/Users/fb/repo/cell"), Paths.get("cell")));
+    assertThat(map.size(), equalTo(1));
+
+    byte[] expectedSearchPrefix = "/Users/fb/repo/cell/".getBytes(Charsets.UTF_8);
+    byte[] expectedReplacementPrefix = "cell/".getBytes(Charsets.UTF_8);
+
+    Map.Entry<byte[], byte[]> mapEntry = map.entrySet().iterator().next();
+    assertThat(expectedSearchPrefix, equalTo(mapEntry.getKey()));
+    assertThat(expectedReplacementPrefix, equalTo(mapEntry.getValue()));
+  }
+
+  @Test
+  public void rewriteMatchingEmptyPath() {
+    // Due to Unix vs Windows path separators
+    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+
+    byte[] stringBytes = makeNullTerminatedCString("/Users/fb/repo/cell");
+    Map<byte[], byte[]> replacementMap =
+        Machos.generateReplacementMap(ImmutableMap.of(Paths.get("/Users/fb/repo"), Paths.get("")));
+
+    Optional<ByteBuffer> rewrittenBuffer =
+        Machos.tryRewritingMatchingPath(stringBytes, 0, replacementMap);
+    assertTrue(rewrittenBuffer.isPresent());
+
+    String rewrittenPath = new String(rewrittenBuffer.get().array());
+    assertThat(rewrittenPath, equalTo("./cell"));
+  }
+
+  @Test
+  public void rewriteMatchingNonEmptyPath() {
+    // Due to Unix vs Windows path separators
+    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+
+    byte[] stringBytes = makeNullTerminatedCString("/Users/fb/repo/cell/folder");
+    Map<byte[], byte[]> replacementMap =
+        Machos.generateReplacementMap(
+            ImmutableMap.of(Paths.get("/Users/fb/repo/cell"), Paths.get("cell")));
+
+    Optional<ByteBuffer> rewrittenBuffer =
+        Machos.tryRewritingMatchingPath(stringBytes, 0, replacementMap);
+    assertTrue(rewrittenBuffer.isPresent());
+
+    String rewrittenPath = new String(rewrittenBuffer.get().array());
+    assertThat(rewrittenPath, equalTo("cell/folder"));
+  }
+
+  @Test
+  public void rewriteNonMatchingNonEmptyPath() {
+    // Due to Unix vs Windows path separators
+    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+
+    byte[] stringBytes = makeNullTerminatedCString("/Users/fb/repo/cell/folder");
+    Map<byte[], byte[]> replacementMap =
+        Machos.generateReplacementMap(
+            ImmutableMap.of(Paths.get("/Users/fb/repo/cell2"), Paths.get("cell2")));
+
+    Optional<ByteBuffer> rewrittenBuffer =
+        Machos.tryRewritingMatchingPath(stringBytes, 0, replacementMap);
+    assertFalse(rewrittenBuffer.isPresent());
+  }
+
+  private static byte[] makeNullTerminatedCString(String string) {
+    byte[] stringBytes = string.getBytes(Charsets.UTF_8);
+    byte[] nullTermStringBytes = new byte[stringBytes.length + 1];
+    System.arraycopy(stringBytes, 0, nullTermStringBytes, 0, stringBytes.length);
+    nullTermStringBytes[stringBytes.length] = 0x0;
+    return nullTermStringBytes;
   }
 }
