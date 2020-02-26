@@ -21,6 +21,7 @@ import com.facebook.buck.core.rules.providers.ProviderInfo;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
 import com.facebook.buck.core.starlark.compatible.BuckSkylarkTypes;
+import com.facebook.buck.core.starlark.compatible.MutableObjectException;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.StarlarkContext;
@@ -103,6 +104,9 @@ public class ProviderInfoCollectionImpl implements ProviderInfoCollection {
 
     @Override
     public ProviderInfoCollection.Builder put(ProviderInfo<?> info) {
+      if (!info.isImmutable()) {
+        throw new MutableObjectException(info);
+      }
       mapBuilder.put(info.getProvider().getKey(), info);
       return this;
     }

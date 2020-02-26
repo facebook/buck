@@ -72,26 +72,31 @@ public class SkylarkDescription implements RuleDescriptionWithInstanceName<Skyla
       throws RuleAnalysisException, ActionCreationException {
     // TODO: BuildTarget should implement Label
 
-    try (Mutability mutability = Mutability.create("analysing target")) {
+    try {
+      Object implResult;
+      BaseFunction implementation;
       SkylarkRuleContext ctx =
           new SkylarkRuleContext(
               context,
               Label.parseAbsolute(target.getFullyQualifiedName(), ImmutableMap.of()),
               args.getCoercedAttrValues(context));
 
-      Environment env =
-          Environment.builder(mutability)
-              .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
-              .setEventHandler(
-                  new ConsoleEventHandler(
-                      context.getEventBus(),
-                      EventKind.ALL_EVENTS,
-                      ImmutableSet.of(),
-                      new HumanReadableExceptionAugmentor(ImmutableMap.of())))
-              .build();
+      try (Mutability mutability = Mutability.create("analysing target")) {
+        Environment env =
+            Environment.builder(mutability)
+                .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
+                .setEventHandler(
+                    new ConsoleEventHandler(
+                        context.getEventBus(),
+                        EventKind.ALL_EVENTS,
+                        ImmutableSet.of(),
+                        new HumanReadableExceptionAugmentor(ImmutableMap.of())))
+                .build();
 
-      BaseFunction implementation = args.getImplementation();
-      Object implResult = implementation.call(ImmutableList.of(ctx), ImmutableMap.of(), null, env);
+        implementation = args.getImplementation();
+
+        implResult = implementation.call(ImmutableList.of(ctx), ImmutableMap.of(), null, env);
+      }
 
       List<SkylarkProviderInfo> returnedProviders =
           SkylarkList.castSkylarkListOrNoneToList(implResult, SkylarkProviderInfo.class, null);
