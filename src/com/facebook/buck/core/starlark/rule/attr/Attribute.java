@@ -105,6 +105,7 @@ public abstract class Attribute<CoercedType> implements AttributeHolder {
    * @throws CoerceFailedException if the value is invalid (e.g. not in a list of pre-approved
    *     values)
    */
+  // TODO(nga): used only in tests
   protected void validateCoercedValue(CoercedType value) throws CoerceFailedException {}
 
   /**
@@ -126,6 +127,7 @@ public abstract class Attribute<CoercedType> implements AttributeHolder {
    * @param value The object that is to be coerced. This generally comes directly from the parser.
    * @throws CoerceFailedException if the value could not be coerced
    */
+  // TODO(nga): used only in tests
   public CoercedType getValue(
       CellNameResolver cellNameResolver,
       ProjectFilesystem projectFilesystem,
