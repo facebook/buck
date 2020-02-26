@@ -129,7 +129,6 @@ public class KotlinLibraryIntegrationTest {
     workspace.writeContentsToPath(amendedBuckconfig, ".buckconfig");
   }
 
-  @Test
   public void shouldAnnotationProcessClassesUsingKapt() {
     ProcessResult buildResult =
         workspace.runBuckCommand(
