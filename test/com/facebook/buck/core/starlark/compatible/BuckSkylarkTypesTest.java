@@ -160,7 +160,7 @@ public class BuckSkylarkTypesTest {
       SkylarkList.MutableList<FakeMutableSkylarkObject> list =
           SkylarkList.MutableList.of(env.getEnv(), mutable);
 
-      thrown.expect(BuckSkylarkTypes.MutableObjectException.class);
+      thrown.expect(MutableObjectException.class);
       BuckSkylarkTypes.asDeepImmutable(list);
     }
   }
@@ -217,7 +217,7 @@ public class BuckSkylarkTypesTest {
       SkylarkDict<FakeMutableSkylarkObject, String> dict =
           SkylarkDict.of(env.getEnv(), new FakeMutableSkylarkObject(), "foo");
 
-      thrown.expect(BuckSkylarkTypes.MutableObjectException.class);
+      thrown.expect(MutableObjectException.class);
       BuckSkylarkTypes.asDeepImmutable(dict);
     }
   }
@@ -228,20 +228,20 @@ public class BuckSkylarkTypesTest {
       SkylarkDict<String, FakeMutableSkylarkObject> dict =
           SkylarkDict.of(env.getEnv(), "foo", new FakeMutableSkylarkObject());
 
-      thrown.expect(BuckSkylarkTypes.MutableObjectException.class);
+      thrown.expect(MutableObjectException.class);
       BuckSkylarkTypes.asDeepImmutable(dict);
     }
   }
 
   @Test
   public void asDeepImmutableFailsIfMutableValueIsPassedThatCannotBeMadeImmutable() {
-    thrown.expect(BuckSkylarkTypes.MutableObjectException.class);
+    thrown.expect(MutableObjectException.class);
     BuckSkylarkTypes.asDeepImmutable(new FakeMutableSkylarkObject());
   }
 
   @Test
   public void asDeepImmutableFailsIfNonSkylarkValueNonPrimitiveTypeIsPassed() {
-    thrown.expect(BuckSkylarkTypes.MutableObjectException.class);
+    thrown.expect(MutableObjectException.class);
     BuckSkylarkTypes.asDeepImmutable(ImmutableList.of());
   }
 

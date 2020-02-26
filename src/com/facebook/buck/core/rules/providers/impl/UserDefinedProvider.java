@@ -18,6 +18,7 @@ package com.facebook.buck.core.rules.providers.impl;
 
 import com.facebook.buck.core.rules.providers.Provider;
 import com.facebook.buck.core.starlark.compatible.BuckSkylarkTypes;
+import com.facebook.buck.core.starlark.compatible.MutableObjectException;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
@@ -135,7 +136,7 @@ public class UserDefinedProvider extends BaseFunction
     for (int i = 0; i < fieldNames.size(); i++) {
       try {
         builder.put(fieldNames.get(i), BuckSkylarkTypes.asDeepImmutable(args[i]));
-      } catch (BuckSkylarkTypes.MutableObjectException e) {
+      } catch (MutableObjectException e) {
         throw new EvalException(
             location,
             String.format(

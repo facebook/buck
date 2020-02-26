@@ -88,26 +88,6 @@ public class BuckSkylarkTypes {
   }
 
   /**
-   * Thrown when trying to construct an Immutable Skylark object from a Mutable one (that cannot be
-   * made immutable. i.e. it is not a list or dictionary)
-   */
-  public static class MutableObjectException extends RuntimeException {
-    private final Object mutableObject;
-
-    MutableObjectException(Object mutableObject) {
-      this.mutableObject = mutableObject;
-    }
-
-    /**
-     * @return the object that is mutable. This can be useful when the mutable object was deep in a
-     *     hierarchy
-     */
-    public Object getMutableObject() {
-      return mutableObject;
-    }
-  }
-
-  /**
    * Attempt to get a deeply immutable instance of a value passed in from Skylark
    *
    * <p>Note that if mutable objects are passed in (namely {@link SkylarkList} or {@link
