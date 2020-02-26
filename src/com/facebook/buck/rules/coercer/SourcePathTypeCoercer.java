@@ -30,11 +30,11 @@ import java.nio.file.Path;
 /** Coerce to {@link com.facebook.buck.core.sourcepath.SourcePath}. */
 public class SourcePathTypeCoercer extends LeafTypeNewCoercer<String, SourcePath> {
   private final TypeCoercer<Object, BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer;
-  private final TypeCoercer<Object, Path> pathTypeCoercer;
+  private final TypeCoercer<Path, Path> pathTypeCoercer;
 
   public SourcePathTypeCoercer(
       TypeCoercer<Object, BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer,
-      TypeCoercer<Object, Path> pathTypeCoercer) {
+      TypeCoercer<Path, Path> pathTypeCoercer) {
     this.buildTargetWithOutputsTypeCoercer = buildTargetWithOutputsTypeCoercer;
     this.pathTypeCoercer = pathTypeCoercer;
   }
@@ -84,7 +84,7 @@ public class SourcePathTypeCoercer extends LeafTypeNewCoercer<String, SourcePath
       return DefaultBuildTargetSourcePath.of(buildTargetWithOutputs);
     } else {
       Path path =
-          pathTypeCoercer.coerce(
+          pathTypeCoercer.coerceBoth(
               cellRoots,
               filesystem,
               pathRelativeToProjectRoot,

@@ -107,7 +107,7 @@ public class TargetNodeTest {
             "appleSource",
             Optional.of("//example/path:five"),
             "source",
-            Optional.of("AnotherClass.java"));
+            Optional.of(Paths.get("example/path/AnotherClass.java")));
 
     TargetNode<ExampleDescriptionArg> targetNode =
         createTargetNode(

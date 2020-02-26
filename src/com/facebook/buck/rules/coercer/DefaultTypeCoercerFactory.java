@@ -110,7 +110,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
         new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer);
     TypeCoercer<Object, BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer =
         new BuildTargetWithOutputsTypeCoercer(buildTargetTypeCoercer);
-    TypeCoercer<Object, Path> pathTypeCoercer = new PathTypeCoercer();
+    TypeCoercer<Path, Path> pathTypeCoercer = new PathTypeCoercer();
     TypeCoercer<String, SourcePath> sourcePathTypeCoercer =
         new SourcePathTypeCoercer(buildTargetWithOutputsTypeCoercer, pathTypeCoercer);
     TypeCoercer<Object, SourceWithFlags> sourceWithFlagsTypeCoercer =

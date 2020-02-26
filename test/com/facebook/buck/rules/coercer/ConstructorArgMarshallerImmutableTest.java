@@ -83,7 +83,6 @@ import org.junit.rules.ExpectedException;
 public class ConstructorArgMarshallerImmutableTest {
 
   public static final BuildTarget TARGET = BuildTargetFactory.newInstance("//example/path:three");
-  private Path basePath;
   private ConstructorArgMarshaller marshaller;
   private ProjectFilesystem filesystem;
 
@@ -91,7 +90,6 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @Before
   public void setUpInspector() {
-    basePath = Paths.get("example", "path");
     marshaller = new DefaultConstructorArgMarshaller();
     filesystem = new FakeProjectFilesystem();
   }
@@ -179,14 +177,6 @@ public class ConstructorArgMarshallerImmutableTest {
   }
 
   @Test
-  public void shouldPopulateAPathValue() throws Exception {
-    DtoWithPath built =
-        invokePopulate(DtoWithPath.class, ImmutableMap.<String, Object>of("path", "Fish.java"));
-
-    assertEquals(Paths.get("example/path", "Fish.java"), built.getPath());
-  }
-
-  @Test
   public void shouldPopulateSourcePaths() throws Exception {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//example/path:peas");
@@ -218,18 +208,6 @@ public class ConstructorArgMarshallerImmutableTest {
                     t1.getUnconfiguredBuildTarget(), t2.getUnconfiguredBuildTarget())));
 
     assertEquals(ImmutableSortedSet.of(t2, t1), built.getStuff());
-  }
-
-  @Test
-  public void shouldPopulateSets() throws Exception {
-    DtoWithSetOfPaths built =
-        invokePopulate(
-            DtoWithSetOfPaths.class,
-            ImmutableMap.<String, Object>of("paths", ImmutableList.of("one", "two")));
-
-    assertEquals(
-        ImmutableSet.of(Paths.get("example/path/one"), Paths.get("example/path/two")),
-        built.getPaths());
   }
 
   @Test
@@ -328,15 +306,6 @@ public class ConstructorArgMarshallerImmutableTest {
   }
 
   @Test
-  public void shouldNormalizePaths() throws Exception {
-    DtoWithPath built =
-        invokePopulate(
-            DtoWithPath.class, ImmutableMap.<String, Object>of("path", "./bar/././fish.txt"));
-
-    assertEquals(basePath.resolve("bar/fish.txt").normalize(), built.getPath());
-  }
-
-  @Test
   public void shouldSetBuildTargetParameters() throws Exception {
     DtoWithBuildTargetList built =
         invokePopulate(
@@ -371,8 +340,8 @@ public class ConstructorArgMarshallerImmutableTest {
             .put("needed", true)
             // Skipping optional boolean.
             .put("aSrcPath", ":path")
-            .put("aPath", "./File.java")
-            .put("notAPath", Optional.of("./NotFile.java"))
+            .put("aPath", Paths.get("./File.java"))
+            .put("notAPath", Optional.of(Paths.get("example/path/NotFile.java")))
             .build();
     DtoWithVariousTypes built = invokePopulate(DtoWithVariousTypes.class, args);
 

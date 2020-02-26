@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.cache.CacheBuilder;
@@ -27,7 +26,8 @@ import com.google.common.reflect.TypeToken;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.nio.file.Path;
 
-public class PathTypeCoercer extends LeafTypeCoercer<Path> {
+/** Coerce to {@link java.nio.file.Path}. */
+public class PathTypeCoercer extends LeafUnconfiguredOnlyCoercer<Path> {
 
   private final LoadingCache<Path, LoadingCache<String, Path>> pathCache =
       CacheBuilder.newBuilder()
@@ -42,17 +42,15 @@ public class PathTypeCoercer extends LeafTypeCoercer<Path> {
                   }));
 
   @Override
-  public TypeToken<Path> getOutputType() {
+  public TypeToken<Path> getUnconfiguredType() {
     return TypeToken.of(Path.class);
   }
 
   @Override
-  public Path coerce(
+  public Path coerceToUnconfigured(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     if (object instanceof String) {
