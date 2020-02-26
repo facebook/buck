@@ -51,6 +51,12 @@ public class SetTypeCoercer<U, T>
   }
 
   @Override
+  public boolean unconfiguredToConfiguredCoercionIsIdentity() {
+    return elementTypeCoercer.unconfiguredToConfiguredCoercionIsIdentity();
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
   public ImmutableSet<T> coerce(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
@@ -59,6 +65,10 @@ public class SetTypeCoercer<U, T>
       TargetConfiguration hostConfiguration,
       ImmutableSet<U> object)
       throws CoerceFailedException {
+    if (unconfiguredToConfiguredCoercionIsIdentity()) {
+      return (ImmutableSet<T>) object;
+    }
+
     ImmutableSet.Builder<T> builder = ImmutableSet.builder();
     fillConfigured(
         cellRoots,

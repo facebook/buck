@@ -26,6 +26,11 @@ import com.google.common.reflect.TypeToken;
 public abstract class LeafUnconfiguredOnlyCoercer<T> extends LeafTypeNewCoercer<T, T> {
 
   @Override
+  public final boolean unconfiguredToConfiguredCoercionIsIdentity() {
+    return true;
+  }
+
+  @Override
   public final TypeToken<T> getOutputType() {
     return getUnconfiguredType();
   }
@@ -37,8 +42,7 @@ public abstract class LeafUnconfiguredOnlyCoercer<T> extends LeafTypeNewCoercer<
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       TargetConfiguration hostConfiguration,
-      T object)
-      throws CoerceFailedException {
+      T object) {
     return object;
   }
 }

@@ -56,6 +56,12 @@ public class ListTypeCoercer<U, T>
   }
 
   @Override
+  public boolean unconfiguredToConfiguredCoercionIsIdentity() {
+    return elementTypeCoercer.unconfiguredToConfiguredCoercionIsIdentity();
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
   public ImmutableList<T> coerce(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
@@ -64,6 +70,11 @@ public class ListTypeCoercer<U, T>
       TargetConfiguration hostConfiguration,
       ImmutableList<U> object)
       throws CoerceFailedException {
+
+    if (unconfiguredToConfiguredCoercionIsIdentity()) {
+      return (ImmutableList<T>) object;
+    }
+
     ImmutableList.Builder<T> builder = ImmutableList.builder();
     fillConfigured(
         cellRoots,

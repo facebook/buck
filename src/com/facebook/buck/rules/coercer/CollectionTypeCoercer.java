@@ -34,7 +34,7 @@ import java.util.Collection;
 public abstract class CollectionTypeCoercer<
         D extends ImmutableCollection<U>, C extends ImmutableCollection<T>, U, T>
     implements TypeCoercer<D, C> {
-  private final TypeCoercer<U, T> elementTypeCoercer;
+  protected final TypeCoercer<U, T> elementTypeCoercer;
 
   CollectionTypeCoercer(TypeCoercer<U, T> elementTypeCoercer) {
     this.elementTypeCoercer = elementTypeCoercer;

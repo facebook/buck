@@ -42,6 +42,14 @@ public interface TypeCoercer<U, T> extends Concatable<T> {
   TypeToken<U> getUnconfiguredType();
 
   /**
+   * {@link #coerce(CellNameResolver, ProjectFilesystem, ForwardRelativePath, TargetConfiguration,
+   * TargetConfiguration, Object)} must be no-op when this returns {@code true}.
+   */
+  default boolean unconfiguredToConfiguredCoercionIsIdentity() {
+    return false;
+  }
+
+  /**
    * Returns whether the leaf nodes of this type coercer outputs value that is an instance of the
    * given class or its subclasses. Does not match non-leaf nodes like Map or List.
    */

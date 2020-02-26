@@ -22,6 +22,7 @@ standard_java_test(
         "//src/com/facebook/buck/rules/macros:types",
         "//src/com/facebook/buck/versions:translator",
         "//test/com/facebook/buck/core/cell:testutil",
+        "//test/com/facebook/buck/core/cell/nameresolver:testutil",
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/rules/platform:testutil",
         "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
