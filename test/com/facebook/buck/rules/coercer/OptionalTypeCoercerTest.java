@@ -19,9 +19,11 @@ package com.facebook.buck.rules.coercer;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.cell.nameresolver.TestCellNameResolver;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -132,5 +134,22 @@ public class OptionalTypeCoercerTest {
                     Optional.of(ImmutableList.of("b", "a")),
                     Optional.of(ImmutableList.of("a", "c"))))
             .get());
+  }
+
+  @Test
+  public void coerceUnconfiguredToConfiguredOptimizedIdentity() throws Exception {
+    OptionalTypeCoercer<String, String> coercer =
+        new OptionalTypeCoercer<>(new StringTypeCoercer());
+
+    Optional<String> input = Optional.of("aaa");
+    Optional<String> coerced =
+        coercer.coerce(
+            TestCellNameResolver.forRoot(),
+            new FakeProjectFilesystem(),
+            ForwardRelativePath.EMPTY,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            input);
+    assertSame(input, coerced);
   }
 }

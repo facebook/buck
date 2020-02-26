@@ -69,6 +69,11 @@ public class OptionalTypeCoercer<U, T> implements TypeCoercer<Optional<U>, Optio
   }
 
   @Override
+  public boolean unconfiguredToConfiguredCoercionIsIdentity() {
+    return coercer.unconfiguredToConfiguredCoercionIsIdentity();
+  }
+
+  @Override
   public Optional<U> coerceToUnconfigured(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
@@ -82,6 +87,7 @@ public class OptionalTypeCoercer<U, T> implements TypeCoercer<Optional<U>, Optio
         coercer.coerceToUnconfigured(cellRoots, filesystem, pathRelativeToProjectRoot, object));
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public Optional<T> coerce(
       CellNameResolver cellRoots,
@@ -92,14 +98,18 @@ public class OptionalTypeCoercer<U, T> implements TypeCoercer<Optional<U>, Optio
       Optional<U> object)
       throws CoerceFailedException {
     if (object.isPresent()) {
-      return Optional.of(
+      T coerced =
           coercer.coerce(
               cellRoots,
               filesystem,
               pathRelativeToProjectRoot,
               targetConfiguration,
               hostConfiguration,
-              object.get()));
+              object.get());
+      if (coerced == object.get()) {
+        return (Optional<T>) object;
+      }
+      return Optional.of(coerced);
     } else {
       return Optional.empty();
     }
