@@ -50,6 +50,36 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class CsharpLibraryIntegrationTest {
 
+  private static final ImmutableList<String> UNIT_TEST_FRAMEWORK_PATHS =
+      ImmutableList.of(
+          "C:/Program Files (x86)/Microsoft Visual Studio/2017/Professional/Common7/IDE/PublicAssemblies/Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll");
+
+  private static final ImmutableList<String> VSTEST_RUNNER_PATHS =
+      ImmutableList.of(
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Professional\\Common7\\IDE\\CommonExtensions\\Microsoft\\TestWindow\\vstest.console.exe");
+
+  private Path assumeUnitTestRunner() {
+    return assumePathExists("Unit test runner in %s", VSTEST_RUNNER_PATHS);
+  }
+
+  private Path assumePathExists(String message, ImmutableList<String> paths) {
+    Optional<Path> foundPath = Optional.empty();
+    for (String pathString : paths) {
+      Path path = Paths.get(pathString);
+      if (Files.exists(path)) {
+        foundPath = Optional.of(path);
+        break;
+      }
+    }
+    assumeTrue(String.format(message, paths), foundPath.isPresent());
+    return foundPath.get();
+  }
+
+  private Path assumeUnitTestFramework() {
+    return assumePathExists(
+        "Expected UnitTestFramework.dll to exist in one of %s", UNIT_TEST_FRAMEWORK_PATHS);
+  }
+
   private static final ImmutableList<String> CSC_DIRS =
       ImmutableList.of(
           "C:/tools/toolchains/vs2017_15.5/BuildTools/MSBuild/15.0/Bin/Roslyn",
@@ -255,5 +285,34 @@ public class CsharpLibraryIntegrationTest {
             "Lib2.format: format_string_1: <replacement>",
             "Lib1.format: format_string_1: <replacement>"),
         ImmutableList.copyOf(result3.trim().split("\\r?\\n")));
+  }
+
+  @Test
+  public void cSharpTestRuns() throws IOException {
+    assumeTrue(ruleAnalysisComputationMode != RuleAnalysisComputationMode.DISABLED);
+    Path unitTestPath = assumeUnitTestFramework();
+    Path unitTestRunner = assumeUnitTestRunner();
+
+    setUp("csharp_udr");
+    workspace.writeContentsToPath(
+        String.format("\"%s\" %%*", unitTestRunner), "csharp/src/runner.bat");
+    Path testDllDest = workspace.resolve("src").resolve(unitTestPath.getFileName());
+
+    workspace.copyFile(unitTestPath.toString(), testDllDest.toString());
+
+    //    String result1 =
+
+    workspace.runBuckCommand(env, "test", "//csharp_test/src:failing").assertTestFailure();
+    workspace.runBuckCommand(env, "test", "//csharp_test/src:simple_passing").assertSuccess();
+
+    workspace
+        .runBuckCommand(
+            env,
+            "run",
+            "//csharp_test/src:alternate",
+            "--",
+            "format_string_1: {0}",
+            "<replacement>")
+        .assertSuccess();
   }
 }

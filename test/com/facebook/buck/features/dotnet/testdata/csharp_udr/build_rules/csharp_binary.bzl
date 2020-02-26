@@ -1,3 +1,5 @@
+load("//build_rules:csharp_binary.bzl", "csharp_compile")
+
 """
 Implementation of a simple C# binary that can use built in csharp_library() and
 prebuilt_dotnet_library() rules.
@@ -7,36 +9,21 @@ Add 'mscorlib.dll' to `system_assemblies` to get this behavior.
 """
 
 def _csharp_binary_impl(ctx):
-    # Make sure that all assemblies are copied over into the output dir that contains
-    # our exe. C# requires them to all be next to eachother at execution time
-    copied_assemblies = []
-    for dep in ctx.attr.deps:
-        assembly = dep[DotnetLibraryProviderInfo].dll
-        copied_assemblies.append(ctx.actions.copy_file(assembly, assembly.basename))
-
-    args = ctx.actions.args([
-        ctx.attr._toolchain[DotnetLegacyToolchainInfo].compiler,
-        "-deterministic",
-        "-target:exe",
-        "-nostdlib",
-    ])
-    if ctx.attr.optimize:
-        args.add("-optimize")
-    if ctx.attr.main:
-        args.add("-main:" + ctx.attr.main)
-    args.add_all(copied_assemblies, format = "-reference:%s")
-    args.add_all(ctx.attr.srcs)
-    args.add_all(ctx.attr.system_assemblies, format = "-reference:%s")
-
-    out_name = ctx.attr.out or ctx.attr.name + ".exe"
-    out = ctx.actions.declare_file(out_name)
-
-    args.add(out.as_output(), format = "-out:%s")
-    ctx.actions.run([args])
+    copied_artifacts, output_exe = csharp_compile(
+        ctx,
+        ctx.attr._toolchain[DotnetLegacyToolchainInfo],
+        ctx.attr.deps,
+        ctx.attr.system_assemblies,
+        ctx.attr.srcs,
+        ctx.attr.optimize,
+        "exe",
+        out_name,
+        ctx.attr.main,
+    )
 
     return [
-        DefaultInfo(named_outputs = {"dlls": copied_assemblies}, default_outputs = [out]),
-        RunInfo(env = {}, args = [out]),
+        DefaultInfo(named_outputs = {"dlls": copied_artifacts}, default_outputs = [output_exe]),
+        RunInfo(env = {}, args = [output_exe]),
     ]
 
 csharp_binary = rule(

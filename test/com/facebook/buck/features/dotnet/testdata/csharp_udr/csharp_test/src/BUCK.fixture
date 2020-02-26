@@ -1,0 +1,57 @@
+load("//build_rules:csharp_test.bzl", "csharp_test")
+
+SYSTEM_DEPS = [
+    "mscorlib.dll",
+    "System.Data.dll",
+    "System.Core.dll",
+]
+
+FRAMEWORK = "net45"
+
+prebuilt_dotnet_library(
+    name = "unit_test_framework",
+    # This is added by the buck test framework. See CsharpLibraryIntegrationTest
+    assembly = ["Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll"],
+)
+
+csharp_library(
+    name = "lib1",
+    srcs = ["Lib1.cs"],
+    framework_ver = FRAMEWORK,
+    deps = SYSTEM_DEPS,
+)
+
+csharp_library(
+    name = "lib2",
+    srcs = ["Lib2.cs"],
+    framework_ver = FRAMEWORK,
+    deps = SYSTEM_DEPS,
+)
+
+csharp_test(
+    name = "passing",
+    deps = [
+        ":lib1",
+        ":lib2",
+        ":unit_test_framework",
+    ],
+    srcs = ["Test.cs"],
+    # This is added by the buck test framework. See CsharpLibraryIntegrationTest
+    runner = "runner.bat",
+)
+
+csharp_test(
+    name = "simple_passing",
+    deps = [":unit_test_framework"],
+    srcs = ["SimpleTest.cs"],
+    # This is added by the buck test framework. See CsharpLibraryIntegrationTest
+    runner = "runner.bat",
+)
+
+csharp_test(
+    name = "failing",
+    deps = [":unit_test_framework"],
+    srcs = ["FailedTest.cs"],
+    # This is added by the buck test framework. See CsharpLibraryIntegrationTest
+    runner = "runner.bat",
+)
