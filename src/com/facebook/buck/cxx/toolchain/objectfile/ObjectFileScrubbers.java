@@ -171,6 +171,23 @@ public class ObjectFileScrubbers {
     return Shorts.fromBytes(b2, b1);
   }
 
+  /** Returned buffer does _not_ include NULL-terminating char. */
+  public static ByteBuffer getCharByteBuffer(byte[] bytes, int startPosition) {
+    int nullCharOffset = startPosition;
+    while (bytes[nullCharOffset] != 0x0) {
+      nullCharOffset++;
+    }
+
+    return ByteBuffer.wrap(bytes, startPosition, nullCharOffset - startPosition);
+  }
+
+  /** C string does _not_ include NULL-terminating char. */
+  public static void putCharByteBuffer(ByteBuffer dest, int position, ByteBuffer charByteBuffer) {
+    dest.position(position);
+    dest.put(charByteBuffer);
+    dest.put((byte) 0x0); // NULL terminating character
+  }
+
   /** Reads a NULL-terminated string from a byte buffer. */
   public static String getAsciiString(byte[] buffer, int startPosition) {
     int nullCharPosition = startPosition;
@@ -244,12 +261,6 @@ public class ObjectFileScrubbers {
     buffer.put(bytes1);
     buffer.put(bytes2);
     buffer.put(bytes3);
-  }
-
-  public static void putAsciiString(ByteBuffer buffer, String string) {
-    byte[] bytes = string.getBytes(Charsets.US_ASCII);
-    buffer.put(bytes);
-    buffer.put((byte) 0x00);
   }
 
   public static void checkArchive(boolean expression, String msg)

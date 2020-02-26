@@ -22,6 +22,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Ints;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
@@ -235,8 +236,12 @@ public class Machos {
         if (strings.containsKey(stringTableIndex)) {
           newStringTableIndex = strings.get(stringTableIndex);
         } else {
-          String string = ObjectFileScrubbers.getAsciiString(stringTableBytes, stringTableIndex);
+          ByteBuffer charByteBuffer =
+              ObjectFileScrubbers.getCharByteBuffer(stringTableBytes, stringTableIndex);
+
           if (type == N_OSO) {
+            String string = ObjectFileScrubbers.getAsciiString(stringTableBytes, stringTableIndex);
+
             for (Map.Entry<Path, Path> root : cellRoots.entrySet()) {
               String rootPrefix = root.getKey() + "/";
               if (string.startsWith(rootPrefix)) {
@@ -245,6 +250,7 @@ public class Machos {
                   replacementPrefix = ".";
                 }
                 string = replacementPrefix + "/" + string.substring(rootPrefix.length());
+                charByteBuffer = ByteBuffer.wrap(string.getBytes(Charsets.US_ASCII));
               }
             }
 
@@ -256,11 +262,12 @@ public class Machos {
               ObjectFileScrubbers.putLittleEndianInt(map, lastModifiedValue);
             }
           }
-          map.position(currentStringTableOffset);
-          ObjectFileScrubbers.putAsciiString(map, string);
+          ObjectFileScrubbers.putCharByteBuffer(map, currentStringTableOffset, charByteBuffer);
+
           newStringTableIndex = currentStringTableOffset - stringTableOffset;
-          currentStringTableOffset = map.position();
           strings.put(stringTableIndex, newStringTableIndex);
+
+          currentStringTableOffset = map.position();
         }
         map.position(stringTableIndexPosition);
         ObjectFileScrubbers.putLittleEndianInt(map, newStringTableIndex);

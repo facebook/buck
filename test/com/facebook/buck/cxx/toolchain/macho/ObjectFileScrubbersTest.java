@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cxx.toolchain.objectfile.ObjectFileScrubbers;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import org.junit.Test;
 
 public class ObjectFileScrubbersTest {
@@ -78,5 +79,55 @@ public class ObjectFileScrubbersTest {
     assertThat(buffer[1], equalTo((byte) 0xFA));
     assertThat(buffer[2], equalTo((byte) 0xED));
     assertThat(buffer[3], equalTo((byte) 0xFE));
+  }
+
+  @Test
+  public void getCStringBufferNonEmptyString() {
+    byte[] stringBytes = "TestString".getBytes();
+    byte[] nullTermStringBytes = new byte[stringBytes.length + 1];
+    System.arraycopy(stringBytes, 0, nullTermStringBytes, 0, stringBytes.length);
+    nullTermStringBytes[stringBytes.length] = 0x0;
+
+    // Check that length of returned string is equal to length of input string
+    ByteBuffer cStringBuffer = ObjectFileScrubbers.getCharByteBuffer(nullTermStringBytes, 0);
+    assertThat(cStringBuffer.limit(), equalTo(stringBytes.length));
+
+    // Check that chars of returned string and input string are the same
+    byte[] rawBytes = new byte[cStringBuffer.limit()];
+    cStringBuffer.get(rawBytes);
+    assertThat(stringBytes, equalTo(rawBytes));
+  }
+
+  @Test
+  public void getCStringBufferEmptyString() {
+    byte[] emptyString = new byte[] {0x0};
+    ByteBuffer cStringBuffer = ObjectFileScrubbers.getCharByteBuffer(emptyString, 0);
+
+    // Check that length of returned string is zero
+    assertThat(cStringBuffer.limit(), equalTo(0));
+  }
+
+  @Test
+  public void putCStringBufferNonEmptyString() {
+    byte[] stringBytes = "TestString".getBytes();
+    byte[] nullTermStringBytes = new byte[stringBytes.length + 1];
+    ObjectFileScrubbers.putCharByteBuffer(
+        ByteBuffer.wrap(nullTermStringBytes), 0, ByteBuffer.wrap(stringBytes));
+
+    // Check string chars were written into the buffer
+    assertThat(
+        Arrays.copyOfRange(nullTermStringBytes, 0, stringBytes.length), equalTo(stringBytes));
+    // Check that string chars are terminated by a NULL char
+    assertThat(nullTermStringBytes[stringBytes.length], equalTo((byte) 0));
+  }
+
+  @Test
+  public void putCStringBufferEmptyString() {
+    byte[] nullTermStringBytes = new byte[1];
+    ObjectFileScrubbers.putCharByteBuffer(
+        ByteBuffer.wrap(nullTermStringBytes), 0, ByteBuffer.allocate(0));
+
+    // Check that terminating NULL char exists
+    assertThat(nullTermStringBytes[0], equalTo((byte) 0));
   }
 }
