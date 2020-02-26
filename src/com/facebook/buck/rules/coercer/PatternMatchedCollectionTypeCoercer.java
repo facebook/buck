@@ -32,12 +32,12 @@ import javax.annotation.Nullable;
 public class PatternMatchedCollectionTypeCoercer<T>
     implements TypeCoercer<Object, PatternMatchedCollection<T>> {
 
-  TypeCoercer<Object, Pattern> patternTypeCoercer;
-  TypeCoercer<Object, T> valueTypeCoercer;
+  TypeCoercer<?, Pattern> patternTypeCoercer;
+  TypeCoercer<?, T> valueTypeCoercer;
   private final TypeToken<PatternMatchedCollection<T>> typeToken;
 
   public PatternMatchedCollectionTypeCoercer(
-      TypeCoercer<Object, Pattern> patternTypeCoercer, TypeCoercer<Object, T> valueTypeCoercer) {
+      TypeCoercer<?, Pattern> patternTypeCoercer, TypeCoercer<?, T> valueTypeCoercer) {
     this.patternTypeCoercer = patternTypeCoercer;
     this.valueTypeCoercer = valueTypeCoercer;
     this.typeToken =
@@ -106,7 +106,7 @@ public class PatternMatchedCollectionTypeCoercer<T>
       }
       Iterator<?> pair = ((Collection<?>) element).iterator();
       Pattern platformSelector =
-          patternTypeCoercer.coerce(
+          patternTypeCoercer.coerceBoth(
               cellRoots,
               filesystem,
               pathRelativeToProjectRoot,
@@ -114,7 +114,7 @@ public class PatternMatchedCollectionTypeCoercer<T>
               hostConfiguration,
               pair.next());
       T value =
-          valueTypeCoercer.coerce(
+          valueTypeCoercer.coerceBoth(
               cellRoots,
               filesystem,
               pathRelativeToProjectRoot,

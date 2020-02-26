@@ -31,7 +31,7 @@ public class MapTypeCoercerTest {
 
   @Test
   public void testConcatProducesMergedMaps() {
-    MapTypeCoercer<String, String> coercer =
+    MapTypeCoercer<?, ?, String, String> coercer =
         new MapTypeCoercer<>(new StringTypeCoercer(), new StringTypeCoercer());
 
     assertEquals(
@@ -45,7 +45,7 @@ public class MapTypeCoercerTest {
 
   @Test
   public void testConcatThrowsExceptionWithDuplicateKeys() {
-    MapTypeCoercer<String, String> coercer =
+    MapTypeCoercer<?, ?, String, String> coercer =
         new MapTypeCoercer<>(new StringTypeCoercer(), new StringTypeCoercer());
 
     thrown.expect(HumanReadableException.class);

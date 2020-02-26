@@ -21,6 +21,7 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.reflect.TypeToken;
@@ -28,12 +29,15 @@ import java.util.List;
 
 public class SourceSortedSetTypeCoercer extends SourceSortedSetConcatable
     implements TypeCoercer<Object, SourceSortedSet> {
-  private final TypeCoercer<Object, ImmutableSortedSet<SourcePath>> unnamedHeadersTypeCoercer;
-  private final TypeCoercer<Object, ImmutableSortedMap<String, SourcePath>> namedHeadersTypeCoercer;
+  private final TypeCoercer<ImmutableList<String>, ImmutableSortedSet<SourcePath>>
+      unnamedHeadersTypeCoercer;
+  private final TypeCoercer<
+          ImmutableSortedMap<String, String>, ImmutableSortedMap<String, SourcePath>>
+      namedHeadersTypeCoercer;
 
   SourceSortedSetTypeCoercer(
-      TypeCoercer<Object, String> stringTypeCoercer,
-      TypeCoercer<Object, SourcePath> sourcePathTypeCoercer) {
+      TypeCoercer<String, String> stringTypeCoercer,
+      TypeCoercer<String, SourcePath> sourcePathTypeCoercer) {
     this.unnamedHeadersTypeCoercer = new SortedSetTypeCoercer<>(sourcePathTypeCoercer);
     this.namedHeadersTypeCoercer =
         new SortedMapTypeCoercer<>(stringTypeCoercer, sourcePathTypeCoercer);
@@ -88,7 +92,7 @@ public class SourceSortedSetTypeCoercer extends SourceSortedSetConcatable
       throws CoerceFailedException {
     if (object instanceof List) {
       return SourceSortedSet.ofUnnamedSources(
-          unnamedHeadersTypeCoercer.coerce(
+          unnamedHeadersTypeCoercer.coerceBoth(
               cellRoots,
               filesystem,
               pathRelativeToProjectRoot,
@@ -97,7 +101,7 @@ public class SourceSortedSetTypeCoercer extends SourceSortedSetConcatable
               object));
     } else {
       return SourceSortedSet.ofNamedSources(
-          namedHeadersTypeCoercer.coerce(
+          namedHeadersTypeCoercer.coerceBoth(
               cellRoots,
               filesystem,
               pathRelativeToProjectRoot,

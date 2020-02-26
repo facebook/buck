@@ -17,38 +17,28 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.reflect.TypeToken;
 
-/** Coercer that just expect JSON type is already what we expect. */
-public class IdentityTypeCoercer<T> extends LeafUnconfiguredOnlyCoercer<T> {
-  private TypeToken<T> type;
+/** Second phase coercion is identity. */
+public abstract class LeafUnconfiguredOnlyCoercer<T> extends LeafTypeNewCoercer<T, T> {
 
-  public IdentityTypeCoercer(TypeToken<T> type) {
-    this.type = type;
-  }
-
-  public IdentityTypeCoercer(Class<T> type) {
-    this(TypeToken.of(type));
+  @Override
+  public final TypeToken<T> getOutputType() {
+    return getUnconfiguredType();
   }
 
   @Override
-  public TypeToken<T> getUnconfiguredType() {
-    return type;
-  }
-
-  @SuppressWarnings("unchecked")
-  @Override
-  public T coerceToUnconfigured(
+  public final T coerce(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
-      Object object)
+      TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
+      T object)
       throws CoerceFailedException {
-    if (type.getRawType().isAssignableFrom(object.getClass())) {
-      return (T) type.getRawType().cast(object);
-    }
-    throw CoerceFailedException.simple(object, getOutputType());
+    return object;
   }
 }

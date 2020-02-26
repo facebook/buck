@@ -30,19 +30,24 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 /** Coerce to {@link com.google.common.collect.ImmutableMap}. */
-public class MapTypeCoercer<K, V> implements TypeCoercer<Object, ImmutableMap<K, V>> {
-  private final TypeCoercer<Object, K> keyTypeCoercer;
-  private final TypeCoercer<Object, V> valueTypeCoercer;
+public class MapTypeCoercer<KU, VU, K, V>
+    implements TypeCoercer<ImmutableMap<KU, VU>, ImmutableMap<K, V>> {
+  private final TypeCoercer<KU, K> keyTypeCoercer;
+  private final TypeCoercer<VU, V> valueTypeCoercer;
   private final TypeToken<ImmutableMap<K, V>> typeToken;
+  private final TypeToken<ImmutableMap<KU, VU>> typeTokenUnconfigured;
 
-  public MapTypeCoercer(
-      TypeCoercer<Object, K> keyTypeCoercer, TypeCoercer<Object, V> valueTypeCoercer) {
+  public MapTypeCoercer(TypeCoercer<KU, K> keyTypeCoercer, TypeCoercer<VU, V> valueTypeCoercer) {
     this.keyTypeCoercer = keyTypeCoercer;
     this.valueTypeCoercer = valueTypeCoercer;
     this.typeToken =
         new TypeToken<ImmutableMap<K, V>>() {}.where(
                 new TypeParameter<K>() {}, keyTypeCoercer.getOutputType())
             .where(new TypeParameter<V>() {}, valueTypeCoercer.getOutputType());
+    this.typeTokenUnconfigured =
+        new TypeToken<ImmutableMap<KU, VU>>() {}.where(
+                new TypeParameter<KU>() {}, keyTypeCoercer.getUnconfiguredType())
+            .where(new TypeParameter<VU>() {}, valueTypeCoercer.getUnconfiguredType());
   }
 
   @Override
@@ -51,8 +56,8 @@ public class MapTypeCoercer<K, V> implements TypeCoercer<Object, ImmutableMap<K,
   }
 
   @Override
-  public TypeToken<Object> getUnconfiguredType() {
-    return TypeToken.of(Object.class);
+  public TypeToken<ImmutableMap<KU, VU>> getUnconfiguredType() {
+    return typeTokenUnconfigured;
   }
 
   @Override
@@ -70,13 +75,29 @@ public class MapTypeCoercer<K, V> implements TypeCoercer<Object, ImmutableMap<K,
   }
 
   @Override
-  public Object coerceToUnconfigured(
+  public ImmutableMap<KU, VU> coerceToUnconfigured(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
-    return object;
+    if (object instanceof Map) {
+      ImmutableMap.Builder<KU, VU> builder = ImmutableMap.builder();
+
+      for (Map.Entry<?, ?> entry : ((Map<?, ?>) object).entrySet()) {
+        KU key =
+            keyTypeCoercer.coerceToUnconfigured(
+                cellRoots, filesystem, pathRelativeToProjectRoot, entry.getKey());
+        VU value =
+            valueTypeCoercer.coerceToUnconfigured(
+                cellRoots, filesystem, pathRelativeToProjectRoot, entry.getValue());
+        builder.put(key, value);
+      }
+
+      return builder.build();
+    } else {
+      throw CoerceFailedException.simple(object, getOutputType());
+    }
   }
 
   @Override
@@ -86,35 +107,31 @@ public class MapTypeCoercer<K, V> implements TypeCoercer<Object, ImmutableMap<K,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       TargetConfiguration hostConfiguration,
-      Object object)
+      ImmutableMap<KU, VU> object)
       throws CoerceFailedException {
-    if (object instanceof Map) {
-      ImmutableMap.Builder<K, V> builder = ImmutableMap.builder();
+    ImmutableMap.Builder<K, V> builder = ImmutableMap.builder();
 
-      for (Map.Entry<?, ?> entry : ((Map<?, ?>) object).entrySet()) {
-        K key =
-            keyTypeCoercer.coerce(
-                cellRoots,
-                filesystem,
-                pathRelativeToProjectRoot,
-                targetConfiguration,
-                hostConfiguration,
-                entry.getKey());
-        V value =
-            valueTypeCoercer.coerce(
-                cellRoots,
-                filesystem,
-                pathRelativeToProjectRoot,
-                targetConfiguration,
-                hostConfiguration,
-                entry.getValue());
-        builder.put(key, value);
-      }
-
-      return builder.build();
-    } else {
-      throw CoerceFailedException.simple(object, getOutputType());
+    for (Map.Entry<KU, VU> entry : object.entrySet()) {
+      K key =
+          keyTypeCoercer.coerce(
+              cellRoots,
+              filesystem,
+              pathRelativeToProjectRoot,
+              targetConfiguration,
+              hostConfiguration,
+              entry.getKey());
+      V value =
+          valueTypeCoercer.coerce(
+              cellRoots,
+              filesystem,
+              pathRelativeToProjectRoot,
+              targetConfiguration,
+              hostConfiguration,
+              entry.getValue());
+      builder.put(key, value);
     }
+
+    return builder.build();
   }
 
   @Nullable

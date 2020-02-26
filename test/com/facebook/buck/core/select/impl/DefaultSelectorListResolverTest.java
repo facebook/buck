@@ -303,7 +303,7 @@ public class DefaultSelectorListResolverTest {
   public void testResolvingListWithNoMatchesThrowsExceptionWithCustomMessage() {
     BuildTarget keyTarget = BuildTargetFactory.newInstance("//a:b");
     BuildTarget selectableTarget = ConfigurationBuildTargetFactoryForTests.newInstance("//x:y");
-    ListTypeCoercer<Flavor> flavorListTypeCoercer = flavorListTypeCoercer();
+    ListTypeCoercer<Flavor, Flavor> flavorListTypeCoercer = flavorListTypeCoercer();
     Selector<ImmutableList<Flavor>> selector =
         new Selector<>(
             ImmutableMap.of(
@@ -344,7 +344,7 @@ public class DefaultSelectorListResolverTest {
   }
 
   @Nonnull
-  private static ListTypeCoercer<Flavor> flavorListTypeCoercer() {
+  private static ListTypeCoercer<Flavor, Flavor> flavorListTypeCoercer() {
     return new ListTypeCoercer<>(new FlavorTypeCoercer());
   }
 }

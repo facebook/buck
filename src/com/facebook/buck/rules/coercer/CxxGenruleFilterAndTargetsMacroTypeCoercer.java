@@ -34,13 +34,14 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercer<M extends CxxGenruleFilt
     implements MacroTypeCoercer<M> {
 
   private final Optional<TypeCoercer<Object, Pattern>> patternTypeCoercer;
-  private final TypeCoercer<Object, ImmutableList<BuildTarget>> buildTargetsTypeCoercer;
+  private final TypeCoercer<ImmutableList<Object>, ImmutableList<BuildTarget>>
+      buildTargetsTypeCoercer;
   private final Class<M> clazz;
   private final BiFunction<Optional<Pattern>, ImmutableList<BuildTarget>, M> factory;
 
   public CxxGenruleFilterAndTargetsMacroTypeCoercer(
       Optional<TypeCoercer<Object, Pattern>> patternTypeCoercer,
-      TypeCoercer<Object, ImmutableList<BuildTarget>> buildTargetsTypeCoercer,
+      TypeCoercer<ImmutableList<Object>, ImmutableList<BuildTarget>> buildTargetsTypeCoercer,
       Class<M> clazz,
       BiFunction<Optional<Pattern>, ImmutableList<BuildTarget>, M> factory) {
     this.patternTypeCoercer = patternTypeCoercer;
@@ -102,7 +103,7 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercer<M extends CxxGenruleFilt
 
     // Parse build target args.
     ImmutableList<BuildTarget> targets =
-        buildTargetsTypeCoercer.coerce(
+        buildTargetsTypeCoercer.coerceBoth(
             cellNameResolver,
             filesystem,
             pathRelativeToProjectRoot,

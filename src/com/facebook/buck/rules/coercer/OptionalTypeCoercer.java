@@ -28,18 +28,22 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 
 /** Coerce to {@link java.util.Optional}. */
-public class OptionalTypeCoercer<T> implements TypeCoercer<Object, Optional<T>> {
+public class OptionalTypeCoercer<U, T> implements TypeCoercer<Optional<U>, Optional<T>> {
 
-  private final TypeCoercer<Object, T> coercer;
+  private final TypeCoercer<U, T> coercer;
   private final TypeToken<Optional<T>> typeToken;
+  private final TypeToken<Optional<U>> typeTokenUnconfigured;
 
-  public OptionalTypeCoercer(TypeCoercer<Object, T> coercer) {
+  public OptionalTypeCoercer(TypeCoercer<U, T> coercer) {
     Preconditions.checkArgument(
         !coercer.getOutputType().getRawType().isAssignableFrom(Optional.class),
         "Nested optional fields are ambiguous.");
     this.coercer = coercer;
     this.typeToken =
         new TypeToken<Optional<T>>() {}.where(new TypeParameter<T>() {}, coercer.getOutputType());
+    this.typeTokenUnconfigured =
+        new TypeToken<Optional<U>>() {}.where(
+            new TypeParameter<U>() {}, coercer.getUnconfiguredType());
   }
 
   @Override
@@ -48,8 +52,8 @@ public class OptionalTypeCoercer<T> implements TypeCoercer<Object, Optional<T>> 
   }
 
   @Override
-  public TypeToken<Object> getUnconfiguredType() {
-    return TypeToken.of(Object.class);
+  public TypeToken<Optional<U>> getUnconfiguredType() {
+    return typeTokenUnconfigured;
   }
 
   @Override
@@ -65,13 +69,17 @@ public class OptionalTypeCoercer<T> implements TypeCoercer<Object, Optional<T>> 
   }
 
   @Override
-  public Object coerceToUnconfigured(
+  public Optional<U> coerceToUnconfigured(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
-    return object;
+    if (object == null || (object instanceof Optional<?> && !((Optional<?>) object).isPresent())) {
+      return Optional.empty();
+    }
+    return Optional.of(
+        coercer.coerceToUnconfigured(cellRoots, filesystem, pathRelativeToProjectRoot, object));
   }
 
   @Override
@@ -81,19 +89,20 @@ public class OptionalTypeCoercer<T> implements TypeCoercer<Object, Optional<T>> 
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       TargetConfiguration hostConfiguration,
-      Object object)
+      Optional<U> object)
       throws CoerceFailedException {
-    if (object == null || (object instanceof Optional<?> && !((Optional<?>) object).isPresent())) {
+    if (object.isPresent()) {
+      return Optional.of(
+          coercer.coerce(
+              cellRoots,
+              filesystem,
+              pathRelativeToProjectRoot,
+              targetConfiguration,
+              hostConfiguration,
+              object.get()));
+    } else {
       return Optional.empty();
     }
-    return Optional.of(
-        coercer.coerce(
-            cellRoots,
-            filesystem,
-            pathRelativeToProjectRoot,
-            targetConfiguration,
-            hostConfiguration,
-            object));
   }
 
   @Nullable

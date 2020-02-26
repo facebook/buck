@@ -28,14 +28,14 @@ import java.util.Optional;
 
 /** A type coercer to handle needed coverage specification for python_test. */
 public class NeededCoverageSpecTypeCoercer implements TypeCoercer<Object, NeededCoverageSpec> {
-  private final TypeCoercer<Object, Integer> intTypeCoercer;
+  private final TypeCoercer<Integer, Integer> intTypeCoercer;
   private final TypeCoercer<Object, BuildTarget> buildTargetTypeCoercer;
-  private final TypeCoercer<Object, String> pathNameTypeCoercer;
+  private final TypeCoercer<String, String> pathNameTypeCoercer;
 
   NeededCoverageSpecTypeCoercer(
-      TypeCoercer<Object, Integer> intTypeCoercer,
+      TypeCoercer<Integer, Integer> intTypeCoercer,
       TypeCoercer<Object, BuildTarget> buildTargetTypeCoercer,
-      TypeCoercer<Object, String> pathNameTypeCoercer) {
+      TypeCoercer<String, String> pathNameTypeCoercer) {
     this.intTypeCoercer = intTypeCoercer;
     this.buildTargetTypeCoercer = buildTargetTypeCoercer;
     this.pathNameTypeCoercer = pathNameTypeCoercer;
@@ -116,7 +116,7 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<Object, Needed
         if (iter.hasNext()) {
           pathName =
               Optional.of(
-                  pathNameTypeCoercer.coerce(
+                  pathNameTypeCoercer.coerceBoth(
                       cellNameResolver,
                       filesystem,
                       pathRelativeToProjectRoot,
@@ -155,7 +155,7 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<Object, Needed
     }
 
     int intValue =
-        intTypeCoercer.coerce(
+        intTypeCoercer.coerceBoth(
             cellNameResolver,
             filesystem,
             pathRelativeToProjectRoot,

@@ -23,7 +23,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.reflect.TypeToken;
 
 /** Coerces numbers with rounding/truncation/extension. */
-public class NumberTypeCoercer<T extends Number> extends LeafTypeCoercer<T> {
+public class NumberTypeCoercer<T extends Number> extends LeafTypeNewCoercer<T, T> {
   private final Class<T> type;
 
   public NumberTypeCoercer(Class<T> type) {
@@ -36,12 +36,15 @@ public class NumberTypeCoercer<T extends Number> extends LeafTypeCoercer<T> {
   }
 
   @Override
-  public T coerce(
+  public TypeToken<T> getUnconfiguredType() {
+    return TypeToken.of(type);
+  }
+
+  @Override
+  public T coerceToUnconfigured(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     if (object instanceof Number) {
@@ -50,6 +53,18 @@ public class NumberTypeCoercer<T extends Number> extends LeafTypeCoercer<T> {
       return castedNumber;
     }
     throw CoerceFailedException.simple(object, getOutputType());
+  }
+
+  @Override
+  public T coerce(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
+      T object)
+      throws CoerceFailedException {
+    return object;
   }
 
   /** Cast the number to the correct subtype. */

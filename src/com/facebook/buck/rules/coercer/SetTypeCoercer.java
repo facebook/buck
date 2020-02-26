@@ -24,19 +24,30 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.TypeParameter;
 import com.google.common.reflect.TypeToken;
 
-public class SetTypeCoercer<T> extends CollectionTypeCoercer<ImmutableSet<T>, T> {
+/** Coerce to {@link com.google.common.collect.ImmutableSet}. */
+public class SetTypeCoercer<U, T>
+    extends CollectionTypeCoercer<ImmutableSet<U>, ImmutableSet<T>, U, T> {
   private final TypeToken<ImmutableSet<T>> typeToken;
+  private final TypeToken<ImmutableSet<U>> typeTokenUnconfigured;
 
-  SetTypeCoercer(TypeCoercer<Object, T> elementTypeCoercer) {
+  SetTypeCoercer(TypeCoercer<U, T> elementTypeCoercer) {
     super(elementTypeCoercer);
     this.typeToken =
         new TypeToken<ImmutableSet<T>>() {}.where(
             new TypeParameter<T>() {}, elementTypeCoercer.getOutputType());
+    this.typeTokenUnconfigured =
+        new TypeToken<ImmutableSet<U>>() {}.where(
+            new TypeParameter<U>() {}, elementTypeCoercer.getUnconfiguredType());
   }
 
   @Override
   public TypeToken<ImmutableSet<T>> getOutputType() {
     return typeToken;
+  }
+
+  @Override
+  public TypeToken<ImmutableSet<U>> getUnconfiguredType() {
+    return typeTokenUnconfigured;
   }
 
   @Override
@@ -46,10 +57,10 @@ public class SetTypeCoercer<T> extends CollectionTypeCoercer<ImmutableSet<T>, T>
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       TargetConfiguration hostConfiguration,
-      Object object)
+      ImmutableSet<U> object)
       throws CoerceFailedException {
     ImmutableSet.Builder<T> builder = ImmutableSet.builder();
-    fill(
+    fillConfigured(
         cellRoots,
         filesystem,
         pathRelativeToProjectRoot,
@@ -57,6 +68,18 @@ public class SetTypeCoercer<T> extends CollectionTypeCoercer<ImmutableSet<T>, T>
         hostConfiguration,
         builder,
         object);
+    return builder.build();
+  }
+
+  @Override
+  public ImmutableSet<U> coerceToUnconfigured(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      Object object)
+      throws CoerceFailedException {
+    ImmutableSet.Builder<U> builder = ImmutableSet.builder();
+    fillUnconfigured(cellRoots, filesystem, pathRelativeToProjectRoot, builder, object);
     return builder.build();
   }
 }

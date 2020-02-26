@@ -33,13 +33,13 @@ import java.util.List;
 public class VersionMatchedCollectionTypeCoercer<T>
     implements TypeCoercer<Object, VersionMatchedCollection<T>> {
 
-  TypeCoercer<Object, ImmutableMap<BuildTarget, Version>> versionsTypeCoercer;
-  TypeCoercer<Object, T> valueTypeCoercer;
+  TypeCoercer<?, ImmutableMap<BuildTarget, Version>> versionsTypeCoercer;
+  TypeCoercer<?, T> valueTypeCoercer;
   private final TypeToken<VersionMatchedCollection<T>> typeToken;
 
   public VersionMatchedCollectionTypeCoercer(
-      TypeCoercer<Object, ImmutableMap<BuildTarget, Version>> versionsTypeCoercer,
-      TypeCoercer<Object, T> valueTypeCoercer) {
+      TypeCoercer<?, ImmutableMap<BuildTarget, Version>> versionsTypeCoercer,
+      TypeCoercer<?, T> valueTypeCoercer) {
     this.versionsTypeCoercer = versionsTypeCoercer;
     this.valueTypeCoercer = valueTypeCoercer;
     this.typeToken =
@@ -103,7 +103,7 @@ public class VersionMatchedCollectionTypeCoercer<T>
       }
       Iterator<?> pair = ((Collection<?>) element).iterator();
       ImmutableMap<BuildTarget, Version> versionsSelector =
-          versionsTypeCoercer.coerce(
+          versionsTypeCoercer.coerceBoth(
               cellRoots,
               filesystem,
               pathRelativeToProjectRoot,
@@ -111,7 +111,7 @@ public class VersionMatchedCollectionTypeCoercer<T>
               hostConfiguration,
               pair.next());
       T value =
-          valueTypeCoercer.coerce(
+          valueTypeCoercer.coerceBoth(
               cellRoots,
               filesystem,
               pathRelativeToProjectRoot,

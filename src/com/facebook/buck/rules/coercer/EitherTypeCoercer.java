@@ -27,19 +27,25 @@ import java.util.Collection;
 import java.util.Map;
 
 /** Coerces a type to either type, trying the left type before the right. */
-public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Object, Either<Left, Right>> {
-  private final TypeCoercer<Object, Left> leftTypeCoercer;
-  private final TypeCoercer<Object, Right> rightTypeCoercer;
+public class EitherTypeCoercer<LU, RU, Left, Right>
+    implements TypeCoercer<Either<LU, RU>, Either<Left, Right>> {
+  private final TypeCoercer<LU, Left> leftTypeCoercer;
+  private final TypeCoercer<RU, Right> rightTypeCoercer;
   private final TypeToken<Either<Left, Right>> typeToken;
+  private final TypeToken<Either<LU, RU>> typeTokenUnconfigured;
 
   public EitherTypeCoercer(
-      TypeCoercer<Object, Left> leftTypeCoercer, TypeCoercer<Object, Right> rightTypeCoercer) {
+      TypeCoercer<LU, Left> leftTypeCoercer, TypeCoercer<RU, Right> rightTypeCoercer) {
     this.leftTypeCoercer = leftTypeCoercer;
     this.rightTypeCoercer = rightTypeCoercer;
     this.typeToken =
         new TypeToken<Either<Left, Right>>() {}.where(
                 new TypeParameter<Left>() {}, leftTypeCoercer.getOutputType())
             .where(new TypeParameter<Right>() {}, rightTypeCoercer.getOutputType());
+    this.typeTokenUnconfigured =
+        new TypeToken<Either<LU, RU>>() {}.where(
+                new TypeParameter<LU>() {}, leftTypeCoercer.getUnconfiguredType())
+            .where(new TypeParameter<RU>() {}, rightTypeCoercer.getUnconfiguredType());
   }
 
   @Override
@@ -48,8 +54,8 @@ public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Object, Eithe
   }
 
   @Override
-  public TypeToken<Object> getUnconfiguredType() {
-    return TypeToken.of(Object.class);
+  public TypeToken<Either<LU, RU>> getUnconfiguredType() {
+    return typeTokenUnconfigured;
   }
 
   @Override
@@ -67,16 +73,6 @@ public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Object, Eithe
     }
   }
 
-  @Override
-  public Object coerceToUnconfigured(
-      CellNameResolver cellRoots,
-      ProjectFilesystem filesystem,
-      ForwardRelativePath pathRelativeToProjectRoot,
-      Object object)
-      throws CoerceFailedException {
-    return object;
-  }
-
   // Classifications for the "type" of object/coercer.  We use this to unambiguously
   // choose which "side" of the coercion fork we want to choose, rather than relying
   // on catching `CoerceFailedException` exceptions, which can lead to really unhelpful
@@ -87,7 +83,7 @@ public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Object, Eithe
     MAP,
   }
 
-  private static <T> Type getCoercerType(TypeCoercer<Object, T> coercer) {
+  private static Type getCoercerType(TypeCoercer<?, ?> coercer) {
     if (coercer instanceof MapTypeCoercer || coercer instanceof SortedMapTypeCoercer) {
       return Type.MAP;
     } else if (coercer instanceof CollectionTypeCoercer || coercer instanceof PairTypeCoercer) {
@@ -108,12 +104,10 @@ public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Object, Eithe
   }
 
   @Override
-  public Either<Left, Right> coerce(
+  public Either<LU, RU> coerceToUnconfigured(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
 
@@ -129,23 +123,13 @@ public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Object, Eithe
     if (leftCoercerType == objectType && rightCoercerType == objectType) {
       try {
         return Either.ofLeft(
-            leftTypeCoercer.coerce(
-                cellRoots,
-                filesystem,
-                pathRelativeToProjectRoot,
-                targetConfiguration,
-                hostConfiguration,
-                object));
+            leftTypeCoercer.coerceToUnconfigured(
+                cellRoots, filesystem, pathRelativeToProjectRoot, object));
       } catch (CoerceFailedException eLeft) {
         try {
           return Either.ofRight(
-              rightTypeCoercer.coerce(
-                  cellRoots,
-                  filesystem,
-                  pathRelativeToProjectRoot,
-                  targetConfiguration,
-                  hostConfiguration,
-                  object));
+              rightTypeCoercer.coerceToUnconfigured(
+                  cellRoots, filesystem, pathRelativeToProjectRoot, object));
         } catch (CoerceFailedException eRight) {
           throw new CoerceFailedException(
               String.format("%s, or %s", eLeft.getMessage(), eRight.getMessage()));
@@ -157,18 +141,42 @@ public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Object, Eithe
     // exceptions propagate up.
     if (leftCoercerType == objectType) {
       return Either.ofLeft(
+          leftTypeCoercer.coerceToUnconfigured(
+              cellRoots, filesystem, pathRelativeToProjectRoot, object));
+    }
+
+    // Only the right coercer matches, so use that to parse the input and let any inner
+    // exceptions propagate up.
+    if (rightCoercerType == objectType) {
+      return Either.ofRight(
+          rightTypeCoercer.coerceToUnconfigured(
+              cellRoots, filesystem, pathRelativeToProjectRoot, object));
+    }
+
+    // None of our coercers matched the "type" of the object, so throw the generic
+    // error message.
+    throw new CoerceFailedException(String.format("cannot parse %s", object));
+  }
+
+  @Override
+  public Either<Left, Right> coerce(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
+      Either<LU, RU> object)
+      throws CoerceFailedException {
+    if (object.isLeft()) {
+      return Either.ofLeft(
           leftTypeCoercer.coerce(
               cellRoots,
               filesystem,
               pathRelativeToProjectRoot,
               targetConfiguration,
               hostConfiguration,
-              object));
-    }
-
-    // Only the right coercer matches, so use that to parse the input and let any inner
-    // exceptions propagate up.
-    if (rightCoercerType == objectType) {
+              object.getLeft()));
+    } else {
       return Either.ofRight(
           rightTypeCoercer.coerce(
               cellRoots,
@@ -176,11 +184,7 @@ public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Object, Eithe
               pathRelativeToProjectRoot,
               targetConfiguration,
               hostConfiguration,
-              object));
+              object.getRight()));
     }
-
-    // None of our coercers matched the "type" of the object, so throw the generic
-    // error message.
-    throw new CoerceFailedException(String.format("cannot parse %s", object));
   }
 }

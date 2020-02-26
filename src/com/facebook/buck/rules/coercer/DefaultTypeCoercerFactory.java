@@ -75,6 +75,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -94,8 +95,8 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
 
   @SuppressWarnings("unchecked")
   public DefaultTypeCoercerFactory() {
-    TypeCoercer<Object, String> stringTypeCoercer = new StringTypeCoercer();
-    TypeCoercer<Object, Flavor> flavorTypeCoercer = new FlavorTypeCoercer();
+    StringTypeCoercer stringTypeCoercer = new StringTypeCoercer();
+    TypeCoercer<Flavor, Flavor> flavorTypeCoercer = new FlavorTypeCoercer();
     // This has no implementation, but is here so that constructor succeeds so that it can be
     // queried. This is only used for the visibility field, which is not actually handled by the
     // coercer.
@@ -108,29 +109,29 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
         new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer);
     TypeCoercer<Object, BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer =
         new BuildTargetWithOutputsTypeCoercer(buildTargetTypeCoercer);
-    PathTypeCoercer pathTypeCoercer = new PathTypeCoercer();
-    TypeCoercer<Object, SourcePath> sourcePathTypeCoercer =
+    TypeCoercer<Object, Path> pathTypeCoercer = new PathTypeCoercer();
+    TypeCoercer<String, SourcePath> sourcePathTypeCoercer =
         new SourcePathTypeCoercer(buildTargetWithOutputsTypeCoercer, pathTypeCoercer);
     TypeCoercer<Object, SourceWithFlags> sourceWithFlagsTypeCoercer =
         new SourceWithFlagsTypeCoercer(
             sourcePathTypeCoercer, new ListTypeCoercer<>(stringTypeCoercer));
-    TypeCoercer<Object, Integer> intTypeCoercer = new NumberTypeCoercer<>(Integer.class);
-    TypeCoercer<Object, Double> doubleTypeCoercer = new NumberTypeCoercer<>(Double.class);
-    TypeCoercer<Object, Boolean> booleanTypeCoercer = new IdentityTypeCoercer<>(Boolean.class);
+    TypeCoercer<Integer, Integer> intTypeCoercer = new NumberTypeCoercer<>(Integer.class);
+    TypeCoercer<Double, Double> doubleTypeCoercer = new NumberTypeCoercer<>(Double.class);
+    TypeCoercer<Boolean, Boolean> booleanTypeCoercer = new IdentityTypeCoercer<>(Boolean.class);
     TypeCoercer<Object, NeededCoverageSpec> neededCoverageSpecTypeCoercer =
         new NeededCoverageSpecTypeCoercer(
             intTypeCoercer, buildTargetTypeCoercer, stringTypeCoercer);
     TypeCoercer<Object, Query> queryTypeCoercer =
         new QueryCoercer(this, unconfiguredBuildTargetFactory);
-    TypeCoercer<Object, ImmutableList<BuildTarget>> buildTargetsTypeCoercer =
+    TypeCoercer<ImmutableList<Object>, ImmutableList<BuildTarget>> buildTargetsTypeCoercer =
         new ListTypeCoercer<>(buildTargetTypeCoercer);
     TypeCoercer<Object, CxxLinkGroupMappingTarget.Traversal> linkGroupMappingTraversalCoercer =
         new CxxLinkGroupMappingTargetTraversalCoercer();
     TypeCoercer<Object, CxxLinkGroupMappingTarget> linkGroupMappingTargetCoercer =
         new CxxLinkGroupMappingTargetCoercer(
             buildTargetTypeCoercer, linkGroupMappingTraversalCoercer, patternTypeCoercer);
-    TypeCoercer<Object, ImmutableList<CxxLinkGroupMappingTarget>> linkGroupMappingTargetsCoercer =
-        new ListTypeCoercer<>(linkGroupMappingTargetCoercer);
+    TypeCoercer<ImmutableList<Object>, ImmutableList<CxxLinkGroupMappingTarget>>
+        linkGroupMappingTargetsCoercer = new ListTypeCoercer<>(linkGroupMappingTargetCoercer);
     TypeCoercer<Object, CxxLinkGroupMapping> linkGroupMappingCoercer =
         new CxxLinkGroupMappingCoercer(stringTypeCoercer, linkGroupMappingTargetsCoercer);
     TypeCoercer<Object, StringWithMacros> stringWithMacrosCoercer =
@@ -348,7 +349,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
   }
 
   @SuppressWarnings("unchecked")
-  private <T> TypeCoercer<Object, ?> typeCoercerForTypeUnchecked(TypeToken<T> typeToken) {
+  private <T> TypeCoercer<?, ?> typeCoercerForTypeUnchecked(TypeToken<T> typeToken) {
     Type type = typeToken.getType();
     if (type instanceof TypeVariable) {
       type = ((TypeVariable<?>) type).getBounds()[0];
@@ -405,7 +406,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
     }
   }
 
-  private TypeCoercer<Object, ?> typeCoercerForParameterizedType(
+  private TypeCoercer<?, ?> typeCoercerForParameterizedType(
       String typeName, Type rawType, Type[] actualTypeArguments) {
     if (!(rawType instanceof Class<?>)) {
       throw new RuntimeException("expected raw type to be a class for type: " + typeName);
@@ -437,7 +438,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
       // be assigned to something of type Set, but not vice versa.
       Type elementType = getSingletonTypeParameter(typeName, actualTypeArguments);
       @SuppressWarnings({"rawtypes", "unchecked"})
-      SortedSetTypeCoercer<?> sortedSetTypeCoercer =
+      SortedSetTypeCoercer<?, ?> sortedSetTypeCoercer =
           new SortedSetTypeCoercer(typeCoercerForComparableType(TypeToken.of(elementType)));
       return sortedSetTypeCoercer;
     } else if (rawClass.isAssignableFrom(ImmutableMap.class)) {
@@ -450,7 +451,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
       Preconditions.checkState(
           actualTypeArguments.length == 2, "expected type '%s' to have two parameters", typeName);
       @SuppressWarnings({"rawtypes", "unchecked"})
-      SortedMapTypeCoercer<?, ?> sortedMapTypeCoercer =
+      SortedMapTypeCoercer<?, ?, ?, ?> sortedMapTypeCoercer =
           new SortedMapTypeCoercer(
               typeCoercerForComparableType(TypeToken.of(actualTypeArguments[0])),
               typeCoercerForTypeUnchecked(TypeToken.of(actualTypeArguments[1])));
@@ -482,7 +483,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
     return coercedTypeCache.getConstructorArgDescriptor(dtoType);
   }
 
-  private TypeCoercer<Object, ?> typeCoercerForComparableType(TypeToken<?> type) {
+  private TypeCoercer<?, ?> typeCoercerForComparableType(TypeToken<?> type) {
     Preconditions.checkState(
         type.getType() instanceof Class
             && Comparable.class.isAssignableFrom((Class<?>) type.getType()),

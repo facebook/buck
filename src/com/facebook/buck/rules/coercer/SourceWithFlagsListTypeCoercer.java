@@ -21,6 +21,7 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.reflect.TypeToken;
@@ -28,12 +29,14 @@ import java.util.List;
 
 /** Coerce to {@link com.facebook.buck.rules.coercer.SourceWithFlagsList}. */
 public class SourceWithFlagsListTypeCoercer implements TypeCoercer<Object, SourceWithFlagsList> {
-  private final TypeCoercer<Object, ImmutableSortedSet<SourceWithFlags>> unnamedSourcesTypeCoercer;
-  private final TypeCoercer<Object, ImmutableSortedMap<String, SourceWithFlags>>
+  private final TypeCoercer<ImmutableList<Object>, ImmutableSortedSet<SourceWithFlags>>
+      unnamedSourcesTypeCoercer;
+  private final TypeCoercer<
+          ImmutableSortedMap<String, Object>, ImmutableSortedMap<String, SourceWithFlags>>
       namedSourcesTypeCoercer;
 
   SourceWithFlagsListTypeCoercer(
-      TypeCoercer<Object, String> stringTypeCoercer,
+      TypeCoercer<String, String> stringTypeCoercer,
       TypeCoercer<Object, SourceWithFlags> sourceWithFlagsTypeCoercer) {
     this.unnamedSourcesTypeCoercer = new SortedSetTypeCoercer<>(sourceWithFlagsTypeCoercer);
     this.namedSourcesTypeCoercer =
@@ -92,7 +95,7 @@ public class SourceWithFlagsListTypeCoercer implements TypeCoercer<Object, Sourc
       throws CoerceFailedException {
     if (object instanceof List) {
       return SourceWithFlagsList.ofUnnamedSources(
-          unnamedSourcesTypeCoercer.coerce(
+          unnamedSourcesTypeCoercer.coerceBoth(
               cellRoots,
               filesystem,
               pathRelativeToProjectRoot,
@@ -101,7 +104,7 @@ public class SourceWithFlagsListTypeCoercer implements TypeCoercer<Object, Sourc
               object));
     } else {
       return SourceWithFlagsList.ofNamedSources(
-          namedSourcesTypeCoercer.coerce(
+          namedSourcesTypeCoercer.coerceBoth(
               cellRoots,
               filesystem,
               pathRelativeToProjectRoot,

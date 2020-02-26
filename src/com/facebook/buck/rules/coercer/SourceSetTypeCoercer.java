@@ -29,12 +29,14 @@ import java.util.List;
 /** Coerce to {@link com.facebook.buck.rules.coercer.SourceSet}. */
 public class SourceSetTypeCoercer extends SourceSetConcatable
     implements TypeCoercer<Object, SourceSet> {
-  private final TypeCoercer<Object, ImmutableSet<SourcePath>> unnamedHeadersTypeCoercer;
-  private final TypeCoercer<Object, ImmutableMap<String, SourcePath>> namedHeadersTypeCoercer;
+  private final TypeCoercer<ImmutableSet<String>, ImmutableSet<SourcePath>>
+      unnamedHeadersTypeCoercer;
+  private final TypeCoercer<ImmutableMap<String, String>, ImmutableMap<String, SourcePath>>
+      namedHeadersTypeCoercer;
 
   SourceSetTypeCoercer(
-      TypeCoercer<Object, String> stringTypeCoercer,
-      TypeCoercer<Object, SourcePath> sourcePathTypeCoercer) {
+      TypeCoercer<String, String> stringTypeCoercer,
+      TypeCoercer<String, SourcePath> sourcePathTypeCoercer) {
     this.unnamedHeadersTypeCoercer = new SetTypeCoercer<>(sourcePathTypeCoercer);
     this.namedHeadersTypeCoercer = new MapTypeCoercer<>(stringTypeCoercer, sourcePathTypeCoercer);
   }
@@ -88,7 +90,7 @@ public class SourceSetTypeCoercer extends SourceSetConcatable
       throws CoerceFailedException {
     if (object instanceof List) {
       return SourceSet.ofUnnamedSources(
-          unnamedHeadersTypeCoercer.coerce(
+          unnamedHeadersTypeCoercer.coerceBoth(
               cellRoots,
               filesystem,
               pathRelativeToProjectRoot,
@@ -97,7 +99,7 @@ public class SourceSetTypeCoercer extends SourceSetConcatable
               object));
     } else {
       return SourceSet.ofNamedSources(
-          namedHeadersTypeCoercer.coerce(
+          namedHeadersTypeCoercer.coerceBoth(
               cellRoots,
               filesystem,
               pathRelativeToProjectRoot,

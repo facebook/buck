@@ -27,19 +27,25 @@ import java.util.Collection;
 import java.util.Iterator;
 
 /** Coerces from a 2-element collection into a pair. */
-public class PairTypeCoercer<FIRST, SECOND> implements TypeCoercer<Object, Pair<FIRST, SECOND>> {
-  private TypeCoercer<Object, FIRST> firstTypeCoercer;
-  private TypeCoercer<Object, SECOND> secondTypeCoercer;
+public class PairTypeCoercer<FU, SU, FIRST, SECOND>
+    implements TypeCoercer<Pair<FU, SU>, Pair<FIRST, SECOND>> {
+  private TypeCoercer<FU, FIRST> firstTypeCoercer;
+  private TypeCoercer<SU, SECOND> secondTypeCoercer;
   private final TypeToken<Pair<FIRST, SECOND>> typeToken;
+  private final TypeToken<Pair<FU, SU>> typeTokenUnconfigured;
 
   public PairTypeCoercer(
-      TypeCoercer<Object, FIRST> firstTypeCoercer, TypeCoercer<Object, SECOND> secondTypeCoercer) {
+      TypeCoercer<FU, FIRST> firstTypeCoercer, TypeCoercer<SU, SECOND> secondTypeCoercer) {
     this.firstTypeCoercer = firstTypeCoercer;
     this.secondTypeCoercer = secondTypeCoercer;
     this.typeToken =
         new TypeToken<Pair<FIRST, SECOND>>() {}.where(
                 new TypeParameter<FIRST>() {}, firstTypeCoercer.getOutputType())
             .where(new TypeParameter<SECOND>() {}, secondTypeCoercer.getOutputType());
+    this.typeTokenUnconfigured =
+        new TypeToken<Pair<FU, SU>>() {}.where(
+                new TypeParameter<FU>() {}, firstTypeCoercer.getUnconfiguredType())
+            .where(new TypeParameter<SU>() {}, secondTypeCoercer.getUnconfiguredType());
   }
 
   @Override
@@ -48,8 +54,8 @@ public class PairTypeCoercer<FIRST, SECOND> implements TypeCoercer<Object, Pair<
   }
 
   @Override
-  public TypeToken<Object> getUnconfiguredType() {
-    return TypeToken.of(Object.class);
+  public TypeToken<Pair<FU, SU>> getUnconfiguredType() {
+    return typeTokenUnconfigured;
   }
 
   @Override
@@ -65,22 +71,10 @@ public class PairTypeCoercer<FIRST, SECOND> implements TypeCoercer<Object, Pair<
   }
 
   @Override
-  public Object coerceToUnconfigured(
+  public Pair<FU, SU> coerceToUnconfigured(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
-      Object object)
-      throws CoerceFailedException {
-    return object;
-  }
-
-  @Override
-  public Pair<FIRST, SECOND> coerce(
-      CellNameResolver cellRoots,
-      ProjectFilesystem filesystem,
-      ForwardRelativePath pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     if (object instanceof Collection) {
@@ -90,26 +84,43 @@ public class PairTypeCoercer<FIRST, SECOND> implements TypeCoercer<Object, Pair<
             object, getOutputType(), "input collection should have 2 elements");
       }
       Iterator<?> iterator = collection.iterator();
-      FIRST first =
-          firstTypeCoercer.coerce(
-              cellRoots,
-              filesystem,
-              pathRelativeToProjectRoot,
-              targetConfiguration,
-              hostConfiguration,
-              iterator.next());
-      SECOND second =
-          secondTypeCoercer.coerce(
-              cellRoots,
-              filesystem,
-              pathRelativeToProjectRoot,
-              targetConfiguration,
-              hostConfiguration,
-              iterator.next());
+      FU first =
+          firstTypeCoercer.coerceToUnconfigured(
+              cellRoots, filesystem, pathRelativeToProjectRoot, iterator.next());
+      SU second =
+          secondTypeCoercer.coerceToUnconfigured(
+              cellRoots, filesystem, pathRelativeToProjectRoot, iterator.next());
       return new Pair<>(first, second);
     } else {
       throw CoerceFailedException.simple(
           object, getOutputType(), "input object should be a 2-element collection");
     }
+  }
+
+  @Override
+  public Pair<FIRST, SECOND> coerce(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
+      Pair<FU, SU> object)
+      throws CoerceFailedException {
+
+    return new Pair<>(
+        firstTypeCoercer.coerce(
+            cellRoots,
+            filesystem,
+            pathRelativeToProjectRoot,
+            targetConfiguration,
+            hostConfiguration,
+            object.getFirst()),
+        secondTypeCoercer.coerce(
+            cellRoots,
+            filesystem,
+            pathRelativeToProjectRoot,
+            targetConfiguration,
+            hostConfiguration,
+            object.getSecond()));
   }
 }

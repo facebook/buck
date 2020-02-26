@@ -34,14 +34,18 @@ import java.util.Collection;
  * element in the list of <code>link_group_map</code> to a {@link CxxLinkGroupMapping}.
  */
 public class CxxLinkGroupMappingCoercer implements TypeCoercer<Object, CxxLinkGroupMapping> {
-  private final TypeCoercer<Object, String> linkGroupTypeCoercer;
-  private final TypeCoercer<Object, ImmutableList<CxxLinkGroupMappingTarget>> mappingTargetsCoercer;
-  private final TypeCoercer<Object, Pair<String, ImmutableList<CxxLinkGroupMappingTarget>>>
+  private final TypeCoercer<String, String> linkGroupTypeCoercer;
+  private final TypeCoercer<ImmutableList<Object>, ImmutableList<CxxLinkGroupMappingTarget>>
+      mappingTargetsCoercer;
+  private final TypeCoercer<
+          Pair<String, ImmutableList<Object>>,
+          Pair<String, ImmutableList<CxxLinkGroupMappingTarget>>>
       buildTargetWithTraversalTypeCoercer;
 
   public CxxLinkGroupMappingCoercer(
-      TypeCoercer<Object, String> linkGroupTypeCoercer,
-      TypeCoercer<Object, ImmutableList<CxxLinkGroupMappingTarget>> mappingTargetCoercer) {
+      TypeCoercer<String, String> linkGroupTypeCoercer,
+      TypeCoercer<ImmutableList<Object>, ImmutableList<CxxLinkGroupMappingTarget>>
+          mappingTargetCoercer) {
     this.linkGroupTypeCoercer = linkGroupTypeCoercer;
     this.mappingTargetsCoercer = mappingTargetCoercer;
     this.buildTargetWithTraversalTypeCoercer =
@@ -97,7 +101,7 @@ public class CxxLinkGroupMappingCoercer implements TypeCoercer<Object, CxxLinkGr
 
     if (object instanceof Collection<?> && ((Collection<?>) object).size() == 2) {
       Pair<String, ImmutableList<CxxLinkGroupMappingTarget>> linkGroupWithMappingTargets =
-          buildTargetWithTraversalTypeCoercer.coerce(
+          buildTargetWithTraversalTypeCoercer.coerceBoth(
               cellRoots,
               filesystem,
               pathRelativeToProjectRoot,

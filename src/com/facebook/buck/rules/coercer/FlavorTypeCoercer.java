@@ -19,24 +19,23 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.reflect.TypeToken;
 
-public class FlavorTypeCoercer extends LeafTypeCoercer<Flavor> {
+/** Coerce to {@link com.facebook.buck.core.model.Flavor}. */
+public class FlavorTypeCoercer extends LeafUnconfiguredOnlyCoercer<Flavor> {
+
   @Override
-  public TypeToken<Flavor> getOutputType() {
+  public TypeToken<Flavor> getUnconfiguredType() {
     return TypeToken.of(Flavor.class);
   }
 
   @Override
-  public Flavor coerce(
+  public Flavor coerceToUnconfigured(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     if (object instanceof String) {

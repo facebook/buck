@@ -46,10 +46,10 @@ public class OptionalTypeCoercerTest {
 
   @Test
   public void nullIsAbsent() throws CoerceFailedException {
-    OptionalTypeCoercer<Unit> coercer =
+    OptionalTypeCoercer<Unit, Unit> coercer =
         new OptionalTypeCoercer<>(new IdentityTypeCoercer<>(Unit.class));
     Optional<Unit> result =
-        coercer.coerce(
+        coercer.coerceBoth(
             TestCellBuilder.createCellRoots(FILESYSTEM).getCellNameResolver(),
             FILESYSTEM,
             PATH_RELATIVE_TO_PROJECT_ROOT,
@@ -61,10 +61,10 @@ public class OptionalTypeCoercerTest {
 
   @Test
   public void emptyIsEmpty() throws CoerceFailedException {
-    OptionalTypeCoercer<Unit> coercer =
+    OptionalTypeCoercer<Unit, Unit> coercer =
         new OptionalTypeCoercer<>(new IdentityTypeCoercer<>(Unit.class));
     Optional<Unit> result =
-        coercer.coerce(
+        coercer.coerceBoth(
             TestCellBuilder.createCellRoots(FILESYSTEM).getCellNameResolver(),
             FILESYSTEM,
             PATH_RELATIVE_TO_PROJECT_ROOT,
@@ -76,9 +76,10 @@ public class OptionalTypeCoercerTest {
 
   @Test
   public void nonNullIsPresent() throws CoerceFailedException {
-    OptionalTypeCoercer<String> coercer = new OptionalTypeCoercer<>(new StringTypeCoercer());
+    OptionalTypeCoercer<String, String> coercer =
+        new OptionalTypeCoercer<>(new StringTypeCoercer());
     Optional<String> result =
-        coercer.coerce(
+        coercer.coerceBoth(
             TestCellBuilder.createCellRoots(FILESYSTEM).getCellNameResolver(),
             FILESYSTEM,
             PATH_RELATIVE_TO_PROJECT_ROOT,
@@ -97,7 +98,7 @@ public class OptionalTypeCoercerTest {
 
   @Test
   public void testConcatOfAbsentElementsIsAbsent() {
-    OptionalTypeCoercer<String> coercer =
+    OptionalTypeCoercer<String, String> coercer =
         new OptionalTypeCoercer<>(new IdentityTypeCoercer<>(String.class));
 
     assertFalse(coercer.concat(Arrays.asList(Optional.empty(), Optional.empty())).isPresent());
@@ -105,10 +106,11 @@ public class OptionalTypeCoercerTest {
 
   @Test
   public void testConcatOfPresentNonConcatableElementsIsAbsent() {
-    PairTypeCoercer<String, String> pairTypeCoercer =
+    PairTypeCoercer<String, String, String, String> pairTypeCoercer =
         new PairTypeCoercer<>(
             new IdentityTypeCoercer<>(String.class), new IdentityTypeCoercer<>(String.class));
-    OptionalTypeCoercer<Pair<String, String>> coercer = new OptionalTypeCoercer<>(pairTypeCoercer);
+    OptionalTypeCoercer<?, Pair<String, String>> coercer =
+        new OptionalTypeCoercer<>(pairTypeCoercer);
 
     assertNull(
         coercer.concat(
@@ -117,9 +119,10 @@ public class OptionalTypeCoercerTest {
 
   @Test
   public void testConcatOfPresentConcatableElementsReturnsAggregatedResult() {
-    ListTypeCoercer<String> listTypeCoercer =
+    ListTypeCoercer<String, String> listTypeCoercer =
         new ListTypeCoercer<>(new IdentityTypeCoercer<>(String.class));
-    OptionalTypeCoercer<ImmutableList<String>> coercer = new OptionalTypeCoercer<>(listTypeCoercer);
+    OptionalTypeCoercer<?, ImmutableList<String>> coercer =
+        new OptionalTypeCoercer<>(listTypeCoercer);
 
     assertEquals(
         ImmutableList.of("b", "a", "a", "c"),

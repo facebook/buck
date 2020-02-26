@@ -36,9 +36,9 @@ import java.util.Optional;
 /** Coerce to {@link com.facebook.buck.rules.coercer.FrameworkPath}. */
 public class FrameworkPathTypeCoercer implements TypeCoercer<Object, FrameworkPath> {
 
-  private final TypeCoercer<Object, SourcePath> sourcePathTypeCoercer;
+  private final TypeCoercer<String, SourcePath> sourcePathTypeCoercer;
 
-  public FrameworkPathTypeCoercer(TypeCoercer<Object, SourcePath> sourcePathTypeCoercer) {
+  public FrameworkPathTypeCoercer(TypeCoercer<String, SourcePath> sourcePathTypeCoercer) {
     this.sourcePathTypeCoercer = sourcePathTypeCoercer;
   }
 
@@ -127,7 +127,7 @@ public class FrameworkPathTypeCoercer implements TypeCoercer<Object, FrameworkPa
         }
       } else {
         return FrameworkPath.ofSourcePath(
-            sourcePathTypeCoercer.coerce(
+            sourcePathTypeCoercer.coerceBoth(
                 cellRoots,
                 filesystem,
                 pathRelativeToProjectRoot,

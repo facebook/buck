@@ -32,7 +32,7 @@ import java.util.Map;
 public class TestSelectorListFactory {
 
   public static <T> SelectorList<T> createSelectorListForCoercer(
-      TypeCoercer<Object, T> elementTypeCoercer, Map<String, ?>... selectors)
+      TypeCoercer<?, T> elementTypeCoercer, Map<String, ?>... selectors)
       throws CoerceFailedException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     ImmutableList.Builder<Selector<T>> selectorBuilder = ImmutableList.builder();
@@ -47,7 +47,7 @@ public class TestSelectorListFactory {
                     ConfigurationBuildTargetFactoryForTests.newInstance(condition.getKey()));
         conditions.put(
             key,
-            elementTypeCoercer.coerce(
+            elementTypeCoercer.coerceBoth(
                 TestCellPathResolver.get(projectFilesystem).getCellNameResolver(),
                 projectFilesystem,
                 ForwardRelativePath.of(""),

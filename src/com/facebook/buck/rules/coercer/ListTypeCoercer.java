@@ -26,22 +26,33 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeParameter;
 import com.google.common.reflect.TypeToken;
 
-public class ListTypeCoercer<T> extends CollectionTypeCoercer<ImmutableList<T>, T>
+/** Coere to {@link com.google.common.collect.ImmutableList}. */
+public class ListTypeCoercer<U, T>
+    extends CollectionTypeCoercer<ImmutableList<U>, ImmutableList<T>, U, T>
     implements Concatable<ImmutableList<T>> {
 
   private final ImmutableListConcatable<T> concatable = new ImmutableListConcatable<>();
   private final TypeToken<ImmutableList<T>> typeToken;
+  private final TypeToken<ImmutableList<U>> typeTokenUnconfigured;
 
-  public ListTypeCoercer(TypeCoercer<Object, T> elementTypeCoercer) {
+  public ListTypeCoercer(TypeCoercer<U, T> elementTypeCoercer) {
     super(elementTypeCoercer);
     this.typeToken =
         new TypeToken<ImmutableList<T>>() {}.where(
             new TypeParameter<T>() {}, elementTypeCoercer.getOutputType());
+    this.typeTokenUnconfigured =
+        new TypeToken<ImmutableList<U>>() {}.where(
+            new TypeParameter<U>() {}, elementTypeCoercer.getUnconfiguredType());
   }
 
   @Override
   public TypeToken<ImmutableList<T>> getOutputType() {
     return typeToken;
+  }
+
+  @Override
+  public TypeToken<ImmutableList<U>> getUnconfiguredType() {
+    return typeTokenUnconfigured;
   }
 
   @Override
@@ -51,10 +62,10 @@ public class ListTypeCoercer<T> extends CollectionTypeCoercer<ImmutableList<T>, 
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       TargetConfiguration hostConfiguration,
-      Object object)
+      ImmutableList<U> object)
       throws CoerceFailedException {
     ImmutableList.Builder<T> builder = ImmutableList.builder();
-    fill(
+    fillConfigured(
         cellRoots,
         filesystem,
         pathRelativeToProjectRoot,
@@ -62,6 +73,18 @@ public class ListTypeCoercer<T> extends CollectionTypeCoercer<ImmutableList<T>, 
         hostConfiguration,
         builder,
         object);
+    return builder.build();
+  }
+
+  @Override
+  public ImmutableList<U> coerceToUnconfigured(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      Object object)
+      throws CoerceFailedException {
+    ImmutableList.Builder<U> builder = ImmutableList.builder();
+    fillUnconfigured(cellRoots, filesystem, pathRelativeToProjectRoot, builder, object);
     return builder.build();
   }
 

@@ -27,7 +27,8 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.reflect.TypeToken;
 import java.nio.file.Path;
 
-public class SourcePathTypeCoercer extends LeafTypeCoercer<SourcePath> {
+/** Coerce to {@link com.facebook.buck.core.sourcepath.SourcePath}. */
+public class SourcePathTypeCoercer extends LeafTypeNewCoercer<String, SourcePath> {
   private final TypeCoercer<Object, BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer;
   private final TypeCoercer<Object, Path> pathTypeCoercer;
 
@@ -44,16 +45,34 @@ public class SourcePathTypeCoercer extends LeafTypeCoercer<SourcePath> {
   }
 
   @Override
+  public TypeToken<String> getUnconfiguredType() {
+    return TypeToken.of(String.class);
+  }
+
+  @Override
+  public String coerceToUnconfigured(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      Object object)
+      throws CoerceFailedException {
+    if (!(object instanceof String)) {
+      throw CoerceFailedException.simple(object, getOutputType());
+    }
+
+    return (String) object;
+  }
+
+  @Override
   public SourcePath coerce(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       TargetConfiguration hostConfiguration,
-      Object object)
+      String object)
       throws CoerceFailedException {
-    if ((object instanceof String)
-        && (((String) object).contains("//") || ((String) object).startsWith(":"))) {
+    if ((object.contains("//") || object.startsWith(":"))) {
       BuildTargetWithOutputs buildTargetWithOutputs =
           buildTargetWithOutputsTypeCoercer.coerce(
               cellRoots,

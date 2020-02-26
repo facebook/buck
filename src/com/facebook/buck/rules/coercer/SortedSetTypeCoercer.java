@@ -20,26 +20,49 @@ import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.reflect.TypeParameter;
 import com.google.common.reflect.TypeToken;
 
-public class SortedSetTypeCoercer<T extends Comparable<? super T>>
-    extends CollectionTypeCoercer<ImmutableSortedSet<T>, T> {
+/** Coerce to {@link com.google.common.collect.ImmutableSortedSet}. */
+public class SortedSetTypeCoercer<U, T extends Comparable<? super T>>
+    extends CollectionTypeCoercer<ImmutableList<U>, ImmutableSortedSet<T>, U, T> {
 
   private final SortedSetConcatable<T> concatable = new SortedSetConcatable<>();
   private final TypeToken<ImmutableSortedSet<T>> typeToken;
+  private final TypeToken<ImmutableList<U>> typeTokenUnconfigured;
 
-  public SortedSetTypeCoercer(TypeCoercer<Object, T> elementTypeCoercer) {
+  public SortedSetTypeCoercer(TypeCoercer<U, T> elementTypeCoercer) {
     super(elementTypeCoercer);
     this.typeToken =
         new TypeToken<ImmutableSortedSet<T>>() {}.where(
             new TypeParameter<T>() {}, elementTypeCoercer.getOutputType());
+    this.typeTokenUnconfigured =
+        new TypeToken<ImmutableList<U>>() {}.where(
+            new TypeParameter<U>() {}, elementTypeCoercer.getUnconfiguredType());
   }
 
   @Override
   public TypeToken<ImmutableSortedSet<T>> getOutputType() {
     return typeToken;
+  }
+
+  @Override
+  public TypeToken<ImmutableList<U>> getUnconfiguredType() {
+    return typeTokenUnconfigured;
+  }
+
+  @Override
+  public ImmutableList<U> coerceToUnconfigured(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      Object object)
+      throws CoerceFailedException {
+    ImmutableList.Builder<U> builder = ImmutableList.builder();
+    fillUnconfigured(cellRoots, filesystem, pathRelativeToProjectRoot, builder, object);
+    return builder.build();
   }
 
   @Override
@@ -49,10 +72,10 @@ public class SortedSetTypeCoercer<T extends Comparable<? super T>>
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       TargetConfiguration hostConfiguration,
-      Object object)
+      ImmutableList<U> object)
       throws CoerceFailedException {
     ImmutableSortedSet.Builder<T> builder = ImmutableSortedSet.naturalOrder();
-    fill(
+    fillConfigured(
         cellRoots,
         filesystem,
         pathRelativeToProjectRoot,

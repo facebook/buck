@@ -143,7 +143,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
                     ? unconfiguredTargetNode.getAttributes().get("compatible_with")
                     : null);
         if (compatibleConfigs != null) {
-          ListTypeCoercer<UnconfiguredBuildTarget> compatibleWithCoercer =
+          ListTypeCoercer<?, UnconfiguredBuildTarget> compatibleWithCoercer =
               new ListTypeCoercer<>(
                   new UnconfiguredBuildTargetTypeCoercer(
                       new ParsingUnconfiguredBuildTargetViewFactory()));
@@ -152,7 +152,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
                 "%s: attribute 'compatibleWith' cannot be configured using select", target);
           }
           ImmutableList<UnconfiguredBuildTarget> coercedCompatibleConfigs =
-              compatibleWithCoercer.coerce(
+              compatibleWithCoercer.coerceBoth(
                   targetCell.getCellNameResolver(),
                   targetCell.getFilesystem(),
                   target.getCellRelativeBasePath().getPath(),

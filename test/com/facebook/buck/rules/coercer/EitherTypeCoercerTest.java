@@ -37,11 +37,11 @@ public class EitherTypeCoercerTest {
 
   @Test
   public void canCoercePairWrappedInEither() throws CoerceFailedException {
-    EitherTypeCoercer<Pair<String, String>, String> coercer =
+    EitherTypeCoercer<Pair<String, String>, String, Pair<String, String>, String> coercer =
         new EitherTypeCoercer<>(new PairTypeCoercer<>(id, id), id);
 
     Either<Pair<String, String>, String> seen =
-        coercer.coerce(
+        coercer.coerceBoth(
             createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             basePath,

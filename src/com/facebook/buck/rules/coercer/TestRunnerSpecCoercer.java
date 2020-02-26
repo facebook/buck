@@ -33,8 +33,10 @@ import java.util.Map;
 public class TestRunnerSpecCoercer implements TypeCoercer<Object, TestRunnerSpec> {
 
   private final TypeCoercer<Object, StringWithMacros> macrosTypeCoercer;
-  private final TypeCoercer<Object, ImmutableMap<StringWithMacros, TestRunnerSpec>> mapTypeCoercer;
-  private final ListTypeCoercer<TestRunnerSpec> listTypeCoercer;
+  private final TypeCoercer<
+          ImmutableMap<Object, Object>, ImmutableMap<StringWithMacros, TestRunnerSpec>>
+      mapTypeCoercer;
+  private final ListTypeCoercer<Object, TestRunnerSpec> listTypeCoercer;
 
   public TestRunnerSpecCoercer(TypeCoercer<Object, StringWithMacros> macrosTypeCoercer) {
     this.macrosTypeCoercer = macrosTypeCoercer;
@@ -99,7 +101,7 @@ public class TestRunnerSpecCoercer implements TypeCoercer<Object, TestRunnerSpec
       Object object)
       throws CoerceFailedException {
     if (object instanceof Map) {
-      return mapTypeCoercer.coerce(
+      return mapTypeCoercer.coerceBoth(
           cellNameResolver,
           filesystem,
           pathRelativeToProjectRoot,
@@ -108,7 +110,7 @@ public class TestRunnerSpecCoercer implements TypeCoercer<Object, TestRunnerSpec
           object);
     }
     if (object instanceof Iterable) {
-      return listTypeCoercer.coerce(
+      return listTypeCoercer.coerceBoth(
           cellNameResolver,
           filesystem,
           pathRelativeToProjectRoot,

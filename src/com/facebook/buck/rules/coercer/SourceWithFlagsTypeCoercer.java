@@ -29,14 +29,15 @@ import java.util.Collection;
 
 /** A type coercer to handle source entries with a list of flags. */
 public class SourceWithFlagsTypeCoercer implements TypeCoercer<Object, SourceWithFlags> {
-  private final TypeCoercer<Object, SourcePath> sourcePathTypeCoercer;
-  private final TypeCoercer<Object, ImmutableList<String>> flagsTypeCoercer;
-  private final TypeCoercer<Object, Pair<SourcePath, ImmutableList<String>>>
+  private final TypeCoercer<String, SourcePath> sourcePathTypeCoercer;
+  private final TypeCoercer<ImmutableList<String>, ImmutableList<String>> flagsTypeCoercer;
+  private final TypeCoercer<
+          Pair<String, ImmutableList<String>>, Pair<SourcePath, ImmutableList<String>>>
       sourcePathWithFlagsTypeCoercer;
 
   SourceWithFlagsTypeCoercer(
-      TypeCoercer<Object, SourcePath> sourcePathTypeCoercer,
-      TypeCoercer<Object, ImmutableList<String>> flagsTypeCoercer) {
+      TypeCoercer<String, SourcePath> sourcePathTypeCoercer,
+      TypeCoercer<ImmutableList<String>, ImmutableList<String>> flagsTypeCoercer) {
     this.sourcePathTypeCoercer = sourcePathTypeCoercer;
     this.flagsTypeCoercer = flagsTypeCoercer;
     this.sourcePathWithFlagsTypeCoercer =
@@ -90,7 +91,7 @@ public class SourceWithFlagsTypeCoercer implements TypeCoercer<Object, SourceWit
     // We're expecting one of two types here. They can be differentiated pretty easily.
     if (object instanceof String) {
       return SourceWithFlags.of(
-          sourcePathTypeCoercer.coerce(
+          sourcePathTypeCoercer.coerceBoth(
               cellRoots,
               filesystem,
               pathRelativeToProjectRoot,
@@ -102,7 +103,7 @@ public class SourceWithFlagsTypeCoercer implements TypeCoercer<Object, SourceWit
     // If we get this far, we're dealing with a Pair of a SourcePath and a String.
     if (object instanceof Collection<?> && ((Collection<?>) object).size() == 2) {
       Pair<SourcePath, ImmutableList<String>> sourcePathWithFlags =
-          sourcePathWithFlagsTypeCoercer.coerce(
+          sourcePathWithFlagsTypeCoercer.coerceBoth(
               cellRoots,
               filesystem,
               pathRelativeToProjectRoot,
