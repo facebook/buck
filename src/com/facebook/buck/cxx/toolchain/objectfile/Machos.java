@@ -216,6 +216,9 @@ public class Machos {
 
     map.position(symbolTableOffset);
 
+    // NB: We need to rewrite the string table as it's not deterministic and it would break
+    //     caching behavior. On the other hand, the symbol table order is deterministic.
+
     boolean is64bit = header.getIs64Bit();
     Map<byte[], byte[]> replacementPathMap = generateReplacementMap(cellRoots);
     IntIntMap strings = new IntIntMap4a(symbolTableCount, 0.75f, NO_VALUE_MARKER);
