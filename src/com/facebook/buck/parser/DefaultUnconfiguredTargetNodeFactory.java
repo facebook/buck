@@ -147,15 +147,13 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
     builtTargetVerifier.verifyBuildTarget(
         cell, descriptor.getRuleType(), buildFile, target, description, rawAttributes);
 
-    String visibilityDefinerDescription = target.getFullyQualifiedName();
-
     ImmutableSet<VisibilityPattern> visibilityPatterns =
         VisibilityPatterns.createFromStringList(
             cell.getCellPathResolver(),
             VisibilityAttributes.VISIBILITY,
             rawAttributes.get(VisibilityAttributes.VISIBILITY),
             buildFile,
-            () -> visibilityDefinerDescription);
+            target::getFullyQualifiedName);
 
     if (visibilityPatterns.isEmpty()) {
       visibilityPatterns = pkg.getVisibilityPatterns();
@@ -167,7 +165,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
             VisibilityAttributes.WITHIN_VIEW,
             rawAttributes.get(VisibilityAttributes.WITHIN_VIEW),
             buildFile,
-            () -> visibilityDefinerDescription);
+            target::getFullyQualifiedName);
 
     if (withinViewPatterns.isEmpty()) {
       withinViewPatterns = pkg.getWithinViewPatterns();
