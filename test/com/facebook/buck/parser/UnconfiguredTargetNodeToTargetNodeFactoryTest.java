@@ -116,7 +116,8 @@ public class UnconfiguredTargetNodeToTargetNodeFactoryTest {
             RuleType.of("java_library", RuleType.Kind.BUILD),
             attributes,
             ImmutableSet.of(),
-            ImmutableSet.of());
+            ImmutableSet.of(),
+            ImmutableList.of());
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     BuildTarget selectableTarget = ConfigurationBuildTargetFactoryForTests.newInstance("//x:y");
     TargetPlatformResolver targetPlatformResolver =

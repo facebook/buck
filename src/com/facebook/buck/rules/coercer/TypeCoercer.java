@@ -125,4 +125,15 @@ public interface TypeCoercer<U, T> extends Concatable<T> {
         type);
     return (TypeCoercer<U, S>) this;
   }
+
+  /** Runtime checked cast. */
+  @SuppressWarnings("unchecked")
+  default <S> TypeCoercer<S, T> checkUnconfiguredAssignableTo(TypeToken<S> type) {
+    Preconditions.checkState(
+        this.getUnconfiguredType().wrap().isSubtypeOf(type.wrap()),
+        "actual unconfigured type %s must be a assignable to %s",
+        this.getUnconfiguredType(),
+        type);
+    return (TypeCoercer<S, T>) this;
+  }
 }

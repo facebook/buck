@@ -34,15 +34,19 @@ import com.facebook.buck.core.select.impl.SelectorListFactory;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.function.BuckPyFunction;
 import com.facebook.buck.parser.syntax.ListWithSelects;
+import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
 import com.facebook.buck.rules.coercer.ParamInfo;
+import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.rules.visibility.parser.VisibilityPatterns;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.reflect.TypeToken;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
@@ -58,6 +62,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
   private final Cells cells;
   private final SelectorListFactory selectorListFactory;
   private final TypeCoercerFactory typeCoercerFactory;
+  private final TypeCoercer<ImmutableList<UnconfiguredBuildTarget>, ?> compatibleWithCoercer;
 
   public DefaultUnconfiguredTargetNodeFactory(
       KnownRuleTypesProvider knownRuleTypesProvider,
@@ -70,6 +75,11 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
     this.cells = cells;
     this.selectorListFactory = selectorListFactory;
     this.typeCoercerFactory = typeCoercerFactory;
+    this.compatibleWithCoercer =
+        typeCoercerFactory
+            .typeCoercerForType(new TypeToken<ImmutableList<UnconfiguredBuildTarget>>() {})
+            .checkUnconfiguredAssignableTo(
+                new TypeToken<ImmutableList<UnconfiguredBuildTarget>>() {});
   }
 
   private ImmutableMap<String, Object> convertSelects(
@@ -175,8 +185,31 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
         convertSelects(
             target, descriptor, rawAttributes, target.getCellRelativeBasePath(), dependencyStack);
 
+    ImmutableList<UnconfiguredBuildTarget> compatibleWith = ImmutableList.of();
+
+    // TODO(nga): UDR populate `compatible_with` while native rules populate `compatibleWith`
+    Object rawCompatibleWith =
+        rawAttributes.getOrDefault("compatible_with", rawAttributes.get("compatibleWith"));
+    if (rawCompatibleWith != null) {
+      try {
+        compatibleWith =
+            compatibleWithCoercer.coerceToUnconfigured(
+                cell.getCellNameResolver(),
+                cell.getFilesystem(),
+                target.getCellRelativeBasePath().getPath(),
+                rawCompatibleWith);
+      } catch (CoerceFailedException e) {
+        throw new HumanReadableException(dependencyStack, e.getMessage(), e);
+      }
+    }
+
     return ImmutableUnconfiguredTargetNode.of(
-        target, descriptor.getRuleType(), withSelects, visibilityPatterns, withinViewPatterns);
+        target,
+        descriptor.getRuleType(),
+        withSelects,
+        visibilityPatterns,
+        withinViewPatterns,
+        compatibleWith);
   }
 
   private static RuleDescriptor<?> parseRuleTypeFromRawRule(

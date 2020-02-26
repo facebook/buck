@@ -43,6 +43,7 @@ import com.facebook.buck.parser.UnconfiguredTargetNodeToTargetNodeFactory;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -96,7 +97,8 @@ public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputationTe
             RuleType.of("java_library", RuleType.Kind.BUILD),
             rawAttributes1,
             ImmutableSet.of(),
-            ImmutableSet.of());
+            ImmutableSet.of(),
+            ImmutableList.of());
 
     UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation computation =
         UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation.of(

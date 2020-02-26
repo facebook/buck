@@ -59,7 +59,8 @@ public class UnconfiguredTargetNodeWithDepsPackageTest {
             RuleType.of("java_library", RuleType.Kind.BUILD),
             rawAttributes1,
             ImmutableSet.of(),
-            ImmutableSet.of());
+            ImmutableSet.of(),
+            ImmutableList.of());
 
     ImmutableMap<String, Object> rawAttributes2 =
         ImmutableMap.of("name", "target2", "buck.type", "java_library", "buck.base_path", "base");
@@ -73,7 +74,8 @@ public class UnconfiguredTargetNodeWithDepsPackageTest {
             RuleType.of("java_library", RuleType.Kind.BUILD),
             rawAttributes2,
             ImmutableSet.of(),
-            ImmutableSet.of());
+            ImmutableSet.of(),
+            ImmutableList.of());
 
     UnconfiguredTargetNodeWithDeps unconfiguredTargetNodeWithDeps1 =
         UnconfiguredTargetNodeWithDeps.of(

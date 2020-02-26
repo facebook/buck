@@ -110,7 +110,8 @@ public class DaemonicCellStateTest {
         RuleType.of("j_l", RuleType.Kind.BUILD),
         ImmutableMap.of(),
         ImmutableSet.of(),
-        ImmutableSet.of());
+        ImmutableSet.of(),
+        ImmutableList.of());
   }
 
   private AbsPath dummyPackageFile() {

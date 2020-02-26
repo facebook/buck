@@ -26,36 +26,29 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationTransformer;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.RuleDescriptor;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
-import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.SimplePerfEvent.Scope;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
-import com.facebook.buck.rules.coercer.ListTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.function.Function;
-import javax.annotation.Nullable;
 
 /** Creates {@link TargetNode} from {@link UnconfiguredTargetNode}. */
 public class UnconfiguredTargetNodeToTargetNodeFactory
@@ -133,40 +126,14 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
                 .getTargetPlatformResolver()
                 .getTargetPlatform(target.getTargetConfiguration(), DependencyStack.top(target));
 
-        // Some rules like write_file use compatible_with, and some rules like genrule use
-        // compatibleWith
-        @Nullable
-        Object compatibleConfigs =
-            unconfiguredTargetNode.getAttributes().containsKey("compatibleWith")
-                ? unconfiguredTargetNode.getAttributes().get("compatibleWith")
-                : (unconfiguredTargetNode.getAttributes().containsKey("compatible_with")
-                    ? unconfiguredTargetNode.getAttributes().get("compatible_with")
-                    : null);
-        if (compatibleConfigs != null) {
-          ListTypeCoercer<?, UnconfiguredBuildTarget> compatibleWithCoercer =
-              new ListTypeCoercer<>(
-                  new UnconfiguredBuildTargetTypeCoercer(
-                      new ParsingUnconfiguredBuildTargetViewFactory()));
-          if (compatibleConfigs instanceof SelectorList<?>) {
-            throw new HumanReadableException(
-                "%s: attribute 'compatibleWith' cannot be configured using select", target);
-          }
-          ImmutableList<UnconfiguredBuildTarget> coercedCompatibleConfigs =
-              compatibleWithCoercer.coerceBoth(
-                  targetCell.getCellNameResolver(),
-                  targetCell.getFilesystem(),
-                  target.getCellRelativeBasePath().getPath(),
-                  target.getTargetConfiguration(),
-                  hostConfiguration,
-                  compatibleConfigs);
-          if (!TargetCompatibilityChecker.configTargetsMatchPlatform(
-              configurationRuleRegistry.get(),
-              coercedCompatibleConfigs,
-              targetPlatform,
-              dependencyStack,
-              buckConfig)) {
-            return TargetNodeMaybeIncompatible.ofIncompatible(target, coercedCompatibleConfigs);
-          }
+        if (!TargetCompatibilityChecker.configTargetsMatchPlatform(
+            configurationRuleRegistry.get(),
+            unconfiguredTargetNode.getCompatibleWith(),
+            targetPlatform,
+            dependencyStack,
+            buckConfig)) {
+          return TargetNodeMaybeIncompatible.ofIncompatible(
+              target, unconfiguredTargetNode.getCompatibleWith());
         }
       }
 
