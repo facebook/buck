@@ -563,10 +563,9 @@ jobs:
       - run:
           # There is an issue with python in macos 10.14.x. this step is a work around and should be removed later.
           # https://stackoverflow.com/questions/59269208/errorrootcode-for-hash-md5-was-not-found-not-able-to-use-any-hg-mercurial-co
-          name: Uninstall Python2
-          # Python2 was EOL on 1/1/2020, it does not work with Xcode 10.3.0
+          name: Reinstall Python2
           command: |
-            brew uninstall python@2
+            brew reinstall https://raw.githubusercontent.com/Homebrew/homebrew-core/86a44a0a552c673a05f11018459c9f5faae3becc/Formula/python@2.rb
       - run:
           <<: *run_ant_build
       - run:
@@ -584,7 +583,7 @@ jobs:
             # Should run this:
             #${BUCK_PEX_LOCATION} test --num-threads=$BUCK_NUM_THREADS --all --filter '^(?!(com.facebook.buck.android|com.facebook.buck.jvm.java)).*[Ii]ntegration.*'
             # But there are some test failures, exclude them for now and fix them later.
-            ${BUCK_PEX_LOCATION} test --num-threads=$BUCK_NUM_THREADS --all --filter '^(?!(com.facebook.buck.android|com.facebook.buck.jvm.java|com.facebook.buck.features.haskell.HaskellBinary|com.facebook.buck.swift.SwiftTestIO|com.facebook.buck.apple.AppleTest|com.facebook.buck.parser.ParserIntegrationTest|com.facebook.buck.features.python.PythonBinaryIntegrationTest)).*[Ii]ntegration.*'
+            ${BUCK_PEX_LOCATION} test --num-threads=$BUCK_NUM_THREADS --all --filter '^(?!(com.facebook.buck.android|com.facebook.buck.jvm.java|com.facebook.buck.features.haskell.HaskellBinary|com.facebook.buck.swift.SwiftTestIO|com.facebook.buck.apple.AppleTest)).*[Ii]ntegration.*'
 
   macos_test_heavy_integration:
     environment:
