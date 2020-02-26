@@ -25,6 +25,7 @@ import com.facebook.buck.rules.coercer.concat.ImmutableListConcatable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeParameter;
 import com.google.common.reflect.TypeToken;
+import java.util.Collection;
 
 /** Coere to {@link com.google.common.collect.ImmutableList}. */
 public class ListTypeCoercer<U, T>
@@ -87,6 +88,7 @@ public class ListTypeCoercer<U, T>
     return builder.build();
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public ImmutableList<U> coerceToUnconfigured(
       CellNameResolver cellRoots,
@@ -94,9 +96,27 @@ public class ListTypeCoercer<U, T>
       ForwardRelativePath pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
-    ImmutableList.Builder<U> builder = ImmutableList.builder();
-    fillUnconfigured(cellRoots, filesystem, pathRelativeToProjectRoot, builder, object);
-    return builder.build();
+    if (object instanceof Collection<?>) {
+      boolean identity = true;
+
+      ImmutableList.Builder<U> builder =
+          ImmutableList.builderWithExpectedSize(((Collection<?>) object).size());
+      for (Object element : (Collection<?>) object) {
+        // if any element failed, the entire collection fails
+        U coercedElement =
+            elementTypeCoercer.coerceToUnconfigured(
+                cellRoots, filesystem, pathRelativeToProjectRoot, element);
+        builder.add(coercedElement);
+        identity &= coercedElement == element;
+      }
+      if (identity && object instanceof ImmutableList<?>) {
+        // reuse allocation
+        return (ImmutableList<U>) object;
+      }
+      return builder.build();
+    } else {
+      throw CoerceFailedException.simple(object, getOutputType().getType());
+    }
   }
 
   @Override

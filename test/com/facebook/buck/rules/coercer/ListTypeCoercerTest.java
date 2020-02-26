@@ -44,4 +44,18 @@ public class ListTypeCoercerTest {
 
     assertSame(list, result);
   }
+
+  @Test
+  public void rawToUnconfiguredOptimized() throws Exception {
+    ListTypeCoercer<String, String> coercer = new ListTypeCoercer<>(new StringTypeCoercer());
+
+    ImmutableList<String> raw = ImmutableList.of("aa", "bb");
+    ImmutableList<String> unconfigured =
+        coercer.coerceToUnconfigured(
+            TestCellNameResolver.forRoot(),
+            new FakeProjectFilesystem(),
+            ForwardRelativePath.EMPTY,
+            raw);
+    assertSame(raw, unconfigured);
+  }
 }
