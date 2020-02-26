@@ -159,6 +159,13 @@ public class EitherTypeCoercer<LU, RU, Left, Right>
   }
 
   @Override
+  public boolean unconfiguredToConfiguredCoercionIsIdentity() {
+    return leftTypeCoercer.unconfiguredToConfiguredCoercionIsIdentity()
+        && rightTypeCoercer.unconfiguredToConfiguredCoercionIsIdentity();
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
   public Either<Left, Right> coerce(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
@@ -168,23 +175,37 @@ public class EitherTypeCoercer<LU, RU, Left, Right>
       Either<LU, RU> object)
       throws CoerceFailedException {
     if (object.isLeft()) {
-      return Either.ofLeft(
+      Left leftCoerced =
           leftTypeCoercer.coerce(
               cellRoots,
               filesystem,
               pathRelativeToProjectRoot,
               targetConfiguration,
               hostConfiguration,
-              object.getLeft()));
+              object.getLeft());
+
+      // avoid allocation even if coercer is effectively no-op
+      if (leftCoerced == object.getLeft()) {
+        return (Either<Left, Right>) object;
+      }
+
+      return Either.ofLeft(leftCoerced);
     } else {
-      return Either.ofRight(
+      Right rightCoerced =
           rightTypeCoercer.coerce(
               cellRoots,
               filesystem,
               pathRelativeToProjectRoot,
               targetConfiguration,
               hostConfiguration,
-              object.getRight()));
+              object.getRight());
+
+      // avoid allocation even if coercer is effectively no-op
+      if (rightCoerced == object.getRight()) {
+        return (Either<Left, Right>) object;
+      }
+
+      return Either.ofRight(rightCoerced);
     }
   }
 }
