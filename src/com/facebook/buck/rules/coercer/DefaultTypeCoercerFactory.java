@@ -20,7 +20,6 @@ import com.facebook.buck.core.description.arg.DataTransferObject;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMapping;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcher;
@@ -108,8 +107,9 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
         new UnconfiguredBuildTargetTypeCoercer(unconfiguredBuildTargetFactory);
     BuildTargetTypeCoercer buildTargetTypeCoercer =
         new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer);
-    TypeCoercer<Object, BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer =
-        new BuildTargetWithOutputsTypeCoercer(buildTargetTypeCoercer);
+    BuildTargetWithOutputsTypeCoercer buildTargetWithOutputsTypeCoercer =
+        new BuildTargetWithOutputsTypeCoercer(
+            new UnconfiguredBuildTargetWithOutputsTypeCoercer(unconfiguredBuildTargetTypeCoercer));
     TypeCoercer<Path, Path> pathTypeCoercer = new PathTypeCoercer();
     TypeCoercer<String, SourcePath> sourcePathTypeCoercer =
         new SourcePathTypeCoercer(buildTargetWithOutputsTypeCoercer, pathTypeCoercer);

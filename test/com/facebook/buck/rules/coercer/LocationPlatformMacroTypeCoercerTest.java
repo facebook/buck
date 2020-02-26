@@ -43,17 +43,16 @@ public class LocationPlatformMacroTypeCoercerTest {
       TestCellPathResolver.get(filesystem).getCellNameResolver();
   private final ForwardRelativePath basePath = ForwardRelativePath.of("");
 
-  private UnconfiguredBuildTargetTypeCoercer unconfiguredBuildTargetFactory;
   private LocationPlatformMacroTypeCoercer coercer;
 
   @Before
   public void setUp() {
-    unconfiguredBuildTargetFactory =
-        new UnconfiguredBuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetViewFactory());
     coercer =
         new LocationPlatformMacroTypeCoercer(
             new BuildTargetWithOutputsTypeCoercer(
-                new BuildTargetTypeCoercer(unconfiguredBuildTargetFactory)));
+                new UnconfiguredBuildTargetWithOutputsTypeCoercer(
+                    new UnconfiguredBuildTargetTypeCoercer(
+                        new ParsingUnconfiguredBuildTargetViewFactory()))));
   }
 
   @Test

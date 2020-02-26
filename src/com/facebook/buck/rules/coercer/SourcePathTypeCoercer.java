@@ -19,6 +19,7 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -29,11 +30,13 @@ import java.nio.file.Path;
 
 /** Coerce to {@link com.facebook.buck.core.sourcepath.SourcePath}. */
 public class SourcePathTypeCoercer extends LeafTypeNewCoercer<String, SourcePath> {
-  private final TypeCoercer<Object, BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer;
+  private final TypeCoercer<UnconfiguredBuildTargetWithOutputs, BuildTargetWithOutputs>
+      buildTargetWithOutputsTypeCoercer;
   private final TypeCoercer<Path, Path> pathTypeCoercer;
 
   public SourcePathTypeCoercer(
-      TypeCoercer<Object, BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer,
+      TypeCoercer<UnconfiguredBuildTargetWithOutputs, BuildTargetWithOutputs>
+          buildTargetWithOutputsTypeCoercer,
       TypeCoercer<Path, Path> pathTypeCoercer) {
     this.buildTargetWithOutputsTypeCoercer = buildTargetWithOutputsTypeCoercer;
     this.pathTypeCoercer = pathTypeCoercer;
@@ -74,7 +77,7 @@ public class SourcePathTypeCoercer extends LeafTypeNewCoercer<String, SourcePath
       throws CoerceFailedException {
     if ((object.contains("//") || object.startsWith(":"))) {
       BuildTargetWithOutputs buildTargetWithOutputs =
-          buildTargetWithOutputsTypeCoercer.coerce(
+          buildTargetWithOutputsTypeCoercer.coerceBoth(
               cellRoots,
               filesystem,
               pathRelativeToProjectRoot,

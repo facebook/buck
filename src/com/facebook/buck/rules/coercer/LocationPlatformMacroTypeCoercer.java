@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.LocationPlatformMacro;
@@ -31,7 +32,8 @@ class LocationPlatformMacroTypeCoercer
     extends AbstractLocationMacroTypeCoercer<LocationPlatformMacro> {
 
   public LocationPlatformMacroTypeCoercer(
-      TypeCoercer<Object, BuildTargetWithOutputs> buildTargetTypeCoercer) {
+      TypeCoercer<UnconfiguredBuildTargetWithOutputs, BuildTargetWithOutputs>
+          buildTargetTypeCoercer) {
     super(buildTargetTypeCoercer);
   }
 

@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.BuildTargetMacro;
@@ -36,13 +37,15 @@ public final class BuildTargetMacroTypeCoercer<M extends BuildTargetMacro>
     HOST,
   }
 
-  private final TypeCoercer<Object, BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer;
+  private final TypeCoercer<UnconfiguredBuildTargetWithOutputs, BuildTargetWithOutputs>
+      buildTargetWithOutputsTypeCoercer;
   private final Class<M> mClass;
   private final TargetOrHost targetOrHost;
   private final Function<BuildTargetWithOutputs, M> factory;
 
   public BuildTargetMacroTypeCoercer(
-      TypeCoercer<Object, BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer,
+      TypeCoercer<UnconfiguredBuildTargetWithOutputs, BuildTargetWithOutputs>
+          buildTargetWithOutputsTypeCoercer,
       Class<M> mClass,
       TargetOrHost targetOrHost,
       Function<BuildTargetWithOutputs, M> factory) {
@@ -85,7 +88,7 @@ public final class BuildTargetMacroTypeCoercer<M extends BuildTargetMacro>
           String.format("expected exactly one argument (found %d)", args.size()));
     }
     BuildTargetWithOutputs target =
-        buildTargetWithOutputsTypeCoercer.coerce(
+        buildTargetWithOutputsTypeCoercer.coerceBoth(
             cellNameResolver,
             filesystem,
             pathRelativeToProjectRoot,

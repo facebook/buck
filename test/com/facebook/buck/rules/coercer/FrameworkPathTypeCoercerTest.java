@@ -19,9 +19,8 @@ package com.facebook.buck.rules.coercer;
 import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -33,11 +32,12 @@ import org.junit.Test;
 
 public class FrameworkPathTypeCoercerTest {
 
-  private final TypeCoercer<UnconfiguredBuildTarget, BuildTarget> buildTargetTypeCoercer =
-      new BuildTargetTypeCoercer(
-          new UnconfiguredBuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetViewFactory()));
-  private final TypeCoercer<Object, BuildTargetWithOutputs> buildTargetWithOutputsTypeCoercer =
-      new BuildTargetWithOutputsTypeCoercer(buildTargetTypeCoercer);
+  private final TypeCoercer<UnconfiguredBuildTargetWithOutputs, BuildTargetWithOutputs>
+      buildTargetWithOutputsTypeCoercer =
+          new BuildTargetWithOutputsTypeCoercer(
+              new UnconfiguredBuildTargetWithOutputsTypeCoercer(
+                  new UnconfiguredBuildTargetTypeCoercer(
+                      new ParsingUnconfiguredBuildTargetViewFactory())));
   private final TypeCoercer<Path, Path> pathTypeCoercer = new PathTypeCoercer();
   private final TypeCoercer<String, SourcePath> sourcePathTypeCoercer =
       new SourcePathTypeCoercer(buildTargetWithOutputsTypeCoercer, pathTypeCoercer);

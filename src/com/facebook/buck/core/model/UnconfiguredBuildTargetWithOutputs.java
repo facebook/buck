@@ -72,4 +72,10 @@ public abstract class UnconfiguredBuildTargetWithOutputs
       UnconfiguredBuildTarget buildTarget, OutputLabel outputLabel) {
     return ImmutableUnconfiguredBuildTargetWithOutputs.of(buildTarget, outputLabel);
   }
+
+  /** Apply the configuration. */
+  public BuildTargetWithOutputs configure(TargetConfiguration targetConfiguration) {
+    return BuildTargetWithOutputs.of(
+        getBuildTarget().configure(targetConfiguration), getOutputLabel());
+  }
 }
