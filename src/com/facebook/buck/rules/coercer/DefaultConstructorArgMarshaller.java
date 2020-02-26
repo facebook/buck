@@ -227,7 +227,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
               .mapValuesThrowing(
                   v -> {
                     return info.getTypeCoercer()
-                        .coerce(
+                        .coerceBoth(
                             cellNameResolver,
                             filesystem,
                             buildTarget.getCellRelativeBasePath().getPath(),
@@ -245,7 +245,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
           attributeWithSelectableValue);
     } else {
       return info.getTypeCoercer()
-          .coerce(
+          .coerceBoth(
               cellNameResolver,
               filesystem,
               buildTarget.getCellRelativeBasePath().getPath(),

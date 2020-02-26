@@ -55,7 +55,7 @@ public class ReflectionParamInfo<T> extends AbstractParamInfo<T> {
   @SuppressWarnings("PMD.EmptyCatchBlock")
   private ReflectionParamInfo(
       String name,
-      TypeCoercer<Object, T> typeCoercer,
+      TypeCoercer<?, T> typeCoercer,
       Method setter,
       Method closestGetterOnAbstractClassOrInterface,
       Method concreteGetter,
@@ -97,7 +97,7 @@ public class ReflectionParamInfo<T> extends AbstractParamInfo<T> {
         staticInfoCache.computeIfAbsent(setter, ReflectionParamInfo::computeSetterInfo);
 
     try {
-      TypeCoercer<Object, ?> typeCoercer =
+      TypeCoercer<?, ?> typeCoercer =
           typeCoercerFactory.typeCoercerForType(TypeToken.of(staticInfo.setterParameterType));
 
       return new ReflectionParamInfo<>(

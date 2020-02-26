@@ -97,7 +97,7 @@ public class OutputMacroExpanderTest {
 
     new DefaultTypeCoercerFactory()
         .typeCoercerForType(TypeToken.of(StringWithMacros.class))
-        .coerce(
+        .coerceBoth(
             cellNameResolver,
             filesystem,
             ForwardRelativePath.of(""),
@@ -110,7 +110,7 @@ public class OutputMacroExpanderTest {
     StringWithMacros stringWithMacros =
         new DefaultTypeCoercerFactory()
             .typeCoercerForType(TypeToken.of(StringWithMacros.class))
-            .coerce(
+            .coerceBoth(
                 cellNameResolver,
                 filesystem,
                 rule.getBuildTarget().getCellRelativeBasePath().getPath(),

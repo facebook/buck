@@ -47,6 +47,11 @@ public class SortedMapTypeCoercer<K extends Comparable<K>, V>
   }
 
   @Override
+  public TypeToken<Object> getUnconfiguredType() {
+    return TypeToken.of(Object.class);
+  }
+
+  @Override
   public boolean hasElementClass(Class<?>... types) {
     return keyTypeCoercer.hasElementClass(types) || valueTypeCoercer.hasElementClass(types);
   }
@@ -59,6 +64,16 @@ public class SortedMapTypeCoercer<K extends Comparable<K>, V>
       keyTypeCoercer.traverse(cellRoots, element.getKey(), traversal);
       valueTypeCoercer.traverse(cellRoots, element.getValue(), traversal);
     }
+  }
+
+  @Override
+  public Object coerceToUnconfigured(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      Object object)
+      throws CoerceFailedException {
+    return object;
   }
 
   @Override

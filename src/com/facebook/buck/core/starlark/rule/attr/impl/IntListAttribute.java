@@ -28,7 +28,7 @@ import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 @BuckStyleValue
 public abstract class IntListAttribute extends Attribute<ImmutableList<Integer>> {
 
-  private static final TypeCoercer<Object, ImmutableList<Integer>> coercer =
+  private static final TypeCoercer<?, ImmutableList<Integer>> coercer =
       TypeCoercerFactoryForStarlark.typeCoercerForType(new TypeToken<ImmutableList<Integer>>() {});
 
   @Override
@@ -49,7 +49,7 @@ public abstract class IntListAttribute extends Attribute<ImmutableList<Integer>>
   }
 
   @Override
-  public TypeCoercer<Object, ImmutableList<Integer>> getTypeCoercer() {
+  public TypeCoercer<?, ImmutableList<Integer>> getTypeCoercer() {
     return coercer;
   }
 

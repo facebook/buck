@@ -26,7 +26,7 @@ import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 @BuckStyleValue
 public abstract class BoolAttribute extends Attribute<Boolean> {
 
-  private static final TypeCoercer<Object, Boolean> coercer =
+  private static final TypeCoercer<?, Boolean> coercer =
       TypeCoercerFactoryForStarlark.typeCoercerForType(TypeToken.of(Boolean.class));
 
   @Override
@@ -44,7 +44,7 @@ public abstract class BoolAttribute extends Attribute<Boolean> {
   }
 
   @Override
-  public TypeCoercer<Object, Boolean> getTypeCoercer() {
+  public TypeCoercer<?, Boolean> getTypeCoercer() {
     return coercer;
   }
 

@@ -54,6 +54,11 @@ public class CxxLinkGroupMappingCoercer implements TypeCoercer<Object, CxxLinkGr
   }
 
   @Override
+  public TypeToken<Object> getUnconfiguredType() {
+    return TypeToken.of(Object.class);
+  }
+
+  @Override
   public boolean hasElementClass(Class<?>... types) {
     return linkGroupTypeCoercer.hasElementClass(types)
         || mappingTargetsCoercer.hasElementClass(types);
@@ -64,6 +69,16 @@ public class CxxLinkGroupMappingCoercer implements TypeCoercer<Object, CxxLinkGr
       CellNameResolver cellRoots, CxxLinkGroupMapping object, Traversal traversal) {
     linkGroupTypeCoercer.traverse(cellRoots, object.getLinkGroup(), traversal);
     mappingTargetsCoercer.traverse(cellRoots, object.getMappingTargets(), traversal);
+  }
+
+  @Override
+  public Object coerceToUnconfigured(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      Object object)
+      throws CoerceFailedException {
+    return object;
   }
 
   @Override

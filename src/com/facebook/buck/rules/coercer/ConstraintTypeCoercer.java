@@ -33,6 +33,21 @@ public class ConstraintTypeCoercer extends LeafTypeCoercer<Constraint> {
   }
 
   @Override
+  public TypeToken<Object> getUnconfiguredType() {
+    return TypeToken.of(Object.class);
+  }
+
+  @Override
+  public Object coerceToUnconfigured(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      Object object)
+      throws CoerceFailedException {
+    return object;
+  }
+
+  @Override
   public Constraint coerce(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,

@@ -51,6 +51,11 @@ public class PatternMatchedCollectionTypeCoercer<T>
   }
 
   @Override
+  public TypeToken<Object> getUnconfiguredType() {
+    return TypeToken.of(Object.class);
+  }
+
+  @Override
   public boolean hasElementClass(Class<?>... types) {
     for (Class<?> type : types) {
       if (type.equals(String.class)) {
@@ -67,6 +72,16 @@ public class PatternMatchedCollectionTypeCoercer<T>
       traversal.traverse(value.getFirst());
       valueTypeCoercer.traverse(cellRoots, value.getSecond(), traversal);
     }
+  }
+
+  @Override
+  public Object coerceToUnconfigured(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      Object object)
+      throws CoerceFailedException {
+    return object;
   }
 
   @Override

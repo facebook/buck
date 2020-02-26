@@ -39,6 +39,8 @@ public interface TypeCoercer<U, T> extends Concatable<T> {
 
   TypeToken<T> getOutputType();
 
+  TypeToken<U> getUnconfiguredType();
+
   /**
    * Returns whether the leaf nodes of this type coercer outputs value that is an instance of the
    * given class or its subclasses. Does not match non-leaf nodes like Map or List.
@@ -53,6 +55,14 @@ public interface TypeCoercer<U, T> extends Concatable<T> {
    */
   void traverse(CellNameResolver cellRoots, T object, Traversal traversal);
 
+  /** Coerce to a value for unconfigured graph. */
+  U coerceToUnconfigured(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      Object object)
+      throws CoerceFailedException;
+
   /** @throws CoerceFailedException Input object cannot be coerced into the given type. */
   T coerce(
       CellNameResolver cellRoots,
@@ -62,6 +72,29 @@ public interface TypeCoercer<U, T> extends Concatable<T> {
       TargetConfiguration hostConfiguration,
       U object)
       throws CoerceFailedException;
+
+  /**
+   * Apply {@link #coerceToUnconfigured(CellNameResolver, ProjectFilesystem, ForwardRelativePath,
+   * Object)} followed by {@link #coerce(CellNameResolver, ProjectFilesystem, ForwardRelativePath,
+   * TargetConfiguration, TargetConfiguration, Object)}.
+   */
+  default T coerceBoth(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
+      Object object)
+      throws CoerceFailedException {
+    U unconfigured = coerceToUnconfigured(cellRoots, filesystem, pathRelativeToProjectRoot, object);
+    return coerce(
+        cellRoots,
+        filesystem,
+        pathRelativeToProjectRoot,
+        targetConfiguration,
+        hostConfiguration,
+        unconfigured);
+  }
 
   /**
    * Implementation of concatenation for this type. <code>null</code> indicates that concatenation

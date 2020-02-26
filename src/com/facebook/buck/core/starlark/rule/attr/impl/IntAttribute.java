@@ -28,7 +28,7 @@ import java.util.List;
 @BuckStyleValue
 public abstract class IntAttribute extends Attribute<Integer> {
 
-  private static final TypeCoercer<Object, Integer> coercer =
+  private static final TypeCoercer<?, Integer> coercer =
       TypeCoercerFactoryForStarlark.typeCoercerForType(TypeToken.of(Integer.class));
 
   @Override
@@ -49,7 +49,7 @@ public abstract class IntAttribute extends Attribute<Integer> {
   }
 
   @Override
-  public TypeCoercer<Object, Integer> getTypeCoercer() {
+  public TypeCoercer<?, Integer> getTypeCoercer() {
     return coercer;
   }
 

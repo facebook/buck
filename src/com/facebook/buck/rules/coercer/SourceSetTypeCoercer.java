@@ -45,6 +45,11 @@ public class SourceSetTypeCoercer extends SourceSetConcatable
   }
 
   @Override
+  public TypeToken<Object> getUnconfiguredType() {
+    return TypeToken.of(Object.class);
+  }
+
+  @Override
   public boolean hasElementClass(Class<?>... types) {
     return unnamedHeadersTypeCoercer.hasElementClass(types)
         || namedHeadersTypeCoercer.hasElementClass(types);
@@ -60,6 +65,16 @@ public class SourceSetTypeCoercer extends SourceSetConcatable
         namedHeadersTypeCoercer.traverse(cellRoots, object.getNamedSources().get(), traversal);
         break;
     }
+  }
+
+  @Override
+  public Object coerceToUnconfigured(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      Object object)
+      throws CoerceFailedException {
+    return object;
   }
 
   @Override

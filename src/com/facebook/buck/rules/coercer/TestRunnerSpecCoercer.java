@@ -48,12 +48,27 @@ public class TestRunnerSpecCoercer implements TypeCoercer<Object, TestRunnerSpec
   }
 
   @Override
+  public TypeToken<Object> getUnconfiguredType() {
+    return TypeToken.of(Object.class);
+  }
+
+  @Override
   public boolean hasElementClass(Class<?>... types) {
     return false;
   }
 
   @Override
   public void traverse(CellNameResolver cellRoots, TestRunnerSpec object, Traversal traversal) {}
+
+  @Override
+  public Object coerceToUnconfigured(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      Object object)
+      throws CoerceFailedException {
+    return object;
+  }
 
   @Override
   public TestRunnerSpec coerce(

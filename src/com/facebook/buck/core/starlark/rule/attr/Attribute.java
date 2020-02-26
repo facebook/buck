@@ -96,7 +96,7 @@ public abstract class Attribute<CoercedType> implements AttributeHolder {
    * The type coercer to use to convert raw values from the parser into something usable internally.
    * This coercer also performs validation
    */
-  public abstract TypeCoercer<Object, CoercedType> getTypeCoercer();
+  public abstract TypeCoercer<?, CoercedType> getTypeCoercer();
 
   /**
    * Validates values post-coercion to ensure other properties besides 'type' are valid
@@ -136,7 +136,7 @@ public abstract class Attribute<CoercedType> implements AttributeHolder {
       throws CoerceFailedException {
     CoercedType coercedValue =
         getTypeCoercer()
-            .coerce(
+            .coerceBoth(
                 cellNameResolver,
                 projectFilesystem,
                 pathRelativeToProjectRoot,

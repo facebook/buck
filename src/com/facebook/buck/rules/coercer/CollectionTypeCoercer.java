@@ -21,6 +21,7 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.reflect.TypeToken;
 import java.util.Collection;
 
 public abstract class CollectionTypeCoercer<C extends ImmutableCollection<T>, T>
@@ -91,5 +92,20 @@ public abstract class CollectionTypeCoercer<C extends ImmutableCollection<T>, T>
               element);
       builder.add(coercedElement);
     }
+  }
+
+  @Override
+  public TypeToken<Object> getUnconfiguredType() {
+    return TypeToken.of(Object.class);
+  }
+
+  @Override
+  public Object coerceToUnconfigured(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      Object object)
+      throws CoerceFailedException {
+    return object;
   }
 }

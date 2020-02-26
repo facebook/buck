@@ -48,6 +48,11 @@ public class FrameworkPathTypeCoercer implements TypeCoercer<Object, FrameworkPa
   }
 
   @Override
+  public TypeToken<Object> getUnconfiguredType() {
+    return TypeToken.of(Object.class);
+  }
+
+  @Override
   public boolean hasElementClass(Class<?>... types) {
     for (Class<?> type : types) {
       if (type.isAssignableFrom(SourceTreePath.class)) {
@@ -69,6 +74,16 @@ public class FrameworkPathTypeCoercer implements TypeCoercer<Object, FrameworkPa
       default:
         throw new RuntimeException("Unhandled type: " + object.getType());
     }
+  }
+
+  @Override
+  public Object coerceToUnconfigured(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      Object object)
+      throws CoerceFailedException {
+    return object;
   }
 
   @Override

@@ -38,7 +38,7 @@ import java.util.Optional;
 public abstract class UnconfiguredOptionalDepAttribute
     extends Attribute<Optional<UnconfiguredBuildTarget>> {
 
-  private static final TypeCoercer<Object, Optional<UnconfiguredBuildTarget>> coercer =
+  private static final TypeCoercer<?, Optional<UnconfiguredBuildTarget>> coercer =
       TypeCoercerFactoryForStarlark.typeCoercerForType(
           new TypeToken<Optional<UnconfiguredBuildTarget>>() {});
 
@@ -60,7 +60,7 @@ public abstract class UnconfiguredOptionalDepAttribute
   }
 
   @Override
-  public TypeCoercer<Object, Optional<UnconfiguredBuildTarget>> getTypeCoercer() {
+  public TypeCoercer<?, Optional<UnconfiguredBuildTarget>> getTypeCoercer() {
     return coercer;
   }
 

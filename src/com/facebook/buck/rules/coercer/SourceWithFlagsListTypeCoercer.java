@@ -46,6 +46,11 @@ public class SourceWithFlagsListTypeCoercer implements TypeCoercer<Object, Sourc
   }
 
   @Override
+  public TypeToken<Object> getUnconfiguredType() {
+    return TypeToken.of(Object.class);
+  }
+
+  @Override
   public boolean hasElementClass(Class<?>... types) {
     return unnamedSourcesTypeCoercer.hasElementClass(types)
         || namedSourcesTypeCoercer.hasElementClass(types);
@@ -64,6 +69,16 @@ public class SourceWithFlagsListTypeCoercer implements TypeCoercer<Object, Sourc
       default:
         throw new RuntimeException("Unhandled type: " + object.getType());
     }
+  }
+
+  @Override
+  public Object coerceToUnconfigured(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      Object object)
+      throws CoerceFailedException {
+    return object;
   }
 
   @Override

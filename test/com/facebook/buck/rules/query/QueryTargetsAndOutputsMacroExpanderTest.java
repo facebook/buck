@@ -65,7 +65,7 @@ public class QueryTargetsAndOutputsMacroExpanderTest {
   private ProjectFilesystem filesystem;
   private ActionGraphBuilder graphBuilder;
   private CellNameResolver cellNameResolver;
-  private TypeCoercer<Object, StringWithMacros> coercer;
+  private TypeCoercer<?, StringWithMacros> coercer;
   private BuildRule rule;
   private StringWithMacrosConverter converter;
   private HashMapWithStats<Macro, Object> cache;
@@ -188,7 +188,7 @@ public class QueryTargetsAndOutputsMacroExpanderTest {
   private String coerceAndStringify(String input, BuildRule rule) throws CoerceFailedException {
     StringWithMacros stringWithMacros =
         (StringWithMacros)
-            coercer.coerce(
+            coercer.coerceBoth(
                 cellNameResolver,
                 filesystem,
                 rule.getBuildTarget().getCellRelativeBasePath().getPath(),

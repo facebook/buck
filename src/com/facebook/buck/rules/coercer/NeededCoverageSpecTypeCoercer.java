@@ -64,6 +64,21 @@ public class NeededCoverageSpecTypeCoercer implements TypeCoercer<Object, Needed
   }
 
   @Override
+  public TypeToken<Object> getUnconfiguredType() {
+    return TypeToken.of(Object.class);
+  }
+
+  @Override
+  public Object coerceToUnconfigured(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      Object object)
+      throws CoerceFailedException {
+    return object;
+  }
+
+  @Override
   public NeededCoverageSpec coerce(
       CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,

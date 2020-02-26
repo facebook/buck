@@ -21,7 +21,7 @@ import com.google.common.reflect.TypeToken;
 
 public interface TypeCoercerFactory {
 
-  <T> TypeCoercer<Object, T> typeCoercerForType(TypeToken<T> type);
+  <T> TypeCoercer<?, T> typeCoercerForType(TypeToken<T> type);
 
   /**
    * Returns an unpopulated DTO object, and the build method which must be called with it when it is

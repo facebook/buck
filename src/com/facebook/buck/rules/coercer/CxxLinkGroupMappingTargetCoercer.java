@@ -56,6 +56,11 @@ public class CxxLinkGroupMappingTargetCoercer
   }
 
   @Override
+  public TypeToken<Object> getUnconfiguredType() {
+    return TypeToken.of(Object.class);
+  }
+
+  @Override
   public boolean hasElementClass(Class<?>... types) {
     return buildTargetTypeCoercer.hasElementClass(types) || traversalCoercer.hasElementClass(types);
   }
@@ -65,6 +70,16 @@ public class CxxLinkGroupMappingTargetCoercer
       CellNameResolver cellRoots, CxxLinkGroupMappingTarget object, Traversal traversal) {
     buildTargetTypeCoercer.traverse(cellRoots, object.getBuildTarget(), traversal);
     traversalCoercer.traverse(cellRoots, object.getTraversal(), traversal);
+  }
+
+  @Override
+  public Object coerceToUnconfigured(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      Object object)
+      throws CoerceFailedException {
+    return object;
   }
 
   @Override

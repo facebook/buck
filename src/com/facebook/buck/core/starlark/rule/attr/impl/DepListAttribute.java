@@ -39,7 +39,7 @@ import java.util.List;
 @BuckStyleValue
 public abstract class DepListAttribute extends Attribute<ImmutableList<BuildTarget>> {
 
-  private static final TypeCoercer<Object, ImmutableList<BuildTarget>> coercer =
+  private static final TypeCoercer<?, ImmutableList<BuildTarget>> coercer =
       TypeCoercerFactoryForStarlark.typeCoercerForType(
           new TypeToken<ImmutableList<BuildTarget>>() {});
 
@@ -63,7 +63,7 @@ public abstract class DepListAttribute extends Attribute<ImmutableList<BuildTarg
   }
 
   @Override
-  public TypeCoercer<Object, ImmutableList<BuildTarget>> getTypeCoercer() {
+  public TypeCoercer<?, ImmutableList<BuildTarget>> getTypeCoercer() {
     return coercer;
   }
 

@@ -34,7 +34,7 @@ import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 @BuckStyleValue
 public abstract class OutputAttribute extends Attribute<String> {
 
-  private static final TypeCoercer<Object, String> coercer =
+  private static final TypeCoercer<?, String> coercer =
       TypeCoercerFactoryForStarlark.typeCoercerForType(TypeToken.of(String.class));
 
   @Override
@@ -52,7 +52,7 @@ public abstract class OutputAttribute extends Attribute<String> {
   }
 
   @Override
-  public TypeCoercer<Object, String> getTypeCoercer() {
+  public TypeCoercer<?, String> getTypeCoercer() {
     return coercer;
   }
 

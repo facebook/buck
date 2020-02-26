@@ -159,7 +159,7 @@ public class MavenCoordinatesMacroExpanderTest {
     StringWithMacros stringWithMacros =
         new DefaultTypeCoercerFactory()
             .typeCoercerForType(TypeToken.of(StringWithMacros.class))
-            .coerce(
+            .coerceBoth(
                 cellNameResolver,
                 filesystem,
                 rule.getBuildTarget().getCellRelativeBasePath().getPath(),

@@ -39,7 +39,7 @@ import java.util.List;
 @BuckStyleValue
 public abstract class SourceListAttribute extends Attribute<ImmutableList<SourcePath>> {
 
-  private static final TypeCoercer<Object, ImmutableList<SourcePath>> coercer =
+  private static final TypeCoercer<?, ImmutableList<SourcePath>> coercer =
       TypeCoercerFactoryForStarlark.typeCoercerForType(
           new TypeToken<ImmutableList<SourcePath>>() {});
 
@@ -61,7 +61,7 @@ public abstract class SourceListAttribute extends Attribute<ImmutableList<Source
   }
 
   @Override
-  public TypeCoercer<Object, ImmutableList<SourcePath>> getTypeCoercer() {
+  public TypeCoercer<?, ImmutableList<SourcePath>> getTypeCoercer() {
     return coercer;
   }
 

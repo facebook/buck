@@ -60,6 +60,11 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<Object, StringWi
   }
 
   @Override
+  public TypeToken<Object> getUnconfiguredType() {
+    return TypeToken.of(Object.class);
+  }
+
+  @Override
   public boolean hasElementClass(Class<?>... types) {
     for (MacroTypeCoercer<? extends Macro> coercer : coercers.values()) {
       if (coercer.hasElementClass(types)) {
@@ -82,6 +87,16 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<Object, StringWi
           Objects.requireNonNull(coercers.get(macroContainer.getMacro().getMacroClass()));
       traverse(cellRoots, coercer, macroContainer.getMacro(), traversal);
     }
+  }
+
+  @Override
+  public Object coerceToUnconfigured(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      Object object)
+      throws CoerceFailedException {
+    return object;
   }
 
   // Most strings with macros do not contain any macros.

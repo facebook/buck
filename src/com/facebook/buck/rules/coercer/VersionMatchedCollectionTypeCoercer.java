@@ -53,6 +53,11 @@ public class VersionMatchedCollectionTypeCoercer<T>
   }
 
   @Override
+  public TypeToken<Object> getUnconfiguredType() {
+    return TypeToken.of(Object.class);
+  }
+
+  @Override
   public boolean hasElementClass(Class<?>... types) {
     return versionsTypeCoercer.hasElementClass(types) || valueTypeCoercer.hasElementClass(types);
   }
@@ -64,6 +69,16 @@ public class VersionMatchedCollectionTypeCoercer<T>
       versionsTypeCoercer.traverse(cellRoots, pair.getFirst(), traversal);
       valueTypeCoercer.traverse(cellRoots, pair.getSecond(), traversal);
     }
+  }
+
+  @Override
+  public Object coerceToUnconfigured(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      Object object)
+      throws CoerceFailedException {
+    return object;
   }
 
   @Override

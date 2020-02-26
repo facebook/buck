@@ -49,6 +49,11 @@ public class SourceWithFlagsTypeCoercer implements TypeCoercer<Object, SourceWit
   }
 
   @Override
+  public TypeToken<Object> getUnconfiguredType() {
+    return TypeToken.of(Object.class);
+  }
+
+  @Override
   public boolean hasElementClass(Class<?>... types) {
     return sourcePathTypeCoercer.hasElementClass(types) || flagsTypeCoercer.hasElementClass(types);
   }
@@ -57,6 +62,16 @@ public class SourceWithFlagsTypeCoercer implements TypeCoercer<Object, SourceWit
   public void traverse(CellNameResolver cellRoots, SourceWithFlags object, Traversal traversal) {
     sourcePathTypeCoercer.traverse(cellRoots, object.getSourcePath(), traversal);
     flagsTypeCoercer.traverse(cellRoots, ImmutableList.copyOf(object.getFlags()), traversal);
+  }
+
+  @Override
+  public Object coerceToUnconfigured(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      Object object)
+      throws CoerceFailedException {
+    return object;
   }
 
   @Override

@@ -343,7 +343,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
   }
 
   @Override
-  public <T> TypeCoercer<Object, T> typeCoercerForType(TypeToken<T> typeToken) {
+  public <T> TypeCoercer<?, T> typeCoercerForType(TypeToken<T> typeToken) {
     return typeCoercerForTypeUnchecked(typeToken).checkOutputAssignableTo(typeToken);
   }
 

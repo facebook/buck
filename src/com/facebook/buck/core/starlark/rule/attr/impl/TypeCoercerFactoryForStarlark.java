@@ -26,7 +26,7 @@ class TypeCoercerFactoryForStarlark {
   /** The factory. */
   private static final TypeCoercerFactory factory = new DefaultTypeCoercerFactory();
 
-  public static <T> TypeCoercer<Object, T> typeCoercerForType(TypeToken<T> type) {
+  public static <T> TypeCoercer<?, T> typeCoercerForType(TypeToken<T> type) {
     return factory.typeCoercerForType(type);
   }
 }

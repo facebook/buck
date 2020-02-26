@@ -32,10 +32,10 @@ import javax.annotation.Nullable;
 public abstract class AbstractParamInfo<T> implements ParamInfo<T> {
 
   private final String name;
-  private final TypeCoercer<Object, T> typeCoercer;
+  private final TypeCoercer<?, T> typeCoercer;
 
   /** Create an instance of {@link AbstractParamInfo} */
-  public AbstractParamInfo(String name, TypeCoercer<Object, T> typeCoercer) {
+  public AbstractParamInfo(String name, TypeCoercer<?, T> typeCoercer) {
     this.name = name;
     this.typeCoercer = typeCoercer;
   }
@@ -46,7 +46,7 @@ public abstract class AbstractParamInfo<T> implements ParamInfo<T> {
   }
 
   @Override
-  public TypeCoercer<Object, T> getTypeCoercer() {
+  public TypeCoercer<?, T> getTypeCoercer() {
     return typeCoercer;
   }
 
@@ -122,7 +122,7 @@ public abstract class AbstractParamInfo<T> implements ParamInfo<T> {
 
   private void traverseHelper(
       CellNameResolver cellPathResolver,
-      TypeCoercer<Object, T> typeCoercer,
+      TypeCoercer<?, T> typeCoercer,
       Traversal traversal,
       Object dto) {
     T object = get(dto);
@@ -147,7 +147,7 @@ public abstract class AbstractParamInfo<T> implements ParamInfo<T> {
     try {
       setCoercedValue(
           dto,
-          typeCoercer.coerce(
+          typeCoercer.coerceBoth(
               cellNameResolver,
               filesystem,
               pathRelativeToProjectRoot,

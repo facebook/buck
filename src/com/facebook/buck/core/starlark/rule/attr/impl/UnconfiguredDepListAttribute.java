@@ -40,7 +40,7 @@ import java.util.List;
 public abstract class UnconfiguredDepListAttribute
     extends Attribute<ImmutableList<UnconfiguredBuildTarget>> {
 
-  private static final TypeCoercer<Object, ImmutableList<UnconfiguredBuildTarget>> coercer =
+  private static final TypeCoercer<?, ImmutableList<UnconfiguredBuildTarget>> coercer =
       TypeCoercerFactoryForStarlark.typeCoercerForType(
           new TypeToken<ImmutableList<UnconfiguredBuildTarget>>() {});
 
@@ -62,7 +62,7 @@ public abstract class UnconfiguredDepListAttribute
   }
 
   @Override
-  public TypeCoercer<Object, ImmutableList<UnconfiguredBuildTarget>> getTypeCoercer() {
+  public TypeCoercer<?, ImmutableList<UnconfiguredBuildTarget>> getTypeCoercer() {
     return coercer;
   }
 

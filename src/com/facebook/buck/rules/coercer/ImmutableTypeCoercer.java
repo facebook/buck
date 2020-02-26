@@ -45,6 +45,11 @@ public class ImmutableTypeCoercer<T extends DataTransferObject> implements TypeC
   }
 
   @Override
+  public TypeToken<Object> getUnconfiguredType() {
+    return TypeToken.of(Object.class);
+  }
+
+  @Override
   public boolean hasElementClass(Class<?>... types) {
     return paramInfos.values().stream().anyMatch(paramInfo -> paramInfo.hasElementTypes(types));
   }
@@ -59,6 +64,16 @@ public class ImmutableTypeCoercer<T extends DataTransferObject> implements TypeC
       Object fieldValue = paramInfo.get(object);
       paramTypeCoercer.traverse(cellRoots, fieldValue, traversal);
     }
+  }
+
+  @Override
+  public Object coerceToUnconfigured(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      Object object)
+      throws CoerceFailedException {
+    return object;
   }
 
   @Override

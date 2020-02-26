@@ -37,7 +37,7 @@ import java.util.List;
 @BuckStyleValue
 public abstract class OutputListAttribute extends Attribute<ImmutableList<String>> {
 
-  private static final TypeCoercer<Object, ImmutableList<String>> coercer =
+  private static final TypeCoercer<?, ImmutableList<String>> coercer =
       TypeCoercerFactoryForStarlark.typeCoercerForType(new TypeToken<ImmutableList<String>>() {});
 
   @Override
@@ -58,7 +58,7 @@ public abstract class OutputListAttribute extends Attribute<ImmutableList<String
   }
 
   @Override
-  public TypeCoercer<Object, ImmutableList<String>> getTypeCoercer() {
+  public TypeCoercer<?, ImmutableList<String>> getTypeCoercer() {
     return coercer;
   }
 

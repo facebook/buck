@@ -48,6 +48,11 @@ public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Object, Eithe
   }
 
   @Override
+  public TypeToken<Object> getUnconfiguredType() {
+    return TypeToken.of(Object.class);
+  }
+
+  @Override
   public boolean hasElementClass(Class<?>... types) {
     return leftTypeCoercer.hasElementClass(types) || rightTypeCoercer.hasElementClass(types);
   }
@@ -60,6 +65,16 @@ public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Object, Eithe
     } else {
       rightTypeCoercer.traverse(cellRoots, object.getRight(), traversal);
     }
+  }
+
+  @Override
+  public Object coerceToUnconfigured(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      Object object)
+      throws CoerceFailedException {
+    return object;
   }
 
   // Classifications for the "type" of object/coercer.  We use this to unambiguously
