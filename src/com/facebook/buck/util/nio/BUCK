@@ -1,0 +1,12 @@
+java_library(
+    name = "nio",
+    srcs = glob(["*.java"]),
+    tests = [
+        "//test/com/facebook/buck/util/nio:nio",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/jvm/java/version:version",
+        "//src/com/facebook/buck/util:util",
+    ],
+)
