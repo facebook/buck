@@ -28,6 +28,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSNumber;
 import com.dd.plist.NSString;
@@ -268,6 +269,33 @@ public class AppleBundleIntegrationTest {
     Path nonCodesignedResourcePath = appPath.resolve("OtherBinary");
     assertTrue(Files.exists(nonCodesignedResourcePath));
     assertFalse(checkCodeSigning(nonCodesignedResourcePath));
+  }
+
+  @Test
+  public void simpleApplicationBundleWithDylibDryRunCodeSigning() throws Exception {
+    assumeTrue(FakeAppleDeveloperEnvironment.supportsCodeSigning());
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "simple_application_bundle_with_codesigning", tmp);
+    workspace.addBuckConfigLocalOption("apple", "dry_run_code_signing", "true");
+    workspace.setUp();
+
+    BuildTarget target = workspace.newBuildTarget("//:DemoAppWithDylib#iphoneos-arm64,no-debug");
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    result.assertSuccess();
+
+    Path appPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                    filesystem,
+                    target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+                    "%s")
+                .resolve("DemoAppWithDylib.app"));
+
+    NSDictionary resultPlist = verifyAndParsePlist(appPath.resolve("BUCK_code_sign_args.plist"));
+    assertEquals(
+        new NSArray(new NSString("../fake.dylib")), resultPlist.get("extra-paths-to-sign"));
   }
 
   @Test

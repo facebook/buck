@@ -54,7 +54,23 @@ apple_bundle(
     ],
 )
 
-# Just make a copy of the binary to get something which can be code signed
+apple_bundle(
+    name = "DemoAppWithDylib",
+    binary = ":DemoAppBinary",
+    extension = "app",
+    info_plist = "Info.plist",
+    deps = [
+        ":DylibResourceWithCodesigning",
+    ],
+)
+
+# Just make a copy of binaries and libraries to get something which can be code signed
+export_file(
+    name = "DylibToBeCodesigned",
+    src = "fake.dylib",
+    out = "fake.dylib",
+)
+
 export_file(
     name = "BinaryToBeCodesigned",
     src = ":DemoAppBinary",
@@ -63,6 +79,14 @@ export_file(
 export_file(
     name = "OtherBinary",
     src = ":DemoAppBinary",
+)
+
+apple_resource(
+    name = "DylibResourceWithCodesigning",
+    codesign_on_copy = True,
+    dirs = [],
+    files = [":DylibToBeCodesigned"],
+    visibility = ["PUBLIC"],
 )
 
 apple_resource(

@@ -69,6 +69,7 @@ import com.facebook.buck.step.fs.MoveStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.types.Either;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
@@ -616,7 +617,20 @@ public class AppleBundle extends AbstractBuildRule
         codeSignOnCopyPathsBuilder.add(outputPath);
       }
 
+      // It only makes sense to sign files, not directories, via codesign.
+      // However, for dry-runs of codesigning, files can be embedded
+      // as a separate argument to the real codesign; there's no point in
+      // signing these as a result.
+      ImmutableList.Builder<Path> extraPathsToSignBuilder = ImmutableList.builder();
+
       for (Path codeSignOnCopyPath : codeSignOnCopyPathsBuilder.build()) {
+        // TODO(kelliem) remove this hard-coded check for dylibs once dry-run consumers
+        // are more flexible.
+        if (dryRunCodeSigning && codeSignOnCopyPath.toString().endsWith(".dylib")) {
+          extraPathsToSignBuilder.add(codeSignOnCopyPath);
+          continue;
+        }
+
         stepsBuilder.add(
             new CodeSignStep(
                 getProjectFilesystem(),
@@ -627,7 +641,10 @@ public class AppleBundle extends AbstractBuildRule
                 codesign,
                 codesignAllocatePath,
                 dryRunCodeSigning
-                    ? Optional.of(codeSignOnCopyPath.resolve(CODE_SIGN_DRY_RUN_ARGS_FILE))
+                    ? Optional.of(
+                        new Pair<>(
+                            codeSignOnCopyPath.resolve(CODE_SIGN_DRY_RUN_ARGS_FILE),
+                            ImmutableList.of()))
                     : Optional.empty(),
                 codesignFlags,
                 codesignTimeout));
@@ -643,7 +660,10 @@ public class AppleBundle extends AbstractBuildRule
               codesign,
               codesignAllocatePath,
               dryRunCodeSigning
-                  ? Optional.of(bundleRoot.resolve(CODE_SIGN_DRY_RUN_ARGS_FILE))
+                  ? Optional.of(
+                      new Pair<>(
+                          bundleRoot.resolve(CODE_SIGN_DRY_RUN_ARGS_FILE),
+                          extraPathsToSignBuilder.build()))
                   : Optional.empty(),
               codesignFlags,
               codesignTimeout));
