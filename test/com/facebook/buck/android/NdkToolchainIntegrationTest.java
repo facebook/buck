@@ -26,7 +26,9 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -100,9 +102,105 @@ public class NdkToolchainIntegrationTest {
     inspector.assertFileContents("lib/armeabi-v7a/libc++_shared.so", "strip:\nit's a runtime");
     inspector.assertFileContents("lib/arm64-v8a/libc++_shared.so", "strip:\nit's a runtime");
     inspector.assertFileContents(
-        "lib/armeabi-v7a/libnative.so", "strip:\nlinker:\ncompile output: native");
+        "lib/armeabi-v7a/libnative.so",
+        String.format(
+            "strip:%n"
+                + "linker test content: test content%n"
+                + "linker:%n"
+                + "compiler test content: test content%n"
+                + "compile output: native"));
     inspector.assertFileContents(
-        "lib/arm64-v8a/libnative.so", "strip:\nlinker:\ncompile output: native");
+        "lib/arm64-v8a/libnative.so",
+        String.format(
+            "strip:%n"
+                + "linker test content: test content%n"
+                + "linker:%n"
+                + "compiler test content: test content%n"
+                + "compile output: native"));
+  }
+
+  @Test
+  public void testBuildWithCustomNdkToolchainNdkPathCompilerRuleKey() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "ndk_toolchain", tmp);
+    CxxToolchainHelper.addCxxToolchainToWorkspace(workspace);
+
+    workspace.addBuckConfigLocalOption(
+        "ndk",
+        "toolchain_target_per_cpu_abi",
+        "armv7 => //ndk_toolchain:good_with_ndk_compiler_flags, arm64 => //ndk_toolchain:bad, x86 => //ndk_toolchain:bad");
+    workspace.setUp();
+
+    Path output = workspace.buildAndReturnOutput("-c", "ndk.cpu_abis=armv7", "//:fat_apk");
+
+    ZipInspector inspector = new ZipInspector(output);
+    inspector.assertFileContents(
+        "lib/armeabi-v7a/libnative.so",
+        String.format(
+            "strip:%n"
+                + "linker:%n"
+                + "compiler test content: test content%n"
+                + "compile output: native"));
+
+    Path ndkContentPath =
+        workspace
+            .getProjectFileSystem()
+            .getRootPath()
+            .resolve("data")
+            .resolve("ndk_content")
+            .getPath();
+    Files.write(ndkContentPath, Collections.singleton("new content"));
+    output = workspace.buildAndReturnOutput("-c", "ndk.cpu_abis=armv7", "//:fat_apk");
+    inspector = new ZipInspector(output);
+    inspector.assertFileContents(
+        "lib/armeabi-v7a/libnative.so",
+        String.format(
+            "strip:%n"
+                + "linker:%n"
+                + "compiler test content: new content%n"
+                + "compile output: native"));
+  }
+
+  @Test
+  public void testBuildWithCustomNdkToolchainNdkPathLinkerRuleKey() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "ndk_toolchain", tmp);
+    CxxToolchainHelper.addCxxToolchainToWorkspace(workspace);
+
+    workspace.addBuckConfigLocalOption(
+        "ndk",
+        "toolchain_target_per_cpu_abi",
+        "armv7 => //ndk_toolchain:good_with_ndk_linker_flags, arm64 => //ndk_toolchain:bad, x86 => //ndk_toolchain:bad");
+    workspace.setUp();
+
+    Path output = workspace.buildAndReturnOutput("-c", "ndk.cpu_abis=armv7", "//:fat_apk");
+
+    ZipInspector inspector = new ZipInspector(output);
+    inspector.assertFileContents(
+        "lib/armeabi-v7a/libnative.so",
+        String.format(
+            "strip:%n"
+                + "linker test content: test content%n"
+                + "linker:%n"
+                + "compile output: native"));
+
+    Path ndkContentPath =
+        workspace
+            .getProjectFileSystem()
+            .getRootPath()
+            .resolve("data")
+            .resolve("ndk_content")
+            .getPath();
+    Files.write(ndkContentPath, Collections.singleton("new content"));
+    output = workspace.buildAndReturnOutput("-c", "ndk.cpu_abis=armv7", "//:fat_apk");
+    inspector = new ZipInspector(output);
+    inspector.assertFileContents(
+        "lib/armeabi-v7a/libnative.so",
+        String.format(
+            "strip:%n"
+                + "linker test content: new content%n"
+                + "linker:%n"
+                + "compile output: native"));
   }
 
   // TODO(cjhopman): Consider adding a test that the relinker uses the custom objdump.

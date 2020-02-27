@@ -14,7 +14,11 @@ parser.add_argument("-test-flag", action=impl.StripQuotesAction)
 
 (options, args) = parser.parse_known_args()
 
-assert os.path.exists(options.test_flag), options.test_flag
+test_content = None
+if options.test_flag:
+    assert os.path.exists(options.test_flag), options.test_flag
+    with open(options.test_flag, "r") as f:
+        test_content = f.read()
 
 # input file appears last in the command
 input = args[-1]
@@ -26,6 +30,8 @@ with open(input) as inputfile:
     data = inputfile.read()
 
 with open(options.output, "w") as out:
+    if test_content:
+        out.write("compiler test content: " + test_content)
     out.write("compile output: " + data)
 
 with open(options.depfile, "w") as depfile:
