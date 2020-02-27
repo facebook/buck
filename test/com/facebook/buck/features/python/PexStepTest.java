@@ -59,14 +59,18 @@ public class PexStepTest {
   private static final Path DEST_PATH = Paths.get("/dest");
   private static final String ENTRY_POINT = "entry_point.main";
 
-  private static final PythonResolvedPackageComponents COMPONENTS =
+  private final PythonResolvedPackageComponents COMPONENTS =
       ImmutablePythonResolvedPackageComponents.builder()
           .putModules(
               TARGET,
               new PythonMappedComponents.Resolved(
                   ImmutableSortedMap.of(Paths.get("m"), Paths.get("/src/m"))))
-          .putModules(TARGET, new PythonModuleDirComponents.Resolved(Paths.get("/tmp/dir1.whl")))
-          .putModules(TARGET, new PythonModuleDirComponents.Resolved(Paths.get("/tmp/dir2.whl")))
+          .putModules(
+              TARGET,
+              new PythonModuleDirComponents.Resolved(Paths.get("/tmp/dir1.whl").toAbsolutePath()))
+          .putModules(
+              TARGET,
+              new PythonModuleDirComponents.Resolved(Paths.get("/tmp/dir2.whl").toAbsolutePath()))
           .putResources(
               TARGET,
               new PythonMappedComponents.Resolved(
@@ -76,7 +80,7 @@ public class PexStepTest {
               new PythonMappedComponents.Resolved(
                   ImmutableSortedMap.of(Paths.get("n.so"), Paths.get("/src/n.so"))))
           .build();
-  private static final ImmutableSortedSet<String> PRELOAD_LIBRARIES = ImmutableSortedSet.of();
+  private final ImmutableSortedSet<String> PRELOAD_LIBRARIES = ImmutableSortedSet.of();
 
   @Rule public TemporaryPaths tmpDir = new TemporaryPaths();
 
