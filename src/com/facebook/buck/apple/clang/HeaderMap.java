@@ -17,6 +17,7 @@
 package com.facebook.buck.apple.clang;
 
 import com.facebook.buck.io.pathformat.PathFormatter;
+import com.facebook.buck.util.nio.ByteBufferUnmapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
 import com.google.common.base.Preconditions;
@@ -194,11 +195,13 @@ public class HeaderMap {
     HeaderMap map;
     try (FileInputStream inputStream = new FileInputStream(hmapFile)) {
       FileChannel fileChannel = inputStream.getChannel();
-      ByteBuffer buffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0, hmapFile.length());
-
-      map = HeaderMap.deserialize(buffer);
-      if (map == null) {
-        throw new IOException("Error while parsing header map " + hmapFile);
+      try (ByteBufferUnmapper unmapper =
+          ByteBufferUnmapper.createUnsafe(
+              fileChannel.map(FileChannel.MapMode.READ_ONLY, 0, hmapFile.length()))) {
+        map = HeaderMap.deserialize(unmapper.getByteBuffer());
+        if (map == null) {
+          throw new IOException("Error while parsing header map " + hmapFile);
+        }
       }
     }
     return map;

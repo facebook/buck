@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx.toolchain.objectfile;
 
-import java.nio.MappedByteBuffer;
+import java.nio.ByteBuffer;
 import java.util.Optional;
 
 /** Reader for the LC_SYMTAB command */
@@ -29,7 +29,7 @@ public class MachoSymTabCommandReader {
    * @return If the command exist, a {@code MachoSymTabCommand}, otherwise an empty optional on
    *     failure.
    */
-  public static Optional<MachoSymTabCommand> read(MappedByteBuffer machoFileBuffer) {
+  public static Optional<MachoSymTabCommand> read(ByteBuffer machoFileBuffer) {
 
     machoFileBuffer.rewind();
     try {

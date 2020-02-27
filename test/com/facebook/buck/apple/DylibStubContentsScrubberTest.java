@@ -34,9 +34,9 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.nio.ByteBufferUnmapper;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -83,23 +83,27 @@ public class DylibStubContentsScrubberTest {
     scrubber.scrubFile(dylibChannel);
 
     // Read the DYLD info, so we can get the offset to the export trie + read it
-    MappedByteBuffer dylibByteBuffer =
-        dylibChannel.map(FileChannel.MapMode.READ_ONLY, 0, dylibChannel.size());
-    Optional<MachoDyldInfoCommand> maybeDyldInfo = MachoDyldInfoCommandReader.read(dylibByteBuffer);
-    assertTrue(maybeDyldInfo.isPresent());
+    try (ByteBufferUnmapper unmapper =
+        ByteBufferUnmapper.createUnsafe(
+            dylibChannel.map(FileChannel.MapMode.READ_ONLY, 0, dylibChannel.size()))) {
+      ByteBuffer dylibByteBuffer = unmapper.getByteBuffer();
+      Optional<MachoDyldInfoCommand> maybeDyldInfo =
+          MachoDyldInfoCommandReader.read(dylibByteBuffer);
+      assertTrue(maybeDyldInfo.isPresent());
 
-    dylibByteBuffer.position(maybeDyldInfo.get().getExportInfoOffset());
-    ByteBuffer exportInfoBuffer = dylibByteBuffer.slice();
-    exportInfoBuffer.limit(maybeDyldInfo.get().getExportInfoSize());
+      dylibByteBuffer.position(maybeDyldInfo.get().getExportInfoOffset());
+      ByteBuffer exportInfoBuffer = dylibByteBuffer.slice();
+      exportInfoBuffer.limit(maybeDyldInfo.get().getExportInfoSize());
 
-    Optional<MachoExportTrieNode> maybeRoot = MachoExportTrieReader.read(exportInfoBuffer);
-    assertTrue(maybeRoot.isPresent());
+      Optional<MachoExportTrieNode> maybeRoot = MachoExportTrieReader.read(exportInfoBuffer);
+      assertTrue(maybeRoot.isPresent());
 
-    List<MachoExportTrieNode> exportedSymbols = maybeRoot.get().collectNodesWithExportInfo();
-    assertThat(exportedSymbols.size(), equalTo(2));
-    for (MachoExportTrieNode node : exportedSymbols) {
-      assertTrue(node.getExportInfo().isPresent());
-      assertThat(node.getExportInfo().get().address, equalTo(0L));
+      List<MachoExportTrieNode> exportedSymbols = maybeRoot.get().collectNodesWithExportInfo();
+      assertThat(exportedSymbols.size(), equalTo(2));
+      for (MachoExportTrieNode node : exportedSymbols) {
+        assertTrue(node.getExportInfo().isPresent());
+        assertThat(node.getExportInfo().get().address, equalTo(0L));
+      }
     }
 
     String nmOutput = workspace.runCommand("nm", destDylibPath.toString()).getStdout().get();

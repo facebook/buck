@@ -22,8 +22,9 @@ import com.facebook.buck.cxx.ElfFile;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.nio.ByteBufferUnmapper;
 import java.io.IOException;
-import java.nio.MappedByteBuffer;
+import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -46,12 +47,16 @@ public class ElfSectionHeaderTest {
     // Overwrite .text section header with 87 in the info field.
     try (FileChannel channel =
         FileChannel.open(elfPath, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
-      MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_WRITE, 0, channel.size());
-      Elf elf = new Elf(buffer);
-      Elf.ElfSectionLookupResult sectionResult = elf.getMandatorySectionByName(elfPath, ".text");
-      buffer.position(
-          (int) (elf.header.e_shoff + sectionResult.getIndex() * elf.header.e_shentsize));
-      sectionResult.getSection().header.withInfo(87L).write(elf.header.ei_class, buffer);
+      try (ByteBufferUnmapper unmapper =
+          ByteBufferUnmapper.createUnsafe(
+              channel.map(FileChannel.MapMode.READ_WRITE, 0, channel.size()))) {
+        ByteBuffer buffer = unmapper.getByteBuffer();
+        Elf elf = new Elf(buffer);
+        Elf.ElfSectionLookupResult sectionResult = elf.getMandatorySectionByName(elfPath, ".text");
+        buffer.position(
+            (int) (elf.header.e_shoff + sectionResult.getIndex() * elf.header.e_shentsize));
+        sectionResult.getSection().header.withInfo(87L).write(elf.header.ei_class, buffer);
+      }
     }
 
     // Verify the result.

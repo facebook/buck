@@ -17,13 +17,13 @@
 package com.facebook.buck.cxx.toolchain.objectfile;
 
 import com.facebook.buck.util.ObjectFileCommonModificationDate;
+import com.facebook.buck.util.nio.ByteBufferUnmapper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Ints;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -62,7 +62,7 @@ public class Machos {
 
   private Machos() {}
 
-  static void setUuidIfPresent(MappedByteBuffer map, byte[] uuid) throws MachoException {
+  static void setUuidIfPresent(ByteBuffer map, byte[] uuid) throws MachoException {
     int commandsCount = getHeader(map).getCommandsCount();
 
     for (int i = 0; i < commandsCount; i++) {
@@ -78,13 +78,17 @@ public class Machos {
   }
 
   static boolean isMacho(FileChannel file) throws IOException {
-    MappedByteBuffer map = file.map(FileChannel.MapMode.READ_ONLY, 0, MH_MAGIC.length);
+    try (ByteBufferUnmapper unmapper =
+        ByteBufferUnmapper.createUnsafe(
+            file.map(FileChannel.MapMode.READ_ONLY, 0, MH_MAGIC.length))) {
+      ByteBuffer map = unmapper.getByteBuffer();
 
-    byte[] magic = ObjectFileScrubbers.getBytes(map, MH_MAGIC.length);
-    return Arrays.equals(MH_MAGIC, magic)
-        || Arrays.equals(MH_CIGAM, magic)
-        || Arrays.equals(MH_MAGIC_64, magic)
-        || Arrays.equals(MH_CIGAM_64, magic);
+      byte[] magic = ObjectFileScrubbers.getBytes(map, MH_MAGIC.length);
+      return Arrays.equals(MH_MAGIC, magic)
+          || Arrays.equals(MH_CIGAM, magic)
+          || Arrays.equals(MH_MAGIC_64, magic)
+          || Arrays.equals(MH_CIGAM_64, magic);
+    }
   }
 
   /**
@@ -102,192 +106,196 @@ public class Machos {
         });
 
     long size = file.size();
-    MappedByteBuffer map = file.map(FileChannel.MapMode.READ_WRITE, 0, size);
+    try (ByteBufferUnmapper unmapper =
+        ByteBufferUnmapper.createUnsafe(file.map(FileChannel.MapMode.READ_WRITE, 0, size))) {
+      ByteBuffer map = unmapper.getByteBuffer();
 
-    MachoHeader header = getHeader(map);
+      MachoHeader header = getHeader(map);
 
-    int symbolTableOffset = 0;
-    int symbolTableCount = 0;
-    int stringTableOffset = 0;
-    int stringTableSizePosition = 0;
-    int stringTableSize = 0;
-    boolean symbolTableSegmentFound = false;
-    int segmentSizePosition = 0;
-    long segmentSize = 0;
-    boolean linkEditSegmentFound = false;
-    int segmentFileSizePosition = 0;
-    int segment64FileSizePosition = 0;
+      int symbolTableOffset = 0;
+      int symbolTableCount = 0;
+      int stringTableOffset = 0;
+      int stringTableSizePosition = 0;
+      int stringTableSize = 0;
+      boolean symbolTableSegmentFound = false;
+      int segmentSizePosition = 0;
+      long segmentSize = 0;
+      boolean linkEditSegmentFound = false;
+      int segmentFileSizePosition = 0;
+      int segment64FileSizePosition = 0;
 
-    int commandsCount = header.getCommandsCount();
-    for (int i = 0; i < commandsCount; i++) {
-      int commandStart = map.position(); // NOPMD
-      int command = ObjectFileScrubbers.getLittleEndianInt(map);
-      int commandSize = ObjectFileScrubbers.getLittleEndianInt(map); // NOPMD
-      switch (command) {
-        case LC_SYMTAB:
-          symbolTableOffset = ObjectFileScrubbers.getLittleEndianInt(map);
-          symbolTableCount = ObjectFileScrubbers.getLittleEndianInt(map);
-          stringTableOffset = ObjectFileScrubbers.getLittleEndianInt(map);
-          stringTableSizePosition = map.position();
-          stringTableSize = ObjectFileScrubbers.getLittleEndianInt(map);
-          symbolTableSegmentFound = true;
-          break;
-        case LC_SEGMENT:
-          byte[] segmentNameBytes = ObjectFileScrubbers.getBytes(map, 16);
-          String segmentName = new String(segmentNameBytes, Charsets.US_ASCII);
-          if (segmentName.startsWith(LINKEDIT)) {
-            linkEditSegmentFound = true;
-            /* vm address */ ObjectFileScrubbers.getLittleEndianInt(map);
-            /* vm size */ ObjectFileScrubbers.getLittleEndianInt(map);
-            /* segment file offset */ ObjectFileScrubbers.getLittleEndianInt(map);
-            segmentFileSizePosition = map.position();
-            segmentSize = ObjectFileScrubbers.getLittleEndianInt(map);
-            /* maximum vm protection */ ObjectFileScrubbers.getLittleEndianInt(map);
-            /* initial vm protection */ ObjectFileScrubbers.getLittleEndianInt(map);
-            /* number of sections */ ObjectFileScrubbers.getLittleEndianInt(map);
-            /* flags */ ObjectFileScrubbers.getLittleEndianInt(map);
+      int commandsCount = header.getCommandsCount();
+      for (int i = 0; i < commandsCount; i++) {
+        int commandStart = map.position(); // NOPMD
+        int command = ObjectFileScrubbers.getLittleEndianInt(map);
+        int commandSize = ObjectFileScrubbers.getLittleEndianInt(map); // NOPMD
+        switch (command) {
+          case LC_SYMTAB:
+            symbolTableOffset = ObjectFileScrubbers.getLittleEndianInt(map);
+            symbolTableCount = ObjectFileScrubbers.getLittleEndianInt(map);
+            stringTableOffset = ObjectFileScrubbers.getLittleEndianInt(map);
+            stringTableSizePosition = map.position();
+            stringTableSize = ObjectFileScrubbers.getLittleEndianInt(map);
+            symbolTableSegmentFound = true;
+            break;
+          case LC_SEGMENT:
+            byte[] segmentNameBytes = ObjectFileScrubbers.getBytes(map, 16);
+            String segmentName = new String(segmentNameBytes, Charsets.US_ASCII);
+            if (segmentName.startsWith(LINKEDIT)) {
+              linkEditSegmentFound = true;
+              /* vm address */ ObjectFileScrubbers.getLittleEndianInt(map);
+              /* vm size */ ObjectFileScrubbers.getLittleEndianInt(map);
+              /* segment file offset */ ObjectFileScrubbers.getLittleEndianInt(map);
+              segmentFileSizePosition = map.position();
+              segmentSize = ObjectFileScrubbers.getLittleEndianInt(map);
+              /* maximum vm protection */ ObjectFileScrubbers.getLittleEndianInt(map);
+              /* initial vm protection */ ObjectFileScrubbers.getLittleEndianInt(map);
+              /* number of sections */ ObjectFileScrubbers.getLittleEndianInt(map);
+              /* flags */ ObjectFileScrubbers.getLittleEndianInt(map);
 
-            if (segmentSizePosition != 0) {
-              throw new MachoException("multiple map segment commands map string table");
+              if (segmentSizePosition != 0) {
+                throw new MachoException("multiple map segment commands map string table");
+              }
+              segmentSizePosition = segmentFileSizePosition;
             }
-            segmentSizePosition = segmentFileSizePosition;
-          }
-          break;
-        case LC_SEGMENT_64:
-          byte[] segment64NameBytes = ObjectFileScrubbers.getBytes(map, 16);
-          String segment64Name = new String(segment64NameBytes, Charsets.US_ASCII);
-          if (segment64Name.startsWith(LINKEDIT)) {
-            linkEditSegmentFound = true;
-            /* vm address */ ObjectFileScrubbers.getLittleEndianLong(map);
-            /* vm size */ ObjectFileScrubbers.getLittleEndianLong(map);
-            /* segment file offset */ ObjectFileScrubbers.getLittleEndianLong(map);
-            segment64FileSizePosition = map.position();
-            segmentSize = ObjectFileScrubbers.getLittleEndianLong(map);
-            /* maximum vm protection */ ObjectFileScrubbers.getLittleEndianInt(map);
-            /* initial vm protection */ ObjectFileScrubbers.getLittleEndianInt(map);
-            /* number of sections */ ObjectFileScrubbers.getLittleEndianInt(map);
-            /* flags */ ObjectFileScrubbers.getLittleEndianInt(map);
+            break;
+          case LC_SEGMENT_64:
+            byte[] segment64NameBytes = ObjectFileScrubbers.getBytes(map, 16);
+            String segment64Name = new String(segment64NameBytes, Charsets.US_ASCII);
+            if (segment64Name.startsWith(LINKEDIT)) {
+              linkEditSegmentFound = true;
+              /* vm address */ ObjectFileScrubbers.getLittleEndianLong(map);
+              /* vm size */ ObjectFileScrubbers.getLittleEndianLong(map);
+              /* segment file offset */ ObjectFileScrubbers.getLittleEndianLong(map);
+              segment64FileSizePosition = map.position();
+              segmentSize = ObjectFileScrubbers.getLittleEndianLong(map);
+              /* maximum vm protection */ ObjectFileScrubbers.getLittleEndianInt(map);
+              /* initial vm protection */ ObjectFileScrubbers.getLittleEndianInt(map);
+              /* number of sections */ ObjectFileScrubbers.getLittleEndianInt(map);
+              /* flags */ ObjectFileScrubbers.getLittleEndianInt(map);
 
-            if (segmentSizePosition != 0) {
-              throw new MachoException("multiple map segment commands map string table");
+              if (segmentSizePosition != 0) {
+                throw new MachoException("multiple map segment commands map string table");
+              }
+              segmentSizePosition = segment64FileSizePosition;
             }
-            segmentSizePosition = segment64FileSizePosition;
-          }
-          break;
-      }
-      map.position(commandStart + commandSize);
-    }
-
-    if (!linkEditSegmentFound) {
-      /*The OSO entries are identified in segments named __LINKEDIT. If no segment is found with
-      that name, there is nothing to scrub.*/
-      return;
-    }
-    if (stringTableSize == 0) {
-      return;
-    }
-
-    if (!isValidFilesize(header, segmentSize)) {
-      throw new MachoException("32bit map segment file size too big");
-    }
-
-    if (!symbolTableSegmentFound) {
-      throw new MachoException("LC_SYMTAB command not found");
-    }
-    if (stringTableOffset + stringTableSize != size) {
-      throw new MachoException("String table does not end at end of file");
-    }
-    if (segmentSizePosition == 0 || segmentSize == 0) {
-      throw new MachoException("LC_SEGMENT or LC_SEGMENT_64 command for string table not found");
-    }
-
-    map.position(stringTableOffset);
-    if (map.get() != 0x20) {
-      throw new MachoException("First character in the string table is not a space");
-    }
-    if (map.get() != 0x00) {
-      throw new MachoException("Second character in the string table is not a NUL");
-    }
-    int currentStringTableOffset = map.position();
-
-    byte[] stringTableBytes = new byte[stringTableSize];
-    map.position(stringTableOffset);
-    map.get(stringTableBytes);
-
-    map.position(symbolTableOffset);
-
-    // NB: We need to rewrite the string table as it's not deterministic and it would break
-    //     caching behavior. On the other hand, the symbol table order is deterministic.
-
-    boolean is64bit = header.getIs64Bit();
-    Map<byte[], byte[]> replacementPathMap = generateReplacementMap(cellRoots);
-    IntIntMap strings = new IntIntMap4a(symbolTableCount, 0.75f, NO_VALUE_MARKER);
-    for (int i = 0; i < symbolTableCount; i++) {
-      // Each LC_SYMTAB entry consists of the following fields:
-      // - String Index: 4 bytes (offset into the string table)
-      // - Type: 1 byte
-      // - Section: 1 byte
-      // - Description: 2 bytes
-      // - Value: 8 bytes on 64bit, 4 bytes on 32bit
-      int stringTableIndexPosition = map.position();
-      int stringTableIndex = ObjectFileScrubbers.getLittleEndianInt(map);
-      byte type = map.get();
-
-      if (stringTableIndex >= 2) {
-        int newStringTableIndex = strings.get(stringTableIndex);
-        if (newStringTableIndex == NO_VALUE_MARKER) {
-          ByteBuffer charByteBuffer =
-              ObjectFileScrubbers.getCharByteBuffer(stringTableBytes, stringTableIndex);
-
-          if (type == N_OSO) {
-            Optional<ByteBuffer> maybeRewrittenCharByteBuffer =
-                tryRewritingMatchingPath(stringTableBytes, stringTableIndex, replacementPathMap);
-            if (maybeRewrittenCharByteBuffer.isPresent()) {
-              charByteBuffer = maybeRewrittenCharByteBuffer.get();
-            }
-
-            int valuePosition = stringTableIndexPosition + 8;
-            map.position(valuePosition);
-            int lastModifiedValue = ObjectFileCommonModificationDate.COMMON_MODIFICATION_TIME_STAMP;
-            if (is64bit) {
-              ObjectFileScrubbers.putLittleEndianLong(map, lastModifiedValue);
-            } else {
-              ObjectFileScrubbers.putLittleEndianInt(map, lastModifiedValue);
-            }
-          }
-          ObjectFileScrubbers.putCharByteBuffer(map, currentStringTableOffset, charByteBuffer);
-
-          newStringTableIndex = currentStringTableOffset - stringTableOffset;
-          strings.put(stringTableIndex, newStringTableIndex);
-
-          currentStringTableOffset = map.position();
+            break;
         }
-        map.position(stringTableIndexPosition);
-        ObjectFileScrubbers.putLittleEndianInt(map, newStringTableIndex);
+        map.position(commandStart + commandSize);
       }
 
-      int symtabEntrySize = 4 + 1 + 1 + 2 + (is64bit ? 8 : 4);
-      int nextSymtabEntryOffset = stringTableIndexPosition + symtabEntrySize;
-      map.position(nextSymtabEntryOffset);
-    }
+      if (!linkEditSegmentFound) {
+        /*The OSO entries are identified in segments named __LINKEDIT. If no segment is found with
+        that name, there is nothing to scrub.*/
+        return;
+      }
+      if (stringTableSize == 0) {
+        return;
+      }
 
-    map.position(stringTableSizePosition);
-    int newStringTableSize = currentStringTableOffset - stringTableOffset;
-    ObjectFileScrubbers.putLittleEndianInt(map, newStringTableSize);
+      if (!isValidFilesize(header, segmentSize)) {
+        throw new MachoException("32bit map segment file size too big");
+      }
 
-    map.position(segmentSizePosition);
-    long newSize = segmentSize + (newStringTableSize - stringTableSize);
-    if (isValidFilesize(header, newSize)) {
-      if (header.getIs64Bit()) {
-        ObjectFileScrubbers.putLittleEndianLong(map, newSize);
+      if (!symbolTableSegmentFound) {
+        throw new MachoException("LC_SYMTAB command not found");
+      }
+      if (stringTableOffset + stringTableSize != size) {
+        throw new MachoException("String table does not end at end of file");
+      }
+      if (segmentSizePosition == 0 || segmentSize == 0) {
+        throw new MachoException("LC_SEGMENT or LC_SEGMENT_64 command for string table not found");
+      }
+
+      map.position(stringTableOffset);
+      if (map.get() != 0x20) {
+        throw new MachoException("First character in the string table is not a space");
+      }
+      if (map.get() != 0x00) {
+        throw new MachoException("Second character in the string table is not a NUL");
+      }
+      int currentStringTableOffset = map.position();
+
+      byte[] stringTableBytes = new byte[stringTableSize];
+      map.position(stringTableOffset);
+      map.get(stringTableBytes);
+
+      map.position(symbolTableOffset);
+
+      // NB: We need to rewrite the string table as it's not deterministic and it would break
+      //     caching behavior. On the other hand, the symbol table order is deterministic.
+
+      boolean is64bit = header.getIs64Bit();
+      Map<byte[], byte[]> replacementPathMap = generateReplacementMap(cellRoots);
+      IntIntMap strings = new IntIntMap4a(symbolTableCount, 0.75f, NO_VALUE_MARKER);
+      for (int i = 0; i < symbolTableCount; i++) {
+        // Each LC_SYMTAB entry consists of the following fields:
+        // - String Index: 4 bytes (offset into the string table)
+        // - Type: 1 byte
+        // - Section: 1 byte
+        // - Description: 2 bytes
+        // - Value: 8 bytes on 64bit, 4 bytes on 32bit
+        int stringTableIndexPosition = map.position();
+        int stringTableIndex = ObjectFileScrubbers.getLittleEndianInt(map);
+        byte type = map.get();
+
+        if (stringTableIndex >= 2) {
+          int newStringTableIndex = strings.get(stringTableIndex);
+          if (newStringTableIndex == NO_VALUE_MARKER) {
+            ByteBuffer charByteBuffer =
+                ObjectFileScrubbers.getCharByteBuffer(stringTableBytes, stringTableIndex);
+
+            if (type == N_OSO) {
+              Optional<ByteBuffer> maybeRewrittenCharByteBuffer =
+                  tryRewritingMatchingPath(stringTableBytes, stringTableIndex, replacementPathMap);
+              if (maybeRewrittenCharByteBuffer.isPresent()) {
+                charByteBuffer = maybeRewrittenCharByteBuffer.get();
+              }
+
+              int valuePosition = stringTableIndexPosition + 8;
+              map.position(valuePosition);
+              int lastModifiedValue =
+                  ObjectFileCommonModificationDate.COMMON_MODIFICATION_TIME_STAMP;
+              if (is64bit) {
+                ObjectFileScrubbers.putLittleEndianLong(map, lastModifiedValue);
+              } else {
+                ObjectFileScrubbers.putLittleEndianInt(map, lastModifiedValue);
+              }
+            }
+            ObjectFileScrubbers.putCharByteBuffer(map, currentStringTableOffset, charByteBuffer);
+
+            newStringTableIndex = currentStringTableOffset - stringTableOffset;
+            strings.put(stringTableIndex, newStringTableIndex);
+
+            currentStringTableOffset = map.position();
+          }
+          map.position(stringTableIndexPosition);
+          ObjectFileScrubbers.putLittleEndianInt(map, newStringTableIndex);
+        }
+
+        int symtabEntrySize = 4 + 1 + 1 + 2 + (is64bit ? 8 : 4);
+        int nextSymtabEntryOffset = stringTableIndexPosition + symtabEntrySize;
+        map.position(nextSymtabEntryOffset);
+      }
+
+      map.position(stringTableSizePosition);
+      int newStringTableSize = currentStringTableOffset - stringTableOffset;
+      ObjectFileScrubbers.putLittleEndianInt(map, newStringTableSize);
+
+      map.position(segmentSizePosition);
+      long newSize = segmentSize + (newStringTableSize - stringTableSize);
+      if (isValidFilesize(header, newSize)) {
+        if (header.getIs64Bit()) {
+          ObjectFileScrubbers.putLittleEndianLong(map, newSize);
+        } else {
+          ObjectFileScrubbers.putLittleEndianInt(map, (int) newSize);
+        }
       } else {
-        ObjectFileScrubbers.putLittleEndianInt(map, (int) newSize);
+        throw new MachoException("32bit scrubbed map segment file size too big");
       }
-    } else {
-      throw new MachoException("32bit scrubbed map segment file size too big");
-    }
 
-    file.truncate(currentStringTableOffset);
+      file.truncate(currentStringTableOffset);
+    }
   }
 
   private static boolean isValidFilesize(MachoHeader header, long filesize) {
@@ -295,7 +303,7 @@ public class Machos {
   }
 
   /** Returns the Mach-O header provided the file is Mach-O, otherwise throws an exception. */
-  protected static MachoHeader getHeader(MappedByteBuffer map) throws MachoException {
+  protected static MachoHeader getHeader(ByteBuffer map) throws MachoException {
     byte[] magic = ObjectFileScrubbers.getBytes(map, MH_MAGIC.length);
     boolean is64bit;
     if (Arrays.equals(MH_MAGIC, magic) || Arrays.equals(MH_CIGAM, magic)) {

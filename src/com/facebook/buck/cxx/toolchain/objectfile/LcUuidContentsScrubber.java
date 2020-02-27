@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx.toolchain.objectfile;
 
 import com.facebook.buck.io.file.FileContentsScrubber;
+import com.facebook.buck.util.nio.ByteBufferUnmapper;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.Range;
 import com.google.common.hash.HashCode;
@@ -25,7 +26,6 @@ import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,20 +57,23 @@ public class LcUuidContentsScrubber implements FileContentsScrubber {
     }
 
     long size = file.size();
-    MappedByteBuffer map = file.map(FileChannel.MapMode.READ_WRITE, 0, size);
+    try (ByteBufferUnmapper unmapper =
+        ByteBufferUnmapper.createUnsafe(file.map(FileChannel.MapMode.READ_WRITE, 0, size))) {
+      ByteBuffer map = unmapper.getByteBuffer();
 
-    resetUuidIfPresent(map);
-    HashCode hashCode = computeHash(map, size);
+      resetUuidIfPresent(map);
+      HashCode hashCode = computeHash(map, size);
 
-    map.rewind();
-    try {
-      Machos.setUuidIfPresent(map, Arrays.copyOf(hashCode.asBytes(), UUID_LENGTH));
-    } catch (Machos.MachoException e) {
-      throw new ScrubException(e.getMessage());
+      map.rewind();
+      try {
+        Machos.setUuidIfPresent(map, Arrays.copyOf(hashCode.asBytes(), UUID_LENGTH));
+      } catch (Machos.MachoException e) {
+        throw new ScrubException(e.getMessage());
+      }
     }
   }
 
-  private HashCode computeHash(MappedByteBuffer map, long fileSize) {
+  private HashCode computeHash(ByteBuffer map, long fileSize) {
     List<Range<Long>> ranges = generateHashRanges(fileSize);
     List<Pair<Range<Long>, ByteBuffer>> rangeBuffers =
         ranges.stream()
@@ -122,7 +125,7 @@ public class LcUuidContentsScrubber implements FileContentsScrubber {
   }
 
   /** Sets the LC_UUID to all zeroes if it's part of the Mach-O file. */
-  protected static void resetUuidIfPresent(MappedByteBuffer map) throws ScrubException {
+  protected static void resetUuidIfPresent(ByteBuffer map) throws ScrubException {
     try {
       Machos.setUuidIfPresent(map, ZERO_UUID);
     } catch (Machos.MachoException e) {

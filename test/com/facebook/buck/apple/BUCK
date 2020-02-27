@@ -237,6 +237,7 @@ java_test(
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util/hashing:hashing",
         "//src/com/facebook/buck/util/json:json",
+        "//src/com/facebook/buck/util/nio:nio",
         "//src/com/facebook/buck/util/stream:stream",
         "//src/com/facebook/buck/util/unarchive:unarchive",
         "//src/com/facebook/buck/util/zip:zip",

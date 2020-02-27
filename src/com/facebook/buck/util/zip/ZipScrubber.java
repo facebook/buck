@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util.zip;
 
+import com.facebook.buck.util.nio.ByteBufferUnmapper;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
 import java.nio.Buffer;
@@ -44,8 +45,11 @@ public class ZipScrubber {
   public static void scrubZip(Path zipPath) throws IOException {
     try (FileChannel channel =
         FileChannel.open(zipPath, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
-      ByteBuffer map = channel.map(FileChannel.MapMode.READ_WRITE, 0, channel.size());
-      scrubZipBuffer(channel.size(), map);
+      try (ByteBufferUnmapper unmapper =
+          ByteBufferUnmapper.createUnsafe(
+              channel.map(FileChannel.MapMode.READ_WRITE, 0, channel.size()))) {
+        scrubZipBuffer(channel.size(), unmapper.getByteBuffer());
+      }
     }
   }
 

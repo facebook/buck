@@ -17,9 +17,9 @@
 package com.facebook.buck.cxx.toolchain.objectfile;
 
 import com.facebook.buck.io.file.FileContentsScrubber;
+import com.facebook.buck.util.nio.ByteBufferUnmapper;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.Optional;
 
@@ -48,22 +48,25 @@ public class DylibStubContentsScrubber implements FileContentsScrubber {
 
   @Override
   public void scrubFile(FileChannel file) throws IOException, ScrubException {
-    MappedByteBuffer mappedFile = file.map(FileChannel.MapMode.READ_WRITE, 0, file.size());
-    LcUuidContentsScrubber.resetUuidIfPresent(mappedFile);
+    try (ByteBufferUnmapper unmapper =
+        ByteBufferUnmapper.createUnsafe(file.map(FileChannel.MapMode.READ_WRITE, 0, file.size()))) {
+      ByteBuffer mappedFile = unmapper.getByteBuffer();
+      LcUuidContentsScrubber.resetUuidIfPresent(mappedFile);
 
-    Optional<MachoSymTabCommand> maybeCmd = MachoSymTabCommandReader.read(mappedFile);
-    if (maybeCmd.isPresent()) {
-      resetSymbolAddressesInSymbolTable(mappedFile, maybeCmd.get());
-    }
+      Optional<MachoSymTabCommand> maybeCmd = MachoSymTabCommandReader.read(mappedFile);
+      if (maybeCmd.isPresent()) {
+        resetSymbolAddressesInSymbolTable(mappedFile, maybeCmd.get());
+      }
 
-    Optional<MachoDyldInfoCommand> maybeDyldInfo = MachoDyldInfoCommandReader.read(mappedFile);
-    if (maybeDyldInfo.isPresent()) {
-      resetSymbolAddressesInExportInfo(mappedFile, maybeDyldInfo.get());
+      Optional<MachoDyldInfoCommand> maybeDyldInfo = MachoDyldInfoCommandReader.read(mappedFile);
+      if (maybeDyldInfo.isPresent()) {
+        resetSymbolAddressesInExportInfo(mappedFile, maybeDyldInfo.get());
+      }
     }
   }
 
   private static void resetSymbolAddressesInSymbolTable(
-      MappedByteBuffer machoBuffer, MachoSymTabCommand symTabCommand) {
+      ByteBuffer machoBuffer, MachoSymTabCommand symTabCommand) {
     machoBuffer.position(symTabCommand.getSymbolTableOffset());
 
     for (int i = 0; i < symTabCommand.getNumberOfSymbolTableEntries(); ++i) {
@@ -85,7 +88,7 @@ public class DylibStubContentsScrubber implements FileContentsScrubber {
   }
 
   private static void resetSymbolAddressesInExportInfo(
-      MappedByteBuffer machoBuffer, MachoDyldInfoCommand dyldInfoCommand) {
+      ByteBuffer machoBuffer, MachoDyldInfoCommand dyldInfoCommand) {
     machoBuffer.position(dyldInfoCommand.getExportInfoOffset());
     machoBuffer.limit(dyldInfoCommand.getExportInfoOffset() + dyldInfoCommand.getExportInfoSize());
 

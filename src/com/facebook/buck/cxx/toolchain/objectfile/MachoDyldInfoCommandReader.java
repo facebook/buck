@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx.toolchain.objectfile;
 
-import java.nio.MappedByteBuffer;
+import java.nio.ByteBuffer;
 import java.util.Optional;
 
 /** Reader for LC_DYLD_INFO[_ONLY] Mach-O commands. */
@@ -29,7 +29,7 @@ public class MachoDyldInfoCommandReader {
    * @return If the command exists, a {@code MachoDyldInfoCommand}, otherwise an empty optional on
    *     failure.
    */
-  public static Optional<MachoDyldInfoCommand> read(MappedByteBuffer machoFileBuffer) {
+  public static Optional<MachoDyldInfoCommand> read(ByteBuffer machoFileBuffer) {
 
     machoFileBuffer.rewind();
     try {

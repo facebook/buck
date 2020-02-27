@@ -57,6 +57,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.util.nio.ByteBufferUnmapper;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.types.Unit;
@@ -79,7 +80,6 @@ import com.google.common.collect.Sets;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import java.io.IOException;
-import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -1038,11 +1038,13 @@ class NativeLibraryMergeEnhancer {
               try (FileChannel channel =
                   FileChannel.open(
                       finalOutput, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
-                MappedByteBuffer buffer =
-                    channel.map(FileChannel.MapMode.READ_WRITE, 0, channel.size());
-                Elf elf = new Elf(buffer);
-                fixSection(elf, ".dynsym", ".dynstr");
-                fixSection(elf, ".symtab", ".strtab");
+                try (ByteBufferUnmapper unmapper =
+                    ByteBufferUnmapper.createUnsafe(
+                        channel.map(FileChannel.MapMode.READ_WRITE, 0, channel.size()))) {
+                  Elf elf = new Elf(unmapper.getByteBuffer());
+                  fixSection(elf, ".dynsym", ".dynstr");
+                  fixSection(elf, ".symtab", ".strtab");
+                }
               }
               return StepExecutionResults.SUCCESS;
             }
