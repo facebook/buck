@@ -132,10 +132,10 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
 
   private static final String ENABLE_WRITE_TO_CAS = "enable_write_to_cas";
   private static final Boolean DEFAULT_ENABLE_WRITE_TO_CAS = false;
-  private static final String CAS_HOST = "cas_host";
-  private static final String CAS_PORT = "cas_port";
+  private static final String CAS_HOST = "cache_cas_host";
+  private static final String CAS_PORT = "cache_cas_port";
   private static final int DEFAULT_CAS_PORT = 443;
-  private static final String CAS_DEADLINE_SEC = "cas_deadline_sec";
+  private static final String CAS_DEADLINE_SEC = "cache_cas_deadline_sec";
   private static final int DEFAULT_CAS_DEADLINE_SEC = 300;
 
   private static final String SCHEDULE_TYPE = "schedule_type";
