@@ -159,6 +159,7 @@ public abstract class AbstractSelectorListResolver implements SelectorListResolv
           selector.getConditions().keySet().stream()
               .filter(key -> !key.isReserved())
               .map(SelectorKey::getBuildTarget)
+              .sorted()
               .collect(Collectors.toList());
       noMatchMessage += ".\nChecked conditions:\n " + Joiner.on("\n ").join(keys);
     } else {

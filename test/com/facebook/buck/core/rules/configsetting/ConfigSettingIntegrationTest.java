@@ -264,8 +264,8 @@ public class ConfigSettingIntegrationTest {
         processResult.getStderr(),
         containsString(
             "None of the conditions in attribute \"srcs\" of //:cat match the configuration.\nChecked conditions:\n"
-                + " //:osx_config\n"
-                + " //:linux_aarch64_config"));
+                + " //:linux_aarch64_config\n"
+                + " //:osx_config"));
   }
 
   @Test
