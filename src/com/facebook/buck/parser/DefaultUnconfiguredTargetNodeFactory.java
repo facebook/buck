@@ -105,7 +105,8 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
         continue;
       }
       ParamInfo<?> paramInfo = constructorDescriptor.getParamInfos().get(attr.getKey());
-      Preconditions.checkNotNull(paramInfo, "attr %s", attr.getKey());
+      Preconditions.checkNotNull(
+          paramInfo, "cannot find param info for arg %s of target %s", attr.getKey(), target);
       result.put(
           attr.getKey(),
           convertSelectorListInAttrValue(
