@@ -54,6 +54,6 @@ public abstract class JavaOptionsProvider implements Toolchain {
   }
 
   public static JavaOptionsProvider of(JavaOptions javaOptions, JavaOptions javaOptionsForTests) {
-    return ImmutableJavaOptionsProvider.of(javaOptions, javaOptionsForTests);
+    return ImmutableJavaOptionsProvider.ofImpl(javaOptions, javaOptionsForTests);
   }
 }

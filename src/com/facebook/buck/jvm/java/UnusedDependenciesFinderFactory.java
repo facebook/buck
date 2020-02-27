@@ -60,7 +60,7 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
       ProjectFilesystem projectFilesystem,
       SourcePathResolverAdapter sourcePathResolverAdapter,
       JavaBuckConfig.UnusedDependenciesAction unusedDependenciesAction) {
-    return ImmutableUnusedDependenciesFinder.of(
+    return ImmutableUnusedDependenciesFinder.ofImpl(
         buildTarget,
         projectFilesystem,
         CompilerOutputPaths.getDepFilePath(buildTarget, projectFilesystem),

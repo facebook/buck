@@ -31,6 +31,6 @@ public interface DoctorEndpointResponse {
 
   static DoctorEndpointResponse of(
       Optional<String> errorMessage, ImmutableList<DoctorSuggestion> suggestions) {
-    return ImmutableDoctorEndpointResponse.of(errorMessage, suggestions);
+    return ImmutableDoctorEndpointResponse.ofImpl(errorMessage, suggestions);
   }
 }

@@ -71,10 +71,10 @@ public abstract class RmStep implements Step {
   }
 
   public static RmStep of(BuildCellRelativePath path, boolean recursive) {
-    return ImmutableRmStep.of(path, recursive);
+    return ImmutableRmStep.ofImpl(path, recursive);
   }
 
   public static RmStep of(BuildCellRelativePath path) {
-    return ImmutableRmStep.of(path, false);
+    return ImmutableRmStep.ofImpl(path, false);
   }
 }

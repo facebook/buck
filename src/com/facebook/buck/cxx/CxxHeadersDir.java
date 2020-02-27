@@ -44,6 +44,6 @@ public abstract class CxxHeadersDir extends CxxHeaders {
   }
 
   public static CxxHeadersDir of(CxxPreprocessables.IncludeType includeType, SourcePath root) {
-    return ImmutableCxxHeadersDir.of(includeType, root);
+    return ImmutableCxxHeadersDir.ofImpl(includeType, root);
   }
 }

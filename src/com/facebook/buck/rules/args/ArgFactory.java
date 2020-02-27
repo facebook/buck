@@ -27,7 +27,7 @@ public class ArgFactory {
   private ArgFactory() {}
 
   public static Arg from(Object object, String formatString) {
-    return ImmutableFormatArg.of(from(object), formatString);
+    return ImmutableFormatArg.ofImpl(from(object), formatString);
   }
 
   /**

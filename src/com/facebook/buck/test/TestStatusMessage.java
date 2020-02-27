@@ -29,6 +29,6 @@ public interface TestStatusMessage {
   long getTimestampMillis();
 
   static TestStatusMessage of(String message, Level level, long timestampMillis) {
-    return ImmutableTestStatusMessage.of(message, level, timestampMillis);
+    return ImmutableTestStatusMessage.ofImpl(message, level, timestampMillis);
   }
 }

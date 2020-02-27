@@ -63,7 +63,7 @@ public abstract class UnconfiguredTargetNodeWithDepsPackage implements ComputeRe
       ImmutableMap<String, UnconfiguredTargetNodeWithDeps> unconfiguredTargetNodesWithDeps,
       ImmutableList<ParsingError> errors,
       ImmutableSet<Path> includes) {
-    return ImmutableUnconfiguredTargetNodeWithDepsPackage.of(
+    return ImmutableUnconfiguredTargetNodeWithDepsPackage.ofImpl(
         packagePath, unconfiguredTargetNodesWithDeps, errors, includes);
   }
 }

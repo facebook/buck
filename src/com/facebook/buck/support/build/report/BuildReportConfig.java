@@ -46,7 +46,7 @@ public abstract class BuildReportConfig implements ConfigView<BuckConfig> {
   public abstract BuckConfig getDelegate();
 
   public static BuildReportConfig of(BuckConfig delegate) {
-    return ImmutableBuildReportConfig.of(delegate);
+    return ImmutableBuildReportConfig.ofImpl(delegate);
   }
 
   @Value.Lazy

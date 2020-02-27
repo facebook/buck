@@ -354,7 +354,7 @@ public class AbstractAsynchronousCacheTest {
       while (result.size() < keys.size()) {
         result.add(skip());
       }
-      return ImmutableMultiFetchResult.of(ImmutableList.copyOf(result));
+      return ImmutableMultiFetchResult.ofImpl(ImmutableList.copyOf(result));
     }
 
     @Override

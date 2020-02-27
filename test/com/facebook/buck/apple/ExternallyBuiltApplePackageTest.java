@@ -67,7 +67,7 @@ public class ExternallyBuiltApplePackageTest {
     projectFilesystem = new FakeProjectFilesystem();
     graphBuilder = new TestActionGraphBuilder();
     config =
-        ImmutableApplePackageConfigAndPlatformInfo.of(
+        ImmutableApplePackageConfigAndPlatformInfo.ofImpl(
             AppleConfig.ApplePackageConfig.of("echo $SDKROOT $OUT", "api"),
             FakeAppleRuleDescriptions.DEFAULT_IPHONEOS_ARMV7_PLATFORM);
   }

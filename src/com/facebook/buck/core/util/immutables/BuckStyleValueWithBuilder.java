@@ -39,6 +39,7 @@ import org.immutables.value.Value;
     get = {"is*", "get*"},
     init = "set*",
     visibility = Value.Style.ImplementationVisibility.PACKAGE,
+    of = "ofImpl",
     overshadowImplementation = true,
     defaults = @Value.Immutable(builder = true, copy = false, prehash = false),
     forceJacksonPropertyNames = false,

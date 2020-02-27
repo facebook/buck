@@ -63,7 +63,7 @@ public abstract class SourceAttribute extends Attribute<SourcePath> {
   }
 
   public static SourceAttribute of(Object preCoercionDefaultValue, String doc, boolean mandatory) {
-    return ImmutableSourceAttribute.of(preCoercionDefaultValue, doc, mandatory);
+    return ImmutableSourceAttribute.ofImpl(preCoercionDefaultValue, doc, mandatory);
   }
 
   private Artifact postCoercionTransform(Object src, RuleAnalysisContext analysisContext) {

@@ -163,7 +163,7 @@ public abstract class BuckPaths {
       Path buckOut,
       Path configuredBuckOut,
       boolean shouldIncludeTargetConfigHash) {
-    return ImmutableBuckPaths.of(
+    return ImmutableBuckPaths.ofImpl(
         cellName, buckOut, configuredBuckOut, shouldIncludeTargetConfigHash);
   }
 

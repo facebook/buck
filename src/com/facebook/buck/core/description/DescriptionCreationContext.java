@@ -39,7 +39,7 @@ public interface DescriptionCreationContext {
       ToolchainProvider toolchainProvider,
       SandboxExecutionStrategy sandboxExecutionStrategy,
       PluginManager pluginManager) {
-    return ImmutableDescriptionCreationContext.of(
+    return ImmutableDescriptionCreationContext.ofImpl(
         buckConfig, toolchainProvider, sandboxExecutionStrategy, pluginManager);
   }
 }

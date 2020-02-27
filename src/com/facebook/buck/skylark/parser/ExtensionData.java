@@ -46,7 +46,7 @@ abstract class ExtensionData {
   public abstract ImmutableSet<String> getLoadTransitiveClosure();
 
   ExtensionData withImportString(String importString) {
-    return ImmutableExtensionData.of(
+    return ImmutableExtensionData.ofImpl(
         getExtension(), getPath(), getDependencies(), importString, getLoadTransitiveClosure());
   }
 }

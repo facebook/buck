@@ -179,7 +179,7 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
       throw new VersionControlCommandFailedException(
           String.format(numberOfWordsMismatchFormat, baseRevisionLine));
     }
-    return ImmutableFastVersionControlStats.of(
+    return ImmutableFastVersionControlStats.ofImpl(
         currentRevisionWords[0],
         baseRevisionWords.length == 4
             ? ImmutableSet.copyOf(baseRevisionWords[3].split(" "))

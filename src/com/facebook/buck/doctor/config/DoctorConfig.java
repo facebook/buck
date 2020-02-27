@@ -56,7 +56,7 @@ public abstract class DoctorConfig implements ConfigView<BuckConfig> {
   public abstract BuckConfig getDelegate();
 
   public static DoctorConfig of(BuckConfig delegate) {
-    return ImmutableDoctorConfig.of(delegate);
+    return ImmutableDoctorConfig.ofImpl(delegate);
   }
 
   @Value.Lazy

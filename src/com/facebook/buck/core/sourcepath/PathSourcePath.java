@@ -78,7 +78,7 @@ public abstract class PathSourcePath implements SourcePath {
 
   public static PathSourcePath of(ProjectFilesystem filesystem, Path relativePath) {
     // TODO(nga): path is not always relative
-    return ImmutablePathSourcePath.of(filesystem, relativePath);
+    return ImmutablePathSourcePath.ofImpl(filesystem, relativePath);
   }
 
   public static PathSourcePath of(ProjectFilesystem filesystem, ForwardRelativePath relativePath) {

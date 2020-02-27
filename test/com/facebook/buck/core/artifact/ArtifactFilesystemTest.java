@@ -115,7 +115,7 @@ public class ArtifactFilesystemTest {
   public void copiesArtifacts() throws IOException {
     ArtifactFilesystem artifactFilesystem = new ArtifactFilesystem(filesystem);
     ImmutableSourceArtifactImpl artifact =
-        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("bar")));
+        ImmutableSourceArtifactImpl.ofImpl(PathSourcePath.of(filesystem, Paths.get("bar")));
     filesystem.writeContentsToPath("some contents", Paths.get("bar"));
 
     BuildArtifact dest = artifactFactory.createBuildArtifact(Paths.get("out"), Location.BUILTIN);
@@ -131,9 +131,9 @@ public class ArtifactFilesystemTest {
   public void expandCommandLine() {
     ArtifactFilesystem artifactFilesystem = new ArtifactFilesystem(filesystem);
     ImmutableSourceArtifactImpl sourceArtifact =
-        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("bar", "baz")));
+        ImmutableSourceArtifactImpl.ofImpl(PathSourcePath.of(filesystem, Paths.get("bar", "baz")));
     ImmutableSourceArtifactImpl shortArtifact =
-        ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("foo")));
+        ImmutableSourceArtifactImpl.ofImpl(PathSourcePath.of(filesystem, Paths.get("foo")));
 
     assertEquals(Paths.get("bar", "baz").toString(), artifactFilesystem.stringify(sourceArtifact));
     assertEquals(Paths.get("foo").toString(), artifactFilesystem.stringify(shortArtifact));

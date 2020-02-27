@@ -136,21 +136,21 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
               input.getSecond(),
               filesystem,
               outputScratch),
-          ImmutableElfSymbolTableScrubberStep.of(
+          ImmutableElfSymbolTableScrubberStep.ofImpl(
               filesystem,
               outputScratch,
               /* section */ ".dynsym",
               /* versymSection */ Optional.of(".gnu.version"),
               /* allowMissing */ false,
               /* scrubUndefinedSymbols */ removeUndefinedSymbols),
-          ImmutableElfSymbolTableScrubberStep.of(
+          ImmutableElfSymbolTableScrubberStep.ofImpl(
               filesystem,
               outputScratch,
               /* section */ ".symtab",
               /* versymSection */ Optional.empty(),
               /* allowMissing */ true,
               /* scrubUndefinedSymbols */ true),
-          ImmutableElfDynamicSectionScrubberStep.of(
+          ImmutableElfDynamicSectionScrubberStep.ofImpl(
               filesystem,
               outputScratch,
               // When scrubbing undefined symbols, drop the `DT_NEEDED` tags from the whitelist,
@@ -160,21 +160,21 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
                   : ImmutableSet.of(
                       ElfDynamicSection.DTag.DT_NEEDED, ElfDynamicSection.DTag.DT_SONAME),
               /* removeScrubbedTags */ removeUndefinedSymbols),
-          ImmutableElfScrubFileHeaderStep.of(filesystem, outputScratch));
+          ImmutableElfScrubFileHeaderStep.ofImpl(filesystem, outputScratch));
       // If we're removing undefined symbols, rewrite the dynamic string table so that strings for
       // undefined symbol names are removed.
       if (removeUndefinedSymbols) {
-        steps.add(ImmutableElfRewriteDynStrSectionStep.of(filesystem, outputScratch));
+        steps.add(ImmutableElfRewriteDynStrSectionStep.ofImpl(filesystem, outputScratch));
       }
       steps.add(
           // objcopy doesn't like the section-address shuffling chicanery we're doing in
           // the ElfCompactSectionsStep, since the new addresses may not jive with the current
           // segment locations.  So kill the segments (program headers) in the scratch file
           // prior to compacting sections, and _again_ in the interface .so file.
-          ImmutableElfClearProgramHeadersStep.of(filesystem, outputScratch),
-          ImmutableElfCompactSectionsStep.of(
+          ImmutableElfClearProgramHeadersStep.ofImpl(filesystem, outputScratch),
+          ImmutableElfCompactSectionsStep.ofImpl(
               buildTarget, commandPrefix, filesystem, outputScratch, filesystem, output),
-          ImmutableElfClearProgramHeadersStep.of(filesystem, output));
+          ImmutableElfClearProgramHeadersStep.ofImpl(filesystem, output));
       return steps.build();
     }
 

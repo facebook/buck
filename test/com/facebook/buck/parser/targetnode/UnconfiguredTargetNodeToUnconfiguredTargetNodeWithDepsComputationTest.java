@@ -106,11 +106,11 @@ public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputationTe
             unconfiguredTargetNodeToTargetNodeFactory, cell.getRootCell());
     UnconfiguredTargetNodeWithDeps rawTargetNode =
         computation.transform(
-            ImmutableUnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsKey.of(
+            ImmutableUnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsKey.ofImpl(
                 unconfiguredTargetNode1, Paths.get("")),
             new FakeComputationEnvironment(
                 ImmutableMap.of(
-                    ImmutableBuildTargetToUnconfiguredTargetNodeKey.of(
+                    ImmutableBuildTargetToUnconfiguredTargetNodeKey.ofImpl(
                         unconfiguredBuildTarget1, Paths.get("")),
                     unconfiguredTargetNode1)));
 

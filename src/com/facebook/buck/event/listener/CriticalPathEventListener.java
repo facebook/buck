@@ -81,7 +81,7 @@ public class CriticalPathEventListener implements BuckEventListener {
     BuildTarget buildTarget = event.getTarget();
     long elapsedTimeMillis = TimeUnit.NANOSECONDS.toMillis(event.getElapsedTimeNano());
     buildTargetToExecutionTimeMap.put(
-        buildTarget, ImmutableExecutionTimeInfo.of(elapsedTimeMillis, event.getNanoTime()));
+        buildTarget, ImmutableExecutionTimeInfo.ofImpl(elapsedTimeMillis, event.getNanoTime()));
   }
 
   /** Subscribes to {@link FinalizingBuildRuleEvent} events */
@@ -92,7 +92,7 @@ public class CriticalPathEventListener implements BuckEventListener {
     handleBuildRule(
         buildRule,
         buildTargetToExecutionTimeMap.getOrDefault(
-            buildTarget, ImmutableExecutionTimeInfo.of(0L, 0L)));
+            buildTarget, ImmutableExecutionTimeInfo.ofImpl(0L, 0L)));
   }
 
   /** Subscribes to {@link RemoteBuildRuleExecutionEvent} events */
@@ -103,7 +103,7 @@ public class CriticalPathEventListener implements BuckEventListener {
         event.getBuildRule().getFullyQualifiedName(), event.getExecutionDurationMs());
     buildTargetToExecutionTimeMap.put(
         event.getBuildRule().getBuildTarget(),
-        ImmutableExecutionTimeInfo.of(event.getExecutionDurationMs(), event.getNanoTime()));
+        ImmutableExecutionTimeInfo.ofImpl(event.getExecutionDurationMs(), event.getNanoTime()));
   }
 
   @VisibleForTesting
@@ -111,7 +111,7 @@ public class CriticalPathEventListener implements BuckEventListener {
     Pair<Optional<BuildTarget>, Long> longestPathBeforeGivenRule =
         findTheLongestPathBeforeThisRule(buildRule);
     CriticalPathNode criticalPathNode =
-        ImmutableCriticalPathNode.of(
+        ImmutableCriticalPathNode.ofImpl(
             executionTimeInfo.getExecutionDurationMs() + longestPathBeforeGivenRule.getSecond(),
             buildRule.getType(),
             longestPathBeforeGivenRule.getFirst().orElse(null),
@@ -140,8 +140,8 @@ public class CriticalPathEventListener implements BuckEventListener {
           buildTargetToCriticalPathNodeMap.computeIfAbsent(
               buildTarget,
               ignore ->
-                  ImmutableCriticalPathNode.of(
-                      0, null, null, ImmutableExecutionTimeInfo.of(0L, 0L)));
+                  ImmutableCriticalPathNode.ofImpl(
+                      0, null, null, ImmutableExecutionTimeInfo.ofImpl(0L, 0L)));
       long totalElapsedTime = criticalPathNode.getTotalElapsedTimeMs();
       if (totalElapsedTime > longestSoFar) {
         longestSoFar = totalElapsedTime;
@@ -186,7 +186,7 @@ public class CriticalPathEventListener implements BuckEventListener {
         .map(
             pair -> {
               CriticalPathNode criticalPathNode = pair.getSecond();
-              return ImmutableCriticalPathReportableNode.of(
+              return ImmutableCriticalPathReportableNode.ofImpl(
                   pair.getFirst(),
                   criticalPathNode.getExecutionTimeInfo().getExecutionDurationMs(),
                   criticalPathNode.getExecutionTimeInfo().getEventNanoTime(),

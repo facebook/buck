@@ -41,7 +41,7 @@ public abstract class NeededCoverageSpec implements TargetTranslatable<NeededCov
 
   public static NeededCoverageSpec of(
       int neededCoverageRatioPercentage, BuildTarget buildTarget, Optional<String> pathName) {
-    return ImmutableNeededCoverageSpec.of(neededCoverageRatioPercentage, buildTarget, pathName);
+    return ImmutableNeededCoverageSpec.ofImpl(neededCoverageRatioPercentage, buildTarget, pathName);
   }
 
   @Override

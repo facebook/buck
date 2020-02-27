@@ -161,7 +161,7 @@ public abstract class InvocationInfo {
       String repository,
       String watchmanVersion,
       long timestampMillis) {
-    return ImmutableInvocationInfo.of(
+    return ImmutableInvocationInfo.ofImpl(
         buildId,
         superConsoleEnabled,
         isDaemon,

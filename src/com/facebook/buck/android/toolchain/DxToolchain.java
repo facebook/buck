@@ -34,6 +34,6 @@ public interface DxToolchain extends Toolchain {
   }
 
   static DxToolchain of(ListeningExecutorService dxExecutorService) {
-    return ImmutableDxToolchain.of(dxExecutorService);
+    return ImmutableDxToolchain.ofImpl(dxExecutorService);
   }
 }

@@ -27,7 +27,7 @@ import com.google.common.collect.ImmutableList;
 public abstract class MachoDylibStubParams implements SharedLibraryInterfaceParams {
 
   public static MachoDylibStubParams of(Tool strip) {
-    return ImmutableMachoDylibStubParams.of(strip);
+    return ImmutableMachoDylibStubParams.ofImpl(strip);
   }
 
   public abstract Tool getStrip();

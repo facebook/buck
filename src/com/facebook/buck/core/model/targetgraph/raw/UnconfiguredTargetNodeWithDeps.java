@@ -54,6 +54,6 @@ public abstract class UnconfiguredTargetNodeWithDeps implements ComputeResult {
 
   public static UnconfiguredTargetNodeWithDeps of(
       UnconfiguredTargetNode unconfiguredTargetNode, ImmutableSet<UnconfiguredBuildTarget> deps) {
-    return ImmutableUnconfiguredTargetNodeWithDeps.of(unconfiguredTargetNode, deps);
+    return ImmutableUnconfiguredTargetNodeWithDeps.ofImpl(unconfiguredTargetNode, deps);
   }
 }

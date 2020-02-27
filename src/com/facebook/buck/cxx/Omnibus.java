@@ -224,7 +224,7 @@ public class Omnibus {
     // Also add any excluded nodes that are also root dependencies.
     deps.addAll(Sets.intersection(rootDeps.keySet(), excluded));
 
-    return ImmutableOmnibusSpec.of(
+    return ImmutableOmnibusSpec.ofImpl(
         graph,
         roots,
         graph.getNodes().stream()
@@ -424,7 +424,7 @@ public class Omnibus {
     }
 
     CxxLink rootRule = graphBuilder.addToIndex(rootLinkRule);
-    return ImmutableOmnibusRoot.of(rootRule.getSourcePathToOutput());
+    return ImmutableOmnibusRoot.ofImpl(rootRule.getSourcePathToOutput());
   }
 
   private static OmnibusRoot createRoot(
@@ -618,7 +618,7 @@ public class Omnibus {
                 argsBuilder.build(),
                 cellPathResolver));
 
-    return ImmutableOmnibusLibrary.of(omnibusSoname, omnibusRule.getSourcePathToOutput());
+    return ImmutableOmnibusLibrary.ofImpl(omnibusSoname, omnibusRule.getSourcePathToOutput());
   }
 
   /**
@@ -750,7 +750,7 @@ public class Omnibus {
           || nativeLinkable.getPreferredLinkage() != NativeLinkableGroup.Linkage.STATIC) {
         for (Map.Entry<String, SourcePath> ent :
             nativeLinkable.getSharedLibraries(graphBuilder).entrySet()) {
-          libs.addLibraries(ImmutableOmnibusLibrary.of(ent.getKey(), ent.getValue()));
+          libs.addLibraries(ImmutableOmnibusLibrary.ofImpl(ent.getKey(), ent.getValue()));
         }
       }
     }

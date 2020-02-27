@@ -45,6 +45,6 @@ public abstract class BuckCellArg {
   }
 
   public static BuckCellArg of(Optional<String> cellName, String arg) {
-    return ImmutableBuckCellArg.of(cellName, arg);
+    return ImmutableBuckCellArg.ofImpl(cellName, arg);
   }
 }

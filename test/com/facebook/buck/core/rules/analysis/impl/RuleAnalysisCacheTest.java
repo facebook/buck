@@ -50,7 +50,7 @@ public class RuleAnalysisCacheTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//my:target");
 
     RuleAnalysisResult cachedResult =
-        ImmutableRuleAnalysisResultImpl.of(
+        ImmutableRuleAnalysisResultImpl.ofImpl(
             buildTarget, TestProviderInfoCollectionImpl.builder().build(), ImmutableMap.of());
     cache.put(RuleAnalysisKey.of(buildTarget), cachedResult);
 
@@ -69,10 +69,10 @@ public class RuleAnalysisCacheTest {
     BuildTarget buildTarget3 = BuildTargetFactory.newInstance("//my:target3");
 
     RuleAnalysisResult cachedResult1 =
-        ImmutableRuleAnalysisResultImpl.of(
+        ImmutableRuleAnalysisResultImpl.ofImpl(
             buildTarget1, TestProviderInfoCollectionImpl.builder().build(), ImmutableMap.of());
     RuleAnalysisResult cachedResult2 =
-        ImmutableRuleAnalysisResultImpl.of(
+        ImmutableRuleAnalysisResultImpl.ofImpl(
             buildTarget2, TestProviderInfoCollectionImpl.builder().build(), ImmutableMap.of());
 
     cache.put(RuleAnalysisKey.of(buildTarget1), cachedResult1);

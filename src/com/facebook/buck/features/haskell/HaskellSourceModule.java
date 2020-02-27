@@ -52,7 +52,7 @@ abstract class HaskellSourceModule implements Comparable<HaskellSourceModule>, A
   abstract SourceType getSourceType();
 
   public static HaskellSourceModule from(String name) {
-    return ImmutableHaskellSourceModule.of(
+    return ImmutableHaskellSourceModule.ofImpl(
         name.substring(0, name.lastIndexOf('.')).replace(File.separatorChar, '.'),
         name.endsWith("-boot") ? SourceType.HsBootFile : SourceType.HsSrcFile);
   }

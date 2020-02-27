@@ -69,6 +69,6 @@ public abstract class SymlinkFileStep implements Step {
 
   public static SymlinkFileStep of(
       ProjectFilesystem filesystem, Path existingFile, Path desiredLink) {
-    return ImmutableSymlinkFileStep.of(filesystem, existingFile, desiredLink);
+    return ImmutableSymlinkFileStep.ofImpl(filesystem, existingFile, desiredLink);
   }
 }

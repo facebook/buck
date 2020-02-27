@@ -28,6 +28,6 @@ public abstract class ConstraintValue {
   public abstract ConstraintSetting getConstraintSetting();
 
   public static ConstraintValue of(BuildTarget buildTarget, ConstraintSetting constraintSetting) {
-    return ImmutableConstraintValue.of(buildTarget, constraintSetting);
+    return ImmutableConstraintValue.ofImpl(buildTarget, constraintSetting);
   }
 }

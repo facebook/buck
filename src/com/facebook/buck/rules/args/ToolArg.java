@@ -30,7 +30,7 @@ public interface ToolArg extends Arg {
   Tool getTool();
 
   static ToolArg of(Tool tool) {
-    return ImmutableToolArg.of(tool);
+    return ImmutableToolArg.ofImpl(tool);
   }
 
   @Override

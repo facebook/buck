@@ -27,7 +27,7 @@ import com.facebook.buck.rules.query.Query;
 public abstract class QueryTargetsAndOutputsMacro extends QueryMacro {
 
   public static QueryTargetsAndOutputsMacro of(String separator, Query coerce) {
-    return ImmutableQueryTargetsAndOutputsMacro.of(separator, coerce);
+    return ImmutableQueryTargetsAndOutputsMacro.ofImpl(separator, coerce);
   }
 
   abstract String getSeparator();

@@ -65,7 +65,7 @@ public abstract class ExplicitBuildTargetSourcePath implements BuildTargetSource
       BuildTargetWithOutputs targetWithOutputs,
       Path resolvedPath,
       Optional<? extends HashCode> precomputedHash) {
-    return ImmutableExplicitBuildTargetSourcePath.of(
+    return ImmutableExplicitBuildTargetSourcePath.ofImpl(
         targetWithOutputs, resolvedPath, precomputedHash);
   }
 

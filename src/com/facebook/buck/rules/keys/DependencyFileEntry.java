@@ -66,7 +66,7 @@ public abstract class DependencyFileEntry {
 
   public static DependencyFileEntry of(
       Path pathToFile, Optional<? extends Path> pathWithinArchive) {
-    return ImmutableDependencyFileEntry.of(pathToFile, pathWithinArchive);
+    return ImmutableDependencyFileEntry.ofImpl(pathToFile, pathWithinArchive);
   }
 
   public static DependencyFileEntry of(Path pathToFile) {

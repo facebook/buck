@@ -65,6 +65,6 @@ public abstract class StringListAttribute extends Attribute<ImmutableList<String
       String doc,
       boolean mandatory,
       boolean allowEmpty) {
-    return ImmutableStringListAttribute.of(preCoercionDefaultValue, doc, mandatory, allowEmpty);
+    return ImmutableStringListAttribute.ofImpl(preCoercionDefaultValue, doc, mandatory, allowEmpty);
   }
 }

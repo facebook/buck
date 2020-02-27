@@ -43,6 +43,6 @@ public abstract class ModuleIndexEntry implements Comparable<ModuleIndexEntry> {
   }
 
   public static ModuleIndexEntry of(String fileUrl, Path filePath, @Nullable String group) {
-    return ImmutableModuleIndexEntry.of(fileUrl, filePath, group);
+    return ImmutableModuleIndexEntry.ofImpl(fileUrl, filePath, group);
   }
 }

@@ -118,7 +118,7 @@ public class Jsr199JavacIntegrationTest {
     Jsr199Javac javac = createJavac(/* withSyntaxError */ false);
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     JavacExecutionContext javacExecutionContext =
-        ImmutableJavacExecutionContext.of(
+        ImmutableJavacExecutionContext.ofImpl(
             new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus()),
             executionContext.getStdErr(),
             executionContext.getClassLoaderCache(),
@@ -173,7 +173,7 @@ public class Jsr199JavacIntegrationTest {
     Jsr199Javac javac = createJavac(/* withSyntaxError */ false);
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     JavacExecutionContext javacExecutionContext =
-        ImmutableJavacExecutionContext.of(
+        ImmutableJavacExecutionContext.ofImpl(
             new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus()),
             executionContext.getStdErr(),
             executionContext.getClassLoaderCache(),
@@ -280,7 +280,7 @@ public class Jsr199JavacIntegrationTest {
     Jsr199Javac javac = createJavac(/* withSyntaxError */ false, Optional.of(fakeJavacJar));
 
     JavacExecutionContext javacExecutionContext =
-        ImmutableJavacExecutionContext.of(
+        ImmutableJavacExecutionContext.ofImpl(
             new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus()),
             executionContext.getStdErr(),
             executionContext.getClassLoaderCache(),
@@ -373,7 +373,7 @@ public class Jsr199JavacIntegrationTest {
     Jsr199Javac javac = new JdkNotFoundJavac();
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     JavacExecutionContext javacExecutionContext =
-        ImmutableJavacExecutionContext.of(
+        ImmutableJavacExecutionContext.ofImpl(
             new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus()),
             executionContext.getStdErr(),
             executionContext.getClassLoaderCache(),

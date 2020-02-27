@@ -328,6 +328,6 @@ public abstract class AbstractReport {
           e);
     }
 
-    return Optional.of(ImmutableFileChangesIgnoredReport.of(watchmanDiagReport));
+    return Optional.of(ImmutableFileChangesIgnoredReport.ofImpl(watchmanDiagReport));
   }
 }

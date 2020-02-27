@@ -30,7 +30,7 @@ public abstract class RuleKeyConfig implements ConfigView<BuckConfig> {
   public abstract BuckConfig getDelegate();
 
   public static RuleKeyConfig of(BuckConfig delegate) {
-    return ImmutableRuleKeyConfig.of(delegate);
+    return ImmutableRuleKeyConfig.ofImpl(delegate);
   }
 
   public RuleKeyDiagnosticsMode getRuleKeyDiagnosticsMode() {

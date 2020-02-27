@@ -30,6 +30,6 @@ public interface WatchmanDiagnostic {
   String getMessage();
 
   static WatchmanDiagnostic of(WatchmanDiagnostic.Level level, String message) {
-    return ImmutableWatchmanDiagnostic.of(level, message);
+    return ImmutableWatchmanDiagnostic.ofImpl(level, message);
   }
 }

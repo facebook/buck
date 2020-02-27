@@ -55,6 +55,6 @@ public interface DoctorJsonResponse {
       Optional<String> errorMessage,
       Optional<String> rageUrl,
       Optional<String> message) {
-    return ImmutableDoctorJsonResponse.of(requestSuccessful, errorMessage, rageUrl, message);
+    return ImmutableDoctorJsonResponse.ofImpl(requestSuccessful, errorMessage, rageUrl, message);
   }
 }

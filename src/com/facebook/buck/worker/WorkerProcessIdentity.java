@@ -36,6 +36,6 @@ public interface WorkerProcessIdentity {
   HashCode getWorkerHash();
 
   static WorkerProcessIdentity of(String persistentWorkerKey, HashCode workerHash) {
-    return ImmutableWorkerProcessIdentity.of(persistentWorkerKey, workerHash);
+    return ImmutableWorkerProcessIdentity.ofImpl(persistentWorkerKey, workerHash);
   }
 }

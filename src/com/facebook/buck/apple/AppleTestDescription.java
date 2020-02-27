@@ -849,14 +849,14 @@ public class AppleTestDescription
     if (!uiTestTargetAppBuildTarget.isPresent()) {
       // Check for legacy UITest setup
       if (isUITestTestHostInfo) {
-        return ImmutableTestHostInfo.of(
+        return ImmutableTestHostInfo.ofImpl(
             testHostWithTargetApp,
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             ImmutableSet.of());
       }
-      return ImmutableTestHostInfo.of(
+      return ImmutableTestHostInfo.ofImpl(
           testHostWithTargetApp,
           Optional.empty(),
           Optional.of(testHostAppBinarySourcePath),
@@ -874,7 +874,7 @@ public class AppleTestDescription
     SourcePath uiTestTargetAppBinarySourcePath =
         uiTestTargetApp.getBinaryBuildRule().getSourcePathToOutput();
 
-    return ImmutableTestHostInfo.of(
+    return ImmutableTestHostInfo.ofImpl(
         testHostWithTargetApp,
         Optional.of(uiTestTargetApp),
         Optional.of(testHostAppBinarySourcePath),

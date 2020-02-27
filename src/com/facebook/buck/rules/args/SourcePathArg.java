@@ -81,6 +81,6 @@ public abstract class SourcePathArg implements Arg, HasSourcePath {
   }
 
   public static SourcePathArg of(SourcePath path) {
-    return ImmutableSourcePathArg.of(path);
+    return ImmutableSourcePathArg.ofImpl(path);
   }
 }

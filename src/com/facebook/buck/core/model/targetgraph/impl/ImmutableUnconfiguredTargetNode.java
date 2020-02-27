@@ -71,7 +71,7 @@ public abstract class ImmutableUnconfiguredTargetNode implements UnconfiguredTar
       ImmutableSet<VisibilityPattern> withinViewPatterns,
       Optional<UnconfiguredBuildTarget> defaultTargetPlatform,
       ImmutableList<UnconfiguredBuildTarget> compatibleWith) {
-    return ImmutableImmutableUnconfiguredTargetNode.of(
+    return ImmutableImmutableUnconfiguredTargetNode.ofImpl(
         buildTarget,
         ruleType,
         attributes,

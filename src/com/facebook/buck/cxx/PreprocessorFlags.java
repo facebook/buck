@@ -64,7 +64,7 @@ public abstract class PreprocessorFlags implements AddsToRuleKey {
   @CustomFieldBehavior(DefaultFieldSerialization.class)
   @Value.Derived
   public CxxIncludePaths getCxxIncludePaths() {
-    return ImmutableCxxIncludePaths.of(getIncludes(), getFrameworkPaths());
+    return ImmutableCxxIncludePaths.ofImpl(getIncludes(), getFrameworkPaths());
   }
 
   public Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {

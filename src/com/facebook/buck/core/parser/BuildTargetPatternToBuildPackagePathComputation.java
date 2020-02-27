@@ -113,7 +113,7 @@ public class BuildTargetPatternToBuildPackagePathComputation
         throw new IllegalStateException();
     }
 
-    return ImmutableBuildPackagePaths.of(packageRoots);
+    return ImmutableBuildPackagePaths.ofImpl(packageRoots);
   }
 
   @Override

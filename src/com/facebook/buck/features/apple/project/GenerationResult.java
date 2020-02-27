@@ -38,7 +38,7 @@ abstract class GenerationResult {
       ImmutableList<CopyInXcode> filesToCopyInXcode,
       ImmutableMap<BuildTarget, PBXTarget> buildTargetToGeneratedTargetMap,
       ImmutableSetMultimap<PBXProject, PBXTarget> generatedProjectToPbxTargets) {
-    return ImmutableGenerationResult.of(
+    return ImmutableGenerationResult.ofImpl(
         resolve,
         projectGenerated,
         requiredBuildTargets,

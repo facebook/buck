@@ -57,6 +57,6 @@ public abstract class RuleDescriptor<T extends ConstructorArg> {
       RuleType ruleType,
       BaseDescription<T> description,
       Function<TypeCoercerFactory, DataTransferObjectDescriptor<T>> dtoDescriptor) {
-    return ImmutableRuleDescriptor.of(ruleType, description, dtoDescriptor);
+    return ImmutableRuleDescriptor.ofImpl(ruleType, description, dtoDescriptor);
   }
 }

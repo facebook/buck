@@ -96,7 +96,7 @@ public class LegacyCompatibleRuleAnalysisComputation
       return computeLegacyProviders(
           key, env, targetNode, (LegacyProviderCompatibleDescription<T>) description);
     } else if (description instanceof DescriptionWithTargetGraph) {
-      return ImmutableLegacyProviderRuleAnalysisResult.of(
+      return ImmutableLegacyProviderRuleAnalysisResult.ofImpl(
           key.getBuildTarget(), LegacyProviderInfoCollectionImpl.of());
     }
 
@@ -121,7 +121,7 @@ public class LegacyCompatibleRuleAnalysisComputation
             key.getBuildTarget(),
             targetNode.getConstructorArg());
 
-    return ImmutableLegacyProviderRuleAnalysisResult.of(
+    return ImmutableLegacyProviderRuleAnalysisResult.ofImpl(
         key.getBuildTarget(), providerInfoCollection);
   }
 

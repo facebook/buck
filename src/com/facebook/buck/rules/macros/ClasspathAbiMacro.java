@@ -33,6 +33,6 @@ public abstract class ClasspathAbiMacro extends BuildTargetMacro {
   }
 
   public static ClasspathAbiMacro of(BuildTargetWithOutputs buildTarget) {
-    return ImmutableClasspathAbiMacro.of(buildTarget);
+    return ImmutableClasspathAbiMacro.ofImpl(buildTarget);
   }
 }

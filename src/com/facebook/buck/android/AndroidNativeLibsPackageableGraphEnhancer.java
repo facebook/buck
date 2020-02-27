@@ -162,7 +162,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     ImmutableMap<String, SourcePath> solibs = nativeLinkable.getSharedLibraries(graphBuilder);
     for (Map.Entry<String, SourcePath> entry : solibs.entrySet()) {
       AndroidLinkableMetadata metadata =
-          ImmutableAndroidLinkableMetadata.of(entry.getKey(), targetCpuType, apkModule);
+          ImmutableAndroidLinkableMetadata.ofImpl(entry.getKey(), targetCpuType, apkModule);
       consumer.accept(metadata, entry.getValue());
     }
   }
@@ -185,7 +185,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     boolean hasNativeCode = hasLinkables || hasNativeLibDirs;
 
     if (!hasNativeCode) {
-      return ImmutableAndroidNativeLibsGraphEnhancementResult.of(
+      return ImmutableAndroidNativeLibsGraphEnhancementResult.ofImpl(
           Optional.empty(),
           Optional.of(ImmutableSortedSet.of()),
           Optional.empty(),
@@ -403,7 +403,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
             ? Optional.of(moduleMappedCopyNativeLibriesBuilder.build())
             : Optional.empty();
 
-    return ImmutableAndroidNativeLibsGraphEnhancementResult.of(
+    return ImmutableAndroidNativeLibsGraphEnhancementResult.ofImpl(
         copyNativeLibraries,
         Optional.of(unstrippedLibraries),
         Optional.ofNullable(sonameMapping),
@@ -451,7 +451,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
                 return;
               }
               AndroidLinkableMetadata runtimeLinkableMetadata =
-                  ImmutableAndroidLinkableMetadata.of(
+                  ImmutableAndroidLinkableMetadata.ofImpl(
                       cxxRuntime.getSoname(), targetCpuType, apkModuleGraph.getRootAPKModule());
               nativeLinkableLibsBuilder.put(runtimeLinkableMetadata, cxxSharedRuntimePath.get());
             });
@@ -532,7 +532,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
               sharedLibrarySoName);
       result.put(
           stripLinkable,
-          ImmutableStrippedObjectDescription.of(
+          ImmutableStrippedObjectDescription.ofImpl(
               stripLinkable.getSourcePathToOutput(),
               sharedLibrarySoName,
               targetCpuType,

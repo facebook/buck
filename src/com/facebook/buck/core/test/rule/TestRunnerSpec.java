@@ -47,6 +47,6 @@ public abstract class TestRunnerSpec {
   }
 
   public static TestRunnerSpec of(Object data) {
-    return ImmutableTestRunnerSpec.of(data);
+    return ImmutableTestRunnerSpec.ofImpl(data);
   }
 }

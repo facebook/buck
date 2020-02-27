@@ -78,7 +78,7 @@ public class MachoDyldInfoCommandReader {
           int export_size = ObjectFileScrubbers.getLittleEndianInt(machoFileBuffer);
 
           return Optional.of(
-              ImmutableMachoDyldInfoCommand.of(
+              ImmutableMachoDyldInfoCommand.ofImpl(
                   command,
                   commandSize,
                   rebase_off,

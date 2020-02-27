@@ -272,7 +272,7 @@ class NativeLibraryMergeEnhancer {
         .asMap()
         .forEach((k, v) -> finalSonameTargetsBuilder.put(k, ImmutableSortedSet.copyOf(v)));
 
-    return ImmutableNativeLibraryMergeEnhancementResult.of(
+    return ImmutableNativeLibraryMergeEnhancementResult.ofImpl(
         mergedLinkablesBuilder.build(),
         ImmutableSortedMap.copyOf(sonameMapBuilder),
         finalSonameTargetsBuilder.build());

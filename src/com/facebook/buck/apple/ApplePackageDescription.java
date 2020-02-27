@@ -189,7 +189,7 @@ public class ApplePackageDescription
       packageConfigs.put(
           packageConfig.map(
               applePackageConfig ->
-                  ImmutableApplePackageConfigAndPlatformInfo.of(applePackageConfig, platform)),
+                  ImmutableApplePackageConfigAndPlatformInfo.ofImpl(applePackageConfig, platform)),
           flavor);
     }
 

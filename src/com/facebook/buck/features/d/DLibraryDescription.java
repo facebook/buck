@@ -80,7 +80,7 @@ public class DLibraryDescription
     BuildTarget sourceTreeTarget =
         buildTarget.withAppendedFlavors(DDescriptionUtils.SOURCE_LINK_TREE);
     DIncludes dIncludes =
-        ImmutableDIncludes.of(
+        ImmutableDIncludes.ofImpl(
             DefaultBuildTargetSourcePath.of(sourceTreeTarget), args.getSrcs().getPaths());
 
     if (buildTarget.getFlavors().contains(CxxDescriptionEnhancer.STATIC_FLAVOR)) {

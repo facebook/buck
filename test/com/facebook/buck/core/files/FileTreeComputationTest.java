@@ -48,20 +48,20 @@ public class FileTreeComputationTest {
     FileTreeComputation transformer = FileTreeComputation.of();
 
     DirectoryList dlist =
-        ImmutableDirectoryList.of(
+        ImmutableDirectoryList.ofImpl(
             ImmutableSortedSet.of(Paths.get("dir/file")),
             ImmutableSortedSet.of(Paths.get("dir/dir1")),
             ImmutableSortedSet.of());
     DirectoryListKey dkey = ImmutableDirectoryListKey.of(Paths.get("dir"));
     DirectoryList dlist1 =
-        ImmutableDirectoryList.of(
+        ImmutableDirectoryList.ofImpl(
             ImmutableSortedSet.of(Paths.get("dir/dir1/file1")),
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of());
     DirectoryListKey dkey1 = ImmutableDirectoryListKey.of(Paths.get("dir/dir1"));
 
     FileTreeKey fkey = ImmutableFileTreeKey.of(Paths.get("dir/dir1"));
-    FileTree ftree = ImmutableFileTree.of(fkey.getPath(), dlist1, ImmutableMap.of());
+    FileTree ftree = ImmutableFileTree.ofImpl(fkey.getPath(), dlist1, ImmutableMap.of());
 
     FakeComputationEnvironment env =
         new FakeComputationEnvironment(ImmutableMap.of(dkey, dlist, dkey1, dlist1, fkey, ftree));

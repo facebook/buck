@@ -50,7 +50,7 @@ public class CxxLuaExtensionBuilder
             new ToolchainProviderBuilder()
                 .withToolchain(
                     LuaPlatformsProvider.DEFAULT_NAME,
-                    ImmutableLuaPlatformsProvider.of(
+                    ImmutableLuaPlatformsProvider.ofImpl(
                         luaPlatform, FlavorDomain.of(LuaPlatform.FLAVOR_DOMAIN_NAME, luaPlatform)))
                 .build(),
             new CxxBuckConfig(FakeBuckConfig.builder().build())),

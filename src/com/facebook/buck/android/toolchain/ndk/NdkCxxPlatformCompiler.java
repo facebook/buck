@@ -41,6 +41,6 @@ public interface NdkCxxPlatformCompiler extends AddsToRuleKey {
   String getGccVersion();
 
   static NdkCxxPlatformCompiler of(NdkCompilerType type, String version, String gccVersion) {
-    return ImmutableNdkCxxPlatformCompiler.of(type, version, gccVersion);
+    return ImmutableNdkCxxPlatformCompiler.ofImpl(type, version, gccVersion);
   }
 }

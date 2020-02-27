@@ -51,6 +51,6 @@ abstract class XcodeProjectWriteOptions {
 
   public static XcodeProjectWriteOptions of(
       PBXProject project, AbstractPBXObjectFactory pbxObjectFactory, Path sourceRoot) {
-    return ImmutableXcodeProjectWriteOptions.of(project, pbxObjectFactory, sourceRoot);
+    return ImmutableXcodeProjectWriteOptions.ofImpl(project, pbxObjectFactory, sourceRoot);
   }
 }

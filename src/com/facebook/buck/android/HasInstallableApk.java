@@ -52,7 +52,7 @@ public interface HasInstallableApk {
     public abstract Optional<ExopackageInfo> getExopackageInfo();
 
     public ApkInfo withApkPath(SourcePath apkPath) {
-      return ImmutableApkInfo.of(getManifestPath(), apkPath, getExopackageInfo());
+      return ImmutableApkInfo.ofImpl(getManifestPath(), apkPath, getExopackageInfo());
     }
   }
 }

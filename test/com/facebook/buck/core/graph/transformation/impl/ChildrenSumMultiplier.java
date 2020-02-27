@@ -64,7 +64,7 @@ public class ChildrenSumMultiplier implements GraphComputation<LongMultNode, Lon
     }
 
     public static LongMultNode of(long get) {
-      return ImmutableLongMultNode.of(get);
+      return ImmutableLongMultNode.ofImpl(get);
     }
   }
 

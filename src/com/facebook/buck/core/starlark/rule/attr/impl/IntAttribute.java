@@ -60,6 +60,6 @@ public abstract class IntAttribute extends Attribute<Integer> {
 
   public static IntAttribute of(
       Integer preCoercionDefaultValue, String doc, boolean mandatory, List<Integer> values) {
-    return ImmutableIntAttribute.of(preCoercionDefaultValue, doc, mandatory, values);
+    return ImmutableIntAttribute.ofImpl(preCoercionDefaultValue, doc, mandatory, values);
   }
 }

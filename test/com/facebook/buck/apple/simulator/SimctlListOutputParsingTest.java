@@ -42,62 +42,62 @@ public class SimctlListOutputParsingTest {
     ImmutableSet<AppleSimulator> expected =
         ImmutableSet.<AppleSimulator>builder()
             .add(
-                ImmutableAppleSimulator.of(
+                ImmutableAppleSimulator.ofImpl(
                     "iPhone 4s",
                     "F7C1CC9A-945E-4258-BA84-DEEBE683798B",
                     AppleSimulatorState.SHUTDOWN))
             .add(
-                ImmutableAppleSimulator.of(
+                ImmutableAppleSimulator.ofImpl(
                     "iPhone 5",
                     "45BD7164-686C-474F-8C68-3730432BC5F2",
                     AppleSimulatorState.SHUTDOWN))
             .add(
-                ImmutableAppleSimulator.of(
+                ImmutableAppleSimulator.ofImpl(
                     "iPhone 5s",
                     "70200ED8-EEF1-4BDB-BCCF-3595B137D67D",
                     AppleSimulatorState.BOOTED))
             .add(
-                ImmutableAppleSimulator.of(
+                ImmutableAppleSimulator.ofImpl(
                     "iPhone 6 Plus",
                     "92340ACF-2C44-455F-BACD-573B133FB20E",
                     AppleSimulatorState.SHUTDOWN))
             .add(
-                ImmutableAppleSimulator.of(
+                ImmutableAppleSimulator.ofImpl(
                     "iPhone 6",
                     "A75FF972-FE12-4656-A8CC-99572879D4A3",
                     AppleSimulatorState.SHUTDOWN))
             .add(
-                ImmutableAppleSimulator.of(
+                ImmutableAppleSimulator.ofImpl(
                     "iPhone SE Trailing Whitespace",
                     "CBB0391A-118C-39BA-CA29-11405CA10BC1",
                     AppleSimulatorState.SHUTDOWN))
             .add(
-                ImmutableAppleSimulator.of(
+                ImmutableAppleSimulator.ofImpl(
                     "iPhone ANSI Color",
                     "7313DF34-884C-49F7-8261-B26377F9FC23",
                     AppleSimulatorState.SHUTDOWN))
             .add(
-                ImmutableAppleSimulator.of(
+                ImmutableAppleSimulator.ofImpl(
                     "iPad 2",
                     "CC1B0BAD-BAE6-4A53-92CF-F79850654057",
                     AppleSimulatorState.SHUTTING_DOWN))
             .add(
-                ImmutableAppleSimulator.of(
+                ImmutableAppleSimulator.ofImpl(
                     "iPad Retina",
                     "137AAA25-54A1-42E8-8202-84DEADD668E1",
                     AppleSimulatorState.SHUTDOWN))
             .add(
-                ImmutableAppleSimulator.of(
+                ImmutableAppleSimulator.ofImpl(
                     "iPad Air",
                     "554B2E0F-63F3-4400-8319-5C5062CF4C95",
                     AppleSimulatorState.SHUTDOWN))
             .add(
-                ImmutableAppleSimulator.of(
+                ImmutableAppleSimulator.ofImpl(
                     "Resizable iPhone",
                     "58E3748F-F7E6-4A45-B52C-A136B59F7A42",
                     AppleSimulatorState.CREATING))
             .add(
-                ImmutableAppleSimulator.of(
+                ImmutableAppleSimulator.ofImpl(
                     "Resizable iPad",
                     "56FE1CBC-61FF-443D-8E23-19D05864C6DB",
                     AppleSimulatorState.SHUTDOWN))

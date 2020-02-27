@@ -37,6 +37,6 @@ public interface NamedToolchain {
   Toolchain getToolchain();
 
   static NamedToolchain of(String name, Toolchain toolchain) {
-    return ImmutableNamedToolchain.of(name, toolchain);
+    return ImmutableNamedToolchain.ofImpl(name, toolchain);
   }
 }

@@ -459,7 +459,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     } else {
       String moduleName = module.getName();
       modulesInfo.add(
-          ImmutableModuleInfo.of(
+          ImmutableModuleInfo.ofImpl(
               moduleName,
               resourcesDirectoryForThisModule,
               dexFileDirectoriesBuilderForThisModule.build(),

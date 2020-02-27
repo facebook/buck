@@ -40,7 +40,7 @@ abstract class GenerationResult {
       Iterable<? extends CopyInXcode> filesToCopyInXcode,
       Map<? extends BuildTarget, ? extends PBXTarget> buildTargetToGeneratedTargetMap,
       Multimap<? extends PBXProject, ? extends PBXTarget> generatedProjectToPbxTargets) {
-    return ImmutableGenerationResult.of(
+    return ImmutableGenerationResult.ofImpl(
         projectPath,
         projectGenerated,
         requiredBuildTargets,

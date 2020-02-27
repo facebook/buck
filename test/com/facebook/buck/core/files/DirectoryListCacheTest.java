@@ -49,7 +49,7 @@ public class DirectoryListCacheTest {
     DirectoryListCache cache = DirectoryListCache.of(tmp.getRoot());
     cache.put(
         ImmutableDirectoryListKey.of(Paths.get("")),
-        ImmutableDirectoryList.of(
+        ImmutableDirectoryList.ofImpl(
             ImmutableSortedSet.of(Paths.get("file")),
             ImmutableSortedSet.of(Paths.get("folder")),
             ImmutableSortedSet.of(Paths.get("symlink"))));
@@ -75,7 +75,7 @@ public class DirectoryListCacheTest {
     DirectoryListCache cache = DirectoryListCache.of(tmp.getRoot());
     cache.put(
         ImmutableDirectoryListKey.of(Paths.get("dir")),
-        ImmutableDirectoryList.of(
+        ImmutableDirectoryList.ofImpl(
             ImmutableSortedSet.of(Paths.get("file")),
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of()));
@@ -102,7 +102,7 @@ public class DirectoryListCacheTest {
     DirectoryListCache cache = DirectoryListCache.of(tmp.getRoot());
     cache.put(
         ImmutableDirectoryListKey.of(Paths.get("")),
-        ImmutableDirectoryList.of(
+        ImmutableDirectoryList.ofImpl(
             ImmutableSortedSet.of(Paths.get("file")),
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of()));
@@ -119,7 +119,7 @@ public class DirectoryListCacheTest {
     DirectoryListCache cache = DirectoryListCache.of(tmp.getRoot());
     cache.put(
         ImmutableDirectoryListKey.of(Paths.get("dir")),
-        ImmutableDirectoryList.of(
+        ImmutableDirectoryList.ofImpl(
             ImmutableSortedSet.of(Paths.get("file")),
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of()));
@@ -138,14 +138,14 @@ public class DirectoryListCacheTest {
     DirectoryListCache cache = DirectoryListCache.of(tmp.getRoot());
     cache.put(
         ImmutableDirectoryListKey.of(Paths.get("dir")),
-        ImmutableDirectoryList.of(
+        ImmutableDirectoryList.ofImpl(
             ImmutableSortedSet.of(Paths.get("file")),
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of()));
 
     cache.put(
         ImmutableDirectoryListKey.of(Paths.get("dir1")),
-        ImmutableDirectoryList.of(
+        ImmutableDirectoryList.ofImpl(
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of(Paths.get("dir1/subdir1")),
             ImmutableSortedSet.of()));
@@ -173,14 +173,14 @@ public class DirectoryListCacheTest {
 
     cache.put(
         ImmutableDirectoryListKey.of(Paths.get("dir1")),
-        ImmutableDirectoryList.of(
+        ImmutableDirectoryList.ofImpl(
             ImmutableSortedSet.of(Paths.get("dir1/file1")),
             ImmutableSortedSet.of(Paths.get("dir1/dir2")),
             ImmutableSortedSet.of()));
 
     cache.put(
         ImmutableDirectoryListKey.of(Paths.get("dir1/dir2")),
-        ImmutableDirectoryList.of(
+        ImmutableDirectoryList.ofImpl(
             ImmutableSortedSet.of(Paths.get("dir1/dir2/file2")),
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of()));
@@ -215,14 +215,14 @@ public class DirectoryListCacheTest {
 
     cache.put(
         ImmutableDirectoryListKey.of(Paths.get("")),
-        ImmutableDirectoryList.of(
+        ImmutableDirectoryList.ofImpl(
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of(Paths.get("dir")),
             ImmutableSortedSet.of()));
 
     cache.put(
         ImmutableDirectoryListKey.of(Paths.get("dir")),
-        ImmutableDirectoryList.of(
+        ImmutableDirectoryList.ofImpl(
             ImmutableSortedSet.of(Paths.get("dir/file")),
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of()));

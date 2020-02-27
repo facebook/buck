@@ -158,7 +158,7 @@ public class CommandRunnerParamsForTesting {
             new TargetConfigurationSerializerForTests(cells.getRootCell().getCellPathResolver()),
             FakeClock.doNotCare());
 
-    return ImmutableCommandRunnerParams.of(
+    return ImmutableCommandRunnerParams.ofImpl(
         console,
         new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)),
         new Cells(cells.getRootCell()),

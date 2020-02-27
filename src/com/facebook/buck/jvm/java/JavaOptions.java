@@ -40,6 +40,6 @@ public abstract class JavaOptions {
   }
 
   public static JavaOptions of(ToolProvider javaRuntimeProvider) {
-    return ImmutableJavaOptions.of(javaRuntimeProvider);
+    return ImmutableJavaOptions.ofImpl(javaRuntimeProvider);
   }
 }

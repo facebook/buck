@@ -46,7 +46,7 @@ public interface SourceControlInfo {
       Optional<Long> revisionTimestampOffTracked,
       Optional<VersionControlSupplier<InputStream>> diff,
       ImmutableSet<String> dirtyFiles) {
-    return ImmutableSourceControlInfo.of(
+    return ImmutableSourceControlInfo.ofImpl(
         currentRevisionId,
         basedOffWhichTracked,
         revisionIdOffTracked,

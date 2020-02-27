@@ -35,10 +35,10 @@ public abstract class ManifestLoadResult {
   public abstract Optional<String> getError();
 
   public static ManifestLoadResult success(Manifest manifest) {
-    return ImmutableManifestLoadResult.of(Optional.of(manifest), Optional.empty());
+    return ImmutableManifestLoadResult.ofImpl(Optional.of(manifest), Optional.empty());
   }
 
   public static ManifestLoadResult error(String error) {
-    return ImmutableManifestLoadResult.of(Optional.empty(), Optional.of(error));
+    return ImmutableManifestLoadResult.ofImpl(Optional.empty(), Optional.of(error));
   }
 }

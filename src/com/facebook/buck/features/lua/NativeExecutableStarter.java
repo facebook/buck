@@ -88,7 +88,7 @@ abstract class NativeExecutableStarter implements Starter {
       Optional<? extends Path> relativeModulesDir,
       Optional<? extends Path> relativePythonModulesDir,
       Optional<? extends Path> relativeNativeLibsDir) {
-    return ImmutableNativeExecutableStarter.of(
+    return ImmutableNativeExecutableStarter.ofImpl(
         projectFilesystem,
         baseTarget,
         baseParams,

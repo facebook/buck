@@ -1446,7 +1446,7 @@ public final class MainRunner {
           try {
             exitCode =
                 command.run(
-                    ImmutableCommandRunnerParams.of(
+                    ImmutableCommandRunnerParams.ofImpl(
                         printConsole,
                         stdIn,
                         cells,
@@ -1897,7 +1897,7 @@ public final class MainRunner {
       }
     }
 
-    return ImmutableParserAndCaches.of(
+    return ImmutableParserAndCaches.ofImpl(
         ParserFactory.create(
             typeCoercerFactory,
             new DefaultConstructorArgMarshaller(),

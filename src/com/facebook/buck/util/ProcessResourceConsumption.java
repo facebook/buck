@@ -95,7 +95,7 @@ public abstract class ProcessResourceConsumption {
       long ioBytesRead,
       long ioBytesWritten,
       long ioTotal) {
-    return ImmutableProcessResourceConsumption.of(
+    return ImmutableProcessResourceConsumption.ofImpl(
         memResident,
         memSize,
         cpuReal,

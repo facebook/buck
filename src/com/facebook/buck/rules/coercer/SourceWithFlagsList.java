@@ -57,12 +57,13 @@ public abstract class SourceWithFlagsList {
 
   public static SourceWithFlagsList ofUnnamedSources(
       ImmutableSortedSet<SourceWithFlags> unnamedSources) {
-    return ImmutableSourceWithFlagsList.of(
+    return ImmutableSourceWithFlagsList.ofImpl(
         Type.UNNAMED, Optional.of(unnamedSources), Optional.empty());
   }
 
   public static SourceWithFlagsList ofNamedSources(
       ImmutableSortedMap<String, SourceWithFlags> namedSources) {
-    return ImmutableSourceWithFlagsList.of(Type.NAMED, Optional.empty(), Optional.of(namedSources));
+    return ImmutableSourceWithFlagsList.ofImpl(
+        Type.NAMED, Optional.empty(), Optional.of(namedSources));
   }
 }

@@ -28,7 +28,7 @@ import java.util.Optional;
 public abstract class CachingBuildEngineBuckConfig implements ConfigView<BuckConfig> {
 
   public static CachingBuildEngineBuckConfig of(BuckConfig delegate) {
-    return ImmutableCachingBuildEngineBuckConfig.of(delegate);
+    return ImmutableCachingBuildEngineBuckConfig.ofImpl(delegate);
   }
 
   /** @return the mode with which to run the build engine. */

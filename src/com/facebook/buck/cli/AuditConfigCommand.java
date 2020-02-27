@@ -95,7 +95,7 @@ public class AuditConfigCommand extends AbstractCommand {
                   section.forEach(
                       (key, val) ->
                           builder.add(
-                              ImmutableConfigValue.of(
+                              ImmutableConfigValue.ofImpl(
                                   String.join(".", section_name, key),
                                   section_name,
                                   key,
@@ -132,12 +132,12 @@ public class AuditConfigCommand extends AbstractCommand {
                       .forEach(
                           (key, val) ->
                               builder.add(
-                                  ImmutableConfigValue.of(
+                                  ImmutableConfigValue.ofImpl(
                                       String.join(".", input, key), input, key, Optional.of(val))));
                 } else {
                   // Dump specified value
                   builder.add(
-                      ImmutableConfigValue.of(
+                      ImmutableConfigValue.ofImpl(
                           input,
                           parts[0],
                           parts[1],

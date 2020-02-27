@@ -71,7 +71,7 @@ public class DefaultExtraInfoCollector implements ExtraInfoCollector {
 
     ImmutableSet<Path> rageExtraFiles = projectFilesystem.getFilesUnderPath(rageExtraFilesDir);
 
-    return Optional.of(ImmutableExtraInfoResult.of(extraInfoCommandOutput, rageExtraFiles));
+    return Optional.of(ImmutableExtraInfoResult.ofImpl(extraInfoCommandOutput, rageExtraFiles));
   }
 
   public static String runCommandAndGetStdout(

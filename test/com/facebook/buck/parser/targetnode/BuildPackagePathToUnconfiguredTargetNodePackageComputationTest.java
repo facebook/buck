@@ -145,10 +145,10 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
                 ImmutableMap.of(
                     BuildPackagePathToBuildFileManifestKey.of(Paths.get("")),
                     buildFileManifest,
-                    ImmutableBuildTargetToUnconfiguredTargetNodeKey.of(
+                    ImmutableBuildTargetToUnconfiguredTargetNodeKey.ofImpl(
                         unconfiguredBuildTarget1, Paths.get("")),
                     unconfiguredTargetNode1,
-                    ImmutableBuildTargetToUnconfiguredTargetNodeKey.of(
+                    ImmutableBuildTargetToUnconfiguredTargetNodeKey.ofImpl(
                         unconfiguredBuildTarget2, Paths.get("")),
                     unconfiguredTargetNode2)));
 

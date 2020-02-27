@@ -146,26 +146,26 @@ public class IjDependencyListBuilder {
 
   public void addModule(String name, Scope scope, boolean exported) {
     builder.add(
-        ImmutableDependencyEntry.of(
+        ImmutableDependencyEntry.ofImpl(
             Type.MODULE,
             SortOrder.MODULE,
-            Optional.of(ImmutableDependencyEntryData.of(name, scope, exported))));
+            Optional.of(ImmutableDependencyEntryData.ofImpl(name, scope, exported))));
   }
 
   public void addCompiledShadow(String name) {
     builder.add(
-        ImmutableDependencyEntry.of(
+        ImmutableDependencyEntry.ofImpl(
             Type.LIBRARY,
             SortOrder.COMPILED_SHADOW,
-            Optional.of(ImmutableDependencyEntryData.of(name, Scope.PROVIDED, true))));
+            Optional.of(ImmutableDependencyEntryData.ofImpl(name, Scope.PROVIDED, true))));
   }
 
   public void addLibrary(String name, Scope scope, boolean exported) {
     builder.add(
-        ImmutableDependencyEntry.of(
+        ImmutableDependencyEntry.ofImpl(
             Type.LIBRARY,
             SortOrder.LIBRARY,
-            Optional.of(ImmutableDependencyEntryData.of(name, scope, exported))));
+            Optional.of(ImmutableDependencyEntryData.ofImpl(name, scope, exported))));
   }
 
   public ImmutableSet<DependencyEntry> build() {

@@ -209,7 +209,7 @@ public final class ExternallyBuiltApplePackage
     }
 
     public ApplePackageConfigAndPlatformInfo withPlatform(AppleCxxPlatform platform) {
-      return ImmutableApplePackageConfigAndPlatformInfo.of(getConfig(), platform);
+      return ImmutableApplePackageConfigAndPlatformInfo.ofImpl(getConfig(), platform);
     }
   }
 }

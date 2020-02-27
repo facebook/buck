@@ -86,7 +86,7 @@ public interface BuildLogEntry {
       Optional<? extends Path> buckFixSpecFile,
       long size,
       Date lastModifiedTime) {
-    return ImmutableBuildLogEntry.of(
+    return ImmutableBuildLogEntry.ofImpl(
         relativePath,
         buildId,
         commandArgs,

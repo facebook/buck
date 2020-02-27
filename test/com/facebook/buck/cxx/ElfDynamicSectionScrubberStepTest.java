@@ -46,7 +46,7 @@ public class ElfDynamicSectionScrubberStepTest {
     ImmutableSet<ElfDynamicSection.DTag> whitelist =
         ImmutableSet.of(ElfDynamicSection.DTag.DT_SONAME, ElfDynamicSection.DTag.DT_NEEDED);
     ElfDynamicSectionScrubberStep step =
-        ImmutableElfDynamicSectionScrubberStep.of(
+        ImmutableElfDynamicSectionScrubberStep.ofImpl(
             TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()),
             tmp.getRoot().getFileSystem().getPath("libfoo.so"),
             whitelist,
@@ -75,7 +75,7 @@ public class ElfDynamicSectionScrubberStepTest {
     ImmutableSet<ElfDynamicSection.DTag> whitelist =
         ImmutableSet.of(ElfDynamicSection.DTag.DT_SONAME, ElfDynamicSection.DTag.DT_NEEDED);
     ElfDynamicSectionScrubberStep step =
-        ImmutableElfDynamicSectionScrubberStep.of(
+        ImmutableElfDynamicSectionScrubberStep.ofImpl(
             TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()),
             tmp.getRoot().getFileSystem().getPath("libfoo.so"),
             whitelist,

@@ -329,7 +329,7 @@ public class PythonBinaryDescription
 
     // Build up the list of all components going into the python binary.
     PythonPackagable root =
-        ImmutablePythonBinaryPackagable.of(
+        ImmutablePythonBinaryPackagable.ofImpl(
             buildTarget,
             projectFilesystem,
             PythonUtil.getDeps(pythonPlatform, cxxPlatform, args.getDeps(), args.getPlatformDeps())

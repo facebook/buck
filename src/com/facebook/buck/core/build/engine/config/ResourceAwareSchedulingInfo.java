@@ -36,7 +36,7 @@ public abstract class ResourceAwareSchedulingInfo {
       boolean resourceAwareSchedulingEnabled,
       ResourceAmounts defaultResourceAmounts,
       Map<String, ? extends ResourceAmounts> amountsPerRuleType) {
-    return ImmutableResourceAwareSchedulingInfo.of(
+    return ImmutableResourceAwareSchedulingInfo.ofImpl(
         resourceAwareSchedulingEnabled, defaultResourceAmounts, amountsPerRuleType);
   }
 

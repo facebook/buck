@@ -63,6 +63,6 @@ public interface AppleDevice {
 
   static AppleDevice of(
       String name, String udid, String state, String type, String os_version, String architecture) {
-    return ImmutableAppleDevice.of(name, udid, state, type, os_version, architecture);
+    return ImmutableAppleDevice.ofImpl(name, udid, state, type, os_version, architecture);
   }
 }

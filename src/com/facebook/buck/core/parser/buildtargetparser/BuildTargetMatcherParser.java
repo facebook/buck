@@ -166,18 +166,18 @@ public abstract class BuildTargetMatcherParser<T> {
 
     @Override
     public BuildTargetMatcher createForDescendants(CellRelativePath cellRelativePath) {
-      return ImmutableSubdirectoryBuildTargetMatcher.of(cellRelativePath);
+      return ImmutableSubdirectoryBuildTargetMatcher.ofImpl(cellRelativePath);
     }
 
     @Override
     public BuildTargetMatcher createForChildren(CellRelativePath cellRelativePath) {
-      return ImmutableImmediateDirectoryBuildTargetMatcher.of(cellRelativePath);
+      return ImmutableImmediateDirectoryBuildTargetMatcher.ofImpl(cellRelativePath);
     }
 
     @Override
     public BuildTargetMatcher createForSingleton(
         UnconfiguredBuildTargetWithOutputs targetWithOutputs) {
-      return ImmutableSingletonBuildTargetMatcher.of(targetWithOutputs.getBuildTarget());
+      return ImmutableSingletonBuildTargetMatcher.ofImpl(targetWithOutputs.getBuildTarget());
     }
   }
 }

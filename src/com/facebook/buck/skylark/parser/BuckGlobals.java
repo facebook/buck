@@ -184,7 +184,7 @@ public abstract class BuckGlobals {
       LoadingCache<String, Label> labelCache,
       KnownUserDefinedRuleTypes knownUserDefinedRuleTypes,
       ImmutableSet<BuiltInProvider<?>> perFeatureProviders) {
-    return ImmutableBuckGlobals.of(
+    return ImmutableBuckGlobals.ofImpl(
         skylarkFunctionModule,
         descriptions,
         implicitNativeRulesState,

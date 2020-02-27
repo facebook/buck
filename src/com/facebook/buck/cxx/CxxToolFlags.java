@@ -72,7 +72,7 @@ public abstract class CxxToolFlags implements AddsToRuleKey {
       platformFlags = platformFlags.addAll(part.getPlatformFlags());
       ruleFlags = ruleFlags.addAll(part.getRuleFlags());
     }
-    return ImmutableIterableCxxToolFlags.of(platformFlags.build(), ruleFlags.build());
+    return ImmutableIterableCxxToolFlags.ofImpl(platformFlags.build(), ruleFlags.build());
   }
 }
 

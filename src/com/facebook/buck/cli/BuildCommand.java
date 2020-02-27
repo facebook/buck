@@ -378,12 +378,13 @@ public class BuildCommand extends AbstractCommand {
       this.arguments.addAll(additionalTargets);
     }
     BuildEvent.Started started = postBuildStartedEvent(params);
-    BuildRunResult result = ImmutableBuildRunResult.of(ExitCode.BUILD_ERROR, ImmutableList.of());
+    BuildRunResult result =
+        ImmutableBuildRunResult.ofImpl(ExitCode.BUILD_ERROR, ImmutableList.of());
     try {
       result = executeBuildAndProcessResult(params, commandThreadManager, targetNodeSpecEnhancer);
     } catch (ActionGraphCreationException e) {
       params.getConsole().printBuildFailure(e.getMessage());
-      result = ImmutableBuildRunResult.of(ExitCode.PARSE_ERROR, ImmutableList.of());
+      result = ImmutableBuildRunResult.ofImpl(ExitCode.PARSE_ERROR, ImmutableList.of());
     } finally {
       params.getBuckEventBus().post(BuildEvent.finished(started, result.getExitCode()));
     }
@@ -443,7 +444,7 @@ public class BuildCommand extends AbstractCommand {
     ActionAndTargetGraphs actionAndTargetGraphs =
         ActionAndTargetGraphs.of(unversionedTargetGraph, versionedTargetGraph, actionGraph);
 
-    return ImmutableGraphsAndBuildTargets.of(actionAndTargetGraphs, buildTargetsWithOutputs);
+    return ImmutableGraphsAndBuildTargets.ofImpl(actionAndTargetGraphs, buildTargetsWithOutputs);
   }
 
   private ImmutableSet<BuildTargetWithOutputs> getBuildTargetsWithOutputsForJustBuild(
@@ -525,7 +526,7 @@ public class BuildCommand extends AbstractCommand {
       }
     }
 
-    return ImmutableBuildRunResult.of(exitCode, graphsAndBuildTargets.getBuildTargets());
+    return ImmutableBuildRunResult.ofImpl(exitCode, graphsAndBuildTargets.getBuildTargets());
   }
 
   /**

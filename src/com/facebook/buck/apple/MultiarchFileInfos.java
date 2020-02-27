@@ -94,7 +94,7 @@ public class MultiarchFileInfos {
     }
 
     return Optional.of(
-        ImmutableMultiarchFileInfo.of(
+        ImmutableMultiarchFileInfo.ofImpl(
             target, thinTargets.build(), Objects.requireNonNull(representativePlatformFlavor)));
   }
 

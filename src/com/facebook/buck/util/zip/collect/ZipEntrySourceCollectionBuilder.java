@@ -56,7 +56,7 @@ public class ZipEntrySourceCollectionBuilder {
     if (excludedEntriesMatcher.matches(entryName)) {
       return;
     }
-    ZipEntrySource entrySource = ImmutableFileZipEntrySource.of(sourceFilePath, entryName);
+    ZipEntrySource entrySource = ImmutableFileZipEntrySource.ofImpl(sourceFilePath, entryName);
     Collection<ZipEntrySource> oldEntries = entryNameToEntry.get(entrySource.getEntryName());
     if (oldEntries.isEmpty()) {
       entryNameToEntry.put(entrySource.getEntryName(), entrySource);
@@ -76,7 +76,7 @@ public class ZipEntrySourceCollectionBuilder {
       if (excludedEntriesMatcher.matches(entryName)) {
         continue;
       }
-      ZipEntrySource entrySource = ImmutableZipEntrySourceFromZip.of(zipFilePath, entryName, i);
+      ZipEntrySource entrySource = ImmutableZipEntrySourceFromZip.ofImpl(zipFilePath, entryName, i);
       Collection<ZipEntrySource> oldEntries = entryNameToEntry.get(entryName);
       if (oldEntries.isEmpty()) {
         entryNameToEntry.put(entryName, entrySource);
@@ -87,7 +87,7 @@ public class ZipEntrySourceCollectionBuilder {
   }
 
   public ZipEntrySourceCollection build() {
-    return ImmutableZipEntrySourceCollection.of(entryNameToEntry.values());
+    return ImmutableZipEntrySourceCollection.ofImpl(entryNameToEntry.values());
   }
 
   private Function<ZipEntrySource, Unit> createDuplicateEntryHandler() {

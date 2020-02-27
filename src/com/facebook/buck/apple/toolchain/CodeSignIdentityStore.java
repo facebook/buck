@@ -34,6 +34,6 @@ public interface CodeSignIdentityStore extends Toolchain {
   }
 
   static CodeSignIdentityStore of(Supplier<ImmutableList<CodeSignIdentity>> identitiesSupplier) {
-    return ImmutableCodeSignIdentityStore.of(identitiesSupplier);
+    return ImmutableCodeSignIdentityStore.ofImpl(identitiesSupplier);
   }
 }

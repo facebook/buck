@@ -51,9 +51,9 @@ public class RuleKeyCacheRecyclerTest {
   @Test
   public void pathWatchEventDoesNotInvalidateDifferentInput() {
     DefaultRuleKeyCache<String> cache = new DefaultRuleKeyCache<>();
-    RuleKeyInput input1 = ImmutableRuleKeyInput.of(FILESYSTEM, FILESYSTEM.getPath("input1"));
+    RuleKeyInput input1 = ImmutableRuleKeyInput.ofImpl(FILESYSTEM, FILESYSTEM.getPath("input1"));
     AddsToRuleKey appendable1 = new AddsToRuleKey() {};
-    RuleKeyInput input2 = ImmutableRuleKeyInput.of(FILESYSTEM, FILESYSTEM.getPath("input2"));
+    RuleKeyInput input2 = ImmutableRuleKeyInput.ofImpl(FILESYSTEM, FILESYSTEM.getPath("input2"));
     AddsToRuleKey appendable2 = new AddsToRuleKey() {};
     cache.get(
         appendable1,
@@ -74,7 +74,7 @@ public class RuleKeyCacheRecyclerTest {
   @Test
   public void pathWatchEventDoesInvalidateDirectoryInputContainingIt() {
     DefaultRuleKeyCache<String> cache = new DefaultRuleKeyCache<>();
-    RuleKeyInput input = ImmutableRuleKeyInput.of(FILESYSTEM, FILESYSTEM.getPath("input"));
+    RuleKeyInput input = ImmutableRuleKeyInput.ofImpl(FILESYSTEM, FILESYSTEM.getPath("input"));
     AddsToRuleKey appendable = new AddsToRuleKey() {};
     cache.get(
         appendable,
@@ -93,7 +93,7 @@ public class RuleKeyCacheRecyclerTest {
     DefaultRuleKeyCache<String> cache = new DefaultRuleKeyCache<>();
 
     // Create a rule key appendable with an input and cache it.
-    RuleKeyInput input1 = ImmutableRuleKeyInput.of(FILESYSTEM, FILESYSTEM.getPath("input1"));
+    RuleKeyInput input1 = ImmutableRuleKeyInput.ofImpl(FILESYSTEM, FILESYSTEM.getPath("input1"));
     AddsToRuleKey appendable1 = new AddsToRuleKey() {};
     cache.get(
         appendable1,
@@ -101,7 +101,7 @@ public class RuleKeyCacheRecyclerTest {
         new NoOpCacheStatsTracker());
 
     // Create another rule key appendable with an input and cache it.
-    RuleKeyInput input2 = ImmutableRuleKeyInput.of(FILESYSTEM, FILESYSTEM.getPath("input2"));
+    RuleKeyInput input2 = ImmutableRuleKeyInput.ofImpl(FILESYSTEM, FILESYSTEM.getPath("input2"));
     AddsToRuleKey appendable2 = new AddsToRuleKey() {};
     cache.get(
         appendable2,

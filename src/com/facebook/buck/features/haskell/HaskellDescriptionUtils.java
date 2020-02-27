@@ -333,7 +333,7 @@ public class HaskellDescriptionUtils {
                 Optional.empty(),
                 Optional.empty(),
                 ImmutableList.of(),
-                ImmutableHaskellSources.of(
+                ImmutableHaskellSources.ofImpl(
                     ImmutableMap.of(
                         HaskellSourceModule.UNUSED, emptyModule.getSourcePathToOutput()))));
     BuildTarget emptyArchiveTarget = target.withAppendedFlavors(InternalFlavor.of("empty-archive"));

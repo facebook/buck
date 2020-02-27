@@ -28,7 +28,7 @@ public interface EnvMacro extends Macro {
   }
 
   static EnvMacro of(String var) {
-    return ImmutableEnvMacro.of(var);
+    return ImmutableEnvMacro.ofImpl(var);
   }
 
   String getVar();

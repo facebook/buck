@@ -46,7 +46,7 @@ public abstract class SwiftTargetTriple implements AddsToRuleKey {
 
   public static SwiftTargetTriple of(
       String architecture, String vendor, String platformName, String targetSdkVersion) {
-    return ImmutableSwiftTargetTriple.of(architecture, vendor, platformName, targetSdkVersion);
+    return ImmutableSwiftTargetTriple.ofImpl(architecture, vendor, platformName, targetSdkVersion);
   }
 
   public SwiftTargetTriple withTargetSdkVersion(String targetSdkVersion) {

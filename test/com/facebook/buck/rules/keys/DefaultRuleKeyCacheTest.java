@@ -97,7 +97,7 @@ public class DefaultRuleKeyCacheTest {
     TrackedRuleKeyCache<String> cache =
         new TrackedRuleKeyCache<>(internalCache, new InstrumentingCacheStatsTracker());
     TestRule rule = new TestRule();
-    RuleKeyInput input = ImmutableRuleKeyInput.of(FILESYSTEM, FILESYSTEM.getPath("input"));
+    RuleKeyInput input = ImmutableRuleKeyInput.ofImpl(FILESYSTEM, FILESYSTEM.getPath("input"));
     cache.get(rule, r -> new RuleKeyResult<>("", ImmutableList.of(), ImmutableList.of(input)));
     assertTrue(internalCache.isCached(rule));
     cache.invalidateInputs(ImmutableList.of(input));
@@ -109,7 +109,7 @@ public class DefaultRuleKeyCacheTest {
     DefaultRuleKeyCache<String> internalCache = new DefaultRuleKeyCache<>();
     TrackedRuleKeyCache<String> cache =
         new TrackedRuleKeyCache<>(internalCache, new InstrumentingCacheStatsTracker());
-    RuleKeyInput input = ImmutableRuleKeyInput.of(FILESYSTEM, FILESYSTEM.getPath("input"));
+    RuleKeyInput input = ImmutableRuleKeyInput.ofImpl(FILESYSTEM, FILESYSTEM.getPath("input"));
     TestRule dep = new TestRule();
     cache.get(dep, r -> new RuleKeyResult<>("", ImmutableList.of(), ImmutableList.of(input)));
     TestRule rule = new TestRule();
@@ -127,7 +127,7 @@ public class DefaultRuleKeyCacheTest {
     DefaultRuleKeyCache<String> internalCache = new DefaultRuleKeyCache<>();
     TrackedRuleKeyCache<String> cache =
         new TrackedRuleKeyCache<>(internalCache, new InstrumentingCacheStatsTracker());
-    RuleKeyInput input = ImmutableRuleKeyInput.of(FILESYSTEM, FILESYSTEM.getPath("input"));
+    RuleKeyInput input = ImmutableRuleKeyInput.ofImpl(FILESYSTEM, FILESYSTEM.getPath("input"));
     TestRule dep = new TestRule();
     cache.get(dep, r -> new RuleKeyResult<>("", ImmutableList.of(), ImmutableList.of()));
     TestRule rule = new TestRule();
@@ -146,7 +146,7 @@ public class DefaultRuleKeyCacheTest {
     // v    v
     // C -> D
 
-    RuleKeyInput input = ImmutableRuleKeyInput.of(FILESYSTEM, FILESYSTEM.getPath("input"));
+    RuleKeyInput input = ImmutableRuleKeyInput.ofImpl(FILESYSTEM, FILESYSTEM.getPath("input"));
     TestRule ruleA = new TestRule();
     TestRule ruleB = new TestRule();
     TestRule ruleC = new TestRule();
@@ -184,7 +184,7 @@ public class DefaultRuleKeyCacheTest {
         new TrackedRuleKeyCache<>(
             new DefaultRuleKeyCache<>(), new InstrumentingCacheStatsTracker());
     TestRule rule = new TestRule();
-    RuleKeyInput input = ImmutableRuleKeyInput.of(FILESYSTEM, FILESYSTEM.getPath("input"));
+    RuleKeyInput input = ImmutableRuleKeyInput.ofImpl(FILESYSTEM, FILESYSTEM.getPath("input"));
     cache.get(rule, r -> new RuleKeyResult<>("", ImmutableList.of(), ImmutableList.of(input)));
     cache.invalidateInputs(ImmutableList.of(input));
     assertThat(cache.getStats().getEvictionCount().get(), Matchers.equalTo(1L));
@@ -197,7 +197,7 @@ public class DefaultRuleKeyCacheTest {
         new TrackedRuleKeyCache<>(
             new DefaultRuleKeyCache<>(), new InstrumentingCacheStatsTracker(clock));
     TestRule rule = new TestRule();
-    RuleKeyInput input = ImmutableRuleKeyInput.of(FILESYSTEM, FILESYSTEM.getPath("input"));
+    RuleKeyInput input = ImmutableRuleKeyInput.ofImpl(FILESYSTEM, FILESYSTEM.getPath("input"));
     cache.get(rule, r -> new RuleKeyResult<>("", ImmutableList.of(), ImmutableList.of(input)));
     cache.invalidateInputs(ImmutableList.of(input));
     assertThat(cache.getStats().getTotalLoadTime().get(), Matchers.equalTo(1L));

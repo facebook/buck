@@ -37,7 +37,7 @@ public abstract class ArchiveMemberPath {
   }
 
   public static ArchiveMemberPath of(Path archivePath, Path memberPath) {
-    return ImmutableArchiveMemberPath.of(archivePath, memberPath);
+    return ImmutableArchiveMemberPath.ofImpl(archivePath, memberPath);
   }
 
   public ArchiveMemberPath withArchivePath(Path archivePath) {

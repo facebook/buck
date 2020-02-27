@@ -32,6 +32,6 @@ public interface CopyFilePhaseDestinationSpec {
 
   static CopyFilePhaseDestinationSpec of(
       PBXCopyFilesBuildPhase.Destination destination, Optional<String> path) {
-    return ImmutableCopyFilePhaseDestinationSpec.of(destination, path);
+    return ImmutableCopyFilePhaseDestinationSpec.ofImpl(destination, path);
   }
 }

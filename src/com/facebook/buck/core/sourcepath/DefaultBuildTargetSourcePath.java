@@ -50,7 +50,7 @@ public abstract class DefaultBuildTargetSourcePath implements BuildTargetSourceP
 
   public static DefaultBuildTargetSourcePath of(
       BuildTargetWithOutputs targetWithOutputs, Optional<? extends HashCode> precomputedHash) {
-    return ImmutableDefaultBuildTargetSourcePath.of(targetWithOutputs, precomputedHash);
+    return ImmutableDefaultBuildTargetSourcePath.ofImpl(targetWithOutputs, precomputedHash);
   }
 
   @Override

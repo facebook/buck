@@ -57,7 +57,7 @@ public abstract class SourcePathWithAppleBundleDestination
 
   public static SourcePathWithAppleBundleDestination of(
       SourcePath sourcePath, AppleBundleDestination destination, boolean codesignOnCopy) {
-    return ImmutableSourcePathWithAppleBundleDestination.of(
+    return ImmutableSourcePathWithAppleBundleDestination.ofImpl(
         sourcePath, destination, codesignOnCopy);
   }
 

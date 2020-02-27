@@ -80,7 +80,8 @@ public class WorkerProcessProtocolZeroTest {
     Path argsPath = Paths.get("args");
     Path stdoutPath = Paths.get("stdout");
     Path stderrPath = Paths.get("stderr");
-    protocol.send(messageID, ImmutableWorkerProcessCommand.of(argsPath, stdoutPath, stderrPath));
+    protocol.send(
+        messageID, ImmutableWorkerProcessCommand.ofImpl(argsPath, stdoutPath, stderrPath));
     String expectedJson =
         String.format(
             "{\"id\":%d,\"type\":\"command\","

@@ -157,10 +157,10 @@ public class DefaultGraphTransformationEngineTest {
             graph.nodes().size(),
             executor);
 
-    ImmutableLongNode node3 = ImmutableLongNode.of(3);
-    ImmutableLongNode node5 = ImmutableLongNode.of(5);
-    ImmutableLongNode node2 = ImmutableLongNode.of(2);
-    ImmutableLongNode node1 = ImmutableLongNode.of(1);
+    ImmutableLongNode node3 = ImmutableLongNode.ofImpl(3);
+    ImmutableLongNode node5 = ImmutableLongNode.ofImpl(5);
+    ImmutableLongNode node2 = ImmutableLongNode.ofImpl(2);
+    ImmutableLongNode node1 = ImmutableLongNode.ofImpl(1);
     ImmutableMap<ImmutableLongNode, Future<LongNode>> resultMap =
         engine.computeAll(ImmutableSet.of(node3, node5, node2, node1));
 
@@ -183,10 +183,10 @@ public class DefaultGraphTransformationEngineTest {
             graph.nodes().size(),
             executor);
 
-    ImmutableLongNode node3 = ImmutableLongNode.of(3);
-    ImmutableLongNode node5 = ImmutableLongNode.of(5);
-    ImmutableLongNode node2 = ImmutableLongNode.of(2);
-    ImmutableLongNode node1 = ImmutableLongNode.of(1);
+    ImmutableLongNode node3 = ImmutableLongNode.ofImpl(3);
+    ImmutableLongNode node5 = ImmutableLongNode.ofImpl(5);
+    ImmutableLongNode node2 = ImmutableLongNode.ofImpl(2);
+    ImmutableLongNode node1 = ImmutableLongNode.ofImpl(1);
 
     ImmutableMap<ImmutableLongNode, LongNode> resultMap =
         engine.computeAllUnchecked(ImmutableSet.of(node3, node5, node2, node1));
@@ -242,7 +242,7 @@ public class DefaultGraphTransformationEngineTest {
 
     ImmutableSet<ImmutableLongNode> nodes =
         IntStream.range(0, NUMBER_OF_THREADS)
-            .mapToObj(ImmutableLongNode::of)
+            .mapToObj(ImmutableLongNode::ofImpl)
             .collect(ImmutableSet.toImmutableSet());
 
     ImmutableMap<ImmutableLongNode, LongNode> resultMap = engine.computeAllUnchecked(nodes);

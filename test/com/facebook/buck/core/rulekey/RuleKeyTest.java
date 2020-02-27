@@ -692,19 +692,19 @@ public class RuleKeyTest {
     RuleKey first =
         createBuilder(ruleFinder)
             .setReflectively(
-                "value", ImmutableTestRuleKeyInterfaceImmutable.of("added-1", "ignored-1"))
+                "value", ImmutableTestRuleKeyInterfaceImmutable.ofImpl("added-1", "ignored-1"))
             .build(RuleKey::new);
 
     RuleKey second =
         createBuilder(ruleFinder)
             .setReflectively(
-                "value", ImmutableTestRuleKeyInterfaceImmutable.of("added-1", "ignored-2"))
+                "value", ImmutableTestRuleKeyInterfaceImmutable.ofImpl("added-1", "ignored-2"))
             .build(RuleKey::new);
 
     RuleKey third =
         createBuilder(ruleFinder)
             .setReflectively(
-                "value", ImmutableTestRuleKeyInterfaceImmutable.of("added-2", "ignored-2"))
+                "value", ImmutableTestRuleKeyInterfaceImmutable.ofImpl("added-2", "ignored-2"))
             .build(RuleKey::new);
 
     assertEquals(first, second);
@@ -717,19 +717,22 @@ public class RuleKeyTest {
     RuleKey first =
         createBuilder(ruleFinder)
             .setReflectively(
-                "value", ImmutableTestRuleKeyInterfacePrehashedImmutable.of("added-1", "ignored-1"))
+                "value",
+                ImmutableTestRuleKeyInterfacePrehashedImmutable.ofImpl("added-1", "ignored-1"))
             .build(RuleKey::new);
 
     RuleKey second =
         createBuilder(ruleFinder)
             .setReflectively(
-                "value", ImmutableTestRuleKeyInterfacePrehashedImmutable.of("added-1", "ignored-2"))
+                "value",
+                ImmutableTestRuleKeyInterfacePrehashedImmutable.ofImpl("added-1", "ignored-2"))
             .build(RuleKey::new);
 
     RuleKey third =
         createBuilder(ruleFinder)
             .setReflectively(
-                "value", ImmutableTestRuleKeyInterfacePrehashedImmutable.of("added-2", "ignored-2"))
+                "value",
+                ImmutableTestRuleKeyInterfacePrehashedImmutable.ofImpl("added-2", "ignored-2"))
             .build(RuleKey::new);
 
     assertEquals(first, second);
@@ -850,7 +853,7 @@ public class RuleKeyTest {
     }
 
     static TestRuleKeyImmutableWithDefaults of(String ruleKeyValue) {
-      return ImmutableTestRuleKeyImmutableWithDefaults.of(ruleKeyValue);
+      return ImmutableTestRuleKeyImmutableWithDefaults.ofImpl(ruleKeyValue);
     }
   }
 
@@ -860,19 +863,19 @@ public class RuleKeyTest {
     RuleKey first =
         createBuilder(ruleFinder)
             .setReflectively(
-                "value", ImmutableTestRuleKeyAbstractImmutable.of("added-1", "ignored-1"))
+                "value", ImmutableTestRuleKeyAbstractImmutable.ofImpl("added-1", "ignored-1"))
             .build(RuleKey::new);
 
     RuleKey second =
         createBuilder(ruleFinder)
             .setReflectively(
-                "value", ImmutableTestRuleKeyAbstractImmutable.of("added-1", "ignored-2"))
+                "value", ImmutableTestRuleKeyAbstractImmutable.ofImpl("added-1", "ignored-2"))
             .build(RuleKey::new);
 
     RuleKey third =
         createBuilder(ruleFinder)
             .setReflectively(
-                "value", ImmutableTestRuleKeyAbstractImmutable.of("added-2", "ignored-2"))
+                "value", ImmutableTestRuleKeyAbstractImmutable.ofImpl("added-2", "ignored-2"))
             .build(RuleKey::new);
 
     assertEquals(first, second);
@@ -889,7 +892,7 @@ public class RuleKeyTest {
   public void packageVisibleImmutablesCanUseAddToRuleKey() {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     createBuilder(ruleFinder)
-        .setReflectively("value", ImmutableTestPackageVisibleTuple.of(0))
+        .setReflectively("value", ImmutableTestPackageVisibleTuple.ofImpl(0))
         .build(RuleKey::new);
   }
 
@@ -905,9 +908,11 @@ public class RuleKeyTest {
 
   @Test
   public void providerInfoCanUseAddToRuleKey() {
-    TestRuleKeyAbstractImmutable rka1 = ImmutableTestRuleKeyAbstractImmutable.of("foo", "bar");
-    TestRuleKeyAbstractImmutable rka2 = ImmutableTestRuleKeyAbstractImmutable.of("not_foot", "bar");
-    TestRuleKeyAbstractImmutable rka3 = ImmutableTestRuleKeyAbstractImmutable.of("foo", "not_bar");
+    TestRuleKeyAbstractImmutable rka1 = ImmutableTestRuleKeyAbstractImmutable.ofImpl("foo", "bar");
+    TestRuleKeyAbstractImmutable rka2 =
+        ImmutableTestRuleKeyAbstractImmutable.ofImpl("not_foot", "bar");
+    TestRuleKeyAbstractImmutable rka3 =
+        ImmutableTestRuleKeyAbstractImmutable.ofImpl("foo", "not_bar");
     TestProviderInfo providerInfo1 = TestProviderInfo.of(rka1);
     TestProviderInfo providerInfo2 = TestProviderInfo.of(rka2);
     TestProviderInfo providerInfo3 = TestProviderInfo.of(rka3);

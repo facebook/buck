@@ -31,7 +31,7 @@ public abstract class RuleAnalysisConfig implements ConfigView<BuckConfig> {
   public abstract BuckConfig getDelegate();
 
   public static RuleAnalysisConfig of(BuckConfig delegate) {
-    return ImmutableRuleAnalysisConfig.of(delegate);
+    return ImmutableRuleAnalysisConfig.ofImpl(delegate);
   }
 
   public RuleAnalysisComputationMode getComputationMode() {

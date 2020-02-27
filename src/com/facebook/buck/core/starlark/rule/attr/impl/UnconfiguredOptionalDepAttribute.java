@@ -80,7 +80,7 @@ public abstract class UnconfiguredOptionalDepAttribute
 
   public static UnconfiguredOptionalDepAttribute of(
       Optional<String> preCoercionDefaultValue, String doc, boolean mandatory, boolean allowEmpty) {
-    return ImmutableUnconfiguredOptionalDepAttribute.of(
+    return ImmutableUnconfiguredOptionalDepAttribute.ofImpl(
         preCoercionDefaultValue, doc, mandatory, allowEmpty);
   }
 

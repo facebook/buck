@@ -59,6 +59,6 @@ public abstract class EventKey {
   }
 
   public static EventKey of(long value) {
-    return ImmutableEventKey.of(value);
+    return ImmutableEventKey.ofImpl(value);
   }
 }

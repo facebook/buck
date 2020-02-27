@@ -34,7 +34,7 @@ public abstract class CxxLinkOptions {
       boolean thinLto,
       boolean fatLto
       ) {
-    return ImmutableCxxLinkOptions.of(
+    return ImmutableCxxLinkOptions.ofImpl(
         thinLto,
         fatLto
         );

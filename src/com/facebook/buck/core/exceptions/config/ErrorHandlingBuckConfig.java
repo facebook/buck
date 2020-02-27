@@ -30,7 +30,7 @@ import org.immutables.value.Value;
 public abstract class ErrorHandlingBuckConfig implements ConfigView<BuckConfig> {
 
   public static ErrorHandlingBuckConfig of(BuckConfig delegate) {
-    return ImmutableErrorHandlingBuckConfig.of(delegate);
+    return ImmutableErrorHandlingBuckConfig.ofImpl(delegate);
   }
 
   @Override

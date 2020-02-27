@@ -63,7 +63,7 @@ abstract class CxxIncludePaths implements AddsToRuleKey {
       fpathBuilder.addAll(item.getFPaths());
     }
 
-    return ImmutableCxxIncludePaths.of(ipathBuilder.build(), fpathBuilder.build());
+    return ImmutableCxxIncludePaths.ofImpl(ipathBuilder.build(), fpathBuilder.build());
   }
 
   public static CxxIncludePaths empty() {

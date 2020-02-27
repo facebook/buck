@@ -108,7 +108,7 @@ public class InstallCommand extends BuildCommand {
   private static final String DEFAULT_APPLE_SIMULATOR_NAME = "iPhone 6s";
   private static final String DEFAULT_APPLE_TV_SIMULATOR_NAME = "Apple TV";
   private static final InstallResult FAILURE =
-      ImmutableInstallResult.of(ExitCode.RUN_ERROR, Optional.empty());
+      ImmutableInstallResult.ofImpl(ExitCode.RUN_ERROR, Optional.empty());
 
   @VisibleForTesting static final String RUN_LONG_ARG = "--run";
   @VisibleForTesting static final String RUN_SHORT_ARG = "-r";
@@ -616,7 +616,7 @@ public class InstallCommand extends BuildCommand {
                   getArguments().get(0),
                   getArguments().get(0)));
     }
-    return ImmutableInstallResult.of(ExitCode.SUCCESS, Optional.empty());
+    return ImmutableInstallResult.ofImpl(ExitCode.SUCCESS, Optional.empty());
   }
 
   private InstallResult installAppleBundleForDevice(
@@ -759,7 +759,7 @@ public class InstallCommand extends BuildCommand {
         }
 
         if (helper.runBundleOnDevice(selectedUdid, appleBundleId.get())) {
-          return ImmutableInstallResult.of(ExitCode.SUCCESS, Optional.empty());
+          return ImmutableInstallResult.ofImpl(ExitCode.SUCCESS, Optional.empty());
         } else {
           params
               .getConsole()
@@ -774,7 +774,7 @@ public class InstallCommand extends BuildCommand {
           return FAILURE;
         }
       } else {
-        return ImmutableInstallResult.of(ExitCode.SUCCESS, Optional.empty());
+        return ImmutableInstallResult.ofImpl(ExitCode.SUCCESS, Optional.empty());
       }
     } else {
       params
@@ -926,7 +926,7 @@ public class InstallCommand extends BuildCommand {
                   getArguments().get(0),
                   getArguments().get(0)));
     }
-    return ImmutableInstallResult.of(ExitCode.SUCCESS, Optional.empty());
+    return ImmutableInstallResult.ofImpl(ExitCode.SUCCESS, Optional.empty());
   }
 
   private InstallResult installAppleBundleForSimulator(
@@ -1105,7 +1105,7 @@ public class InstallCommand extends BuildCommand {
                           "Successfully installed %s. (Use `buck install -r %s` to run.)"),
                   getArguments().get(0),
                   getArguments().get(0)));
-      return ImmutableInstallResult.of(ExitCode.SUCCESS, Optional.empty());
+      return ImmutableInstallResult.ofImpl(ExitCode.SUCCESS, Optional.empty());
     }
   }
 
@@ -1161,7 +1161,7 @@ public class InstallCommand extends BuildCommand {
                 waitForDebugger ? " (waiting for debugger)" : "",
                 launchedPid.get()));
 
-    return ImmutableInstallResult.of(ExitCode.SUCCESS, launchedPid);
+    return ImmutableInstallResult.ofImpl(ExitCode.SUCCESS, launchedPid);
   }
 
   /**

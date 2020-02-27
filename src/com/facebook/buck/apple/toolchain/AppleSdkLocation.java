@@ -34,6 +34,6 @@ public interface AppleSdkLocation extends ComparableToolchain {
   }
 
   static AppleSdkLocation of(Map<? extends AppleSdk, ? extends AppleSdkPaths> appleSdkPaths) {
-    return ImmutableAppleSdkLocation.of(appleSdkPaths);
+    return ImmutableAppleSdkLocation.ofImpl(appleSdkPaths);
   }
 }

@@ -129,7 +129,7 @@ public class IjProjectDataPreparerTest {
                     "data",
                     equalTo(
                         Optional.of(
-                            ImmutableDependencyEntryData.of(
+                            ImmutableDependencyEntryData.ofImpl(
                                 "third_party_guava",
                                 IjDependencyListBuilder.Scope.COMPILE,
                                 false)))))));
@@ -224,7 +224,7 @@ public class IjProjectDataPreparerTest {
                     "data",
                     equalTo(
                         Optional.of(
-                            ImmutableDependencyEntryData.of(
+                            ImmutableDependencyEntryData.ofImpl(
                                 "___dep_java_com_example",
                                 IjDependencyListBuilder.Scope.COMPILE,
                                 false)))))));
@@ -314,7 +314,7 @@ public class IjProjectDataPreparerTest {
                     "data",
                     equalTo(
                         Optional.of(
-                            ImmutableDependencyEntryData.of(
+                            ImmutableDependencyEntryData.ofImpl(
                                 "//java/com/example/base:tests",
                                 IjDependencyListBuilder.Scope.PROVIDED,
                                 true))))),
@@ -324,7 +324,7 @@ public class IjProjectDataPreparerTest {
                     "data",
                     equalTo(
                         Optional.of(
-                            ImmutableDependencyEntryData.of(
+                            ImmutableDependencyEntryData.ofImpl(
                                 guavaLibrary.getName(),
                                 IjDependencyListBuilder.Scope.COMPILE,
                                 false))))),
@@ -334,7 +334,7 @@ public class IjProjectDataPreparerTest {
                     "data",
                     equalTo(
                         Optional.of(
-                            ImmutableDependencyEntryData.of(
+                            ImmutableDependencyEntryData.ofImpl(
                                 hamcrestLibrary.getName(),
                                 IjDependencyListBuilder.Scope.COMPILE,
                                 false)))))));
@@ -348,7 +348,7 @@ public class IjProjectDataPreparerTest {
                     "data",
                     equalTo(
                         Optional.of(
-                            ImmutableDependencyEntryData.of(
+                            ImmutableDependencyEntryData.ofImpl(
                                 baseModule.getName(),
                                 IjDependencyListBuilder.Scope.TEST,
                                 false))))),
@@ -358,7 +358,7 @@ public class IjProjectDataPreparerTest {
                     "data",
                     equalTo(
                         Optional.of(
-                            ImmutableDependencyEntryData.of(
+                            ImmutableDependencyEntryData.ofImpl(
                                 hamcrestLibrary.getName(),
                                 IjDependencyListBuilder.Scope.TEST,
                                 false)))))));

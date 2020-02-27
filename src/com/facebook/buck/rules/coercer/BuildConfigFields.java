@@ -51,7 +51,7 @@ public abstract class BuildConfigFields implements Iterable<Field> {
     public abstract String getValue();
 
     public static BuildConfigFields.Field of(String type, String name, String value) {
-      return ImmutableBuildConfigFields.Field.of(type, name, value);
+      return ImmutableBuildConfigFields.Field.ofImpl(type, name, value);
     }
 
     /**
@@ -66,7 +66,7 @@ public abstract class BuildConfigFields implements Iterable<Field> {
   }
 
   private static final BuildConfigFields INSTANCE =
-      ImmutableBuildConfigFields.of(ImmutableMap.of());
+      ImmutableBuildConfigFields.ofImpl(ImmutableMap.of());
 
   private static final Pattern VARIABLE_DEFINITION_PATTERN =
       Pattern.compile(
@@ -98,7 +98,7 @@ public abstract class BuildConfigFields implements Iterable<Field> {
     if (nameToField.isEmpty()) {
       return INSTANCE;
     }
-    return ImmutableBuildConfigFields.of(nameToField);
+    return ImmutableBuildConfigFields.ofImpl(nameToField);
   }
 
   public static BuildConfigFields of() {

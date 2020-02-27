@@ -65,7 +65,7 @@ public class BuiltInProvider<T extends BuiltInProviderInfo<T>> extends BuckStarl
         infoApiFields,
         defaultSkylarkValues,
         noneableParams);
-    this.key = ImmutableBuiltInKey.of(infoClass);
+    this.key = ImmutableBuiltInKey.ofImpl(infoClass);
     infoConstructor.setAccessible(true);
     this.infoFactory = Either.ofLeft(infoConstructor);
   }
@@ -82,7 +82,7 @@ public class BuiltInProvider<T extends BuiltInProviderInfo<T>> extends BuckStarl
         infoApiFields,
         defaultSkylarkValues,
         noneableParams);
-    this.key = ImmutableBuiltInKey.of(infoClass);
+    this.key = ImmutableBuiltInKey.ofImpl(infoClass);
     infoFactory.setAccessible(true);
     this.infoFactory = Either.ofRight(infoFactory);
   }

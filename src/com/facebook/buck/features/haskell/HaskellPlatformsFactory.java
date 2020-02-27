@@ -46,7 +46,7 @@ public class HaskellPlatformsFactory {
 
     return HaskellPlatform.builder()
         .setHaskellVersion(
-            ImmutableHaskellVersion.of(haskellBuckConfig.getCompilerMajorVersion(section)))
+            ImmutableHaskellVersion.ofImpl(haskellBuckConfig.getCompilerMajorVersion(section)))
         .setCompiler(getCompiler(section))
         .setCompilerFlags(haskellBuckConfig.getCompilerFlags(section).orElse(ImmutableList.of()))
         .setLinker(getLinker(section))

@@ -32,6 +32,6 @@ public interface BuildFileSyntaxError {
 
   static BuildFileSyntaxError of(
       Path fileName, Number lineNumber, Optional<? extends Number> offset, String text) {
-    return ImmutableBuildFileSyntaxError.of(fileName, lineNumber, offset, text);
+    return ImmutableBuildFileSyntaxError.ofImpl(fileName, lineNumber, offset, text);
   }
 }

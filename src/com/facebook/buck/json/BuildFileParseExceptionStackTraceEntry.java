@@ -31,7 +31,7 @@ public interface BuildFileParseExceptionStackTraceEntry {
 
   static BuildFileParseExceptionStackTraceEntry of(
       Path fileName, Number lineNumber, String functionName, String text) {
-    return ImmutableBuildFileParseExceptionStackTraceEntry.of(
+    return ImmutableBuildFileParseExceptionStackTraceEntry.ofImpl(
         fileName, lineNumber, functionName, text);
   }
 }

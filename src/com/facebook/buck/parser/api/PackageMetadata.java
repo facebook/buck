@@ -25,7 +25,7 @@ public abstract class PackageMetadata {
 
   /** A singleton instance with no visibility/within_view entries. */
   public static final ImmutablePackageMetadata EMPTY_SINGLETON =
-      ImmutablePackageMetadata.of(ImmutableList.of(), ImmutableList.of());
+      ImmutablePackageMetadata.ofImpl(ImmutableList.of(), ImmutableList.of());
 
   /** @return the visibility defined in the package. */
   public abstract ImmutableList<String> getVisibility();
@@ -35,6 +35,6 @@ public abstract class PackageMetadata {
 
   public static PackageMetadata of(
       ImmutableList<String> visibility, ImmutableList<String> withinView) {
-    return ImmutablePackageMetadata.of(visibility, withinView);
+    return ImmutablePackageMetadata.ofImpl(visibility, withinView);
   }
 }

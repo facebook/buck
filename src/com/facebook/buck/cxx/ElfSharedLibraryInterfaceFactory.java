@@ -73,7 +73,7 @@ abstract class ElfSharedLibraryInterfaceFactory implements SharedLibraryInterfac
   }
 
   public static ElfSharedLibraryInterfaceFactory from(ElfSharedLibraryInterfaceParams params) {
-    return ImmutableElfSharedLibraryInterfaceFactory.of(
+    return ImmutableElfSharedLibraryInterfaceFactory.ofImpl(
         params.getObjcopy(), params.isRemoveUndefinedSymbols());
   }
 }

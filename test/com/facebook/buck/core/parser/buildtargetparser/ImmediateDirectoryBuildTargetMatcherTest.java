@@ -34,7 +34,7 @@ public class ImmediateDirectoryBuildTargetMatcherTest {
   @Test
   public void testApply() {
     ImmediateDirectoryBuildTargetMatcher pattern =
-        ImmutableImmediateDirectoryBuildTargetMatcher.of(
+        ImmutableImmediateDirectoryBuildTargetMatcher.ofImpl(
             CellRelativePath.of(
                 CanonicalCellName.rootCell(), ForwardRelativePath.of("src/com/facebook/buck")));
 

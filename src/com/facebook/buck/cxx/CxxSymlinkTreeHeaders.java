@@ -166,7 +166,7 @@ public abstract class CxxSymlinkTreeHeaders extends CxxHeaders implements RuleKe
       Optional<? extends SourcePath> headerMap,
       ImmutableSortedMap<Path, SourcePath> nameToPathMap,
       String symlinkTreeClass) {
-    return ImmutableCxxSymlinkTreeHeaders.of(
+    return ImmutableCxxSymlinkTreeHeaders.ofImpl(
         includeType, root, includeRoot, headerMap, nameToPathMap, symlinkTreeClass);
   }
 

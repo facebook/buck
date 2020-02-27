@@ -25,7 +25,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 abstract class HaskellPackageInfo implements AddsToRuleKey {
 
   public static HaskellPackageInfo of(String name, String version, String identifier) {
-    return ImmutableHaskellPackageInfo.of(name, version, identifier);
+    return ImmutableHaskellPackageInfo.ofImpl(name, version, identifier);
   }
 
   @AddToRuleKey

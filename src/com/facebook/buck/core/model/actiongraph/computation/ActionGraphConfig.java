@@ -26,7 +26,7 @@ import org.immutables.value.Value;
 public abstract class ActionGraphConfig implements ConfigView<BuckConfig> {
 
   public static ActionGraphConfig of(BuckConfig delegate) {
-    return ImmutableActionGraphConfig.of(delegate);
+    return ImmutableActionGraphConfig.ofImpl(delegate);
   }
 
   @Override

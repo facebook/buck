@@ -41,6 +41,6 @@ public interface ActionAnalysisDataKey {
   ActionAnalysisData.ID getID();
 
   static ActionAnalysisDataKey of(BuildTarget buildTarget, ActionAnalysisData.ID iD) {
-    return ImmutableActionAnalysisDataKey.of(buildTarget, iD);
+    return ImmutableActionAnalysisDataKey.ofImpl(buildTarget, iD);
   }
 }

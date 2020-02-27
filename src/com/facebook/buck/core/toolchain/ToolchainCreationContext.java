@@ -48,7 +48,7 @@ public interface ToolchainCreationContext {
       ProcessExecutor processExecutor,
       ExecutableFinder executableFinder,
       RuleKeyConfiguration ruleKeyConfiguration) {
-    return ImmutableToolchainCreationContext.of(
+    return ImmutableToolchainCreationContext.ofImpl(
         environment,
         buckConfig,
         filesystem,

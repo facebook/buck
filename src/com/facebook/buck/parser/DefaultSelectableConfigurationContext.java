@@ -50,7 +50,7 @@ public abstract class DefaultSelectableConfigurationContext
       BuckConfig buckConfig,
       TargetConfiguration targetConfiguration,
       TargetPlatformResolver platformProvider) {
-    return ImmutableDefaultSelectableConfigurationContext.of(
+    return ImmutableDefaultSelectableConfigurationContext.ofImpl(
         buckConfig, targetConfiguration, platformProvider);
   }
 }

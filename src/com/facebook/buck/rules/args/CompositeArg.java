@@ -60,6 +60,6 @@ public abstract class CompositeArg implements Arg {
   }
 
   public static CompositeArg of(ImmutableList<Arg> args) {
-    return ImmutableCompositeArg.of(args);
+    return ImmutableCompositeArg.ofImpl(args);
   }
 }

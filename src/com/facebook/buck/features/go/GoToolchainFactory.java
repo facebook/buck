@@ -50,7 +50,7 @@ public class GoToolchainFactory implements ToolchainFactory<GoToolchain> {
         cxxPlatformsProviderFactory.getUnresolvedCxxPlatforms();
 
     GoPlatformFactory platformFactory =
-        ImmutableGoPlatformFactory.of(
+        ImmutableGoPlatformFactory.ofImpl(
             context.getBuckConfig(),
             context.getProcessExecutor(),
             context.getExecutableFinder(),
@@ -84,6 +84,6 @@ public class GoToolchainFactory implements ToolchainFactory<GoToolchain> {
                 .<Flavor>map(InternalFlavor::of)
                 .orElse(defaultCxxPlatform.getFlavor()));
 
-    return Optional.of(ImmutableGoToolchain.of(goPlatforms, defaultGoPlatform));
+    return Optional.of(ImmutableGoToolchain.ofImpl(goPlatforms, defaultGoPlatform));
   }
 }

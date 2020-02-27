@@ -30,7 +30,7 @@ import org.immutables.value.Value;
 public abstract class CacheResult {
 
   private static final CacheResult MISS_RESULT =
-      ImmutableCacheResult.of(
+      ImmutableCacheResult.ofImpl(
           CacheResultType.MISS,
           Optional.empty(),
           Optional.empty(),
@@ -39,7 +39,7 @@ public abstract class CacheResult {
           Optional.empty(),
           Optional.empty());
   private static final CacheResult IGNORED_RESULT =
-      ImmutableCacheResult.of(
+      ImmutableCacheResult.ofImpl(
           CacheResultType.IGNORED,
           Optional.empty(),
           Optional.empty(),
@@ -48,7 +48,7 @@ public abstract class CacheResult {
           Optional.empty(),
           Optional.empty());
   private static final CacheResult LOCAL_KEY_UNCHANGED_HIT_RESULT =
-      ImmutableCacheResult.of(
+      ImmutableCacheResult.ofImpl(
           CacheResultType.LOCAL_KEY_UNCHANGED_HIT,
           Optional.empty(),
           Optional.empty(),
@@ -57,7 +57,7 @@ public abstract class CacheResult {
           Optional.empty(),
           Optional.empty());
   public static final CacheResult SKIPPED_RESULT =
-      ImmutableCacheResult.of(
+      ImmutableCacheResult.ofImpl(
           CacheResultType.SKIPPED,
           Optional.empty(),
           Optional.empty(),
@@ -126,7 +126,7 @@ public abstract class CacheResult {
       ArtifactCacheMode cacheMode,
       ImmutableMap<String, String> metadata,
       long artifactSize) {
-    return ImmutableCacheResult.of(
+    return ImmutableCacheResult.ofImpl(
         CacheResultType.HIT,
         Optional.of(cacheSource),
         Optional.of(cacheMode),
@@ -137,7 +137,7 @@ public abstract class CacheResult {
   }
 
   public static CacheResult hit(String cacheSource, ArtifactCacheMode cacheMode) {
-    return ImmutableCacheResult.of(
+    return ImmutableCacheResult.ofImpl(
         CacheResultType.HIT,
         Optional.of(cacheSource),
         Optional.of(cacheMode),
@@ -148,7 +148,7 @@ public abstract class CacheResult {
   }
 
   public static CacheResult miss(String cacheSource, ArtifactCacheMode cacheMode) {
-    return ImmutableCacheResult.of(
+    return ImmutableCacheResult.ofImpl(
         CacheResultType.MISS,
         Optional.of(cacheSource),
         Optional.of(cacheMode),
@@ -160,7 +160,7 @@ public abstract class CacheResult {
 
   public static CacheResult error(
       String cacheSource, ArtifactCacheMode cacheMode, String cacheError) {
-    return ImmutableCacheResult.of(
+    return ImmutableCacheResult.ofImpl(
         CacheResultType.ERROR,
         Optional.of(cacheSource),
         Optional.of(cacheMode),
@@ -172,7 +172,7 @@ public abstract class CacheResult {
 
   public static CacheResult softError(
       String cacheSource, ArtifactCacheMode cacheMode, String cacheError) {
-    return ImmutableCacheResult.of(
+    return ImmutableCacheResult.ofImpl(
         CacheResultType.SOFT_ERROR,
         Optional.of(cacheSource),
         Optional.of(cacheMode),
@@ -183,7 +183,7 @@ public abstract class CacheResult {
   }
 
   public static CacheResult of(CacheResultType type, String cacheSource) {
-    return ImmutableCacheResult.of(
+    return ImmutableCacheResult.ofImpl(
         type,
         Optional.of(cacheSource),
         Optional.empty(),
@@ -206,7 +206,7 @@ public abstract class CacheResult {
   }
 
   public static CacheResult contains(String cacheSource, ArtifactCacheMode cacheMode) {
-    return ImmutableCacheResult.of(
+    return ImmutableCacheResult.ofImpl(
         CacheResultType.CONTAINS,
         Optional.of(cacheSource),
         Optional.of(cacheMode),
@@ -228,7 +228,7 @@ public abstract class CacheResult {
     for (CacheResultType type : CacheResultType.values()) {
       if (val.endsWith(type.name())) {
         String rest = val.substring(0, val.length() - type.name().length());
-        return ImmutableCacheResult.of(
+        return ImmutableCacheResult.ofImpl(
             type,
             rest.isEmpty()
                 ? Optional.empty()
@@ -262,7 +262,7 @@ public abstract class CacheResult {
     if (cacheError().equals(cacheError)) {
       return this;
     }
-    return ImmutableCacheResult.of(
+    return ImmutableCacheResult.ofImpl(
         getType(),
         cacheSource(),
         cacheMode(),
@@ -276,7 +276,7 @@ public abstract class CacheResult {
     if (twoLevelContentHashKey().equals(twoLevelContentHashKey)) {
       return this;
     }
-    return ImmutableCacheResult.of(
+    return ImmutableCacheResult.ofImpl(
         getType(),
         cacheSource(),
         cacheMode(),
@@ -290,7 +290,7 @@ public abstract class CacheResult {
     if (metadata().equals(metadata)) {
       return this;
     }
-    return ImmutableCacheResult.of(
+    return ImmutableCacheResult.ofImpl(
         getType(),
         cacheSource(),
         cacheMode(),
@@ -304,7 +304,7 @@ public abstract class CacheResult {
     if (artifactSizeBytes().equals(artifactSizeBytes)) {
       return this;
     }
-    return ImmutableCacheResult.of(
+    return ImmutableCacheResult.ofImpl(
         getType(),
         cacheSource(),
         cacheMode(),

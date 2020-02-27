@@ -86,7 +86,7 @@ public abstract class DepListAttribute extends Attribute<ImmutableList<BuildTarg
       boolean mandatory,
       boolean allowEmpty,
       ImmutableList<Provider<?>> providers) {
-    return ImmutableDepListAttribute.of(
+    return ImmutableDepListAttribute.ofImpl(
         preCoercionDefaultValue, doc, mandatory, allowEmpty, providers);
   }
 

@@ -142,6 +142,6 @@ public abstract class ImplicitInclude {
   }
 
   public static ImplicitInclude of(String rawImportLabel, Map<String, ? extends String> symbols) {
-    return ImmutableImplicitInclude.of(rawImportLabel, symbols);
+    return ImmutableImplicitInclude.ofImpl(rawImportLabel, symbols);
   }
 }

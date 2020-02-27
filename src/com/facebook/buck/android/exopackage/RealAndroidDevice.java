@@ -703,10 +703,10 @@ public class RealAndroidDevice implements AndroidDevice {
 
   private Optional<RapidInstallMode> getRapidInstallMode() {
     if (device.isEmulator() && rapidInstallTypes.contains("emu")) {
-      return Optional.of(ImmutableRapidInstallMode.of("10.0.2.2")); // NOPMD
+      return Optional.of(ImmutableRapidInstallMode.ofImpl("10.0.2.2")); // NOPMD
     } else if (isLocalTransport() && rapidInstallTypes.contains("tcp")) {
       String hostIpAddr = device.getSerialNumber().replaceAll("\\.[0-9:]+$", ".1");
-      return Optional.of(ImmutableRapidInstallMode.of(hostIpAddr));
+      return Optional.of(ImmutableRapidInstallMode.ofImpl(hostIpAddr));
     }
     return Optional.empty();
   }

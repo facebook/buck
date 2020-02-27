@@ -64,7 +64,7 @@ public interface BuildEngine {
     public abstract ListenableFuture<BuildResult> getResult();
 
     public static BuildEngineResult of(ListenableFuture<BuildResult> result) {
-      return ImmutableBuildEngineResult.of(result);
+      return ImmutableBuildEngineResult.ofImpl(result);
     }
   }
 }

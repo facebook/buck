@@ -241,7 +241,7 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
 
     Path logDir = info.getLogDirectoryPath();
     RuleKeyDiagnosticsListenerCloseArgs args =
-        ImmutableRuleKeyDiagnosticsListenerCloseArgs.of(
+        ImmutableRuleKeyDiagnosticsListenerCloseArgs.ofImpl(
             outputExecutor,
             buildReportFileUploader,
             logDir.resolve(BuckConstant.RULE_KEY_DIAG_GRAPH_FILE_NAME),

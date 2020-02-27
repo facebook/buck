@@ -53,6 +53,6 @@ public abstract class BuildFileManifest implements ComputeResult, FileManifest {
       Optional<ImmutableMap<String, Optional<String>>> env,
       ImmutableList<GlobSpecWithResult> globManifest,
       ImmutableList<ParsingError> errors) {
-    return ImmutableBuildFileManifest.of(targets, includes, configs, env, globManifest, errors);
+    return ImmutableBuildFileManifest.ofImpl(targets, includes, configs, env, globManifest, errors);
   }
 }

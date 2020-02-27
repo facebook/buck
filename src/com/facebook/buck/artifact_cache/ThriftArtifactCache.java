@@ -433,7 +433,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
         fetchClient.makeRequest(
             hybridThriftEndpoint,
             toOkHttpRequest(ThriftArtifactCacheProtocol.createRequest(PROTOCOL, cacheRequest)))) {
-      return ImmutableMultiFetchResult.of(
+      return ImmutableMultiFetchResult.ofImpl(
           processMultiFetchResponse(keys, outputs, cacheRequest, joinedKeys, httpResponse));
     }
   }

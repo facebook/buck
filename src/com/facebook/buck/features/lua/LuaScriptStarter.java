@@ -54,7 +54,7 @@ abstract class LuaScriptStarter implements Starter {
       String mainModule,
       Optional<? extends Path> relativeModulesDir,
       Optional<? extends Path> relativePythonModulesDir) {
-    return ImmutableLuaScriptStarter.of(
+    return ImmutableLuaScriptStarter.ofImpl(
         projectFilesystem,
         baseTarget,
         baseParams,

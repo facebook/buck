@@ -58,7 +58,7 @@ abstract class AppleBundleDestinations implements AddsToRuleKey {
 
   private static final Path OSX_CONTENTS_PATH = Paths.get("Contents");
   public static final AppleBundleDestinations OSX_DESTINATIONS =
-      ImmutableAppleBundleDestinations.of(
+      ImmutableAppleBundleDestinations.ofImpl(
           OSX_CONTENTS_PATH,
           OSX_CONTENTS_PATH.resolve("Resources"),
           OSX_CONTENTS_PATH.resolve("MacOS"),
@@ -72,7 +72,7 @@ abstract class AppleBundleDestinations implements AddsToRuleKey {
 
   private static final Path OSX_FRAMEWORK_CONTENTS_PATH = Paths.get("");
   public static final AppleBundleDestinations OSX_FRAMEWORK_DESTINATIONS =
-      ImmutableAppleBundleDestinations.of(
+      ImmutableAppleBundleDestinations.ofImpl(
           OSX_FRAMEWORK_CONTENTS_PATH.resolve("Resources"),
           OSX_FRAMEWORK_CONTENTS_PATH.resolve("Resources"),
           OSX_FRAMEWORK_CONTENTS_PATH,
@@ -86,7 +86,7 @@ abstract class AppleBundleDestinations implements AddsToRuleKey {
 
   private static final Path IOS_CONTENTS_PATH = Paths.get("");
   public static final AppleBundleDestinations IOS_DESTINATIONS =
-      ImmutableAppleBundleDestinations.of(
+      ImmutableAppleBundleDestinations.ofImpl(
           IOS_CONTENTS_PATH,
           IOS_CONTENTS_PATH,
           IOS_CONTENTS_PATH,
@@ -100,7 +100,7 @@ abstract class AppleBundleDestinations implements AddsToRuleKey {
 
   private static final Path IOS_FRAMEWORK_CONTENTS_PATH = Paths.get("");
   public static final AppleBundleDestinations IOS_FRAMEWORK_DESTINATIONS =
-      ImmutableAppleBundleDestinations.of(
+      ImmutableAppleBundleDestinations.ofImpl(
           IOS_FRAMEWORK_CONTENTS_PATH,
           IOS_FRAMEWORK_CONTENTS_PATH,
           IOS_FRAMEWORK_CONTENTS_PATH,

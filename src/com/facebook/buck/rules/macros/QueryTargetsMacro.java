@@ -37,6 +37,6 @@ public abstract class QueryTargetsMacro extends QueryMacro {
   }
 
   public static QueryTargetsMacro of(Query query) {
-    return ImmutableQueryTargetsMacro.of(query);
+    return ImmutableQueryTargetsMacro.ofImpl(query);
   }
 }

@@ -54,7 +54,7 @@ class ListCommandLineArgs implements CommandLineArgs {
 
   @Override
   public Stream<ArgAndFormatString> getArgsAndFormatStrings() {
-    return objects.stream().map(o -> ImmutableArgAndFormatString.of(o, formatString));
+    return objects.stream().map(o -> ImmutableArgAndFormatString.ofImpl(o, formatString));
   }
 
   @Override

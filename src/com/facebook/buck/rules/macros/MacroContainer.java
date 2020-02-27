@@ -37,7 +37,7 @@ public abstract class MacroContainer {
   }
 
   public static MacroContainer of(Macro macro, boolean outputToFile) {
-    return ImmutableMacroContainer.of(macro, outputToFile);
+    return ImmutableMacroContainer.ofImpl(macro, outputToFile);
   }
 
   public final MacroContainer withMacro(Macro value) {

@@ -465,7 +465,8 @@ public abstract class AbstractValueVisitorTest {
 
     @AddToRuleKey
     private final TupleInterfaceData tupleInterfaceData =
-        ImmutableTupleInterfaceData.of(FakeSourcePath.of(rootFilesystem, "first.path"), "world");
+        ImmutableTupleInterfaceData.ofImpl(
+            FakeSourcePath.of(rootFilesystem, "first.path"), "world");
 
     @AddToRuleKey
     private final ImmutableInterfaceData immutableInterfaceData =
@@ -476,7 +477,7 @@ public abstract class AbstractValueVisitorTest {
 
     @AddToRuleKey
     private final TupleClassData tupleClassData =
-        ImmutableTupleClassData.of(FakeSourcePath.of(rootFilesystem, "third.path"), "world");
+        ImmutableTupleClassData.ofImpl(FakeSourcePath.of(rootFilesystem, "third.path"), "world");
 
     @AddToRuleKey
     private final ImmutableClassData immutableClassData =

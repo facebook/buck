@@ -142,7 +142,7 @@ public class BuckFixSpecParserTest {
     Path logDir = filesystem.getBuckPaths().getLogDir().resolve(buildCommandDir);
 
     BuckFixSpec expectedSpec =
-        ImmutableBuckFixSpec.of(
+        ImmutableBuckFixSpec.ofImpl(
             buildCommandId,
             "build",
             0,
@@ -233,7 +233,7 @@ public class BuckFixSpecParserTest {
     Path logDir = filesystem.getBuckPaths().getLogDir().resolve(buildCommandDir);
 
     BuckFixSpec expectedSpec =
-        ImmutableBuckFixSpec.of(
+        ImmutableBuckFixSpec.ofImpl(
             buildCommandId,
             "build",
             0,
@@ -333,7 +333,7 @@ public class BuckFixSpecParserTest {
   }
 
   private BuckFixSpec expectedSpecWithException(Optional<Exception> e, Path logDir) {
-    return ImmutableBuckFixSpec.of(
+    return ImmutableBuckFixSpec.ofImpl(
         buildCommandId,
         "build",
         ExitCode.FATAL_GENERIC.getCode(),

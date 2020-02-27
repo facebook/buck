@@ -383,7 +383,7 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
     }
 
     public static PerfEventId of(String value) {
-      return ImmutablePerfEventId.of(value);
+      return ImmutablePerfEventId.ofImpl(value);
     }
   }
 

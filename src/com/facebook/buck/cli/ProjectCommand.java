@@ -127,7 +127,7 @@ public class ProjectCommand extends AbstractCommand implements PluginBasedComman
       ProjectSubCommand subCommand = subcommands.get(projectIde);
 
       ProjectGeneratorParameters projectGeneratorParameters =
-          ImmutableProjectGeneratorParameters.of(
+          ImmutableProjectGeneratorParameters.ofImpl(
               params,
               dryRun,
               withTests,

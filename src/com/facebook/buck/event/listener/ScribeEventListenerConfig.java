@@ -32,7 +32,7 @@ public abstract class ScribeEventListenerConfig implements ConfigView<BuckConfig
   public abstract BuckConfig getDelegate();
 
   public static ScribeEventListenerConfig of(BuckConfig delegate) {
-    return ImmutableScribeEventListenerConfig.of(delegate);
+    return ImmutableScribeEventListenerConfig.ofImpl(delegate);
   }
 
   /** If false (default) then Buck events are not logged to Scribe */

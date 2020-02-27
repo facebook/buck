@@ -51,6 +51,6 @@ public abstract class BuildPackagePathToBuildFileManifestKey
   }
 
   public static BuildPackagePathToBuildFileManifestKey of(Path path) {
-    return ImmutableBuildPackagePathToBuildFileManifestKey.of(path);
+    return ImmutableBuildPackagePathToBuildFileManifestKey.ofImpl(path);
   }
 }

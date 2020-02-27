@@ -29,6 +29,7 @@ public abstract class FakeRuleAnalysisResultImpl extends RuleAnalysisResultImpl 
       BuildTarget buildTarget,
       ProviderInfoCollection providerInfos,
       Map<? extends ActionAnalysisData.ID, ? extends ActionAnalysisData> registeredActions) {
-    return ImmutableFakeRuleAnalysisResultImpl.of(buildTarget, providerInfos, registeredActions);
+    return ImmutableFakeRuleAnalysisResultImpl.ofImpl(
+        buildTarget, providerInfos, registeredActions);
   }
 }

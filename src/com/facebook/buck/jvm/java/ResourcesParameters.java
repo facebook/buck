@@ -54,7 +54,7 @@ public abstract class ResourcesParameters implements AddsToRuleKey {
 
   public static ResourcesParameters of(
       ImmutableSortedMap<String, SourcePath> resources, Optional<String> resourcesRoot) {
-    return ImmutableResourcesParameters.of(resources, resourcesRoot);
+    return ImmutableResourcesParameters.ofImpl(resources, resourcesRoot);
   }
 
   public static ResourcesParameters create(

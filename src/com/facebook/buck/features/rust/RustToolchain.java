@@ -37,6 +37,6 @@ public interface RustToolchain extends Toolchain {
   static RustToolchain of(
       UnresolvedRustPlatform defaultRustPlatform,
       FlavorDomain<UnresolvedRustPlatform> rustPlatforms) {
-    return ImmutableRustToolchain.of(defaultRustPlatform, rustPlatforms);
+    return ImmutableRustToolchain.ofImpl(defaultRustPlatform, rustPlatforms);
   }
 }

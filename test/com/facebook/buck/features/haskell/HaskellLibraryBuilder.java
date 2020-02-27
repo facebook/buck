@@ -46,7 +46,7 @@ public class HaskellLibraryBuilder
             new ToolchainProviderBuilder()
                 .withToolchain(
                     HaskellPlatformsProvider.DEFAULT_NAME,
-                    ImmutableHaskellPlatformsProvider.of(defaultPlatform, platforms))
+                    ImmutableHaskellPlatformsProvider.ofImpl(defaultPlatform, platforms))
                 .build(),
             cxxBuckConfig),
         target);

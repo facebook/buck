@@ -38,6 +38,6 @@ public abstract class LdflagsSharedMacro extends CxxGenruleFilterAndTargetsMacro
 
   public static LdflagsSharedMacro of(
       Optional<Pattern> pattern, ImmutableList<BuildTarget> buildTargets) {
-    return ImmutableLdflagsSharedMacro.of(pattern, buildTargets);
+    return ImmutableLdflagsSharedMacro.ofImpl(pattern, buildTargets);
   }
 }

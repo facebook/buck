@@ -64,7 +64,7 @@ public abstract class BuildCellRelativePath {
   }
 
   public static BuildCellRelativePath of(Path pathRelativeToBuildCellRoot) {
-    return ImmutableBuildCellRelativePath.of(pathRelativeToBuildCellRoot);
+    return ImmutableBuildCellRelativePath.ofImpl(pathRelativeToBuildCellRoot);
   }
 
   @Override

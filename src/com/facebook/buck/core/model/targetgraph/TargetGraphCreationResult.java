@@ -42,16 +42,16 @@ public abstract class TargetGraphCreationResult {
 
   /** Copies this object with replacing the target graph. */
   public TargetGraphCreationResult withTargetGraph(TargetGraph targetGraph) {
-    return ImmutableTargetGraphCreationResult.of(targetGraph, getBuildTargets());
+    return ImmutableTargetGraphCreationResult.ofImpl(targetGraph, getBuildTargets());
   }
 
   /** Copies this object with replacing the top level targets. */
   public TargetGraphCreationResult withBuildTargets(Iterable<? extends BuildTarget> elements) {
-    return ImmutableTargetGraphCreationResult.of(getTargetGraph(), elements);
+    return ImmutableTargetGraphCreationResult.ofImpl(getTargetGraph(), elements);
   }
 
   public static TargetGraphCreationResult of(
       TargetGraph targetGraph, ImmutableSet<BuildTarget> buildTargets) {
-    return ImmutableTargetGraphCreationResult.of(targetGraph, buildTargets);
+    return ImmutableTargetGraphCreationResult.ofImpl(targetGraph, buildTargets);
   }
 }

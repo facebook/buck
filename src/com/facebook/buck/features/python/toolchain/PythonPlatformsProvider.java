@@ -32,6 +32,6 @@ public interface PythonPlatformsProvider extends Toolchain {
   }
 
   static PythonPlatformsProvider of(FlavorDomain<PythonPlatform> pythonPlatforms) {
-    return ImmutablePythonPlatformsProvider.of(pythonPlatforms);
+    return ImmutablePythonPlatformsProvider.ofImpl(pythonPlatforms);
   }
 }

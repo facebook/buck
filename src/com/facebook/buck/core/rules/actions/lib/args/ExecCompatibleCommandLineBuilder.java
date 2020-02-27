@@ -43,6 +43,6 @@ public class ExecCompatibleCommandLineBuilder implements CommandLineBuilder {
             commandLineArgs.getArgsAndFormatStrings(),
             (o, i) -> CommandLineArgStringifier.asString(filesystem, i == 0, o))
         .forEach(builder::add);
-    return ImmutableCommandLine.of(env, builder.build());
+    return ImmutableCommandLine.ofImpl(env, builder.build());
   }
 }

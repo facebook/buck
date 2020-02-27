@@ -171,7 +171,7 @@ public abstract class SourceSortedSet implements TargetTranslatable<SourceSorted
       SourceSortedSet.Type type,
       Optional<? extends ImmutableSortedSet<SourcePath>> unnamedSources,
       Optional<? extends ImmutableSortedMap<String, SourcePath>> namedSources) {
-    return ImmutableSourceSortedSet.of(type, unnamedSources, namedSources);
+    return ImmutableSourceSortedSet.ofImpl(type, unnamedSources, namedSources);
   }
 
   private static Type findType(Iterable<SourceSortedSet> elements) {

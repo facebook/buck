@@ -95,7 +95,7 @@ public class RuleKeyCacheRecycler<V> {
         // As inputs to rule keys can be directories, make sure we also invalidate any
         // directories containing this path.
         IntStream.range(1, path.getNameCount() + 1)
-            .mapToObj(end -> ImmutableRuleKeyInput.of(filesystem, path.subpath(0, end)))
+            .mapToObj(end -> ImmutableRuleKeyInput.ofImpl(filesystem, path.subpath(0, end)))
             .collect(ImmutableList.toImmutableList()),
         new NoOpCacheStatsTracker());
   }

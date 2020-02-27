@@ -57,7 +57,7 @@ public abstract class BackgroundTask<T> {
       T actionArgs,
       Optional<? extends BackgroundTask.Timeout> timeout,
       boolean shouldCancelOnRepeat) {
-    return ImmutableBackgroundTask.of(name, action, actionArgs, timeout, shouldCancelOnRepeat);
+    return ImmutableBackgroundTask.ofImpl(name, action, actionArgs, timeout, shouldCancelOnRepeat);
   }
 
   /** Timeout object for {@link BackgroundTask}. */
@@ -68,7 +68,7 @@ public abstract class BackgroundTask<T> {
     abstract TimeUnit unit();
 
     public static Timeout of(long timeout, TimeUnit unit) {
-      return ImmutableTimeout.of(timeout, unit);
+      return ImmutableTimeout.ofImpl(timeout, unit);
     }
   }
 }

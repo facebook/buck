@@ -51,6 +51,6 @@ public abstract class StaticUnresolvedNdkCxxPlatform implements UnresolvedNdkCxx
   }
 
   public static StaticUnresolvedNdkCxxPlatform of(NdkCxxPlatform staticallyResolvedInstance) {
-    return ImmutableStaticUnresolvedNdkCxxPlatform.of(staticallyResolvedInstance);
+    return ImmutableStaticUnresolvedNdkCxxPlatform.ofImpl(staticallyResolvedInstance);
   }
 }

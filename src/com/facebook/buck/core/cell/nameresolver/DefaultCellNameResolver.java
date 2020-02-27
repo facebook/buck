@@ -51,6 +51,6 @@ public abstract class DefaultCellNameResolver implements CellNameResolver {
 
   public static ImmutableDefaultCellNameResolver of(
       Map<? extends Optional<String>, ? extends CanonicalCellName> knownCells) {
-    return ImmutableDefaultCellNameResolver.of(knownCells);
+    return ImmutableDefaultCellNameResolver.ofImpl(knownCells);
   }
 }

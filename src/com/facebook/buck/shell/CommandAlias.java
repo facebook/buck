@@ -127,7 +127,7 @@ public class CommandAlias extends NoopBuildRule implements BinaryBuildRule, HasR
                 ImmutableSortedMap.toImmutableSortedMap(
                     Ordering.natural(), Entry::getKey, e -> buildRuleAsTool(e.getValue())));
 
-    return ImmutableCrossPlatformTool.of(
+    return ImmutableCrossPlatformTool.ofImpl(
         genericDelegate
             .map(this::buildRuleAsTool)
             .orElseGet(() -> new UnsupportedPlatformTool(getBuildTarget(), platform)),

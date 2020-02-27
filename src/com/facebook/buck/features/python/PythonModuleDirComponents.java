@@ -42,7 +42,7 @@ import java.util.function.Consumer;
 abstract class PythonModuleDirComponents implements PythonComponents {
 
   public static PythonModuleDirComponents of(SourcePath directory) {
-    return ImmutablePythonModuleDirComponents.of(directory);
+    return ImmutablePythonModuleDirComponents.ofImpl(directory);
   }
 
   // TODO(agallagher): We hash the entire dir contents even though, when creating symlinks, we only

@@ -65,7 +65,7 @@ public interface BuildRuleCreationContextWithTargetGraph extends BuildRuleCreati
       ToolchainProvider toolchainProvider,
       ConfigurationRuleRegistry configurationRuleRegistry,
       ProviderInfoCollection providerInfoCollection) {
-    return ImmutableBuildRuleCreationContextWithTargetGraph.of(
+    return ImmutableBuildRuleCreationContextWithTargetGraph.ofImpl(
         targetGraph,
         actionGraphBuilder,
         projectFilesystem,

@@ -42,7 +42,7 @@ public class BuckStarlarkStructObjectTest {
   @Test
   public void findsGettersForStructLikeClasses() throws NoSuchMethodException, EvalException {
 
-    TestStructLikeClass structLikeClass = ImmutableTestStructLikeClass.of("foo");
+    TestStructLikeClass structLikeClass = ImmutableTestStructLikeClass.ofImpl("foo");
 
     assertEquals(structLikeClass.getFoo(), structLikeClass.getValue("get_foo"));
   }
@@ -50,7 +50,7 @@ public class BuckStarlarkStructObjectTest {
   @Test
   public void throwsEvalExceptionWhenNoMatchingField() throws NoSuchMethodException, EvalException {
 
-    TestStructLikeClass structLikeClass = ImmutableTestStructLikeClass.of("foo");
+    TestStructLikeClass structLikeClass = ImmutableTestStructLikeClass.ofImpl("foo");
 
     expectedException.expect(EvalException.class);
     structLikeClass.getValue("get_bar");

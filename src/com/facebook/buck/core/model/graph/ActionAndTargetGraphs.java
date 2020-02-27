@@ -54,7 +54,7 @@ public abstract class ActionAndTargetGraphs {
       TargetGraphCreationResult unversionedTargetGraph,
       Optional<? extends TargetGraphCreationResult> versionedTargetGraph,
       ActionGraphAndBuilder actionGraphAndBuilder) {
-    return ImmutableActionAndTargetGraphs.of(
+    return ImmutableActionAndTargetGraphs.ofImpl(
         unversionedTargetGraph, versionedTargetGraph, actionGraphAndBuilder);
   }
 }

@@ -28,7 +28,7 @@ interface OcamlToolchain extends Toolchain {
 
   static OcamlToolchain of(
       OcamlPlatform defaultOcamlPlatform, FlavorDomain<OcamlPlatform> ocamlPlatforms) {
-    return ImmutableOcamlToolchain.of(defaultOcamlPlatform, ocamlPlatforms);
+    return ImmutableOcamlToolchain.ofImpl(defaultOcamlPlatform, ocamlPlatforms);
   }
 
   OcamlPlatform getDefaultOcamlPlatform();

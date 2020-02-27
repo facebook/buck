@@ -68,7 +68,7 @@ public abstract class DepAttribute extends Attribute<BuildTarget> {
       String doc,
       boolean mandatory,
       ImmutableList<Provider<?>> providers) {
-    return ImmutableDepAttribute.of(preCoercionDefaultValue, doc, mandatory, providers);
+    return ImmutableDepAttribute.ofImpl(preCoercionDefaultValue, doc, mandatory, providers);
   }
 
   private SkylarkDependency postCoercionTransform(Object dep, RuleAnalysisContext analysisContext) {

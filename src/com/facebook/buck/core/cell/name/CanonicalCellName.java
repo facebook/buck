@@ -85,7 +85,7 @@ public abstract class CanonicalCellName implements Comparable<CanonicalCellName>
   }
 
   public static CanonicalCellName of(Optional<String> name) {
-    return ImmutableCanonicalCellName.of(name);
+    return ImmutableCanonicalCellName.ofImpl(name);
   }
 
   /**

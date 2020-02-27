@@ -24,7 +24,7 @@ public abstract class ProductType {
   public abstract String getIdentifier();
 
   public static ProductType of(String identifier) {
-    return ImmutableProductType.of(identifier);
+    return ImmutableProductType.ofImpl(identifier);
   }
 
   @Override

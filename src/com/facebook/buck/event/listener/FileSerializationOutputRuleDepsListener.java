@@ -50,7 +50,7 @@ public class FileSerializationOutputRuleDepsListener
     String targetId = event.getTarget().getFullyQualifiedName();
     long elapsedTimeMillis = TimeUnit.NANOSECONDS.toMillis(event.getElapsedTimeNano());
     RuleExecutionTimeData ruleExecutionTimeData =
-        ImmutableRuleExecutionTimeData.of(targetId, elapsedTimeMillis);
+        ImmutableRuleExecutionTimeData.ofImpl(targetId, elapsedTimeMillis);
 
     convertToJson(ruleExecutionTimeData).ifPresent(this::scheduleWrite);
   }

@@ -158,7 +158,7 @@ public class PreDexedFilesSorter {
       primaryDexContents.add(dexWithClasses);
       primaryDexInputMetadata.put(
           getJarName(dexWithClasses),
-          ImmutableDexMetadata.of(
+          ImmutableDexMetadata.ofImpl(
               dexWithClasses.getWeightEstimate(), dexWithClasses.getClassesHash().toString()));
     }
 
@@ -219,7 +219,7 @@ public class PreDexedFilesSorter {
           builder.build(),
           secondaryOutputToInputs.build(),
           metadataTxtEntries.build(),
-          ImmutablePrimaryDexInputMetadata.of(primaryDexSize, primaryDexInputMetadata.build()),
+          ImmutablePrimaryDexInputMetadata.ofImpl(primaryDexSize, primaryDexInputMetadata.build()),
           secondaryDexInputsHashes.build());
     }
 

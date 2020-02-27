@@ -45,7 +45,7 @@ public abstract class AliasConfig implements ConfigView<BuckConfig> {
   }
 
   public static AliasConfig of(BuckConfig delegate) {
-    return ImmutableAliasConfig.of(delegate);
+    return ImmutableAliasConfig.ofImpl(delegate);
   }
 
   /**

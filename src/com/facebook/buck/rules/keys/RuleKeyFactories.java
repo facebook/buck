@@ -80,7 +80,7 @@ public abstract class RuleKeyFactories {
       RuleKeyFactoryWithDiagnostics<RuleKey> defaultRuleKeyFactory,
       RuleKeyFactory<RuleKey> inputBasedRuleKeyFactory,
       DependencyFileRuleKeyFactory depFileRuleKeyFactory) {
-    return ImmutableRuleKeyFactories.of(
+    return ImmutableRuleKeyFactories.ofImpl(
         defaultRuleKeyFactory, inputBasedRuleKeyFactory, depFileRuleKeyFactory);
   }
 

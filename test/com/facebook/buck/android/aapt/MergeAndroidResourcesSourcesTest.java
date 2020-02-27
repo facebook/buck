@@ -136,7 +136,7 @@ public class MergeAndroidResourcesSourcesTest {
     File tmpFolder = tmp.newFolder("tmp");
 
     MergeAndroidResourceSourcesStep step =
-        ImmutableMergeAndroidResourceSourcesStep.of(
+        ImmutableMergeAndroidResourceSourcesStep.ofImpl(
             ImmutableList.of(rootPath.resolve("res_in_1"), rootPath.resolve("res_in_2")),
             outFolder.toPath(),
             tmpFolder.toPath());

@@ -44,6 +44,6 @@ public abstract class ParsingError {
   }
 
   public static ParsingError of(String message, ImmutableList<String> stackTrace) {
-    return ImmutableParsingError.of(message, stackTrace);
+    return ImmutableParsingError.ofImpl(message, stackTrace);
   }
 }

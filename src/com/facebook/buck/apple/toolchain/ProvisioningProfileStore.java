@@ -265,6 +265,6 @@ public abstract class ProvisioningProfileStore implements AddsToRuleKey, Toolcha
 
   public static ProvisioningProfileStore of(
       Supplier<ImmutableList<ProvisioningProfileMetadata>> provisioningProfilesSupplier) {
-    return ImmutableProvisioningProfileStore.of(provisioningProfilesSupplier);
+    return ImmutableProvisioningProfileStore.ofImpl(provisioningProfilesSupplier);
   }
 }

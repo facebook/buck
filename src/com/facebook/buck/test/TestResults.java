@@ -117,7 +117,7 @@ public abstract class TestResults implements TestResultsExternalInterface<TestCa
       ImmutableList<TestCaseSummary> testCases,
       ImmutableSet<String> contacts,
       ImmutableSet<String> labels) {
-    return ImmutableTestResults.of(buildTarget, testCases, contacts, labels);
+    return ImmutableTestResults.ofImpl(buildTarget, testCases, contacts, labels);
   }
 
   public static Builder builder() {

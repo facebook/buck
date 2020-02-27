@@ -119,7 +119,7 @@ public abstract class KnownNativeRuleTypes implements KnownRuleTypes {
       ImmutableList<Description<?>> knownBuildDescriptions,
       ImmutableList<ConfigurationRuleDescription<?, ?>> knownConfigurationDescriptions,
       ImmutableList<BuiltInProvider<?>> perFeatureProviders) {
-    return ImmutableKnownNativeRuleTypes.of(
+    return ImmutableKnownNativeRuleTypes.ofImpl(
         knownBuildDescriptions, knownConfigurationDescriptions, perFeatureProviders);
   }
 }

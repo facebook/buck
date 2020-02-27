@@ -52,7 +52,7 @@ public class BuildFileManifestPojoizer {
     public abstract Function<Object, Object> getTransformFunction();
 
     public static PojoTransformer of(Class<?> clazz, Function<Object, Object> transformFunction) {
-      return ImmutablePojoTransformer.of(clazz, transformFunction);
+      return ImmutablePojoTransformer.ofImpl(clazz, transformFunction);
     }
   }
 

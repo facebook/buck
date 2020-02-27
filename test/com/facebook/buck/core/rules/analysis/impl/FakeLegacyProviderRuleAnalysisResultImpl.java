@@ -27,6 +27,6 @@ public abstract class FakeLegacyProviderRuleAnalysisResultImpl
 
   public static FakeLegacyProviderRuleAnalysisResultImpl of(
       BuildTarget buildTarget, ProviderInfoCollection providerInfos) {
-    return ImmutableFakeLegacyProviderRuleAnalysisResultImpl.of(buildTarget, providerInfos);
+    return ImmutableFakeLegacyProviderRuleAnalysisResultImpl.ofImpl(buildTarget, providerInfos);
   }
 }

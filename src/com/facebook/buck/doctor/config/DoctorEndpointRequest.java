@@ -48,7 +48,7 @@ public interface DoctorEndpointRequest {
       Optional<String> machineReadableLog,
       Optional<String> endpointMessage,
       Optional<String> reportUrl) {
-    return ImmutableDoctorEndpointRequest.of(
+    return ImmutableDoctorEndpointRequest.ofImpl(
         buildId, logDirPath, machineReadableLog, endpointMessage, reportUrl);
   }
 }

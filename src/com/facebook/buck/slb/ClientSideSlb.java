@@ -158,7 +158,7 @@ public class ClientSideSlb implements HttpLoadBalancer {
       List<LoadBalancerPingEvent.PerServerPingData> allServerData =
           Futures.allAsList(futures).get();
       eventBus.post(
-          new LoadBalancerPingEvent(ImmutableLoadBalancerPingEventData.of(allServerData)));
+          new LoadBalancerPingEvent(ImmutableLoadBalancerPingEventData.ofImpl(allServerData)));
       LOG.verbose("all pings complete %s", toString());
     } catch (InterruptedException ex) {
       LOG.info(ex, "ClientSideSlb was interrupted");

@@ -34,7 +34,7 @@ public abstract class ExopackageInfo {
     SourcePath getDirectory();
 
     static DexInfo of(SourcePath metadata, SourcePath directory) {
-      return ImmutableDexInfo.of(metadata, directory);
+      return ImmutableDexInfo.ofImpl(metadata, directory);
     }
   }
 
@@ -45,7 +45,7 @@ public abstract class ExopackageInfo {
     SourcePath getDirectory();
 
     static NativeLibsInfo of(SourcePath metadata, SourcePath directory) {
-      return ImmutableNativeLibsInfo.of(metadata, directory);
+      return ImmutableNativeLibsInfo.ofImpl(metadata, directory);
     }
   }
 
@@ -54,7 +54,7 @@ public abstract class ExopackageInfo {
     ImmutableList<ExopackagePathAndHash> getResourcesPaths();
 
     static ResourcesInfo of(ImmutableList<ExopackagePathAndHash> resourcesPaths) {
-      return ImmutableResourcesInfo.of(resourcesPaths);
+      return ImmutableResourcesInfo.ofImpl(resourcesPaths);
     }
   }
 

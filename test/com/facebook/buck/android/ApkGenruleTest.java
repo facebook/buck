@@ -223,7 +223,7 @@ public class ApkGenruleTest {
 
     @Override
     public ApkInfo getApkInfo() {
-      return ImmutableApkInfo.of(
+      return ImmutableApkInfo.ofImpl(
           FakeSourcePath.of("spoof"), FakeSourcePath.of("buck-out/gen/fb4a.apk"), Optional.empty());
     }
   }

@@ -39,7 +39,7 @@ public abstract class ActionGraphAndBuilder {
       ActionGraph actionGraph,
       ActionGraphBuilder actionGraphBuilder,
       BuildEngineActionToBuildRuleResolver buildEngineActionToBuildRuleResolver) {
-    return ImmutableActionGraphAndBuilder.of(
+    return ImmutableActionGraphAndBuilder.ofImpl(
         actionGraph, actionGraphBuilder, buildEngineActionToBuildRuleResolver);
   }
 }

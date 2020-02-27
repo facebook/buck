@@ -34,7 +34,7 @@ public interface UserLocalConfiguration {
       boolean noBuckCheckPresent,
       Map<? extends Path, ? extends String> localConfigsContents,
       Map<String, ? extends String> configOverrides) {
-    return ImmutableUserLocalConfiguration.of(
+    return ImmutableUserLocalConfiguration.ofImpl(
         noBuckCheckPresent, localConfigsContents, configOverrides);
   }
 }

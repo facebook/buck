@@ -100,7 +100,7 @@ public class JavacPipelineState implements RulePipelineState {
       closeables.add(firstOrderContext);
 
       JavacExecutionContext javacExecutionContext =
-          ImmutableJavacExecutionContext.of(
+          ImmutableJavacExecutionContext.ofImpl(
               new JavacEventSinkToBuckEventBusBridge(firstOrderContext.getBuckEventBus()),
               stderr,
               firstOrderContext.getClassLoaderCache(),

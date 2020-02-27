@@ -60,7 +60,7 @@ public abstract class AndroidNdk implements ComparableToolchain {
       Path ndkRootPath,
       boolean shouldEscapeCFlagsInDoubleQuotes,
       ExecutableFinder executableFinder) {
-    return ImmutableAndroidNdk.of(
+    return ImmutableAndroidNdk.ofImpl(
         ndkVersion, ndkRootPath, shouldEscapeCFlagsInDoubleQuotes, executableFinder);
   }
 }

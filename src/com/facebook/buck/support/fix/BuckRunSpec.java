@@ -66,6 +66,6 @@ public abstract class BuckRunSpec {
       ImmutableMap<String, String> envp,
       Path cwd,
       boolean isFixScript) {
-    return ImmutableBuckRunSpec.of(argv, envp, cwd, isFixScript);
+    return ImmutableBuckRunSpec.ofImpl(argv, envp, cwd, isFixScript);
   }
 }

@@ -52,7 +52,7 @@ public abstract class RawConfig {
   }
 
   public static RawConfig of(Map<String, ? extends ImmutableMap<String, String>> values) {
-    return ImmutableRawConfig.of(values);
+    return ImmutableRawConfig.ofImpl(values);
   }
 
   public static Builder builder() {

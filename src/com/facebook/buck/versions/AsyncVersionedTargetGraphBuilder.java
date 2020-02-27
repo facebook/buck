@@ -112,7 +112,7 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
   @Override
   protected VersionInfo getVersionInfo(TargetNode<?> node) {
     return Futures.getUnchecked(
-        versionInfoAsyncTransformationEngine.compute(ImmutableVersionInfoKey.of(node)));
+        versionInfoAsyncTransformationEngine.compute(ImmutableVersionInfoKey.ofImpl(node)));
   }
 
   @Override
@@ -258,7 +258,7 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
       return ImmutableSet.copyOf(
           Iterables.transform(
               versionedDeps,
-              buildTarget -> ImmutableVersionInfoKey.of(targetGraph.get(buildTarget))));
+              buildTarget -> ImmutableVersionInfoKey.ofImpl(targetGraph.get(buildTarget))));
     }
 
     /** Get/cache the transitive version info for this node. */
@@ -303,7 +303,7 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
     }
 
     public static VersionTargetGraphKey of(TargetNode<?> node) {
-      return ImmutableVersionTargetGraphKey.of(node, Optional.empty(), Optional.empty());
+      return ImmutableVersionTargetGraphKey.ofImpl(node, Optional.empty(), Optional.empty());
     }
   }
 
@@ -400,7 +400,7 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
                 if (TargetGraphVersionTransformations.isVersionPropagator(targetNode)
                     || TargetGraphVersionTransformations.getVersionedNode(targetNode).isPresent()) {
                   subGraphKeys.add(
-                      ImmutableVersionTargetGraphKey.of(
+                      ImmutableVersionTargetGraphKey.ofImpl(
                           resolveVersions(targetNode, selectedVersions),
                           Optional.of(selectedVersions),
                           Optional.of(targetTranslator)));
@@ -440,7 +440,7 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
 
       TargetNodeTranslator targetTranslator = getTargetNodeTranslator(root, selectedVersions);
 
-      return ImmutableVersionRootInfo.of(selectedVersions, targetTranslator);
+      return ImmutableVersionRootInfo.ofImpl(selectedVersions, targetTranslator);
     }
 
     @SuppressWarnings("unchecked")

@@ -48,7 +48,7 @@ public class NetworkStatsKeeper {
   }
 
   RemoteDownloadStats getRemoteDownloadStats() {
-    return ImmutableRemoteDownloadStats.of(
+    return ImmutableRemoteDownloadStats.ofImpl(
         remoteDownloadedArtifactsCount.get(), remoteDownloadedArtifactsBytes.get());
   }
 }

@@ -48,7 +48,7 @@ public class ChildrenAdder implements GraphComputation<LongNode, LongNode> {
     }
 
     public static LongNode of(long get) {
-      return ImmutableLongNode.of(get);
+      return ImmutableLongNode.ofImpl(get);
     }
   }
 

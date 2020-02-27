@@ -37,7 +37,7 @@ public abstract class RunInfoLegacyTool implements Tool {
   public abstract RunInfo getRunInfo();
 
   public static RunInfoLegacyTool of(RunInfo runInfo) {
-    return ImmutableRunInfoLegacyTool.of(runInfo);
+    return ImmutableRunInfoLegacyTool.ofImpl(runInfo);
   }
 
   @Override

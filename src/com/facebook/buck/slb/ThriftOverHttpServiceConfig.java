@@ -36,6 +36,6 @@ public abstract class ThriftOverHttpServiceConfig {
   }
 
   public static ThriftOverHttpServiceConfig of(HttpService service, String thriftPath) {
-    return ImmutableThriftOverHttpServiceConfig.of(service, thriftPath);
+    return ImmutableThriftOverHttpServiceConfig.ofImpl(service, thriftPath);
   }
 }

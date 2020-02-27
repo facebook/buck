@@ -53,7 +53,7 @@ class LocalBackedByteStreamServer extends ByteStreamImplBase {
   public static GrpcRemoteExecutionClients.ParsedReadResource parseResourceName(String resource) {
     Matcher matcher = RESOURCE_NAME_PATTERN.matcher(resource);
     Preconditions.checkState(matcher.matches());
-    return ImmutableParsedReadResource.of(
+    return ImmutableParsedReadResource.ofImpl(
         matcher.group(1),
         Digest.newBuilder()
             .setHash(matcher.group(2))

@@ -72,7 +72,7 @@ public abstract class DefaultNewCellPathResolver implements NewCellPathResolver 
 
   public static ImmutableDefaultNewCellPathResolver of(
       Map<? extends AbsPath, ? extends CanonicalCellName> pathToNameMap) {
-    return ImmutableDefaultNewCellPathResolver.of(pathToNameMap);
+    return ImmutableDefaultNewCellPathResolver.ofImpl(pathToNameMap);
   }
 
   private String formatKnownCells() {

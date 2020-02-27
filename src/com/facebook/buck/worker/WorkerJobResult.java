@@ -28,6 +28,6 @@ public interface WorkerJobResult {
   Optional<String> getStderr();
 
   static WorkerJobResult of(int exitCode, Optional<String> stdout, Optional<String> stderr) {
-    return ImmutableWorkerJobResult.of(exitCode, stdout, stderr);
+    return ImmutableWorkerJobResult.ofImpl(exitCode, stdout, stderr);
   }
 }

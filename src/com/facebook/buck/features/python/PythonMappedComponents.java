@@ -41,7 +41,7 @@ import org.immutables.value.Value;
 public abstract class PythonMappedComponents implements PythonComponents {
 
   public static PythonMappedComponents of(ImmutableSortedMap<Path, SourcePath> components) {
-    return ImmutablePythonMappedComponents.of(components);
+    return ImmutablePythonMappedComponents.ofImpl(components);
   }
 
   // TODO(agallagher): The keys here should be module/resource names in `String` form (e.g,

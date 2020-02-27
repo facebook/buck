@@ -61,7 +61,7 @@ abstract class HaskellSources implements AddsToRuleKey {
           CxxGenruleDescription.fixupSourcePath(
               graphBuilder, platform.getCxxPlatform(), ent.getValue()));
     }
-    return ImmutableHaskellSources.of(moduleMap.build());
+    return ImmutableHaskellSources.ofImpl(moduleMap.build());
   }
 
   public ImmutableSortedSet<String> getModuleNames() {

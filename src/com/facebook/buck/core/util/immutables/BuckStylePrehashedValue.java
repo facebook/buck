@@ -41,7 +41,7 @@ import org.immutables.value.Value;
 @Value.Style(
     get = {"is*", "get*"},
     init = "set*",
-    of = "of",
+    of = "ofImpl",
     visibility = Value.Style.ImplementationVisibility.PACKAGE,
     allParameters = true,
     defaults = @Value.Immutable(builder = false, copy = false, prehash = true),

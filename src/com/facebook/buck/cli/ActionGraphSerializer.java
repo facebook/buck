@@ -67,7 +67,7 @@ public class ActionGraphSerializer {
   }
 
   private ActionGraphNode toActionGraphNode(BuildRule rule) {
-    return ImmutableActionGraphNode.of(
+    return ImmutableActionGraphNode.ofImpl(
         rule.getBuildTarget(), rule.getBuildDeps(), getRuntimeDeps(rule));
   }
 
@@ -122,7 +122,7 @@ public class ActionGraphSerializer {
   private Optional<String> convertToJson(ActionGraphNode actionGraphNode) {
     BuildTarget buildTarget = actionGraphNode.getBuildTarget();
     ActionGraphData actionGraphData =
-        ImmutableActionGraphData.of(
+        ImmutableActionGraphData.ofImpl(
             toTargetId(buildTarget),
             buildRuleResolver.getRule(buildTarget).getType(),
             convertToStringSet(actionGraphNode.getBuildDeps()),

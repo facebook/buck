@@ -78,7 +78,7 @@ public class RuleBasedPlatformResolverTest {
               BuildTarget buildTarget, Class<R> ruleClass, DependencyStack dependencyStack) {
             if (buildTarget.equals(platformTarget)) {
               return ruleClass.cast(
-                  ImmutablePlatformRule.of(
+                  ImmutablePlatformRule.ofImpl(
                       platformTarget,
                       "platform",
                       ImmutableSet.of(constraintValue),

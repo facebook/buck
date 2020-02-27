@@ -35,6 +35,6 @@ public interface ToolchainDescriptor<T extends Toolchain> {
       String name,
       Class<T> toolchainClass,
       Class<? extends ToolchainFactory<T>> toolchainFactoryClass) {
-    return ImmutableToolchainDescriptor.of(name, toolchainClass, toolchainFactoryClass);
+    return ImmutableToolchainDescriptor.ofImpl(name, toolchainClass, toolchainFactoryClass);
   }
 }

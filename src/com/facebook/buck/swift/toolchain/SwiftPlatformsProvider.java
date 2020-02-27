@@ -33,6 +33,6 @@ public interface SwiftPlatformsProvider extends Toolchain {
   }
 
   static SwiftPlatformsProvider of(FlavorDomain<UnresolvedSwiftPlatform> swiftCxxPlatforms) {
-    return ImmutableSwiftPlatformsProvider.of(swiftCxxPlatforms);
+    return ImmutableSwiftPlatformsProvider.ofImpl(swiftCxxPlatforms);
   }
 }

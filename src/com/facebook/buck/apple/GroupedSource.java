@@ -110,7 +110,7 @@ public abstract class GroupedSource {
 
   /** Creates a {@link GroupedSource} given a {@link SourceWithFlags}. */
   public static GroupedSource ofSourceWithFlags(SourceWithFlags sourceWithFlags) {
-    return ImmutableGroupedSource.of(
+    return ImmutableGroupedSource.ofImpl(
         Type.SOURCE_WITH_FLAGS,
         Optional.of(sourceWithFlags),
         Optional.empty(),
@@ -124,7 +124,7 @@ public abstract class GroupedSource {
    * be included in sources.
    */
   public static GroupedSource ofIgnoredSource(SourcePath sourcePath) {
-    return ImmutableGroupedSource.of(
+    return ImmutableGroupedSource.ofImpl(
         Type.IGNORED_SOURCE,
         Optional.empty(),
         Optional.of(sourcePath),
@@ -137,7 +137,7 @@ public abstract class GroupedSource {
    * Creates a {@link GroupedSource} given a {@link SourcePath} representing a public header file.
    */
   public static GroupedSource ofPublicHeader(SourcePath headerPath) {
-    return ImmutableGroupedSource.of(
+    return ImmutableGroupedSource.ofImpl(
         Type.PUBLIC_HEADER,
         Optional.empty(),
         Optional.of(headerPath),
@@ -150,7 +150,7 @@ public abstract class GroupedSource {
    * Creates a {@link GroupedSource} given a {@link SourcePath} representing a private header file.
    */
   public static GroupedSource ofPrivateHeader(SourcePath headerPath) {
-    return ImmutableGroupedSource.of(
+    return ImmutableGroupedSource.ofImpl(
         Type.PRIVATE_HEADER,
         Optional.empty(),
         Optional.of(headerPath),
@@ -164,7 +164,7 @@ public abstract class GroupedSource {
       String sourceGroupName,
       Path sourceGroupPathRelativeToTarget,
       Collection<GroupedSource> sourceGroup) {
-    return ImmutableGroupedSource.of(
+    return ImmutableGroupedSource.ofImpl(
         Type.SOURCE_GROUP,
         Optional.empty(),
         Optional.empty(),

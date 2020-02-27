@@ -110,6 +110,6 @@ public abstract class BuildTargetPattern {
 
   public static BuildTargetPattern of(
       CellRelativePath cellRelativeBasePath, Kind kind, String localNameAndFlavors) {
-    return ImmutableBuildTargetPattern.of(cellRelativeBasePath, kind, localNameAndFlavors);
+    return ImmutableBuildTargetPattern.ofImpl(cellRelativeBasePath, kind, localNameAndFlavors);
   }
 }

@@ -93,7 +93,7 @@ public class ResolvedJavacPluginProperties implements AddsToRuleKey {
   /** Get the javac plugin fields. */
   public JavacPluginJsr199Fields getJavacPluginJsr199Fields(
       SourcePathResolverAdapter resolver, ProjectFilesystem filesystem) {
-    return ImmutableJavacPluginJsr199Fields.of(
+    return ImmutableJavacPluginJsr199Fields.ofImpl(
         getCanReuseClassLoader(),
         getProcessorNames(),
         ImmutableList.copyOf(getClasspath(resolver, filesystem)));

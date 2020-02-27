@@ -93,7 +93,7 @@ public abstract class DefaultCellPathResolver extends AbstractCellPathResolver {
       Map<String, AbsPath> cellPaths,
       CellNameResolver cellNameResolver,
       NewCellPathResolver newCellPathResolver) {
-    return ImmutableDefaultCellPathResolver.of(
+    return ImmutableDefaultCellPathResolver.ofImpl(
         root, sortCellPaths(cellPaths), cellNameResolver, newCellPathResolver);
   }
 

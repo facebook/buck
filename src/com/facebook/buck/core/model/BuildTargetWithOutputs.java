@@ -68,6 +68,6 @@ public abstract class BuildTargetWithOutputs implements Comparable<BuildTargetWi
   }
 
   public static BuildTargetWithOutputs of(BuildTarget buildTarget, OutputLabel outputLabel) {
-    return ImmutableBuildTargetWithOutputs.of(buildTarget, outputLabel);
+    return ImmutableBuildTargetWithOutputs.ofImpl(buildTarget, outputLabel);
   }
 }

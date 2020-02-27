@@ -75,7 +75,7 @@ public class Elf {
       ElfSection section = getSectionByIndex(index);
       String sectionName = stringTable.lookupString(section.header.sh_name);
       if (name.equals(sectionName)) {
-        return Optional.of(ImmutableElfSectionLookupResult.of(index, section));
+        return Optional.of(ImmutableElfSectionLookupResult.ofImpl(index, section));
       }
     }
     return Optional.empty();

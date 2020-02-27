@@ -39,6 +39,6 @@ public abstract class GlobSpec {
 
   public static GlobSpec of(
       Collection<String> include, Collection<String> exclude, boolean excludeDirectories) {
-    return ImmutableGlobSpec.of(include, exclude, excludeDirectories);
+    return ImmutableGlobSpec.ofImpl(include, exclude, excludeDirectories);
   }
 }

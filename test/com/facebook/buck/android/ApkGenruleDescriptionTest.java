@@ -91,7 +91,7 @@ public class ApkGenruleDescriptionTest {
 
     @Override
     public ApkInfo getApkInfo() {
-      return ImmutableApkInfo.of(FakeSourcePath.of("nothing"), apkPath, Optional.empty());
+      return ImmutableApkInfo.ofImpl(FakeSourcePath.of("nothing"), apkPath, Optional.empty());
     }
 
     @Override

@@ -51,6 +51,6 @@ public abstract class StaticUnresolvedSwiftPlatform implements UnresolvedSwiftPl
 
   public static StaticUnresolvedSwiftPlatform of(
       Optional<? extends SwiftPlatform> staticallyResolvedInstance, Flavor flavor) {
-    return ImmutableStaticUnresolvedSwiftPlatform.of(staticallyResolvedInstance, flavor);
+    return ImmutableStaticUnresolvedSwiftPlatform.ofImpl(staticallyResolvedInstance, flavor);
   }
 }

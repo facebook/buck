@@ -27,7 +27,7 @@ public abstract class CopyInXcode {
       Path sourcePath,
       CopyInXcode.DestinationBase destinationBase,
       Path destinationPath) {
-    return ImmutableCopyInXcode.of(sourceType, sourcePath, destinationBase, destinationPath);
+    return ImmutableCopyInXcode.ofImpl(sourceType, sourcePath, destinationBase, destinationPath);
   }
 
   public enum SourceType {

@@ -65,6 +65,6 @@ public abstract class NdkCxxPlatformsProvider extends BaseToolchain
 
   public static NdkCxxPlatformsProvider of(
       Map<TargetCpuType, ? extends UnresolvedNdkCxxPlatform> ndkCxxPlatforms) {
-    return ImmutableNdkCxxPlatformsProvider.of(ndkCxxPlatforms);
+    return ImmutableNdkCxxPlatformsProvider.ofImpl(ndkCxxPlatforms);
   }
 }

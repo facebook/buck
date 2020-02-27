@@ -41,6 +41,6 @@ public abstract class LocationMacro extends BaseLocationMacro {
   }
 
   public static LocationMacro of(BuildTargetWithOutputs target) {
-    return ImmutableLocationMacro.of(target);
+    return ImmutableLocationMacro.ofImpl(target);
   }
 }

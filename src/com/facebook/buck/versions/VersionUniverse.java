@@ -33,7 +33,7 @@ public abstract class VersionUniverse {
   }
 
   public static VersionUniverse of(Map<? extends BuildTarget, ? extends Version> versions) {
-    return ImmutableVersionUniverse.of(versions);
+    return ImmutableVersionUniverse.ofImpl(versions);
   }
 
   public static class Builder extends ImmutableVersionUniverse.Builder {}

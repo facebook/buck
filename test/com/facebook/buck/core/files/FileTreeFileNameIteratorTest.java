@@ -48,29 +48,29 @@ public class FileTreeFileNameIteratorTest {
 
   private static FileTreeFileNameIterator createIterator() {
     DirectoryList dlist1 =
-        ImmutableDirectoryList.of(
+        ImmutableDirectoryList.ofImpl(
             ImmutableSortedSet.of(Paths.get("file")),
             ImmutableSortedSet.of(Paths.get("dir1")),
             ImmutableSortedSet.of());
 
     DirectoryList dlist2 =
-        ImmutableDirectoryList.of(
+        ImmutableDirectoryList.ofImpl(
             ImmutableSortedSet.of(Paths.get("dir1/file1")),
             ImmutableSortedSet.of(Paths.get("dir1/dir2")),
             ImmutableSortedSet.of());
 
     DirectoryList dlist3 =
-        ImmutableDirectoryList.of(
+        ImmutableDirectoryList.ofImpl(
             ImmutableSortedSet.of(Paths.get("dir1/dir2/file")),
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of());
 
-    FileTree ftree3 = ImmutableFileTree.of(Paths.get("dir1/dir2"), dlist3, ImmutableMap.of());
+    FileTree ftree3 = ImmutableFileTree.ofImpl(Paths.get("dir1/dir2"), dlist3, ImmutableMap.of());
     FileTree ftree2 =
-        ImmutableFileTree.of(
+        ImmutableFileTree.ofImpl(
             Paths.get("dir1"), dlist2, ImmutableMap.of(Paths.get("dir1/dir2"), ftree3));
     FileTree ftree1 =
-        ImmutableFileTree.of(Paths.get(""), dlist1, ImmutableMap.of(Paths.get("dir1"), ftree2));
+        ImmutableFileTree.ofImpl(Paths.get(""), dlist1, ImmutableMap.of(Paths.get("dir1"), ftree2));
 
     return FileTreeFileNameIterator.of(ftree1, "file");
   }

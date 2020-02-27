@@ -66,7 +66,7 @@ public abstract class StringSortedSetAttribute extends Attribute<ImmutableSorted
       String doc,
       boolean mandatory,
       boolean allowEmpty) {
-    return ImmutableStringSortedSetAttribute.of(
+    return ImmutableStringSortedSetAttribute.ofImpl(
         preCoercionDefaultValue, doc, mandatory, allowEmpty);
   }
 }

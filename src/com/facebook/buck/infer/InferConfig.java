@@ -43,7 +43,7 @@ public abstract class InferConfig implements ConfigView<BuckConfig> {
   public abstract BuckConfig getDelegate();
 
   public static InferConfig of(BuckConfig delegate) {
-    return ImmutableInferConfig.of(delegate);
+    return ImmutableInferConfig.ofImpl(delegate);
   }
 
   @Value.Lazy

@@ -215,7 +215,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputation
 
     for (String target : buildFileManifest.getTargets().keySet()) {
       BuildTargetToUnconfiguredTargetNodeKey depkey =
-          ImmutableBuildTargetToUnconfiguredTargetNodeKey.of(
+          ImmutableBuildTargetToUnconfiguredTargetNodeKey.ofImpl(
               UnconfiguredBuildTarget.of(
                   cell.getCanonicalName(), BaseName.ofPath(basePath), target, FlavorSet.NO_FLAVORS),
               key.getPath());

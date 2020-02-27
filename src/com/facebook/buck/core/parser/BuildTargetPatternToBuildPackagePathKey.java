@@ -43,6 +43,6 @@ public abstract class BuildTargetPatternToBuildPackagePathKey
   }
 
   public static BuildTargetPatternToBuildPackagePathKey of(BuildTargetPattern pattern) {
-    return ImmutableBuildTargetPatternToBuildPackagePathKey.of(pattern);
+    return ImmutableBuildTargetPatternToBuildPackagePathKey.ofImpl(pattern);
   }
 }

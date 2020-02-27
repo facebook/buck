@@ -33,6 +33,6 @@ public interface JavaToolchain extends Toolchain {
   JavacProvider getJavacProvider();
 
   static JavaToolchain of(JavacProvider javacProvider) {
-    return ImmutableJavaToolchain.of(javacProvider);
+    return ImmutableJavaToolchain.ofImpl(javacProvider);
   }
 }

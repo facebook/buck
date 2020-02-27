@@ -37,6 +37,7 @@ public abstract class CxxPlatformsProvider implements Toolchain {
   public static CxxPlatformsProvider of(
       UnresolvedCxxPlatform defaultUnresolvedCxxPlatform,
       FlavorDomain<UnresolvedCxxPlatform> unresolvedCxxPlatforms) {
-    return ImmutableCxxPlatformsProvider.of(defaultUnresolvedCxxPlatform, unresolvedCxxPlatforms);
+    return ImmutableCxxPlatformsProvider.ofImpl(
+        defaultUnresolvedCxxPlatform, unresolvedCxxPlatforms);
   }
 }

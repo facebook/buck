@@ -25,6 +25,6 @@ public abstract class ConstraintSetting {
   public abstract BuildTarget getBuildTarget();
 
   public static ConstraintSetting of(BuildTarget buildTarget) {
-    return ImmutableConstraintSetting.of(buildTarget);
+    return ImmutableConstraintSetting.ofImpl(buildTarget);
   }
 }

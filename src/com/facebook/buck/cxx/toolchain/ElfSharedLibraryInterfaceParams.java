@@ -27,7 +27,8 @@ public abstract class ElfSharedLibraryInterfaceParams implements SharedLibraryIn
 
   public static ElfSharedLibraryInterfaceParams of(
       ToolProvider objcopy, ImmutableList<String> ldflags, boolean removeUndefinedSymbols) {
-    return ImmutableElfSharedLibraryInterfaceParams.of(objcopy, ldflags, removeUndefinedSymbols);
+    return ImmutableElfSharedLibraryInterfaceParams.ofImpl(
+        objcopy, ldflags, removeUndefinedSymbols);
   }
 
   public abstract ToolProvider getObjcopy();

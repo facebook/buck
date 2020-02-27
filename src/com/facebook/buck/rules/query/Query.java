@@ -38,14 +38,16 @@ public abstract class Query {
   public abstract ImmutableSortedSet<BuildTarget> getResolvedQuery();
 
   public static Query of(String query, TargetConfiguration targetConfiguration, BaseName baseName) {
-    return ImmutableQuery.of(query, targetConfiguration, baseName, null);
+    return ImmutableQuery.ofImpl(query, targetConfiguration, baseName, null);
   }
 
   public Query withQuery(String query) {
-    return ImmutableQuery.of(query, getTargetConfiguration(), getBaseName(), getResolvedQuery());
+    return ImmutableQuery.ofImpl(
+        query, getTargetConfiguration(), getBaseName(), getResolvedQuery());
   }
 
   public Query withResolvedQuery(ImmutableSortedSet<BuildTarget> resolveDepQuery) {
-    return ImmutableQuery.of(getQuery(), getTargetConfiguration(), getBaseName(), resolveDepQuery);
+    return ImmutableQuery.ofImpl(
+        getQuery(), getTargetConfiguration(), getBaseName(), resolveDepQuery);
   }
 }

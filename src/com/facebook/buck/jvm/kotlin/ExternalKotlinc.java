@@ -46,7 +46,7 @@ import java.util.function.Supplier;
 public class ExternalKotlinc implements Kotlinc, AddsToRuleKey {
 
   private static final KotlincVersion DEFAULT_VERSION =
-      ImmutableKotlincVersion.of("unknown version");
+      ImmutableKotlincVersion.ofImpl("unknown version");
 
   private final Path pathToKotlinc;
   private final Supplier<KotlincVersion> version;
@@ -73,7 +73,7 @@ public class ExternalKotlinc implements Kotlinc, AddsToRuleKey {
               if (Strings.isNullOrEmpty(output)) {
                 return DEFAULT_VERSION;
               } else {
-                return ImmutableKotlincVersion.of(output);
+                return ImmutableKotlincVersion.ofImpl(output);
               }
             });
     this.kotlinCompilerVersion = getKotlinCompilerVersion();

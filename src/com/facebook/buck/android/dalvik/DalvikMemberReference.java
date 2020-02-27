@@ -22,7 +22,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 abstract class DalvikMemberReference {
 
   public static DalvikMemberReference of(String className, String memberName, String descriptor) {
-    return ImmutableDalvikMemberReference.of(className, memberName, descriptor);
+    return ImmutableDalvikMemberReference.ofImpl(className, memberName, descriptor);
   }
 
   abstract String getClassName();

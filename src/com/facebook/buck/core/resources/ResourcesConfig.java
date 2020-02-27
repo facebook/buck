@@ -38,7 +38,7 @@ public abstract class ResourcesConfig implements ConfigView<BuckConfig> {
   public abstract BuckConfig getDelegate();
 
   public static ResourcesConfig of(BuckConfig delegate) {
-    return ImmutableResourcesConfig.of(delegate);
+    return ImmutableResourcesConfig.ofImpl(delegate);
   }
 
   @Value.Lazy

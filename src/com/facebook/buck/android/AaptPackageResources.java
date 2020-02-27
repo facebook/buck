@@ -278,7 +278,7 @@ public class AaptPackageResources extends AbstractBuildRule {
 
   public AaptOutputInfo getAaptOutputInfo() {
     BuildTarget target = getBuildTarget();
-    return ImmutableAaptOutputInfo.of(
+    return ImmutableAaptOutputInfo.ofImpl(
         ExplicitBuildTargetSourcePath.of(target, getPathToRDotTxtFile()),
         ExplicitBuildTargetSourcePath.of(target, getResourceApkPath()),
         ExplicitBuildTargetSourcePath.of(target, getAndroidManifestXml()),

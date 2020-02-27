@@ -46,14 +46,14 @@ public class FileTreeCacheTest {
     FileTreeCache cache = FileTreeCache.of(tmp.getRoot());
 
     DirectoryList dlist =
-        ImmutableDirectoryList.of(
+        ImmutableDirectoryList.ofImpl(
             ImmutableSortedSet.of(Paths.get("file")),
             ImmutableSortedSet.of(Paths.get("folder")),
             ImmutableSortedSet.of(Paths.get("symlink")));
 
     cache.put(
         ImmutableFileTreeKey.of(Paths.get("")),
-        ImmutableFileTree.of(Paths.get(""), dlist, ImmutableMap.of()));
+        ImmutableFileTree.ofImpl(Paths.get(""), dlist, ImmutableMap.of()));
 
     Optional<FileTree> ftree = cache.get(ImmutableFileTreeKey.of(Paths.get("")));
     assertTrue(ftree.isPresent());
@@ -72,29 +72,29 @@ public class FileTreeCacheTest {
   @Parameters(method = "getInvalidateParameters")
   public void whenFileListChangeThenInvalidateTreeUpNotDown(Kind kind) {
     DirectoryList dlist1 =
-        ImmutableDirectoryList.of(
+        ImmutableDirectoryList.ofImpl(
             ImmutableSortedSet.of(Paths.get("file1")),
             ImmutableSortedSet.of(Paths.get("dir1")),
             ImmutableSortedSet.of());
 
     DirectoryList dlist2 =
-        ImmutableDirectoryList.of(
+        ImmutableDirectoryList.ofImpl(
             ImmutableSortedSet.of(Paths.get("file2")),
             ImmutableSortedSet.of(Paths.get("dir2")),
             ImmutableSortedSet.of());
 
     DirectoryList dlist3 =
-        ImmutableDirectoryList.of(
+        ImmutableDirectoryList.ofImpl(
             ImmutableSortedSet.of(Paths.get("file3")),
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of());
 
-    FileTree ftree3 = ImmutableFileTree.of(Paths.get("dir1/dir2"), dlist3, ImmutableMap.of());
+    FileTree ftree3 = ImmutableFileTree.ofImpl(Paths.get("dir1/dir2"), dlist3, ImmutableMap.of());
     FileTree ftree2 =
-        ImmutableFileTree.of(
+        ImmutableFileTree.ofImpl(
             Paths.get("dir1"), dlist2, ImmutableMap.of(Paths.get("dir1/dir2"), ftree3));
     FileTree ftree1 =
-        ImmutableFileTree.of(Paths.get(""), dlist1, ImmutableMap.of(Paths.get("dir1"), ftree2));
+        ImmutableFileTree.ofImpl(Paths.get(""), dlist1, ImmutableMap.of(Paths.get("dir1"), ftree2));
 
     FileTreeCache cache = FileTreeCache.of(tmp.getRoot());
     cache.put(ImmutableFileTreeKey.of(Paths.get("")), ftree1);
@@ -122,9 +122,9 @@ public class FileTreeCacheTest {
     FileTreeCache cache = FileTreeCache.of(tmp.getRoot());
     cache.put(
         ImmutableFileTreeKey.of(Paths.get("")),
-        ImmutableFileTree.of(
+        ImmutableFileTree.ofImpl(
             Paths.get(""),
-            ImmutableDirectoryList.of(
+            ImmutableDirectoryList.ofImpl(
                 ImmutableSortedSet.of(Paths.get("file")),
                 ImmutableSortedSet.of(),
                 ImmutableSortedSet.of()),
@@ -142,9 +142,9 @@ public class FileTreeCacheTest {
     FileTreeCache cache = FileTreeCache.of(tmp.getRoot());
     cache.put(
         ImmutableFileTreeKey.of(Paths.get("")),
-        ImmutableFileTree.of(
+        ImmutableFileTree.ofImpl(
             Paths.get(""),
-            ImmutableDirectoryList.of(
+            ImmutableDirectoryList.ofImpl(
                 ImmutableSortedSet.of(Paths.get("file")),
                 ImmutableSortedSet.of(),
                 ImmutableSortedSet.of()),
@@ -163,9 +163,9 @@ public class FileTreeCacheTest {
     FileTreeCache cache = FileTreeCache.of(tmp.getRoot());
     cache.put(
         ImmutableFileTreeKey.of(Paths.get("")),
-        ImmutableFileTree.of(
+        ImmutableFileTree.ofImpl(
             Paths.get(""),
-            ImmutableDirectoryList.of(
+            ImmutableDirectoryList.ofImpl(
                 ImmutableSortedSet.of(Paths.get("file")),
                 ImmutableSortedSet.of(),
                 ImmutableSortedSet.of()),

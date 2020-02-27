@@ -37,7 +37,7 @@ public abstract class TestBuckConfig implements ConfigView<BuckConfig> {
   public abstract BuckConfig getDelegate();
 
   public static TestBuckConfig of(BuckConfig delegate) {
-    return ImmutableTestBuckConfig.of(delegate);
+    return ImmutableTestBuckConfig.ofImpl(delegate);
   }
 
   @Lazy

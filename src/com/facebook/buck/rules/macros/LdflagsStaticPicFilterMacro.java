@@ -38,6 +38,6 @@ public abstract class LdflagsStaticPicFilterMacro extends CxxGenruleFilterAndTar
 
   public static LdflagsStaticPicFilterMacro of(
       Optional<Pattern> pattern, ImmutableList<BuildTarget> buildTargets) {
-    return ImmutableLdflagsStaticPicFilterMacro.of(pattern, buildTargets);
+    return ImmutableLdflagsStaticPicFilterMacro.ofImpl(pattern, buildTargets);
   }
 }

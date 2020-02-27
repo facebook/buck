@@ -42,7 +42,7 @@ public abstract class BuildContext {
       JavaPackageFinder javaPackageFinder,
       BuckEventBus eventBus,
       boolean shouldDeleteTemporaries) {
-    return ImmutableBuildContext.of(
+    return ImmutableBuildContext.ofImpl(
         sourcePathResolver,
         buildCellRootPath,
         javaPackageFinder,

@@ -80,7 +80,7 @@ public class DirectoryListComputation implements GraphComputation<DirectoryListK
       }
     }
 
-    return ImmutableDirectoryList.of(
+    return ImmutableDirectoryList.ofImpl(
         filesBuilder.build(), dirsBuilder.build(), symlinksBuilder.build());
   }
 

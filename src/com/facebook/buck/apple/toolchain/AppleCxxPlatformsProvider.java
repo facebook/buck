@@ -52,6 +52,6 @@ public abstract class AppleCxxPlatformsProvider implements CxxPlatformsSupplier 
 
   public static AppleCxxPlatformsProvider of(
       FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatforms) {
-    return ImmutableAppleCxxPlatformsProvider.of(appleCxxPlatforms);
+    return ImmutableAppleCxxPlatformsProvider.ofImpl(appleCxxPlatforms);
   }
 }

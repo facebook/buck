@@ -133,7 +133,7 @@ public class CriticalPathEventListenerTest {
         new FakeBuildRule(
             BuildTargetFactory.newInstance("//:" + buildTargetName),
             ImmutableSortedSet.copyOf(buildRules));
-    listener.handleBuildRule(buildRule, ImmutableExecutionTimeInfo.of(execTime, 0L));
+    listener.handleBuildRule(buildRule, ImmutableExecutionTimeInfo.ofImpl(execTime, 0L));
     return buildRule;
   }
 

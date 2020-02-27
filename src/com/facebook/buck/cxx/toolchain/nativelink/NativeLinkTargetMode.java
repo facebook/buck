@@ -39,11 +39,11 @@ public abstract class NativeLinkTargetMode {
   }
 
   public static NativeLinkTargetMode executable() {
-    return ImmutableNativeLinkTargetMode.of(Linker.LinkType.EXECUTABLE, Optional.empty());
+    return ImmutableNativeLinkTargetMode.ofImpl(Linker.LinkType.EXECUTABLE, Optional.empty());
   }
 
   public static NativeLinkTargetMode library(Optional<String> soname) {
-    return ImmutableNativeLinkTargetMode.of(Linker.LinkType.SHARED, soname);
+    return ImmutableNativeLinkTargetMode.ofImpl(Linker.LinkType.SHARED, soname);
   }
 
   public static NativeLinkTargetMode library(String soname) {

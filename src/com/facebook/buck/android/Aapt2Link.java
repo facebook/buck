@@ -214,7 +214,7 @@ public class Aapt2Link extends AbstractBuildRule {
   }
 
   public AaptOutputInfo getAaptOutputInfo() {
-    return ImmutableAaptOutputInfo.of(
+    return ImmutableAaptOutputInfo.ofImpl(
         ExplicitBuildTargetSourcePath.of(getBuildTarget(), getRDotTxtPath()),
         ExplicitBuildTargetSourcePath.of(getBuildTarget(), getResourceApkPath()),
         ExplicitBuildTargetSourcePath.of(getBuildTarget(), getFinalManifestPath()),

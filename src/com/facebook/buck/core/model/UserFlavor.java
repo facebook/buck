@@ -65,6 +65,6 @@ public abstract class UserFlavor implements Flavor {
   }
 
   public static UserFlavor of(String name, String description) {
-    return ImmutableUserFlavor.of(name, description);
+    return ImmutableUserFlavor.ofImpl(name, description);
   }
 }

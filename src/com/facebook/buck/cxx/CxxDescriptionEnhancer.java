@@ -526,7 +526,7 @@ public class CxxDescriptionEnhancer {
 
     for (String privateInclude : includeDirectories) {
       builder.addIncludes(
-          ImmutableCxxIncludes.of(
+          ImmutableCxxIncludes.ofImpl(
               CxxPreprocessables.IncludeType.LOCAL,
               PathSourcePath.of(
                   projectFilesystem,
@@ -1627,7 +1627,7 @@ public class CxxDescriptionEnhancer {
     // graphBuilder for the parts that don't.
     BuildRule buildRule = graphBuilder.requireRule(buildTarget);
     sourcePaths.add(buildRule.getSourcePathToOutput());
-    return Optional.of(ImmutableCxxCompilationDatabaseDependencies.of(sourcePaths.build()));
+    return Optional.of(ImmutableCxxCompilationDatabaseDependencies.ofImpl(sourcePaths.build()));
   }
 
   /**

@@ -44,7 +44,7 @@ import java.util.function.Consumer;
 public abstract class CxxDeps {
 
   public static final CxxDeps EMPTY_INSTANCE =
-      ImmutableCxxDeps.of(ImmutableList.of(), ImmutableList.of());
+      ImmutableCxxDeps.ofImpl(ImmutableList.of(), ImmutableList.of());
 
   public abstract ImmutableList<BuildTarget> getDeps();
 
@@ -152,7 +152,7 @@ public abstract class CxxDeps {
       if (deps.isEmpty() && platformDeps.isEmpty()) {
         return CxxDeps.EMPTY_INSTANCE;
       }
-      return ImmutableCxxDeps.of(deps, platformDeps);
+      return ImmutableCxxDeps.ofImpl(deps, platformDeps);
     }
   }
 }

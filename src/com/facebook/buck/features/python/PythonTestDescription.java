@@ -326,7 +326,7 @@ public class PythonTestDescription
 
     // Build up the list of everything going into the python test.
     PythonPackagable root =
-        ImmutablePythonBinaryPackagable.of(
+        ImmutablePythonBinaryPackagable.ofImpl(
             buildTarget,
             projectFilesystem,
             deps,

@@ -33,7 +33,7 @@ public abstract class DotnetBuckConfig implements ConfigView<BuckConfig> {
   public abstract BuckConfig getDelegate();
 
   public static DotnetBuckConfig of(BuckConfig delegate) {
-    return ImmutableDotnetBuckConfig.of(delegate);
+    return ImmutableDotnetBuckConfig.ofImpl(delegate);
   }
 
   public Optional<ToolProvider> getCsharpCompiler() {

@@ -35,6 +35,6 @@ public interface BuildFileParseExceptionData {
       String value,
       Optional<BuildFileSyntaxError> syntaxError,
       ImmutableList<BuildFileParseExceptionStackTraceEntry> stackTrace) {
-    return ImmutableBuildFileParseExceptionData.of(type, value, syntaxError, stackTrace);
+    return ImmutableBuildFileParseExceptionData.ofImpl(type, value, syntaxError, stackTrace);
   }
 }

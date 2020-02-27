@@ -63,7 +63,7 @@ public abstract class CxxLinkGroupMappingTarget implements Comparable<CxxLinkGro
       BuildTarget buildTarget,
       CxxLinkGroupMappingTarget.Traversal traversal,
       Optional<? extends Pattern> labelPattern) {
-    return ImmutableCxxLinkGroupMappingTarget.of(buildTarget, traversal, labelPattern);
+    return ImmutableCxxLinkGroupMappingTarget.ofImpl(buildTarget, traversal, labelPattern);
   }
 
   @Override

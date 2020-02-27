@@ -43,6 +43,6 @@ public interface BuildRuleKeys {
       Optional<RuleKey> inputRuleKey,
       Optional<RuleKey> depFileRuleKey,
       Optional<RuleKey> manifestRuleKey) {
-    return ImmutableBuildRuleKeys.of(ruleKey, inputRuleKey, depFileRuleKey, manifestRuleKey);
+    return ImmutableBuildRuleKeys.ofImpl(ruleKey, inputRuleKey, depFileRuleKey, manifestRuleKey);
   }
 }

@@ -62,7 +62,7 @@ public abstract class OutputAttribute extends Attribute<String> {
   }
 
   public static OutputAttribute of(Object preCoercionDefaultValue, String doc, boolean mandatory) {
-    return ImmutableOutputAttribute.of(preCoercionDefaultValue, doc, mandatory);
+    return ImmutableOutputAttribute.ofImpl(preCoercionDefaultValue, doc, mandatory);
   }
 
   Artifact postCoercionTransform(Object coercedValue, RuleAnalysisContext analysisContext) {

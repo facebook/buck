@@ -33,7 +33,7 @@ public interface ActionExecutionResult {
 
   static ActionExecutionSuccess success(
       Optional<String> stdOut, Optional<String> stdErr, ImmutableList<String> command) {
-    return ImmutableActionExecutionSuccess.of(stdOut, stdErr, command);
+    return ImmutableActionExecutionSuccess.ofImpl(stdOut, stdErr, command);
   }
 
   static ActionExecutionFailure failure(
@@ -41,7 +41,7 @@ public interface ActionExecutionResult {
       Optional<String> stdErr,
       ImmutableList<String> command,
       Optional<Exception> exception) {
-    return ImmutableActionExecutionFailure.of(stdOut, stdErr, command, exception);
+    return ImmutableActionExecutionFailure.ofImpl(stdOut, stdErr, command, exception);
   }
 
   /** A successful action execution */

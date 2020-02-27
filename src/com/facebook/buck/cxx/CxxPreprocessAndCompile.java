@@ -368,7 +368,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
           compilerDelegate.getPreArgfileArgs(),
           compilerDelegate.getCompiler(),
           Optional.of(
-              ImmutableCxxLogInfo.of(
+              ImmutableCxxLogInfo.ofImpl(
                   Optional.ofNullable(targetName),
                   Optional.ofNullable(relativeInputPath.getPath()),
                   Optional.ofNullable(resolvedOutput))));

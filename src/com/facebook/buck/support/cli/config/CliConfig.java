@@ -41,7 +41,7 @@ public abstract class CliConfig implements ConfigView<BuckConfig> {
   public abstract BuckConfig getDelegate();
 
   public static CliConfig of(BuckConfig delegate) {
-    return ImmutableCliConfig.of(delegate);
+    return ImmutableCliConfig.ofImpl(delegate);
   }
 
   /**

@@ -40,7 +40,7 @@ public class RustPlatformFactoryTest {
     SourcePathResolverAdapter pathResolver = resolver.getSourcePathResolver();
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     RustPlatformFactory factory =
-        ImmutableRustPlatformFactory.of(
+        ImmutableRustPlatformFactory.ofImpl(
             FakeBuckConfig.builder()
                 .setFilesystem(filesystem)
                 .setSections(

@@ -42,6 +42,6 @@ abstract class GoLinkable {
 
   static GoLinkable of(
       ImmutableMap<Path, SourcePath> goLinkInput, ImmutableSet<BuildTarget> exportedDeps) {
-    return ImmutableGoLinkable.of(goLinkInput, exportedDeps);
+    return ImmutableGoLinkable.ofImpl(goLinkInput, exportedDeps);
   }
 }

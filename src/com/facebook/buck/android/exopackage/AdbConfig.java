@@ -28,7 +28,7 @@ public abstract class AdbConfig implements ConfigView<BuckConfig> {
   public abstract BuckConfig getDelegate();
 
   public static AdbConfig of(BuckConfig delegate) {
-    return ImmutableAdbConfig.of(delegate);
+    return ImmutableAdbConfig.ofImpl(delegate);
   }
 
   @Value.Lazy

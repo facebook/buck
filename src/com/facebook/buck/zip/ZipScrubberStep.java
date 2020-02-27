@@ -55,6 +55,6 @@ public abstract class ZipScrubberStep implements Step {
   }
 
   public static ZipScrubberStep of(Path zipAbsolutePath) {
-    return ImmutableZipScrubberStep.of(zipAbsolutePath);
+    return ImmutableZipScrubberStep.ofImpl(zipAbsolutePath);
   }
 }

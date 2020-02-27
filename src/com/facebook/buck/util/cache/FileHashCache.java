@@ -70,7 +70,7 @@ public interface FileHashCache extends FileHashLoader {
 
     static FileHashCacheVerificationResult of(
         int cachesExamined, int filesExamined, ImmutableList<String> verificationErrors) {
-      return ImmutableFileHashCacheVerificationResult.of(
+      return ImmutableFileHashCacheVerificationResult.ofImpl(
           cachesExamined, filesExamined, verificationErrors);
     }
   }

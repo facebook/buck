@@ -38,6 +38,6 @@ public abstract class RedexOptions implements AddsToRuleKey {
 
   public static RedexOptions of(
       Tool redex, Optional<SourcePath> redexConfig, ImmutableList<Arg> redexExtraArgs) {
-    return ImmutableRedexOptions.of(redex, redexConfig, redexExtraArgs);
+    return ImmutableRedexOptions.ofImpl(redex, redexConfig, redexExtraArgs);
   }
 }

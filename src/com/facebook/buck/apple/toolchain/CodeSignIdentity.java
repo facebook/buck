@@ -76,7 +76,8 @@ public abstract class CodeSignIdentity implements AddsToRuleKey {
       Optional<? extends HashCode> fingerPrint,
       String subjectCommonName,
       boolean useSubjectCommonNameToSign) {
-    return ImmutableCodeSignIdentity.of(fingerPrint, subjectCommonName, useSubjectCommonNameToSign);
+    return ImmutableCodeSignIdentity.ofImpl(
+        fingerPrint, subjectCommonName, useSubjectCommonNameToSign);
   }
 
   /** Convert a {@code String} into a fingerprint {@code HashCode} if it's in the correct format. */

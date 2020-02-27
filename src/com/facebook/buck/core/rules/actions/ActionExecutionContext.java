@@ -68,7 +68,7 @@ public abstract class ActionExecutionContext {
       ProcessExecutor processExecutor,
       Map<String, ? extends String> environment,
       Path workingDirectory) {
-    return ImmutableActionExecutionContext.of(
+    return ImmutableActionExecutionContext.ofImpl(
         buckEventBus, artifactFilesystem, processExecutor, environment, workingDirectory);
   }
 }

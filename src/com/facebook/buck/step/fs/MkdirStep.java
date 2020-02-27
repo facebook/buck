@@ -52,6 +52,6 @@ public abstract class MkdirStep implements Step {
   }
 
   public static MkdirStep of(BuildCellRelativePath path) {
-    return ImmutableMkdirStep.of(path);
+    return ImmutableMkdirStep.ofImpl(path);
   }
 }

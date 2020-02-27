@@ -34,7 +34,7 @@ import org.immutables.value.Value;
 public abstract class CoercedTestRunnerSpec {
 
   public static CoercedTestRunnerSpec of(Object data) {
-    return ImmutableCoercedTestRunnerSpec.of(data);
+    return ImmutableCoercedTestRunnerSpec.ofImpl(data);
   }
 
   protected abstract Object getData();

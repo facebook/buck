@@ -166,7 +166,7 @@ public abstract class RemoteExecutionConfig implements ConfigView<BuckConfig> {
   }
 
   public static RemoteExecutionConfig of(BuckConfig delegate) {
-    return ImmutableRemoteExecutionConfig.of(delegate);
+    return ImmutableRemoteExecutionConfig.ofImpl(delegate);
   }
 
   @VisibleForTesting

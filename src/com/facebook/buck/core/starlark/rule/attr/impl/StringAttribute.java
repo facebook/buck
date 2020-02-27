@@ -60,6 +60,6 @@ public abstract class StringAttribute extends Attribute<String> {
 
   public static StringAttribute of(
       String preCoercionDefaultValue, String doc, boolean mandatory, List<String> values) {
-    return ImmutableStringAttribute.of(preCoercionDefaultValue, doc, mandatory, values);
+    return ImmutableStringAttribute.ofImpl(preCoercionDefaultValue, doc, mandatory, values);
   }
 }

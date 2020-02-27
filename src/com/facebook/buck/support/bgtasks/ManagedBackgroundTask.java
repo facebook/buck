@@ -40,7 +40,7 @@ class ManagedBackgroundTask<T> {
 
   protected ManagedBackgroundTask(BackgroundTask<T> task, BuildId buildId) {
     this.task = task;
-    this.id = ImmutableTaskId.of(task.getName(), buildId);
+    this.id = ImmutableTaskId.ofImpl(task.getName(), buildId);
     this.toCancel = false;
     this.future = SettableFuture.create();
   }

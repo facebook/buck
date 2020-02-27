@@ -32,6 +32,6 @@ public interface JavaCxxPlatformProvider extends Toolchain {
   }
 
   static JavaCxxPlatformProvider of(UnresolvedCxxPlatform defaultJavaCxxPlatform) {
-    return ImmutableJavaCxxPlatformProvider.of(defaultJavaCxxPlatform);
+    return ImmutableJavaCxxPlatformProvider.ofImpl(defaultJavaCxxPlatform);
   }
 }

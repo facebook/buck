@@ -663,7 +663,7 @@ public class ExopackageInstallerIntegrationTest {
     }
 
     HasInstallableApk.ApkInfo apkInfo =
-        ImmutableApkInfo.of(
+        ImmutableApkInfo.ofImpl(
             manifestSourcePath,
             apkSourcePath,
             Optional.of(

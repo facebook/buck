@@ -102,7 +102,7 @@ public class RuleAnalysisComputation
         ruleDescription.ruleImpl(
             ruleAnalysisContext, targetNode.getBuildTarget(), targetNode.getConstructorArg());
 
-    return ImmutableRuleAnalysisResultImpl.of(
+    return ImmutableRuleAnalysisResultImpl.ofImpl(
         targetNode.getBuildTarget(),
         providers,
         ImmutableMap.copyOf(ruleAnalysisContext.getRegisteredActionData()));

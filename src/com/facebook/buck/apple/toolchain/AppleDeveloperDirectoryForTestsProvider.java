@@ -37,6 +37,6 @@ public interface AppleDeveloperDirectoryForTestsProvider extends Toolchain {
   }
 
   static AppleDeveloperDirectoryForTestsProvider of(Path appleDeveloperDirectoryForTests) {
-    return ImmutableAppleDeveloperDirectoryForTestsProvider.of(appleDeveloperDirectoryForTests);
+    return ImmutableAppleDeveloperDirectoryForTestsProvider.ofImpl(appleDeveloperDirectoryForTests);
   }
 }

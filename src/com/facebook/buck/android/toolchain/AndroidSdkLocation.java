@@ -33,6 +33,6 @@ public interface AndroidSdkLocation extends ComparableToolchain {
   }
 
   static AndroidSdkLocation of(Path sdkRootPath) {
-    return ImmutableAndroidSdkLocation.of(sdkRootPath);
+    return ImmutableAndroidSdkLocation.ofImpl(sdkRootPath);
   }
 }

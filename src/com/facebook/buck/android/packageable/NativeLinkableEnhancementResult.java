@@ -32,7 +32,7 @@ public interface NativeLinkableEnhancementResult {
   static NativeLinkableEnhancementResult of(
       Multimap<? extends APKModule, ? extends NativeLinkable> nativeLinkables,
       Multimap<? extends APKModule, ? extends NativeLinkable> nativeLinkableAssets) {
-    return ImmutableNativeLinkableEnhancementResult.of(nativeLinkables, nativeLinkableAssets);
+    return ImmutableNativeLinkableEnhancementResult.ofImpl(nativeLinkables, nativeLinkableAssets);
   }
 
   /** Native libraries by platform. */

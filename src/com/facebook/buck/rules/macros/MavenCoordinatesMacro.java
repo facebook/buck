@@ -33,6 +33,6 @@ public abstract class MavenCoordinatesMacro extends BuildTargetMacro {
   }
 
   public static MavenCoordinatesMacro of(BuildTargetWithOutputs buildTarget) {
-    return ImmutableMavenCoordinatesMacro.of(buildTarget);
+    return ImmutableMavenCoordinatesMacro.ofImpl(buildTarget);
   }
 }

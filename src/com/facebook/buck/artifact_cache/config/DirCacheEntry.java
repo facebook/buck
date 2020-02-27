@@ -40,13 +40,14 @@ public abstract class DirCacheEntry {
       Path cacheDir,
       Optional<Long> maxSizeBytes,
       CacheReadMode cacheReadMode) {
-    return ImmutableDirCacheEntry.of(name, cacheDir, maxSizeBytes, cacheReadMode);
+    return ImmutableDirCacheEntry.ofImpl(name, cacheDir, maxSizeBytes, cacheReadMode);
   }
 
   public DirCacheEntry withCacheReadMode(CacheReadMode cacheReadMode) {
     if (getCacheReadMode().equals(cacheReadMode)) {
       return this;
     }
-    return ImmutableDirCacheEntry.of(getName(), getCacheDir(), getMaxSizeBytes(), cacheReadMode);
+    return ImmutableDirCacheEntry.ofImpl(
+        getName(), getCacheDir(), getMaxSizeBytes(), cacheReadMode);
   }
 }

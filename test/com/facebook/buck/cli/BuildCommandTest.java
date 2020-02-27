@@ -635,7 +635,7 @@ public class BuildCommandTest {
             defaultPath,
             pathsByLabelsForTargets,
             useMultipleOutputsRule);
-    return ImmutableGraphsAndBuildTargets.of(
+    return ImmutableGraphsAndBuildTargets.ofImpl(
         actionAndTargetGraphs, targetsByTargetsWithOutputs.keySet());
   }
 

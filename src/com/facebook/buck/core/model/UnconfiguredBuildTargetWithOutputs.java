@@ -70,7 +70,7 @@ public abstract class UnconfiguredBuildTargetWithOutputs
 
   public static UnconfiguredBuildTargetWithOutputs of(
       UnconfiguredBuildTarget buildTarget, OutputLabel outputLabel) {
-    return ImmutableUnconfiguredBuildTargetWithOutputs.of(buildTarget, outputLabel);
+    return ImmutableUnconfiguredBuildTargetWithOutputs.ofImpl(buildTarget, outputLabel);
   }
 
   /** Apply the configuration. */

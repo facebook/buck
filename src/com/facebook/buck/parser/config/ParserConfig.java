@@ -97,7 +97,7 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
   public abstract BuckConfig getDelegate();
 
   public static ParserConfig of(BuckConfig delegate) {
-    return ImmutableParserConfig.of(delegate);
+    return ImmutableParserConfig.ofImpl(delegate);
   }
 
   @Value.Lazy

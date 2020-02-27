@@ -32,6 +32,6 @@ public interface ReSessionData {
 
   static ReSessionData of(
       RESessionID reSessionId, String reSessionLabel, ModernBuildRuleBuildStrategy strategy) {
-    return ImmutableReSessionData.of(reSessionId, reSessionLabel, strategy);
+    return ImmutableReSessionData.ofImpl(reSessionId, reSessionLabel, strategy);
   }
 }

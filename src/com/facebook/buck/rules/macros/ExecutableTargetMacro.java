@@ -34,6 +34,6 @@ public abstract class ExecutableTargetMacro extends AbstractExecutableTargetOrHo
   }
 
   public static ExecutableTargetMacro of(BuildTargetWithOutputs buildTarget) {
-    return ImmutableExecutableTargetMacro.of(buildTarget);
+    return ImmutableExecutableTargetMacro.ofImpl(buildTarget);
   }
 }

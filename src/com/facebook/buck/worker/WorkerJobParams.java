@@ -29,6 +29,6 @@ public interface WorkerJobParams {
   WorkerProcessParams getWorkerProcessParams();
 
   static WorkerJobParams of(String jobArgs, WorkerProcessParams workerProcessParams) {
-    return ImmutableWorkerJobParams.of(jobArgs, workerProcessParams);
+    return ImmutableWorkerJobParams.ofImpl(jobArgs, workerProcessParams);
   }
 }

@@ -34,7 +34,7 @@ public abstract class DepsAwareExecutorConfig implements ConfigView<BuckConfig> 
   public abstract BuckConfig getDelegate();
 
   public static DepsAwareExecutorConfig of(BuckConfig delegate) {
-    return ImmutableDepsAwareExecutorConfig.of(delegate);
+    return ImmutableDepsAwareExecutorConfig.ofImpl(delegate);
   }
 
   /** @return the {@link DepsAwareExecutorType} we should use based on the buckconfig */

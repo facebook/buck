@@ -105,7 +105,8 @@ public class DTestDescription
             ImmutableList.of("-unittest"),
             args.getSrcs(),
             args.getLinkerFlags(),
-            ImmutableDIncludes.of(sourceTree.getSourcePathToOutput(), args.getSrcs().getPaths()));
+            ImmutableDIncludes.ofImpl(
+                sourceTree.getSourcePathToOutput(), args.getSrcs().getPaths()));
     graphBuilder.addToIndex(binaryRule);
 
     return new DTest(

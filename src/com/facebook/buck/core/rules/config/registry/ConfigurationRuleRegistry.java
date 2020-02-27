@@ -41,7 +41,7 @@ public interface ConfigurationRuleRegistry {
       ConfigurationRuleResolver configurationRuleResolver,
       ConstraintResolver constraintResolver,
       TargetPlatformResolver targetPlatformResolver) {
-    return ImmutableConfigurationRuleRegistry.of(
+    return ImmutableConfigurationRuleRegistry.ofImpl(
         configurationRuleResolver, constraintResolver, targetPlatformResolver);
   }
 }

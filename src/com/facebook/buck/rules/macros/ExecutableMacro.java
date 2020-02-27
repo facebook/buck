@@ -29,10 +29,10 @@ public abstract class ExecutableMacro extends AbstractExecutableTargetOrHostMacr
 
   @Override
   protected ExecutableMacro withTargetWithOutputs(BuildTargetWithOutputs target) {
-    return ImmutableExecutableMacro.of(target);
+    return ImmutableExecutableMacro.ofImpl(target);
   }
 
   public static ExecutableMacro of(BuildTargetWithOutputs buildTarget) {
-    return ImmutableExecutableMacro.of(buildTarget);
+    return ImmutableExecutableMacro.ofImpl(buildTarget);
   }
 }

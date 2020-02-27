@@ -452,7 +452,8 @@ public class DefaultRuleKeyFactoryTest {
     assertThat(result, Matchers.notNullValue());
     assertThat(
         result.inputs,
-        Matchers.containsInAnyOrder(ImmutableRuleKeyInput.of(filesystem, input.getRelativePath())));
+        Matchers.containsInAnyOrder(
+            ImmutableRuleKeyInput.ofImpl(filesystem, input.getRelativePath())));
     assertThat(result.deps, Matchers.containsInAnyOrder(dep, appendable));
   }
 
@@ -499,7 +500,8 @@ public class DefaultRuleKeyFactoryTest {
     assertThat(result, Matchers.notNullValue());
     assertThat(
         result.inputs,
-        Matchers.containsInAnyOrder(ImmutableRuleKeyInput.of(filesystem, input.getRelativePath())));
+        Matchers.containsInAnyOrder(
+            ImmutableRuleKeyInput.ofImpl(filesystem, input.getRelativePath())));
     assertThat(result.deps, Matchers.emptyIterable());
   }
 

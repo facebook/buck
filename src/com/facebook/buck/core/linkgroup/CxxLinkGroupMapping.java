@@ -48,7 +48,7 @@ public abstract class CxxLinkGroupMapping implements Comparable<CxxLinkGroupMapp
 
   public static CxxLinkGroupMapping of(
       String linkGroup, ImmutableList<CxxLinkGroupMappingTarget> mappingTargets) {
-    return ImmutableCxxLinkGroupMapping.of(linkGroup, mappingTargets);
+    return ImmutableCxxLinkGroupMapping.ofImpl(linkGroup, mappingTargets);
   }
 
   @Override

@@ -345,7 +345,7 @@ public class DefaultClassInfoTest {
   @Test
   public void testBuckStyleValueImmutable() {
     SourcePath path = FakeSourcePath.of(filesystem, "some.path");
-    BuckStyleValueImmutable immutable = ImmutableBuckStyleValueImmutable.of(path);
+    BuckStyleValueImmutable immutable = ImmutableBuckStyleValueImmutable.ofImpl(path);
     ClassInfo<BuckStyleValueImmutable> classInfo = DefaultClassInfoFactory.forInstance(immutable);
     StringifyingValueVisitor visitor = new StringifyingValueVisitor();
     classInfo.visit(immutable, visitor);

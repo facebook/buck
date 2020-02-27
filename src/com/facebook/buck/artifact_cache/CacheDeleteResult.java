@@ -26,6 +26,6 @@ public abstract class CacheDeleteResult {
   public abstract ImmutableList<String> getCacheNames();
 
   public static CacheDeleteResult of(ImmutableList<String> cacheNames) {
-    return ImmutableCacheDeleteResult.of(cacheNames);
+    return ImmutableCacheDeleteResult.ofImpl(cacheNames);
   }
 }

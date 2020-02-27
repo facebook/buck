@@ -297,7 +297,7 @@ public class RuleAnalysisComputationTest {
             new FakeComputationEnvironment(
                 ImmutableMap.of(
                     RuleAnalysisKey.of(buildTarget2),
-                    ImmutableRuleAnalysisResultImpl.of(
+                    ImmutableRuleAnalysisResultImpl.ofImpl(
                         buildTarget2, expectedProviders, ImmutableMap.of()))));
 
     // We shouldn't be making copies of the providers or build target in our transformation. It

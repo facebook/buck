@@ -46,6 +46,6 @@ public abstract class EmbeddedCellBuckOutInfo {
 
   public static EmbeddedCellBuckOutInfo of(
       Path mainCellRoot, BuckPaths mainCellBuckPaths, CanonicalCellName cellName) {
-    return ImmutableEmbeddedCellBuckOutInfo.of(mainCellRoot, mainCellBuckPaths, cellName);
+    return ImmutableEmbeddedCellBuckOutInfo.ofImpl(mainCellRoot, mainCellBuckPaths, cellName);
   }
 }

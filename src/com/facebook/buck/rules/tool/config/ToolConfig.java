@@ -39,7 +39,7 @@ public abstract class ToolConfig implements ConfigView<BuckConfig> {
   public abstract BuckConfig getDelegate();
 
   public static ToolConfig of(BuckConfig delegate) {
-    return ImmutableToolConfig.of(delegate);
+    return ImmutableToolConfig.ofImpl(delegate);
   }
 
   /**

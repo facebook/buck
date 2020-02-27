@@ -29,6 +29,6 @@ public abstract class ExactConstraint implements Constraint {
   }
 
   public static ExactConstraint of(Version version) {
-    return ImmutableExactConstraint.of(version);
+    return ImmutableExactConstraint.ofImpl(version);
   }
 }

@@ -76,7 +76,7 @@ public abstract class EventInterval {
   }
 
   public static EventInterval of(OptionalLong start, OptionalLong end) {
-    return ImmutableEventInterval.of(start, end);
+    return ImmutableEventInterval.ofImpl(start, end);
   }
 
   public static EventInterval start(long start) {

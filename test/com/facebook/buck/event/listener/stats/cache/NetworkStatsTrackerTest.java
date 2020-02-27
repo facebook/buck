@@ -59,7 +59,7 @@ public class NetworkStatsTrackerTest {
             BuildTargetFactory.newInstance("//:test"), new RuleKey(HashCode.fromInt(0)));
     eventBus.post(started);
 
-    assertEquals(ImmutableRemoteDownloadStats.of(0, 0), tracker.getRemoteDownloadStats());
+    assertEquals(ImmutableRemoteDownloadStats.ofImpl(0, 0), tracker.getRemoteDownloadStats());
 
     Builder finishedBuilder = HttpArtifactCacheEvent.newFinishedEventBuilder(started);
     finishedBuilder
@@ -70,14 +70,14 @@ public class NetworkStatsTrackerTest {
         .setArtifactSizeBytes(100);
     eventBus.post(finishedBuilder.build());
 
-    assertEquals(ImmutableRemoteDownloadStats.of(1, 100), tracker.getRemoteDownloadStats());
+    assertEquals(ImmutableRemoteDownloadStats.ofImpl(1, 100), tracker.getRemoteDownloadStats());
 
     started =
         HttpArtifactCacheEvent.newFetchStartedEvent(
             BuildTargetFactory.newInstance("//:test"), new RuleKey(HashCode.fromInt(0)));
     eventBus.post(started);
 
-    assertEquals(ImmutableRemoteDownloadStats.of(1, 100), tracker.getRemoteDownloadStats());
+    assertEquals(ImmutableRemoteDownloadStats.ofImpl(1, 100), tracker.getRemoteDownloadStats());
 
     finishedBuilder = HttpArtifactCacheEvent.newFinishedEventBuilder(started);
     finishedBuilder
@@ -88,7 +88,7 @@ public class NetworkStatsTrackerTest {
         .setArtifactSizeBytes(200);
     eventBus.post(finishedBuilder.build());
 
-    assertEquals(ImmutableRemoteDownloadStats.of(2, 300), tracker.getRemoteDownloadStats());
+    assertEquals(ImmutableRemoteDownloadStats.ofImpl(2, 300), tracker.getRemoteDownloadStats());
   }
 
   @Test
@@ -254,6 +254,7 @@ public class NetworkStatsTrackerTest {
 
   private NetworkStatsTracker.RemoteArtifactUploadStats uploadStats(
       int failed, int scheduled, int started, int uploaded, long totalBytes) {
-    return ImmutableRemoteArtifactUploadStats.of(started, failed, uploaded, scheduled, totalBytes);
+    return ImmutableRemoteArtifactUploadStats.ofImpl(
+        started, failed, uploaded, scheduled, totalBytes);
   }
 }

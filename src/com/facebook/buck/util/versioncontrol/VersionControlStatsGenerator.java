@@ -89,7 +89,7 @@ public class VersionControlStatsGenerator {
         x -> {
           synchronized (this) {
             this.fastStats =
-                ImmutableFastVersionControlStats.of(
+                ImmutableFastVersionControlStats.ofImpl(
                     x.getCurrentRevisionId(),
                     x.getBaseBookmarks(),
                     x.getBranchedFromMasterRevisionId(),

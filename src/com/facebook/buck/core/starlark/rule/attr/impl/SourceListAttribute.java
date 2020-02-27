@@ -82,7 +82,7 @@ public abstract class SourceListAttribute extends Attribute<ImmutableList<Source
       String doc,
       boolean mandatory,
       boolean allowEmpty) {
-    return ImmutableSourceListAttribute.of(preCoercionDefaultValue, doc, mandatory, allowEmpty);
+    return ImmutableSourceListAttribute.ofImpl(preCoercionDefaultValue, doc, mandatory, allowEmpty);
   }
 
   private ImmutableList<Artifact> postCoercionTransform(

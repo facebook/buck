@@ -26,6 +26,6 @@ public abstract class DummyConfigurationRule implements ConfigurationRule {
   public abstract BuildTarget getBuildTarget();
 
   public static DummyConfigurationRule of(BuildTarget target) {
-    return ImmutableDummyConfigurationRule.of(target);
+    return ImmutableDummyConfigurationRule.ofImpl(target);
   }
 }

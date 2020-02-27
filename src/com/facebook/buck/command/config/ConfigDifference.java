@@ -77,17 +77,19 @@ public class ConfigDifference {
                   (option, value) ->
                       result.put(
                           section + "." + option,
-                          ImmutableConfigChange.of(value.leftValue(), value.rightValue())));
+                          ImmutableConfigChange.ofImpl(value.leftValue(), value.rightValue())));
       BiConsumer<String, Map<String, String>> appendLeft =
           (section, diff) ->
               diff.forEach(
                   (option, value) ->
-                      result.put(section + "." + option, ImmutableConfigChange.of(value, null)));
+                      result.put(
+                          section + "." + option, ImmutableConfigChange.ofImpl(value, null)));
       BiConsumer<String, Map<String, String>> appendRight =
           (section, diff) ->
               diff.forEach(
                   (option, value) ->
-                      result.put(section + "." + option, ImmutableConfigChange.of(null, value)));
+                      result.put(
+                          section + "." + option, ImmutableConfigChange.ofImpl(null, value)));
 
       diffSections
           .entriesDiffering()
@@ -117,7 +119,7 @@ public class ConfigDifference {
     String getNewValue();
 
     static ConfigChange of(@Nullable String prevValue, @Nullable String newValue) {
-      return ImmutableConfigChange.of(prevValue, newValue);
+      return ImmutableConfigChange.ofImpl(prevValue, newValue);
     }
   }
 

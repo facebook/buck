@@ -37,7 +37,7 @@ public abstract class ConfigIgnoredByDaemon implements ConfigView<BuckConfig> {
   public abstract BuckConfig getDelegate();
 
   public static ConfigIgnoredByDaemon of(BuckConfig delegate) {
-    return ImmutableConfigIgnoredByDaemon.of(delegate);
+    return ImmutableConfigIgnoredByDaemon.ofImpl(delegate);
   }
 
   private static ImmutableMap<String, ImmutableSet<String>> getIgnoreFieldsForDaemonRestart() {

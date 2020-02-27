@@ -49,6 +49,6 @@ public abstract class ComposedKey<KeyType1 extends ComputeKey<?>, ResultType2 ex
   public static <KeyType1 extends ComputeKey<?>, ResultType2 extends ComputeResult>
       ComposedKey<KeyType1, ResultType2> of(
           KeyType1 originKey, Class<ResultType2> targetResultClass) {
-    return ImmutableComposedKey.of(originKey, targetResultClass);
+    return ImmutableComposedKey.ofImpl(originKey, targetResultClass);
   }
 }

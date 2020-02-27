@@ -32,7 +32,7 @@ public abstract class SandboxConfig implements ConfigView<BuckConfig> {
   public abstract BuckConfig getDelegate();
 
   public static SandboxConfig of(BuckConfig delegate) {
-    return ImmutableSandboxConfig.of(delegate);
+    return ImmutableSandboxConfig.ofImpl(delegate);
   }
 
   /**

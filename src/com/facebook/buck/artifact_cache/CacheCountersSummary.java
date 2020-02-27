@@ -79,7 +79,7 @@ public abstract class CacheCountersSummary {
       int totalCacheLocalKeyUnchangedHits,
       AtomicInteger successUploadCount,
       AtomicInteger failureUploadCount) {
-    return ImmutableCacheCountersSummary.of(
+    return ImmutableCacheCountersSummary.ofImpl(
         cacheHitsPerMode,
         cacheErrorsPerMode,
         cacheBytesPerMode,

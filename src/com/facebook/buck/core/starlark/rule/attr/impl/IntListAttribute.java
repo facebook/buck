@@ -65,6 +65,6 @@ public abstract class IntListAttribute extends Attribute<ImmutableList<Integer>>
       String doc,
       boolean mandatory,
       boolean allowEmpty) {
-    return ImmutableIntListAttribute.of(preCoercionDefaultValue, doc, mandatory, allowEmpty);
+    return ImmutableIntListAttribute.ofImpl(preCoercionDefaultValue, doc, mandatory, allowEmpty);
   }
 }

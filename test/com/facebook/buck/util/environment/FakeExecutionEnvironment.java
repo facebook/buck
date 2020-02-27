@@ -60,7 +60,7 @@ public abstract class FakeExecutionEnvironment implements ExecutionEnvironment {
       Network likelyActiveNetwork,
       Optional<String> wifiSsid,
       Map<String, ? extends String> environment) {
-    return ImmutableFakeExecutionEnvironment.of(
+    return ImmutableFakeExecutionEnvironment.ofImpl(
         hostname,
         username,
         availableCores,

@@ -85,12 +85,12 @@ public class VersionedTargetGraphCache {
 
     // If new inputs match old ones, we can used the cached graph, if present.
     VersionedTargetGraphInputs newInputs =
-        ImmutableVersionedTargetGraphInputs.of(targetGraphCreationResult, versionUniverses);
+        ImmutableVersionedTargetGraphInputs.ofImpl(targetGraphCreationResult, versionUniverses);
     if (cachedVersionedTargetGraph != null
         && newInputs.equals(cachedVersionedTargetGraph.getInputs())) {
 
       VersionedTargetGraphCacheResult result =
-          ImmutableVersionedTargetGraphCacheResult.of(
+          ImmutableVersionedTargetGraphCacheResult.ofImpl(
               ResultType.HIT, cachedVersionedTargetGraph.getTargetGraphCreationResult());
 
       request.recordHit();
@@ -118,9 +118,9 @@ public class VersionedTargetGraphCache {
             targetGraphCreationResult,
             cells);
     cachedVersionedTargetGraph =
-        ImmutableCachedVersionedTargetGraph.of(newInputs, newVersionedTargetGraph);
+        ImmutableCachedVersionedTargetGraph.ofImpl(newInputs, newVersionedTargetGraph);
     VersionedTargetGraphCacheResult result =
-        ImmutableVersionedTargetGraphCacheResult.of(resultType, newVersionedTargetGraph);
+        ImmutableVersionedTargetGraphCacheResult.ofImpl(resultType, newVersionedTargetGraph);
 
     request.recordLoadSuccess();
 

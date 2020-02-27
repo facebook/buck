@@ -27,6 +27,6 @@ public interface ProjectWatch {
   Optional<String> getProjectPrefix();
 
   static ProjectWatch of(String watchRoot, Optional<String> projectPrefix) {
-    return ImmutableProjectWatch.of(watchRoot, projectPrefix);
+    return ImmutableProjectWatch.ofImpl(watchRoot, projectPrefix);
   }
 }

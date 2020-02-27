@@ -58,7 +58,7 @@ public abstract class IjSourceFolder implements Comparable<IjSourceFolder> {
       IjResourceFolderType ijResourceFolderType,
       @Nullable Path relativeOutputPath,
       @Nullable String packagePrefix) {
-    return ImmutableIjSourceFolder.of(
+    return ImmutableIjSourceFolder.ofImpl(
         type,
         url,
         path,

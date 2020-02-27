@@ -25,7 +25,7 @@ import org.immutables.value.Value;
 public abstract class APKModule implements Comparable<APKModule>, AddsToRuleKey {
 
   public static APKModule of(String name, boolean hasResources) {
-    return ImmutableAPKModule.of(name, hasResources);
+    return ImmutableAPKModule.ofImpl(name, hasResources);
   }
 
   @AddToRuleKey

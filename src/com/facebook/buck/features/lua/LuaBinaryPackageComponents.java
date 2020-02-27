@@ -27,6 +27,6 @@ abstract class LuaBinaryPackageComponents {
   public abstract LuaPackageComponents getComponents();
 
   public static LuaBinaryPackageComponents of(SourcePath starter, LuaPackageComponents components) {
-    return ImmutableLuaBinaryPackageComponents.of(starter, components);
+    return ImmutableLuaBinaryPackageComponents.ofImpl(starter, components);
   }
 }

@@ -50,7 +50,7 @@ public abstract class PackageContext {
       PackageIdentifier packageIdentifier,
       EventHandler eventHandler,
       Map<String, ? extends Object> implicitlyLoadedSymbols) {
-    return ImmutablePackageContext.of(
+    return ImmutablePackageContext.ofImpl(
         globber, rawConfig, packageIdentifier, eventHandler, implicitlyLoadedSymbols);
   }
 }

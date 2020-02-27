@@ -178,7 +178,7 @@ public class LocalCellProviderFactory {
 
                 // TODO(13777679): cells in other watchman roots do not work correctly.
 
-                return ImmutableCellImpl.of(
+                return ImmutableCellImpl.ofImpl(
                     cellPathResolver.getKnownRoots().stream()
                         .collect(ImmutableSortedSet.toImmutableSortedSet(AbsPath.comparator())),
                     canonicalCellName,

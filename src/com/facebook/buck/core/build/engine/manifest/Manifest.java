@@ -342,6 +342,6 @@ public class Manifest {
   }
 
   public ManifestStats getStats() {
-    return ImmutableManifestStats.of(entries.size(), hashes.size(), inputs.size());
+    return ImmutableManifestStats.ofImpl(entries.size(), hashes.size(), inputs.size());
   }
 }

@@ -148,10 +148,10 @@ public class SkylarkParamInfoTest {
   @Test
   public void attributesOfOptionalsAreOptional() {
     SkylarkParamInfo<?> nonOptionalInfo =
-        new SkylarkParamInfo<>("foo", ImmutableTestIntAttribute.of(1, "", false));
+        new SkylarkParamInfo<>("foo", ImmutableTestIntAttribute.ofImpl(1, "", false));
     SkylarkParamInfo<?> optionalInfo =
         new SkylarkParamInfo<>(
-            "foo", ImmutableTestOptionalIntAttribute.of(Optional.empty(), "", false));
+            "foo", ImmutableTestOptionalIntAttribute.ofImpl(Optional.empty(), "", false));
 
     assertFalse(nonOptionalInfo.isOptional());
     assertTrue(optionalInfo.isOptional());
@@ -160,14 +160,14 @@ public class SkylarkParamInfoTest {
   @Test
   public void doesNotReturnAHint() {
     SkylarkParamInfo<?> info =
-        new SkylarkParamInfo<>("foo", ImmutableTestIntAttribute.of(1, "", false));
+        new SkylarkParamInfo<>("foo", ImmutableTestIntAttribute.ofImpl(1, "", false));
     assertNull(info.getHint());
   }
 
   @Test
   public void errorsOnWrongDTOTypeInGet() {
     SkylarkParamInfo<?> info =
-        new SkylarkParamInfo<>("foo", ImmutableTestIntAttribute.of(1, "", false));
+        new SkylarkParamInfo<>("foo", ImmutableTestIntAttribute.ofImpl(1, "", false));
 
     expected.expect(IllegalArgumentException.class);
 
@@ -177,7 +177,7 @@ public class SkylarkParamInfoTest {
   @Test
   public void errorsOnWrongDTOTypeInSet() {
     SkylarkParamInfo<?> info =
-        new SkylarkParamInfo<>("foo", ImmutableTestIntAttribute.of(1, "", false));
+        new SkylarkParamInfo<>("foo", ImmutableTestIntAttribute.ofImpl(1, "", false));
 
     expected.expect(IllegalArgumentException.class);
 
@@ -187,7 +187,7 @@ public class SkylarkParamInfoTest {
   @Test
   public void returnsEmptyGenericsOnNonGenericCoercer() {
     SkylarkParamInfo<?> info =
-        new SkylarkParamInfo<>("foo", ImmutableTestIntAttribute.of(1, "", false));
+        new SkylarkParamInfo<>("foo", ImmutableTestIntAttribute.ofImpl(1, "", false));
     assertEquals(Integer.class, info.getTypeCoercer().getOutputType().getType());
   }
 
@@ -195,11 +195,11 @@ public class SkylarkParamInfoTest {
   public void returnsCorrectGenericsOnGenericCoercer() {
     SkylarkParamInfo<?> listInfo =
         new SkylarkParamInfo<>(
-            "foo", ImmutableTestListStringAttribute.of(ImmutableList.of(), "", false));
+            "foo", ImmutableTestListStringAttribute.ofImpl(ImmutableList.of(), "", false));
 
     SkylarkParamInfo<?> mapInfo =
         new SkylarkParamInfo<>(
-            "foo", ImmutableTestMapStringAttribute.of(ImmutableMap.of(), "", false));
+            "foo", ImmutableTestMapStringAttribute.ofImpl(ImmutableMap.of(), "", false));
 
     Type listParamTypes = listInfo.getTypeCoercer().getOutputType().getType();
     Type mapParamTypes = mapInfo.getTypeCoercer().getOutputType().getType();

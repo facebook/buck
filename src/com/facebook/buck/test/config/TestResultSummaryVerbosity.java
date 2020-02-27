@@ -33,6 +33,7 @@ public interface TestResultSummaryVerbosity {
 
   static TestResultSummaryVerbosity of(
       boolean includeStdErr, boolean includeStdOut, OptionalInt maxDebugLogLines) {
-    return ImmutableTestResultSummaryVerbosity.of(includeStdErr, includeStdOut, maxDebugLogLines);
+    return ImmutableTestResultSummaryVerbosity.ofImpl(
+        includeStdErr, includeStdOut, maxDebugLogLines);
   }
 }

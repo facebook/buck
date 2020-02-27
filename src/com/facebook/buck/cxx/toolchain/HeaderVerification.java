@@ -66,7 +66,7 @@ public abstract class HeaderVerification implements AddsToRuleKey {
       HeaderVerification.Mode mode,
       ImmutableSortedSet<String> whitelist,
       ImmutableSortedSet<String> platformWhitelist) {
-    return ImmutableHeaderVerification.of(mode, whitelist, platformWhitelist);
+    return ImmutableHeaderVerification.ofImpl(mode, whitelist, platformWhitelist);
   }
 
   /** @return whether the given header has been whitelisted. */

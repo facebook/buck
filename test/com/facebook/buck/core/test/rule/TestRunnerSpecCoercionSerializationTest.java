@@ -63,7 +63,7 @@ public class TestRunnerSpecCoercionSerializationTest {
     graphBuilder.addToIndex(rule);
 
     ImmutableTestRunnerSpec spec =
-        ImmutableTestRunnerSpec.of(
+        ImmutableTestRunnerSpec.ofImpl(
             ImmutableMap.of(
                 StringWithMacrosUtils.format("a"),
                 ImmutableTestRunnerSpec.of(

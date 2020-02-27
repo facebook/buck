@@ -75,6 +75,6 @@ public class DoctorInteractiveReport extends AbstractReport {
 
   @Override
   protected Optional<UserReport> getUserReport() {
-    return issueDescription.map(issue -> ImmutableUserReport.of("", issue));
+    return issueDescription.map(issue -> ImmutableUserReport.ofImpl("", issue));
   }
 }

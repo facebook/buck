@@ -85,7 +85,7 @@ public abstract class TargetNodePredicateSpec implements TargetNodeSpec {
   }
 
   public static TargetNodePredicateSpec of(BuildFileSpec buildFileSpec, boolean onlyTests) {
-    return ImmutableTargetNodePredicateSpec.of(buildFileSpec, onlyTests);
+    return ImmutableTargetNodePredicateSpec.ofImpl(buildFileSpec, onlyTests);
   }
 
   @Override

@@ -35,6 +35,6 @@ public abstract class RuleScheduleInfo {
   }
 
   public static RuleScheduleInfo of(int jobsMultiplier) {
-    return ImmutableRuleScheduleInfo.of(jobsMultiplier);
+    return ImmutableRuleScheduleInfo.ofImpl(jobsMultiplier);
   }
 }

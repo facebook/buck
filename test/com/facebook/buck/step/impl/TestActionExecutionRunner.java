@@ -112,6 +112,6 @@ public class TestActionExecutionRunner {
                 .setProjectFilesystemFactory(projectFilesystemFactory)
                 .build());
 
-    return ImmutableExecutionDetails.of(action, consoleEventListener, executionResult);
+    return ImmutableExecutionDetails.ofImpl(action, consoleEventListener, executionResult);
   }
 }

@@ -87,6 +87,6 @@ public abstract class VersionedTool implements Tool, HasCustomInputsLogic {
 
   public static VersionedTool of(
       String name, PathSourcePath path, String version, ImmutableList<String> extraArgs) {
-    return ImmutableVersionedTool.of(name, path, version, extraArgs);
+    return ImmutableVersionedTool.ofImpl(name, path, version, extraArgs);
   }
 }

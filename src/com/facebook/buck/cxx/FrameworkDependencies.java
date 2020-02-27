@@ -27,6 +27,6 @@ public abstract class FrameworkDependencies {
   public abstract ImmutableSet<SourcePath> getSourcePaths();
 
   public static FrameworkDependencies of(ImmutableSet<SourcePath> sourcePaths) {
-    return ImmutableFrameworkDependencies.of(sourcePaths);
+    return ImmutableFrameworkDependencies.ofImpl(sourcePaths);
   }
 }

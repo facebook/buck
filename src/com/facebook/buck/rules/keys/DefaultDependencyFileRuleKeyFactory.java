@@ -107,7 +107,7 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
             RuleKeyBuilder.createDefaultHasher(ruleKeyLogger));
     ruleKeyFieldLoader.setFields(builder, rule, keyType.toRuleKeyType());
     Result<RuleKey> result = builder.buildResult(RuleKey::new);
-    return ImmutableRuleKeyAndInputs.of(result.getRuleKey(), result.getSourcePaths());
+    return ImmutableRuleKeyAndInputs.ofImpl(result.getRuleKey(), result.getSourcePaths());
   }
 
   private class Builder<RULE_KEY> extends RuleKeyBuilder<RULE_KEY> {

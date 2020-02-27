@@ -29,7 +29,7 @@ public abstract class CounterBuckConfig implements ConfigView<BuckConfig> {
   public abstract BuckConfig getDelegate();
 
   public static CounterBuckConfig of(BuckConfig delegate) {
-    return ImmutableCounterBuckConfig.of(delegate);
+    return ImmutableCounterBuckConfig.ofImpl(delegate);
   }
 
   public long getCountersFirstFlushIntervalMillis() {

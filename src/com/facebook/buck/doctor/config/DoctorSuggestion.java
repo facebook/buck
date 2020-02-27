@@ -55,6 +55,6 @@ public interface DoctorSuggestion {
 
   static DoctorSuggestion of(
       DoctorSuggestion.StepStatus status, Optional<String> area, String suggestion) {
-    return ImmutableDoctorSuggestion.of(status, area, suggestion);
+    return ImmutableDoctorSuggestion.ofImpl(status, area, suggestion);
   }
 }

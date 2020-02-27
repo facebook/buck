@@ -44,6 +44,6 @@ public abstract class SelectorValue {
   }
 
   public static SelectorValue of(Map<String, ? extends Object> dictionary, String noMatchError) {
-    return ImmutableSelectorValue.of(dictionary, noMatchError);
+    return ImmutableSelectorValue.ofImpl(dictionary, noMatchError);
   }
 }

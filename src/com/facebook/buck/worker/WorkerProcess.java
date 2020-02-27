@@ -120,7 +120,8 @@ public class WorkerProcess implements Closeable {
     LOG.debug(
         "Sending job %d to process %d \n" + " job arguments: \'%s\'",
         messageID, this.hashCode(), jobArgs);
-    protocol.send(messageID, ImmutableWorkerProcessCommand.of(argsPath, stdoutPath, stderrPath));
+    protocol.send(
+        messageID, ImmutableWorkerProcessCommand.ofImpl(argsPath, stdoutPath, stderrPath));
     LOG.debug("Receiving response for job %d from process %d", messageID, this.hashCode());
     int exitCode = protocol.receiveCommandResponse(messageID);
     Optional<String> stdout = filesystem.readFileIfItExists(stdoutPath);

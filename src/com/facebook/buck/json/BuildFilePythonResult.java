@@ -41,6 +41,6 @@ public interface BuildFilePythonResult {
       ImmutableList<Map<String, Object>> values,
       ImmutableList<Map<String, Object>> diagnostics,
       Optional<String> profile) {
-    return ImmutableBuildFilePythonResult.of(values, diagnostics, profile);
+    return ImmutableBuildFilePythonResult.ofImpl(values, diagnostics, profile);
   }
 }

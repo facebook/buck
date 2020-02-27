@@ -138,7 +138,7 @@ public abstract class CxxSourceRuleFactory {
    */
   @Value.Lazy
   protected Optional<PreInclude> getPreInclude() {
-    return ImmutablePreIncludeFactory.of(
+    return ImmutablePreIncludeFactory.ofImpl(
             getProjectFilesystem(),
             getBaseBuildTarget(),
             getActionGraphBuilder(),
@@ -787,7 +787,7 @@ public abstract class CxxSourceRuleFactory {
       Optional<SourcePath> prefixHeader,
       Optional<SourcePath> precompiledHeader,
       PicType picType) {
-    return ImmutableCxxSourceRuleFactory.of(
+    return ImmutableCxxSourceRuleFactory.ofImpl(
         projectFilesystem,
         baseBuildTarget,
         actionGraphBuilder,
@@ -810,7 +810,7 @@ public abstract class CxxSourceRuleFactory {
 
     static PreprocessorDelegateCacheKey of(
         CxxSource.Type sourceType, ImmutableList<String> sourceFlags) {
-      return ImmutablePreprocessorDelegateCacheKey.of(sourceType, sourceFlags);
+      return ImmutablePreprocessorDelegateCacheKey.ofImpl(sourceType, sourceFlags);
     }
 
     CxxSource.Type getSourceType();

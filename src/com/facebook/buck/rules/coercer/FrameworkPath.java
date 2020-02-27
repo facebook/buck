@@ -95,7 +95,7 @@ public abstract class FrameworkPath implements Comparable<FrameworkPath>, AddsTo
       FrameworkPath.Type type,
       Optional<? extends SourceTreePath> sourceTreePath,
       Optional<? extends SourcePath> sourcePath) {
-    return ImmutableFrameworkPath.of(type, sourceTreePath, sourcePath);
+    return ImmutableFrameworkPath.ofImpl(type, sourceTreePath, sourcePath);
   }
 
   private static Path convertToPath(

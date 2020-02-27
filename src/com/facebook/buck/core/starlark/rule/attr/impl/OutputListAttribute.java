@@ -76,7 +76,7 @@ public abstract class OutputListAttribute extends Attribute<ImmutableList<String
 
   public static OutputListAttribute of(
       Object preCoercionDefaultValue, String doc, boolean mandatory, boolean allowEmpty) {
-    return ImmutableOutputListAttribute.of(preCoercionDefaultValue, doc, mandatory, allowEmpty);
+    return ImmutableOutputListAttribute.ofImpl(preCoercionDefaultValue, doc, mandatory, allowEmpty);
   }
 
   ImmutableList<Artifact> postCoercionTransform(

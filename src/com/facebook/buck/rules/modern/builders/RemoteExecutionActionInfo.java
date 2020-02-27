@@ -43,7 +43,7 @@ public abstract class RemoteExecutionActionInfo {
       ImmutableList<UploadDataSupplier> requiredData,
       long totalInputSize,
       java.lang.Iterable<? extends Path> outputs) {
-    return ImmutableRemoteExecutionActionInfo.of(
+    return ImmutableRemoteExecutionActionInfo.ofImpl(
         actionDigest, requiredData, totalInputSize, outputs);
   }
 }

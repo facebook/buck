@@ -94,7 +94,7 @@ public abstract class BuildEngineBuildContext {
       BuildId buildId,
       Map<String, ? extends String> environment,
       boolean keepGoing) {
-    return ImmutableBuildEngineBuildContext.of(
+    return ImmutableBuildEngineBuildContext.ofImpl(
         buildContext, artifactCache, clock, buildId, environment, keepGoing);
   }
 

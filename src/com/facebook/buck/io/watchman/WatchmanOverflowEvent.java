@@ -32,6 +32,6 @@ public abstract class WatchmanOverflowEvent implements WatchmanEvent {
   public abstract String getReason();
 
   public static WatchmanOverflowEvent of(AbsPath cellPath, String reason) {
-    return ImmutableWatchmanOverflowEvent.of(cellPath, reason);
+    return ImmutableWatchmanOverflowEvent.ofImpl(cellPath, reason);
   }
 }

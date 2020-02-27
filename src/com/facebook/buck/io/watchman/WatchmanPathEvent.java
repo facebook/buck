@@ -37,6 +37,6 @@ public abstract class WatchmanPathEvent implements WatchmanEvent {
   public abstract RelPath getPath();
 
   public static WatchmanPathEvent of(AbsPath cellPath, WatchmanEvent.Kind kind, RelPath path) {
-    return ImmutableWatchmanPathEvent.of(cellPath, kind, path);
+    return ImmutableWatchmanPathEvent.ofImpl(cellPath, kind, path);
   }
 }

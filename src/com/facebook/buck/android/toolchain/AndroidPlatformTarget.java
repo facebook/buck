@@ -100,7 +100,7 @@ public abstract class AndroidPlatformTarget implements Toolchain, AddsToRuleKey 
       Path proguardJar,
       Path proguardConfig,
       Path optimizedProguardConfig) {
-    return ImmutableAndroidPlatformTarget.of(
+    return ImmutableAndroidPlatformTarget.ofImpl(
         platformName,
         androidJar,
         bootclasspathEntries,

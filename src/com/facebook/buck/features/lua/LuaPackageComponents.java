@@ -149,6 +149,6 @@ abstract class LuaPackageComponents implements AddsToRuleKey {
       Map<String, ? extends SourcePath> modules,
       Map<String, ? extends SourcePath> pythonModules,
       Map<String, ? extends SourcePath> nativeLibraries) {
-    return ImmutableLuaPackageComponents.of(modules, pythonModules, nativeLibraries);
+    return ImmutableLuaPackageComponents.ofImpl(modules, pythonModules, nativeLibraries);
   }
 }

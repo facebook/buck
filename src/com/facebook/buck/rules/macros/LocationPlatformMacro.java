@@ -42,7 +42,7 @@ public abstract class LocationPlatformMacro extends BaseLocationMacro {
 
   public static LocationPlatformMacro of(
       BuildTargetWithOutputs target, Iterable<? extends Flavor> flavors) {
-    return ImmutableLocationPlatformMacro.of(target, flavors);
+    return ImmutableLocationPlatformMacro.ofImpl(target, flavors);
   }
 
   abstract ImmutableSet<Flavor> getFlavors();

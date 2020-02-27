@@ -74,15 +74,15 @@ public class IdbOutputParsingTest {
     }
 
     // Get the expected result
-    ImmutableIdbFailureInfo empty = ImmutableIdbFailureInfo.of("", "", 0);
+    ImmutableIdbFailureInfo empty = ImmutableIdbFailureInfo.ofImpl("", "", 0);
     ImmutableIdbFailureInfo failure =
-        ImmutableIdbFailureInfo.of(
+        ImmutableIdbFailureInfo.ofImpl(
             "((pictureType != FBActorProfilePictureTypePage) is true) failed",
             "Libraries/FBActorKit/FBActorKitTests/FBActorKitTests.m",
             58);
     ImmutableSet<ImmutableIdbTestResult> expectedResult =
         ImmutableSet.of(
-            ImmutableIdbTestResult.of(
+            ImmutableIdbTestResult.ofImpl(
                 "FBActorKitTests",
                 "FBActorKitTests",
                 "testActorProfilePictureForActor",
@@ -92,7 +92,7 @@ public class IdbOutputParsingTest {
                 false,
                 empty,
                 new String[0]),
-            ImmutableIdbTestResult.of(
+            ImmutableIdbTestResult.ofImpl(
                 "FBActorKitTests",
                 "FBActorKitTests",
                 "testActorProfilePictureForEvent",
@@ -102,7 +102,7 @@ public class IdbOutputParsingTest {
                 false,
                 empty,
                 new String[0]),
-            ImmutableIdbTestResult.of(
+            ImmutableIdbTestResult.ofImpl(
                 "FBActorKitTests",
                 "FBActorKitTests",
                 "testActorProfilePictureForGroup",
@@ -112,7 +112,7 @@ public class IdbOutputParsingTest {
                 false,
                 empty,
                 new String[0]),
-            ImmutableIdbTestResult.of(
+            ImmutableIdbTestResult.ofImpl(
                 "FBActorKitTests",
                 "FBActorKitTests",
                 "testActorProfilePictureForNilActor",
@@ -122,7 +122,7 @@ public class IdbOutputParsingTest {
                 false,
                 empty,
                 new String[0]),
-            ImmutableIdbTestResult.of(
+            ImmutableIdbTestResult.ofImpl(
                 "FBActorKitTests",
                 "FBActorKitTests",
                 "testActorProfilePictureForPage",
@@ -132,7 +132,7 @@ public class IdbOutputParsingTest {
                 false,
                 failure,
                 new String[0]),
-            ImmutableIdbTestResult.of(
+            ImmutableIdbTestResult.ofImpl(
                 "FBActorKitTests",
                 "FBActorKitTests",
                 "testActorProfilePictureForPlace",

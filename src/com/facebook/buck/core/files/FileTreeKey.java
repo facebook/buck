@@ -38,6 +38,6 @@ public abstract class FileTreeKey implements ComputeKey<FileTree> {
   }
 
   public static FileTreeKey of(Path path) {
-    return ImmutableFileTreeKey.of(path);
+    return ImmutableFileTreeKey.ofImpl(path);
   }
 }

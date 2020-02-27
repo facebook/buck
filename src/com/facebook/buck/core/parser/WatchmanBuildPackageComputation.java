@@ -171,7 +171,7 @@ public class WatchmanBuildPackageComputation
             .map((String buildFilePath) -> getPackagePathOfBuildFile(basePath, buildFilePath))
             .filter(p -> !filesystemView.isIgnored(p))
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
-    return ImmutableBuildPackagePaths.of(relativeBuildFiles);
+    return ImmutableBuildPackagePaths.ofImpl(relativeBuildFiles);
   }
 
   private Path getPackagePathOfBuildFile(Path basePath, String buildFilePath) {

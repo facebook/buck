@@ -44,15 +44,15 @@ abstract class PrebuiltPythonLibraryComponents implements PythonComponents {
   abstract SourcePath getDirectory();
 
   public static PrebuiltPythonLibraryComponents ofModules(SourcePath sourcePath) {
-    return ImmutablePrebuiltPythonLibraryComponents.of(Type.MODULES, sourcePath);
+    return ImmutablePrebuiltPythonLibraryComponents.ofImpl(Type.MODULES, sourcePath);
   }
 
   public static PrebuiltPythonLibraryComponents ofResources(SourcePath sourcePath) {
-    return ImmutablePrebuiltPythonLibraryComponents.of(Type.RESOURCES, sourcePath);
+    return ImmutablePrebuiltPythonLibraryComponents.ofImpl(Type.RESOURCES, sourcePath);
   }
 
   public static PrebuiltPythonLibraryComponents ofSources(SourcePath sourcePath) {
-    return ImmutablePrebuiltPythonLibraryComponents.of(Type.SOURCES, sourcePath);
+    return ImmutablePrebuiltPythonLibraryComponents.ofImpl(Type.SOURCES, sourcePath);
   }
 
   private static boolean accept(Type type, Path path) {

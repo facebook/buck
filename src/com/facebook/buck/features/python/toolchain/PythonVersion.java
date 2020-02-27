@@ -35,6 +35,6 @@ public abstract class PythonVersion implements AddsToRuleKey {
   }
 
   public static PythonVersion of(String interpreterName, String versionString) {
-    return ImmutablePythonVersion.of(interpreterName, versionString);
+    return ImmutablePythonVersion.ofImpl(interpreterName, versionString);
   }
 }

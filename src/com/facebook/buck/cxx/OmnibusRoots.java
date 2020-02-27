@@ -144,7 +144,7 @@ public abstract class OmnibusRoots {
     public OmnibusRoots build() {
       ImmutableMap<BuildTarget, NativeLinkable> excluded = buildExcluded();
       ImmutableMap<BuildTarget, NativeLinkTarget> included = buildIncluded(excluded.keySet());
-      return ImmutableOmnibusRoots.of(included, excluded);
+      return ImmutableOmnibusRoots.ofImpl(included, excluded);
     }
   }
 }

@@ -72,6 +72,6 @@ public abstract class RuleType {
   }
 
   public static RuleType of(String name, RuleType.Kind kind) {
-    return ImmutableRuleType.of(name, kind);
+    return ImmutableRuleType.ofImpl(name, kind);
   }
 }

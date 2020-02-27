@@ -318,7 +318,7 @@ public class CxxBuckConfig {
     Optional<Type> type = delegate.getEnum(cxxSection, toolType.key + "_type", Type.class);
     if (target.isPresent()) {
       return Optional.of(
-          ImmutableCxxToolProviderParams.of(
+          ImmutableCxxToolProviderParams.ofImpl(
               source,
               target,
               Optional.empty(),
@@ -327,7 +327,7 @@ public class CxxBuckConfig {
               Optional.of(getUseDetailedUntrackedHeaderMessages())));
     } else {
       return Optional.of(
-          ImmutableCxxToolProviderParams.of(
+          ImmutableCxxToolProviderParams.ofImpl(
               source,
               Optional.empty(),
               Optional.of(

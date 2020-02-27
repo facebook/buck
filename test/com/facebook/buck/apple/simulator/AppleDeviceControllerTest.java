@@ -316,88 +316,88 @@ public class AppleDeviceControllerTest {
 
     ImmutableSet<ImmutableAppleDevice> expected =
         ImmutableSet.of(
-            (ImmutableAppleDevice.of(
+            (ImmutableAppleDevice.ofImpl(
                 "Apple Watch Series 2 - 38mm", "", "Shutdown", "simulator", "watchOS 5.2", "i386")),
-            (ImmutableAppleDevice.of(
+            (ImmutableAppleDevice.ofImpl(
                 "Apple Watch Series 2 - 42mm", "", "Shutdown", "simulator", "watchOS 5.2", "i386")),
-            (ImmutableAppleDevice.of(
+            (ImmutableAppleDevice.ofImpl(
                 "Apple Watch Series 3 - 38mm", "", "Shutdown", "simulator", "watchOS 5.2", "i386")),
-            (ImmutableAppleDevice.of(
+            (ImmutableAppleDevice.ofImpl(
                 "Apple Watch Series 3 - 42mm", "", "Shutdown", "simulator", "watchOS 5.2", "i386")),
-            (ImmutableAppleDevice.of(
+            (ImmutableAppleDevice.ofImpl(
                 "Apple Watch Series 4 - 40mm", "", "Shutdown", "simulator", "watchOS 5.2", "i386")),
-            (ImmutableAppleDevice.of(
+            (ImmutableAppleDevice.ofImpl(
                 "Apple Watch Series 4 - 44mm", "", "Shutdown", "simulator", "watchOS 5.2", "i386")),
-            (ImmutableAppleDevice.of(
+            (ImmutableAppleDevice.ofImpl(
                 "iPad Air (3rd generation)", "", "Booted", "simulator", "iOS 12.2", "x86_64")),
-            (ImmutableAppleDevice.of(
+            (ImmutableAppleDevice.ofImpl(
                 "iPhone 5s", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (ImmutableAppleDevice.of(
+            (ImmutableAppleDevice.ofImpl(
                 "iPhone 6", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (ImmutableAppleDevice.of(
+            (ImmutableAppleDevice.ofImpl(
                 "iPhone 6 Plus", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (ImmutableAppleDevice.of(
+            (ImmutableAppleDevice.ofImpl(
                 "iPhone 6s", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (ImmutableAppleDevice.of(
+            (ImmutableAppleDevice.ofImpl(
                 "iPhone 6s Plus", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (ImmutableAppleDevice.of(
+            (ImmutableAppleDevice.ofImpl(
                 "iPhone 7", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (ImmutableAppleDevice.of(
+            (ImmutableAppleDevice.ofImpl(
                 "iPhone 7 Plus", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (ImmutableAppleDevice.of(
+            (ImmutableAppleDevice.ofImpl(
                 "iPhone 8", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (ImmutableAppleDevice.of(
+            (ImmutableAppleDevice.ofImpl(
                 "iPhone 8 Plus", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (ImmutableAppleDevice.of(
+            (ImmutableAppleDevice.ofImpl(
                 "iPhone SE", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (ImmutableAppleDevice.of(
+            (ImmutableAppleDevice.ofImpl(
                 "iPhone X",
                 "DF85F9BE-70D1-4706-B95F-58CD25986051",
                 "Shutdown",
                 "simulator",
                 "iOS 12.4",
                 "x86_64")),
-            (ImmutableAppleDevice.of(
+            (ImmutableAppleDevice.ofImpl(
                 "iPhone Xs", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (ImmutableAppleDevice.of(
+            (ImmutableAppleDevice.ofImpl(
                 "iPhone Xs Max", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (ImmutableAppleDevice.of(
+            (ImmutableAppleDevice.ofImpl(
                 "iPhone X\u0280", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (ImmutableAppleDevice.of(
+            (ImmutableAppleDevice.ofImpl(
                 "iPad (5th generation)", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (ImmutableAppleDevice.of(
+            (ImmutableAppleDevice.ofImpl(
                 "iPad (6th generation)", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (ImmutableAppleDevice.of(
+            (ImmutableAppleDevice.ofImpl(
                 "iPad Air", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (ImmutableAppleDevice.of(
+            (ImmutableAppleDevice.ofImpl(
                 "iPad Air 2", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (ImmutableAppleDevice.of(
+            (ImmutableAppleDevice.ofImpl(
                 "iPad Pro (10.5-inch)", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (ImmutableAppleDevice.of(
+            (ImmutableAppleDevice.ofImpl(
                 "iPad Pro (11-inch)", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (ImmutableAppleDevice.of(
+            (ImmutableAppleDevice.ofImpl(
                 "iPad Pro (12.9-inch)", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (ImmutableAppleDevice.of(
+            (ImmutableAppleDevice.ofImpl(
                 "iPad Pro (12.9-inch) (2nd generation)",
                 "",
                 "Shutdown",
                 "simulator",
                 "iOS 12.2",
                 "x86_64")),
-            (ImmutableAppleDevice.of(
+            (ImmutableAppleDevice.ofImpl(
                 "iPad Pro (12.9-inch) (3rd generation)",
                 "",
                 "Shutdown",
                 "simulator",
                 "iOS 12.2",
                 "x86_64")),
-            (ImmutableAppleDevice.of(
+            (ImmutableAppleDevice.ofImpl(
                 "iPad Pro (9.7-inch)", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (ImmutableAppleDevice.of(
+            (ImmutableAppleDevice.ofImpl(
                 "Apple TV", "", "Shutdown", "simulator", "tvOS 12.2", "x86_64")),
-            (ImmutableAppleDevice.of(
+            (ImmutableAppleDevice.ofImpl(
                 "Apple TV 4K", "", "Shutdown", "simulator", "tvOS 12.2", "x86_64")),
-            (ImmutableAppleDevice.of(
+            (ImmutableAppleDevice.ofImpl(
                 "Apple TV 4K (at 1080p)", "", "Shutdown", "simulator", "tvOS 12.2", "x86_64")));
 
     assertEquals(simulators, expected);
@@ -423,7 +423,7 @@ public class AppleDeviceControllerTest {
 
     ImmutableSet<ImmutableAppleDevice> expected =
         ImmutableSet.of(
-            ImmutableAppleDevice.of("iPhone", "", "Booted", "device", "iOS 12.4", "arm64"));
+            ImmutableAppleDevice.ofImpl("iPhone", "", "Booted", "device", "iOS 12.4", "arm64"));
 
     assertEquals(physicalDevices, expected);
   }

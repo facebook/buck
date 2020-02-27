@@ -45,7 +45,7 @@ import java.util.stream.Collectors;
 @BuckStyleValue
 public abstract class CellConfig {
 
-  public static final CellConfig EMPTY_INSTANCE = ImmutableCellConfig.of(ImmutableMap.of());
+  public static final CellConfig EMPTY_INSTANCE = ImmutableCellConfig.ofImpl(ImmutableMap.of());
 
   public abstract ImmutableMap<CellName, RawConfig> getValues();
 
@@ -148,7 +148,7 @@ public abstract class CellConfig {
                     if (map.isEmpty()) {
                       return CellConfig.EMPTY_INSTANCE;
                     }
-                    return ImmutableCellConfig.of(map);
+                    return ImmutableCellConfig.ofImpl(map);
                   }));
     }
 

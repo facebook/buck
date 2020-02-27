@@ -60,7 +60,7 @@ public abstract class ForwardingBuildTargetSourcePath implements BuildTargetSour
       BuildTargetWithOutputs target,
       SourcePath delegate,
       Optional<? extends HashCode> precomputedHash) {
-    return ImmutableForwardingBuildTargetSourcePath.of(target, delegate, precomputedHash);
+    return ImmutableForwardingBuildTargetSourcePath.ofImpl(target, delegate, precomputedHash);
   }
 
   @Override

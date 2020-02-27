@@ -30,7 +30,7 @@ public abstract class LogBuckConfig implements ConfigView<BuckConfig> {
   public abstract BuckConfig getDelegate();
 
   public static LogBuckConfig of(BuckConfig delegate) {
-    return ImmutableLogBuckConfig.of(delegate);
+    return ImmutableLogBuckConfig.ofImpl(delegate);
   }
 
   private static final String LOG_SECTION = "log";

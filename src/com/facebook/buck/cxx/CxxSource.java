@@ -153,6 +153,6 @@ public abstract class CxxSource { // NOPMD
   public abstract ImmutableList<String> getFlags();
 
   public static CxxSource of(CxxSource.Type type, SourcePath path, ImmutableList<String> flags) {
-    return ImmutableCxxSource.of(type, path, flags);
+    return ImmutableCxxSource.ofImpl(type, path, flags);
   }
 }

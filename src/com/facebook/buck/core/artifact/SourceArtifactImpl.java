@@ -106,6 +106,6 @@ public abstract class SourceArtifactImpl extends AbstractArtifact
   }
 
   public static SourceArtifactImpl of(PathSourcePath sourcePath) {
-    return ImmutableSourceArtifactImpl.of(sourcePath);
+    return ImmutableSourceArtifactImpl.ofImpl(sourcePath);
   }
 }

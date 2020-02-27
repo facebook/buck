@@ -44,6 +44,6 @@ public interface ProviderCreationContext {
   static ProviderCreationContext of(
       Map<? extends BuildTarget, ? extends ProviderInfoCollection> dependencies,
       ProjectFilesystem projectFilesystem) {
-    return ImmutableProviderCreationContext.of(dependencies, projectFilesystem);
+    return ImmutableProviderCreationContext.ofImpl(dependencies, projectFilesystem);
   }
 }

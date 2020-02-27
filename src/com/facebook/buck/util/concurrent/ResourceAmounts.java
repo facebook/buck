@@ -21,7 +21,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 @BuckStyleValue
 public abstract class ResourceAmounts {
 
-  private static final ResourceAmounts ZERO = ImmutableResourceAmounts.of(0, 0, 0, 0);
+  private static final ResourceAmounts ZERO = ImmutableResourceAmounts.ofImpl(0, 0, 0, 0);
 
   public abstract int getCpu();
 
@@ -46,7 +46,7 @@ public abstract class ResourceAmounts {
     if (cpu == 0 && memory == 0 && diskIO == 0 && networkIO == 0) {
       return ZERO;
     }
-    return ImmutableResourceAmounts.of(cpu, memory, diskIO, networkIO);
+    return ImmutableResourceAmounts.ofImpl(cpu, memory, diskIO, networkIO);
   }
 
   public ResourceAmounts append(ResourceAmounts amounts) {

@@ -35,6 +35,6 @@ public class InferToolchainFactory implements ToolchainFactory<InferToolchain> {
     ExecutableFinder executableFinder = context.getExecutableFinder();
 
     return InferPlatformFactory.getBasedOnConfigAndPath(config, executableFinder)
-        .map(ImmutableInferToolchain::of);
+        .map(ImmutableInferToolchain::ofImpl);
   }
 }

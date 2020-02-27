@@ -77,7 +77,7 @@ public class LogUploaderListener implements BuckEventListener {
     }
 
     LogUploaderListenerCloseArgs args =
-        ImmutableLogUploaderListenerCloseArgs.of(
+        ImmutableLogUploaderListenerCloseArgs.ofImpl(
             traceUploadUri.get(), logDirectoryPath, logFilePath, buildId);
     BackgroundTask<LogUploaderListenerCloseArgs> task =
         BackgroundTask.of(

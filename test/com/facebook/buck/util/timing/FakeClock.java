@@ -49,7 +49,7 @@ public abstract class FakeClock implements Clock {
   }
 
   public static FakeClock of(long currentTimeMillis, long nanoTime) {
-    return ImmutableFakeClock.of(currentTimeMillis, nanoTime);
+    return ImmutableFakeClock.ofImpl(currentTimeMillis, nanoTime);
   }
 
   public FakeClock withCurrentTimeMillis(long millis) {

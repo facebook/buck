@@ -60,6 +60,6 @@ public abstract class InternalFlavor implements Flavor {
   }
 
   public static InternalFlavor of(String name) {
-    return ImmutableInternalFlavor.of(name);
+    return ImmutableInternalFlavor.ofImpl(name);
   }
 }

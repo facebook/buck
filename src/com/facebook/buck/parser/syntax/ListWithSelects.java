@@ -40,6 +40,6 @@ public abstract class ListWithSelects {
   }
 
   public static ListWithSelects of(ImmutableList<Object> elements, Class<?> type) {
-    return ImmutableListWithSelects.of(elements, type);
+    return ImmutableListWithSelects.ofImpl(elements, type);
   }
 }

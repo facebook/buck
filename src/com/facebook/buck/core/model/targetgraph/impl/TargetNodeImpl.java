@@ -228,7 +228,7 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
 
   @Override
   public TargetNodeImpl<T> withDeclaredDeps(Iterable<? extends BuildTarget> declaredDeps) {
-    return ImmutableTargetNodeImpl.of(
+    return ImmutableTargetNodeImpl.ofImpl(
         getBuildTarget(),
         getNodeCopier(),
         getDescription(),
@@ -284,7 +284,7 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
   @Override
   public TargetNodeImpl<T> withSelectedVersions(
       Optional<? extends ImmutableMap<BuildTarget, Version>> selectedVersions) {
-    return ImmutableTargetNodeImpl.of(
+    return ImmutableTargetNodeImpl.ofImpl(
         getBuildTarget(),
         getNodeCopier(),
         getDescription(),
@@ -314,7 +314,7 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
       ImmutableSet<VisibilityPattern> visibilityPatterns,
       ImmutableSet<VisibilityPattern> withinViewPatterns,
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions) {
-    return ImmutableTargetNodeImpl.of(
+    return ImmutableTargetNodeImpl.ofImpl(
         buildTarget,
         nodeCopier,
         description,

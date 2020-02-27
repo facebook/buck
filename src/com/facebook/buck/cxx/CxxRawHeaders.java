@@ -60,6 +60,6 @@ public abstract class CxxRawHeaders extends CxxHeaders {
   abstract ImmutableSortedSet<SourcePath> getHeaders();
 
   public static CxxRawHeaders of(ImmutableSortedSet<SourcePath> headers) {
-    return ImmutableCxxRawHeaders.of(headers);
+    return ImmutableCxxRawHeaders.ofImpl(headers);
   }
 }

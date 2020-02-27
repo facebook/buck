@@ -27,7 +27,7 @@ import org.immutables.value.Value;
 public abstract class ArchiveMemberSourcePath implements SourcePath {
 
   public static ArchiveMemberSourcePath of(SourcePath archiveSourcePath, Path memberPath) {
-    return ImmutableArchiveMemberSourcePath.of(archiveSourcePath, memberPath);
+    return ImmutableArchiveMemberSourcePath.ofImpl(archiveSourcePath, memberPath);
   }
 
   public abstract SourcePath getArchiveSourcePath();

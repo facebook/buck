@@ -56,7 +56,7 @@ public class DotnetToolchainSupplier implements ToolchainSupplier {
               context.getBuckConfig()::getPathSourcePath,
               Paths.get("csc"),
               context.getEnvironment());
-      return Optional.of(ImmutableDotnetToolchain.of(dotnetBuckConfig, systemCsharpCompiler));
+      return Optional.of(ImmutableDotnetToolchain.ofImpl(dotnetBuckConfig, systemCsharpCompiler));
     }
   }
 }

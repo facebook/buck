@@ -49,6 +49,6 @@ public abstract class RuleAnalysisKey implements ComputeKey<RuleAnalysisResult> 
   }
 
   public static RuleAnalysisKey of(BuildTarget buildTarget) {
-    return ImmutableRuleAnalysisKey.of(buildTarget);
+    return ImmutableRuleAnalysisKey.ofImpl(buildTarget);
   }
 }

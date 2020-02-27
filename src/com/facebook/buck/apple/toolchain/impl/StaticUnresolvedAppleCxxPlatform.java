@@ -70,6 +70,6 @@ public abstract class StaticUnresolvedAppleCxxPlatform implements UnresolvedAppl
 
   public static StaticUnresolvedAppleCxxPlatform of(
       AppleCxxPlatform appleCxxPlatform, Flavor flavor) {
-    return ImmutableStaticUnresolvedAppleCxxPlatform.of(appleCxxPlatform, flavor);
+    return ImmutableStaticUnresolvedAppleCxxPlatform.ofImpl(appleCxxPlatform, flavor);
   }
 }

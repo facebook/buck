@@ -188,7 +188,7 @@ public class RuleKeyLoggerListener implements BuckEventListener {
     submitFlushLogLines();
 
     RuleKeyLoggerListenerCloseArgs args =
-        ImmutableRuleKeyLoggerListenerCloseArgs.of(
+        ImmutableRuleKeyLoggerListenerCloseArgs.ofImpl(
             outputExecutor,
             ruleKeyLogFileUploader,
             info.getLogDirectoryPath().resolve(BuckConstant.RULE_KEY_LOGGER_FILE_NAME));

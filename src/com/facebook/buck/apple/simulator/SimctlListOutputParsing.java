@@ -66,7 +66,7 @@ public class SimctlListOutputParsing {
     Matcher matcher = SIMCTL_LIST_DEVICES_PATTERN.matcher(line);
     if (matcher.matches()) {
       AppleSimulator simulator =
-          ImmutableAppleSimulator.of(
+          ImmutableAppleSimulator.ofImpl(
               matcher.group(DEVICE_NAME_GROUP),
               matcher.group(DEVICE_UDID_GROUP),
               AppleSimulatorState.fromString(matcher.group(DEVICE_STATE_GROUP)));

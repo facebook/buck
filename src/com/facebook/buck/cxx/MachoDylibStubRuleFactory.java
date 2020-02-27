@@ -58,6 +58,6 @@ public abstract class MachoDylibStubRuleFactory implements SharedLibraryInterfac
   }
 
   public static MachoDylibStubRuleFactory from(MachoDylibStubParams params) {
-    return ImmutableMachoDylibStubRuleFactory.of(params.getStrip());
+    return ImmutableMachoDylibStubRuleFactory.ofImpl(params.getStrip());
   }
 }

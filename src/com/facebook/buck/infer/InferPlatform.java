@@ -57,7 +57,7 @@ public abstract class InferPlatform implements AddsToRuleKey {
       Optional<? extends SourcePath> inferConfig,
       Optional<? extends SourcePath> nullsafeThirdPartySignatures,
       boolean executeRemotely) {
-    return ImmutableInferPlatform.of(
+    return ImmutableInferPlatform.ofImpl(
         inferBin, inferVersion, inferConfig, nullsafeThirdPartySignatures, executeRemotely);
   }
 }

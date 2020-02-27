@@ -81,7 +81,7 @@ public class MergeAndroidResourceSources extends AbstractBuildRule {
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), destinationDirectory)));
     steps.add(
-        ImmutableMergeAndroidResourceSourcesStep.of(
+        ImmutableMergeAndroidResourceSourcesStep.ofImpl(
             originalDirectories.stream()
                 .map(context.getSourcePathResolver()::getAbsolutePath)
                 .collect(ImmutableList.toImmutableList()),

@@ -45,7 +45,7 @@ public abstract class BuildTargetSpec implements TargetNodeSpec {
   /** Returns a {@code BuildTargetSpec} with an empty output label. */
   public static BuildTargetSpec of(
       UnconfiguredBuildTarget unconfiguredBuildTarget, BuildFileSpec buildFileSpec) {
-    return ImmutableBuildTargetSpec.of(
+    return ImmutableBuildTargetSpec.ofImpl(
         UnconfiguredBuildTargetWithOutputs.of(unconfiguredBuildTarget, OutputLabel.defaultLabel()),
         buildFileSpec);
   }
@@ -62,7 +62,7 @@ public abstract class BuildTargetSpec implements TargetNodeSpec {
    * @param targetWithOutputs Build target to match
    */
   public static BuildTargetSpec from(UnconfiguredBuildTargetWithOutputs targetWithOutputs) {
-    return ImmutableBuildTargetSpec.of(
+    return ImmutableBuildTargetSpec.ofImpl(
         targetWithOutputs,
         BuildFileSpec.fromUnconfiguredBuildTarget(targetWithOutputs.getBuildTarget()));
   }

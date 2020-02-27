@@ -25,7 +25,7 @@ public abstract class Counter {
   private final CounterInfo info;
 
   protected Counter(String category, String name, ImmutableMap<String, String> tags) {
-    this.info = ImmutableCounterInfo.of(category, name, tags);
+    this.info = ImmutableCounterInfo.ofImpl(category, name, tags);
   }
 
   /**

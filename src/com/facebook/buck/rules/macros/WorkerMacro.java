@@ -34,6 +34,6 @@ public abstract class WorkerMacro extends BuildTargetMacro {
   }
 
   public static WorkerMacro of(BuildTargetWithOutputs buildTarget) {
-    return ImmutableWorkerMacro.of(buildTarget);
+    return ImmutableWorkerMacro.ofImpl(buildTarget);
   }
 }

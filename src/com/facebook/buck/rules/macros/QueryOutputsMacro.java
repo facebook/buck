@@ -37,6 +37,6 @@ public abstract class QueryOutputsMacro extends QueryMacro {
   }
 
   public static QueryOutputsMacro of(Query query) {
-    return ImmutableQueryOutputsMacro.of(query);
+    return ImmutableQueryOutputsMacro.ofImpl(query);
   }
 }

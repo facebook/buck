@@ -45,7 +45,7 @@ public abstract class BuildPackagePathToUnconfiguredTargetNodePackageKey
   public abstract Path getPath();
 
   public static BuildPackagePathToUnconfiguredTargetNodePackageKey of(Path path) {
-    return ImmutableBuildPackagePathToUnconfiguredTargetNodePackageKey.of(path);
+    return ImmutableBuildPackagePathToUnconfiguredTargetNodePackageKey.ofImpl(path);
   }
 
   @Value.Check

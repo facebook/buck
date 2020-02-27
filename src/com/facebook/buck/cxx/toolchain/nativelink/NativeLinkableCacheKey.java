@@ -27,7 +27,7 @@ public abstract class NativeLinkableCacheKey {
 
   public static NativeLinkableCacheKey of(
       Flavor flavor, Linker.LinkableDepType type, boolean forceLinkWhole, CxxPlatform cxxPlatform) {
-    return ImmutableNativeLinkableCacheKey.of(flavor, type, forceLinkWhole, cxxPlatform);
+    return ImmutableNativeLinkableCacheKey.ofImpl(flavor, type, forceLinkWhole, cxxPlatform);
   }
 
   public abstract Flavor getFlavor();

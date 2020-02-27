@@ -42,7 +42,7 @@ public abstract class HybridThriftOverHttpServiceImplArgs {
       ListeningExecutorService executor,
       ThriftProtocol thriftProtocol,
       String hybridThriftPath) {
-    return ImmutableHybridThriftOverHttpServiceImplArgs.of(
+    return ImmutableHybridThriftOverHttpServiceImplArgs.ofImpl(
         service, executor, thriftProtocol, hybridThriftPath);
   }
 }

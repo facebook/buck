@@ -31,7 +31,7 @@ public abstract class CellName {
       ImmutableCellName.of(ALL_CELLS_SPECIAL_STRING);
 
   public static CellName of(String name) {
-    return ImmutableCellName.of(name);
+    return ImmutableCellName.ofImpl(name);
   }
 
   public abstract String getName();

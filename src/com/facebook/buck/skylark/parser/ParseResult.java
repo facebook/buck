@@ -67,7 +67,7 @@ public abstract class ParseResult {
       Iterable<String> loadedPaths,
       Map<String, ? extends ImmutableMap<String, Optional<String>>> readConfigurationOptions,
       Iterable<? extends GlobSpecWithResult> globManifestWithResult) {
-    return ImmutableParseResult.of(
+    return ImmutableParseResult.ofImpl(
         getPackage, rawRules, loadedPaths, readConfigurationOptions, globManifestWithResult);
   }
 }

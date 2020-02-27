@@ -184,7 +184,7 @@ public abstract class CommandRunnerParams {
     if (artifactCacheFactory == getArtifactCacheFactory()) {
       return this;
     }
-    return ImmutableCommandRunnerParams.of(
+    return ImmutableCommandRunnerParams.ofImpl(
         getConsole(),
         getStdIn(),
         getCells(),
@@ -232,7 +232,7 @@ public abstract class CommandRunnerParams {
     if (buckConfig == getBuckConfig()) {
       return this;
     }
-    return ImmutableCommandRunnerParams.of(
+    return ImmutableCommandRunnerParams.ofImpl(
         getConsole(),
         getStdIn(),
         getCells(),

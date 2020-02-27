@@ -80,6 +80,6 @@ public abstract class DiffAbisStep implements Step {
       Path classAbiPath,
       Path sourceAbiPath,
       JavaBuckConfig.SourceAbiVerificationMode verificationMode) {
-    return ImmutableDiffAbisStep.of(classAbiPath, sourceAbiPath, verificationMode);
+    return ImmutableDiffAbisStep.ofImpl(classAbiPath, sourceAbiPath, verificationMode);
   }
 }

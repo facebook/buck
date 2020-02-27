@@ -78,7 +78,7 @@ public class NetworkStatsTracker {
 
   /** Get the current upload stats. */
   public RemoteArtifactUploadStats getRemoteArtifactUploadStats() {
-    return ImmutableRemoteArtifactUploadStats.of(
+    return ImmutableRemoteArtifactUploadStats.ofImpl(
         remoteArtifactUploadsStartedCount.get(),
         remoteArtifactUploadFailedCount.get(),
         remoteArtifactUploadedCount.get(),

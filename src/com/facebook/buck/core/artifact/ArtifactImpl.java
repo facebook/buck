@@ -233,7 +233,7 @@ class ArtifactImpl extends AbstractArtifact
           location,
           String.format("%s is already bound. It cannot be used as an output artifact", this));
     }
-    return ImmutableOutputArtifact.of(this);
+    return ImmutableOutputArtifact.ofImpl(this);
   }
 
   @Override
@@ -242,7 +242,7 @@ class ArtifactImpl extends AbstractArtifact
       throw new HumanReadableException(
           "%s is already bound. It cannot be used as an output artifact", this);
     }
-    return ImmutableOutputArtifact.of(this);
+    return ImmutableOutputArtifact.ofImpl(this);
   }
 
   @Override

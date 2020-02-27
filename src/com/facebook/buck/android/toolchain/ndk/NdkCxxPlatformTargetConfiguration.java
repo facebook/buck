@@ -26,7 +26,7 @@ public abstract class NdkCxxPlatformTargetConfiguration {
 
   public static NdkCxxPlatformTargetConfiguration of(
       TargetCpuType targetCpuType, String targetAppPlatform, NdkCxxPlatformCompiler compiler) {
-    return ImmutableNdkCxxPlatformTargetConfiguration.of(
+    return ImmutableNdkCxxPlatformTargetConfiguration.ofImpl(
         targetCpuType, targetAppPlatform, compiler);
   }
 

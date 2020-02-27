@@ -328,7 +328,7 @@ public class Machos {
     if (is64bit) {
       /* reserved */ ObjectFileScrubbers.getLittleEndianInt(map);
     }
-    return ImmutableMachoHeader.of(commandsCount, is64bit);
+    return ImmutableMachoHeader.ofImpl(commandsCount, is64bit);
   }
 
   public static class MachoException extends Exception {

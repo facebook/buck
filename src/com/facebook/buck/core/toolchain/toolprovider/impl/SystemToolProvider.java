@@ -99,7 +99,7 @@ public abstract class SystemToolProvider implements ToolProvider, RuleAnalysisLe
       Path name,
       Map<String, ? extends String> environment,
       Optional<String> source) {
-    return ImmutableSystemToolProvider.of(
+    return ImmutableSystemToolProvider.ofImpl(
         executableFinder, sourcePathConverter, name, environment, source);
   }
 

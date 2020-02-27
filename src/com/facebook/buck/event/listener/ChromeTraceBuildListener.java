@@ -252,7 +252,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   @Override
   public void close() {
     ChromeTraceBuildListenerCloseAction.ChromeTraceBuildListenerCloseArgs args =
-        ImmutableChromeTraceBuildListenerCloseArgs.of(
+        ImmutableChromeTraceBuildListenerCloseArgs.ofImpl(
             outputExecutor,
             tracePath,
             chromeTraceWriter,

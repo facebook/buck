@@ -34,6 +34,6 @@ public abstract class GlobSpecWithResult {
   public abstract Set<String> getFilePaths();
 
   public static GlobSpecWithResult of(GlobSpec globSpec, Set<String> filePaths) {
-    return ImmutableGlobSpecWithResult.of(globSpec, filePaths);
+    return ImmutableGlobSpecWithResult.ofImpl(globSpec, filePaths);
   }
 }

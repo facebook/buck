@@ -42,6 +42,6 @@ public abstract class ComposedResult<
   public static <KeyType extends ComputeKey<ResultType>, ResultType extends ComputeResult>
       ComposedResult<KeyType, ResultType> of(
           Map<? extends KeyType, ? extends ResultType> resultMap) {
-    return ImmutableComposedResult.of(resultMap);
+    return ImmutableComposedResult.ofImpl(resultMap);
   }
 }

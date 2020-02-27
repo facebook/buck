@@ -54,7 +54,7 @@ public class NumberFormatter {
 
   private NumberFormat getFormatter(Locale locale) {
     return numberFormatCache.getUnchecked(
-        ImmutableNumberFormatterCacheKey.of(Thread.currentThread().getId(), locale));
+        ImmutableNumberFormatterCacheKey.ofImpl(Thread.currentThread().getId(), locale));
   }
 
   /** @see NumberFormat#format(double) */

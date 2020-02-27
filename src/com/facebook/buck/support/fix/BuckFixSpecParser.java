@@ -223,7 +223,7 @@ public class BuckFixSpecParser {
     List<String> expandedCommandArgs = buildLogEntry.getExpandedCommandArgs().get();
 
     return Either.ofLeft(
-        ImmutableBuckFixSpec.of(
+        ImmutableBuckFixSpec.ofImpl(
             buildId,
             commandArgs.get(0),
             exitCode,

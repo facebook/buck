@@ -26,7 +26,7 @@ public interface AdbToolchain extends Toolchain {
   String DEFAULT_NAME = "adb-toolchain";
 
   static AdbToolchain of(Path adbPath) {
-    return ImmutableAdbToolchain.of(adbPath);
+    return ImmutableAdbToolchain.ofImpl(adbPath);
   }
 
   /** @return {@code Path} pointing to the Android adb platform tool. */

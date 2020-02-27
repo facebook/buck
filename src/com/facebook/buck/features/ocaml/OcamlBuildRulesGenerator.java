@@ -131,7 +131,7 @@ public class OcamlBuildRulesGenerator {
       rules.add(generateDebugLauncherRule());
     }
 
-    return ImmutableOcamlGeneratedBuildRules.of(
+    return ImmutableOcamlGeneratedBuildRules.ofImpl(
         rules.build(),
         ImmutableSortedSet.copyOf(nativeCompileDeps.build()),
         ImmutableSortedSet.copyOf(bytecodeCompileDeps.build()),

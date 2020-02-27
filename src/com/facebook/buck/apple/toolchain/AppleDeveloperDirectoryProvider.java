@@ -34,6 +34,6 @@ public interface AppleDeveloperDirectoryProvider extends Toolchain {
   }
 
   static AppleDeveloperDirectoryProvider of(Path appleDeveloperDirectory) {
-    return ImmutableAppleDeveloperDirectoryProvider.of(appleDeveloperDirectory);
+    return ImmutableAppleDeveloperDirectoryProvider.ofImpl(appleDeveloperDirectory);
   }
 }

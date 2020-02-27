@@ -38,6 +38,6 @@ public abstract class CxxppFlagsMacro extends CxxGenruleFilterAndTargetsMacro {
 
   public static CxxppFlagsMacro of(
       Optional<Pattern> pattern, ImmutableList<BuildTarget> buildTargets) {
-    return ImmutableCxxppFlagsMacro.of(pattern, buildTargets);
+    return ImmutableCxxppFlagsMacro.ofImpl(pattern, buildTargets);
   }
 }

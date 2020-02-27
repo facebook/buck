@@ -53,7 +53,7 @@ public abstract class SourceWithFlags implements Comparable<SourceWithFlags>, Ad
   }
 
   public static SourceWithFlags of(SourcePath sourcePath, ImmutableList<String> flags) {
-    return ImmutableSourceWithFlags.of(sourcePath, flags);
+    return ImmutableSourceWithFlags.ofImpl(sourcePath, flags);
   }
 
   public SourceWithFlags withSourcePath(SourcePath sourcePath) {

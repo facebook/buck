@@ -26,7 +26,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 public interface ExopackagePathAndHash extends AddsToRuleKey {
 
   static ExopackagePathAndHash of(SourcePath path, SourcePath hashPath) {
-    return ImmutableExopackagePathAndHash.of(path, hashPath);
+    return ImmutableExopackagePathAndHash.ofImpl(path, hashPath);
   }
 
   @AddToRuleKey

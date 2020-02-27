@@ -59,7 +59,7 @@ public abstract class FixBuckConfig implements ConfigView<BuckConfig> {
   public abstract BuckConfig getDelegate();
 
   public static FixBuckConfig of(BuckConfig delegate) {
-    return ImmutableFixBuckConfig.of(delegate);
+    return ImmutableFixBuckConfig.ofImpl(delegate);
   }
 
   /** Get the script to run when buck fix is invoked */

@@ -37,6 +37,6 @@ public abstract class QueryPathsMacro extends QueryMacro {
   }
 
   public static QueryPathsMacro of(Query query) {
-    return ImmutableQueryPathsMacro.of(query);
+    return ImmutableQueryPathsMacro.ofImpl(query);
   }
 }

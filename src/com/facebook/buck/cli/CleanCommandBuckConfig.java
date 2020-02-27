@@ -30,7 +30,7 @@ public abstract class CleanCommandBuckConfig implements ConfigView<BuckConfig> {
   public abstract BuckConfig getDelegate();
 
   public static CleanCommandBuckConfig of(BuckConfig delegate) {
-    return ImmutableCleanCommandBuckConfig.of(delegate);
+    return ImmutableCleanCommandBuckConfig.ofImpl(delegate);
   }
 
   @Value.Lazy

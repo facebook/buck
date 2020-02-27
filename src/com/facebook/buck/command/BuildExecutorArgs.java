@@ -70,7 +70,7 @@ public abstract class BuildExecutorArgs {
       BuildInfoStoreManager buildInfoStoreManager,
       ArtifactCacheFactory artifactCacheFactory,
       RuleKeyConfiguration ruleKeyConfiguration) {
-    return ImmutableBuildExecutorArgs.of(
+    return ImmutableBuildExecutorArgs.ofImpl(
         console,
         buckEventBus,
         platform,

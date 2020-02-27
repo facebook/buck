@@ -52,6 +52,6 @@ public class HaskellPlatformsProviderFactory implements ToolchainFactory<Haskell
         haskellPlatforms.getValue(defaultCxxPlatform.getFlavor());
 
     return Optional.of(
-        ImmutableHaskellPlatformsProvider.of(defaultHaskellPlatform, haskellPlatforms));
+        ImmutableHaskellPlatformsProvider.ofImpl(defaultHaskellPlatform, haskellPlatforms));
   }
 }

@@ -62,14 +62,14 @@ public class WatchmanWatcherTest {
 
   private static final AbsPath FAKE_ROOT = AbsPath.of(Paths.get("/fake/root").toAbsolutePath());
   private static final WatchmanQuery FAKE_QUERY =
-      ImmutableWatchmanQuery.of("/fake/root", ImmutableMap.of());
+      ImmutableWatchmanQuery.ofImpl("/fake/root", ImmutableMap.of());
   private static final List<Object> FAKE_UUID_QUERY = FAKE_QUERY.toList("n:buckduuid");
   private static final List<Object> FAKE_CLOCK_QUERY = FAKE_QUERY.toList("c:0:0");
 
   private static final AbsPath FAKE_SECONDARY_ROOT =
       AbsPath.of(Paths.get("/fake/secondary").toAbsolutePath());
   private static final WatchmanQuery FAKE_SECONDARY_QUERY =
-      ImmutableWatchmanQuery.of("/fake/SECONDARY", ImmutableMap.of());
+      ImmutableWatchmanQuery.ofImpl("/fake/SECONDARY", ImmutableMap.of());
 
   private EventBus eventBus;
   private EventBuffer eventBuffer;
@@ -384,7 +384,7 @@ public class WatchmanWatcherTest {
                 RecursiveFileMatcher.of(RelPath.get("bar/baz"))),
             ImmutableSet.of(Capability.DIRNAME));
     assertEquals(
-        ImmutableWatchmanQuery.of(
+        ImmutableWatchmanQuery.ofImpl(
             "/path/to/repo",
             ImmutableMap.of(
                 "expression",
@@ -413,7 +413,7 @@ public class WatchmanWatcherTest {
                 RecursiveFileMatcher.of(RelPath.get("bar/baz"))),
             ImmutableSet.of());
     assertEquals(
-        ImmutableWatchmanQuery.of(
+        ImmutableWatchmanQuery.ofImpl(
             "/path/to/repo",
             ImmutableMap.of(
                 "expression",
@@ -445,7 +445,7 @@ public class WatchmanWatcherTest {
                 RecursiveFileMatcher.of(RelPath.get("bar/baz"))),
             ImmutableSet.of(Capability.DIRNAME));
     assertEquals(
-        ImmutableWatchmanQuery.of(
+        ImmutableWatchmanQuery.ofImpl(
             watchRoot,
             ImmutableMap.of(
                 "expression",
@@ -472,7 +472,7 @@ public class WatchmanWatcherTest {
             ImmutableSet.of(GlobPatternMatcher.of("*.pbxproj")),
             ImmutableSet.of(Capability.DIRNAME));
     assertEquals(
-        ImmutableWatchmanQuery.of(
+        ImmutableWatchmanQuery.ofImpl(
             "/path/to/repo",
             ImmutableMap.of(
                 "expression",

@@ -515,7 +515,7 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     String getExtension();
 
     static ApplePackageConfig of(String command, String extension) {
-      return ImmutableApplePackageConfig.of(command, extension);
+      return ImmutableApplePackageConfig.ofImpl(command, extension);
     }
   }
 }

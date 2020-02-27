@@ -34,12 +34,12 @@ public class BuildTargetOutputLabelParser {
   public static TargetWithOutputLabel getBuildTargetNameWithOutputLabel(String targetName) {
     if (!targetName.contains(OUTPUT_LABEL_START_INDICATOR)
         && !targetName.contains(OUTPUT_LABEL_END_INDICATOR)) {
-      return ImmutableTargetWithOutputLabel.of(targetName, OutputLabel.defaultLabel());
+      return ImmutableTargetWithOutputLabel.ofImpl(targetName, OutputLabel.defaultLabel());
     }
     int outputLabelStartIndex = targetName.indexOf(OUTPUT_LABEL_START_INDICATOR);
     int outputLabelEndIndex = targetName.indexOf(OUTPUT_LABEL_END_INDICATOR);
     checkValid(outputLabelStartIndex, outputLabelEndIndex, targetName);
-    return ImmutableTargetWithOutputLabel.of(
+    return ImmutableTargetWithOutputLabel.ofImpl(
         targetName.substring(0, outputLabelStartIndex),
         OutputLabel.of(targetName.substring(outputLabelStartIndex + 1, targetName.length() - 1)));
   }

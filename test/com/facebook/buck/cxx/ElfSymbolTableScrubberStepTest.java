@@ -47,7 +47,7 @@ public class ElfSymbolTableScrubberStepTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "elf_shared_lib", tmp);
     workspace.setUp();
     ElfSymbolTableScrubberStep step =
-        ImmutableElfSymbolTableScrubberStep.of(
+        ImmutableElfSymbolTableScrubberStep.ofImpl(
             TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()),
             tmp.getRoot().getFileSystem().getPath("libfoo.so"),
             ".dynsym",
@@ -87,7 +87,7 @@ public class ElfSymbolTableScrubberStepTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "elf_shared_lib", tmp);
     workspace.setUp();
     ElfSymbolTableScrubberStep step =
-        ImmutableElfSymbolTableScrubberStep.of(
+        ImmutableElfSymbolTableScrubberStep.ofImpl(
             TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()),
             tmp.getRoot().getFileSystem().getPath("libfoo.so"),
             ".dynsym",

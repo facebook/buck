@@ -44,9 +44,9 @@ public class VisibilityPatternParser {
   public static VisibilityPattern parse(
       CellPathResolver cellNames, Path definingPath, String buildTargetPattern) {
     if (VISIBILITY_PUBLIC.equals(buildTargetPattern)) {
-      return ImmutablePublicVisibilityPattern.of(definingPath);
+      return ImmutablePublicVisibilityPattern.ofImpl(definingPath);
     } else {
-      return ImmutableBuildTargetVisibilityPattern.of(
+      return ImmutableBuildTargetVisibilityPattern.ofImpl(
           buildTargetPatternParser.parse(buildTargetPattern, cellNames.getCellNameResolver()),
           definingPath);
     }

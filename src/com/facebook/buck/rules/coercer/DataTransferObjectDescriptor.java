@@ -86,7 +86,7 @@ public abstract class DataTransferObjectDescriptor<T extends DataTransferObject>
       Supplier<Object> builderFactory,
       Map<String, ? extends ParamInfo<?>> paramInfos,
       DataTransferObjectDescriptor.BuilderBuildFunction<T> buildFunction) {
-    return ImmutableDataTransferObjectDescriptor.of(
+    return ImmutableDataTransferObjectDescriptor.ofImpl(
         objectClass, builderFactory, paramInfos, buildFunction);
   }
 }

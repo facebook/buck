@@ -97,7 +97,7 @@ public interface TestXRule extends TestRule, ExternalTestRunnerRule, HasSuppleme
       ExecutionContext executionContext,
       TestRunningOptions testRunningOptions,
       BuildContext buildContext) {
-    return ImmutableExternalRunnerTestProtocol.of(
+    return ImmutableExternalRunnerTestProtocol.ofImpl(
         getBuildTarget(), getSpecs(), buildContext.getSourcePathResolver());
   }
 

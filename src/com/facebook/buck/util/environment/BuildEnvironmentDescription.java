@@ -149,7 +149,7 @@ public abstract class BuildEnvironmentDescription {
       ImmutableMap<String, String> extraData,
       int jsonProtocolVersion,
       String buildType) {
-    return ImmutableBuildEnvironmentDescription.of(
+    return ImmutableBuildEnvironmentDescription.ofImpl(
         user,
         hostname,
         os,

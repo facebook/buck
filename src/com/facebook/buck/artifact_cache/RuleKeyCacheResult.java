@@ -43,7 +43,7 @@ public abstract class RuleKeyCacheResult {
       RuleKeyType ruleKeyType,
       CacheResultType cacheResult,
       Optional<String> twoLevelContentHashKey) {
-    return ImmutableRuleKeyCacheResult.of(
+    return ImmutableRuleKeyCacheResult.ofImpl(
         buildTarget,
         ruleKey,
         requestTimestampMillis,

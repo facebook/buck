@@ -49,6 +49,6 @@ public abstract class BoolAttribute extends Attribute<Boolean> {
   }
 
   public static BoolAttribute of(Boolean preCoercionDefaultValue, String doc, boolean mandatory) {
-    return ImmutableBoolAttribute.of(preCoercionDefaultValue, doc, mandatory);
+    return ImmutableBoolAttribute.ofImpl(preCoercionDefaultValue, doc, mandatory);
   }
 }

@@ -36,6 +36,6 @@ public abstract class ContentRoot implements Comparable<ContentRoot> {
   }
 
   public static ContentRoot of(String url, ImmutableList<IjSourceFolder> folders) {
-    return ImmutableContentRoot.of(url, folders);
+    return ImmutableContentRoot.ofImpl(url, folders);
   }
 }

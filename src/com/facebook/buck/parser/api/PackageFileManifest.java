@@ -60,6 +60,6 @@ public abstract class PackageFileManifest implements ComputeResult, FileManifest
       ImmutableMap<String, Object> configs,
       Optional<ImmutableMap<String, Optional<String>>> env,
       ImmutableList<ParsingError> errors) {
-    return ImmutablePackageFileManifest.of(getPackage, includes, configs, env, errors);
+    return ImmutablePackageFileManifest.ofImpl(getPackage, includes, configs, env, errors);
   }
 }

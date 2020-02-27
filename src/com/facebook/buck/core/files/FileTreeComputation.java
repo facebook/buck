@@ -61,7 +61,7 @@ public class FileTreeComputation implements GraphComputation<FileTreeKey, FileTr
       deps = MoreMaps.transformKeys(children, k -> k.getPath());
     }
 
-    return ImmutableFileTree.of(key.getPath(), currentDir, deps);
+    return ImmutableFileTree.ofImpl(key.getPath(), currentDir, deps);
   }
 
   @Override

@@ -26,6 +26,6 @@ public interface DocumentLocation {
   Integer getColumnNumber();
 
   static DocumentLocation of(Integer lineNumber, Integer columnNumber) {
-    return ImmutableDocumentLocation.of(lineNumber, columnNumber);
+    return ImmutableDocumentLocation.ofImpl(lineNumber, columnNumber);
   }
 }

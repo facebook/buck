@@ -244,7 +244,7 @@ public class Build implements Closeable {
         resultBuilder.put(rule, Optional.ofNullable(buildResults.get(i)));
       }
 
-      return ImmutableBuildExecutionResult.of(
+      return ImmutableBuildExecutionResult.ofImpl(
           resultBuilder,
           buildResults.stream().filter(input -> !input.isSuccess()).collect(Collectors.toList()));
     }
@@ -261,7 +261,7 @@ public class Build implements Closeable {
       resultBuilder.put(rule, Optional.ofNullable(results.get(i)));
     }
 
-    return ImmutableBuildExecutionResult.of(
+    return ImmutableBuildExecutionResult.ofImpl(
         resultBuilder,
         results.stream().filter(input -> !input.isSuccess()).collect(Collectors.toList()));
   }

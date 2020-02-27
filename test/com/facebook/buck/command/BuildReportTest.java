@@ -130,7 +130,7 @@ public class BuildReportTest {
         rule6, Optional.of(BuildResult.success(rule1, BUILT_LOCALLY, CacheResult.miss())));
 
     buildExecutionResult =
-        ImmutableBuildExecutionResult.of(ruleToResult, ImmutableSet.of(rule2Failure));
+        ImmutableBuildExecutionResult.ofImpl(ruleToResult, ImmutableSet.of(rule2Failure));
   }
 
   @Test
@@ -308,7 +308,7 @@ public class BuildReportTest {
         ImmutableMap.of(
             rule, Optional.of(BuildResult.success(rule, BUILT_LOCALLY, CacheResult.miss())));
     Build.BuildExecutionResult buildExecutionResult =
-        ImmutableBuildExecutionResult.of(ruleResultWithOutput, ImmutableSet.of());
+        ImmutableBuildExecutionResult.ofImpl(ruleResultWithOutput, ImmutableSet.of());
     BuckConfig buckConfig =
         FakeBuckConfig.builder()
             .setFilesystem(new FakeProjectFilesystem())

@@ -78,7 +78,7 @@ public class BuildReportUpload {
   private void uploadInBackground(
       Config config, ListenableFuture<Optional<FullVersionControlStats>> vcStatsFuture) {
     BuildReportUploadActionArgs args =
-        ImmutableBuildReportUploadActionArgs.of(config, buildReportUploader, vcStatsFuture);
+        ImmutableBuildReportUploadActionArgs.ofImpl(config, buildReportUploader, vcStatsFuture);
 
     BackgroundTask<BuildReportUploadActionArgs> task =
         BackgroundTask.of("BuildReportUpload", new BuildReportUploadAction(), args);
@@ -107,7 +107,7 @@ public class BuildReportUpload {
         LOG.warn("Uploading build report without version control stats");
       }
 
-      FullBuildReport buildReport = ImmutableFullBuildReport.of(args.getConfig(), vcStats);
+      FullBuildReport buildReport = ImmutableFullBuildReport.ofImpl(args.getConfig(), vcStats);
       try {
         args.getBuildReportUploader().uploadReport(buildReport);
       } catch (IOException e) {

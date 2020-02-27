@@ -38,7 +38,7 @@ public class GoPlatformFactoryTest {
     Path root = filesystem.resolve("root");
     filesystem.mkdirs(root);
     GoPlatformFactory factory =
-        ImmutableGoPlatformFactory.of(
+        ImmutableGoPlatformFactory.ofImpl(
             FakeBuckConfig.builder()
                 .setFilesystem(filesystem)
                 .setSections(

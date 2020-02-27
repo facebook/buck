@@ -77,7 +77,7 @@ public class AndroidInstrumentationTestTest {
         new HasInstallableApk() {
           @Override
           public ApkInfo getApkInfo() {
-            return ImmutableApkInfo.of(
+            return ImmutableApkInfo.ofImpl(
                 PathSourcePath.of(fakeFilesystem, Paths.get("AndroidManifest")),
                 PathSourcePath.of(fakeFilesystem, Paths.get("ApkInfo")),
                 Optional.of(

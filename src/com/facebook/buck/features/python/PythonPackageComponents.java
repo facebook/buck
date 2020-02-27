@@ -126,7 +126,7 @@ public abstract class PythonPackageComponents implements AddsToRuleKey {
   }
 
   public PythonPackageComponents withDefaultInitPy(@Nullable SourcePath emptyInit) {
-    return ImmutablePythonPackageComponents.of(
+    return ImmutablePythonPackageComponents.ofImpl(
         getModules(),
         getResources(),
         getNativeLibraries(),
@@ -172,7 +172,7 @@ public abstract class PythonPackageComponents implements AddsToRuleKey {
     }
 
     public PythonPackageComponents build() {
-      return ImmutablePythonPackageComponents.of(
+      return ImmutablePythonPackageComponents.ofImpl(
           modules, resources, nativeLibraries, Optional.empty(), zipSafe);
     }
   }

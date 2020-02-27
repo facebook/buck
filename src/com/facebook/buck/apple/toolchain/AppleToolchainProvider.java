@@ -33,6 +33,6 @@ public interface AppleToolchainProvider extends ComparableToolchain {
   }
 
   static AppleToolchainProvider of(Map<String, ? extends AppleToolchain> appleToolchains) {
-    return ImmutableAppleToolchainProvider.of(appleToolchains);
+    return ImmutableAppleToolchainProvider.ofImpl(appleToolchains);
   }
 }

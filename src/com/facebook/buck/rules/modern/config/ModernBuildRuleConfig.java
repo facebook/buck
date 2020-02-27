@@ -28,7 +28,7 @@ public abstract class ModernBuildRuleConfig
   public static final String SECTION = "modern_build_rule";
 
   public static ModernBuildRuleConfig of(BuckConfig delegate) {
-    return ImmutableModernBuildRuleConfig.of(delegate);
+    return ImmutableModernBuildRuleConfig.ofImpl(delegate);
   }
 
   @Value.Derived

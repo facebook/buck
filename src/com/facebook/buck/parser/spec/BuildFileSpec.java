@@ -37,7 +37,7 @@ public abstract class BuildFileSpec {
    * @return a new {@link BuildFileSpec} with {@link #isRecursive()}} set to {@code true}
    */
   public static BuildFileSpec fromRecursivePath(CellRelativePath cellRelativePath) {
-    return ImmutableBuildFileSpec.of(cellRelativePath, /* recursive */ true);
+    return ImmutableBuildFileSpec.ofImpl(cellRelativePath, /* recursive */ true);
   }
 
   /**
@@ -46,7 +46,7 @@ public abstract class BuildFileSpec {
    * @return a new {@link BuildFileSpec} with {@link #isRecursive()}} set to {@code false}
    */
   public static BuildFileSpec fromPath(CellRelativePath cellRelativePath) {
-    return ImmutableBuildFileSpec.of(cellRelativePath, /* recursive */ false);
+    return ImmutableBuildFileSpec.ofImpl(cellRelativePath, /* recursive */ false);
   }
 
   /** @return a {@link BuildFileSpec} for a specific build target like //foo/bar:baz */

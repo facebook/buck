@@ -29,6 +29,6 @@ interface VersionInfo extends ComputeResult {
   ImmutableMap<BuildTarget, ImmutableSet<Version>> getVersionDomain();
 
   static VersionInfo of(Map<? extends BuildTarget, ? extends ImmutableSet<Version>> versionDomain) {
-    return ImmutableVersionInfo.of(versionDomain);
+    return ImmutableVersionInfo.ofImpl(versionDomain);
   }
 }

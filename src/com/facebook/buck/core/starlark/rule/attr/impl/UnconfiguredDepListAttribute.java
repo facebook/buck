@@ -85,7 +85,7 @@ public abstract class UnconfiguredDepListAttribute
       String doc,
       boolean mandatory,
       boolean allowEmpty) {
-    return ImmutableUnconfiguredDepListAttribute.of(
+    return ImmutableUnconfiguredDepListAttribute.ofImpl(
         preCoercionDefaultValue, doc, mandatory, allowEmpty);
   }
 

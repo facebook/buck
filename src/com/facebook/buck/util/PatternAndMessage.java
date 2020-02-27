@@ -39,6 +39,6 @@ public abstract class PatternAndMessage {
   }
 
   public static PatternAndMessage of(Pattern pattern, String message) {
-    return ImmutablePatternAndMessage.of(pattern, message);
+    return ImmutablePatternAndMessage.ofImpl(pattern, message);
   }
 }

@@ -105,7 +105,8 @@ public class HttpArtifactCacheEventListener implements BuckEventListener {
   @Override
   public void close() {
     HttpArtifactCacheEventListenerCloseArgs args =
-        ImmutableHttpArtifactCacheEventListenerCloseArgs.of(fetchRequestLogger, storeRequestLogger);
+        ImmutableHttpArtifactCacheEventListenerCloseArgs.ofImpl(
+            fetchRequestLogger, storeRequestLogger);
     BackgroundTask<HttpArtifactCacheEventListenerCloseArgs> task =
         BackgroundTask.of(
             "HttpArtifactCacheEventListener_close",

@@ -59,7 +59,7 @@ public interface WorkerProcessParams {
       ImmutableMap<String, String> startupEnvironment,
       int maxWorkers,
       Optional<WorkerProcessIdentity> workerProcessIdentity) {
-    return ImmutableWorkerProcessParams.of(
+    return ImmutableWorkerProcessParams.ofImpl(
         tempDir, startupCommand, startupEnvironment, maxWorkers, workerProcessIdentity);
   }
 }

@@ -288,7 +288,8 @@ public class TestRunning {
       }
       steps = stepsBuilder.build();
 
-      TestRun testRun = ImmutableTestRun.of(test, steps, resultsInterpreter, testReportingCallback);
+      TestRun testRun =
+          ImmutableTestRun.ofImpl(test, steps, resultsInterpreter, testReportingCallback);
 
       // Always run the commands, even if the list of commands as empty. There may be zero
       // commands because the rule is cached, but its results must still be processed.

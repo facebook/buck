@@ -44,7 +44,7 @@ public abstract class BuildBuckConfig implements ConfigView<BuckConfig> {
   public abstract BuckConfig getDelegate();
 
   public static BuildBuckConfig of(BuckConfig delegate) {
-    return ImmutableBuildBuckConfig.of(delegate);
+    return ImmutableBuildBuckConfig.ofImpl(delegate);
   }
 
   @Value.Lazy

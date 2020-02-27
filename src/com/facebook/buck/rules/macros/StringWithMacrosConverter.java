@@ -90,7 +90,7 @@ public abstract class StringWithMacrosConverter {
       ImmutableList<MacroExpander<? extends Macro, ?>> expanders,
       Optional<Function<String, String>> sanitizer,
       HashMap<Macro, Object> precomputedWorkCache) {
-    return ImmutableStringWithMacrosConverter.of(
+    return ImmutableStringWithMacrosConverter.ofImpl(
         buildTarget,
         cellNameResolver,
         actionGraphBuilder,

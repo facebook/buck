@@ -173,7 +173,7 @@ public abstract class SourceSet implements TargetTranslatable<SourceSet>, AddsTo
       SourceSet.Type type,
       Optional<? extends ImmutableSet<SourcePath>> unnamedSources,
       Optional<? extends ImmutableMap<String, SourcePath>> namedSources) {
-    return ImmutableSourceSet.of(type, unnamedSources, namedSources);
+    return ImmutableSourceSet.ofImpl(type, unnamedSources, namedSources);
   }
 
   private static Type findType(Iterable<SourceSet> elements) {

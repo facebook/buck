@@ -87,7 +87,7 @@ public class PlatformDescription
             .map(ConstraintValueRule::getConstraintValue)
             .collect(ImmutableSet.toImmutableSet()));
 
-    return ImmutablePlatformRule.of(
+    return ImmutablePlatformRule.ofImpl(
         buildTarget,
         arg.getName(),
         constraintValueRules,

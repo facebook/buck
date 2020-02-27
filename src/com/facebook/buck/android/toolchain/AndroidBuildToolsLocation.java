@@ -28,7 +28,7 @@ public interface AndroidBuildToolsLocation extends Toolchain {
   String DEFAULT_NAME = "android-build-tools";
 
   static AndroidBuildToolsLocation of(Path buildToolsPath) {
-    return ImmutableAndroidBuildToolsLocation.of(buildToolsPath);
+    return ImmutableAndroidBuildToolsLocation.ofImpl(buildToolsPath);
   }
 
   /** @return {@code Path} pointing to Android SDK build tools */

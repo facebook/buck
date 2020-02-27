@@ -21,11 +21,11 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 @BuckStyleValue
 public interface Version {
 
-  Version DEFAULT = ImmutableVersion.of("default");
+  Version DEFAULT = ImmutableVersion.ofImpl("default");
 
   String getName();
 
   static Version of(String name) {
-    return ImmutableVersion.of(name);
+    return ImmutableVersion.ofImpl(name);
   }
 }

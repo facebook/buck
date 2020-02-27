@@ -37,7 +37,7 @@ public abstract class RuleKeyConfiguration {
       String coreKey,
       long buildInputRuleKeyFileSizeLimit,
       BuckModuleHashStrategy buckModuleHashStrategy) {
-    return ImmutableRuleKeyConfiguration.of(
+    return ImmutableRuleKeyConfiguration.ofImpl(
         seed, coreKey, buildInputRuleKeyFileSizeLimit, buckModuleHashStrategy);
   }
 }

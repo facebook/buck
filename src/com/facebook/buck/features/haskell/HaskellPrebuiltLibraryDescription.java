@@ -106,12 +106,12 @@ public class HaskellPrebuiltLibraryDescription
         }
         HaskellPackage pkg = pkgBuilder.build();
 
-        return ImmutableHaskellCompileInput.of(args.getExportedCompilerFlags(), pkg);
+        return ImmutableHaskellCompileInput.ofImpl(args.getExportedCompilerFlags(), pkg);
       }
 
       @Override
       public HaskellHaddockInput getHaddockInput(HaskellPlatform platform) {
-        return ImmutableHaskellHaddockInput.of(ImmutableList.of(), ImmutableList.of());
+        return ImmutableHaskellHaddockInput.ofImpl(ImmutableList.of(), ImmutableList.of());
       }
 
       public NativeLinkableInput getNativeLinkableInput(

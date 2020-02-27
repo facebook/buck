@@ -402,7 +402,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
         });
 
     MachineReadableLoggerListenerCloseArgs args =
-        ImmutableMachineReadableLoggerListenerCloseArgs.of(
+        ImmutableMachineReadableLoggerListenerCloseArgs.ofImpl(
             executor,
             info.getLogDirectoryPath().resolve(BuckConstant.BUCK_MACHINE_LOG_FILE_NAME),
             chromeTraceConfig.getLogUploadMode().shouldUploadLogs(exitCode)

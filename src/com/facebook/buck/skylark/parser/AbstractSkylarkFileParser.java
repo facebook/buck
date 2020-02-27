@@ -137,7 +137,8 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
     // Only export requested symbols, and ensure that all requsted symbols are present.
     ExtensionData data =
-        loadExtension(ImmutableLoadImport.of(containingLabel, implicitInclude.get().getLoadPath()));
+        loadExtension(
+            ImmutableLoadImport.ofImpl(containingLabel, implicitInclude.get().getLoadPath()));
     ImmutableMap<String, Object> symbols = data.getExtension().getBindings();
     ImmutableMap<String, String> expectedSymbols = implicitInclude.get().getSymbols();
     Builder<String, Object> loaded = ImmutableMap.builderWithExpectedSize(expectedSymbols.size());
@@ -151,7 +152,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       }
       loaded.put(kvp.getKey(), symbol);
     }
-    return ImmutableImplicitlyLoadedExtension.of(data, loaded.build());
+    return ImmutableImplicitlyLoadedExtension.ofImpl(data, loaded.build());
   }
 
   /** @return The parsed result defined in {@code parseFile}. */
@@ -242,7 +243,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
     parseContext.setup(env);
 
-    return ImmutableEnvironmentData.of(
+    return ImmutableEnvironmentData.ofImpl(
         env, toLoadedPaths(buildFilePath, dependencies, implicitLoadExtensionData));
   }
 
@@ -361,7 +362,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
             ? ImmutableList.of()
             : loadIncludes(label, fileAst.getImports());
 
-    return ImmutableIncludesData.of(
+    return ImmutableIncludesData.ofImpl(
         filePath, dependencies, toIncludedPaths(filePath.toString(), dependencies, null));
   }
 
@@ -377,7 +378,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       SkylarkImport skylarkImport = skylarkImports.get(i);
       // sometimes users include the same extension multiple times...
       if (!processed.add(skylarkImport)) continue;
-      LoadImport loadImport = ImmutableLoadImport.of(containingLabel, skylarkImport);
+      LoadImport loadImport = ImmutableLoadImport.ofImpl(containingLabel, skylarkImport);
       try {
         includes.add(includesDataCache.getUnchecked(loadImport));
       } catch (UncheckedExecutionException e) {
@@ -416,7 +417,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       // sometimes users include the same extension multiple times...
       if (!processed.add(skylarkImport)) continue;
       try {
-        extensions.add(loadExtension(ImmutableLoadImport.of(containingLabel, skylarkImport)));
+        extensions.add(loadExtension(ImmutableLoadImport.ofImpl(containingLabel, skylarkImport)));
       } catch (UncheckedExecutionException e) {
         propagateRootCause(e);
       }
@@ -614,7 +615,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     boolean haveUnsatisfiedDeps = false;
     for (int i = 0; i < load.getAST().getImports().size(); ++i) {
       LoadImport dependency =
-          ImmutableLoadImport.of(load.getLabel(), load.getAST().getImports().get(i));
+          ImmutableLoadImport.ofImpl(load.getLabel(), load.getAST().getImports().get(i));
 
       // Record dependency for this load.
       load.addDependency(dependency);
@@ -674,7 +675,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       loadedExtension = new Extension(extensionEnv);
     }
 
-    return ImmutableExtensionData.of(
+    return ImmutableExtensionData.ofImpl(
         loadedExtension,
         load.getPath(),
         dependencies,
@@ -866,7 +867,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
     @Value.Lazy
     static ImplicitlyLoadedExtension empty() {
-      return ImmutableImplicitlyLoadedExtension.of(null, ImmutableMap.of());
+      return ImmutableImplicitlyLoadedExtension.ofImpl(null, ImmutableMap.of());
     }
   }
 }

@@ -43,6 +43,6 @@ public abstract class StringArg implements Arg {
   }
 
   public static StringArg of(String arg) {
-    return ImmutableStringArg.of(arg);
+    return ImmutableStringArg.ofImpl(arg);
   }
 }

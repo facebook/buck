@@ -105,7 +105,7 @@ public abstract class SourceSortedSetAttribute extends Attribute<ImmutableSorted
       String doc,
       boolean mandatory,
       boolean allowEmpty) {
-    return ImmutableSourceSortedSetAttribute.of(
+    return ImmutableSourceSortedSetAttribute.ofImpl(
         preCoercionDefaultValue, doc, mandatory, allowEmpty);
   }
 }

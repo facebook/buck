@@ -33,6 +33,6 @@ public interface JavacOptionsProvider extends Toolchain {
   }
 
   static JavacOptionsProvider of(JavacOptions javacOptions) {
-    return ImmutableJavacOptionsProvider.of(javacOptions);
+    return ImmutableJavacOptionsProvider.ofImpl(javacOptions);
   }
 }

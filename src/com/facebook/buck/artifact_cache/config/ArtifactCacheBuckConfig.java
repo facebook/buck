@@ -333,7 +333,8 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
               }
             });
 
-    return ImmutableArtifactCacheEntries.of(httpCacheEntries, dirCacheEntries, sqliteCacheEntries);
+    return ImmutableArtifactCacheEntries.ofImpl(
+        httpCacheEntries, dirCacheEntries, sqliteCacheEntries);
   }
 
   private ImmutableSet<HttpCacheEntry> getHttpCacheEntries() {
@@ -594,7 +595,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
     Optional<Long> maxInlinedSizeBytes =
         buckConfig.getValue(section, SQLITE_MAX_INLINED_SIZE_FIELD).map(SizeUnit::parseBytes);
 
-    return ImmutableSQLiteCacheEntry.of(
+    return ImmutableSQLiteCacheEntry.ofImpl(
         Optional.of(cacheName), pathToCacheDir, maxSizeBytes, maxInlinedSizeBytes, readMode);
   }
 

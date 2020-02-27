@@ -26,7 +26,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 public abstract class AbsoluteOutputMacro implements Macro {
 
   public static AbsoluteOutputMacro of(String outputName) {
-    return ImmutableAbsoluteOutputMacro.of(outputName);
+    return ImmutableAbsoluteOutputMacro.ofImpl(outputName);
   }
 
   @Override
