@@ -76,6 +76,11 @@ private static final long serialVersionUID = 0L;
 
             break;
           }
+          case 40: {
+
+            engineScheduledCount_ = input.readInt64();
+            break;
+          }
           default: {
             if (!parseUnknownField(
                 input, unknownFields, extensionRegistry, tag)) {
@@ -171,6 +176,15 @@ private static final long serialVersionUID = 0L;
     return getIsFallbackEnabledForCompletedAction();
   }
 
+  public static final int ENGINE_SCHEDULED_COUNT_FIELD_NUMBER = 5;
+  private long engineScheduledCount_;
+  /**
+   * <code>int64 engine_scheduled_count = 5;</code>
+   */
+  public long getEngineScheduledCount() {
+    return engineScheduledCount_;
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -197,6 +211,9 @@ private static final long serialVersionUID = 0L;
     if (isFallbackEnabledForCompletedAction_ != null) {
       output.writeMessage(4, getIsFallbackEnabledForCompletedAction());
     }
+    if (engineScheduledCount_ != 0L) {
+      output.writeInt64(5, engineScheduledCount_);
+    }
     unknownFields.writeTo(output);
   }
 
@@ -221,6 +238,10 @@ private static final long serialVersionUID = 0L;
     if (isFallbackEnabledForCompletedAction_ != null) {
       size += com.google.protobuf.CodedOutputStream
         .computeMessageSize(4, getIsFallbackEnabledForCompletedAction());
+    }
+    if (engineScheduledCount_ != 0L) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeInt64Size(5, engineScheduledCount_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -248,6 +269,8 @@ private static final long serialVersionUID = 0L;
       if (!getIsFallbackEnabledForCompletedAction()
           .equals(other.getIsFallbackEnabledForCompletedAction())) return false;
     }
+    if (getEngineScheduledCount()
+        != other.getEngineScheduledCount()) return false;
     if (!unknownFields.equals(other.unknownFields)) return false;
     return true;
   }
@@ -272,6 +295,9 @@ private static final long serialVersionUID = 0L;
       hash = (37 * hash) + IS_FALLBACK_ENABLED_FOR_COMPLETED_ACTION_FIELD_NUMBER;
       hash = (53 * hash) + getIsFallbackEnabledForCompletedAction().hashCode();
     }
+    hash = (37 * hash) + ENGINE_SCHEDULED_COUNT_FIELD_NUMBER;
+    hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+        getEngineScheduledCount());
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -421,6 +447,8 @@ private static final long serialVersionUID = 0L;
         isFallbackEnabledForCompletedAction_ = null;
         isFallbackEnabledForCompletedActionBuilder_ = null;
       }
+      engineScheduledCount_ = 0L;
+
       return this;
     }
 
@@ -455,6 +483,7 @@ private static final long serialVersionUID = 0L;
       } else {
         result.isFallbackEnabledForCompletedAction_ = isFallbackEnabledForCompletedActionBuilder_.build();
       }
+      result.engineScheduledCount_ = engineScheduledCount_;
       onBuilt();
       return result;
     }
@@ -514,6 +543,9 @@ private static final long serialVersionUID = 0L;
       }
       if (other.hasIsFallbackEnabledForCompletedAction()) {
         mergeIsFallbackEnabledForCompletedAction(other.getIsFallbackEnabledForCompletedAction());
+      }
+      if (other.getEngineScheduledCount() != 0L) {
+        setEngineScheduledCount(other.getEngineScheduledCount());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -782,6 +814,32 @@ private static final long serialVersionUID = 0L;
         isFallbackEnabledForCompletedAction_ = null;
       }
       return isFallbackEnabledForCompletedActionBuilder_;
+    }
+
+    private long engineScheduledCount_ ;
+    /**
+     * <code>int64 engine_scheduled_count = 5;</code>
+     */
+    public long getEngineScheduledCount() {
+      return engineScheduledCount_;
+    }
+    /**
+     * <code>int64 engine_scheduled_count = 5;</code>
+     */
+    public Builder setEngineScheduledCount(long value) {
+      
+      engineScheduledCount_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>int64 engine_scheduled_count = 5;</code>
+     */
+    public Builder clearEngineScheduledCount() {
+      
+      engineScheduledCount_ = 0L;
+      onChanged();
+      return this;
     }
     @java.lang.Override
     public final Builder setUnknownFields(

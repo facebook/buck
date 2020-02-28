@@ -51,4 +51,9 @@ public interface ExecutedActionInfoOrBuilder extends
    * <code>.google.protobuf.BoolValue is_fallback_enabled_for_completed_action = 4;</code>
    */
   com.google.protobuf.BoolValueOrBuilder getIsFallbackEnabledForCompletedActionOrBuilder();
+
+  /**
+   * <code>int64 engine_scheduled_count = 5;</code>
+   */
+  long getEngineScheduledCount();
 }

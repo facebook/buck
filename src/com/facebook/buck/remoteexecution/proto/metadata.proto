@@ -164,6 +164,7 @@ message ExecutedActionInfo {
   // Whether we should fallback to local retry if this action fails with exit code 1.
   // Fallback means we don't trust if this action failed and it may be flaky.
   google.protobuf.BoolValue is_fallback_enabled_for_completed_action = 4;
+  int64 engine_scheduled_count = 5;
 }
 
 message DebugInfo {
