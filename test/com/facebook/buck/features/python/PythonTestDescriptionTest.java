@@ -29,6 +29,7 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -37,6 +38,7 @@ import com.facebook.buck.core.rules.common.BuildRules;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
 import com.facebook.buck.cxx.CxxBinaryBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
@@ -63,6 +65,8 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.shell.ShBinary;
 import com.facebook.buck.shell.ShBinaryBuilder;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.stream.RichStream;
@@ -626,6 +630,86 @@ public class PythonTestDescriptionTest {
             Matchers.hasItem(graphBuilder.getSourcePathResolver().getAbsolutePath(libASrc)),
             Matchers.not(
                 Matchers.hasItem(graphBuilder.getSourcePathResolver().getAbsolutePath(libBSrc)))));
+  }
+
+  @Test
+  public void externalTestSpecBinaryInRequiredPaths() {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    TargetNode<?> test =
+        PythonTestBuilder.create(BuildTargetFactory.newInstance("//:test"))
+            .setPackageStyle(PythonBuckConfig.PackageStyle.INPLACE)
+            .build();
+    ActionGraphBuilder graphBuilder =
+        new TestActionGraphBuilder(TargetGraphFactory.newInstance(test), filesystem);
+    PythonTest pyTest = (PythonTest) graphBuilder.requireRule(test.getBuildTarget());
+    ExternalTestRunnerTestSpec spec =
+        pyTest.getExternalTestRunnerSpec(
+            TestExecutionContext.newInstance(),
+            TestRunningOptions.builder().build(),
+            FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()));
+    PythonInPlaceBinary binary = (PythonInPlaceBinary) pyTest.getBinary();
+    assertThat(
+        spec.getRequiredPaths(),
+        Matchers.hasItem(
+            graphBuilder.getSourcePathResolver().getAbsolutePath(binary.getSourcePathToOutput())));
+  }
+
+  @Test
+  public void externalTestSpecComponentsTreeInRequiredPaths() {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    TargetNode<?> library =
+        PythonLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"))
+            .setSrcs(
+                SourceSortedSet.ofUnnamedSources(
+                    ImmutableSortedSet.of(FakeSourcePath.of("foo.py"))))
+            .build();
+    TargetNode<?> test =
+        PythonTestBuilder.create(BuildTargetFactory.newInstance("//:test"))
+            .setPackageStyle(PythonBuckConfig.PackageStyle.INPLACE)
+            .setDeps(ImmutableSortedSet.of(library.getBuildTarget()))
+            .build();
+    ActionGraphBuilder graphBuilder =
+        new TestActionGraphBuilder(TargetGraphFactory.newInstance(library, test), filesystem);
+    PythonTest pyTest = (PythonTest) graphBuilder.requireRule(test.getBuildTarget());
+    ExternalTestRunnerTestSpec spec =
+        pyTest.getExternalTestRunnerSpec(
+            TestExecutionContext.newInstance(),
+            TestRunningOptions.builder().build(),
+            FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()));
+    PythonInPlaceBinary binary = (PythonInPlaceBinary) pyTest.getBinary();
+    assertThat(spec.getRequiredPaths(), Matchers.hasItem(binary.getLinkTree().getRoot()));
+  }
+
+  @Test
+  public void externalTestSpecEnvLocationMacroInRequiredPaths() {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    TargetNode<?> genrule =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:gen"))
+            .setOut("foo.txt")
+            .build();
+    TargetNode<?> test =
+        PythonTestBuilder.create(BuildTargetFactory.newInstance("//:test"))
+            .setPackageStyle(PythonBuckConfig.PackageStyle.INPLACE)
+            .setEnv(
+                ImmutableMap.of(
+                    "FOO",
+                    StringWithMacrosUtils.format("%s", LocationMacro.of(genrule.getBuildTarget()))))
+            .build();
+    ActionGraphBuilder graphBuilder =
+        new TestActionGraphBuilder(TargetGraphFactory.newInstance(genrule, test), filesystem);
+    PythonTest pyTest = (PythonTest) graphBuilder.requireRule(test.getBuildTarget());
+    ExternalTestRunnerTestSpec spec =
+        pyTest.getExternalTestRunnerSpec(
+            TestExecutionContext.newInstance(),
+            TestRunningOptions.builder().build(),
+            FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()));
+    assertThat(
+        spec.getRequiredPaths(),
+        Matchers.hasItem(
+            graphBuilder
+                .getSourcePathResolver()
+                .getAbsolutePath(
+                    graphBuilder.requireRule(genrule.getBuildTarget()).getSourcePathToOutput())));
   }
 
   private RuleKey calculateRuleKey(BuildRuleResolver ruleResolver, BuildRule rule) {

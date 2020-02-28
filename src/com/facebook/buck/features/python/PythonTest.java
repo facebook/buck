@@ -34,7 +34,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
-import com.facebook.buck.core.test.rule.ExternalTestSpec;
 import com.facebook.buck.core.test.rule.TestRule;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -56,6 +55,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.concurrent.Callable;
@@ -267,19 +268,44 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public ExternalTestSpec getExternalTestRunnerSpec(
+  public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
       ExecutionContext executionContext,
       TestRunningOptions testRunningOptions,
       BuildContext buildContext) {
+
+    Tool executable = binary.getExecutableCommand(OutputLabel.defaultLabel());
+
+    List<Path> requiredPaths = new ArrayList<>();
+
+    // Add the test binary.
+    requiredPaths.add(
+        buildContext.getSourcePathResolver().getAbsolutePath(binary.getSourcePathToOutput()));
+
+    // Extract the in-place components link tree from the command and add it to required paths so
+    // that external runners now to ship it remotely.
+    //
+    // TODO(agallagher): We should either a) provide a better way of extracting just the symlink
+    // tree from the executable `Tool` or b) (probably better) just dump out all the paths here too
+    // and expect the external test runner to ship these remotely and maintain the symlinks in the
+    // symlink tree (the worry here is that the serialization overhead of these giant lib lists
+    // will be noticeable).
+    if (binary instanceof PythonInPlaceBinary) {
+      requiredPaths.add(((PythonInPlaceBinary) binary).getLinkTree().getRoot());
+    }
+
+    // Extract any required paths from env.
+    for (Arg arg : getEnv().values()) {
+      BuildableSupport.deriveInputs(arg)
+          .map(buildContext.getSourcePathResolver()::getAbsolutePath)
+          .forEach(requiredPaths::add);
+    }
+
     return ExternalTestRunnerTestSpec.builder()
         .setCwd(getProjectFilesystem().getRootPath().getPath())
         .setTarget(getBuildTarget())
         .setType("pyunit")
         .setNeededCoverage(neededCoverage)
-        .addAllCommand(
-            binary
-                .getExecutableCommand(OutputLabel.defaultLabel())
-                .getCommandPrefix(buildContext.getSourcePathResolver()))
+        .addAllCommand(executable.getCommandPrefix(buildContext.getSourcePathResolver()))
         .putAllEnv(getMergedEnv(buildContext.getSourcePathResolver()))
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
@@ -287,6 +313,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             buildContext
                 .getSourcePathResolver()
                 .getAllAbsolutePaths(getAdditionalCoverageTargets()))
+        .setRequiredPaths(requiredPaths)
         .build();
   }
 

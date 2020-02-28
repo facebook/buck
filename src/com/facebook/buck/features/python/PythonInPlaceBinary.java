@@ -215,4 +215,8 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
     // The actual steps of a in-place binary doesn't actually have any build-time deps.
     return ImmutableSortedSet.of();
   }
+
+  SymlinkTree getLinkTree() {
+    return linkTree;
+  }
 }

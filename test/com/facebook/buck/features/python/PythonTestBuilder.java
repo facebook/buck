@@ -190,6 +190,11 @@ public class PythonTestBuilder
     return this;
   }
 
+  public PythonTestBuilder setEnv(ImmutableMap<String, StringWithMacros> env) {
+    getArgForPopulating().setEnv(env);
+    return this;
+  }
+
   @Override
   public PythonTestBuilder setSelectedVersions(
       ImmutableMap<BuildTarget, Version> selectedVersions) {
