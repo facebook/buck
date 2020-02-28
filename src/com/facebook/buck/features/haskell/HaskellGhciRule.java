@@ -41,9 +41,9 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MakeExecutableStep;
+import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.StringTemplateStep;
 import com.facebook.buck.step.fs.SymlinkFileStep;
 import com.facebook.buck.step.fs.SymlinkMapsPaths;
@@ -318,6 +318,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     String name = getBuildTarget().getShortName();
     Path dir = getOutputDir();
     Path so = resolver.getRelativePath(omnibusSharedObject.getSourcePathToOutput());
+    Path binDir = dir.resolve(name + ".bin");
     Path packagesDir = dir.resolve(name + ".packages");
     Path symlinkDir = dir.resolve(HaskellGhciDescription.getSoLibsRelDir(getBuildTarget()));
     Path symlinkPreloadDir = dir.resolve(name + ".preload-symlinks");
@@ -330,20 +331,14 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), dir)));
-    steps.addAll(
-        MakeCleanDirectoryStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), symlinkDir)));
-    steps.addAll(
-        MakeCleanDirectoryStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), symlinkPreloadDir)));
-    steps.addAll(
-        MakeCleanDirectoryStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), packagesDir)));
+    for (Path subdir : ImmutableList.of(binDir, packagesDir, symlinkDir, symlinkPreloadDir)) {
+      steps.add(
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(), getProjectFilesystem(), subdir)));
+    }
 
-    steps.add(CopyStep.forFile(getProjectFilesystem(), so, dir.resolve(so.getFileName())));
+    steps.add(SymlinkFileStep.of(getProjectFilesystem(), so, dir.resolve(so.getFileName())));
 
     symlinkLibs(resolver, symlinkDir, steps, solibs);
     symlinkLibs(resolver, symlinkPreloadDir, steps, preloadLibs);
@@ -486,17 +481,10 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     String ghcPath = null;
     try {
       if (ghciBinDep.isPresent()) {
-
-        Path binDir = dir.resolve(name + ".bin");
         Path bin = binDir.resolve("ghci");
         SourcePath sp = ghciBinDep.get();
 
-        steps.addAll(
-            MakeCleanDirectoryStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    context.getBuildCellRootPath(), getProjectFilesystem(), binDir)));
-
-        steps.add(CopyStep.forFile(getProjectFilesystem(), resolver.getRelativePath(sp), bin));
+        steps.add(SymlinkFileStep.of(getProjectFilesystem(), resolver.getRelativePath(sp), bin));
 
         ghcPath = "${DIR}/" + dir.relativize(bin) + " -B" + ghciLib.toRealPath();
       } else {
@@ -583,5 +571,12 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public Tool getExecutableCommand(OutputLabel outputLabel) {
     SourcePath p = ExplicitBuildTargetSourcePath.of(getBuildTarget(), scriptPath());
     return new CommandTool.Builder().addArg(SourcePathArg.of(p)).build();
+  }
+
+  @Override
+  public boolean isCacheable() {
+    // Absolute symlinks cannot be cached and recreating them is very fast
+    // anyway.
+    return false;
   }
 }
