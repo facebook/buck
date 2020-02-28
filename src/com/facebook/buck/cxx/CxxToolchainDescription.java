@@ -48,7 +48,6 @@ import com.facebook.buck.cxx.toolchain.linker.impl.DefaultLinkerProvider;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
-import com.facebook.buck.rules.macros.OutputMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.google.common.collect.ImmutableList;
@@ -130,7 +129,7 @@ public class CxxToolchainDescription
             buildTarget,
             context.getCellPathResolver().getCellNameResolver(),
             ruleResolver,
-            ImmutableList.of(LocationMacroExpander.INSTANCE, new OutputMacroExpander()),
+            ImmutableList.of(LocationMacroExpander.INSTANCE),
             Optional.empty());
     cxxPlatform.setAs(
         new CompilerProvider(
