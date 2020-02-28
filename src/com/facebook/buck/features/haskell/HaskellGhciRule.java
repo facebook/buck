@@ -44,9 +44,10 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MakeExecutableStep;
-import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.StringTemplateStep;
 import com.facebook.buck.step.fs.SymlinkFileStep;
+import com.facebook.buck.step.fs.SymlinkMapsPaths;
+import com.facebook.buck.step.fs.SymlinkTreeMergeStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Charsets;
@@ -61,11 +62,13 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import org.stringtemplate.v4.ST;
 
 public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
@@ -354,21 +357,18 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       }
     }
 
+    ImmutableMap.Builder<Path, Path> packageLinks = ImmutableMap.builder();
+    BiConsumer<Path, Path> putLink =
+        (destination, source) ->
+            packageLinks.put(
+                destination, packagesDir.resolve(destination.getParent()).relativize(source));
     for (HaskellPackage pkg : haskellPackages) {
-      String pkgname = pkg.getInfo().getName();
-      Path pkgdir = packagesDir.resolve(pkgname);
-      steps.addAll(
-          MakeCleanDirectoryStep.of(
-              BuildCellRelativePath.fromCellRelativePath(
-                  context.getBuildCellRootPath(), getProjectFilesystem(), pkgdir)));
+      Path pkgdir = Paths.get(pkg.getInfo().getName());
 
       Path pkgDbSrc = resolver.getRelativePath(pkg.getPackageDb());
-      steps.add(
-          CopyStep.forDirectory(
-              getProjectFilesystem(),
-              pkgDbSrc,
-              pkgdir,
-              CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
+      Path pkgDbLink = pkgdir.resolve(pkgDbSrc.getFileName());
+      putLink.accept(pkgDbLink, pkgDbSrc);
+      pkgdirs.add("${DIR}/" + dir.relativize(packagesDir.resolve(pkgDbLink)));
 
       ImmutableSet.Builder<SourcePath> artifacts = ImmutableSet.builder();
       artifacts.addAll(pkg.getLibraries());
@@ -383,21 +383,19 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
       for (SourcePath artifact : artifacts.build()) {
         Path source = resolver.getRelativePath(artifact);
-        Path destination = pkgdir.resolve(source.getParent().getFileName());
-        steps.add(
-            MkdirStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    context.getBuildCellRootPath(), getProjectFilesystem(), destination)));
-        steps.add(
-            CopyStep.forDirectory(
-                getProjectFilesystem(),
-                source,
-                destination,
-                CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
+        Path destination =
+            pkgdir.resolve(source.subpath(source.getNameCount() - 2, source.getNameCount()));
+        putLink.accept(destination, source);
       }
-
-      pkgdirs.add("${DIR}/" + dir.relativize(pkgdir.resolve(pkgDbSrc.getFileName())));
     }
+
+    steps.add(
+        new SymlinkTreeMergeStep(
+            "ghci_packages",
+            getProjectFilesystem(),
+            packagesDir,
+            new SymlinkMapsPaths(packageLinks.build()),
+            (a, b) -> false));
 
     ImmutableSet.Builder<String> exposedPkgs = ImmutableSet.builder();
     for (HaskellPackage pkg : firstOrderHaskellPackages) {
