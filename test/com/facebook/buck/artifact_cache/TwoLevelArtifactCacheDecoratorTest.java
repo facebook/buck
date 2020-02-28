@@ -20,9 +20,11 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableMap;
@@ -45,12 +47,16 @@ public class TwoLevelArtifactCacheDecoratorTest {
 
   @Test
   public void testCacheFetch() throws IOException {
+    ProjectFilesystem fs = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
+
     try (InMemoryArtifactCache inMemoryArtifactCache = new InMemoryArtifactCache();
         TwoLevelArtifactCacheDecorator twoLevelCache =
             new TwoLevelArtifactCacheDecorator(
                 inMemoryArtifactCache,
-                TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()),
-                BuckEventBusForTests.newInstance(),
+                new SimpleSecondLevelArtifactCache(inMemoryArtifactCache, fs, eventBus),
+                fs,
+                eventBus,
                 /* performTwoLevelStores */ true,
                 /* minimumTwoLevelStoredArtifactSize */ 0L,
                 /* maximumTwoLevelStoredArtifactSize */ Optional.empty())) {
@@ -80,12 +86,16 @@ public class TwoLevelArtifactCacheDecoratorTest {
 
   @Test
   public void testResultDoesntHaveAddedMetadata() throws IOException {
+    ProjectFilesystem fs = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
+
     try (InMemoryArtifactCache inMemoryArtifactCache = new InMemoryArtifactCache();
         TwoLevelArtifactCacheDecorator twoLevelCache =
             new TwoLevelArtifactCacheDecorator(
                 inMemoryArtifactCache,
-                TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()),
-                BuckEventBusForTests.newInstance(),
+                new SimpleSecondLevelArtifactCache(inMemoryArtifactCache, fs, eventBus),
+                fs,
+                eventBus,
                 /* performTwoLevelStores */ true,
                 /* minimumTwoLevelStoredArtifactSize */ 0L,
                 /* maximumTwoLevelStoredArtifactSize */ Optional.empty())) {
@@ -104,12 +114,16 @@ public class TwoLevelArtifactCacheDecoratorTest {
 
   private void testStoreThresholds(int artifactSize, int expectedArtifactsInCache)
       throws IOException {
+    ProjectFilesystem fs = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
+
     try (InMemoryArtifactCache inMemoryArtifactCache = new InMemoryArtifactCache();
         TwoLevelArtifactCacheDecorator twoLevelCache =
             new TwoLevelArtifactCacheDecorator(
                 inMemoryArtifactCache,
-                TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()),
-                BuckEventBusForTests.newInstance(),
+                new SimpleSecondLevelArtifactCache(inMemoryArtifactCache, fs, eventBus),
+                fs,
+                eventBus,
                 /* performTwoLevelStores */ true,
                 /* minimumTwoLevelStoredArtifactSize */ 5L,
                 /* maximumTwoLevelStoredArtifactSize */ Optional.of(10L))) {
@@ -142,12 +156,16 @@ public class TwoLevelArtifactCacheDecoratorTest {
 
   @Test
   public void testMetadataIsNotShared() throws IOException {
+    ProjectFilesystem fs = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
+
     try (InMemoryArtifactCache inMemoryArtifactCache = new InMemoryArtifactCache();
         TwoLevelArtifactCacheDecorator twoLevelCache =
             new TwoLevelArtifactCacheDecorator(
                 inMemoryArtifactCache,
-                TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()),
-                BuckEventBusForTests.newInstance(),
+                new SimpleSecondLevelArtifactCache(inMemoryArtifactCache, fs, eventBus),
+                fs,
+                eventBus,
                 /* performTwoLevelStores */ true,
                 /* minimumTwoLevelStoredArtifactSize */ 0L,
                 /* maximumTwoLevelStoredArtifactSize */ Optional.empty())) {
@@ -179,20 +197,25 @@ public class TwoLevelArtifactCacheDecoratorTest {
 
   @Test
   public void testCanRead2LStoresIfStoresDisabled() throws IOException {
+    ProjectFilesystem fs = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
+
     try (InMemoryArtifactCache inMemoryArtifactCache = new InMemoryArtifactCache();
         TwoLevelArtifactCacheDecorator twoLevelCache =
             new TwoLevelArtifactCacheDecorator(
                 inMemoryArtifactCache,
-                TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()),
-                BuckEventBusForTests.newInstance(),
+                new SimpleSecondLevelArtifactCache(inMemoryArtifactCache, fs, eventBus),
+                fs,
+                eventBus,
                 /* performTwoLevelStores */ true,
                 /* minimumTwoLevelStoredArtifactSize */ 0L,
                 /* maximumTwoLevelStoredArtifactSize */ Optional.empty());
         TwoLevelArtifactCacheDecorator twoLevelCacheNoStore =
             new TwoLevelArtifactCacheDecorator(
                 inMemoryArtifactCache,
-                TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()),
-                BuckEventBusForTests.newInstance(),
+                new SimpleSecondLevelArtifactCache(inMemoryArtifactCache, fs, eventBus),
+                fs,
+                eventBus,
                 /* performTwoLevelStores */ false,
                 /* minimumTwoLevelStoredArtifactSize */ 0L,
                 /* maximumTwoLevelStoredArtifactSize */ Optional.empty())) {

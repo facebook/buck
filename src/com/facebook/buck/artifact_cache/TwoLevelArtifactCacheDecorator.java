@@ -30,10 +30,8 @@ import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.stream.RichStream;
-import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -45,7 +43,6 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
@@ -62,11 +59,12 @@ import javax.annotation.Nullable;
 public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecorator {
 
   @VisibleForTesting static final String METADATA_KEY = "TWO_LEVEL_CACHE_CONTENT_HASH";
-  private static final String COUNTER_CATEGORY = "buck_two_level_cache_stats";
+  public static final String COUNTER_CATEGORY = "buck_two_level_cache_stats";
 
   private static final Logger LOG = Logger.get(TwoLevelArtifactCacheDecorator.class);
 
   private final ArtifactCache delegate;
+  private final SecondLevelArtifactCache secondLevelDelegate;
   private final ProjectFilesystem projectFilesystem;
   private final Path emptyFilePath;
   private final boolean performTwoLevelStores;
@@ -80,12 +78,14 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
 
   public TwoLevelArtifactCacheDecorator(
       ArtifactCache delegate,
+      SecondLevelArtifactCache secondLevelDelegate,
       ProjectFilesystem projectFilesystem,
       BuckEventBus buckEventBus,
       boolean performTwoLevelStores,
       long minimumTwoLevelStoredArtifactSize,
       Optional<Long> maximumTwoLevelStoredArtifactSize) {
     this.delegate = delegate;
+    this.secondLevelDelegate = secondLevelDelegate;
     this.projectFilesystem = projectFilesystem;
     this.performTwoLevelStores = performTwoLevelStores;
     this.minimumTwoLevelStoredArtifactSize = minimumTwoLevelStoredArtifactSize;
@@ -137,7 +137,7 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
 
           String contentHashKey = fetchResult.getMetadata().get(METADATA_KEY);
           ListenableFuture<CacheResult> outputFileFetchResultFuture =
-              delegate.fetchAsync(target, new RuleKey(contentHashKey), output);
+              secondLevelDelegate.fetchAsync(target, contentHashKey, output);
 
           return Futures.transformAsync(
               outputFileFetchResultFuture,
@@ -241,58 +241,39 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
       throw new RuntimeException("Cannot get file size of " + output.getPath());
     }
 
-    String hashCode;
-    try {
-      hashCode = computeSha1(output);
-    } catch (IOException e) {
-      throw new RuntimeException("Cannot compute SHA1 of " + output.getPath());
-    }
-
-    ImmutableMap<String, String> metadataWithCacheKey =
-        ImmutableMap.<String, String>builder()
-            .putAll(info.getMetadata())
-            .put(METADATA_KEY, hashCode)
-            .build();
     // We need to upload artifacts in this order to prevent race condition. If we would do
     // it concurrently it is possible that we upload metadata before the file. Then other
     // builder read metadata, but cannot find a file (which is still being uploaded), and
     // decide that we have to re-upload it. With enough machines building the same target
     // we end up with constant re-uploading and rebuilding flow. The following issue is
     // only in case when output hash changes between builds.
-    Pair<ArtifactInfo, BorrowablePath> artifact =
-        new Pair<>(
-            ArtifactInfo.builder()
-                .addRuleKeys(new RuleKey(hashCode))
-                .setBuildTarget(info.getBuildTarget())
-                .setBuildTimeMs(info.getBuildTimeMs())
-                .build(),
-            output);
-    Pair<ArtifactInfo, BorrowablePath> metadata =
-        new Pair<>(
-            ArtifactInfo.builder()
-                .setRuleKeys(info.getRuleKeys())
-                .setMetadata(metadataWithCacheKey)
-                .setBuildTarget(info.getBuildTarget())
-                .setBuildTimeMs(info.getBuildTimeMs())
-                .build(),
-            BorrowablePath.notBorrowablePath(emptyFilePath));
+    return Futures.transformAsync(
+        secondLevelDelegate.storeAsync(info, output),
+        contentKey -> {
+          if (contentKey == null) {
+            throw new RuntimeException("No content key received from second level artifact cache.");
+          }
 
-    return Futures.transform(
-        // This relies on the fact that delegate stores artifacts in sequential way in the order
-        // they are being passed. If we store them internally in consecutive way, there is a
-        // possibility of race condition.
-        delegate.store(ImmutableList.of(artifact, metadata)),
-        Functions.constant(true),
+          ImmutableMap<String, String> metadataWithCacheKey =
+              ImmutableMap.<String, String>builder()
+                  .putAll(info.getMetadata())
+                  .put(METADATA_KEY, contentKey)
+                  .build();
+
+          ArtifactInfo metadata =
+              ArtifactInfo.builder()
+                  .setRuleKeys(info.getRuleKeys())
+                  .setMetadata(metadataWithCacheKey)
+                  .setBuildTarget(info.getBuildTarget())
+                  .setBuildTimeMs(info.getBuildTimeMs())
+                  .build();
+
+          return Futures.transform(
+              delegate.store(metadata, BorrowablePath.notBorrowablePath(emptyFilePath)),
+              __ -> true,
+              MoreExecutors.directExecutor());
+        },
         MoreExecutors.directExecutor());
-  }
-
-  @Nonnull
-  private String computeSha1(BorrowablePath output) throws IOException {
-    long hashComputationStart = System.currentTimeMillis();
-    String hashCode = projectFilesystem.computeSha1(output.getPath()) + "2c00";
-    long hashComputationEnd = System.currentTimeMillis();
-    secondLevelHashComputationTimeMs.addSample(hashComputationEnd - hashComputationStart);
-    return hashCode;
   }
 
   @Override

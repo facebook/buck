@@ -379,6 +379,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
     result =
         new TwoLevelArtifactCacheDecorator(
             result,
+            new SimpleSecondLevelArtifactCache(result, projectFilesystem, buckEventBus),
             projectFilesystem,
             buckEventBus,
             buckConfig.getTwoLevelCachingEnabled(),
