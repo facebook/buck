@@ -16,13 +16,16 @@
 
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.core.util.log.Logger;
+import com.google.common.io.BaseEncoding;
 
 /** Content keys used in metadata attached to first-level Buck Cache objects */
 @BuckStyleValueWithBuilder
 public abstract class SecondLevelContentKey {
   private static final Logger LOG = Logger.get(SecondLevelContentKey.class);
+  private static final BaseEncoding RULE_KEY_ENCODING = BaseEncoding.base16().lowerCase();
 
   private static final String OLD_STYLE_SUFFIX = "2c00";
   private static final String CACHE_ONLY_PREFIX = "cache";
@@ -82,6 +85,19 @@ public abstract class SecondLevelContentKey {
       default:
         return getKey();
     }
+  }
+
+  /**
+   * Converts the content key to a rule key, re-encoding as needed.
+   *
+   * @return the rule key
+   */
+  public RuleKey toRuleKey() {
+    if (getType() == Type.OLD_STYLE) {
+      return new RuleKey(toString());
+    }
+
+    return new RuleKey(RULE_KEY_ENCODING.encode(toString().getBytes()));
   }
 
   public static Builder builder() {
