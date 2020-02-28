@@ -27,6 +27,7 @@ import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
@@ -75,6 +76,11 @@ public class CxxTestBuilder
 
   public CxxTestBuilder setEnv(ImmutableMap<String, StringWithMacros> env) {
     getArgForPopulating().setEnv(env);
+    return this;
+  }
+
+  public CxxTestBuilder setLinkStyle(Linker.LinkableDepType linkStyle) {
+    getArgForPopulating().setLinkStyle(linkStyle);
     return this;
   }
 

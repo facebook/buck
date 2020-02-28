@@ -33,11 +33,15 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.common.BuildRules;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
 import com.facebook.buck.core.test.rule.TestRule;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
@@ -403,6 +407,165 @@ public class CxxTestDescriptionTest {
               .setResources(ImmutableSortedSet.of(resource))
               .build();
       assertThat(cxxTestWithResources.getInputs(), hasItem(ForwardRelativePath.ofPath(resource)));
+    }
+  }
+
+  @Test
+  public void externalTestSpecBinaryInRequiredPaths() {
+    for (CxxTestType framework : CxxTestType.values()) {
+      ProjectFilesystem filesystem = new FakeProjectFilesystem();
+      TargetNode<?> test =
+          createTestBuilder()
+              .setLinkStyle(Linker.LinkableDepType.SHARED)
+              .setUseDefaultTestMain(false)
+              .setFramework(framework)
+              .build();
+      ActionGraphBuilder graphBuilder =
+          new TestActionGraphBuilder(TargetGraphFactory.newInstance(test), filesystem);
+      CxxTest cxxTest = (CxxTest) graphBuilder.requireRule(test.getBuildTarget());
+      ExternalTestRunnerTestSpec spec =
+          cxxTest.getExternalTestRunnerSpec(
+              TestExecutionContext.newInstance(),
+              TestRunningOptions.builder().build(),
+              FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()));
+      assertThat(
+          spec.getRequiredPaths(),
+          hasItem(
+              graphBuilder
+                  .getSourcePathResolver()
+                  .getAbsolutePath(cxxTest.getBinary().getSourcePathToOutput())));
+    }
+  }
+
+  @Test
+  public void externalTestSpecSharedLibTreeInRequiredPaths() {
+    for (CxxTestType framework : CxxTestType.values()) {
+      ProjectFilesystem filesystem = new FakeProjectFilesystem();
+      TargetNode<?> library =
+          new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:lib"))
+              .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.cpp"))))
+              .build();
+      TargetNode<?> test =
+          createTestBuilder()
+              .setLinkStyle(Linker.LinkableDepType.SHARED)
+              .setUseDefaultTestMain(false)
+              .setDeps(ImmutableSortedSet.of(library.getBuildTarget()))
+              .setFramework(framework)
+              .build();
+      ActionGraphBuilder graphBuilder =
+          new TestActionGraphBuilder(TargetGraphFactory.newInstance(library, test), filesystem);
+      CxxTest cxxTest = (CxxTest) graphBuilder.requireRule(test.getBuildTarget());
+      ExternalTestRunnerTestSpec spec =
+          cxxTest.getExternalTestRunnerSpec(
+              TestExecutionContext.newInstance(),
+              TestRunningOptions.builder().build(),
+              FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()));
+      assertThat(
+          spec.getRequiredPaths(),
+          hasItem(
+              filesystem.resolve(
+                  CxxDescriptionEnhancer.getSharedLibrarySymlinkTreePath(
+                      filesystem,
+                      cxxTest.getBinary().getBuildTarget(),
+                      CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor()))));
+    }
+  }
+
+  @Test
+  public void externalTestSpecArgLocationMacroInRequiredPaths() {
+    for (CxxTestType framework : CxxTestType.values()) {
+      ProjectFilesystem filesystem = new FakeProjectFilesystem();
+      TargetNode<?> genrule =
+          GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:gen"))
+              .setOut("foo.txt")
+              .build();
+      TargetNode<?> test =
+          createTestBuilder()
+              .setLinkStyle(Linker.LinkableDepType.SHARED)
+              .setUseDefaultTestMain(false)
+              .setArgs(
+                  ImmutableList.of(
+                      StringWithMacrosUtils.format(
+                          "--foo=%s", LocationMacro.of(genrule.getBuildTarget()))))
+              .setFramework(framework)
+              .build();
+      ActionGraphBuilder graphBuilder =
+          new TestActionGraphBuilder(TargetGraphFactory.newInstance(genrule, test), filesystem);
+      CxxTest cxxTest = (CxxTest) graphBuilder.requireRule(test.getBuildTarget());
+      ExternalTestRunnerTestSpec spec =
+          cxxTest.getExternalTestRunnerSpec(
+              TestExecutionContext.newInstance(),
+              TestRunningOptions.builder().build(),
+              FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()));
+      assertThat(
+          spec.getRequiredPaths(),
+          hasItem(
+              graphBuilder
+                  .getSourcePathResolver()
+                  .getAbsolutePath(
+                      graphBuilder.requireRule(genrule.getBuildTarget()).getSourcePathToOutput())));
+    }
+  }
+
+  @Test
+  public void externalTestSpecEnvLocationMacroInRequiredPaths() {
+    for (CxxTestType framework : CxxTestType.values()) {
+      ProjectFilesystem filesystem = new FakeProjectFilesystem();
+      TargetNode<?> genrule =
+          GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:gen"))
+              .setOut("foo.txt")
+              .build();
+      TargetNode<?> test =
+          createTestBuilder()
+              .setLinkStyle(Linker.LinkableDepType.SHARED)
+              .setUseDefaultTestMain(false)
+              .setEnv(
+                  ImmutableMap.of(
+                      "FOO",
+                      StringWithMacrosUtils.format(
+                          "%s", LocationMacro.of(genrule.getBuildTarget()))))
+              .setFramework(framework)
+              .build();
+      ActionGraphBuilder graphBuilder =
+          new TestActionGraphBuilder(TargetGraphFactory.newInstance(genrule, test), filesystem);
+      CxxTest cxxTest = (CxxTest) graphBuilder.requireRule(test.getBuildTarget());
+      ExternalTestRunnerTestSpec spec =
+          cxxTest.getExternalTestRunnerSpec(
+              TestExecutionContext.newInstance(),
+              TestRunningOptions.builder().build(),
+              FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()));
+      assertThat(
+          spec.getRequiredPaths(),
+          hasItem(
+              graphBuilder
+                  .getSourcePathResolver()
+                  .getAbsolutePath(
+                      graphBuilder.requireRule(genrule.getBuildTarget()).getSourcePathToOutput())));
+    }
+  }
+
+  @Test
+  public void externalTestSpecResourcesInRequiredPaths() {
+    for (CxxTestType framework : CxxTestType.values()) {
+      ProjectFilesystem filesystem = new FakeProjectFilesystem();
+      TargetNode<?> test =
+          createTestBuilder()
+              .setLinkStyle(Linker.LinkableDepType.SHARED)
+              .setUseDefaultTestMain(false)
+              .setResources(ImmutableSortedSet.of(filesystem.getPath("foo", "resource.dat")))
+              .setFramework(framework)
+              .build();
+      ActionGraphBuilder graphBuilder =
+          new TestActionGraphBuilder(TargetGraphFactory.newInstance(test), filesystem);
+      CxxTest cxxTest = (CxxTest) graphBuilder.requireRule(test.getBuildTarget());
+      ExternalTestRunnerTestSpec spec =
+          cxxTest.getExternalTestRunnerSpec(
+              TestExecutionContext.newInstance(),
+              TestRunningOptions.builder().build(),
+              FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()));
+      assertThat(
+          spec.getRequiredPaths(),
+          hasItem(filesystem.resolve(filesystem.getPath("foo", "resource.dat"))));
     }
   }
 

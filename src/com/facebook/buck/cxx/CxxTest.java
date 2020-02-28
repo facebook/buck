@@ -36,7 +36,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
-import com.facebook.buck.core.test.rule.ExternalTestSpec;
 import com.facebook.buck.core.test.rule.TestRule;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -55,11 +54,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -75,9 +77,7 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final BuildRule binary;
   private final Tool executable;
 
-  @AddToRuleKey
-  @SuppressWarnings("PMD.UnusedPrivateField")
-  private final ImmutableSortedSet<? extends SourcePath> resources;
+  @AddToRuleKey private final ImmutableSortedSet<? extends SourcePath> resources;
 
   private final ImmutableSet<SourcePath> additionalCoverageTargets;
   private final Function<SourcePathRuleFinder, ImmutableSortedSet<BuildRule>>
@@ -292,10 +292,45 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public ExternalTestSpec getExternalTestRunnerSpec(
+  public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
       ExecutionContext executionContext,
       TestRunningOptions testRunningOptions,
       BuildContext buildContext) {
+
+    List<Path> requiredPaths = new ArrayList<>();
+
+    // Add the test binary.
+    requiredPaths.add(
+        buildContext.getSourcePathResolver().getAbsolutePath(binary.getSourcePathToOutput()));
+
+    // Extract the shared library link tree from the command and add it to required paths so that
+    // external runners now to ship it remotely.
+    //
+    // TODO(agallagher): We should either a) provide a better way of extracting just the symlink
+    // tree from the executable `Tool` or b) (probably better) just dump out all the libs here too
+    // and expect the external test runner to ship these remotely and maintain the symlinks in the
+    // symlink tree (the worry here is that the serialization overhead of these giant lib lists
+    // will be noticeable).
+    BuildableSupport.deriveInputs(executable)
+        .map(buildContext.getSourcePathResolver()::getAbsolutePath)
+        // Skip the executable, as that's already handled in the command.
+        .skip(1)
+        // Skip all libs and just grab the symlink tree.
+        .reduce((first, second) -> second)
+        .ifPresent(requiredPaths::add);
+
+    // Extract any required paths from args/env.
+    for (Arg arg : Iterables.concat(args, env.values())) {
+      BuildableSupport.deriveInputs(arg)
+          .map(buildContext.getSourcePathResolver()::getAbsolutePath)
+          .forEach(requiredPaths::add);
+    }
+
+    // Add resources to required paths.
+    resources.stream()
+        .map(buildContext.getSourcePathResolver()::getAbsolutePath)
+        .forEach(requiredPaths::add);
+
     return ExternalTestRunnerTestSpec.builder()
         .setCwd(getProjectFilesystem().getRootPath().getPath())
         .setTarget(getBuildTarget())
@@ -311,6 +346,7 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             buildContext
                 .getSourcePathResolver()
                 .getAllAbsolutePaths(getAdditionalCoverageTargets()))
+        .setRequiredPaths(requiredPaths)
         .build();
   }
 
@@ -319,6 +355,11 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .putAll(executable.getEnvironment(pathResolver))
         .putAll(Arg.stringify(env, pathResolver))
         .build();
+  }
+
+  @VisibleForTesting
+  BuildRule getBinary() {
+    return binary;
   }
 
   protected ImmutableList<Arg> getArgs() {
