@@ -18,10 +18,10 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
@@ -47,6 +47,10 @@ import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.impl.DefaultLinkerProvider;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.rules.macros.LocationMacroExpander;
+import com.facebook.buck.rules.macros.OutputMacroExpander;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -70,7 +74,7 @@ public class CxxToolchainDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       CxxToolchainDescriptionArg args) {
-    BuildRuleResolver ruleResolver = context.getActionGraphBuilder();
+    ActionGraphBuilder ruleResolver = context.getActionGraphBuilder();
 
     CxxPlatform.Builder cxxPlatform = CxxPlatform.builder();
 
@@ -121,13 +125,23 @@ public class CxxToolchainDescription
     // This should be the same for all the tools that use it.
     final boolean preferDependencyTree = false;
 
+    StringWithMacrosConverter macrosConverter =
+        StringWithMacrosConverter.of(
+            buildTarget,
+            context.getCellPathResolver().getCellNameResolver(),
+            ruleResolver,
+            ImmutableList.of(LocationMacroExpander.INSTANCE, new OutputMacroExpander()),
+            Optional.empty());
     cxxPlatform.setAs(
         new CompilerProvider(
             ToolProviders.getToolProvider(args.getAssembler()),
             compilerType,
             ToolType.AS,
             preferDependencyTree));
-    cxxPlatform.setAsflags(StringArg.from(args.getAssemblerFlags()));
+    cxxPlatform.setAsflags(
+        args.getAssemblerFlags().stream()
+            .map(macrosConverter::convert)
+            .collect(ImmutableList.toImmutableList()));
 
     cxxPlatform.setAspp(
         new PreprocessorProvider(
@@ -140,7 +154,10 @@ public class CxxToolchainDescription
             compilerType,
             ToolType.CC,
             preferDependencyTree));
-    cxxPlatform.setCflags(StringArg.from(args.getCCompilerFlags()));
+    cxxPlatform.setCflags(
+        args.getCCompilerFlags().stream()
+            .map(macrosConverter::convert)
+            .collect(ImmutableList.toImmutableList()));
 
     cxxPlatform.setCxx(
         new CompilerProvider(
@@ -148,7 +165,10 @@ public class CxxToolchainDescription
             compilerType,
             ToolType.CXX,
             preferDependencyTree));
-    cxxPlatform.setCxxflags(StringArg.from(args.getCxxCompilerFlags()));
+    cxxPlatform.setCxxflags(
+        args.getCxxCompilerFlags().stream()
+            .map(macrosConverter::convert)
+            .collect(ImmutableList.toImmutableList()));
 
     cxxPlatform.setCpp(
         new PreprocessorProvider(
@@ -169,34 +189,58 @@ public class CxxToolchainDescription
           ImmutableList.<Arg>builder()
               // Add a deterministic build ID.
               .add(StringArg.of("-Wl,--build-id"))
-              .addAll(StringArg.from(args.getLinkerFlags()))
+              .addAll(
+                  args.getLinkerFlags().stream()
+                      .map(macrosConverter::convert)
+                      .collect(ImmutableList.toImmutableList()))
               .build());
     } else {
       // TODO(cjhopman): We should force build ids by default for all linkers.
-      cxxPlatform.setLdflags(StringArg.from(args.getLinkerFlags()));
+      cxxPlatform.setLdflags(
+          args.getLinkerFlags().stream()
+              .map(macrosConverter::convert)
+              .collect(ImmutableList.toImmutableList()));
     }
 
     cxxPlatform.setAr(
         ArchiverProvider.from(
             ToolProviders.getToolProvider(args.getArchiver()), args.getArchiverType()));
-    cxxPlatform.setArflags(StringArg.from(args.getArchiverFlags()));
+    cxxPlatform.setArflags(
+        args.getArchiverFlags().stream()
+            .map(macrosConverter::convert)
+            .collect(ImmutableList.toImmutableList()));
 
     cxxPlatform.setStrip(
         ToolProviders.getToolProvider(args.getStrip())
             .resolve(ruleResolver, buildTarget.getTargetConfiguration()));
-    cxxPlatform.setStripFlags(StringArg.from(args.getStripFlags()));
+    cxxPlatform.setStripFlags(
+        args.getStripFlags().stream()
+            .map(macrosConverter::convert)
+            .collect(ImmutableList.toImmutableList()));
 
     cxxPlatform.setRanlib(args.getRanlib().map(ToolProviders::getToolProvider));
-    cxxPlatform.setRanlibflags(StringArg.from(args.getRanlibFlags()));
+    cxxPlatform.setRanlibflags(
+        args.getRanlibFlags().stream()
+            .map(macrosConverter::convert)
+            .collect(ImmutableList.toImmutableList()));
 
     ListMultimap<LinkableDepType, Arg> runtimeLdFlags =
         Multimaps.newListMultimap(new LinkedHashMap<>(), ArrayList::new);
     runtimeLdFlags.putAll(
-        LinkableDepType.STATIC, StringArg.from(args.getStaticDepRuntimeLdFlags()));
+        LinkableDepType.STATIC,
+        args.getStaticDepRuntimeLdFlags().stream()
+            .map(macrosConverter::convert)
+            .collect(ImmutableList.toImmutableList()));
     runtimeLdFlags.putAll(
-        LinkableDepType.STATIC_PIC, StringArg.from(args.getStaticPicDepRuntimeLdFlags()));
+        LinkableDepType.STATIC_PIC,
+        args.getStaticPicDepRuntimeLdFlags().stream()
+            .map(macrosConverter::convert)
+            .collect(ImmutableList.toImmutableList()));
     runtimeLdFlags.putAll(
-        LinkableDepType.SHARED, StringArg.from(args.getSharedDepRuntimeLdFlags()));
+        LinkableDepType.SHARED,
+        args.getSharedDepRuntimeLdFlags().stream()
+            .map(macrosConverter::convert)
+            .collect(ImmutableList.toImmutableList()));
     cxxPlatform.setRuntimeLdflags(runtimeLdFlags);
 
     cxxPlatform.setSymbolNameTool(
@@ -304,31 +348,31 @@ public class CxxToolchainDescription
     SourcePath getAssembler();
 
     /** Flags for the assembler. */
-    ImmutableList<String> getAssemblerFlags();
+    ImmutableList<StringWithMacros> getAssemblerFlags();
 
     /** C compiler binary. */
     SourcePath getCCompiler();
 
     /** C compiler flags. */
-    ImmutableList<String> getCCompilerFlags();
+    ImmutableList<StringWithMacros> getCCompilerFlags();
 
     /** C++ compiler binary. */
     SourcePath getCxxCompiler();
 
     /** C++ compiler flags. */
-    ImmutableList<String> getCxxCompilerFlags();
+    ImmutableList<StringWithMacros> getCxxCompilerFlags();
 
     /** Linker binary. */
     SourcePath getLinker();
 
     /** Linker flags. */
-    ImmutableList<String> getLinkerFlags();
+    ImmutableList<StringWithMacros> getLinkerFlags();
 
     /** Archiver binary. */
     SourcePath getArchiver();
 
     /** Archiver flags. */
-    ImmutableList<String> getArchiverFlags();
+    ImmutableList<StringWithMacros> getArchiverFlags();
 
     /** {@link ArchiverProvider.Type} of the archiver. */
     ArchiverProvider.Type getArchiverType();
@@ -340,19 +384,19 @@ public class CxxToolchainDescription
     Optional<SourcePath> getRanlib();
 
     /** Ranlib flags. */
-    ImmutableList<String> getRanlibFlags();
+    ImmutableList<StringWithMacros> getRanlibFlags();
 
     /** Strip flags. */
-    ImmutableList<String> getStripFlags();
+    ImmutableList<StringWithMacros> getStripFlags();
 
     /** Flags for linking the c/c++ runtime for static libraries. */
-    ImmutableList<String> getStaticDepRuntimeLdFlags();
+    ImmutableList<StringWithMacros> getStaticDepRuntimeLdFlags();
 
     /** Flags for linking the c/c++ runtime for static-pic libraries. */
-    ImmutableList<String> getStaticPicDepRuntimeLdFlags();
+    ImmutableList<StringWithMacros> getStaticPicDepRuntimeLdFlags();
 
     /** Flags for linking the c/c++ runtime for shared libraries. */
-    ImmutableList<String> getSharedDepRuntimeLdFlags();
+    ImmutableList<StringWithMacros> getSharedDepRuntimeLdFlags();
 
     /** nm binary. */
     SourcePath getNm();

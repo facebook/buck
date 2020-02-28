@@ -40,6 +40,7 @@ import com.facebook.buck.cxx.toolchain.CxxToolProvider;
 import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceParams;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
@@ -73,10 +74,15 @@ public class CxxToolchainDescriptionTest {
         .setArchiverType(Type.GNU)
         .setAssembler(binaryToolPath)
         .setCCompiler(pathToolPath)
-        .setCCompilerFlags(ImmutableList.of("c", "flags"))
+        .setCCompilerFlags(
+            ImmutableList.of(
+                StringWithMacros.ofConstantString("c"), StringWithMacros.ofConstantString("flags")))
         .setCompilerType(CxxToolProvider.Type.CLANG)
         .setLinker(pathToolPath)
-        .setLinkerFlags(ImmutableList.of("linker", "flags"))
+        .setLinkerFlags(
+            ImmutableList.of(
+                StringWithMacros.ofConstantString("linker"),
+                StringWithMacros.ofConstantString("flags")))
         .setNm(binaryToolPath)
         .setName("my_toolchain")
         .setObjectFileExtension(".object")

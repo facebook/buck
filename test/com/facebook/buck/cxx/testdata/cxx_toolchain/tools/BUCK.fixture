@@ -23,3 +23,14 @@ define_impl("ranlib")
 define_impl("linker")
 
 define_impl("strip")
+
+genrule(
+    name = "genfile",
+    cmd = "mkdir $OUT; cp $SRCDIR/test_file $OUT/outfile",
+    cmd_exe = "mkdir $OUT & cp $SRCDIR/test_file $OUT/outfile",
+    srcs = [
+        "test_file",
+    ],
+    out = "generated",
+    visibility = ["PUBLIC"],
+)

@@ -30,7 +30,9 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -116,5 +118,93 @@ public class CxxToolchainIntegrationTest {
     ProcessResult result = workspace.runBuckBuild("//:binary#bad");
     result.assertFailure();
     assertThat(result.getStderr(), containsString("stderr: unimplemented"));
+  }
+
+  @Test
+  public void testCxxToolchainWithCompilerMacro() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_toolchain", tmp);
+    workspace.addBuckConfigLocalOption(
+        "cxx#good", "toolchain_target", "//toolchain:good-with-compiler-macro");
+    workspace.setUp();
+
+    Path output = workspace.buildAndReturnOutput("//:binary#good");
+    assertEquals(
+        String.format(
+            "linker:%n"
+                + "archive:%n"
+                + "object: compile output: not a real cpp%n"
+                + "test arg: test file%n"
+                + "%n"
+                + "object: compile output: also not a real cpp%n"
+                + "test arg: test file%n"
+                + "%n"
+                + "ranlib applied.%n"),
+        workspace.getFileContents(output));
+
+    // Test that rule keys are computed correctly.
+    Path testFilePath =
+        workspace
+            .getProjectFileSystem()
+            .getRootPath()
+            .resolve("tools")
+            .resolve("test_file")
+            .getPath();
+    Files.write(testFilePath, Collections.singleton("modified file"));
+
+    output = workspace.buildAndReturnOutput("//:binary#good");
+    assertEquals(
+        String.format(
+            "linker:%n"
+                + "archive:%n"
+                + "object: compile output: not a real cpp%n"
+                + "test arg: modified file%n"
+                + "%n"
+                + "object: compile output: also not a real cpp%n"
+                + "test arg: modified file%n"
+                + "%n"
+                + "ranlib applied.%n"),
+        workspace.getFileContents(output));
+  }
+
+  @Test
+  public void testCxxToolchainWithLinkerMacro() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_toolchain", tmp);
+    workspace.addBuckConfigLocalOption(
+        "cxx#good", "toolchain_target", "//toolchain:good-with-linker-macro");
+    workspace.setUp();
+
+    Path output = workspace.buildAndReturnOutput("//:binary#good");
+    assertEquals(
+        String.format(
+            "linker:%n"
+                + "test arg: test file%n"
+                + "archive:%n"
+                + "object: compile output: not a real cpp%n"
+                + "object: compile output: also not a real cpp%n"
+                + "ranlib applied.%n"),
+        workspace.getFileContents(output));
+
+    // Test that rule keys are computed correctly.
+    Path testFilePath =
+        workspace
+            .getProjectFileSystem()
+            .getRootPath()
+            .resolve("tools")
+            .resolve("test_file")
+            .getPath();
+    Files.write(testFilePath, Collections.singleton("modified file"));
+
+    output = workspace.buildAndReturnOutput("//:binary#good");
+    assertEquals(
+        String.format(
+            "linker:%n"
+                + "test arg: modified file%n"
+                + "archive:%n"
+                + "object: compile output: not a real cpp%n"
+                + "object: compile output: also not a real cpp%n"
+                + "ranlib applied.%n"),
+        workspace.getFileContents(output));
   }
 }

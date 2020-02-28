@@ -40,3 +40,37 @@ define_toolchain(
     ranlib = "//tools:unimplemented",
     strip = "//tools:unimplemented",
 )
+
+define_toolchain(
+    name = "good-with-compiler-macro",
+    archiver = "//tools:archiver",
+    assembler = "//tools:unimplemented",
+    c_compiler = "//tools:compiler",
+    cxx_compiler = "//tools:compiler",
+    cxx_compiler_flags = [
+        "-test-arg",
+        "$(location //tools:genfile)/outfile",
+    ],
+    linker = "//tools:linker",
+    nm = "//tools:unimplemented",
+    objcopy_for_shared_library_interface = "//tools:unimplemented",
+    ranlib = "//tools:ranlib",
+    strip = "//tools:strip",
+)
+
+define_toolchain(
+    name = "good-with-linker-macro",
+    archiver = "//tools:archiver",
+    assembler = "//tools:unimplemented",
+    c_compiler = "//tools:compiler",
+    cxx_compiler = "//tools:compiler",
+    linker = "//tools:linker",
+    linker_flags = [
+        "-test-arg",
+        "$(location //tools:genfile)/outfile",
+    ],
+    nm = "//tools:unimplemented",
+    objcopy_for_shared_library_interface = "//tools:unimplemented",
+    ranlib = "//tools:ranlib",
+    strip = "//tools:strip",
+)

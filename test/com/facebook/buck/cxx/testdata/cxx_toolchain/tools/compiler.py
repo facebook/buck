@@ -9,6 +9,7 @@ parser = impl.argparser()
 # We just need to know the input file, the output location and the depfile location
 parser.add_argument("-o", dest="output", action=impl.StripQuotesAction)
 parser.add_argument("-MF", dest="depfile", action=impl.StripQuotesAction)
+parser.add_argument("-test-arg", action=impl.StripQuotesAction)
 
 (options, args) = parser.parse_known_args()
 
@@ -26,6 +27,9 @@ with open(input) as inputfile:
 
 with open(options.output, "w") as out:
     out.write("compile output: " + data)
+    if options.test_arg:
+        with open(options.test_arg) as inputfile:
+            out.write("\ntest arg: " + inputfile.read())
 
 with open(options.depfile, "w") as depfile:
     depfile.write(options.output + " :\\\n    " + input + "\n")
