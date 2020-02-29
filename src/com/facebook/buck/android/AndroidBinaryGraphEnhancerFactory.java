@@ -218,7 +218,8 @@ public class AndroidBinaryGraphEnhancerFactory {
         AndroidNativeTargetConfigurationMatcherFactory.create(
             configurationRuleRegistry, buildTarget, dependencyStack, args.getCpuFilters()),
         androidBuckConfig.getFailOnLegacyAaptErrors(),
-        args.isAapt2LocaleFiltering());
+        args.isAapt2LocaleFiltering(),
+        args.getExtraFilteredResources());
   }
 
   private ImmutableSet<String> addFallbackLocales(ImmutableSet<String> locales) {

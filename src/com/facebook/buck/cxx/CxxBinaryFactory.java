@@ -79,7 +79,7 @@ public class CxxBinaryFactory {
 
     // Extract the platform from the flavor, falling back to the default platform if none are
     // found.
-    ImmutableSet<Flavor> flavors = ImmutableSet.copyOf(target.getFlavors());
+    ImmutableSet<Flavor> flavors = ImmutableSet.copyOf(target.getFlavors().getSet());
     CxxPlatform cxxPlatform =
         CxxPlatforms.getCxxPlatform(cxxPlatformsProvider, target, args.getDefaultPlatform())
             .resolve(graphBuilder, target.getTargetConfiguration());

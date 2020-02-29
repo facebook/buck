@@ -190,7 +190,7 @@ public class CxxLibraryDescriptionTest {
     // Setup the build params we'll pass to description when generating the build rules.
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     CxxSourceRuleFactory cxxSourceRuleFactory =
-        CxxSourceRuleFactoryHelper.of(filesystem.getRootPath(), target, cxxPlatform);
+        CxxSourceRuleFactoryHelper.of(filesystem.getRootPath().getPath(), target, cxxPlatform);
 
     String headerName = "test/bar.h";
     String privateHeaderName = "test/bar_private.h";
@@ -493,7 +493,8 @@ public class CxxLibraryDescriptionTest {
     // Setup the build params we'll pass to description when generating the build rules.
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     CxxSourceRuleFactory cxxSourceRuleFactoryPDC =
-        CxxSourceRuleFactoryHelper.of(filesystem.getRootPath(), target, cxxPlatform, PicType.PDC);
+        CxxSourceRuleFactoryHelper.of(
+            filesystem.getRootPath().getPath(), target, cxxPlatform, PicType.PDC);
 
     CxxLibraryBuilder cxxLibraryBuilder =
         new CxxLibraryBuilder(target)
@@ -604,7 +605,8 @@ public class CxxLibraryDescriptionTest {
 
     // Verify that the archive rule has the correct deps: the object files from our sources.
     CxxSourceRuleFactory cxxSourceRuleFactoryPIC =
-        CxxSourceRuleFactoryHelper.of(filesystem.getRootPath(), target, cxxPlatform, PicType.PIC);
+        CxxSourceRuleFactoryHelper.of(
+            filesystem.getRootPath().getPath(), target, cxxPlatform, PicType.PIC);
     rule.getNativeLinkableInput(
         cxxPlatform,
         Linker.LinkableDepType.SHARED,
@@ -729,7 +731,8 @@ public class CxxLibraryDescriptionTest {
     assertThat(deps.size(), is(1));
     BuildRule buildRule = deps.asList().get(0);
     assertThat(
-        buildRule.getBuildTarget().getFlavors(), hasItem(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR));
+        buildRule.getBuildTarget().getFlavors().getSet(),
+        hasItem(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR));
   }
 
   @Test

@@ -181,7 +181,7 @@ public abstract class AbstractNodeBuilder<
               ImmutableSet.of(
                   VisibilityPatternParser.parse(
                       null,
-                      filesystem.getRootPath().resolve("BUCK"),
+                      filesystem.getRootPath().resolve("BUCK").getPath(),
                       VisibilityPatternParser.VISIBILITY_PUBLIC)),
               ImmutableSet.of())
           .withSelectedVersions(selectedVersions);

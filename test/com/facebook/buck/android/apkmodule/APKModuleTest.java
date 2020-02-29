@@ -33,15 +33,13 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.Test;
@@ -349,25 +347,20 @@ public class APKModuleTest {
 
     TargetGraph graph = TargetGraphFactory.newInstance(nodeBuilder.build());
 
-    Map<String, List<BuildTarget>> seedConfigMap = new HashMap<>();
+    ImmutableMap.Builder<String, ImmutableList<BuildTarget>> seedConfigMap = ImmutableMap.builder();
 
-    List<BuildTarget> androidSeedConfig = new ArrayList<>();
-    androidSeedConfig.add(androidLibraryTarget);
-    seedConfigMap.put("android", androidSeedConfig);
+    seedConfigMap.put("android", ImmutableList.of(androidLibraryTarget));
 
-    List<BuildTarget> javaSeedConfig = new ArrayList<>();
-    javaSeedConfig.add(javaLibraryTarget);
-    seedConfigMap.put("java", javaSeedConfig);
+    seedConfigMap.put("java", ImmutableList.of(javaLibraryTarget));
 
-    Map<String, List<String>> appModuleDependencies = new HashMap<>();
-    List<String> androidDependencies = new ArrayList<>();
-    androidDependencies.add("java");
-    appModuleDependencies.put("android", androidDependencies);
+    ImmutableMap.Builder<String, ImmutableList<String>> appModuleDependencies =
+        ImmutableMap.builder();
+    appModuleDependencies.put("android", ImmutableList.of("java"));
 
     APKModuleGraph dag =
         new APKModuleGraph(
-            Optional.of(seedConfigMap),
-            Optional.of(appModuleDependencies),
+            Optional.of(seedConfigMap.build()),
+            Optional.of(appModuleDependencies.build()),
             Optional.empty(),
             ImmutableSet.of(),
             graph,
@@ -492,29 +485,22 @@ public class APKModuleTest {
 
     TargetGraph graph = TargetGraphFactory.newInstance(nodeBuilder.build());
 
-    Map<String, List<BuildTarget>> seedConfigMap = new HashMap<>();
+    ImmutableMap.Builder<String, ImmutableList<BuildTarget>> seedConfigMap = ImmutableMap.builder();
 
-    List<BuildTarget> androidSeedConfig = new ArrayList<>();
-    androidSeedConfig.add(androidLibraryTarget);
-    seedConfigMap.put("android", androidSeedConfig);
+    seedConfigMap.put("android", ImmutableList.of(androidLibraryTarget));
 
-    List<BuildTarget> javaSeedConfig = new ArrayList<>();
-    javaSeedConfig.add(javaLibraryTarget);
-    seedConfigMap.put("java", javaSeedConfig);
+    seedConfigMap.put("java", ImmutableList.of(javaLibraryTarget));
 
-    List<BuildTarget> java2SeedConfig = new ArrayList<>();
-    java2SeedConfig.add(java2LibraryTarget);
-    seedConfigMap.put("java2", java2SeedConfig);
+    seedConfigMap.put("java2", ImmutableList.of(java2LibraryTarget));
 
-    Map<String, List<String>> appModuleDependencies = new HashMap<>();
-    List<String> androidAppDependencies = new ArrayList<>();
-    androidAppDependencies.add("java");
-    appModuleDependencies.put("android", androidAppDependencies);
+    ImmutableMap.Builder<String, ImmutableList<String>> appModuleDependencies =
+        ImmutableMap.builder();
+    appModuleDependencies.put("android", ImmutableList.of("java"));
 
     APKModuleGraph dag =
         new APKModuleGraph(
-            Optional.of(seedConfigMap),
-            Optional.of(appModuleDependencies),
+            Optional.of(seedConfigMap.build()),
+            Optional.of(appModuleDependencies.build()),
             Optional.empty(),
             ImmutableSet.of(),
             graph,
@@ -650,34 +636,22 @@ public class APKModuleTest {
 
     TargetGraph graph = TargetGraphFactory.newInstance(nodeBuilder.build());
 
-    Map<String, List<BuildTarget>> seedConfigMap = new HashMap<>();
+    ImmutableMap.Builder<String, ImmutableList<BuildTarget>> seedConfigMap = ImmutableMap.builder();
 
-    List<BuildTarget> androidSeedConfig = new ArrayList<>();
-    androidSeedConfig.add(androidLibraryTarget);
-    seedConfigMap.put("android", androidSeedConfig);
+    seedConfigMap.put("android", ImmutableList.of(androidLibraryTarget));
+    seedConfigMap.put("java", ImmutableList.of(javaLibraryTarget));
+    seedConfigMap.put("java2", ImmutableList.of(java2LibraryTarget));
 
-    List<BuildTarget> javaSeedConfig = new ArrayList<>();
-    javaSeedConfig.add(javaLibraryTarget);
-    seedConfigMap.put("java", javaSeedConfig);
+    ImmutableMap.Builder<String, ImmutableList<String>> appModuleDependencies =
+        ImmutableMap.builder();
 
-    List<BuildTarget> java2SeedConfig = new ArrayList<>();
-    java2SeedConfig.add(java2LibraryTarget);
-    seedConfigMap.put("java2", java2SeedConfig);
-
-    Map<String, List<String>> appModuleDependencies = new HashMap<>();
-
-    List<String> androidAppDependencies = new ArrayList<>();
-    androidAppDependencies.add("java");
-    appModuleDependencies.put("android", androidAppDependencies);
-
-    List<String> javaAppDependencies = new ArrayList<>();
-    javaAppDependencies.add("java2");
-    appModuleDependencies.put("java", javaAppDependencies);
+    appModuleDependencies.put("android", ImmutableList.of("java"));
+    appModuleDependencies.put("java", ImmutableList.of("java2"));
 
     APKModuleGraph dag =
         new APKModuleGraph(
-            Optional.of(seedConfigMap),
-            Optional.of(appModuleDependencies),
+            Optional.of(seedConfigMap.build()),
+            Optional.of(appModuleDependencies.build()),
             Optional.empty(),
             ImmutableSet.of(),
             graph,
@@ -818,34 +792,22 @@ public class APKModuleTest {
 
     TargetGraph graph = TargetGraphFactory.newInstance(nodeBuilder.build());
 
-    Map<String, List<BuildTarget>> seedConfigMap = new HashMap<>();
+    ImmutableMap.Builder<String, ImmutableList<BuildTarget>> seedConfigMap = ImmutableMap.builder();
 
-    List<BuildTarget> androidSeedConfig = new ArrayList<>();
-    androidSeedConfig.add(androidLibraryTarget);
-    seedConfigMap.put("android", androidSeedConfig);
+    seedConfigMap.put("android", ImmutableList.of(androidLibraryTarget));
+    seedConfigMap.put("java", ImmutableList.of(javaLibraryTarget));
+    seedConfigMap.put("java2", ImmutableList.of(java2LibraryTarget));
 
-    List<BuildTarget> javaSeedConfig = new ArrayList<>();
-    javaSeedConfig.add(javaLibraryTarget);
-    seedConfigMap.put("java", javaSeedConfig);
+    ImmutableMap.Builder<String, ImmutableList<String>> appModuleDependencies =
+        ImmutableMap.builder();
 
-    List<BuildTarget> java2SeedConfig = new ArrayList<>();
-    java2SeedConfig.add(java2LibraryTarget);
-    seedConfigMap.put("java2", java2SeedConfig);
-
-    Map<String, List<String>> appModuleDependencies = new HashMap<>();
-
-    List<String> androidAppDependencies = new ArrayList<>();
-    androidAppDependencies.add("java");
-    appModuleDependencies.put("android", androidAppDependencies);
-
-    List<String> javaAppDependencies = new ArrayList<>();
-    javaAppDependencies.add("java2");
-    appModuleDependencies.put("java", javaAppDependencies);
+    appModuleDependencies.put("android", ImmutableList.of("java"));
+    appModuleDependencies.put("java", ImmutableList.of("java2"));
 
     APKModuleGraph dag =
         new APKModuleGraph(
-            Optional.of(seedConfigMap),
-            Optional.of(appModuleDependencies),
+            Optional.of(seedConfigMap.build()),
+            Optional.of(appModuleDependencies.build()),
             Optional.empty(),
             ImmutableSet.of(),
             graph,

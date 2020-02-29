@@ -16,7 +16,6 @@
 
 package com.facebook.buck.logd.client;
 
-import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.logd.LogDaemonException;
 import com.facebook.buck.logd.proto.CreateLogRequest;
 import com.facebook.buck.logd.proto.CreateLogResponse;
@@ -32,13 +31,15 @@ import io.grpc.stub.StreamObserver;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Given a host and port number, this client is used to make a connection and stream logs to logD
  * server
  */
 public class LogdClient implements LogDaemonClient {
-  private static final Logger LOG = Logger.get(LogdClient.class.getName());
+  private static final Logger LOG = LogManager.getLogger();
   private static final int TIME_OUT_SECONDS = 5;
 
   private final ManagedChannel channel;
@@ -49,6 +50,8 @@ public class LogdClient implements LogDaemonClient {
   private Map<Integer, StreamObserver<LogMessage>> requestObservers = new ConcurrentHashMap<>();
   private Map<Integer, String> fileIdToPath = new ConcurrentHashMap<>();
 
+  private StreamObserverFactory streamObserverFactory;
+
   /**
    * Constructs a LogdClient with the provided hostname and port number.
    *
@@ -56,8 +59,20 @@ public class LogdClient implements LogDaemonClient {
    * @param port port number
    */
   public LogdClient(String host, int port) {
-    this(ManagedChannelBuilder.forAddress(host, port).usePlaintext());
-    LOG.info("Channel established to " + host + " at port " + port);
+    this(host, port, new DefaultStreamObserverFactory());
+  }
+
+  /**
+   * Constructs a LogdClient with the provided hostname, port number and an implementation of
+   * StreamObserverFactory.
+   *
+   * @param host host name
+   * @param port port number
+   * @param streamObserverFactory an implementation of StreamObserverFactory
+   */
+  public LogdClient(String host, int port, StreamObserverFactory streamObserverFactory) {
+    this(ManagedChannelBuilder.forAddress(host, port).usePlaintext(), streamObserverFactory);
+    LOG.info("Channel established to {} at port {}", host, port);
   }
 
   /**
@@ -66,23 +81,24 @@ public class LogdClient implements LogDaemonClient {
    * @param channelBuilder a channel to LogD server
    */
   @VisibleForTesting
-  public LogdClient(ManagedChannelBuilder<?> channelBuilder) {
+  public LogdClient(
+      ManagedChannelBuilder<?> channelBuilder, StreamObserverFactory streamObserverFactory) {
     channel = channelBuilder.build();
     blockingStub = LogdServiceGrpc.newBlockingStub(channel);
     asyncStub = LogdServiceGrpc.newStub(channel);
+    this.streamObserverFactory = streamObserverFactory;
   }
 
   @Override
   public void shutdown() {
     try {
       LOG.info(
-          "Awaiting termination of channel to logD server. Waiting for up to %s seconds...",
+          "Awaiting termination of channel to logD server. Waiting for up to {} seconds...",
           TIME_OUT_SECONDS);
       channel.shutdown().awaitTermination(TIME_OUT_SECONDS, TimeUnit.SECONDS);
       if (!channel.isTerminated()) {
         LOG.warn(
-            "Channel is still open after shutdown request and "
-                + "%s seconds timeout. Shutting down forcefully...",
+            "Channel is still open after shutdown request and {} seconds timeout. Shutting down forcefully...",
             TIME_OUT_SECONDS);
         channel.shutdownNow();
         LOG.info("Successfully shut down LogD client.");
@@ -106,7 +122,7 @@ public class LogdClient implements LogDaemonClient {
 
       return logdFileId;
     } catch (StatusRuntimeException e) {
-      LOG.error("LogD failed to return response with a file identifier: ", e.getStatus());
+      LOG.error("LogD failed to return response with a file identifier: " + e.getStatus(), e);
       throw new LogDaemonException(
           e, "LogD failed to create a log file at %s, of type %s", path, logType);
     }
@@ -123,25 +139,7 @@ public class LogdClient implements LogDaemonClient {
     //   the responseObserver.
     responseObservers.computeIfAbsent(
         logFileId,
-        newLogFileId ->
-            new StreamObserver<Status>() {
-              private String path = fileIdToPath.get(newLogFileId);
-
-              @Override
-              public void onNext(Status response) {
-                LOG.info("Logs written to " + path);
-              }
-
-              @Override
-              public void onError(Throwable t) {
-                LOG.error(t, "LogD failed to send a response: " + io.grpc.Status.fromThrowable(t));
-              }
-
-              @Override
-              public void onCompleted() {
-                LOG.info("LogD closing stream to " + path);
-              }
-            });
+        newLogFileId -> streamObserverFactory.createStreamObserver(fileIdToPath.get(newLogFileId)));
 
     StreamObserver<LogMessage> requestObserver =
         requestObservers.computeIfAbsent(

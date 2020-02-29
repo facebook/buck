@@ -243,7 +243,7 @@ public class CxxLibraryDescription
     if (!type.isPresent()) {
       return buildTarget;
     }
-    Set<Flavor> flavors = Sets.newHashSet(buildTarget.getFlavors());
+    Set<Flavor> flavors = Sets.newHashSet(buildTarget.getFlavors().getSet());
     flavors.remove(type.get().getKey());
     return buildTarget.withFlavors(flavors);
   }

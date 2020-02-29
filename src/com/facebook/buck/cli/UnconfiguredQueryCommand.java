@@ -66,15 +66,13 @@ public class UnconfiguredQueryCommand extends AbstractQueryCommand {
         PerBuildState parserState =
             new PerBuildStateFactory(
                     params.getTypeCoercerFactory(),
-                    new DefaultConstructorArgMarshaller(params.getTypeCoercerFactory()),
+                    new DefaultConstructorArgMarshaller(),
                     params.getKnownRuleTypesProvider(),
                     new ParserPythonInterpreterProvider(
                         params.getCells().getRootCell().getBuckConfig(),
                         params.getExecutableFinder()),
                     params.getWatchman(),
                     params.getBuckEventBus(),
-                    params.getManifestServiceSupplier(),
-                    params.getFileHashCache(),
                     params.getUnconfiguredBuildTargetFactory(),
                     params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))
                 .create(

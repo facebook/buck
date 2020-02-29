@@ -26,12 +26,12 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.command.config.ConfigDifference.ConfigChange;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.support.cli.args.GlobalCliOptions;
 import com.facebook.buck.util.config.Configs;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -46,7 +46,7 @@ public class UIMessagesFormatterTest {
 
   @Test
   public void useSpecificOverridesMessage() throws IOException {
-    Path tempPath = temporaryFolder.newFolder().toPath();
+    AbsPath tempPath = AbsPath.of(temporaryFolder.newFolder().toPath());
     Optional<String> message =
         UIMessagesFormatter.useSpecificOverridesMessage(tempPath, ImmutableSet.of());
     if (!Configs.getDefaultConfigurationFiles(tempPath).isEmpty()) {

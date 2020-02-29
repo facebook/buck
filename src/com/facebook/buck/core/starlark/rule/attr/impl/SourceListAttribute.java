@@ -17,22 +17,16 @@
 package com.facebook.buck.core.starlark.rule.attr.impl;
 
 import com.facebook.buck.core.artifact.Artifact;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.PostCoercionTransform;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
-import com.facebook.buck.rules.coercer.BuildTargetTypeCoercer;
-import com.facebook.buck.rules.coercer.BuildTargetWithOutputsTypeCoercer;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
-import com.facebook.buck.rules.coercer.ListTypeCoercer;
-import com.facebook.buck.rules.coercer.PathTypeCoercer;
-import com.facebook.buck.rules.coercer.SourcePathTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercer;
-import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.reflect.TypeToken;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import java.util.List;
 
@@ -45,14 +39,9 @@ import java.util.List;
 @BuckStyleValue
 public abstract class SourceListAttribute extends Attribute<ImmutableList<SourcePath>> {
 
-  private static final TypeCoercer<ImmutableList<SourcePath>> coercer =
-      new ListTypeCoercer<>(
-          new SourcePathTypeCoercer(
-              new BuildTargetWithOutputsTypeCoercer(
-                  new BuildTargetTypeCoercer(
-                      new UnconfiguredBuildTargetTypeCoercer(
-                          new ParsingUnconfiguredBuildTargetViewFactory()))),
-              new PathTypeCoercer()));
+  private static final TypeCoercer<?, ImmutableList<SourcePath>> coercer =
+      TypeCoercerFactoryForStarlark.typeCoercerForType(
+          new TypeToken<ImmutableList<SourcePath>>() {});
 
   @Override
   public abstract ImmutableList<String> getPreCoercionDefaultValue();
@@ -72,7 +61,7 @@ public abstract class SourceListAttribute extends Attribute<ImmutableList<Source
   }
 
   @Override
-  public TypeCoercer<ImmutableList<SourcePath>> getTypeCoercer() {
+  public TypeCoercer<?, ImmutableList<SourcePath>> getTypeCoercer() {
     return coercer;
   }
 

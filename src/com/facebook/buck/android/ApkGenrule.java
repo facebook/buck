@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
@@ -156,7 +157,7 @@ public final class ApkGenrule extends BaseGenrule<ApkGenrule.Buildable>
         Optional<Arg> cmdExe,
         Optional<String> type,
         Optional<String> out,
-        Optional<ImmutableMap<String, ImmutableSet<String>>> outs,
+        Optional<ImmutableMap<OutputLabel, ImmutableSet<String>>> outs,
         boolean enableSandboxingInGenrule,
         boolean isCacheable,
         String environmentExpansionSeparator,

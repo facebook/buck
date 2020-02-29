@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -48,13 +49,13 @@ public class UnflavoredBuildTargetFactoryTest {
   @Test
   public void createSucceeds() {
     Path buildFilePath = cell.getRootCell().getFilesystem().resolve("BUCK");
-    Path relativeBuildFilePath = cell.getRootCell().getFilesystem().relativize(buildFilePath);
+    RelPath relativeBuildFilePath = cell.getRootCell().getFilesystem().relativize(buildFilePath);
     String base_path = MorePaths.getParentOrEmpty(relativeBuildFilePath).toString();
 
     Map<String, Object> malformedMap = ImmutableMap.of("buck.base_path", base_path, "name", "bar");
 
     UnflavoredBuildTargetFactory.createFromRawNode(
-        cell.getRootCell().getRoot(),
+        cell.getRootCell().getRoot().getPath(),
         cell.getRootCell().getCanonicalName(),
         malformedMap,
         buildFilePath);
@@ -70,7 +71,7 @@ public class UnflavoredBuildTargetFactoryTest {
     expectedException.expectMessage("malformed raw data");
 
     UnflavoredBuildTargetFactory.createFromRawNode(
-        cell.getRootCell().getRoot(),
+        cell.getRootCell().getRoot().getPath(),
         cell.getRootCell().getCanonicalName(),
         malformedMap,
         buildFilePath);
@@ -79,7 +80,7 @@ public class UnflavoredBuildTargetFactoryTest {
   @Test
   public void exceptionOnSwappedRawNode() {
     Path buildFilePath = cell.getRootCell().getFilesystem().resolve("BUCK");
-    Path relativeBuildFilePath = cell.getRootCell().getFilesystem().relativize(buildFilePath);
+    RelPath relativeBuildFilePath = cell.getRootCell().getFilesystem().relativize(buildFilePath);
     String base_path = MorePaths.getParentOrEmpty(relativeBuildFilePath).toString();
 
     Map<String, Object> malformedMap = ImmutableMap.of("buck.base_path", base_path, "name", "bar");
@@ -89,7 +90,7 @@ public class UnflavoredBuildTargetFactoryTest {
 
     buildFilePath = cell.getRootCell().getFilesystem().resolve("a/BUCK");
     UnflavoredBuildTargetFactory.createFromRawNode(
-        cell.getRootCell().getRoot(),
+        cell.getRootCell().getRoot().getPath(),
         cell.getRootCell().getCanonicalName(),
         malformedMap,
         buildFilePath);

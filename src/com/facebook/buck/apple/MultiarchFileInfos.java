@@ -61,7 +61,7 @@ public class MultiarchFileInfos {
   public static Optional<MultiarchFileInfo> create(
       FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatforms, BuildTarget target) {
     ImmutableList<ImmutableSortedSet<Flavor>> thinFlavorSets =
-        generateThinFlavors(target.getFlavors());
+        generateThinFlavors(target.getFlavors().getSet());
     if (thinFlavorSets.size() <= 1) { // Actually a thin binary
       return Optional.empty();
     }
@@ -101,7 +101,7 @@ public class MultiarchFileInfos {
   /** Assert that target supports multiple architectures. */
   public static void checkTargetSupportsMultiarch(BuildTarget target) {
     ImmutableList<ImmutableSortedSet<Flavor>> thinFlavorSets =
-        generateThinFlavors(target.getFlavors());
+        generateThinFlavors(target.getFlavors().getSet());
     if (thinFlavorSets.size() <= 1) { // Actually a thin binary
       return;
     }
@@ -110,7 +110,7 @@ public class MultiarchFileInfos {
   }
 
   private static void assertTargetSupportsMultiarch(BuildTarget target) {
-    if (!Sets.intersection(target.getFlavors(), FORBIDDEN_BUILD_ACTIONS).isEmpty()) {
+    if (!Sets.intersection(target.getFlavors().getSet(), FORBIDDEN_BUILD_ACTIONS).isEmpty()) {
       throw new HumanReadableException(
           "%s: Fat binaries is only supported when building an actual binary.", target);
     }

@@ -20,16 +20,15 @@ import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
+import com.facebook.buck.core.rules.knowntypes.RuleDescriptor;
 import com.facebook.buck.core.starlark.rule.SkylarkDescription;
 import com.facebook.buck.core.starlark.rule.SkylarkDescriptionArg;
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
 import com.facebook.buck.core.starlark.rule.names.UserDefinedRuleNames;
 import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
-import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
 import com.google.devtools.build.lib.cmdline.Label;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
 
@@ -86,30 +85,29 @@ public class KnownUserDefinedRuleTypes implements KnownRuleTypes {
   }
 
   @Override
-  public RuleType getRuleType(String name) {
-    SkylarkUserDefinedRule rule = Preconditions.checkNotNull(getRule(name));
-    return RuleType.of(rule.getName(), RuleType.Kind.BUILD);
+  public RuleDescriptor<?> getDescriptorByName(String name) {
+    return getDescriptorByNameImpl(name);
   }
 
-  @Override
-  public BaseDescription<?> getDescription(RuleType ruleType) {
-    return description;
-  }
-
-  @Override
   @SuppressWarnings("unchecked")
-  public <T extends ConstructorArg> DataTransferObjectDescriptor<T> getConstructorArgDescriptor(
-      TypeCoercerFactory typeCoercerFactory, RuleType ruleType, Class<T> dtoClass) {
-    Preconditions.checkArgument(dtoClass.isAssignableFrom(SkylarkDescriptionArg.class));
-    SkylarkUserDefinedRule rule = Objects.requireNonNull(getRule(ruleType.getName()));
-    return DataTransferObjectDescriptor.of(
-        dtoClass,
-        () -> new SkylarkDescriptionArg(rule),
-        rule.getAllParamInfo(),
-        args -> {
-          ((SkylarkDescriptionArg) args).build();
-          // Terrible cast here, but java doesn't have useful generic type constraints
-          return (T) args;
-        });
+  private <T extends ConstructorArg> RuleDescriptor<T> getDescriptorByNameImpl(String name) {
+    SkylarkUserDefinedRule rule = getRule(name);
+
+    Preconditions.checkState(rule != null, "UDR not found: %s", name);
+
+    RuleType ruleType = RuleType.of(rule.getName(), RuleType.Kind.BUILD);
+    return RuleDescriptor.of(
+        ruleType,
+        (BaseDescription<T>) this.description,
+        tcf ->
+            DataTransferObjectDescriptor.of(
+                ((BaseDescription<T>) this.description).getConstructorArgType(),
+                () -> new SkylarkDescriptionArg(rule),
+                rule.getAllParamInfo(),
+                args -> {
+                  ((SkylarkDescriptionArg) args).build();
+                  // Terrible cast here, but java doesn't have useful generic type constraints
+                  return (T) args;
+                }));
   }
 }

@@ -120,11 +120,11 @@ abstract class OcamlBuildContext implements AddsToRuleKey {
   @AddToRuleKey
   public abstract Optional<Tool> getOcamlBytecodeCompiler();
 
-  protected abstract List<String> getCFlags();
+  protected abstract List<Arg> getCFlags();
 
   protected abstract Optional<String> getOcamlInteropIncludesDir();
 
-  protected abstract List<String> getLdFlags();
+  protected abstract List<Arg> getLdFlags();
 
   protected abstract Preprocessor getCPreprocessor();
 
@@ -338,21 +338,23 @@ abstract class OcamlBuildContext implements AddsToRuleKey {
     return compileFlags.build();
   }
 
-  private static ImmutableList<String> addPrefix(String prefix, Iterable<String> flags) {
+  private static ImmutableList<Arg> addPrefix(Arg prefix, Iterable<Arg> flags) {
     return ImmutableList.copyOf(MoreIterables.zipAndConcat(Iterables.cycle(prefix), flags));
   }
 
-  public ImmutableList<String> getCommonCFlags() {
-    ImmutableList.Builder<String> builder = ImmutableList.builder();
+  public ImmutableList<Arg> getCommonCFlags() {
+    ImmutableList.Builder<Arg> builder = ImmutableList.builder();
     builder.addAll(getCFlags());
     builder.add(
-        "-isystem"
-            + getOcamlInteropIncludesDir().orElse(DEFAULT_OCAML_INTEROP_INCLUDE_DIR.toString()));
+        StringArg.of(
+            "-isystem"
+                + getOcamlInteropIncludesDir()
+                    .orElse(DEFAULT_OCAML_INTEROP_INCLUDE_DIR.toString())));
     return builder.build();
   }
 
-  public ImmutableList<String> getCommonCLinkerFlags() {
-    return addPrefix("-ccopt", getLdFlags());
+  public ImmutableList<Arg> getCommonCLinkerFlags() {
+    return addPrefix(StringArg.of("-ccopt"), getLdFlags());
   }
 
   public static Builder builder(

@@ -55,9 +55,14 @@ public class KnownRuleTypesProviderTest {
         FakeBuckConfig.builder()
             .setSections(
                 ImmutableMap.of(
+                    "rule_analysis",
+                    ImmutableMap.of("mode", "PROVIDER_COMPATIBLE"),
                     "parser",
                     ImmutableMap.of(
-                        "user_defined_rules", enableUserDefinedRules ? "enabled" : "disabled")))
+                        "default_build_file_syntax",
+                        "SKYLARK",
+                        "user_defined_rules",
+                        enableUserDefinedRules ? "enabled" : "disabled")))
             .build();
     return new TestCellBuilder().setBuckConfig(config).build().getRootCell();
   }
@@ -85,13 +90,15 @@ public class KnownRuleTypesProviderTest {
     KnownUserDefinedRuleTypes knownUserDefinedRuleTypes = provider.getUserDefinedRuleTypes(cell);
     knownUserDefinedRuleTypes.addRule(rule);
 
-    assertNotNull(knownRuleTypes.getRuleType("fake"));
+    assertNotNull(knownRuleTypes.getDescriptorByName("fake").getRuleType());
     assertTrue(knownRuleTypes instanceof HybridKnownRuleTypes);
-    assertSame(knownRuleTypes.getRuleType("fake"), knownNativeRuleTypes.getRuleType("fake"));
-
-    assertNotNull(knownRuleTypes.getRuleType(rule.getName()));
     assertSame(
-        knownRuleTypes.getRuleType(rule.getName()),
-        knownUserDefinedRuleTypes.getRuleType(rule.getName()));
+        knownRuleTypes.getDescriptorByName("fake").getRuleType(),
+        knownNativeRuleTypes.getDescriptorByName("fake").getRuleType());
+
+    assertNotNull(knownRuleTypes.getDescriptorByName(rule.getName()).getRuleType());
+    assertSame(
+        knownRuleTypes.getDescriptorByName(rule.getName()).getRuleType(),
+        knownUserDefinedRuleTypes.getDescriptorByName(rule.getName()).getRuleType());
   }
 }

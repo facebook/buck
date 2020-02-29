@@ -68,4 +68,8 @@ public interface PathWrapper {
   default FileSystem getFileSystem() {
     return getPath().getFileSystem();
   }
+
+  default boolean startsWith(Path other) {
+    return getPath().startsWith(other);
+  }
 }

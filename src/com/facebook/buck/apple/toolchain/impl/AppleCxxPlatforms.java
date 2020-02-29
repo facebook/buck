@@ -56,6 +56,8 @@ import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.impl.DefaultLinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.swift.toolchain.SwiftTargetTriple;
 import com.facebook.buck.swift.toolchain.impl.SwiftPlatformFactory;
@@ -320,7 +322,7 @@ public class AppleCxxPlatforms {
     // https://github.com/facebook/buck/pull/1168: add the root cell's absolute path to the quote
     // include path, and also force it to be sanitized by all user rule keys.
     if (appleConfig.addCellPathToIquotePath()) {
-      sanitizerPaths.put(filesystem.getRootPath(), ".");
+      sanitizerPaths.put(filesystem.getRootPath().getPath(), ".");
       cflagsBuilder.add("-iquote", filesystem.getRootPath().toString());
     }
 
@@ -420,6 +422,9 @@ public class AppleCxxPlatforms {
         config.getHeaderVerificationOrIgnore().withPlatformWhitelist(whitelistBuilder.build());
     LOG.debug(
         "Headers verification platform whitelist: %s", headerVerification.getPlatformWhitelist());
+    ImmutableList<String> ldFlags =
+        ImmutableList.<String>builder().addAll(cflags).addAll(ldflagsBuilder.build()).build();
+    ImmutableList<Arg> cflagsArgs = ImmutableList.copyOf(StringArg.from(cflags));
 
     CxxPlatform cxxPlatform =
         CxxPlatforms.build(
@@ -435,19 +440,20 @@ public class AppleCxxPlatforms {
             new DefaultLinkerProvider(
                 LinkerProvider.Type.DARWIN,
                 new ConstantToolProvider(clangXxPath),
-                config.shouldCacheLinks()),
-            ImmutableList.<String>builder().addAll(cflags).addAll(ldflagsBuilder.build()).build(),
+                config.shouldCacheLinks(),
+                appleConfig.shouldLinkScrubConcurrently()),
+            StringArg.from(ldFlags),
             ImmutableMultimap.of(),
             strip,
             ArchiverProvider.from(new BsdArchiver(ar)),
             ArchiveContents.NORMAL,
             Optional.of(new ConstantToolProvider(ranlib)),
             new PosixNmSymbolNameTool(new ConstantToolProvider(nm)),
-            cflagsBuilder.build(),
+            cflagsArgs,
             ImmutableList.of(),
-            cflags,
+            cflagsArgs,
             ImmutableList.of(),
-            cflags,
+            cflagsArgs,
             ImmutableList.of(),
             "dylib",
             "%s.dylib",

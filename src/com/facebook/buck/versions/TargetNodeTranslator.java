@@ -254,7 +254,7 @@ public abstract class TargetNodeTranslator {
       Object newConstructorArgOrBuilder) {
     boolean modified = false;
 
-    for (ParamInfo param :
+    for (ParamInfo<?> param :
         typeCoercerFactory
             .getConstructorArgDescriptor(constructorArg.getClass())
             .getParamInfos()

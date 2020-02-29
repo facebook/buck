@@ -144,7 +144,7 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
               new PrintStreamPathOutputPresenter(
                   params.getConsole().getStdOut(),
                   getOutputMode(),
-                  params.getCells().getRootCell().getRoot()),
+                  params.getCells().getRootCell().getRoot().getPath()),
               projectGeneratorParameters.getArgsParser(),
               arguments -> {
                 try {
@@ -188,7 +188,7 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
                   new PrintStreamPathOutputPresenter(
                       params.getConsole().getStdOut(),
                       getOutputMode(),
-                      params.getCells().getRootCell().getRoot()),
+                      params.getCells().getRootCell().getRoot().getPath()),
                   projectGeneratorParameters.getArgsParser(),
                   arguments -> {
                     try {

@@ -55,7 +55,7 @@ public class CopyResourcesStepTest {
     BuildContext buildContext =
         FakeBuildContext.withSourcePathResolver(ruleFinder.getSourcePathResolver())
             .withJavaPackageFinder(javaPackageFinder)
-            .withBuildCellRootPath(filesystem.getRootPath());
+            .withBuildCellRootPath(filesystem.getRootPath().getPath());
 
     CopyResourcesStep step =
         new CopyResourcesStep(
@@ -120,7 +120,7 @@ public class CopyResourcesStepTest {
     BuildContext buildContext =
         FakeBuildContext.withSourcePathResolver(ruleFinder.getSourcePathResolver())
             .withJavaPackageFinder(javaPackageFinder)
-            .withBuildCellRootPath(filesystem.getRootPath());
+            .withBuildCellRootPath(filesystem.getRootPath().getPath());
     CopyResourcesStep step =
         new CopyResourcesStep(
             filesystem,
@@ -185,7 +185,7 @@ public class CopyResourcesStepTest {
     BuildContext buildContext =
         FakeBuildContext.withSourcePathResolver(ruleFinder.getSourcePathResolver())
             .withJavaPackageFinder(javaPackageFinder)
-            .withBuildCellRootPath(filesystem.getRootPath());
+            .withBuildCellRootPath(filesystem.getRootPath().getPath());
 
     CopyResourcesStep step =
         new CopyResourcesStep(

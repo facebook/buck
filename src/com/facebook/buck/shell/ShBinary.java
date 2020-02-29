@@ -23,6 +23,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.NewCellPathResolver;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -131,7 +132,7 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     // Create symlink to our own cell.
     CanonicalCellName thisCellCanonicalName = cellNameResolver.getName(Optional.empty());
     Path rootPath = cellPathResolver.getCellPath(thisCellCanonicalName);
-    Path relativePath = projectFilesystem.getRootPath().relativize(rootPath);
+    RelPath relativePath = projectFilesystem.getRootPath().relativize(rootPath);
     cellsPathsStringsBuilder.add(Escaper.BASH_ESCAPER.apply(relativePath.toString()));
     cellsNamesBuilder.add(Escaper.BASH_ESCAPER.apply(ROOT_CELL_LINK_NAME));
 

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.util.string.MoreStrings;
@@ -101,10 +102,10 @@ public class JavacErrorParser {
 
   private Optional<String> getMissingSymbolInLocalPackage(Matcher matcher) {
     String fileName = matcher.group("file");
-    Path repoRoot = filesystem.getRootPath().toAbsolutePath().normalize();
+    AbsPath repoRoot = filesystem.getRootPath().normalize();
     Path filePath = Paths.get(fileName).toAbsolutePath().normalize();
     try {
-      filePath = repoRoot.relativize(filePath);
+      filePath = repoRoot.relativize(filePath).getPath();
     } catch (IllegalArgumentException e) {
       return Optional.empty();
     }

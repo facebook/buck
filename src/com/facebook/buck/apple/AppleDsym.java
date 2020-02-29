@@ -108,7 +108,7 @@ public class AppleDsym extends AbstractBuildRule
         buildTarget,
         RULE_FLAVOR);
     Preconditions.checkArgument(
-        !AppleDebugFormat.FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors()),
+        !AppleDebugFormat.FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors().getSet()),
         "Rule %s must not contain any debug format flavors (%s), only rule flavor %s",
         buildTarget,
         AppleDebugFormat.FLAVOR_DOMAIN.getFlavors(),
@@ -120,12 +120,12 @@ public class AppleDsym extends AbstractBuildRule
         CxxStrip.RULE_FLAVOR,
         AppleDsym.class.toString());
     Preconditions.checkArgument(
-        !StripStyle.FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors()),
+        !StripStyle.FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors().getSet()),
         "Rule %s must not contain strip style flavors: %s works only with unstripped binaries!",
         buildTarget,
         AppleDsym.class.toString());
     Preconditions.checkArgument(
-        !LinkerMapMode.FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors()),
+        !LinkerMapMode.FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors().getSet()),
         "Rule %s must not contain linker map mode flavors.",
         buildTarget);
   }

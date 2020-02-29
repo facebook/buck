@@ -26,6 +26,7 @@ import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.List;
@@ -93,14 +94,14 @@ public interface AndroidGraphEnhancerArgs
 
   Set<BuildTarget> getApplicationModuleTargets();
 
-  Map<String, List<BuildTarget>> getApplicationModuleConfigs();
+  ImmutableMap<String, ImmutableList<BuildTarget>> getApplicationModuleConfigs();
 
   @Value.Default
   default Set<String> getApplicationModulesWithResources() {
     return ImmutableSet.of();
   }
 
-  Optional<Map<String, List<String>>> getApplicationModuleDependencies();
+  Optional<ImmutableMap<String, ImmutableList<String>>> getApplicationModuleDependencies();
 
   @Value.Default
   default boolean getIsCacheable() {
@@ -200,5 +201,10 @@ public interface AndroidGraphEnhancerArgs
   @Value.Default
   default boolean isSkipProguard() {
     return false;
+  }
+
+  @Value.Default
+  default ImmutableSet<String> getExtraFilteredResources() {
+    return ImmutableSet.of();
   }
 }

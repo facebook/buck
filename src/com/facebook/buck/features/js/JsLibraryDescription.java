@@ -108,7 +108,8 @@ public class JsLibraryDescription
       throw new RuntimeException(e);
     }
     Optional<Either<SourcePath, Pair<SourcePath, String>>> file =
-        JsFlavors.extractSourcePath(sourcesToFlavors.inverse(), buildTarget.getFlavors().stream());
+        JsFlavors.extractSourcePath(
+            sourcesToFlavors.inverse(), buildTarget.getFlavors().getSet().stream());
 
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     CellPathResolver cellRoots = context.getCellPathResolver();
@@ -287,7 +288,7 @@ public class JsLibraryDescription
     }
 
     private BuildTarget addFlavorsToLibraryTarget(BuildTarget unflavored) {
-      return unflavored.withAppendedFlavors(baseTarget.getFlavors());
+      return unflavored.withAppendedFlavors(baseTarget.getFlavors().getSet());
     }
 
     JsLibrary verifyIsJsLibraryRule(BuildRule rule) {
@@ -358,7 +359,9 @@ public class JsLibraryDescription
 
   private static BuildTarget withFileFlavorOnly(BuildTarget target) {
     return target.withFlavors(
-        target.getFlavors().stream().filter(JsFlavors::isFileFlavor).toArray(Flavor[]::new));
+        target.getFlavors().getSet().stream()
+            .filter(JsFlavors::isFileFlavor)
+            .toArray(Flavor[]::new));
   }
 
   private static ImmutableBiMap<Either<SourcePath, Pair<SourcePath, String>>, Flavor>

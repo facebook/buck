@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.util.types.Unit;
 import java.io.IOException;
@@ -52,7 +53,7 @@ class CellManager {
   void registerInputsUnderSymlinks(Path buildFile, TargetNode<?> node) throws IOException {
     Cell currentCell = getCell(node.getBuildTarget().getCell());
     symlinkCache.registerInputsUnderSymlinks(
-        currentCell, getCell(node.getBuildTarget().getCell()), buildFile, node);
+        currentCell, getCell(node.getBuildTarget().getCell()), AbsPath.of(buildFile), node);
   }
 
   void close() {

@@ -184,7 +184,8 @@ public class AuditInputCommand extends AbstractCommand {
                       .getCells()
                       .getRootCell()
                       .getRoot()
-                      .relativize(cell.getRoot().resolve(path)));
+                      .getPath()
+                      .relativize(cell.getRoot().getPath().resolve(path)));
             }
           } catch (IOException e) {
             throw new RuntimeException(e);

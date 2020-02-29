@@ -22,10 +22,11 @@ import com.facebook.buck.core.cell.CellConfig;
 import com.facebook.buck.core.cell.CellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
@@ -362,7 +363,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
    */
   protected ImmutableSet<BuildTargetWithOutputs> matchBuildTargetsWithLabelsFromSpecs(
       ImmutableList<TargetNodeSpec> specs, Set<BuildTarget> buildTargets) {
-    HashMultimap<UnconfiguredBuildTargetView, OutputLabel> buildTargetViewToOutputLabel =
+    HashMultimap<UnconfiguredBuildTarget, OutputLabel> buildTargetViewToOutputLabel =
         HashMultimap.create(specs.size(), 1);
 
     specs.stream()
@@ -371,7 +372,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
         .forEach(
             buildTargetSpec -> {
               buildTargetViewToOutputLabel.put(
-                  buildTargetSpec.getUnconfiguredBuildTargetView(),
+                  buildTargetSpec.getUnconfiguredBuildTarget(),
                   buildTargetSpec.getUnconfiguredBuildTargetViewWithOutputs().getOutputLabel());
             });
 
@@ -380,7 +381,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
     for (BuildTarget target : buildTargets) {
       boolean mappedTarget = false;
 
-      UnconfiguredBuildTargetView targetView = target.getUnconfiguredBuildTargetView();
+      UnconfiguredBuildTarget targetView = target.getUnconfiguredBuildTarget();
       // HashMultimap creates an empty collection on 'get()' if key is missing, rather than
       // returning null
       if (buildTargetViewToOutputLabel.containsKey(targetView)) {
@@ -421,7 +422,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
             .setJavaPackageFinder(params.getJavaPackageFinder())
             .setExecutors(params.getExecutors())
             .setCellPathResolver(params.getCells().getRootCell().getCellPathResolver())
-            .setBuildCellRootPath(params.getCells().getRootCell().getRoot())
+            .setBuildCellRootPath(params.getCells().getRootCell().getRoot().getPath())
             .setCells(params.getCells())
             .setProcessExecutor(new DefaultProcessExecutor(params.getConsole()))
             .setDefaultTestTimeoutMillis(testBuckConfig.getDefaultTestTimeoutMillis())
@@ -573,7 +574,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
   }
 
   private void parseConfigFileOption(
-      ImmutableMap<CellName, Path> cellMapping, CellConfig.Builder builder, String filename) {
+      ImmutableMap<CellName, AbsPath> cellMapping, CellConfig.Builder builder, String filename) {
     // See if the filename argument specifies the cell.
     String[] matches = filename.split("=", 2);
 
@@ -598,17 +599,17 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
     // Filename may also contain the cell name, so resolve the path to the file.
     BuckCellArg filenameArg = BuckCellArg.of(filename);
     filename = BuckCellArg.of(filename).getArg();
-    Path projectRoot =
+    AbsPath projectRoot =
         cellMapping.get(
             filenameArg.getCellName().isPresent()
                 ? CellName.of(filenameArg.getCellName().get())
                 : CellName.ROOT_CELL_NAME);
 
-    Path path = projectRoot.resolve(filename);
+    AbsPath path = projectRoot.resolve(filename);
     ImmutableMap<String, ImmutableMap<String, String>> sectionsToEntries;
 
     try {
-      sectionsToEntries = Configs.parseConfigFile(path);
+      sectionsToEntries = Configs.parseConfigFile(path.getPath());
     } catch (IOException e) {
       throw new HumanReadableException(e, "File could not be read: %s", filename);
     }
@@ -649,7 +650,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
 
   @Override
   @SuppressWarnings("unchecked")
-  public CellConfig getConfigOverrides(ImmutableMap<CellName, Path> cellMapping) {
+  public CellConfig getConfigOverrides(ImmutableMap<CellName, AbsPath> cellMapping) {
     CellConfig.Builder builder = CellConfig.builder();
 
     for (Object option : configOverrides) {

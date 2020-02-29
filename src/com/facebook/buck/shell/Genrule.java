@@ -41,6 +41,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -170,7 +171,12 @@ public class Genrule extends BaseGenrule<GenruleBuildable>
             cmdExe,
             type,
             out,
-            outs,
+            outs.map(
+                outputLabelsToPaths ->
+                    outputLabelsToPaths.entrySet().stream()
+                        .collect(
+                            ImmutableMap.toImmutableMap(
+                                e -> OutputLabel.of(e.getKey()), Map.Entry::getValue))),
             enableSandboxingInGenrule,
             isCacheable,
             environmentExpansionSeparator.orElse(" "),
@@ -235,12 +241,12 @@ public class Genrule extends BaseGenrule<GenruleBuildable>
             filesystem.resolve(pathToOutDirectory).toString(),
             filesystem.resolve(pathToPublicOutDirectory).toString(),
             filesystem.resolve(WriteToFileArg.getMacroPath(filesystem, buildTarget)).toString())
-        .addAllowedToReadMetadataPaths(filesystem.getRootPath().toAbsolutePath().toString())
+        .addAllowedToReadMetadataPaths(filesystem.getRootPath().toString())
         .addAllowedToWritePaths(
             filesystem.resolve(pathToTmpDirectory).toString(),
             filesystem.resolve(pathToOutDirectory).toString(),
             filesystem.resolve(pathToPublicOutDirectory).toString())
-        .addDeniedToReadPaths(filesystem.getRootPath().toAbsolutePath().toString())
+        .addDeniedToReadPaths(filesystem.getRootPath().toString())
         .build();
   }
 

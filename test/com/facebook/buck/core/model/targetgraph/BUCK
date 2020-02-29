@@ -7,6 +7,7 @@ java_test(
     deps = [
         ":testutil",
         "//src/com/facebook/buck/core/model/targetgraph/impl:impl",
+        "//src/com/facebook/buck/core/parser/buildtargetpattern:buildtargetpattern",
         "//src/com/facebook/buck/core/rules/knowntypes:knowntypes",
         "//src/com/facebook/buck/core/select/impl:impl",
         "//src/com/facebook/buck/rules/coercer:coercer",
@@ -15,6 +16,7 @@ java_test(
         "//test/com/facebook/buck/core/cell/nameresolver:testutil",
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/rules/impl:testutil",
+        "//test/com/facebook/buck/core/sourcepath:testutil",
         "//test/com/facebook/buck/jvm/java:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//third-party/java/junit:junit",

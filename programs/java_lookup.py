@@ -24,11 +24,11 @@ from programs.subprocutils import which
 
 JDK_8_AND_UNDER_PATH_VERSION_REGEX_STRINGS = [
     r"jdk(?P<full>1\.(?P<major>\d+)(\.\d+(_\d+)?)?)(\.jdk)?",
-    r"adoptopenjdk-(?P<full>(?P<major>[6-8]))(\.jdk|\.jre)?",
+    r"adoptopenjdk-(?P<full>(?P<major>[6-8])(\.\d+(_\d+)?)?)(\.jdk|\.jre)?",
 ]
 JDK_9_AND_OVER_PATH_VERSION_REGEX_STRINGS = [
     r"jdk-(?P<full>(?P<major>\d+)(\.\d+(\.\d+(_\d+)?)?)?)(\.jdk)?",
-    r"adoptopenjdk-(?P<full>(?P<major>9|\d{2,}))(\.jdk|\.jre)?",
+    r"adoptopenjdk-(?P<full>(?P<major>9|\d{2,})(\.\d+(\.\d+(_\d+)?)?)?)(\.jdk|\.jre)?",
 ]
 
 JDK_8_AND_UNDER_PATH_VERSION_REGEXES = [
@@ -68,6 +68,9 @@ def _get_suspected_java_version_from_java_path(java_path):
 
 
 def _get_java_path_for_highest_minor_version(base_path, desired_major_version):
+    if not os.path.isdir(base_path):
+        return None
+
     max_version = None
     max_dir = None
     regexes = (

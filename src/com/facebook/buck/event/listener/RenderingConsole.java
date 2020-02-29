@@ -179,7 +179,10 @@ public class RenderingConsole {
       }
     }
     if (stderrDirty) {
-      LOG.debug("Stopping console output (stderr was dirty).");
+      LOG.warn("Stopping console output (stderr was dirty).");
+    }
+    if (stdoutDirty) {
+      LOG.warn("Stopping console output (stdout was dirty).");
     }
   }
 

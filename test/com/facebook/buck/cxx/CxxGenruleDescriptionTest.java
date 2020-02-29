@@ -43,6 +43,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.impl.StaticUnresolvedCxxPlatform;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.macros.CcFlagsMacro;
 import com.facebook.buck.rules.macros.CcMacro;
@@ -155,8 +156,8 @@ public class CxxGenruleDescriptionTest {
   public void cppflagsNoArgs() {
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.DEFAULT_PLATFORM
-            .withCppflags(ImmutableList.of("-cppflag"))
-            .withCxxppflags(ImmutableList.of("-cxxppflag"));
+            .withCppflags(ImmutableList.of(StringArg.of("-cppflag")))
+            .withCxxppflags(ImmutableList.of(StringArg.of("-cxxppflag")));
     CxxGenruleBuilder builder =
         new CxxGenruleBuilder(
                 BuildTargetFactory.newInstance("//:rule#" + cxxPlatform.getFlavor()),
@@ -186,9 +187,9 @@ public class CxxGenruleDescriptionTest {
   public void cflagsNoArgs() {
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.DEFAULT_PLATFORM
-            .withAsflags(ImmutableList.of("-asflag"))
-            .withCflags(ImmutableList.of("-cflag"))
-            .withCxxflags(ImmutableList.of("-cxxflag"));
+            .withAsflags(ImmutableList.of(StringArg.of("-asflag")))
+            .withCflags(ImmutableList.of(StringArg.of("-cflag")))
+            .withCxxflags(ImmutableList.of(StringArg.of("-cxxflag")));
     CxxGenruleBuilder builder =
         new CxxGenruleBuilder(
                 BuildTargetFactory.newInstance("//:rule#" + cxxPlatform.getFlavor()),

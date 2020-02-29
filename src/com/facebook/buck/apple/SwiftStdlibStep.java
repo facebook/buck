@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.toolchain.CodeSignIdentity;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -47,10 +48,10 @@ class SwiftStdlibStep implements Step {
 
   private static final Logger LOG = Logger.get(SwiftStdlibStep.class);
 
-  private final Path workingDirectory;
-  private final Path temp;
+  private final AbsPath workingDirectory;
+  private final AbsPath temp;
   private final Path sdkPath;
-  private final Path destinationDirectory;
+  private final AbsPath destinationDirectory;
   private final Iterable<String> swiftStdlibToolCommandPrefix;
   private final Iterable<String> lipoCommandPrefix;
   private final boolean useLipoThin;
@@ -60,7 +61,7 @@ class SwiftStdlibStep implements Step {
   private final Optional<Supplier<CodeSignIdentity>> codeSignIdentitySupplier;
 
   public SwiftStdlibStep(
-      Path workingDirectory,
+      AbsPath workingDirectory,
       Path temp,
       Path sdkPath,
       Path destinationDirectory,
@@ -145,7 +146,7 @@ class SwiftStdlibStep implements Step {
   private ProcessExecutorParams makeProcessExecutorParams(
       ExecutionContext context, ImmutableList<String> command) {
     ProcessExecutorParams.Builder builder = ProcessExecutorParams.builder();
-    builder.setDirectory(workingDirectory.toAbsolutePath());
+    builder.setDirectory(workingDirectory.getPath());
     builder.setCommand(command);
 
     Map<String, String> environment = new HashMap<>(context.getEnvironment());
@@ -168,10 +169,10 @@ class SwiftStdlibStep implements Step {
     }
 
     // Copy from temp to destinationDirectory if we wrote files.
-    if (Files.notExists(temp)) {
+    if (Files.notExists(temp.getPath())) {
       return StepExecutionResults.SUCCESS;
     }
-    try (DirectoryStream<Path> dirStream = Files.newDirectoryStream(temp)) {
+    try (DirectoryStream<Path> dirStream = Files.newDirectoryStream(temp.getPath())) {
       ImmutableList<Path> libs =
           FluentIterable.from(dirStream).filter(Files::isRegularFile).toList();
 
@@ -179,7 +180,7 @@ class SwiftStdlibStep implements Step {
         return StepExecutionResults.SUCCESS;
       }
 
-      Files.createDirectories(destinationDirectory);
+      Files.createDirectories(destinationDirectory.getPath());
 
       // Get needed archs from the binary.
       params = makeProcessExecutorParams(context, getArchsCommand(binaryPathToScan));

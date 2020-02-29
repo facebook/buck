@@ -22,13 +22,12 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
-import com.google.common.collect.Ordering;
+import java.util.Arrays;
 import java.util.Objects;
 import javax.annotation.Nullable;
 
@@ -52,23 +51,11 @@ import javax.annotation.Nullable;
 public class UnconfiguredBuildTarget
     implements Comparable<UnconfiguredBuildTarget>, QueryTarget, DependencyStack.Element {
 
-  private static final Ordering<Iterable<Flavor>> LEXICOGRAPHICAL_ORDERING =
-      Ordering.<Flavor>natural().lexicographical();
-
-  /** Flavors passed to this object should be sorted using this ordering */
-  public static final Ordering<Flavor> FLAVOR_ORDERING = Ordering.natural();
-
-  /** Indicates empty set of flavors */
-  public static final ImmutableSortedSet<Flavor> NO_FLAVORS =
-      ImmutableSortedSet.orderedBy(FLAVOR_ORDERING).build();
-
   private final UnflavoredBuildTarget unflavoredBuildTarget;
-  private final ImmutableSortedSet<Flavor> flavors;
+  private final FlavorSet flavors;
   private final int hash;
 
-  private UnconfiguredBuildTarget(
-      UnflavoredBuildTarget unflavoredBuildTarget, ImmutableSortedSet<Flavor> flavors) {
-    Preconditions.checkArgument(flavors.comparator() == FLAVOR_ORDERING);
+  private UnconfiguredBuildTarget(UnflavoredBuildTarget unflavoredBuildTarget, FlavorSet flavors) {
     this.unflavoredBuildTarget = unflavoredBuildTarget;
     this.flavors = flavors;
     this.hash = Objects.hash(unflavoredBuildTarget, flavors);
@@ -118,7 +105,12 @@ public class UnconfiguredBuildTarget
 
   /** Set of flavors used with that build target. */
   @JsonProperty("flavors")
-  public ImmutableSortedSet<Flavor> getFlavors() {
+  public ImmutableSortedSet<Flavor> getFlavorSet() {
+    return flavors.getSet();
+  }
+
+  @JsonIgnore
+  public FlavorSet getFlavors() {
     return flavors;
   }
 
@@ -146,7 +138,12 @@ public class UnconfiguredBuildTarget
 
   @JsonIgnore
   private String getFlavorsAsString() {
-    return Joiner.on(",").join(getFlavors());
+    return getFlavors().toCommaSeparatedString();
+  }
+
+  @JsonIgnore
+  public String getShortNameAndFlavorPostfix() {
+    return getName() + getFlavorPostfix();
   }
 
   @Override
@@ -181,7 +178,7 @@ public class UnconfiguredBuildTarget
 
     return ComparisonChain.start()
         .compare(this.unflavoredBuildTarget, that.unflavoredBuildTarget)
-        .compare(this.flavors, that.flavors, LEXICOGRAPHICAL_ORDERING)
+        .compare(this.flavors, that.flavors)
         .result();
   }
 
@@ -200,20 +197,29 @@ public class UnconfiguredBuildTarget
 
   /** A constructor */
   public static UnconfiguredBuildTarget of(
-      UnflavoredBuildTarget unflavoredBuildTarget, ImmutableSortedSet<Flavor> flavors) {
+      UnflavoredBuildTarget unflavoredBuildTarget, FlavorSet flavors) {
     return interner.intern(new UnconfiguredBuildTarget(unflavoredBuildTarget, flavors));
   }
 
   /** A constructor */
   private static UnconfiguredBuildTarget of(
-      CellRelativePath cellRelativePath, String name, ImmutableSortedSet<Flavor> flavors) {
+      CellRelativePath cellRelativePath, String name, FlavorSet flavors) {
     return of(UnflavoredBuildTarget.of(cellRelativePath, name), flavors);
   }
 
   /** A constructor */
   public static UnconfiguredBuildTarget of(
-      CanonicalCellName cell, BaseName baseName, String name, ImmutableSortedSet<Flavor> flavors) {
+      CanonicalCellName cell, BaseName baseName, String name, FlavorSet flavors) {
     return of(CellRelativePath.of(cell, baseName.getPath()), name, flavors);
+  }
+
+  /** Helper for creating a build target in the root cell with no flavors. */
+  public static UnconfiguredBuildTarget of(BaseName baseName, String shortName) {
+    // TODO(buck_team): this is unsafe. It allows us to potentially create an inconsistent build
+    // target where the cell name doesn't match the cell path.
+    return UnconfiguredBuildTarget.of(
+        UnflavoredBuildTarget.of(CanonicalCellName.unsafeRootCell(), baseName, shortName),
+        FlavorSet.NO_FLAVORS);
   }
 
   @JsonCreator
@@ -222,11 +228,11 @@ public class UnconfiguredBuildTarget
       @JsonProperty("baseName") String baseName,
       @JsonProperty("name") String name,
       @JsonProperty("flavors") ImmutableSortedSet<Flavor> flavors) {
-    return of(cell, BaseName.of(baseName), name, flavors);
+    return of(cell, BaseName.of(baseName), name, FlavorSet.copyOf(flavors));
   }
 
   public UnconfiguredBuildTarget withoutFlavors() {
-    return of(getCell(), getBaseName(), getName(), NO_FLAVORS);
+    return of(getCell(), getBaseName(), getName(), FlavorSet.NO_FLAVORS);
   }
 
   public UnconfiguredBuildTarget withLocalName(String localName) {
@@ -234,11 +240,61 @@ public class UnconfiguredBuildTarget
   }
 
   public BuildTarget configure(TargetConfiguration targetConfiguration) {
-    return BuildTarget.of(UnconfiguredBuildTargetView.of(this), targetConfiguration);
+    return BuildTarget.of(this, targetConfiguration);
   }
 
   @JsonIgnore
   public boolean isFlavored() {
     return !getFlavors().isEmpty();
+  }
+
+  /**
+   * Creates a new build target by copying all of the information from this build target and using
+   * the provided flavors as flavors in the new build target.
+   *
+   * @param flavors flavors to use when creating a new build target
+   */
+  public UnconfiguredBuildTarget withFlavors(Iterable<? extends Flavor> flavors) {
+    return UnconfiguredBuildTarget.of(getUnflavoredBuildTarget(), FlavorSet.copyOf(flavors));
+  }
+
+  /**
+   * Creates a new build target by copying all of the information from this build target and using
+   * the provided flavors as flavors in the new build target.
+   *
+   * @param flavors flavors to use when creating a new build target
+   */
+  public UnconfiguredBuildTarget withFlavors(Flavor... flavors) {
+    return withFlavors(Arrays.asList(flavors));
+  }
+
+  /**
+   * Creates a new build target by copying all of the information from this build target and
+   * replacing the short name with the given name.
+   *
+   * @param shortName short name of the new build target
+   */
+  public UnconfiguredBuildTarget withShortName(String shortName) {
+    return UnconfiguredBuildTarget.of(
+        UnflavoredBuildTarget.of(
+            getUnflavoredBuildTarget().getCell(),
+            getUnflavoredBuildTarget().getBaseName(),
+            shortName),
+        getFlavors());
+  }
+
+  public UnconfiguredBuildTarget withUnflavoredBuildTarget(UnflavoredBuildTarget target) {
+    return UnconfiguredBuildTarget.of(target, getFlavors());
+  }
+
+  /**
+   * Verifies that this build target has no flavors.
+   *
+   * @return this build target
+   * @throws IllegalStateException if a build target has flavors
+   */
+  public UnconfiguredBuildTarget assertUnflavored() {
+    Preconditions.checkState(!isFlavored(), "%s is flavored.", this);
+    return this;
   }
 }

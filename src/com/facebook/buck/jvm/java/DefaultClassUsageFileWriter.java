@@ -18,6 +18,8 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.base.Preconditions;
@@ -91,13 +93,13 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
   private static Optional<Path> getCrossCellPath(Path jarAbsolutePath, CellPathResolver resolver) {
     // TODO(cjhopman): This is wrong if a cell ends up depending on something in another cell that
     // it doesn't have a mapping for :o
-    for (Path cellRoot : resolver.getKnownRoots()) {
-      if (jarAbsolutePath.startsWith(cellRoot)) {
-        Path relativePath = cellRoot.relativize(jarAbsolutePath);
+    for (AbsPath cellRoot : resolver.getKnownRoots()) {
+      if (jarAbsolutePath.startsWith(cellRoot.getPath())) {
+        RelPath relativePath = cellRoot.relativize(jarAbsolutePath);
         Optional<String> cellName = resolver.getCanonicalCellName(cellRoot);
         // We use an absolute path to represent a path rooted in another cell
-        Path cellNameRoot = cellRoot.getRoot().resolve(cellName.orElse(ROOT_CELL_IDENTIFIER));
-        return Optional.of(cellNameRoot.resolve(relativePath));
+        AbsPath cellNameRoot = cellRoot.getRoot().resolve(cellName.orElse(ROOT_CELL_IDENTIFIER));
+        return Optional.of(cellNameRoot.resolve(relativePath).getPath());
       }
     }
     return Optional.empty();

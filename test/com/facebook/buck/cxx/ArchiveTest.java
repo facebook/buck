@@ -43,6 +43,7 @@ import com.facebook.buck.cxx.toolchain.BsdArchiver;
 import com.facebook.buck.cxx.toolchain.GnuArchiver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
@@ -191,9 +192,9 @@ public class ArchiveTest {
             projectFilesystem,
             resolver,
             DEFAULT_ARCHIVER,
-            ImmutableList.of("-foo"),
+            ImmutableList.of(StringArg.of("-foo")),
             DEFAULT_RANLIB,
-            ImmutableList.of("-bar"),
+            ImmutableList.of(StringArg.of("-bar")),
             ArchiveContents.NORMAL,
             DEFAULT_OUTPUT_FILE_NAME,
             ImmutableList.of(FakeSourcePath.of("simple.o")),

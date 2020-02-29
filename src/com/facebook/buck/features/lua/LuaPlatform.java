@@ -22,7 +22,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorConvertible;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
@@ -78,7 +78,7 @@ public abstract class LuaPlatform implements FlavorConvertible {
                                 "Cannot find C/C++ library rule %s", target)))
         .orElse(
             new SystemLuaCxxLibrary(
-                UnconfiguredBuildTargetView.of(BaseName.of("//system"), "lua")
+                UnconfiguredBuildTarget.of(BaseName.of("//system"), "lua")
                     .configure(targetConfiguration)));
   }
 

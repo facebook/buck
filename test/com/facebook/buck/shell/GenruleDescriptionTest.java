@@ -61,6 +61,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -81,10 +82,9 @@ public class GenruleDescriptionTest {
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     DataTransferObjectDescriptor<GenruleDescriptionArg> builder =
-        knownRuleTypes.getConstructorArgDescriptor(
-            typeCoercerFactory,
-            knownRuleTypes.getRuleType("genrule"),
-            genruleDescription.getConstructorArgType());
+        knownRuleTypes
+            .getDescriptorByNameChecked("genrule", GenruleDescriptionArg.class)
+            .dataTransferObjectDescriptor(typeCoercerFactory);
 
     Map<String, Object> instance =
         ImmutableMap.of(
@@ -93,17 +93,17 @@ public class GenruleDescriptionTest {
             "srcs",
             ImmutableList.of(":baz", "//biz:baz"),
             "out",
-            "AndroidManifest.xml",
+            Optional.of("AndroidManifest.xml"),
             "cmd",
-            "$(exe //bin:executable) $(location :arg)");
+            Optional.of("$(exe //bin:executable) $(location :arg)"));
     ProjectFilesystem projectFilesystem = new AllExistingProjectFilesystem();
-    ConstructorArgMarshaller marshaller = new DefaultConstructorArgMarshaller(typeCoercerFactory);
+    ConstructorArgMarshaller marshaller = new DefaultConstructorArgMarshaller();
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
     ImmutableSet.Builder<VisibilityPattern> visibilityPatterns = ImmutableSet.builder();
     ImmutableSet.Builder<VisibilityPattern> withinViewPatterns = ImmutableSet.builder();
     GenruleDescriptionArg constructorArg =
         marshaller.populate(
-            createCellRoots(projectFilesystem),
+            createCellRoots(projectFilesystem).getCellNameResolver(),
             projectFilesystem,
             new ThrowingSelectorListResolver(),
             new ThrowingTargetConfigurationTransformer(),

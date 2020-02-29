@@ -408,7 +408,7 @@ public class TestCommand extends BuildCommand {
             .addAllCommand(command)
             .addAllCommand(withDashArguments)
             .setEnvironment(params.getEnvironment())
-            .setDirectory(params.getCells().getRootCell().getFilesystem().getRootPath());
+            .setDirectory(params.getCells().getRootCell().getFilesystem().getRootPath().getPath());
     if (!withDashArguments.contains("--buck-test-info")) {
       builder = builder.addCommand("--buck-test-info", infoFile.toString());
     }
@@ -628,9 +628,7 @@ public class TestCommand extends BuildCommand {
                             .getBuckConfig()
                             .getView(BuildBuckConfig.class)
                             .getBuildInputRuleKeyFileSizeLimit(),
-                        ruleKeyCacheScope.getCache()),
-                    cachingBuildEngineBuckConfig.getManifestServiceIfEnabled(
-                        params.getManifestServiceSupplier()));
+                        ruleKeyCacheScope.getCache()));
             Build build =
                 new Build(
                     actionGraphAndBuilder.getActionGraphBuilder(),
@@ -675,7 +673,7 @@ public class TestCommand extends BuildCommand {
           BuildContext buildContext =
               BuildContext.of(
                   actionGraphAndBuilder.getActionGraphBuilder().getSourcePathResolver(),
-                  params.getCells().getRootCell().getRoot(),
+                  params.getCells().getRootCell().getRoot().getPath(),
                   params.getJavaPackageFinder(),
                   params.getBuckEventBus(),
                   params

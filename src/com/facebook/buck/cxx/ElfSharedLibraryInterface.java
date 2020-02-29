@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -242,33 +243,33 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
     protected Pair<ProjectFilesystem, Path> getInput(
         BuildContext context, ProjectFilesystem filesystem, Path outputPath, Builder<Step> steps) {
       String shortNameAndFlavorPostfix = buildTarget.getShortNameAndFlavorPostfix();
-      Path outputDirPath = filesystem.getRootPath().resolve(outputPath);
+      AbsPath outputDirPath = filesystem.getRootPath().resolve(outputPath);
 
-      Path argFilePath =
+      AbsPath argFilePath =
           outputDirPath.resolve(String.format("%s.argsfile", shortNameAndFlavorPostfix));
-      Path fileListPath =
+      AbsPath fileListPath =
           outputDirPath.resolve(String.format("%s__filelist.txt", shortNameAndFlavorPostfix));
       Path output = outputPath.resolve(libName);
       SourcePathResolverAdapter sourcePathResolverAdapter = context.getSourcePathResolver();
       steps
           .addAll(
               CxxPrepareForLinkStep.create(
-                  argFilePath,
-                  fileListPath,
+                  argFilePath.getPath(),
+                  fileListPath.getPath(),
                   linker.fileList(fileListPath),
                   output,
                   args,
                   linker,
                   buildTarget.getCell(),
-                  filesystem.getRootPath(),
+                  filesystem.getRootPath().getPath(),
                   sourcePathResolverAdapter))
           .add(
               new CxxLinkStep(
                   filesystem.getRootPath(),
                   linker.getEnvironment(sourcePathResolverAdapter),
                   linker.getCommandPrefix(sourcePathResolverAdapter),
-                  argFilePath,
-                  outputDirPath));
+                  argFilePath.getPath(),
+                  outputDirPath.getPath()));
       return new Pair<>(filesystem, output);
     }
   }

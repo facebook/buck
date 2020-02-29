@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -44,7 +45,7 @@ public class PythonEnvironmentTest {
             pythonPath, pythonVersion, configSection, UnconfiguredTargetConfiguration.INSTANCE);
 
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
-    Path root = Paths.get("root");
+    AbsPath root = AbsPath.of(Paths.get("root").toAbsolutePath());
     CellPathResolver cellResolver = TestCellPathResolver.create(root);
     PythonEnvironment reconstructed =
         SerializationTestHelper.serializeAndDeserialize(

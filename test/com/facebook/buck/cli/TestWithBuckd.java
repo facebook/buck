@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assume.assumeFalse;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -52,7 +53,7 @@ public class TestWithBuckd extends ExternalResource {
     WatchmanFactory watchmanFactory = new WatchmanFactory();
     Watchman watchman =
         watchmanFactory.build(
-            ImmutableSet.of(temporaryPaths.getRoot()),
+            ImmutableSet.of(AbsPath.of(temporaryPaths.getRoot())),
             getWatchmanEnv(),
             new TestConsole(),
             FakeClock.doNotCare(),

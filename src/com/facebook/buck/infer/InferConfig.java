@@ -19,7 +19,7 @@ package com.facebook.buck.infer;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
@@ -64,7 +64,7 @@ public abstract class InferConfig implements ConfigView<BuckConfig> {
     }
     String value = valueOpt.get();
 
-    Optional<UnconfiguredBuildTargetView> targetOpt =
+    Optional<UnconfiguredBuildTarget> targetOpt =
         getDelegate().getMaybeUnconfiguredBuildTarget(SECTION, DIST_FIELD);
 
     ToolProvider toolProvider =
@@ -113,7 +113,7 @@ public abstract class InferConfig implements ConfigView<BuckConfig> {
     return getDelegate().getBooleanValue(SECTION, "execute_remotely", false);
   }
 
-  private ToolProvider mkDistProviderFromTarget(UnconfiguredBuildTargetView target) {
+  private ToolProvider mkDistProviderFromTarget(UnconfiguredBuildTarget target) {
     String source = String.format("[%s] %s", SECTION, DIST_FIELD);
     return new InferDistFromTargetProvider(target, getDistBinary(), source);
   }

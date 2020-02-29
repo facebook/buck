@@ -39,7 +39,7 @@ public abstract class DataTransferObjectDescriptor<T extends DataTransferObject>
   public abstract Supplier<Object> getBuilderFactory();
 
   /** The param infos needed to populate this object */
-  public abstract ImmutableMap<String, ParamInfo> getParamInfos();
+  public abstract ImmutableMap<String, ParamInfo<?>> getParamInfos();
 
   /**
    * A function that takes the result of {@link #getBuilderFactory()}}, and calls its 'build'
@@ -84,7 +84,7 @@ public abstract class DataTransferObjectDescriptor<T extends DataTransferObject>
   public static <T extends DataTransferObject> DataTransferObjectDescriptor<T> of(
       Class<T> objectClass,
       Supplier<Object> builderFactory,
-      Map<String, ? extends ParamInfo> paramInfos,
+      Map<String, ? extends ParamInfo<?>> paramInfos,
       DataTransferObjectDescriptor.BuilderBuildFunction<T> buildFunction) {
     return ImmutableDataTransferObjectDescriptor.of(
         objectClass, builderFactory, paramInfos, buildFunction);

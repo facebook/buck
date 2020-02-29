@@ -27,7 +27,7 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CellRelativePath;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -110,7 +110,9 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
   public Optional<Path> getLibraryAndroidManifestPath(
       TargetNode<AndroidLibraryDescription.CoreArg> targetNode) {
     Optional<SourcePath> manifestPath = targetNode.getConstructorArg().getManifest();
-    return manifestPath.map(sourcePathResolver::getAbsolutePath).map(projectFilesystem::relativize);
+    return manifestPath
+        .map(sourcePathResolver::getAbsolutePath)
+        .map(path -> projectFilesystem.relativize(path).getPath());
   }
 
   @Override
@@ -212,7 +214,7 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
 
   private static BuildTarget buildTargetPatchCell(
       BuildTarget buildTarget, CanonicalCellName cellName) {
-    return UnconfiguredBuildTargetView.of(
+    return UnconfiguredBuildTarget.of(
             UnflavoredBuildTarget.of(
                 CellRelativePath.of(cellName, buildTarget.getCellRelativeBasePath().getPath()),
                 buildTarget.getShortName()),

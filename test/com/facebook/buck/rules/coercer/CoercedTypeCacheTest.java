@@ -187,7 +187,7 @@ public class CoercedTypeCacheTest {
     public abstract String getConsistentOverriddenInterfaceNonInput();
   }
 
-  private ParamInfo getParamInfo(String name) {
+  private ParamInfo<?> getParamInfo(String name) {
     return coercedTypeCache.extractForImmutableBuilder(Dto.Builder.class).get(name);
   }
 }

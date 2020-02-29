@@ -18,11 +18,13 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.spec.TargetNodeSpec;
@@ -30,7 +32,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.SortedMap;
 import javax.annotation.Nullable;
@@ -46,29 +47,29 @@ public interface Parser {
 
   PerBuildStateFactory getPerBuildStateFactory();
 
-  TargetNode<?> getTargetNode(
+  TargetNode<?> getTargetNodeAssertCompatible(
       ParsingContext parsingContext, BuildTarget target, DependencyStack dependencyStack)
       throws BuildFileParseException;
 
-  ImmutableList<TargetNode<?>> getAllTargetNodes(
+  ImmutableList<TargetNodeMaybeIncompatible> getAllTargetNodes(
       PerBuildState perBuildState,
       Cell cell,
-      Path buildFile,
+      AbsPath buildFile,
       Optional<TargetConfiguration> targetConfiguration)
       throws BuildFileParseException;
 
   ImmutableList<TargetNode<?>> getAllTargetNodesWithTargetCompatibilityFiltering(
       PerBuildState state,
       Cell cell,
-      Path buildFile,
+      AbsPath buildFile,
       Optional<TargetConfiguration> targetConfiguration)
       throws BuildFileParseException;
 
-  TargetNode<?> getTargetNode(
+  TargetNode<?> getTargetNodeAssertCompatible(
       PerBuildState perBuildState, BuildTarget target, DependencyStack dependencyStack)
       throws BuildFileParseException;
 
-  ListenableFuture<TargetNode<?>> getTargetNodeJob(
+  ListenableFuture<TargetNode<?>> getTargetNodeJobAssertCompatible(
       PerBuildState perBuildState, BuildTarget target, DependencyStack dependencyStack)
       throws BuildTargetException;
 

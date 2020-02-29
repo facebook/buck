@@ -46,9 +46,11 @@ function ls_files_cmd {
     fi
 }
 
+PROTOC="protoc"
+
 # Compile all proto files visible to git (cached and others).
 for f in $(ls_files_cmd src/**.proto); do
-   protoc --java_out=src-gen/ --java_opt=annotate_code $f
+   $PROTOC --java_out=src-gen/ --java_opt=annotate_code $f
 done
 
 # Remove metadata files.

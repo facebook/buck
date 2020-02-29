@@ -18,6 +18,7 @@ package com.facebook.buck.util.unarchive;
 
 import static com.google.common.collect.Iterables.concat;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -165,14 +166,14 @@ public class UntarTest {
           linkedToPath);
     }
 
-    Path realExpectedLinkedToPath =
+    AbsPath realExpectedLinkedToPath =
         filesystem
             .getRootPath()
             .resolve(symlinkPath.getParent().resolve(expectedLinkedToPath).normalize());
     Assert.assertTrue(
         String.format(
             "Expected link %s to be the same file as %s", fullPath, realExpectedLinkedToPath),
-        Files.isSameFile(fullPath, realExpectedLinkedToPath));
+        Files.isSameFile(fullPath, realExpectedLinkedToPath.getPath()));
 
     String contents = Joiner.on('\n').join(Files.readAllLines(fullPath));
     Assert.assertEquals(expectedContents, contents);
@@ -585,7 +586,7 @@ public class UntarTest {
   @Test
   public void cleanDirectoriesExactly() throws Exception {
     Path archive = filesystem.resolve("archive.tar");
-    Path outDir = filesystem.getRootPath();
+    AbsPath outDir = filesystem.getRootPath();
 
     List<String> toLeave =
         ImmutableList.of(
@@ -615,7 +616,7 @@ public class UntarTest {
         .extractArchive(
             archive,
             filesystem,
-            outDir,
+            outDir.getPath(),
             Optional.empty(),
             ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 

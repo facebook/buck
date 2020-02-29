@@ -80,7 +80,7 @@ class GroovycStep implements Step {
         ProcessExecutorParams.builder()
             .setCommand(createCommand())
             .setEnvironment(context.getEnvironment())
-            .setDirectory(filesystem.getRootPath().toAbsolutePath())
+            .setDirectory(filesystem.getRootPath().getPath())
             .build();
     writePathToSourcesList(sourceFilePaths);
     ProcessExecutor processExecutor = context.getProcessExecutor();

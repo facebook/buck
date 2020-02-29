@@ -80,7 +80,7 @@ public class FixCommand extends AbstractCommand {
         ProcessExecutorParams.builder()
             .addAllCommand(scriptPath)
             .setEnvironment(params.getEnvironment())
-            .setDirectory(params.getCells().getRootCell().getFilesystem().getRootPath())
+            .setDirectory(params.getCells().getRootCell().getFilesystem().getRootPath().getPath())
             .build();
     int code =
         processExecutor

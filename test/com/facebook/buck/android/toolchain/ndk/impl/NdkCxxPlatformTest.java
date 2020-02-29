@@ -45,8 +45,10 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.CxxLinkOptions;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPreprocessAndCompile;
@@ -65,6 +67,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
@@ -338,15 +341,14 @@ public class NdkCxxPlatformTest {
             NdkCxxRuntimeType.DYNAMIC,
             new AlwaysFoundExecutableFinder(),
             false /* strictToolchainPaths */);
+    CxxPlatform cxxPlatform = platform.resolve(new TestActionGraphBuilder()).getCxxPlatform();
+    BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
+    SourcePathResolverAdapter resolver = ruleResolver.getSourcePathResolver();
+    assertThat(Arg.stringify(cxxPlatform.getCflags(), resolver), hasItems("-std=gnu11", "-O2"));
     assertThat(
-        platform.resolve(new TestActionGraphBuilder()).getCxxPlatform().getCflags(),
-        hasItems("-std=gnu11", "-O2"));
-    assertThat(
-        platform.resolve(new TestActionGraphBuilder()).getCxxPlatform().getCxxflags(),
+        Arg.stringify(cxxPlatform.getCxxflags(), resolver),
         hasItems("-std=gnu++11", "-O2", "-fno-exceptions", "-fno-rtti"));
-    assertThat(
-        platform.resolve(new TestActionGraphBuilder()).getCxxPlatform().getCppflags(),
-        hasItems("-std=gnu11", "-O2"));
+    assertThat(Arg.stringify(cxxPlatform.getCppflags(), resolver), hasItems("-std=gnu11", "-O2"));
   }
 
   @Test
@@ -388,17 +390,20 @@ public class NdkCxxPlatformTest {
                 new AlwaysFoundExecutableFinder(),
                 false /* strictToolchainPaths */)
             .resolve(new TestActionGraphBuilder());
+    BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
+    SourcePathResolverAdapter resolver = ruleResolver.getSourcePathResolver();
 
     // Check that we can add new flags and that we can actually override things like
     // warning/optimazation/etc.
-    ImmutableList<String> cppflags = platform.getCxxPlatform().getCppflags();
+    ImmutableList<String> cppflags =
+        Arg.stringify(platform.getCxxPlatform().getCppflags(), resolver);
     assertThat(
         cppflags, hasItems("-std=buck", "-O2", "-Og", "-DSOME_CFLAG", "-DBUCK", "-Wno-buck"));
     assertThat(cppflags, not(hasItems("-DSOME_CXXFLAG")));
     assertLastMatchingFlagIs(cppflags, f -> f.startsWith("-O"), "-Og");
     assertLastMatchingFlagIs(cppflags, f -> f.startsWith("-std="), "-std=buck");
 
-    ImmutableList<String> cflags = platform.getCxxPlatform().getCflags();
+    ImmutableList<String> cflags = Arg.stringify(platform.getCxxPlatform().getCflags(), resolver);
     assertThat(cflags, hasItems("-Og", "-O2", "-std=buck", "-DSOME_CFLAG", "-DBUCK", "-Wno-buck"));
     assertThat(cflags, not(hasItem("-DSOME_CXXFLAG")));
 
@@ -406,13 +411,15 @@ public class NdkCxxPlatformTest {
     assertLastMatchingFlagIs(cflags, f -> f.startsWith("-W"), "-Wno-buck");
     assertLastMatchingFlagIs(cflags, f -> f.startsWith("-std="), "-std=buck");
 
-    ImmutableList<String> cxxppflags = platform.getCxxPlatform().getCxxppflags();
+    ImmutableList<String> cxxppflags =
+        Arg.stringify(platform.getCxxPlatform().getCxxppflags(), resolver);
     assertThat(cxxppflags, hasItems("-O2", "-DSOME_CXXFLAG", "-DBUCK", "-Og", "-Wno-buck"));
     assertThat(cxxppflags, not(hasItem("-DSOME_CFLAG")));
     assertLastMatchingFlagIs(cxxppflags, f -> f.startsWith("-O"), "-Og");
     assertLastMatchingFlagIs(cxxppflags, f -> f.startsWith("-std="), "-std=buck++");
 
-    ImmutableList<String> cxxflags = platform.getCxxPlatform().getCxxflags();
+    ImmutableList<String> cxxflags =
+        Arg.stringify(platform.getCxxPlatform().getCxxflags(), resolver);
     assertThat(
         cxxflags,
         hasItems(
@@ -490,6 +497,8 @@ public class NdkCxxPlatformTest {
     Joiner joiner = Joiner.on("\n");
     CxxPlatform cxxPlatform = platform.getCxxPlatform();
     DebugPathSanitizer sanitizer = cxxPlatform.getCompilerDebugPathSanitizer();
+    BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
+    SourcePathResolverAdapter resolver = ruleResolver.getSourcePathResolver();
     Path expectedFlags = TestDataHelper.getTestDataDirectory(this).resolve("ndkcxxplatforms.flags");
     String expected = Files.toString(expectedFlags.toFile(), Charsets.UTF_8);
 
@@ -520,10 +529,13 @@ public class NdkCxxPlatformTest {
                 + "---BEGIN CXXPPFLAGS---\n"
                 + "%s\n"
                 + "---END CXXPPFLAGS-----\n",
-            joiner.join(sanitizer.sanitizeFlags(cxxPlatform.getCflags())),
-            joiner.join(sanitizer.sanitizeFlags(cxxPlatform.getCppflags())),
-            joiner.join(sanitizer.sanitizeFlags(cxxPlatform.getCxxflags())),
-            joiner.join(sanitizer.sanitizeFlags(cxxPlatform.getCxxppflags())));
+            joiner.join(sanitizer.sanitizeFlags(Arg.stringify(cxxPlatform.getCflags(), resolver))),
+            joiner.join(
+                sanitizer.sanitizeFlags(Arg.stringify(cxxPlatform.getCppflags(), resolver))),
+            joiner.join(
+                sanitizer.sanitizeFlags(Arg.stringify(cxxPlatform.getCxxflags(), resolver))),
+            joiner.join(
+                sanitizer.sanitizeFlags(Arg.stringify(cxxPlatform.getCxxppflags(), resolver))));
     // Use assertEquals instead of assertThat because Intellij's handling of failures of
     // assertEquals is more user-friendly than for assertThat.
     assertEquals(expected, actual);

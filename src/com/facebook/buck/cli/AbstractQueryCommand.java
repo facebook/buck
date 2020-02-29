@@ -313,7 +313,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
       queryResultMap.putAll(input, queryResult);
     }
 
-    LOG.debug("Printing out the following targets: %s", queryResultMap);
+    LOG.debug("Printing out %d targets", queryResultMap.size());
 
     if (attributesFilter.size() > 0) {
       collectAndPrintAttributesAsJson(
@@ -335,7 +335,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
   private void runSingleQuery(CommandRunnerParams params, BuckQueryEnvironment env, String query)
       throws IOException, InterruptedException, QueryException {
     Set<QueryTarget> queryResult = env.evaluateQuery(query);
-    LOG.debug("Printing out the following targets: %s", queryResult);
+    LOG.debug("Printing out %d targets", queryResult.size());
 
     try (CloseableWrapper<PrintStream> printStreamWrapper = getPrintStreamWrapper(params)) {
       PrintStream printStream = printStreamWrapper.get();

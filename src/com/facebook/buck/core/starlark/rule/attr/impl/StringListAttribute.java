@@ -19,18 +19,17 @@ package com.facebook.buck.core.starlark.rule.attr.impl;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
-import com.facebook.buck.rules.coercer.ListTypeCoercer;
-import com.facebook.buck.rules.coercer.StringTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.collect.ImmutableList;
+import com.google.common.reflect.TypeToken;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 
 /** Class that represents a list of strings */
 @BuckStyleValue
 public abstract class StringListAttribute extends Attribute<ImmutableList<String>> {
 
-  private static final TypeCoercer<ImmutableList<String>> coercer =
-      new ListTypeCoercer<>(new StringTypeCoercer());
+  private static final TypeCoercer<?, ImmutableList<String>> coercer =
+      TypeCoercerFactoryForStarlark.typeCoercerForType(new TypeToken<ImmutableList<String>>() {});
 
   @Override
   public abstract ImmutableList<String> getPreCoercionDefaultValue();
@@ -50,7 +49,7 @@ public abstract class StringListAttribute extends Attribute<ImmutableList<String
   }
 
   @Override
-  public TypeCoercer<ImmutableList<String>> getTypeCoercer() {
+  public TypeCoercer<?, ImmutableList<String>> getTypeCoercer() {
     return coercer;
   }
 

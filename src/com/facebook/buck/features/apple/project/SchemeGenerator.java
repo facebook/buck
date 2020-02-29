@@ -134,7 +134,7 @@ class SchemeGenerator {
     this.additionalSchemeActions = additionalSchemeActions;
     this.notificationPayloadFile = notificationPayloadFile;
 
-    LOG.debug(
+    LOG.verbose(
         "Generating scheme with build targets %s, test build targets %s, test bundle targets %s",
         orderedBuildTargets, orderedBuildTestTargets, orderedRunTestTargets);
   }

@@ -843,11 +843,11 @@ public class WorkspaceAndProjectGeneratorTest {
     assertThat(extensionSchemeBuildAction.getBuildActionEntries(), hasSize(2));
     assertThat(
         extensionSchemeBuildAction.getBuildActionEntries().get(0),
-        withNameAndBuildingFor(
-            "BarApp", equalTo(XCScheme.BuildActionEntry.BuildFor.INDEXING_ONLY)));
+        withNameAndBuildingFor("BarApp", equalTo(BuildFor.MAIN_EXECUTABLE)));
     assertThat(
         extensionSchemeBuildAction.getBuildActionEntries().get(1),
-        withNameAndBuildingFor("BarShareExtension", equalTo(BuildFor.MAIN_EXECUTABLE)));
+        withNameAndBuildingFor(
+            "BarShareExtension", equalTo(XCScheme.BuildActionEntry.BuildFor.INDEXING_ONLY)));
   }
 
   @Test

@@ -47,6 +47,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -678,8 +679,7 @@ public class XcodeNativeTargetGenerator {
     ImmutableMap<String, String> appendedConfig = ImmutableMap.of();
     ImmutableMap<String, String> extraSettings = ImmutableMap.of();
     Builder<String, String> defaultSettingsBuilder = ImmutableMap.builder();
-    defaultSettingsBuilder.put(
-        "REPO_ROOT", projectFilesystem.getRootPath().toAbsolutePath().normalize().toString());
+    defaultSettingsBuilder.put("REPO_ROOT", projectFilesystem.getRootPath().normalize().toString());
     defaultSettingsBuilder.put("HALIDE_COMPILER_PATH", compilerPath.toString());
 
     // pass the source list to the xcode script
@@ -702,6 +702,7 @@ public class XcodeNativeTargetGenerator {
         targetNode,
         buildTarget,
         defaultCxxPlatform,
+        defaultPathResolver,
         xcodeNativeTargetAttributesBuilder,
         extraSettings,
         defaultSettingsBuilder.build(),
@@ -1463,7 +1464,7 @@ public class XcodeNativeTargetGenerator {
     }
     extraSettingsBuilder.put("USE_HEADERMAP", shouldSetUseHeadermap ? "YES" : "NO");
 
-    Path repoRoot = projectFilesystem.getRootPath().toAbsolutePath().normalize();
+    AbsPath repoRoot = projectFilesystem.getRootPath().normalize();
     defaultSettingsBuilder.put("REPO_ROOT", repoRoot.toString());
     if (hasSwiftVersionArg && containsSwiftCode) {
       // We need to be able to control the directory where Xcode places the derived sources, so
@@ -1542,6 +1543,7 @@ public class XcodeNativeTargetGenerator {
         targetNode,
         buildTarget,
         defaultCxxPlatform,
+        defaultPathResolver,
         xcodeNativeTargetAttributesBuilder,
         extraSettingsBuilder.build(),
         defaultSettingsBuilder.build(),

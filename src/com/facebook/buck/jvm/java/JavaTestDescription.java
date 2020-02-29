@@ -356,7 +356,8 @@ public class JavaTestDescription
                   nativeLibsSymlinkTree.getProjectFilesystem(),
                   nativeLibsSymlinkTree
                       .getProjectFilesystem()
-                      .relativize(nativeLibsSymlinkTree.getRoot()),
+                      .relativize(nativeLibsSymlinkTree.getRoot())
+                      .getPath(),
                   filteredLinks.build());
         }
 

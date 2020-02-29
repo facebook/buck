@@ -104,7 +104,7 @@ class BuildPrehook implements AutoCloseable {
             .addAllCommand(interpreterAndArgs.orElse(ImmutableList.of()))
             .addCommand(pathToScript)
             .setEnvironment(environmentBuilder.build())
-            .setDirectory(cell.getFilesystem().getRootPath())
+            .setDirectory(cell.getFilesystem().getRootPath().getPath())
             .build();
     ByteArrayOutputStream prehookStderr = new ByteArrayOutputStream();
     ListeningProcessExecutor.ProcessListener processListener = createProcessListener(prehookStderr);

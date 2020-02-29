@@ -61,7 +61,8 @@ public class UqueryCommandIntegrationTest {
   @Test
   public void testWithoutSelects() {
     ProcessResult resultUncofigured =
-        workspace.runBuckCommand("uquery", "kind('.*', deps(%Ss))", "//:dummy_without_selects");
+        workspace.runBuckCommand(
+            "uquery-dont-use", "kind('.*', deps(%Ss))", "//:dummy_without_selects");
     resultUncofigured.assertSuccess();
 
     ProcessResult result =
@@ -75,7 +76,7 @@ public class UqueryCommandIntegrationTest {
   public void testWithoutSelectsJson() {
     ProcessResult resultJsonUncofigured =
         workspace.runBuckCommand(
-            "uquery", "//:dummy_without_selects",
+            "uquery-dont-use", "//:dummy_without_selects",
             "--output-attributes", ".*");
     resultJsonUncofigured.assertSuccess();
 
@@ -96,7 +97,8 @@ public class UqueryCommandIntegrationTest {
   @Test
   public void testOneSelect() throws IOException {
     ProcessResult processResult =
-        workspace.runBuckCommand("uquery", "kind('.*', deps(%Ss))", "//:dummy_with_one_select");
+        workspace.runBuckCommand(
+            "uquery-dont-use", "kind('.*', deps(%Ss))", "//:dummy_with_one_select");
     processResult.assertSuccess();
 
     sortOutputLinesAndCompare(
@@ -107,7 +109,7 @@ public class UqueryCommandIntegrationTest {
   public void testOneSelectJson() throws IOException {
     ProcessResult processResult =
         workspace.runBuckCommand(
-            "uquery", "//:dummy_with_one_select",
+            "uquery-dont-use", "//:dummy_with_one_select",
             "--output-attributes", "buck.type|deps|name");
     processResult.assertSuccess();
 
@@ -124,7 +126,8 @@ public class UqueryCommandIntegrationTest {
   @Test
   public void testListPlusSelect() throws IOException {
     ProcessResult processResult =
-        workspace.runBuckCommand("uquery", "kind('.*', deps(%Ss))", "//:dummy_list_plus_select");
+        workspace.runBuckCommand(
+            "uquery-dont-use", "kind('.*', deps(%Ss))", "//:dummy_list_plus_select");
     processResult.assertSuccess();
 
     sortOutputLinesAndCompare(
@@ -135,7 +138,7 @@ public class UqueryCommandIntegrationTest {
   public void testListPlusSelectJson() throws IOException {
     ProcessResult processResult =
         workspace.runBuckCommand(
-            "uquery", "//:dummy_list_plus_select",
+            "uquery-dont-use", "//:dummy_list_plus_select",
             "--output-attributes", "buck.type|deps|name");
 
     assertThat(
@@ -151,7 +154,8 @@ public class UqueryCommandIntegrationTest {
   @Test
   public void testMultipleConcats() throws IOException {
     ProcessResult processResult =
-        workspace.runBuckCommand("uquery", "kind('.*', deps(%Ss))", "//:dummy_multiple_concats");
+        workspace.runBuckCommand(
+            "uquery-dont-use", "kind('.*', deps(%Ss))", "//:dummy_multiple_concats");
     processResult.assertSuccess();
 
     sortOutputLinesAndCompare(
@@ -162,7 +166,7 @@ public class UqueryCommandIntegrationTest {
   public void testMultipleConcatsJson() throws IOException {
     ProcessResult processResult =
         workspace.runBuckCommand(
-            "uquery", "//:dummy_multiple_concats",
+            "uquery-dont-use", "//:dummy_multiple_concats",
             "--output-attributes", "buck.type|deps|name");
 
     assertThat(
@@ -178,7 +182,8 @@ public class UqueryCommandIntegrationTest {
   @Test
   public void testDepsWithSelects() throws IOException {
     ProcessResult processResult =
-        workspace.runBuckCommand("uquery", "kind('.*', deps(%Ss))", "//:dummy_deps_with_selects");
+        workspace.runBuckCommand(
+            "uquery-dont-use", "kind('.*', deps(%Ss))", "//:dummy_deps_with_selects");
     processResult.assertSuccess();
 
     sortOutputLinesAndCompare(
@@ -189,7 +194,7 @@ public class UqueryCommandIntegrationTest {
   public void testDepsWithSelectsJson() throws IOException {
     ProcessResult processResult =
         workspace.runBuckCommand(
-            "uquery",
+            "uquery-dont-use",
             "kind('.*', deps(%Ss))",
             "//:dummy_deps_with_selects",
             "--output-attributes",
@@ -205,14 +210,16 @@ public class UqueryCommandIntegrationTest {
     // Explicitly test that unconfigured query does not filter targets
     ProcessResult processResult =
         workspace.runBuckCommand(
-            "uquery", "--target-platforms=//compatible/config:banana-platform", "//compatible:");
+            "uquery-dont-use",
+            "--target-platforms=//compatible/config:banana-platform",
+            "//compatible:");
     processResult.assertSuccess();
 
     sortOutputLinesAndCompare(processResult.getStdout(), "//compatible:incompatible_with_config\n");
   }
 
   private void assertBehavesLikeConfiguredQuery(String target) {
-    ProcessResult resultUncofigured = workspace.runBuckCommand("uquery", target);
+    ProcessResult resultUncofigured = workspace.runBuckCommand("uquery-dont-use", target);
     resultUncofigured.assertSuccess();
 
     ProcessResult result = workspace.runBuckCommand("query", target);
@@ -276,7 +283,7 @@ public class UqueryCommandIntegrationTest {
 
     ProcessResult result =
         workspace.runBuckCommand(
-            "uquery", "owner('A.java')", "--target-platforms", "//:linux_platform");
+            "uquery-dont-use", "owner('A.java')", "--target-platforms", "//:linux_platform");
 
     result.assertSuccess();
     assertEquals(

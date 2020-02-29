@@ -38,8 +38,17 @@ public class SubdirectoryBuildTargetMatcherTest {
             CellRelativePath.of(
                 CanonicalCellName.rootCell(), ForwardRelativePath.of("src/com/facebook/buck")));
 
-    assertTrue(pattern.matches(BuildTargetFactory.newInstance("//src/com/facebook/buck:buck")));
-    assertTrue(pattern.matches(BuildTargetFactory.newInstance("//src/com/facebook/buck/bar:bar")));
-    assertFalse(pattern.matches(BuildTargetFactory.newInstance("//src/com/facebook/foo:foo")));
+    assertTrue(
+        pattern.matches(
+            BuildTargetFactory.newInstance("//src/com/facebook/buck:buck")
+                .getUnconfiguredBuildTarget()));
+    assertTrue(
+        pattern.matches(
+            BuildTargetFactory.newInstance("//src/com/facebook/buck/bar:bar")
+                .getUnconfiguredBuildTarget()));
+    assertFalse(
+        pattern.matches(
+            BuildTargetFactory.newInstance("//src/com/facebook/foo:foo")
+                .getUnconfiguredBuildTarget()));
   }
 }

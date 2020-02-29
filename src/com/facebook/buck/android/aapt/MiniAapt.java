@@ -21,6 +21,7 @@ import com.facebook.buck.android.aapt.RDotTxtEntry.CustomDrawableType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.IdType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.event.BuckEventBus;
@@ -273,7 +274,7 @@ public class MiniAapt implements Step {
     Collection<Path> contents =
         filesystemView.getDirectoryContents(resolver.getRelativePath(resDirectory));
     for (Path dir : contents) {
-      if (!filesystem.isDirectory(dir) && !filesystem.isIgnored(dir)) {
+      if (!filesystem.isDirectory(dir) && !filesystem.isIgnored(RelPath.of(dir))) {
         if (!shouldIgnoreFile(dir, filesystem)) {
           eventBus.post(ConsoleEvent.warning("MiniAapt [warning]: ignoring file '%s'.", dir));
         }
@@ -367,7 +368,7 @@ public class MiniAapt implements Step {
       if (shouldIgnoreFile(path, filesystem)) {
         continue;
       }
-      if (!filesystem.isFile(path) && !filesystem.isIgnored(path)) {
+      if (!filesystem.isFile(path) && !filesystem.isIgnored(RelPath.of(path))) {
         eventBus.post(ConsoleEvent.warning("MiniAapt [warning]: ignoring non-file '%s'.", path));
         continue;
       }

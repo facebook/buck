@@ -36,7 +36,7 @@ import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.util.log.Logger;
@@ -82,7 +82,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
   public static final String PROTOCOL_HEADER = "X-Thrift-Protocol";
   public static final ThriftProtocol PROTOCOL = ThriftProtocol.COMPACT;
 
-  private final Function<String, UnconfiguredBuildTargetView> unconfiguredBuildTargetFactory;
+  private final Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory;
   private final TargetConfigurationSerializer targetConfigurationSerializer;
   private final String hybridThriftEndpoint;
   private final BuildId buildId;

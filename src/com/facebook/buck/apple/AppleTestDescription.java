@@ -229,10 +229,10 @@ public class AppleTestDescription
     }
 
     boolean createBundle =
-        Sets.intersection(buildTarget.getFlavors(), AUXILIARY_LIBRARY_FLAVORS).isEmpty();
+        Sets.intersection(buildTarget.getFlavors().getSet(), AUXILIARY_LIBRARY_FLAVORS).isEmpty();
     // Flavors pertaining to the library targets that are generated.
     Sets.SetView<Flavor> libraryFlavors =
-        Sets.difference(buildTarget.getFlavors(), AUXILIARY_LIBRARY_FLAVORS);
+        Sets.difference(buildTarget.getFlavors().getSet(), AUXILIARY_LIBRARY_FLAVORS);
     boolean addDefaultPlatform = libraryFlavors.isEmpty();
     ImmutableSet.Builder<Flavor> extraFlavorsBuilder = ImmutableSet.builder();
     if (createBundle) {
@@ -590,7 +590,7 @@ public class AppleTestDescription
     return transitiveStaticLibraryDependencyTargetNodes.stream()
         .filter(
             t ->
-                t.getBuildTarget().getFlavors().stream()
+                t.getBuildTarget().getFlavors().getSet().stream()
                         .reduce(
                             true,
                             (result, next) ->

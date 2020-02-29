@@ -1031,39 +1031,8 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
-  public void testBuildAppleLibraryWhereModularSwiftUsesUmbrellaDirectoryModuleMap()
-      throws Exception {
-    ProjectWorkspace workspace = testModularScenario("umbrella_directory_modulemap", "Test");
-
-    // After testing the build itself, we want to ensure that we did not create an
-    // umbrella header for the library, and were truly relying on only the umbrella
-    // directory declaration.
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
-    Path headersPath =
-        tmp.getRoot()
-            .resolve(
-                BuildTargetPaths.getGenPath(
-                    filesystem,
-                    BuildTargetFactory.newInstance(
-                        "//:ObjCLibrary#header-mode-symlink-tree-with-umbrella-directory-modulemap,headers,iphonesimulator-x86_64"),
-                    "%s"))
-            .resolve("ObjCLibrary");
-
-    Path umbrellaHeaderPath = headersPath.resolve("ObjCLibrary.h");
-    assertThat("umbrella header should not exist", Files.exists(umbrellaHeaderPath), is(false));
-
-    // Also check that an actual header from the library exists, so that we know
-    // we don't just have the wrong directory when passing the "false" check
-    // above.
-    Path libraryHeaderPath = headersPath.resolve("FirstHeader.h");
-    assertThat("library header should exist", Files.exists(libraryHeaderPath), is(true));
-  }
-
-  @Test
-  public void testBuildAppleLibraryWhereModularSwiftUsesPerLibraryUmbrellaDirectoryModuleMap()
-      throws Exception {
-    testModularScenario("umbrella_directory_modulemap_per_library", "Test");
+  public void testBuildAppleLibraryWhereModularSwiftUsesHeaderModuleMap() throws Exception {
+    testModularScenario("headers_modulemap", "Test");
   }
 
   @Test

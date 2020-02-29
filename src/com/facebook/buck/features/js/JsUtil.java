@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -97,7 +98,7 @@ public class JsUtil {
         jobArgs
             .addArray(
                 "flavors",
-                buildTarget.getFlavors().stream()
+                buildTarget.getFlavors().getSet().stream()
                     .filter(JsFlavors::shouldBePassedToWorker)
                     .map(Flavor::getName)
                     .collect(JsonBuilder.toArrayOfStrings()))
@@ -146,6 +147,10 @@ public class JsUtil {
     return JsFlavors.PLATFORM_DOMAIN
         .getFlavor(flavors)
         .map(platform -> getValueForFlavor(PLATFORM_STRINGS, platform));
+  }
+
+  static Optional<String> getPlatformString(FlavorSet flavors) {
+    return getPlatformString(flavors.getSet());
   }
 
   public static String getSourcemapPath(JsBundleOutputs jsBundleOutputs) {

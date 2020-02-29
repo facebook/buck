@@ -979,7 +979,7 @@ public class AppleBundleIntegrationTest {
             InternalFlavor.of("no-include-frameworks"), InternalFlavor.of("include-frameworks"));
 
     for (BuildTarget builtTarget : buckBuildLog.getAllTargets()) {
-      if (Sets.intersection(builtTarget.getFlavors(), includeFrameworkFlavors).isEmpty()) {
+      if (Sets.intersection(builtTarget.getFlavors().getSet(), includeFrameworkFlavors).isEmpty()) {
         assertThat(
             builtTarget.getUnflavoredBuildTarget().getFullyQualifiedName(),
             not(in(targetsThatShouldContainIncludeFrameworkFlavors)));

@@ -20,6 +20,7 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorConvertible;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
+import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.google.common.collect.ImmutableList;
@@ -70,6 +71,9 @@ abstract class HaskellPlatform implements FlavorConvertible {
 
   /** @return whether ghc supports the -expose-package flag. */
   abstract boolean supportExposePackage();
+
+  /** @return How archive built from haskell rules packages its contents. */
+  abstract ArchiveContents getArchiveContents();
 
   /** @return The template to use for startup scripts for GHCi targets. */
   abstract Supplier<Path> getGhciScriptTemplate();

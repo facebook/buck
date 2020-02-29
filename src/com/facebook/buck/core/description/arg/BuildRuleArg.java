@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.description.arg;
 
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -43,11 +43,11 @@ public interface BuildRuleArg extends ConstructorArg {
    * actually called, but the attr is fetched by name from the raw (unconfigured) target node.
    */
   @Hint(isDep = false, isConfigurable = false)
-  Optional<UnconfiguredBuildTargetView> getDefaultTargetPlatform();
+  Optional<UnconfiguredBuildTarget> getDefaultTargetPlatform();
 
   /** A list of {@code config_setting} a target is compatible with. */
   @Hint(isDep = false, isConfigurable = false)
-  ImmutableList<UnconfiguredBuildTargetView> getCompatibleWith();
+  ImmutableList<UnconfiguredBuildTarget> getCompatibleWith();
 
   @Value.Derived
   default boolean labelsContainsAnyOf(Set<String> labels) {

@@ -118,7 +118,7 @@ public class SmartDexingStepTest {
     SmartDexingStep.createDxStepForDxPseudoRule(
         createAndroidPlatformTarget(),
         steps,
-        FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(filesystem.getRootPath()),
+        FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(filesystem.getRootPath().getPath()),
         filesystem,
         filesToDex,
         outputPath,
@@ -163,7 +163,7 @@ public class SmartDexingStepTest {
     SmartDexingStep.createDxStepForDxPseudoRule(
         createAndroidPlatformTarget(),
         steps,
-        FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(filesystem.getRootPath()),
+        FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(filesystem.getRootPath().getPath()),
         filesystem,
         filesToDex,
         outputPath,

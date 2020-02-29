@@ -16,11 +16,15 @@
 
 package com.facebook.buck.apple.clang;
 
+import com.google.common.collect.ImmutableList;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Set;
+
 /**
  * Creates module map instances.
  *
- * <p>Use this instead of directly creating UmbrellaHeaderModuleMap or UmbrellaDirectoryModuleMap
- * instances.
+ * <p>Use this instead of directly creating a module map instance directory.
  */
 public class ModuleMapFactory {
 
@@ -31,15 +35,33 @@ public class ModuleMapFactory {
    * @param moduleMapMode The module map mode to use.
    * @param swiftMode The Swift mode to use for umbrella header module maps. This parameter is
    *     unused with umbrella directory module maps.
+   * @param headerPaths The exported headers of the module. This parameter is only used with headers
+   *     module maps.
    * @return A module map instance.
    */
   public static ModuleMap createModuleMap(
-      String moduleName, ModuleMapMode moduleMapMode, UmbrellaHeaderModuleMap.SwiftMode swiftMode) {
+      String moduleName,
+      ModuleMapMode moduleMapMode,
+      UmbrellaHeaderModuleMap.SwiftMode swiftMode,
+      Set<Path> headerPaths) {
     switch (moduleMapMode) {
+      case HEADERS:
+        String stripPrefix = moduleName + "/";
+        List<String> headerNames =
+            headerPaths.stream()
+                .map(
+                    path -> {
+                      String relativePath = path.toString();
+                      return relativePath.startsWith(stripPrefix)
+                          ? relativePath.substring(stripPrefix.length())
+                          : relativePath;
+                    })
+                .sorted()
+                .collect(ImmutableList.toImmutableList());
+
+        return new HeadersModuleMap(moduleName, headerNames);
       case UMBRELLA_HEADER:
         return new UmbrellaHeaderModuleMap(moduleName, swiftMode);
-      case UMBRELLA_DIRECTORY:
-        return new UmbrellaDirectoryModuleMap(moduleName);
     }
 
     throw new RuntimeException();

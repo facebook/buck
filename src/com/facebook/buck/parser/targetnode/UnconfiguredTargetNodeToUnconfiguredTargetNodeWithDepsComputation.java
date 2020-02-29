@@ -18,6 +18,7 @@ package com.facebook.buck.parser.targetnode;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
@@ -25,7 +26,6 @@ import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
@@ -34,7 +34,6 @@ import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.parser.UnconfiguredTargetNodeToTargetNodeFactory;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.Path;
 import java.util.Optional;
 
 /** Transforms {@link UnconfiguredTargetNode} to {@link UnconfiguredTargetNodeWithDeps} */
@@ -60,7 +59,6 @@ public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation
    *     TargetNode} from {@link UnconfiguredTargetNode} in order to resolve deps
    * @param cell A {@link Cell} object that contains targets used in this transformation, it is
    *     mostly used to resolve paths to absolute paths
-   * @return
    */
   public static UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation of(
       UnconfiguredTargetNodeToTargetNodeFactory unconfiguredTargetNodeToTargetNodeFactory,
@@ -78,7 +76,7 @@ public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation
   public UnconfiguredTargetNodeWithDeps transform(
       UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsKey key, ComputationEnvironment env) {
 
-    Path buildFileAbsolutePath =
+    AbsPath buildFileAbsolutePath =
         cell.getRoot()
             .resolve(key.getPackagePath())
             .resolve(cell.getBuckConfig().getView(ParserConfig.class).getBuildFileName());
@@ -93,13 +91,8 @@ public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation
     // to resolve
     // configuration for Target Node (we use empty configuration at this point)
 
-    // Create short living UnconfiguredBuildTargetView
-    // TODO: configure data object directly
-    UnconfiguredBuildTargetView unconfiguredBuildTargetView =
-        UnconfiguredBuildTargetView.of(unconfiguredBuildTarget);
-
     BuildTarget buildTarget =
-        unconfiguredBuildTargetView.configure(UnconfiguredTargetConfiguration.INSTANCE);
+        unconfiguredBuildTarget.configure(UnconfiguredTargetConfiguration.INSTANCE);
 
     // TODO(nga): obtain proper dependency stack
     DependencyStack dependencyStack =
@@ -108,21 +101,22 @@ public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation
     // All target nodes are created sequentially from raw target nodes
     // TODO: use RawTargetNodeToTargetNode transformation
     TargetNode<?> targetNode =
-        unconfiguredTargetNodeToTargetNodeFactory.createTargetNode(
-            cell,
-            buildFileAbsolutePath,
-            buildTarget,
-            dependencyStack,
-            key.getUnconfiguredTargetNode(),
-            id ->
-                SimplePerfEvent.scope(
-                    Optional.empty(), SimplePerfEvent.PerfEventId.of("raw_to_targetnode")));
+        unconfiguredTargetNodeToTargetNodeFactory
+            .createTargetNode(
+                cell,
+                buildFileAbsolutePath,
+                buildTarget,
+                dependencyStack,
+                key.getUnconfiguredTargetNode(),
+                id ->
+                    SimplePerfEvent.scope(
+                        Optional.empty(), SimplePerfEvent.PerfEventId.of("raw_to_targetnode")))
+            .assertGetTargetNode(dependencyStack);
 
     ImmutableSet<UnconfiguredBuildTarget> deps =
         targetNode.getParseDeps().stream()
-            .map(bt -> bt.getUnconfiguredBuildTargetView().getData())
+            .map(BuildTarget::getUnconfiguredBuildTarget)
             .collect(ImmutableSet.toImmutableSet());
-
     // END TEMPORARY
 
     return UnconfiguredTargetNodeWithDeps.of(key.getUnconfiguredTargetNode(), deps);

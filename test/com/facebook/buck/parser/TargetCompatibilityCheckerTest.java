@@ -43,7 +43,6 @@ import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.configsetting.ConfigSettingRule;
-import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.core.rules.platform.ConstraintSettingRule;
 import com.facebook.buck.core.rules.platform.ConstraintValueRule;
 import com.facebook.buck.core.rules.platform.RuleBasedConstraintResolver;
@@ -167,7 +166,8 @@ public class TargetCompatibilityCheckerTest {
         createTargetNodeArg(
             ImmutableMap.of(
                 "compatibleWith",
-                ImmutableList.of(nonCompatibleConfigSetting.getBuildTarget().toString())));
+                ImmutableList.of(
+                    nonCompatibleConfigSetting.getBuildTarget().getUnconfiguredBuildTarget())));
     assertFalse(
         TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
             configurationRuleRegistry,
@@ -184,8 +184,8 @@ public class TargetCompatibilityCheckerTest {
             ImmutableMap.of(
                 "compatibleWith",
                 ImmutableList.of(
-                    compatibleConfigSetting.getBuildTarget().toString(),
-                    nonCompatibleConfigSetting.getBuildTarget().toString())));
+                    compatibleConfigSetting.getBuildTarget().getUnconfiguredBuildTarget(),
+                    nonCompatibleConfigSetting.getBuildTarget().getUnconfiguredBuildTarget())));
     assertTrue(
         TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
             configurationRuleRegistry,
@@ -201,7 +201,10 @@ public class TargetCompatibilityCheckerTest {
         createTargetNodeArg(
             ImmutableMap.of(
                 "compatibleWith",
-                ImmutableList.of(compatibleConfigSettingWithValues.getBuildTarget().toString())));
+                ImmutableList.of(
+                    compatibleConfigSettingWithValues
+                        .getBuildTarget()
+                        .getUnconfiguredBuildTarget())));
 
     BuckConfig compatibleBuckConfig =
         FakeBuckConfig.builder()
@@ -222,7 +225,10 @@ public class TargetCompatibilityCheckerTest {
         createTargetNodeArg(
             ImmutableMap.of(
                 "compatibleWith",
-                ImmutableList.of(compatibleConfigSettingWithValues.getBuildTarget().toString())));
+                ImmutableList.of(
+                    compatibleConfigSettingWithValues
+                        .getBuildTarget()
+                        .getUnconfiguredBuildTarget())));
 
     BuckConfig incompatibleBuckConfig =
         FakeBuckConfig.builder()
@@ -240,21 +246,15 @@ public class TargetCompatibilityCheckerTest {
   private ConstructorArg createTargetNodeArg(Map<String, Object> rawNode) throws Exception {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-    ConstructorArgMarshaller marshaller = new DefaultConstructorArgMarshaller(typeCoercerFactory);
-    KnownNativeRuleTypes knownRuleTypes =
-        KnownNativeRuleTypes.of(
-            ImmutableList.of(new TestRuleRuleDescription()),
-            ImmutableList.of(),
-            ImmutableList.of());
+    ConstructorArgMarshaller marshaller = new DefaultConstructorArgMarshaller();
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//:target");
 
     DataTransferObjectDescriptor<TestDescriptionArg> builder =
-        knownRuleTypes.getConstructorArgDescriptor(
-            typeCoercerFactory, knownRuleTypes.getRuleType("test_rule"), TestDescriptionArg.class);
+        typeCoercerFactory.getConstructorArgDescriptor(TestDescriptionArg.class);
 
     return marshaller.populate(
-        TestCellPathResolver.get(projectFilesystem),
+        TestCellPathResolver.get(projectFilesystem).getCellNameResolver(),
         projectFilesystem,
         new ThrowingSelectorListResolver(),
         new ThrowingTargetConfigurationTransformer(),

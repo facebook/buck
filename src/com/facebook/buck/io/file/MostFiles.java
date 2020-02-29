@@ -16,6 +16,7 @@
 
 package com.facebook.buck.io.file;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.google.common.annotations.VisibleForTesting;
@@ -248,6 +249,11 @@ public final class MostFiles {
         writer.newLine();
       }
     }
+  }
+
+  /** Writes the specified lines to the specified file, encoded as UTF-8. */
+  public static void writeLinesToFile(Iterable<String> lines, AbsPath file) throws IOException {
+    writeLinesToFile(lines, file.getPath());
   }
 
   /** Log a simplistic diff between lines and the contents of file. */

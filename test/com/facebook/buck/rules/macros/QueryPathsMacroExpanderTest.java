@@ -18,9 +18,10 @@ package com.facebook.buck.rules.macros;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -41,6 +42,7 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.reflect.TypeToken;
 import java.nio.file.Paths;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -52,12 +54,12 @@ public class QueryPathsMacroExpanderTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
   private FakeProjectFilesystem filesystem;
-  private CellPathResolver cellPathResolver;
+  private CellNameResolver cellNameResolver;
 
   @Before
   public void setUp() {
-    filesystem = new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp.getRoot());
-    cellPathResolver = TestCellBuilder.createCellRoots(filesystem);
+    filesystem = new FakeProjectFilesystem(CanonicalCellName.rootCell(), AbsPath.of(tmp.getRoot()));
+    cellNameResolver = TestCellBuilder.createCellRoots(filesystem).getCellNameResolver();
   }
 
   @Test
@@ -84,14 +86,14 @@ public class QueryPathsMacroExpanderTest {
     StringWithMacrosConverter converter =
         StringWithMacrosConverter.of(
             targetNode.getBuildTarget(),
-            cellPathResolver.getCellNameResolver(),
+            cellNameResolver,
             graphBuilder,
             ImmutableList.of(expander));
 
     String input = "$(query_paths 'deps(//some:target)')";
 
     String expanded =
-        coerceAndStringify(filesystem, cellPathResolver, graphBuilder, converter, input, rule);
+        coerceAndStringify(filesystem, cellNameResolver, graphBuilder, converter, input, rule);
 
     // Expand the expected results
     String expected =
@@ -138,23 +140,22 @@ public class QueryPathsMacroExpanderTest {
 
   private String coerceAndStringify(
       ProjectFilesystem filesystem,
-      CellPathResolver cellPathResolver,
+      CellNameResolver cellNameResolver,
       ActionGraphBuilder graphBuilder,
       StringWithMacrosConverter converter,
       String input,
       BuildRule rule)
       throws CoerceFailedException {
     StringWithMacros stringWithMacros =
-        (StringWithMacros)
-            new DefaultTypeCoercerFactory()
-                .typeCoercerForType(StringWithMacros.class)
-                .coerce(
-                    cellPathResolver,
-                    filesystem,
-                    rule.getBuildTarget().getCellRelativeBasePath().getPath(),
-                    UnconfiguredTargetConfiguration.INSTANCE,
-                    UnconfiguredTargetConfiguration.INSTANCE,
-                    input);
+        new DefaultTypeCoercerFactory()
+            .typeCoercerForType(TypeToken.of(StringWithMacros.class))
+            .coerceBoth(
+                cellNameResolver,
+                filesystem,
+                rule.getBuildTarget().getCellRelativeBasePath().getPath(),
+                UnconfiguredTargetConfiguration.INSTANCE,
+                UnconfiguredTargetConfiguration.INSTANCE,
+                input);
     Arg arg = converter.convert(stringWithMacros);
     return Arg.stringify(arg, graphBuilder.getSourcePathResolver());
   }

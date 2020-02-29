@@ -18,8 +18,9 @@ package com.facebook.buck.rules.coercer;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
@@ -42,12 +43,12 @@ import org.junit.rules.ExpectedException;
 
 public class SourcePathTypeCoercerTest {
   private FakeProjectFilesystem projectFilesystem;
-  private CellPathResolver cellRoots;
+  private CellNameResolver cellRoots;
   private final ForwardRelativePath pathRelativeToProjectRoot = ForwardRelativePath.of("");
   private final SourcePathTypeCoercer sourcePathTypeCoercer =
       new SourcePathTypeCoercer(
           new BuildTargetWithOutputsTypeCoercer(
-              new BuildTargetTypeCoercer(
+              new UnconfiguredBuildTargetWithOutputsTypeCoercer(
                   new UnconfiguredBuildTargetTypeCoercer(
                       new ParsingUnconfiguredBuildTargetViewFactory()))),
           new PathTypeCoercer());
@@ -55,7 +56,7 @@ public class SourcePathTypeCoercerTest {
   @Before
   public void setUp() {
     projectFilesystem = new FakeProjectFilesystem();
-    cellRoots = TestCellPathResolver.get(projectFilesystem);
+    cellRoots = TestCellPathResolver.get(projectFilesystem).getCellNameResolver();
   }
 
   @Before
@@ -69,7 +70,7 @@ public class SourcePathTypeCoercerTest {
     projectFilesystem.touch(Paths.get(path));
 
     SourcePath sourcePath =
-        sourcePathTypeCoercer.coerce(
+        sourcePathTypeCoercer.coerceBoth(
             cellRoots,
             projectFilesystem,
             pathRelativeToProjectRoot,
@@ -81,9 +82,25 @@ public class SourcePathTypeCoercerTest {
   }
 
   @Test
+  public void coercePathRelativeToBasePath() throws CoerceFailedException, IOException {
+    projectFilesystem.touch(Paths.get("foo/bar/hello.a"));
+
+    SourcePath sourcePath =
+        sourcePathTypeCoercer.coerceBoth(
+            cellRoots,
+            projectFilesystem,
+            ForwardRelativePath.of("foo/bar"),
+            UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            "hello.a");
+
+    assertEquals(PathSourcePath.of(projectFilesystem, Paths.get("foo/bar/hello.a")), sourcePath);
+  }
+
+  @Test
   public void coerceAbsoluteBuildTarget() throws CoerceFailedException {
     SourcePath sourcePath =
-        sourcePathTypeCoercer.coerce(
+        sourcePathTypeCoercer.coerceBoth(
             cellRoots,
             projectFilesystem,
             pathRelativeToProjectRoot,
@@ -98,7 +115,7 @@ public class SourcePathTypeCoercerTest {
   @Test
   public void coerceAbsoluteBuildTargetWithOutputLabel() throws CoerceFailedException {
     SourcePath sourcePath =
-        sourcePathTypeCoercer.coerce(
+        sourcePathTypeCoercer.coerceBoth(
             cellRoots,
             projectFilesystem,
             pathRelativeToProjectRoot,
@@ -116,7 +133,7 @@ public class SourcePathTypeCoercerTest {
   @Test
   public void coerceRelativeBuildTarget() throws CoerceFailedException {
     SourcePath sourcePath =
-        sourcePathTypeCoercer.coerce(
+        sourcePathTypeCoercer.coerceBoth(
             cellRoots,
             projectFilesystem,
             pathRelativeToProjectRoot,
@@ -131,7 +148,7 @@ public class SourcePathTypeCoercerTest {
   @Test
   public void coerceRelativeBuildTargetWithOutputLabel() throws CoerceFailedException {
     SourcePath sourcePath =
-        sourcePathTypeCoercer.coerce(
+        sourcePathTypeCoercer.coerceBoth(
             cellRoots,
             projectFilesystem,
             pathRelativeToProjectRoot,
@@ -148,12 +165,14 @@ public class SourcePathTypeCoercerTest {
 
   @Test
   public void coerceCrossRepoBuildTarget() throws CoerceFailedException {
-    Path rootPath = projectFilesystem.getRootPath();
-    Path helloRoot = rootPath.resolve("hello");
-    cellRoots = TestCellPathResolver.create(rootPath, ImmutableMap.of("hello", helloRoot));
+    AbsPath rootPath = projectFilesystem.getRootPath();
+    AbsPath helloRoot = rootPath.resolve("hello");
+    cellRoots =
+        TestCellPathResolver.create(rootPath, ImmutableMap.of("hello", helloRoot.getPath()))
+            .getCellNameResolver();
 
     SourcePath sourcePath =
-        sourcePathTypeCoercer.coerce(
+        sourcePathTypeCoercer.coerceBoth(
             cellRoots,
             projectFilesystem,
             pathRelativeToProjectRoot,
@@ -177,7 +196,7 @@ public class SourcePathTypeCoercerTest {
     exception.expect(CoerceFailedException.class);
     exception.expectMessage("Path cannot contain an absolute path");
 
-    sourcePathTypeCoercer.coerce(
+    sourcePathTypeCoercer.coerceBoth(
         cellRoots,
         projectFilesystem,
         pathRelativeToProjectRoot,

@@ -47,8 +47,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheLoader;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Optional;
 
 /** Creates a {@link CellProvider} to be used in a local (non-distributed) build. */
@@ -59,21 +59,21 @@ public class LocalCellProviderFactory {
       ProjectFilesystem rootFilesystem,
       BuckConfig rootConfig,
       CellConfig rootCellConfigOverrides,
-      ImmutableMap<CellName, Path> cellPathMapping,
+      ImmutableMap<CellName, AbsPath> cellPathMapping,
       CellPathResolver rootCellCellPathResolver,
       BuckModuleManager moduleManager,
       ToolchainProviderFactory toolchainProviderFactory,
       ProjectFilesystemFactory projectFilesystemFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory) {
 
-    ImmutableMap<Path, RawConfig> pathToConfigOverrides;
+    ImmutableMap<AbsPath, RawConfig> pathToConfigOverrides;
     try {
       pathToConfigOverrides = rootCellConfigOverrides.getOverridesByPath(cellPathMapping);
     } catch (InvalidCellOverrideException e) {
       throw new HumanReadableException(e.getMessage());
     }
 
-    ImmutableSet<Path> allRoots = ImmutableSet.copyOf(cellPathMapping.values());
+    ImmutableSet<AbsPath> allRoots = ImmutableSet.copyOf(cellPathMapping.values());
 
     NewCellPathResolver newCellPathResolver =
         CellMappingsFactory.create(rootFilesystem.getRootPath(), rootConfig.getConfig());
@@ -81,31 +81,31 @@ public class LocalCellProviderFactory {
     return new CellProvider(
         newCellPathResolver,
         cellProvider ->
-            new CacheLoader<Path, Cell>() {
+            new CacheLoader<AbsPath, Cell>() {
               @Override
-              public Cell load(Path cellPath) throws IOException {
-                AbsPath normalizedCellPath = AbsPath.of(cellPath).toRealPath().normalize();
+              public Cell load(AbsPath cellPath) throws IOException {
+                AbsPath normalizedCellPath = cellPath.toRealPath().normalize();
 
                 Preconditions.checkState(
-                    allRoots.contains(normalizedCellPath.getPath()),
+                    allRoots.contains(normalizedCellPath),
                     "Cell %s outside of transitive closure of root cell (%s).",
                     normalizedCellPath,
                     allRoots);
 
                 RawConfig configOverrides =
-                    Optional.ofNullable(pathToConfigOverrides.get(normalizedCellPath.getPath()))
+                    Optional.ofNullable(pathToConfigOverrides.get(normalizedCellPath))
                         .orElse(RawConfig.of(ImmutableMap.of()));
                 Config config =
                     Configs.createDefaultConfig(normalizedCellPath.getPath(), configOverrides);
 
-                ImmutableMap<String, Path> cellMapping =
+                ImmutableMap<String, AbsPath> cellMapping =
                     DefaultCellPathResolver.getCellPathsFromConfigRepositoriesSection(
                         cellPath, config.get(DefaultCellPathResolver.REPOSITORIES_SECTION));
 
                 // The cell should only contain a subset of cell mappings of the root cell.
                 cellMapping.forEach(
                     (name, path) -> {
-                      Path pathInRootResolver =
+                      AbsPath pathInRootResolver =
                           rootCellCellPathResolver.getCellPathsByRootCellExternalName().get(name);
                       if (pathInRootResolver == null) {
                         throw new HumanReadableException(
@@ -130,7 +130,10 @@ public class LocalCellProviderFactory {
 
                 CellPathResolver cellPathResolver =
                     new CellPathResolverView(
-                        rootCellCellPathResolver, cellNameResolver, cellMapping.keySet(), cellPath);
+                        rootCellCellPathResolver,
+                        cellNameResolver,
+                        cellMapping.keySet(),
+                        cellPath.getPath());
 
                 Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo = Optional.empty();
                 CanonicalCellName canonicalCellName =
@@ -142,7 +145,7 @@ public class LocalCellProviderFactory {
                   embeddedCellBuckOutInfo =
                       Optional.of(
                           EmbeddedCellBuckOutInfo.of(
-                              rootFilesystem.resolve(rootFilesystem.getRootPath()),
+                              rootFilesystem.getRootPath().getPath(),
                               rootFilesystem.getBuckPaths(),
                               canonicalCellName));
                 }
@@ -176,7 +179,8 @@ public class LocalCellProviderFactory {
                 // TODO(13777679): cells in other watchman roots do not work correctly.
 
                 return ImmutableCellImpl.of(
-                    cellPathResolver.getKnownRoots(),
+                    cellPathResolver.getKnownRoots().stream()
+                        .collect(ImmutableSortedSet.toImmutableSortedSet(AbsPath.comparator())),
                     canonicalCellName,
                     cellFilesystem,
                     buckConfig,

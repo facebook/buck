@@ -22,11 +22,8 @@ import com.facebook.buck.log.views.JsonViews;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Sets;
 import java.util.Objects;
 import java.util.Set;
 import javax.annotation.concurrent.ThreadSafe;
@@ -39,38 +36,32 @@ import javax.annotation.concurrent.ThreadSafe;
     setterVisibility = JsonAutoDetect.Visibility.NONE)
 public class BuildTarget implements Comparable<BuildTarget>, DependencyStack.Element {
 
-  private final UnconfiguredBuildTargetView unconfiguredBuildTargetView;
+  private final UnconfiguredBuildTarget unconfiguredBuildTarget;
   private final TargetConfiguration targetConfiguration;
   private final int hash;
 
   private BuildTarget(
-      UnconfiguredBuildTargetView unconfiguredBuildTargetView,
-      TargetConfiguration targetConfiguration) {
-    this.unconfiguredBuildTargetView = unconfiguredBuildTargetView;
+      UnconfiguredBuildTarget unconfiguredBuildTarget, TargetConfiguration targetConfiguration) {
+    this.unconfiguredBuildTarget = unconfiguredBuildTarget;
     this.targetConfiguration = targetConfiguration;
-    this.hash = Objects.hash(unconfiguredBuildTargetView, targetConfiguration);
+    this.hash = Objects.hash(unconfiguredBuildTarget, targetConfiguration);
   }
 
   static BuildTarget of(
-      UnconfiguredBuildTargetView unconfiguredBuildTargetView,
-      TargetConfiguration targetConfiguration) {
-    return new BuildTarget(unconfiguredBuildTargetView, targetConfiguration);
-  }
-
-  public UnconfiguredBuildTargetView getUnconfiguredBuildTargetView() {
-    return unconfiguredBuildTargetView;
+      UnconfiguredBuildTarget unconfiguredBuildTarget, TargetConfiguration targetConfiguration) {
+    return new BuildTarget(unconfiguredBuildTarget, targetConfiguration);
   }
 
   public UnconfiguredBuildTarget getUnconfiguredBuildTarget() {
-    return getUnconfiguredBuildTargetView().getData();
+    return unconfiguredBuildTarget;
   }
 
   public UnflavoredBuildTarget getUnflavoredBuildTarget() {
-    return unconfiguredBuildTargetView.getUnflavoredBuildTarget();
+    return unconfiguredBuildTarget.getUnflavoredBuildTarget();
   }
 
-  public ImmutableSortedSet<Flavor> getFlavors() {
-    return unconfiguredBuildTargetView.getFlavors();
+  public FlavorSet getFlavors() {
+    return unconfiguredBuildTarget.getFlavors();
   }
 
   public TargetConfiguration getTargetConfiguration() {
@@ -79,15 +70,15 @@ public class BuildTarget implements Comparable<BuildTarget>, DependencyStack.Ele
 
   @JsonProperty("cell")
   public CanonicalCellName getCell() {
-    return unconfiguredBuildTargetView.getCell();
+    return unconfiguredBuildTarget.getCell();
   }
 
   public BaseName getBaseName() {
-    return unconfiguredBuildTargetView.getBaseName();
+    return unconfiguredBuildTarget.getBaseName();
   }
 
   public CellRelativePath getCellRelativeBasePath() {
-    return unconfiguredBuildTargetView.getCellRelativeBasePath();
+    return unconfiguredBuildTarget.getCellRelativeBasePath();
   }
 
   @JsonProperty("baseName")
@@ -99,7 +90,7 @@ public class BuildTarget implements Comparable<BuildTarget>, DependencyStack.Ele
   @JsonProperty("shortName")
   @JsonView(JsonViews.MachineReadableLog.class)
   public String getShortName() {
-    return unconfiguredBuildTargetView.getShortName();
+    return unconfiguredBuildTarget.getName();
   }
 
   /**
@@ -107,7 +98,7 @@ public class BuildTarget implements Comparable<BuildTarget>, DependencyStack.Ele
    * "guava-latest". Note that the flavor of the target is included here.
    */
   public String getShortNameAndFlavorPostfix() {
-    return unconfiguredBuildTargetView.getShortNameAndFlavorPostfix();
+    return unconfiguredBuildTarget.getShortNameAndFlavorPostfix();
   }
 
   /** An empty string when there are no flavors, or hash followed by comma-separated flavors. */
@@ -121,7 +112,7 @@ public class BuildTarget implements Comparable<BuildTarget>, DependencyStack.Ele
   @JsonProperty("flavor")
   @JsonView(JsonViews.MachineReadableLog.class)
   protected String getFlavorsAsString() {
-    return Joiner.on(",").join(getFlavors());
+    return getFlavors().toCommaSeparatedString();
   }
 
   /**
@@ -129,7 +120,7 @@ public class BuildTarget implements Comparable<BuildTarget>, DependencyStack.Ele
    * "cell//third_party/java/guava:guava-latest".
    */
   public String getFullyQualifiedName() {
-    return unconfiguredBuildTargetView.getFullyQualifiedName();
+    return unconfiguredBuildTarget.getFullyQualifiedName();
   }
 
   /**
@@ -137,11 +128,11 @@ public class BuildTarget implements Comparable<BuildTarget>, DependencyStack.Ele
    * "//third_party/java/guava:guava-latest".
    */
   public String getCellRelativeName() {
-    return unconfiguredBuildTargetView.getCellRelativeName();
+    return unconfiguredBuildTarget.getCellRelativeName();
   }
 
   public boolean isFlavored() {
-    return unconfiguredBuildTargetView.isFlavored();
+    return unconfiguredBuildTarget.isFlavored();
   }
 
   /** @return {@link #getFullyQualifiedName()} */
@@ -156,8 +147,7 @@ public class BuildTarget implements Comparable<BuildTarget>, DependencyStack.Ele
   }
 
   public BuildTarget withShortName(String shortName) {
-    return BuildTarget.of(
-        unconfiguredBuildTargetView.withShortName(shortName), targetConfiguration);
+    return BuildTarget.of(unconfiguredBuildTarget.withShortName(shortName), targetConfiguration);
   }
 
   /**
@@ -167,12 +157,13 @@ public class BuildTarget implements Comparable<BuildTarget>, DependencyStack.Ele
    * @throws IllegalStateException if a build target has flavors
    */
   public BuildTarget assertUnflavored() {
-    unconfiguredBuildTargetView.assertUnflavored();
+    unconfiguredBuildTarget.assertUnflavored();
     return this;
   }
 
   public BuildTarget withoutFlavors(Set<Flavor> flavors) {
-    return withFlavors(Sets.difference(getFlavors(), flavors));
+    FlavorSet newFlavors = this.getFlavors().without(flavors);
+    return withFlavors(newFlavors.getSet());
   }
 
   public BuildTarget withoutFlavors(Flavor... flavors) {
@@ -185,7 +176,7 @@ public class BuildTarget implements Comparable<BuildTarget>, DependencyStack.Ele
       return this;
     }
 
-    return BuildTarget.of(unconfiguredBuildTargetView.withoutFlavors(), targetConfiguration);
+    return BuildTarget.of(unconfiguredBuildTarget.withoutFlavors(), targetConfiguration);
   }
 
   public BuildTarget withFlavors(Flavor... flavors) {
@@ -193,11 +184,11 @@ public class BuildTarget implements Comparable<BuildTarget>, DependencyStack.Ele
   }
 
   public BuildTarget withFlavors(Iterable<? extends Flavor> flavors) {
-    return BuildTarget.of(unconfiguredBuildTargetView.withFlavors(flavors), targetConfiguration);
+    return BuildTarget.of(unconfiguredBuildTarget.withFlavors(flavors), targetConfiguration);
   }
 
   public BuildTarget withAppendedFlavors(Set<Flavor> flavors) {
-    return withFlavors(Sets.union(getFlavors(), flavors));
+    return withFlavors(getFlavors().withAdded(flavors).getSet());
   }
 
   public BuildTarget withAppendedFlavors(Flavor... flavors) {
@@ -207,7 +198,7 @@ public class BuildTarget implements Comparable<BuildTarget>, DependencyStack.Ele
   /** Keep flavors and configuration, replace everything else. */
   public BuildTarget withUnflavoredBuildTarget(UnflavoredBuildTarget target) {
     return BuildTarget.of(
-        unconfiguredBuildTargetView.withUnflavoredBuildTarget(target), targetConfiguration);
+        unconfiguredBuildTarget.withUnflavoredBuildTarget(target), targetConfiguration);
   }
 
   @Override
@@ -220,7 +211,7 @@ public class BuildTarget implements Comparable<BuildTarget>, DependencyStack.Ele
     }
     BuildTarget that = (BuildTarget) o;
     return hash == that.hash
-        && unconfiguredBuildTargetView.equals(that.unconfiguredBuildTargetView)
+        && unconfiguredBuildTarget.equals(that.unconfiguredBuildTarget)
         && targetConfiguration.equals(that.targetConfiguration);
   }
 
@@ -236,7 +227,7 @@ public class BuildTarget implements Comparable<BuildTarget>, DependencyStack.Ele
     }
 
     return ComparisonChain.start()
-        .compare(unconfiguredBuildTargetView, that.unconfiguredBuildTargetView)
+        .compare(unconfiguredBuildTarget, that.unconfiguredBuildTarget)
         .compare(targetConfiguration, that.targetConfiguration)
         .result();
   }

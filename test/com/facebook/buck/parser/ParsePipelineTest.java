@@ -28,6 +28,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.DefaultCellNameResolverProvider;
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -36,8 +37,8 @@ import com.facebook.buck.core.model.impl.FilesystemBackedBuildFileTree;
 import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
 import com.facebook.buck.core.model.platform.impl.ThrowingPlatformResolver;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
-import com.facebook.buck.core.model.tc.factory.TargetConfigurationFactory;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
@@ -49,7 +50,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.watchman.WatchmanFactory;
-import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.api.ForwardingProjectBuildFileParserDecorator;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.config.ParserConfig;
@@ -60,20 +60,17 @@ import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Streams;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -141,7 +138,8 @@ public class ParsePipelineTest {
     TargetNode<?> libTargetNode =
         fixture
             .getTargetNodeParsePipeline()
-            .getNode(cell, BuildTargetFactory.newInstance("//:lib"), DependencyStack.root());
+            .getNode(cell, BuildTargetFactory.newInstance("//:lib"), DependencyStack.root())
+            .assertGetTargetNode(DependencyStack.root());
 
     waitForAll(libTargetNode.getBuildDeps(), dep -> fixture.targetExistsInCache(dep));
     fixture.close();
@@ -151,13 +149,17 @@ public class ParsePipelineTest {
   public void speculativeDepsTraversalWhenGettingAllNodes() throws Exception {
     Fixture fixture = createMultiThreadedFixture("pipeline_test");
     Cell cell = fixture.getCells();
-    ImmutableList<TargetNode<?>> libTargetNodes =
+    ImmutableList<TargetNodeMaybeIncompatible> libTargetNodes =
         fixture
             .getTargetNodeParsePipeline()
             .getAllRequestedTargetNodes(
-                cell, fixture.getCells().getFilesystem().resolve("BUCK"), Optional.empty());
+                cell,
+                AbsPath.of(fixture.getCells().getFilesystem().resolve("BUCK")),
+                Optional.empty());
     FluentIterable<BuildTarget> allDeps =
-        FluentIterable.from(libTargetNodes).transformAndConcat(input -> input.getBuildDeps());
+        FluentIterable.from(libTargetNodes)
+            .transformAndConcat(
+                input -> input.assertGetTargetNode(DependencyStack.root()).getBuildDeps());
     waitForAll(allDeps, dep -> fixture.targetExistsInCache(dep));
     fixture.close();
   }
@@ -185,7 +187,9 @@ public class ParsePipelineTest {
       fixture
           .getTargetNodeParsePipeline()
           .getAllRequestedTargetNodes(
-              cell, cell.getFilesystem().resolve("no/such/file/BUCK"), Optional.empty());
+              cell,
+              AbsPath.of(cell.getFilesystem().resolve("no/such/file/BUCK")),
+              Optional.empty());
     }
   }
 
@@ -198,7 +202,7 @@ public class ParsePipelineTest {
           stringContainsInOrder("Buck wasn't able to parse", "No such file or directory"));
       fixture
           .getBuildFileRawNodeParsePipeline()
-          .getFile(cell, cell.getFilesystem().resolve("no/such/file/BUCK"));
+          .getFile(cell, AbsPath.of(cell.getFilesystem().resolve("no/such/file/BUCK")));
     }
   }
 
@@ -238,12 +242,15 @@ public class ParsePipelineTest {
     Fixture fixture = createMultiThreadedFixture("pipeline_test");
     Cell cell = fixture.getCells();
 
-    Path rootBuildFile = cell.getFilesystem().resolve("BUCK");
+    AbsPath rootBuildFile = AbsPath.of(cell.getFilesystem().resolve("BUCK"));
 
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
 
     TargetNode<?> libTargetNode =
-        fixture.getTargetNodeParsePipeline().getNode(cell, libTarget, DependencyStack.root());
+        fixture
+            .getTargetNodeParsePipeline()
+            .getNode(cell, libTarget, DependencyStack.root())
+            .assertGetTargetNode(DependencyStack.root());
 
     Set<BuildTarget> deps = libTargetNode.getBuildDeps();
     for (BuildTarget buildTarget : deps) {
@@ -254,12 +261,12 @@ public class ParsePipelineTest {
     assertTrue(fixture.buildFileExistsInCache(rootBuildFile));
     assertTrue(fixture.targetExistsInCache(libTarget));
 
-    Path aBuildFile = cell.getFilesystem().resolve("a/BUCK");
+    AbsPath aBuildFile = AbsPath.of(cell.getFilesystem().resolve("a/BUCK"));
     assertTrue(fixture.buildFileExistsInCache(aBuildFile));
     BuildTarget aTarget = BuildTargetFactory.newInstance("//a:a");
     assertTrue(fixture.targetExistsInCache(aTarget));
 
-    Path bBuildFile = cell.getFilesystem().resolve("b/BUCK");
+    AbsPath bBuildFile = AbsPath.of(cell.getFilesystem().resolve("b/BUCK"));
     assertTrue(fixture.buildFileExistsInCache(bBuildFile));
     BuildTarget bTarget = BuildTargetFactory.newInstance("//b:b");
     assertTrue(fixture.targetExistsInCache(bTarget));
@@ -282,12 +289,15 @@ public class ParsePipelineTest {
     Fixture fixture = createMultiThreadedFixture("pipeline_test");
     Cell cell = fixture.getCells();
 
-    Path rootBuildFile = cell.getFilesystem().resolve("BUCK");
+    AbsPath rootBuildFile = AbsPath.of(cell.getFilesystem().resolve("BUCK"));
 
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
 
     TargetNode<?> libTargetNode =
-        fixture.getTargetNodeParsePipeline().getNode(cell, libTarget, DependencyStack.root());
+        fixture
+            .getTargetNodeParsePipeline()
+            .getNode(cell, libTarget, DependencyStack.root())
+            .assertGetTargetNode(DependencyStack.root());
 
     Set<BuildTarget> deps = libTargetNode.getBuildDeps();
     for (BuildTarget buildTarget : deps) {
@@ -298,18 +308,18 @@ public class ParsePipelineTest {
     assertTrue(fixture.buildFileExistsInCache(rootBuildFile));
     assertTrue(fixture.targetExistsInCache(libTarget));
 
-    Path aBuildFile = cell.getFilesystem().resolve("a/BUCK");
+    AbsPath aBuildFile = AbsPath.of(cell.getFilesystem().resolve("a/BUCK"));
     assertTrue(fixture.buildFileExistsInCache(aBuildFile));
     BuildTarget aTarget = BuildTargetFactory.newInstance("//a:a");
     assertTrue(fixture.targetExistsInCache(aTarget));
 
-    Path bBuildFile = cell.getFilesystem().resolve("b/BUCK");
+    AbsPath bBuildFile = AbsPath.of(cell.getFilesystem().resolve("b/BUCK"));
     assertTrue(fixture.buildFileExistsInCache(bBuildFile));
     BuildTarget bTarget = BuildTargetFactory.newInstance("//b:b");
     assertTrue(fixture.targetExistsInCache(bTarget));
 
     // Invalidation of an include file only invalidates build files that depend on it
-    fixture.invalidatePath(cell.getFilesystem().resolve("a/test.bzl"));
+    fixture.invalidatePath(AbsPath.of(cell.getFilesystem().resolve("a/test.bzl")));
 
     assertTrue(fixture.buildFileExistsInCache(rootBuildFile));
     assertTrue(fixture.targetExistsInCache(libTarget));
@@ -326,12 +336,15 @@ public class ParsePipelineTest {
     Fixture fixture = createMultiThreadedFixture("pipeline_test");
     Cell cell = fixture.getCells();
 
-    Path rootBuildFile = cell.getFilesystem().resolve("BUCK");
+    AbsPath rootBuildFile = AbsPath.of(cell.getFilesystem().resolve("BUCK"));
 
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
 
     TargetNode<?> libTargetNode =
-        fixture.getTargetNodeParsePipeline().getNode(cell, libTarget, DependencyStack.root());
+        fixture
+            .getTargetNodeParsePipeline()
+            .getNode(cell, libTarget, DependencyStack.root())
+            .assertGetTargetNode(DependencyStack.root());
 
     Set<BuildTarget> deps = libTargetNode.getBuildDeps();
     for (BuildTarget buildTarget : deps) {
@@ -343,25 +356,25 @@ public class ParsePipelineTest {
     assertTrue(fixture.targetExistsInCache(libTarget));
 
     Path aBuildFile = cell.getFilesystem().resolve("a/BUCK");
-    assertTrue(fixture.buildFileExistsInCache(aBuildFile));
+    assertTrue(fixture.buildFileExistsInCache(AbsPath.of(aBuildFile)));
     BuildTarget aTarget = BuildTargetFactory.newInstance("//a:a");
     assertTrue(fixture.targetExistsInCache(aTarget));
 
     Path bBuildFile = cell.getFilesystem().resolve("b/BUCK");
-    assertTrue(fixture.buildFileExistsInCache(bBuildFile));
+    assertTrue(fixture.buildFileExistsInCache(AbsPath.of(bBuildFile)));
     BuildTarget bTarget = BuildTargetFactory.newInstance("//b:b");
     assertTrue(fixture.targetExistsInCache(bTarget));
 
     // Invalidation of a source file does not invalidate any nodes/manifests
-    fixture.invalidatePath(cell.getFilesystem().resolve("b/B.java"));
+    fixture.invalidatePath(AbsPath.of(cell.getFilesystem().resolve("b/B.java")));
 
     assertTrue(fixture.buildFileExistsInCache(rootBuildFile));
     assertTrue(fixture.targetExistsInCache(libTarget));
 
-    assertTrue(fixture.buildFileExistsInCache(aBuildFile));
+    assertTrue(fixture.buildFileExistsInCache(AbsPath.of(aBuildFile)));
     assertTrue(fixture.targetExistsInCache(aTarget));
 
-    assertTrue(fixture.buildFileExistsInCache(bBuildFile));
+    assertTrue(fixture.buildFileExistsInCache(AbsPath.of(bBuildFile)));
     assertTrue(fixture.targetExistsInCache(bTarget));
   }
 
@@ -375,7 +388,10 @@ public class ParsePipelineTest {
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
 
     TargetNode<?> libTargetNode =
-        fixture.getTargetNodeParsePipeline().getNode(cell, libTarget, DependencyStack.root());
+        fixture
+            .getTargetNodeParsePipeline()
+            .getNode(cell, libTarget, DependencyStack.root())
+            .assertGetTargetNode(DependencyStack.root());
 
     Set<BuildTarget> deps = libTargetNode.getBuildDeps();
     for (BuildTarget buildTarget : deps) {
@@ -383,32 +399,32 @@ public class ParsePipelineTest {
     }
 
     // Validate expected state
-    assertTrue(fixture.buildFileExistsInCache(rootBuildFile));
+    assertTrue(fixture.buildFileExistsInCache(AbsPath.of(rootBuildFile)));
     assertTrue(fixture.targetExistsInCache(libTarget));
 
     Path aBuildFile = cell.getFilesystem().resolve("a/BUCK");
-    assertTrue(fixture.buildFileExistsInCache(aBuildFile));
+    assertTrue(fixture.buildFileExistsInCache(AbsPath.of(aBuildFile)));
     BuildTarget aTarget = BuildTargetFactory.newInstance("//a:a");
     assertTrue(fixture.targetExistsInCache(aTarget));
 
     Path bBuildFile = cell.getFilesystem().resolve("b/BUCK");
-    assertTrue(fixture.buildFileExistsInCache(bBuildFile));
+    assertTrue(fixture.buildFileExistsInCache(AbsPath.of(bBuildFile)));
     BuildTarget bTarget = BuildTargetFactory.newInstance("//b:b");
     assertTrue(fixture.targetExistsInCache(bTarget));
 
-    Path packageFile = cell.getFilesystem().resolve("b/PACKAGE");
+    AbsPath packageFile = AbsPath.of(cell.getFilesystem().resolve("b/PACKAGE"));
     assertTrue(fixture.packageFileExistsInCache(packageFile));
 
     // Invalidation of a package only invalidates the nodes of the dependent build file
     fixture.invalidatePath(packageFile);
 
-    assertTrue(fixture.buildFileExistsInCache(rootBuildFile));
+    assertTrue(fixture.buildFileExistsInCache(AbsPath.of(rootBuildFile)));
     assertTrue(fixture.targetExistsInCache(libTarget));
 
-    assertTrue(fixture.buildFileExistsInCache(aBuildFile));
+    assertTrue(fixture.buildFileExistsInCache(AbsPath.of(aBuildFile)));
     assertTrue(fixture.targetExistsInCache(aTarget));
 
-    assertTrue(fixture.buildFileExistsInCache(bBuildFile));
+    assertTrue(fixture.buildFileExistsInCache(AbsPath.of(bBuildFile)));
     assertFalse(fixture.targetExistsInCache(bTarget));
 
     assertFalse(fixture.packageFileExistsInCache(packageFile));
@@ -418,8 +434,8 @@ public class ParsePipelineTest {
   public void packageFileInvalidationInvalidatesAllChildNodes() throws Exception {
     try (Fixture fixture = createMultiThreadedFixture("package_inheritance")) {
       Cell cell = fixture.getCells();
-      Path barBuildFilePath = cell.getFilesystem().resolve("bar/BUCK");
-      List<TargetNode<?>> nodes =
+      AbsPath barBuildFilePath = AbsPath.of(cell.getFilesystem().resolve("bar/BUCK"));
+      List<TargetNodeMaybeIncompatible> nodes =
           fixture
               .getTargetNodeParsePipeline()
               .getAllRequestedTargetNodes(cell, barBuildFilePath, Optional.empty());
@@ -430,7 +446,7 @@ public class ParsePipelineTest {
       assertTrue(fixture.targetExistsInCache(nodes.get(0).getBuildTarget()));
       assertTrue(fixture.targetExistsInCache(nodes.get(1).getBuildTarget()));
 
-      Path parentPackageFile = cell.getFilesystem().resolve("PACKAGE");
+      AbsPath parentPackageFile = AbsPath.of(cell.getFilesystem().resolve("PACKAGE"));
       assertTrue(fixture.packageFileExistsInCache(parentPackageFile));
 
       // Invalidate the package file
@@ -492,10 +508,6 @@ public class ParsePipelineTest {
     private final ListeningExecutorService executorService;
     private final Set<CloseRecordingProjectBuildFileParserDecorator> projectBuildFileParsers;
 
-    private ThrowingCloseableMemoizedSupplier<ManifestService, IOException> getManifestSupplier() {
-      return ThrowingCloseableMemoizedSupplier.of(() -> null, ManifestService::close);
-    }
-
     public Fixture(
         String scenario,
         ListeningExecutorService executorService,
@@ -511,8 +523,7 @@ public class ParsePipelineTest {
       this.cells = new Cells(this.workspace.asCell());
 
       TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory();
-      ConstructorArgMarshaller constructorArgMarshaller =
-          new DefaultConstructorArgMarshaller(coercerFactory);
+      ConstructorArgMarshaller constructorArgMarshaller = new DefaultConstructorArgMarshaller();
 
       this.daemonicParserState = new DaemonicParserState(NUM_THREADS);
 
@@ -528,9 +539,7 @@ public class ParsePipelineTest {
                                 new ParserPythonInterpreterProvider(
                                     input.getBuckConfig(), new ExecutableFinder()),
                                 TestKnownRuleTypesProvider.create(
-                                    BuckPluginManagerFactory.createPluginManager()),
-                                getManifestSupplier(),
-                                new FakeFileHashCache(ImmutableMap.of()))
+                                    BuckPluginManagerFactory.createPluginManager()))
                             .createFileParser(eventBus, input, watchman, threadSafe));
                 synchronized (projectBuildFileParsers) {
                   projectBuildFileParsers.add(buildFileParser);
@@ -603,9 +612,10 @@ public class ParsePipelineTest {
               new DefaultUnconfiguredTargetNodeFactory(
                   knownRuleTypesProvider,
                   new BuiltTargetVerifier(),
-                  cells.getRootCell().getCellPathResolver(),
+                  cells,
                   new SelectorListFactory(
-                      new SelectorFactory(new ParsingUnconfiguredBuildTargetViewFactory()))));
+                      new SelectorFactory(new ParsingUnconfiguredBuildTargetViewFactory())),
+                  coercerFactory));
       ParserTargetNodeFromUnconfiguredTargetNodeFactory rawTargetNodeToTargetNodeFactory =
           new UnconfiguredTargetNodeToTargetNodeFactory(
               coercerFactory,
@@ -617,7 +627,9 @@ public class ParsePipelineTest {
               new ThrowingSelectorListResolver(),
               new ThrowingPlatformResolver(),
               new MultiPlatformTargetConfigurationTransformer(new ThrowingPlatformResolver()),
-              UnconfiguredTargetConfiguration.INSTANCE);
+              UnconfiguredTargetConfiguration.INSTANCE,
+              cells.getRootCell().getBuckConfig(),
+              Optional.empty());
       this.targetNodeParsePipeline =
           new UnconfiguredTargetNodeToTargetNodeParsePipeline(
               this.daemonicParserState.getTargetNodeCache(),
@@ -628,10 +640,7 @@ public class ParsePipelineTest {
               "raw_target_node_parse_pipeline",
               speculativeParsing == SpeculativeParsing.ENABLED,
               rawTargetNodeToTargetNodeFactory,
-              false,
-              new TargetConfigurationFactory(
-                  new ParsingUnconfiguredBuildTargetViewFactory(),
-                  cells.getRootCell().getCellPathResolver()));
+              false);
     }
 
     public UnconfiguredTargetNodeToTargetNodeParsePipeline getTargetNodeParsePipeline() {
@@ -653,21 +662,21 @@ public class ParsePipelineTest {
           .isPresent();
     }
 
-    public boolean buildFileExistsInCache(Path path) {
+    public boolean buildFileExistsInCache(AbsPath path) {
       return daemonicParserState
           .getRawNodeCache()
           .lookupComputedNode(cells.getRootCell(), path, eventBus)
           .isPresent();
     }
 
-    public boolean packageFileExistsInCache(Path path) {
+    public boolean packageFileExistsInCache(AbsPath path) {
       return daemonicParserState
           .getPackageFileCache()
           .lookupComputedNode(cells.getRootCell(), path, eventBus)
           .isPresent();
     }
 
-    public void invalidatePath(Path path) {
+    public void invalidatePath(AbsPath path) {
       daemonicParserState.invalidatePath(path);
     }
 

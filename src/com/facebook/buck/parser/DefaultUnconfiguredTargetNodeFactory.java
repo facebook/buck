@@ -17,17 +17,17 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableUnconfiguredTargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.Package;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
+import com.facebook.buck.core.rules.knowntypes.RuleDescriptor;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.impl.SelectorListFactory;
@@ -35,15 +35,22 @@ import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.function.BuckPyFunction;
 import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
+import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
+import com.facebook.buck.rules.coercer.ParamInfo;
+import com.facebook.buck.rules.coercer.TypeCoercer;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.rules.visibility.parser.VisibilityPatterns;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.reflect.TypeToken;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Creates {@link UnconfiguredTargetNode} instances from raw data coming in form the {@link
@@ -53,30 +60,62 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
 
   private final KnownRuleTypesProvider knownRuleTypesProvider;
   private final BuiltTargetVerifier builtTargetVerifier;
-  private final CellPathResolver cellPathResolver;
+  private final Cells cells;
   private final SelectorListFactory selectorListFactory;
+  private final TypeCoercerFactory typeCoercerFactory;
+  private final TypeCoercer<ImmutableList<UnconfiguredBuildTarget>, ?> compatibleWithCoercer;
+  private final TypeCoercer<UnconfiguredBuildTarget, ?> defaultTargetPlatformCoercer;
 
   public DefaultUnconfiguredTargetNodeFactory(
       KnownRuleTypesProvider knownRuleTypesProvider,
       BuiltTargetVerifier builtTargetVerifier,
-      CellPathResolver cellPathResolver,
-      SelectorListFactory selectorListFactory) {
+      Cells cells,
+      SelectorListFactory selectorListFactory,
+      TypeCoercerFactory typeCoercerFactory) {
     this.knownRuleTypesProvider = knownRuleTypesProvider;
     this.builtTargetVerifier = builtTargetVerifier;
-    this.cellPathResolver = cellPathResolver;
+    this.cells = cells;
     this.selectorListFactory = selectorListFactory;
+    this.typeCoercerFactory = typeCoercerFactory;
+    this.compatibleWithCoercer =
+        typeCoercerFactory
+            .typeCoercerForType(new TypeToken<ImmutableList<UnconfiguredBuildTarget>>() {})
+            .checkUnconfiguredAssignableTo(
+                new TypeToken<ImmutableList<UnconfiguredBuildTarget>>() {});
+    this.defaultTargetPlatformCoercer =
+        typeCoercerFactory
+            .typeCoercerForType(TypeToken.of(UnconfiguredBuildTarget.class))
+            .checkUnconfiguredAssignableTo(TypeToken.of(UnconfiguredBuildTarget.class));
   }
 
   private ImmutableMap<String, Object> convertSelects(
+      Cell cell,
+      UnconfiguredBuildTarget target,
+      RuleDescriptor<?> descriptor,
       Map<String, Object> attrs,
-      ForwardRelativePath pathRelativeToProjectRoot,
+      CellRelativePath pathRelativeToProjectRoot,
       DependencyStack dependencyStack) {
     ImmutableMap.Builder<String, Object> result = ImmutableMap.builder();
+    DataTransferObjectDescriptor<?> constructorDescriptor =
+        descriptor.dataTransferObjectDescriptor(typeCoercerFactory);
     for (Map.Entry<String, Object> attr : attrs.entrySet()) {
+      if (attr.getKey().startsWith("buck.")
+          || attr.getKey().equals(VisibilityAttributes.VISIBILITY)
+          || attr.getKey().equals(VisibilityAttributes.WITHIN_VIEW)) {
+        continue;
+      }
+      ParamInfo<?> paramInfo = constructorDescriptor.getParamInfos().get(attr.getKey());
+      Preconditions.checkNotNull(paramInfo, "attr %s", attr.getKey());
       result.put(
           attr.getKey(),
           convertSelectorListInAttrValue(
-              attr.getKey(), attr.getValue(), pathRelativeToProjectRoot, dependencyStack));
+              cell,
+              target,
+              paramInfo,
+              attr.getKey(),
+              attr.getValue(),
+              pathRelativeToProjectRoot,
+              dependencyStack));
     }
     return result.build();
   }
@@ -85,24 +124,48 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
    * Convert attr value {@link ListWithSelects} to {@link SelectorList} or keep it as is otherwise
    */
   private Object convertSelectorListInAttrValue(
+      Cell cell,
+      UnconfiguredBuildTarget buildTarget,
+      ParamInfo<?> paramInfo,
       String attrName,
       Object attrValue,
-      ForwardRelativePath pathRelativeToProjectRoot,
+      CellRelativePath pathRelativeToProjectRoot,
       DependencyStack dependencyStack) {
-    if (attrValue instanceof ListWithSelects) {
-      try {
-        return selectorListFactory.create(
-            cellPathResolver, pathRelativeToProjectRoot, (ListWithSelects) attrValue);
-      } catch (CoerceFailedException e) {
-        throw new HumanReadableException(
-            e,
-            dependencyStack,
-            "failed to coerce list with selects for attr %s: %s",
-            attrName,
-            e.getMessage());
+    try {
+      if (attrValue instanceof ListWithSelects) {
+        if (!paramInfo.isConfigurable()) {
+          throw new HumanReadableException(
+              dependencyStack,
+              "%s: attribute '%s' cannot be configured using select",
+              buildTarget,
+              attrName);
+        }
+
+        SelectorList<Object> selectorList =
+            selectorListFactory.create(
+                cells.getCell(pathRelativeToProjectRoot.getCellName()).getCellNameResolver(),
+                pathRelativeToProjectRoot.getPath(),
+                (ListWithSelects) attrValue);
+        return selectorList.mapValuesThrowing(
+            v ->
+                paramInfo
+                    .getTypeCoercer()
+                    .coerceToUnconfigured(
+                        cell.getCellNameResolver(),
+                        cell.getFilesystem(),
+                        pathRelativeToProjectRoot.getPath(),
+                        v));
+      } else {
+        return paramInfo
+            .getTypeCoercer()
+            .coerceToUnconfigured(
+                cell.getCellNameResolver(),
+                cell.getFilesystem(),
+                pathRelativeToProjectRoot.getPath(),
+                attrValue);
       }
-    } else {
-      return attrValue;
+    } catch (CoerceFailedException e) {
+      throw new HumanReadableException(e, dependencyStack, e.getMessage());
     }
   }
 
@@ -115,19 +178,13 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
       Map<String, Object> rawAttributes,
       Package pkg) {
     KnownRuleTypes knownRuleTypes = knownRuleTypesProvider.get(cell);
-    RuleType ruleType = parseRuleTypeFromRawRule(knownRuleTypes, rawAttributes);
-
-    if (ruleType.getKind() == RuleType.Kind.CONFIGURATION) {
-      assertRawTargetNodeAttributesNotConfigurable(target, rawAttributes);
-    }
+    RuleDescriptor<?> descriptor = parseRuleTypeFromRawRule(knownRuleTypes, rawAttributes);
 
     // Because of the way that the parser works, we know this can never return null.
-    BaseDescription<?> description = knownRuleTypes.getDescription(ruleType);
+    BaseDescription<?> description = descriptor.getDescription();
 
     builtTargetVerifier.verifyBuildTarget(
-        cell, ruleType, buildFile, target, description, rawAttributes);
-
-    String visibilityDefinerDescription = target.getFullyQualifiedName();
+        cell, descriptor.getRuleType(), buildFile, target, description, rawAttributes);
 
     ImmutableSet<VisibilityPattern> visibilityPatterns =
         VisibilityPatterns.createFromStringList(
@@ -135,7 +192,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
             VisibilityAttributes.VISIBILITY,
             rawAttributes.get(VisibilityAttributes.VISIBILITY),
             buildFile,
-            () -> visibilityDefinerDescription);
+            target::getFullyQualifiedName);
 
     if (visibilityPatterns.isEmpty()) {
       visibilityPatterns = pkg.getVisibilityPatterns();
@@ -147,34 +204,69 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
             VisibilityAttributes.WITHIN_VIEW,
             rawAttributes.get(VisibilityAttributes.WITHIN_VIEW),
             buildFile,
-            () -> visibilityDefinerDescription);
+            target::getFullyQualifiedName);
 
     if (withinViewPatterns.isEmpty()) {
       withinViewPatterns = pkg.getWithinViewPatterns();
     }
 
     ImmutableMap<String, Object> withSelects =
-        convertSelects(rawAttributes, target.getCellRelativeBasePath().getPath(), dependencyStack);
+        convertSelects(
+            cell,
+            target,
+            descriptor,
+            rawAttributes,
+            target.getCellRelativeBasePath(),
+            dependencyStack);
+
+    Optional<UnconfiguredBuildTarget> defaultTargetPlatform = Optional.empty();
+    Object rawDefaultTargetPlatform = rawAttributes.get("defaultTargetPlatform");
+    if (rawDefaultTargetPlatform != null && !rawDefaultTargetPlatform.equals("")) {
+      try {
+        defaultTargetPlatform =
+            Optional.of(
+                defaultTargetPlatformCoercer.coerceToUnconfigured(
+                    cell.getCellNameResolver(),
+                    cell.getFilesystem(),
+                    target.getCellRelativeBasePath().getPath(),
+                    rawDefaultTargetPlatform));
+      } catch (CoerceFailedException e) {
+        throw new HumanReadableException(dependencyStack, e.getMessage(), e);
+      }
+    }
+
+    ImmutableList<UnconfiguredBuildTarget> compatibleWith = ImmutableList.of();
+
+    // TODO(nga): UDR populate `compatible_with` while native rules populate `compatibleWith`
+    Object rawCompatibleWith =
+        rawAttributes.getOrDefault("compatible_with", rawAttributes.get("compatibleWith"));
+    if (rawCompatibleWith != null) {
+      try {
+        compatibleWith =
+            compatibleWithCoercer.coerceToUnconfigured(
+                cell.getCellNameResolver(),
+                cell.getFilesystem(),
+                target.getCellRelativeBasePath().getPath(),
+                rawCompatibleWith);
+      } catch (CoerceFailedException e) {
+        throw new HumanReadableException(dependencyStack, e.getMessage(), e);
+      }
+    }
 
     return ImmutableUnconfiguredTargetNode.of(
-        target, ruleType, withSelects, visibilityPatterns, withinViewPatterns);
+        target,
+        descriptor.getRuleType(),
+        withSelects,
+        visibilityPatterns,
+        withinViewPatterns,
+        defaultTargetPlatform,
+        compatibleWith);
   }
 
-  private static RuleType parseRuleTypeFromRawRule(
+  private static RuleDescriptor<?> parseRuleTypeFromRawRule(
       KnownRuleTypes knownRuleTypes, Map<String, Object> attributes) {
     String type =
         (String) Objects.requireNonNull(attributes.get(BuckPyFunction.TYPE_PROPERTY_NAME));
-    return knownRuleTypes.getRuleType(type);
-  }
-
-  private void assertRawTargetNodeAttributesNotConfigurable(
-      UnconfiguredBuildTarget buildTarget, Map<String, Object> rawTargetNodeAttributes) {
-    for (Map.Entry<String, ?> entry : rawTargetNodeAttributes.entrySet()) {
-      Preconditions.checkState(
-          !(entry.getValue() instanceof SelectorList),
-          "Attribute %s cannot be configurable in %s",
-          entry.getKey(),
-          buildTarget);
-    }
+    return knownRuleTypes.getDescriptorByName(type);
   }
 }

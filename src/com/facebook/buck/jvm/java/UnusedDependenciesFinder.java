@@ -384,9 +384,7 @@ public abstract class UnusedDependenciesFinder implements Step {
     final SourcePath ruleOutput = rule.getSourcePathToOutput();
     final SourcePath abiRuleOutput = getAbiPath(buildRuleResolver, (HasJavaAbi) rule);
     return new BuildTargetAndSourcePaths(
-        rule.getBuildTarget().getUnconfiguredBuildTargetView().toString(),
-        ruleOutput,
-        abiRuleOutput);
+        rule.getBuildTarget().getUnconfiguredBuildTarget().toString(), ruleOutput, abiRuleOutput);
   }
 
   @Nullable

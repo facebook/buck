@@ -45,6 +45,8 @@ import com.facebook.buck.cxx.toolchain.ToolType;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.impl.DefaultLinkerProvider;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -125,7 +127,7 @@ public class CxxToolchainDescription
             compilerType,
             ToolType.AS,
             preferDependencyTree));
-    cxxPlatform.setAsflags(args.getAssemblerFlags());
+    cxxPlatform.setAsflags(StringArg.from(args.getAssemblerFlags()));
 
     cxxPlatform.setAspp(
         new PreprocessorProvider(
@@ -138,7 +140,7 @@ public class CxxToolchainDescription
             compilerType,
             ToolType.CC,
             preferDependencyTree));
-    cxxPlatform.setCflags(args.getCCompilerFlags());
+    cxxPlatform.setCflags(StringArg.from(args.getCCompilerFlags()));
 
     cxxPlatform.setCxx(
         new CompilerProvider(
@@ -146,7 +148,7 @@ public class CxxToolchainDescription
             compilerType,
             ToolType.CXX,
             preferDependencyTree));
-    cxxPlatform.setCxxflags(args.getCxxCompilerFlags());
+    cxxPlatform.setCxxflags(StringArg.from(args.getCxxCompilerFlags()));
 
     cxxPlatform.setCpp(
         new PreprocessorProvider(
@@ -164,34 +166,37 @@ public class CxxToolchainDescription
 
     if (linkerType == LinkerProvider.Type.GNU) {
       cxxPlatform.setLdflags(
-          ImmutableList.<String>builder()
+          ImmutableList.<Arg>builder()
               // Add a deterministic build ID.
-              .add("-Wl,--build-id")
-              .addAll(args.getLinkerFlags())
+              .add(StringArg.of("-Wl,--build-id"))
+              .addAll(StringArg.from(args.getLinkerFlags()))
               .build());
     } else {
       // TODO(cjhopman): We should force build ids by default for all linkers.
-      cxxPlatform.setLdflags(args.getLinkerFlags());
+      cxxPlatform.setLdflags(StringArg.from(args.getLinkerFlags()));
     }
 
     cxxPlatform.setAr(
         ArchiverProvider.from(
             ToolProviders.getToolProvider(args.getArchiver()), args.getArchiverType()));
-    cxxPlatform.setArflags(args.getArchiverFlags());
+    cxxPlatform.setArflags(StringArg.from(args.getArchiverFlags()));
 
     cxxPlatform.setStrip(
         ToolProviders.getToolProvider(args.getStrip())
             .resolve(ruleResolver, buildTarget.getTargetConfiguration()));
-    cxxPlatform.setStripFlags(args.getStripFlags());
+    cxxPlatform.setStripFlags(StringArg.from(args.getStripFlags()));
 
     cxxPlatform.setRanlib(args.getRanlib().map(ToolProviders::getToolProvider));
-    cxxPlatform.setRanlibflags(args.getRanlibFlags());
+    cxxPlatform.setRanlibflags(StringArg.from(args.getRanlibFlags()));
 
-    ListMultimap<LinkableDepType, String> runtimeLdFlags =
+    ListMultimap<LinkableDepType, Arg> runtimeLdFlags =
         Multimaps.newListMultimap(new LinkedHashMap<>(), ArrayList::new);
-    runtimeLdFlags.putAll(LinkableDepType.STATIC, args.getStaticDepRuntimeLdFlags());
-    runtimeLdFlags.putAll(LinkableDepType.STATIC_PIC, args.getStaticPicDepRuntimeLdFlags());
-    runtimeLdFlags.putAll(LinkableDepType.SHARED, args.getSharedDepRuntimeLdFlags());
+    runtimeLdFlags.putAll(
+        LinkableDepType.STATIC, StringArg.from(args.getStaticDepRuntimeLdFlags()));
+    runtimeLdFlags.putAll(
+        LinkableDepType.STATIC_PIC, StringArg.from(args.getStaticPicDepRuntimeLdFlags()));
+    runtimeLdFlags.putAll(
+        LinkableDepType.SHARED, StringArg.from(args.getSharedDepRuntimeLdFlags()));
     cxxPlatform.setRuntimeLdflags(runtimeLdFlags);
 
     cxxPlatform.setSymbolNameTool(

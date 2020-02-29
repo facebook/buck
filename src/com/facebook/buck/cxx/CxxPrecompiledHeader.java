@@ -183,7 +183,7 @@ class CxxPrecompiledHeader extends AbstractBuildRule
 
   public Path getRelativeInputPath(SourcePathResolverAdapter resolver) {
     // TODO(mzlee): We should make a generic solution to address this
-    return getProjectFilesystem().relativize(resolver.getAbsolutePath(input));
+    return getProjectFilesystem().relativize(resolver.getAbsolutePath(input)).getPath();
   }
 
   public Path getOutputPath() {

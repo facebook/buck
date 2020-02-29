@@ -75,7 +75,8 @@ public class GenAidlTest {
   @Before
   public void setUp() throws IOException {
     stubFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-    Files.createDirectories(stubFilesystem.getRootPath().resolve("java/com/example/base"));
+    Files.createDirectories(
+        stubFilesystem.getRootPath().resolve("java/com/example/base").getPath());
 
     pathToAidl = FakeSourcePath.of(stubFilesystem, "java/com/example/base/IWhateverService.aidl");
     importPath = Paths.get("java/com/example/base").toString();
@@ -127,7 +128,7 @@ public class GenAidlTest {
 
     BuildContext buildContext =
         FakeBuildContext.withSourcePathResolver(pathResolver)
-            .withBuildCellRootPath(stubFilesystem.getRootPath());
+            .withBuildCellRootPath(stubFilesystem.getRootPath().getPath());
     List<Step> steps = genAidlRule.getBuildSteps(buildContext, new FakeBuildableContext());
 
     Path outputDirectory = BuildTargetPaths.getScratchPath(stubFilesystem, target, "__%s.aidl");
@@ -166,7 +167,8 @@ public class GenAidlTest {
         StackedFileHashCache.createDefaultHashCaches(
             stubFilesystem, FileHashCacheMode.LOADING_CACHE);
     DefaultRuleKeyFactory factory = new TestDefaultRuleKeyFactory(hashCache, ruleFinder);
-    stubFilesystem.touch(stubFilesystem.getRootPath().resolve(pathToAidl.getRelativePath()));
+    stubFilesystem.touch(
+        stubFilesystem.getRootPath().resolve(pathToAidl.getRelativePath()).getPath());
 
     GenAidl genAidlRuleNoDeps = createGenAidlRule(ImmutableSortedSet.of());
     RuleKey ruleKey = factory.build(genAidlRuleNoDeps);

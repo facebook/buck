@@ -88,7 +88,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.Optional;
-import java.util.OptionalInt;
 import org.immutables.value.Value;
 import org.junit.Test;
 
@@ -768,7 +767,7 @@ public class AndroidBinaryGraphEnhancerTest {
 
     PreDexSplitDexGroup rDotJavaDexRule =
         (PreDexSplitDexGroup) graphBuilder.getRule(rDotJavaDexTarget);
-    assertEquals(rDotJavaDexRule.getGroupIndex(), OptionalInt.of(3));
+    assertEquals(rDotJavaDexRule.getGroupIndex(), Optional.of(3));
 
     assertThat(
         Iterables.transform(trimUberRDotJavaRule.getBuildDeps(), BuildRule::getBuildTarget),
@@ -1084,7 +1083,8 @@ public class AndroidBinaryGraphEnhancerTest {
         /* useProtoFormat */ false,
         new NoopAndroidNativeTargetConfigurationMatcher(),
         /* failOnLegacyAapt2Errors */ false,
-        false);
+        false,
+        ImmutableSet.of());
   }
 
   private NonPreDexedDexBuildable.NonPredexedDexBuildableArgs defaultNonPredexedArgs() {

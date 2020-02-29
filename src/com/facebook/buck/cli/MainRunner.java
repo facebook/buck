@@ -126,8 +126,6 @@ import com.facebook.buck.log.ConsoleHandlerState;
 import com.facebook.buck.log.GlobalStateManager;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.log.LogConfig;
-import com.facebook.buck.manifestservice.ManifestService;
-import com.facebook.buck.manifestservice.ManifestServiceConfig;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserFactory;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
@@ -189,7 +187,6 @@ import com.facebook.buck.util.PrintStreamProcessExecutorFactory;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.Scope;
-import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.ThrowingCloseableWrapper;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.cache.InstrumentingCacheStatsTracker;
@@ -210,7 +207,6 @@ import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.environment.NetworkInfo;
 import com.facebook.buck.util.environment.Platform;
-import com.facebook.buck.util.hashing.FileHashLoader;
 import com.facebook.buck.util.network.MacIpv6BugWorkaround;
 import com.facebook.buck.util.network.RemoteLogBuckConfig;
 import com.facebook.buck.util.perf.PerfStatsTracking;
@@ -576,21 +572,21 @@ public final class MainRunner {
     }
   }
 
-  private ImmutableMap<CellName, Path> getCellMapping(AbsPath canonicalRootPath)
+  private ImmutableMap<CellName, AbsPath> getCellMapping(AbsPath canonicalRootPath)
       throws IOException {
     return DefaultCellPathResolver.bootstrapPathMapping(
-        canonicalRootPath.getPath(), Configs.createDefaultConfig(canonicalRootPath.getPath()));
+        canonicalRootPath, Configs.createDefaultConfig(canonicalRootPath.getPath()));
   }
 
-  private Config setupDefaultConfig(ImmutableMap<CellName, Path> cellMapping, BuckCommand command)
-      throws IOException {
-    Path rootPath =
+  private Config setupDefaultConfig(
+      ImmutableMap<CellName, AbsPath> cellMapping, BuckCommand command) throws IOException {
+    AbsPath rootPath =
         Objects.requireNonNull(
             cellMapping.get(CellName.ROOT_CELL_NAME), "Root cell should be implicitly added");
     RawConfig rootCellConfigOverrides;
 
     try {
-      ImmutableMap<Path, RawConfig> overridesByPath =
+      ImmutableMap<AbsPath, RawConfig> overridesByPath =
           command.getConfigOverrides(cellMapping).getOverridesByPath(cellMapping);
       rootCellConfigOverrides =
           Optional.ofNullable(overridesByPath.get(rootPath)).orElse(RawConfig.of());
@@ -601,16 +597,18 @@ public final class MainRunner {
     if (commandMode == CommandMode.TEST) {
       // test mode: we skip looking into /etc and /home for config files for determinism
       return Configs.createDefaultConfig(
-          rootPath, Configs.getRepoConfigurationFiles(rootPath), rootCellConfigOverrides);
+          rootPath.getPath(),
+          Configs.getRepoConfigurationFiles(rootPath.getPath()),
+          rootCellConfigOverrides);
     }
 
-    return Configs.createDefaultConfig(rootPath, rootCellConfigOverrides);
+    return Configs.createDefaultConfig(rootPath.getPath(), rootCellConfigOverrides);
   }
 
-  private ImmutableSet<Path> getProjectWatchList(
+  private ImmutableSet<AbsPath> getProjectWatchList(
       AbsPath canonicalRootPath, BuckConfig buckConfig, DefaultCellPathResolver cellPathResolver) {
-    return ImmutableSet.<Path>builder()
-        .add(canonicalRootPath.getPath())
+    return ImmutableSet.<AbsPath>builder()
+        .add(canonicalRootPath)
         .addAll(
             buckConfig.getView(ParserConfig.class).getWatchCells()
                 ? cellPathResolver.getPathMapping().values()
@@ -636,7 +634,7 @@ public final class MainRunner {
 
     // Setup filesystem and buck config.
     AbsPath canonicalRootPath = AbsPath.of(projectRoot.toRealPath()).normalize();
-    ImmutableMap<CellName, Path> rootCellMapping = getCellMapping(canonicalRootPath);
+    ImmutableMap<CellName, AbsPath> rootCellMapping = getCellMapping(canonicalRootPath);
     ImmutableList<String> args =
         BuckArgsMethods.expandAtFiles(unexpandedCommandLineArgs, rootCellMapping);
 
@@ -747,7 +745,7 @@ public final class MainRunner {
         warnAboutConfigFileOverrides(filesystem.getRootPath(), cliConfig);
       }
 
-      ImmutableSet<Path> projectWatchList =
+      ImmutableSet<AbsPath> projectWatchList =
           getProjectWatchList(canonicalRootPath, buckConfig, cellPathResolver);
 
       Verbosity verbosity = VerbosityParser.parse(args);
@@ -915,7 +913,7 @@ public final class MainRunner {
       ProjectFilesystem rootCellProjectFilesystem =
           projectFilesystemFactory.createOrThrow(
               CanonicalCellName.rootCell(),
-              AbsPath.of(cells.getRootCell().getFilesystem().getRootPath()),
+              cells.getRootCell().getFilesystem().getRootPath(),
               BuckPaths.getBuckOutIncludeTargetConfigHashFromRootCellConfig(config));
       BuildBuckConfig buildBuckConfig =
           cells.getRootCell().getBuckConfig().getView(BuildBuckConfig.class);
@@ -1010,17 +1008,9 @@ public final class MainRunner {
                       printConsole.getStdErr().getRawStream(),
                       verbosity);
           DefaultBuckEventBus buildEventBus = new DefaultBuckEventBus(clock, buildId);
-          ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier =
-              ThrowingCloseableMemoizedSupplier.of(
-                  () -> {
-                    ManifestServiceConfig manifestServiceConfig =
-                        new ManifestServiceConfig(buckConfig);
-                    return manifestServiceConfig.createManifestService(
-                        clock, buildEventBus, newDirectExecutorService());
-                  },
-                  ManifestService::close);
           ) {
-        BuckConfigWriter.writeConfig(filesystem.getRootPath(), invocationInfo, buckConfig);
+        BuckConfigWriter.writeConfig(
+            filesystem.getRootPath().getPath(), invocationInfo, buckConfig);
 
         CommonThreadFactoryState commonThreadFactoryState =
             GlobalStateManager.singleton().getThreadToCommandRegister();
@@ -1299,12 +1289,12 @@ public final class MainRunner {
 
           if (logBuckConfig.isBuckConfigLocalWarningEnabled()
               && !printConsole.getVerbosity().isSilent()) {
-            ImmutableList<Path> localConfigFiles =
+            ImmutableList<AbsPath> localConfigFiles =
                 cells.getAllCells().stream()
                     .map(
                         cell ->
                             cell.getRoot().resolve(Configs.DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME))
-                    .filter(path -> Files.isRegularFile(path))
+                    .filter(path -> Files.isRegularFile(path.getPath()))
                     .collect(ImmutableList.toImmutableList());
             if (localConfigFiles.size() > 0) {
               String message =
@@ -1312,7 +1302,7 @@ public final class MainRunner {
                       ? "Using local configuration:"
                       : "Using local configurations:";
               buildEventBus.post(ConsoleEvent.warning(message));
-              for (Path localConfigFile : localConfigFiles) {
+              for (AbsPath localConfigFile : localConfigFiles) {
                 buildEventBus.post(ConsoleEvent.warning(String.format("- %s", localConfigFile)));
               }
             }
@@ -1343,7 +1333,7 @@ public final class MainRunner {
           VersionControlStatsGenerator vcStatsGenerator =
               new VersionControlStatsGenerator(
                   new DelegatingVersionControlCmdLineInterface(
-                      cells.getRootCell().getFilesystem().getRootPath(),
+                      cells.getRootCell().getFilesystem().getRootPath().getPath(),
                       new PrintStreamProcessExecutorFactory(),
                       vcBuckConfig.getHgCmd(),
                       buckConfig.getEnvironment()),
@@ -1383,7 +1373,7 @@ public final class MainRunner {
               CommandEvent.started(
                   command.getDeclaredSubCommandName(),
                   remainingArgs,
-                  cells.getRootCell().getRoot().relativize(absoluteClientPwd).normalize(),
+                  cells.getRootCell().getRoot().getPath().relativize(absoluteClientPwd).normalize(),
                   context.isPresent()
                       ? OptionalLong.of(buckGlobalState.getUptime())
                       : OptionalLong.empty(),
@@ -1417,8 +1407,6 @@ public final class MainRunner {
                   ruleKeyConfiguration,
                   depsAwareExecutorSupplier,
                   executableFinder,
-                  manifestServiceSupplier,
-                  fileHashCache,
                   buildTargetFactory,
                   hostConfiguration.orElse(UnconfiguredTargetConfiguration.INSTANCE),
                   targetSpecResolver);
@@ -1502,7 +1490,6 @@ public final class MainRunner {
                         moduleManager,
                         depsAwareExecutorSupplier,
                         metadataProvider,
-                        manifestServiceSupplier,
                         buckGlobalState,
                         absoluteClientPwd));
           } catch (InterruptedException | ClosedByInterruptException e) {
@@ -1614,7 +1601,7 @@ public final class MainRunner {
       // Pass if we can't resolve the path, it'll blow up eventually
     }
 
-    if (!pwd.startsWith(rootCell.getRoot())) {
+    if (!pwd.startsWith(rootCell.getRoot().getPath())) {
       if (originalPwd.equals(pwd)) {
         throw new IllegalStateException(
             String.format(
@@ -1749,7 +1736,7 @@ public final class MainRunner {
     }
   }
 
-  private void warnAboutConfigFileOverrides(Path root, CliConfig cliConfig) throws IOException {
+  private void warnAboutConfigFileOverrides(AbsPath root, CliConfig cliConfig) throws IOException {
     if (!cliConfig.getWarnOnConfigFileOverrides()) {
       return;
     }
@@ -1864,8 +1851,6 @@ public final class MainRunner {
       CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>>
           depsAwareExecutorSupplier,
       ExecutableFinder executableFinder,
-      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
-      FileHashLoader fileHashLoader,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       TargetConfiguration hostConfiguration,
       TargetSpecResolver targetSpecResolver)
@@ -1915,17 +1900,16 @@ public final class MainRunner {
     return ImmutableParserAndCaches.of(
         ParserFactory.create(
             typeCoercerFactory,
-            new DefaultConstructorArgMarshaller(typeCoercerFactory),
+            new DefaultConstructorArgMarshaller(),
             knownRuleTypesProvider,
             new ParserPythonInterpreterProvider(parserConfig, executableFinder),
             buckGlobalState.getDaemonicParserState(),
             targetSpecResolver,
             watchman,
             buildEventBus,
-            manifestServiceSupplier,
-            fileHashLoader,
             unconfiguredBuildTargetFactory,
-            hostConfiguration),
+            hostConfiguration,
+            BuildBuckConfig.of(buckConfig).shouldBuckOutIncludeTargetConfigHash()),
         buckGlobalState.getTypeCoercerFactory(),
         new InstrumentedVersionedTargetGraphCache(
             buckGlobalState.getVersionedTargetGraphCache(), new InstrumentingCacheStatsTracker()),
@@ -2038,7 +2022,7 @@ public final class MainRunner {
   private static Watchman buildWatchman(
       Optional<NGContext> context,
       ParserConfig parserConfig,
-      ImmutableSet<Path> projectWatchList,
+      ImmutableSet<AbsPath> projectWatchList,
       ImmutableMap<String, String> clientEnvironment,
       Console console,
       Clock clock)

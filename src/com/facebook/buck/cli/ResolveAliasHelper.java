@@ -19,7 +19,8 @@ package com.facebook.buck.cli;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.config.ParserConfig;
@@ -27,7 +28,6 @@ import com.facebook.buck.parser.exceptions.MissingBuildFileException;
 import com.facebook.buck.support.cli.config.AliasConfig;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -72,16 +72,16 @@ public class ResolveAliasHelper {
   static String validateBuildTargetForFullyQualifiedTarget(
       CommandRunnerParams params, String target, PerBuildState parserState) {
 
-    UnconfiguredBuildTargetView buildTarget =
+    UnconfiguredBuildTarget buildTarget =
         params.getBuckConfig().getUnconfiguredBuildTargetForFullyQualifiedTarget(target);
 
     Cell owningCell = params.getCells().getCell(buildTarget.getCell());
-    Path buildFile;
+    AbsPath buildFile;
     try {
       buildFile =
           owningCell
               .getBuckConfigView(ParserConfig.class)
-              .getAbsolutePathToBuildFile(owningCell, buildTarget.getData());
+              .getAbsolutePathToBuildFile(owningCell, buildTarget);
     } catch (MissingBuildFileException e) {
       throw new HumanReadableException(e);
     }
@@ -91,11 +91,12 @@ public class ResolveAliasHelper {
     ImmutableList<TargetNode<?>> targetNodes =
         params
             .getParser()
-            .getAllTargetNodes(parserState, owningCell, buildFile, params.getTargetConfiguration());
+            .getAllTargetNodesWithTargetCompatibilityFiltering(
+                parserState, owningCell, buildFile, params.getTargetConfiguration());
 
     // Check that the given target is a valid target.
     for (TargetNode<?> candidate : targetNodes) {
-      if (candidate.getBuildTarget().getUnconfiguredBuildTargetView().equals(buildTarget)) {
+      if (candidate.getBuildTarget().getUnconfiguredBuildTarget().equals(buildTarget)) {
         return buildTarget.getFullyQualifiedName();
       }
     }

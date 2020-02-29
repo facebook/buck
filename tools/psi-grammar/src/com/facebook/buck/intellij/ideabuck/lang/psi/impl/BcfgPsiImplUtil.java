@@ -139,8 +139,7 @@ public class BcfgPsiImplUtil {
    * its textual name.
    */
   public static String getValue(BcfgSectionName sectionName) {
-    return getFragments(sectionName)
-        .stream()
+    return getFragments(sectionName).stream()
         .map(PsiElement::getText)
         .collect(Collectors.joining());
   }
@@ -213,8 +212,7 @@ public class BcfgPsiImplUtil {
    * significant inner whitespace (i.e, not line continuations).
    */
   public static String getValue(BcfgPropertyName propertyName) {
-    return getFragments(propertyName)
-        .stream()
+    return getFragments(propertyName).stream()
         .map(PsiElement::getText)
         .collect(Collectors.joining());
   }
@@ -250,8 +248,7 @@ public class BcfgPsiImplUtil {
    * or macros.
    */
   public static String getValue(BcfgPropertyValue propertyValue) {
-    return getFragments(propertyValue)
-        .stream()
+    return getFragments(propertyValue).stream()
         .map(PsiElement::getText)
         .collect(Collectors.joining());
   }

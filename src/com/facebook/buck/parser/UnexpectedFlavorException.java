@@ -92,7 +92,7 @@ public class UnexpectedFlavorException extends HumanReadableException {
   private static ImmutableSet<Flavor> getInvalidFlavors(
       Flavored flavored, UnconfiguredBuildTarget target) {
     // TODO(nga): wrong target configuration
-    return target.getFlavors().stream()
+    return target.getFlavors().getSet().stream()
         .filter(
             flavor ->
                 !flavored.hasFlavors(
@@ -103,7 +103,7 @@ public class UnexpectedFlavorException extends HumanReadableException {
   private static ImmutableSet<Flavor> getValidFlavors(
       Flavored flavored, UnconfiguredBuildTarget target) {
     // TODO(nga): wrong target configuration
-    return target.getFlavors().stream()
+    return target.getFlavors().getSet().stream()
         .filter(
             flavor ->
                 flavored.hasFlavors(

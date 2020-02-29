@@ -51,7 +51,10 @@ class DefaultIjLibraryFactoryResolver implements IjLibraryFactoryResolver {
       requiredBuildTargets.ifPresent(
           requiredTargets -> requiredTargets.add(((BuildTargetSourcePath) path).getTarget()));
     }
-    return projectFilesystem.getRootPath().relativize(sourcePathResolver.getAbsolutePath(path));
+    return projectFilesystem
+        .getRootPath()
+        .relativize(sourcePathResolver.getAbsolutePath(path))
+        .getPath();
   }
 
   @Override

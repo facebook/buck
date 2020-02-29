@@ -27,6 +27,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorConvertible;
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -191,7 +192,7 @@ public class SwiftLibraryDescription
     // them from the flavors attached to the build target.
     Optional<Map.Entry<Flavor, UnresolvedCxxPlatform>> platform =
         getCxxPlatforms(buildTarget.getTargetConfiguration()).getFlavorAndValue(buildTarget);
-    ImmutableSortedSet<Flavor> buildFlavors = buildTarget.getFlavors();
+    FlavorSet buildFlavors = buildTarget.getFlavors();
     ImmutableSortedSet<BuildRule> filteredExtraDeps =
         params.getExtraDeps().get().stream()
             .filter(
@@ -223,7 +224,7 @@ public class SwiftLibraryDescription
       // extract them from the flavors attached to the build target.
       Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(buildTarget);
       if (!buildFlavors.contains(SWIFT_COMPILE_FLAVOR) && type.isPresent()) {
-        Set<Flavor> flavors = Sets.newHashSet(buildTarget.getFlavors());
+        Set<Flavor> flavors = Sets.newHashSet(buildTarget.getFlavors().getSet());
         flavors.remove(type.get().getKey());
         BuildTarget target = buildTarget.withFlavors(flavors);
         if (flavoredLinkerMapMode.isPresent()) {

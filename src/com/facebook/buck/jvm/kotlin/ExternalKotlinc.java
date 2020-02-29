@@ -141,7 +141,7 @@ public class ExternalKotlinc implements Kotlinc, AddsToRuleKey {
           ProcessExecutorParams.builder()
               .setCommand(command)
               .setEnvironment(context.getEnvironment())
-              .setDirectory(projectFilesystem.getRootPath().toAbsolutePath())
+              .setDirectory(projectFilesystem.getRootPath().getPath())
               .build();
       ProcessExecutor.Result result = context.getProcessExecutor().launchAndExecute(params);
       exitCode = result.getExitCode();

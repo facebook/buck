@@ -37,7 +37,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class QueryTargetCollectorTest {
-  private static final Path ROOT = Paths.get("/fake/cell/root");
+  private static final Path ROOT = Paths.get("/fake/cell/root").toAbsolutePath();
   private static final String baseName = "//app";
   private QueryEnvironment env =
       new GraphEnhancementQueryEnvironment(

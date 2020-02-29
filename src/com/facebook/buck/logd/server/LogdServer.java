@@ -16,7 +16,6 @@
 
 package com.facebook.buck.logd.server;
 
-import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.logd.LogDaemonException;
 import com.facebook.buck.logd.proto.CreateLogRequest;
 import com.facebook.buck.logd.proto.CreateLogResponse;
@@ -37,13 +36,15 @@ import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Given a port number, logD server is responsible for handling log writing to a filesystem and to
  * storage.
  */
 public class LogdServer implements LogDaemonServer {
-  private static final Logger LOG = Logger.get(LogdServer.class.getName());
+  private static final Logger LOG = LogManager.getLogger();
   private static final int TIME_OUT_SECONDS = 5;
 
   private final Server server;
@@ -78,7 +79,7 @@ public class LogdServer implements LogDaemonServer {
   @Override
   public void start() throws IOException {
     server.start();
-    LOG.info("Server started, listening on " + port);
+    LOG.info("Server started, listening on port {}", port);
 
     Runtime.getRuntime()
         .addShutdownHook(
@@ -97,15 +98,13 @@ public class LogdServer implements LogDaemonServer {
     if (server != null) {
       try {
         LOG.info(
-            "Awaiting termination of logD server. Waiting for up to %s seconds...",
+            "Awaiting termination of logD server. Waiting for up to {} seconds...",
             TIME_OUT_SECONDS);
         server.shutdown().awaitTermination(TIME_OUT_SECONDS, TimeUnit.SECONDS);
         if (!server.isTerminated()) {
           LOG.warn(
-              "LogD server is still running after shutdown request and "
-                  + "%s seconds timeout. Shutting down forcefully...",
+              "LogD server is still running after shutdown request and {} seconds timeout. Shutting down forcefully...",
               TIME_OUT_SECONDS);
-
           server.shutdownNow();
           LOG.info("Successfully terminated LogD server.");
         }
@@ -133,9 +132,9 @@ public class LogdServer implements LogDaemonServer {
       String logFilePath = request.getLogFilePath();
       try {
         responseObserver.onNext(createFile(request));
-        LOG.debug("Log file created at " + logFilePath);
+        LOG.debug("Log file created at {}", logFilePath);
       } catch (LogDaemonException e) {
-        LOG.error(e, "Failed to create log file at " + logFilePath);
+        LOG.error("Failed to create log file at " + logFilePath, e);
         responseObserver.onError(e);
       }
 
@@ -167,14 +166,14 @@ public class LogdServer implements LogDaemonServer {
           try {
             appendLog(logId, logMessage.getLogMessage());
           } catch (IOException e) {
-            LOG.error(e, "Failed to append log file at " + path);
+            LOG.error("Failed to append log file at " + path, e);
             throw new LogDaemonException(e, "Failed to append log file at %s", path);
           }
         }
 
         @Override
         public void onError(Throwable t) {
-          LOG.error(t, "log appending cancelled");
+          LOG.error("log appending cancelled", t);
         }
 
         @Override
@@ -220,7 +219,7 @@ public class LogdServer implements LogDaemonServer {
       try {
         Files.createDirectories(logFilePath.getParent());
         Files.createFile(logFilePath);
-        LOG.info("Created new file at " + logFilePath.toString());
+        LOG.info("Created new file at {}", logFilePath.toString());
 
         int genFileId = logFileIdGenerator.generateFileId();
         fileIdToPath.put(genFileId, filePath);
@@ -228,7 +227,7 @@ public class LogdServer implements LogDaemonServer {
 
         return CreateLogResponse.newBuilder().setLogId(genFileId).build();
       } catch (IOException e) {
-        LOG.error(e, "LogD failed to create a file at %s", filePath);
+        LOG.error("LogD failed to create a file at " + filePath, e);
         throw new LogDaemonException(e, "LogD failed to create a file at %s", filePath);
       }
     }

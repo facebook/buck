@@ -87,7 +87,8 @@ public class AndroidAppModularity extends AbstractBuildRule {
                               .relativize(
                                   buildContext
                                       .getSourcePathResolver()
-                                      .getAbsolutePath(input.getValue()))))
+                                      .getAbsolutePath(input.getValue()))
+                              .getPath()))
               .collect(ImmutableSet.toImmutableSet()));
     }
 

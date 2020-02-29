@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.command.config.ConfigDifference;
 import com.facebook.buck.command.config.ConfigDifference.ConfigChange;
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.support.cli.args.GlobalCliOptions;
 import com.facebook.buck.util.config.Configs;
 import com.google.common.base.Predicates;
@@ -58,13 +59,13 @@ class UIMessagesFormatter {
   }
 
   static Optional<String> useSpecificOverridesMessage(
-      Path root, ImmutableSet<Path> overridesToIgnore) throws IOException {
+      AbsPath root, ImmutableSet<Path> overridesToIgnore) throws IOException {
 
-    Path mainConfigPath = Configs.getMainConfigurationFile(root);
+    Path mainConfigPath = Configs.getMainConfigurationFile(root.getPath());
     String userSpecifiedOverrides =
         Configs.getDefaultConfigurationFiles(root).stream()
             .filter(path -> isValidPath(path, overridesToIgnore, mainConfigPath))
-            .map(path -> path.startsWith(root) ? root.relativize(path) : path)
+            .map(path -> path.startsWith(root.getPath()) ? root.relativize(path) : path)
             .map(Objects::toString)
             .distinct()
             .sorted(Comparator.naturalOrder())

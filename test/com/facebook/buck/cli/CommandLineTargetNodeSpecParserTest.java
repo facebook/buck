@@ -70,7 +70,7 @@ public class CommandLineTargetNodeSpecParserTest {
     cells = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
     return new CommandLineTargetNodeSpecParser(
         cells.getRootCell(),
-        filesystem.getRootPath().resolve(relativeWorkingDir).normalize(),
+        filesystem.getRootPath().resolve(relativeWorkingDir).normalize().getPath(),
         config,
         new BuildTargetMatcherTargetNodeParser());
   }

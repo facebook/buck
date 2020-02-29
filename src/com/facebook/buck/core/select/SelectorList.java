@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.select;
 
-import com.facebook.buck.rules.coercer.concat.Concatable;
+import com.facebook.buck.util.function.ThrowingFunction;
 import com.google.common.collect.ImmutableList;
 import java.util.Objects;
 
@@ -41,11 +41,10 @@ import java.util.Objects;
  * @param <T> the type of objects the underlying selectors provide after resolution
  */
 public final class SelectorList<T> {
-  private final Concatable<T> elementTypeConcatable;
+
   private final ImmutableList<Selector<T>> selectors;
 
-  public SelectorList(Concatable<T> elementTypeConcatable, ImmutableList<Selector<T>> selectors) {
-    this.elementTypeConcatable = elementTypeConcatable;
+  public SelectorList(ImmutableList<Selector<T>> selectors) {
     this.selectors = selectors;
   }
 
@@ -56,12 +55,16 @@ public final class SelectorList<T> {
     return selectors;
   }
 
-  /**
-   * @return {@link Concatable} that should be used to produce a final result by concatenating the
-   *     results of individual selectors in this list.
-   */
-  public Concatable<T> getConcatable() {
-    return elementTypeConcatable;
+  /** Transform all items with given function. */
+  public <U, E extends Exception> SelectorList<U> mapValuesThrowing(
+      ThrowingFunction<T, U, E> function) throws E {
+    ImmutableList.Builder<Selector<U>> selectors =
+        ImmutableList.builderWithExpectedSize(this.selectors.size());
+    for (Selector<T> selector : this.selectors) {
+      selectors.add(selector.mapValuesThrowing(function));
+    }
+
+    return new SelectorList<>(selectors.build());
   }
 
   @Override
@@ -73,22 +76,16 @@ public final class SelectorList<T> {
       return false;
     }
     SelectorList<?> that = (SelectorList<?>) o;
-    return elementTypeConcatable.equals(that.elementTypeConcatable)
-        && selectors.equals(that.selectors);
+    return selectors.equals(that.selectors);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(elementTypeConcatable, selectors);
+    return Objects.hash(selectors);
   }
 
   @Override
   public String toString() {
-    return "SelectorList{"
-        + "elementTypeConcatable="
-        + elementTypeConcatable
-        + ", selectors="
-        + selectors
-        + '}';
+    return "SelectorList{" + ", selectors=" + selectors + '}';
   }
 }

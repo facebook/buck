@@ -173,8 +173,7 @@ public class BuildExecutor {
             actionGraphAndBuilder.getActionGraphBuilder(),
             args.getBuckConfig().getView(BuildBuckConfig.class).getBuildInputRuleKeyFileSizeLimit(),
             ruleKeyCacheScope.getCache(),
-            ruleKeyLogger),
-        args.getManifestService());
+            ruleKeyLogger));
   }
 
   public Build getBuild() {

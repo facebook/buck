@@ -16,13 +16,13 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.reflect.TypeToken;
 
 /** Coerces numbers with rounding/truncation/extension. */
-public class NumberTypeCoercer<T extends Number> extends LeafTypeCoercer<T> {
+public class NumberTypeCoercer<T extends Number> extends LeafUnconfiguredOnlyCoercer<T> {
   private final Class<T> type;
 
   public NumberTypeCoercer(Class<T> type) {
@@ -30,17 +30,15 @@ public class NumberTypeCoercer<T extends Number> extends LeafTypeCoercer<T> {
   }
 
   @Override
-  public Class<T> getOutputClass() {
-    return type;
+  public TypeToken<T> getUnconfiguredType() {
+    return TypeToken.of(type);
   }
 
   @Override
-  public T coerce(
-      CellPathResolver cellRoots,
+  public T coerceToUnconfigured(
+      CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     if (object instanceof Number) {
@@ -48,7 +46,7 @@ public class NumberTypeCoercer<T extends Number> extends LeafTypeCoercer<T> {
       T castedNumber = (T) castNumber((Number) object);
       return castedNumber;
     }
-    throw CoerceFailedException.simple(object, getOutputClass());
+    throw CoerceFailedException.simple(object, getOutputType());
   }
 
   /** Cast the number to the correct subtype. */

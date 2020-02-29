@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.starlark.compatible;
 
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -84,26 +85,6 @@ public class BuckSkylarkTypes {
           SkylarkList<?> list, Class<NonWildcardType> elementClass, @Nullable String description)
           throws EvalException {
     return ImmutableList.copyOf((List<DestType>) list.getContents(elementClass, description));
-  }
-
-  /**
-   * Thrown when trying to construct an Immutable Skylark object from a Mutable one (that cannot be
-   * made immutable. i.e. it is not a list or dictionary)
-   */
-  public static class MutableObjectException extends RuntimeException {
-    private final Object mutableObject;
-
-    MutableObjectException(Object mutableObject) {
-      this.mutableObject = mutableObject;
-    }
-
-    /**
-     * @return the object that is mutable. This can be useful when the mutable object was deep in a
-     *     hierarchy
-     */
-    public Object getMutableObject() {
-      return mutableObject;
-    }
   }
 
   /**
@@ -222,5 +203,21 @@ public class BuckSkylarkTypes {
         String.format(
             "Invalid type provided. Expected %s, got %s",
             clazz.getSimpleName(), object.getClass().getSimpleName()));
+  }
+
+  /**
+   * Checks if a given value is 'Immutable'. This mostly works like {@link
+   * com.google.devtools.build.lib.syntax.EvalUtils#isImmutable(java.lang.Object)}, but it can also
+   * handle {@link com.google.common.collect.ImmutableCollection} and {@link
+   * com.google.common.collect.ImmutableMap}
+   */
+  public static boolean isImmutable(Object o) {
+    if (o instanceof ImmutableCollection<?>) {
+      return ((ImmutableCollection<?>) o).stream().allMatch(BuckSkylarkTypes::isImmutable);
+    } else if (o instanceof ImmutableMap<?, ?>) {
+      return ((ImmutableMap<?, ?>) o).values().stream().allMatch(BuckSkylarkTypes::isImmutable);
+    } else {
+      return EvalUtils.isImmutable(o);
+    }
   }
 }

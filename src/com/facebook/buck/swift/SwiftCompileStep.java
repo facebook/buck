@@ -17,6 +17,7 @@
 package com.facebook.buck.swift;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -27,7 +28,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 
@@ -36,12 +36,14 @@ class SwiftCompileStep implements Step {
 
   private static final Logger LOG = Logger.get(SwiftCompileStep.class);
 
-  private final Path compilerCwd;
+  private final AbsPath compilerCwd;
   private final ImmutableMap<String, String> compilerEnvironment;
   private final ImmutableList<String> compilerCommand;
 
   SwiftCompileStep(
-      Path compilerCwd, Map<String, String> compilerEnvironment, Iterable<String> compilerCommand) {
+      AbsPath compilerCwd,
+      Map<String, String> compilerEnvironment,
+      Iterable<String> compilerCommand) {
     this.compilerCwd = compilerCwd;
     this.compilerEnvironment = ImmutableMap.copyOf(compilerEnvironment);
     this.compilerCommand = ImmutableList.copyOf(compilerCommand);
@@ -54,7 +56,7 @@ class SwiftCompileStep implements Step {
 
   private ProcessExecutorParams makeProcessExecutorParams(ExecutionContext context) {
     ProcessExecutorParams.Builder builder = ProcessExecutorParams.builder();
-    builder.setDirectory(compilerCwd.toAbsolutePath());
+    builder.setDirectory(compilerCwd.getPath());
     builder.setEnvironment(compilerEnvironment);
     builder.setCommand(
         ImmutableList.<String>builder()

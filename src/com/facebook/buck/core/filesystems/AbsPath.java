@@ -16,10 +16,12 @@
 
 package com.facebook.buck.core.filesystems;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Comparator;
 
 /** Absolute path. */
 public interface AbsPath extends PathWrapper {
@@ -51,11 +53,53 @@ public interface AbsPath extends PathWrapper {
     return AbsPath.of(getPath().toRealPath(options));
   }
 
+  default AbsPath resolve(RelPath other) {
+    return resolve(other.getPath());
+  }
+
+  default boolean startsWith(AbsPath path) {
+    return startsWith(path.getPath());
+  }
+
   default AbsPath resolve(Path path) {
     return AbsPath.of(getPath().resolve(path));
   }
 
-  default AbsPath resolve(RelPath other) {
-    return resolve(other.getPath());
+  default AbsPath resolve(String path) {
+    return AbsPath.of(getPath().resolve(path));
+  }
+
+  default AbsPath getParent() {
+    Path parent = getPath().getParent();
+    return parent != null ? AbsPath.of(parent) : null;
+  }
+
+  default RelPath relativize(Path other) {
+    return RelPath.of(this.getPath().relativize(other));
+  }
+
+  default RelPath relativize(AbsPath other) {
+    return relativize(other.getPath());
+  }
+
+  /**
+   * Get the filesystem root of the current path. Note unlike {@link Path#getRoot()} this function
+   * never returns {@code null} because absolute paths always have root.
+   */
+  default AbsPath getRoot() {
+    Path root = getPath().getRoot();
+    if (root == null) {
+      throw new IllegalStateException("abs path must have a root: " + this);
+    }
+    return AbsPath.of(root);
+  }
+
+  default File toFile() {
+    return getPath().toFile();
+  }
+
+  /** We cannot implement {@link java.lang.Comparable} directly. */
+  static Comparator<AbsPath> comparator() {
+    return Comparator.comparing(AbsPath::getPath);
   }
 }

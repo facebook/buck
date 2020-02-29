@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.model;
 
-import java.nio.file.Path;
+import com.facebook.buck.core.filesystems.RelPath;
 import java.util.Optional;
 
 /**
@@ -34,5 +34,5 @@ public interface BuildFileTree {
    * @param filePath the path whose base path to find.
    * @return the base path if there is one.
    */
-  Optional<Path> getBasePathOfAncestorTarget(Path filePath);
+  Optional<RelPath> getBasePathOfAncestorTarget(RelPath filePath);
 }

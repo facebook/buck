@@ -52,7 +52,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.OptionalInt;
+import java.util.Optional;
 import javax.annotation.Nullable;
 
 /** Responsible for bucketing pre-dexed objects into primary and secondary dex files. */
@@ -64,7 +64,7 @@ public class PreDexedFilesSorter {
   private final long dexWeightLimit;
   private final DexStore dexStore;
   private final Path secondaryDexJarFilesDir;
-  private final OptionalInt groupIndex;
+  private final Optional<Integer> groupIndex;
 
   /**
    * Directory under the project filesystem where this step may write temporary data. This directory
@@ -81,7 +81,7 @@ public class PreDexedFilesSorter {
       long dexWeightLimit,
       DexStore dexStore,
       Path secondaryDexJarFilesDir,
-      OptionalInt groupIndex) {
+      Optional<Integer> groupIndex) {
     this.dexFilesToMerge = dexFilesToMerge;
     this.primaryDexFilter = ClassNameFilter.fromConfiguration(primaryDexPatterns);
     this.apkModuleGraph = apkModuleGraph;

@@ -16,17 +16,16 @@
 
 package com.facebook.buck.core.select.impl;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.parser.syntax.SelectorValue;
-import com.facebook.buck.rules.coercer.CoerceFailedException;
-import com.facebook.buck.rules.coercer.JsonTypeConcatenatingCoercer;
-import com.facebook.buck.rules.coercer.JsonTypeConcatenatingCoercerFactory;
-import com.facebook.buck.rules.coercer.SingleElementJsonTypeConcatenatingCoercer;
+import com.facebook.buck.rules.coercer.concat.JsonTypeConcatenatingCoercer;
+import com.facebook.buck.rules.coercer.concat.JsonTypeConcatenatingCoercerFactory;
+import com.facebook.buck.rules.coercer.concat.SingleElementJsonTypeConcatenatingCoercer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -46,10 +45,9 @@ public class SelectorListFactory {
    *     non-coerced.)
    */
   public SelectorList<Object> create(
-      CellPathResolver cellPathResolver,
+      CellNameResolver cellNameResolver,
       ForwardRelativePath pathRelativeToProjectRoot,
-      ListWithSelects listWithSelects)
-      throws CoerceFailedException {
+      ListWithSelects listWithSelects) {
     ImmutableList.Builder<Selector<Object>> builder =
         ImmutableList.builderWithExpectedSize(listWithSelects.getElements().size());
     for (Object element : listWithSelects.getElements()) {
@@ -58,7 +56,7 @@ public class SelectorListFactory {
         ImmutableMap<String, Object> rawAttributes = selectorValue.getDictionary();
         builder.add(
             selectorFactory.createSelector(
-                cellPathResolver,
+                cellNameResolver,
                 pathRelativeToProjectRoot,
                 rawAttributes,
                 selectorValue.getNoMatchError()));
@@ -77,6 +75,6 @@ public class SelectorListFactory {
       }
     }
 
-    return new SelectorList<>(coercer, builder.build());
+    return new SelectorList<>(builder.build());
   }
 }

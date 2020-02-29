@@ -20,6 +20,7 @@ import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -67,14 +68,14 @@ public class ArtifactUploader {
       BuckEventBus eventBus,
       ImmutableMap<String, String> buildMetadata,
       SortedSet<Path> pathsToIncludeInArchive,
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
+      BuildRule buildRule,
       long buildTimeMs) {
+    ProjectFilesystem projectFilesystem = buildRule.getProjectFilesystem();
     NamedTemporaryFile archive;
     try {
       archive =
           getTemporaryArtifactArchive(
-              buildTarget, projectFilesystem, ruleKeys, eventBus, pathsToIncludeInArchive);
+              buildRule, projectFilesystem, ruleKeys, eventBus, pathsToIncludeInArchive);
     } catch (BuckUncheckedExecutionException e) {
       LOG.error(e.getMessage());
       LOG.debug(e.toString() + "\n" + Throwables.getStackTraceAsString(e));
@@ -87,7 +88,7 @@ public class ArtifactUploader {
             ArtifactInfo.builder()
                 .setRuleKeys(ruleKeys)
                 .setMetadata(buildMetadata)
-                .setBuildTarget(buildTarget)
+                .setBuildTarget(buildRule.getBuildTarget())
                 .setBuildTimeMs(buildTimeMs)
                 .build(),
             BorrowablePath.borrowablePath(archive.get()));
@@ -116,7 +117,7 @@ public class ArtifactUploader {
                             t,
                             "When storing RuleKeys %s to the cache for %s.",
                             ruleKeys,
-                            buildTarget);
+                            buildRule.getBuildTarget());
                       }
                     },
                     new HumanReadableExceptionAugmentor(ImmutableMap.of()))
@@ -146,7 +147,7 @@ public class ArtifactUploader {
                               e,
                               "When deleting temporary archive %s for upload of %s.",
                               archive.get(),
-                              buildTarget);
+                              buildRule.getBuildTarget());
                         }
                       },
                       new HumanReadableExceptionAugmentor(ImmutableMap.of()))
@@ -159,14 +160,16 @@ public class ArtifactUploader {
   }
 
   private static NamedTemporaryFile getTemporaryArtifactArchive(
-      BuildTarget buildTarget,
+      BuildRule buildRule,
       ProjectFilesystem projectFilesystem,
       ImmutableSet<RuleKey> ruleKeys,
       BuckEventBus eventBus,
       SortedSet<Path> pathsToIncludeInArchive) {
     ArtifactCompressionEvent.Started started =
-        ArtifactCompressionEvent.started(ArtifactCompressionEvent.Operation.COMPRESS, ruleKeys);
+        ArtifactCompressionEvent.started(
+            ArtifactCompressionEvent.Operation.COMPRESS, ruleKeys, buildRule);
     eventBus.post(started);
+    BuildTarget buildTarget = buildRule.getBuildTarget();
     long compressedSize = 0L;
     long fullSize = 0L;
     try (CloseableHolder<NamedTemporaryFile> archive =
@@ -183,7 +186,8 @@ public class ArtifactUploader {
           buildTarget,
           Joiner.on('\n').join(ImmutableSortedSet.copyOf(pathsToIncludeInArchive)));
     } finally {
-      eventBus.post(ArtifactCompressionEvent.finished(started, fullSize, compressedSize));
+      eventBus.post(
+          ArtifactCompressionEvent.finished(started, fullSize, compressedSize, buildRule));
     }
   }
 

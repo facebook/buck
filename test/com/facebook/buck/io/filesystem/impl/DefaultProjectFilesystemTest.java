@@ -109,7 +109,7 @@ public class DefaultProjectFilesystemTest {
 
     // view should be relative to root
     assertEquals(Paths.get(""), view.projectRoot);
-    assertEquals(filesystem.getRootPath(), view.getRootPath());
+    assertEquals(filesystem.getRootPath().getPath(), view.getRootPath());
     assertEquals(Paths.get(""), view.relativize(tmp.getRoot()));
 
     // view should have no ignores
@@ -603,7 +603,7 @@ public class DefaultProjectFilesystemTest {
     ImmutableSet<Path> ignorePaths =
         FluentIterable.from(filesystem.getIgnorePaths())
             .filter(RecursiveFileMatcher.class)
-            .transform(RecursiveFileMatcher::getPath)
+            .transform(recursiveFileMatcher -> recursiveFileMatcher.getPath().getPath())
             .toSet();
     assertThat(
         ImmutableSortedSet.copyOf(Ordering.natural(), ignorePaths),
@@ -631,7 +631,7 @@ public class DefaultProjectFilesystemTest {
         FluentIterable.from(
                 TestProjectFilesystems.createProjectFilesystem(rootPath, config).getIgnorePaths())
             .filter(RecursiveFileMatcher.class)
-            .transform(RecursiveFileMatcher::getPath)
+            .transform(recursiveFileMatcher -> recursiveFileMatcher.getPath().getPath())
             .toSet();
     assertThat(
         "Cache directory should be in set of ignored paths",

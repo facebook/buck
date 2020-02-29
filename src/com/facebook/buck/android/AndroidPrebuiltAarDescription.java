@@ -24,6 +24,7 @@ import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -109,9 +110,9 @@ public class AndroidPrebuiltAarDescription
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
-    ImmutableSet<Flavor> flavors = buildTarget.getFlavors();
+    FlavorSet flavors = buildTarget.getFlavors();
     if (flavors.contains(AAR_UNZIP_FLAVOR)) {
-      Preconditions.checkState(flavors.size() == 1);
+      Preconditions.checkState(flavors.getSet().size() == 1);
       BuildRuleParams unzipAarParams =
           params
               .withoutDeclaredDeps()
@@ -147,7 +148,7 @@ public class AndroidPrebuiltAarDescription
 
     if (flavors.contains(AAR_PREBUILT_JAR_FLAVOR)) {
       Preconditions.checkState(
-          flavors.size() == 1,
+          flavors.getSet().size() == 1,
           "Expected only flavor to be %s but also found %s",
           AAR_PREBUILT_JAR_FLAVOR,
           flavors);

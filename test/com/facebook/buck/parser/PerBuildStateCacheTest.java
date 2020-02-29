@@ -21,6 +21,7 @@ import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.targetgraph.impl.Package;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -31,7 +32,6 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Optional;
 import org.junit.Assert;
 import org.junit.Before;
@@ -64,25 +64,25 @@ public class PerBuildStateCacheTest {
     childCell = cells.getRootCell().getCell(filesystem.resolve("xplat").toAbsolutePath());
   }
 
-  Package createPackage(Cell cell, Path packageFile) {
+  Package createPackage(Cell cell, AbsPath packageFile) {
     return createPackage(cell, packageFile, PackageMetadata.EMPTY_SINGLETON);
   }
 
   Package createPackage(
       Cell cell,
-      Path packageFile,
+      AbsPath packageFile,
       ImmutableList<String> visibility,
       ImmutableList<String> within_view) {
     return createPackage(cell, packageFile, PackageMetadata.of(visibility, within_view));
   }
 
-  Package createPackage(Cell cell, Path packageFile, PackageMetadata packageMetadata) {
-    return PackageFactory.create(cell, packageFile, packageMetadata, Optional.empty());
+  Package createPackage(Cell cell, AbsPath packageFile, PackageMetadata packageMetadata) {
+    return PackageFactory.create(cell, packageFile.getPath(), packageMetadata, Optional.empty());
   }
 
   @Test
   public void putPackageIfNotPresent() {
-    Path packageFile = filesystem.resolve("Foo");
+    AbsPath packageFile = AbsPath.of(filesystem.resolve("Foo"));
 
     Package pkg = createPackage(cells.getRootCell(), packageFile);
 
@@ -95,7 +95,7 @@ public class PerBuildStateCacheTest {
 
   @Test
   public void lookupPackage() {
-    Path packageFile = filesystem.resolve("Foo");
+    AbsPath packageFile = AbsPath.of(filesystem.resolve("Foo"));
 
     Optional<Package> lookupPackage =
         packageCache.lookupComputedNode(cells.getRootCell(), packageFile, eventBus);
@@ -113,7 +113,7 @@ public class PerBuildStateCacheTest {
 
   @Test
   public void packageInRootCellIsNotInChildCell() {
-    Path packageFile = filesystem.resolve("Foo");
+    AbsPath packageFile = AbsPath.of(filesystem.resolve("Foo"));
 
     // Make sure to create two different packages
     Package pkg1 =

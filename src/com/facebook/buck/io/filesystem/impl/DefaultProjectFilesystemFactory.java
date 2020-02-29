@@ -19,6 +19,7 @@ package com.facebook.buck.io.filesystem.impl;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
 import com.facebook.buck.io.filesystem.GlobPatternMatcher;
@@ -75,7 +76,7 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
     ProjectFilesystemDelegatePair delegatePair =
         ProjectFilesystemDelegateFactory.newInstance(root.getPath(), config);
     return new DefaultProjectFilesystem(
-        root.getPath(),
+        root,
         extractIgnorePaths(root.getPath(), config, buckPaths, embeddedCellBuckOutInfo),
         buckPaths,
         delegatePair.getGeneralDelegate(),
@@ -109,7 +110,7 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
 
     FileSystem rootFs = root.getFileSystem();
 
-    builder.add(RecursiveFileMatcher.of(rootFs.getPath(".idea")));
+    builder.add(RecursiveFileMatcher.of(RelPath.of(rootFs.getPath(".idea"))));
 
     String projectKey = "project";
     String ignoreKey = "ignore";
@@ -159,7 +160,7 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
       if (pathToAdd.isAbsolute()) {
         pathToAdd = root.relativize(pathToAdd);
       }
-      builder.add(RecursiveFileMatcher.of(pathToAdd));
+      builder.add(RecursiveFileMatcher.of(RelPath.of(pathToAdd)));
     }
   }
 

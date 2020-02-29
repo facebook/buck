@@ -124,18 +124,14 @@ public class RuleKeyStressRunnerTest {
     Assert.assertThat(
         lines.subList(0, partition),
         Matchers.contains(
-            expectedPrefixes
-                .subList(0, partition)
-                .stream()
+            expectedPrefixes.subList(0, partition).stream()
                 .map(prefix -> Matchers.startsWith(prefix))
                 .collect(ImmutableList.toImmutableList())));
 
     Assert.assertThat(
         lines.subList(partition, lines.size()),
         Matchers.containsInAnyOrder(
-            expectedPrefixes
-                .subList(partition, expectedPrefixes.size())
-                .stream()
+            expectedPrefixes.subList(partition, expectedPrefixes.size()).stream()
                 .map(prefix -> Matchers.startsWith(prefix))
                 .collect(ImmutableList.toImmutableList())));
   }

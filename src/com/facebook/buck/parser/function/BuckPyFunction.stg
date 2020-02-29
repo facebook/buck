@@ -15,3 +15,21 @@ param(param) ::= "<param.pythonName><if(param.optional)>=None<endif>"
 assign(param) ::= "<param.name:quote()>: <param.pythonName>"
 
 quote(thing) ::= "'<thing>'"
+
+buck_py_attrs(implicit_required_attrs, implicit_optional_attrs, implicit_required_test_attrs, implicit_optional_test_attrs) ::= <<
+IMPLICIT_REQUIRED_ATTRS = set([
+  <implicit_required_attrs:quote();separator=",">
+])
+
+IMPLICIT_OPTIONAL_ATTRS = set([
+  <implicit_optional_attrs:quote();separator=",">
+])
+
+IMPLICIT_REQUIRED_TEST_ATTRS = set([
+  <implicit_required_test_attrs:quote();separator=",">
+])
+
+IMPLICIT_OPTIONAL_TEST_ATTRS = set([
+  <implicit_optional_test_attrs:quote();separator=",">
+])
+>>

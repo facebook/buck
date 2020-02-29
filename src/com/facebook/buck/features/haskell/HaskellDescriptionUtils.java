@@ -106,7 +106,7 @@ public class HaskellDescriptionUtils {
     ExplicitCxxToolFlags.Builder preprocessorFlagsBuilder = CxxToolFlags.explicitBuilder();
 
     preprocessorFlagsBuilder.setPlatformFlags(
-        StringArg.from(CxxSourceTypes.getPlatformPreprocessFlags(cxxPlatform, CxxSource.Type.C)));
+        CxxSourceTypes.getPlatformPreprocessFlags(cxxPlatform, CxxSource.Type.C));
     for (CxxPreprocessorInput preprocessorInput : cxxPreprocessorInputs) {
       builder
           .addAllIncludes(preprocessorInput.getIncludes())
@@ -345,8 +345,7 @@ public class HaskellDescriptionUtils {
                 graphBuilder,
                 platform.getCxxPlatform(),
                 "libempty.a",
-                emptyCompiledModule.getObjects(),
-                /* cacheable */ true));
+                emptyCompiledModule.getObjects()));
     argsBuilder.add(SourcePathArg.of(emptyArchive.getSourcePathToOutput()));
 
     ImmutableList<Arg> args = argsBuilder.build();
@@ -579,17 +578,7 @@ public class HaskellDescriptionUtils {
         haskellPackages.build(),
         prebuiltHaskellPackages.build(),
         hsProfile,
-        platform.getGhciScriptTemplate().get(),
-        argExtraScriptTemplates,
-        platform.getGhciIservScriptTemplate().get(),
-        platform.getGhciBinutils().get(),
-        platform.getGhciGhc().get(),
-        platform.getGhciIServ().get(),
-        platform.getGhciIServProf().get(),
-        platform.getGhciLib().get(),
-        platform.getGhciCxx().get(),
-        platform.getGhciCc().get(),
-        platform.getGhciCpp().get(),
-        platform.getGhciPackager().get());
+        platform,
+        argExtraScriptTemplates);
   }
 }

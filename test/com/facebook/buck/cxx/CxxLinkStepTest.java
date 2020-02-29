@@ -42,7 +42,7 @@ public class CxxLinkStepTest {
             projectFilesystem.getRootPath(),
             ImmutableMap.of(),
             linker,
-            projectFilesystem.getRootPath().resolve("argfile.txt"),
+            projectFilesystem.getRootPath().resolve("argfile.txt").getPath(),
             Paths.get("scratchDir"));
 
     // Verify it uses the expected command.

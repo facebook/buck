@@ -48,14 +48,16 @@ public class ErrorLoggerTest {
 
   @Test
   public void testRuntimeException() {
-    LoggedErrors errors = logException(new RuntimeException("message"), true);
+    LoggedErrors errors = logException(new RuntimeException("message"));
     assertNull(errors.userVisible);
-    assertEquals("java.lang.RuntimeException: message", errors.userVisibleInternal);
+    assertThat(
+        errors.userVisibleInternal.replace("\r\n", "\n"),
+        Matchers.startsWith("java.lang.RuntimeException: message\n\tat "));
   }
 
   @Test
   public void testHumanReadableException() {
-    LoggedErrors errors = logException(new HumanReadableException("message"), true);
+    LoggedErrors errors = logException(new HumanReadableException("message"));
     assertNull(errors.userVisibleInternal);
     assertEquals("message", errors.userVisible);
   }
@@ -63,7 +65,7 @@ public class ErrorLoggerTest {
   @Test
   public void humanReadableExceptionWithDepStack() {
     LoggedErrors errors =
-        logException(new HumanReadableException(DependencyStack.top("//foo:bar"), "message"), true);
+        logException(new HumanReadableException(DependencyStack.top("//foo:bar"), "message"));
     assertNull(errors.userVisibleInternal);
     assertEquals(linesToText("message", "    At //foo:bar"), errors.userVisible);
   }
@@ -73,8 +75,7 @@ public class ErrorLoggerTest {
     LoggedErrors errors =
         logException(
             new HumanReadableException(
-                DependencyStack.top("//foo:bin").child("//bar:lib"), "message"),
-            true);
+                DependencyStack.top("//foo:bin").child("//bar:lib"), "message"));
     assertNull(errors.userVisibleInternal);
     assertEquals(
         linesToText("message", "    At //bar:lib", "    At //foo:bin"), errors.userVisible);
@@ -108,8 +109,7 @@ public class ErrorLoggerTest {
         logException(
             new RuntimeException(
                 new InternalExceptionWithDepStack(
-                    DependencyStack.top("//foo:bin").child("//bar:lib"), "message")),
-            true);
+                    DependencyStack.top("//foo:bin").child("//bar:lib"), "message")));
     // Note that even though ExceptionWithHumanReadableMessage is meant to be
     // a human-readable exception, it is treated as internal error.
     assertThat(
@@ -141,8 +141,7 @@ public class ErrorLoggerTest {
 
   @Test
   public void testWrappedException() {
-    LoggedErrors errors =
-        logException(new TestException(new HumanReadableException("message")), true);
+    LoggedErrors errors = logException(new TestException(new HumanReadableException("message")));
     assertNull(errors.userVisibleInternal);
     assertEquals("message", errors.userVisible);
   }
@@ -150,7 +149,7 @@ public class ErrorLoggerTest {
   @Test
   public void testExecutionException() {
     LoggedErrors errors =
-        logException(new ExecutionException(new HumanReadableException("message")), true);
+        logException(new ExecutionException(new HumanReadableException("message")));
     assertNull(errors.userVisibleInternal);
     assertEquals("message", errors.userVisible);
   }
@@ -158,7 +157,7 @@ public class ErrorLoggerTest {
   @Test
   public void testUncheckedExecutionException() {
     LoggedErrors errors =
-        logException(new UncheckedExecutionException(new HumanReadableException("message")), true);
+        logException(new UncheckedExecutionException(new HumanReadableException("message")));
     assertNull(errors.userVisibleInternal);
     assertEquals("message", errors.userVisible);
   }
@@ -166,7 +165,7 @@ public class ErrorLoggerTest {
   @Test
   public void testWrappedExceptionWithContext() {
     LoggedErrors errors =
-        logException(new TestException(new HumanReadableException("message"), "context"), true);
+        logException(new TestException(new HumanReadableException("message"), "context"));
     assertNull(errors.userVisibleInternal);
     assertEquals(linesToText("message", "    context"), errors.userVisible);
   }
@@ -185,7 +184,7 @@ public class ErrorLoggerTest {
     String expected = linesToText(rawMessage, "    context", "Try adding '}'!");
 
     LoggedErrors errors =
-        logException(new TestException(new HumanReadableException(rawMessage), "context"), true);
+        logException(new TestException(new HumanReadableException(rawMessage), "context"));
     assertNull(errors.userVisibleInternal);
     assertEquals(expected, errors.userVisible);
   }
@@ -201,20 +200,21 @@ public class ErrorLoggerTest {
             "int main() {",
             "\u001B[0;1;32m           ^",
             "\u001B[0m1 error generated.");
-    String expected =
-        linesToText("java.lang.RuntimeException: " + rawMessage, "    context", "Try adding '}'!");
-
     LoggedErrors errors =
-        logException(new TestException(new RuntimeException(rawMessage), "context"), true);
+        logException(new TestException(new RuntimeException(rawMessage), "context"));
     assertNull(errors.userVisible);
-    assertEquals(expected, errors.userVisibleInternal);
+    assertThat(
+        errors.userVisibleInternal,
+        Matchers.containsString("java.lang.RuntimeException: " + rawMessage));
+    assertThat(
+        errors.userVisibleInternal,
+        Matchers.containsString(linesToText("    context", "Try adding '}'!")));
   }
 
   @Test
   public void testInterruptedException() {
     LoggedErrors errors =
-        logException(
-            new TestException(new InterruptedException("This has been interrupted.")), true);
+        logException(new TestException(new InterruptedException("This has been interrupted.")));
 
     assertEquals("Interrupted", errors.userVisible);
     assertNull(errors.userVisibleInternal);
@@ -222,7 +222,7 @@ public class ErrorLoggerTest {
 
   @Test
   public void testClosedByInterruptedException() {
-    LoggedErrors errors = logException(new TestException(new ClosedByInterruptException()), true);
+    LoggedErrors errors = logException(new TestException(new ClosedByInterruptException()));
 
     assertEquals("Interrupted", errors.userVisible);
     assertNull(errors.userVisibleInternal);
@@ -230,36 +230,39 @@ public class ErrorLoggerTest {
 
   @Test
   public void testOutOfMemoryError() {
-    LoggedErrors errors =
-        logException(new TestException(new OutOfMemoryError("No more memory!")), true);
+    LoggedErrors errors = logException(new TestException(new OutOfMemoryError("No more memory!")));
 
     assertNull(errors.userVisible);
-    assertEquals(
-        linesToText(
+    assertThat(
+        errors.userVisibleInternal,
+        Matchers.containsString(
             "Buck ran out of memory, you may consider increasing heap size with java args "
-                + "(see https://buck.build/files-and-dirs/buckjavaargs.html)",
-            "java.lang.OutOfMemoryError: No more memory!"),
-        errors.userVisibleInternal);
+                + "(see https://buck.build/files-and-dirs/buckjavaargs.html)"));
+    assertThat(
+        errors.userVisibleInternal,
+        Matchers.containsString("java.lang.OutOfMemoryError: No more memory!"));
   }
 
   @Test
   public void testFileSystemLoopException() {
     LoggedErrors errors =
-        logException(new TestException(new FileSystemLoopException("It's a loop!")), true);
+        logException(new TestException(new FileSystemLoopException("It's a loop!")));
 
     assertNull(errors.userVisible);
-    assertEquals(
-        linesToText(
+    assertThat(
+        errors.userVisibleInternal,
+        Matchers.containsString(
             "Loop detected in your directory, which may be caused by circular symlink. "
-                + "You may consider running the command in a smaller directory.",
-            "java.nio.file.FileSystemLoopException: It's a loop!"),
-        errors.userVisibleInternal);
+                + "You may consider running the command in a smaller directory."));
+    assertThat(
+        errors.userVisibleInternal,
+        Matchers.containsString("java.nio.file.FileSystemLoopException: It's a loop!"));
   }
 
   @Test
   public void testNoSpaceLeftOnDevice() {
     LoggedErrors errors =
-        logException(new TestException(new IOException("No space left on device xyzzy.")), true);
+        logException(new TestException(new IOException("No space left on device xyzzy.")));
 
     assertEquals("No space left on device xyzzy.", errors.userVisible);
     assertNull(errors.userVisibleInternal);
@@ -267,15 +270,14 @@ public class ErrorLoggerTest {
 
   @Test
   public void handlesIOExceptionWithNoMessage() {
-    LoggedErrors errors =
-        logException(new BuckUncheckedExecutionException(new IOException()), true);
+    LoggedErrors errors = logException(new BuckUncheckedExecutionException(new IOException()));
     assertNull(errors.userVisible);
   }
 
   @Test
   public void testBuckIsDying() {
     LoggedErrors errors =
-        logException(new TestException(new BuckIsDyingException("It's all falling apart.")), true);
+        logException(new TestException(new BuckIsDyingException("It's all falling apart.")));
 
     assertNull(errors.userVisible);
     assertEquals("Failed because buck was already dying", errors.userVisibleInternal);
@@ -284,8 +286,7 @@ public class ErrorLoggerTest {
   @Test
   public void testCommandLineException() {
     LoggedErrors errors =
-        logException(
-            new TestException(new CommandLineException("--foo isn't an argument, silly")), true);
+        logException(new TestException(new CommandLineException("--foo isn't an argument, silly")));
 
     assertEquals("BAD ARGUMENTS: --foo isn't an argument, silly", errors.userVisible);
     assertNull(errors.userVisibleInternal);
@@ -302,14 +303,14 @@ public class ErrorLoggerTest {
 
     assertThat(
         deconstructed.getAugmentedErrorWithContext(
-            false, "    ", new HumanReadableExceptionAugmentor(ImmutableMap.of())),
+            "    ", new HumanReadableExceptionAugmentor(ImmutableMap.of())),
         Matchers.allOf(
             Matchers.containsString("java.io.IOException: okay"),
             Matchers.containsString("    a little more context"),
             Matchers.containsString("    a little context")));
   }
 
-  LoggedErrors logException(Exception e, boolean suppressStackTraces) {
+  LoggedErrors logException(Exception e) {
     LoggedErrors result = new LoggedErrors();
     new ErrorLogger(
             new ErrorLogger.LogImpl() {
@@ -334,7 +335,6 @@ public class ErrorLoggerTest {
             new HumanReadableExceptionAugmentor(
                 ImmutableMap.of(
                     Pattern.compile("main.cpp:1:13: error: expected ('}')"), "Try adding $1!")))
-        .setSuppressStackTraces(suppressStackTraces)
         .logException(e);
     assertTrue(result.userVisibleInternal == null ^ result.userVisible == null);
     assertNotNull(result.verbose);
@@ -365,7 +365,7 @@ public class ErrorLoggerTest {
 
   @Test
   public void fullExceptionStackTraceIsPrinted() {
-    LoggedErrors errors = logException(makeException(), false);
+    LoggedErrors errors = logException(makeException());
     assertNull(errors.userVisible);
     assertNotNull(errors.userVisibleInternal);
 

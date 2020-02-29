@@ -92,7 +92,7 @@ public class SkylarkProjectBuildFileParserTestUtils {
         .setPythonInterpreter("skylark");
   }
 
-  static SkylarkProjectBuildFileParser createParserWithOptions(
+  public static SkylarkProjectBuildFileParser createParserWithOptions(
       SkylarkFilesystem skylarkFilesystem,
       EventHandler eventHandler,
       ProjectBuildFileParserOptions options,

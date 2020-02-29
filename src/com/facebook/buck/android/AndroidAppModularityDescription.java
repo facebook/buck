@@ -28,9 +28,10 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.rules.query.Query;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -81,9 +82,9 @@ public class AndroidAppModularityDescription
   @RuleArg
   interface AbstractAndroidAppModularityDescriptionArg
       extends BuildRuleArg, HasDeclaredDeps, HasApplicationModuleBlacklist {
-    Map<String, List<BuildTarget>> getApplicationModuleConfigs();
+    ImmutableMap<String, ImmutableList<BuildTarget>> getApplicationModuleConfigs();
 
-    Optional<Map<String, List<String>>> getApplicationModuleDependencies();
+    Optional<ImmutableMap<String, ImmutableList<String>>> getApplicationModuleDependencies();
 
     @Hint(isDep = false)
     ImmutableSet<BuildTarget> getNoDx();

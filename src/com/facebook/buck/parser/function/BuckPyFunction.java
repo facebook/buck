@@ -19,15 +19,19 @@ package com.facebook.buck.parser.function;
 import com.facebook.buck.core.description.arg.DataTransferObject;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.visibility.VisibilityAttributes;
+import com.facebook.buck.skylark.function.SkylarkRuleFunctions;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.Comparator;
+import java.util.Map;
 import java.util.function.Supplier;
 import org.stringtemplate.v4.AutoIndentWriter;
 import org.stringtemplate.v4.ST;
@@ -75,9 +79,10 @@ public class BuckPyFunction {
   public String toPythonFunction(RuleType type, Class<? extends DataTransferObject> dtoClass) {
     ImmutableList.Builder<StParamInfo> mandatory = ImmutableList.builder();
     ImmutableList.Builder<StParamInfo> optional = ImmutableList.builder();
-    for (ParamInfo param :
-        ImmutableSortedSet.copyOf(
-            typeCoercerFactory.getConstructorArgDescriptor(dtoClass).getParamInfos().values())) {
+    for (ParamInfo<?> param :
+        typeCoercerFactory.getConstructorArgDescriptor(dtoClass).getParamInfos().values().stream()
+            .sorted(Comparator.comparing(ParamInfo::getName))
+            .collect(ImmutableList.toImmutableList())) {
       if (isSkippable(param)) {
         continue;
       }
@@ -116,7 +121,52 @@ public class BuckPyFunction {
     return stringWriter.toString();
   }
 
-  private boolean isSkippable(ParamInfo param) {
+  private static final ImmutableList<String> UDR_IMPLICIT_REQUIRED_ATTRIBUTES =
+      getUdrImplicits(SkylarkRuleFunctions.IMPLICIT_ATTRIBUTES, true);
+  private static final ImmutableList<String> UDR_IMPLICIT_OPTIONAL_ATTRIBUTES =
+      getUdrImplicits(SkylarkRuleFunctions.IMPLICIT_ATTRIBUTES, false);
+  private static final ImmutableList<String> UDR_IMPLICIT_REQUIRED_TEST_ATTRIBUTES =
+      getUdrImplicits(SkylarkRuleFunctions.IMPLICIT_TEST_ATTRIBUTES, true);;
+  private static final ImmutableList<String> UDR_IMPLICIT_OPTIONAL_TEST_ATTRIBUTES =
+      getUdrImplicits(SkylarkRuleFunctions.IMPLICIT_TEST_ATTRIBUTES, false);
+
+  private static ImmutableList<String> getUdrImplicits(
+      ImmutableMap<String, Attribute<?>> implicitAttributes, boolean requiredParams) {
+    return implicitAttributes.entrySet().stream()
+        .filter(e -> e.getValue().getMandatory() == requiredParams)
+        .map(Map.Entry::getKey)
+        .collect(ImmutableList.toImmutableList());
+  }
+
+  /**
+   * Returns a python string containing all of the default rule parameters that should be made
+   * available to user defined rules in the python build file parser
+   */
+  public String addDefaultAttributes() {
+    STGroup group = buckPyFunctionTemplate.get();
+
+    ST st;
+    // STGroup#getInstanceOf may not be thread safe.
+    // See discussion in: https://github.com/antlr/stringtemplate4/issues/61
+    synchronized (group) {
+      st = group.getInstanceOf("buck_py_attrs");
+    }
+
+    st.add("implicit_required_attrs", UDR_IMPLICIT_REQUIRED_ATTRIBUTES);
+    st.add("implicit_optional_attrs", UDR_IMPLICIT_OPTIONAL_ATTRIBUTES);
+    st.add("implicit_required_test_attrs", UDR_IMPLICIT_REQUIRED_TEST_ATTRIBUTES);
+    st.add("implicit_optional_test_attrs", UDR_IMPLICIT_OPTIONAL_TEST_ATTRIBUTES);
+
+    try {
+      StringWriter stringWriter = new StringWriter();
+      st.write(new AutoIndentWriter(stringWriter, "\n"));
+      return stringWriter.toString();
+    } catch (IOException e) {
+      throw new IllegalStateException("ST writer should not throw with StringWriter", e);
+    }
+  }
+
+  private boolean isSkippable(ParamInfo<?> param) {
     if ("name".equals(param.getName())) {
       if (!String.class.equals(param.getResultClass())) {
         throw new HumanReadableException("'name' parameter must be a java.lang.String");
@@ -143,7 +193,7 @@ public class BuckPyFunction {
     public final String pythonName;
     public final boolean optional;
 
-    public StParamInfo(ParamInfo info) {
+    public StParamInfo(ParamInfo<?> info) {
       this.name = info.getName();
       this.pythonName = info.getPythonName();
       this.optional = info.isOptional();

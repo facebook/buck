@@ -20,6 +20,7 @@ import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
+import com.google.devtools.build.lib.syntax.SkylarkImport;
 import javax.annotation.Nullable;
 
 /**
@@ -68,6 +69,26 @@ public class UserDefinedRuleNames {
           Label.parseAbsolute(identifier.substring(0, idx), ImmutableMap.of()),
           identifier.substring(idx + 1));
     } catch (LabelSyntaxException e) {
+      return null;
+    }
+  }
+
+  /**
+   * Convert a 'buck.type' string into a SkylarkImport object
+   *
+   * @param identifier the result from buck.type
+   * @return A {@link SkylarkImport} object if {@code identifier} is parsable as a UDR identifier,
+   *     else {@code null}
+   */
+  @Nullable
+  public static SkylarkImport importFromIdentifier(String identifier) {
+    int idx = identifier.lastIndexOf(':');
+    if (idx == -1 || idx == identifier.length() - 1) {
+      return null;
+    }
+    try {
+      return SkylarkImport.create(identifier.substring(0, idx));
+    } catch (SkylarkImport.SkylarkImportSyntaxException e) {
       return null;
     }
   }

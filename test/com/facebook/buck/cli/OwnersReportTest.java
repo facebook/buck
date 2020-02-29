@@ -292,7 +292,7 @@ public class OwnersReportTest {
     OwnersReport report =
         OwnersReport.builder(
                 cell.getRootCell(),
-                cell.getRootCell().getRoot(),
+                cell.getRootCell().getRoot().getPath(),
                 TestParserFactory.create(executor.get(), cell.getRootCell()),
                 TestPerBuildStateFactory.create(parser, cell.getRootCell()),
                 Optional.empty())

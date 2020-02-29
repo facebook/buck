@@ -23,8 +23,10 @@ import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.util.Optional;
 
 /** Immutable implementation of {@link UnconfiguredTargetNode}. */
 @BuckStylePrehashedValue
@@ -53,13 +55,29 @@ public abstract class ImmutableUnconfiguredTargetNode implements UnconfiguredTar
   @JsonProperty("withinViewPatterns")
   public abstract ImmutableSet<VisibilityPattern> getWithinViewPatterns();
 
+  @Override
+  @JsonProperty("defaultTargetPlatform")
+  public abstract Optional<UnconfiguredBuildTarget> getDefaultTargetPlatform();
+
+  @Override
+  @JsonProperty("compatibleWith")
+  public abstract ImmutableList<UnconfiguredBuildTarget> getCompatibleWith();
+
   public static UnconfiguredTargetNode of(
       UnconfiguredBuildTarget buildTarget,
       RuleType ruleType,
       ImmutableMap<String, Object> attributes,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
-      ImmutableSet<VisibilityPattern> withinViewPatterns) {
+      ImmutableSet<VisibilityPattern> withinViewPatterns,
+      Optional<UnconfiguredBuildTarget> defaultTargetPlatform,
+      ImmutableList<UnconfiguredBuildTarget> compatibleWith) {
     return ImmutableImmutableUnconfiguredTargetNode.of(
-        buildTarget, ruleType, attributes, visibilityPatterns, withinViewPatterns);
+        buildTarget,
+        ruleType,
+        attributes,
+        visibilityPatterns,
+        withinViewPatterns,
+        defaultTargetPlatform,
+        compatibleWith);
   }
 }

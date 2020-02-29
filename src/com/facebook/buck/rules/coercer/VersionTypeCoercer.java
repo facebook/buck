@@ -16,31 +16,30 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.versions.Version;
+import com.google.common.reflect.TypeToken;
 
-public class VersionTypeCoercer extends LeafTypeCoercer<Version> {
+/** Coerce to {@link Version}. */
+class VersionTypeCoercer extends LeafUnconfiguredOnlyCoercer<Version> {
 
   @Override
-  public Class<Version> getOutputClass() {
-    return Version.class;
+  public TypeToken<Version> getUnconfiguredType() {
+    return TypeToken.of(Version.class);
   }
 
   @Override
-  public Version coerce(
-      CellPathResolver cellRoots,
+  public Version coerceToUnconfigured(
+      CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     if (object instanceof String) {
       return Version.of((String) object);
     }
-    throw CoerceFailedException.simple(object, getOutputClass());
+    throw CoerceFailedException.simple(object, getOutputType());
   }
 }

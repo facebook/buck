@@ -18,7 +18,7 @@ package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.file.LazyPath;
@@ -53,7 +53,7 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
    */
   private static final Logger LOG = Logger.get(HttpArtifactCache.class);
 
-  private final Function<String, UnconfiguredBuildTargetView> unconfiguredBuildTargetFactory;
+  private final Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory;
   private final TargetConfigurationSerializer targetConfigurationSerializer;
 
   public HttpArtifactCache(NetworkCacheArgs args) {

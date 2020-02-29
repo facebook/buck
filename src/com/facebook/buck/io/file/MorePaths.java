@@ -17,7 +17,9 @@
 package com.facebook.buck.io.file;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.BuckUnixPath;
+import com.facebook.buck.core.filesystems.PathWrapper;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.io.windowsfs.WindowsFS;
@@ -120,6 +122,10 @@ public class MorePaths {
     return path1.relativize(path2);
   }
 
+  public static RelPath relativize(PathWrapper path1, PathWrapper path2) {
+    return RelPath.of(relativize(path1.getPath(), path2.getPath()));
+  }
+
   /**
    * Returns a child path relative to a base path. This is similar to `Path.relativize`, but
    * supports base paths that start with "..", even in Java 11. JCL implementations of
@@ -183,6 +189,11 @@ public class MorePaths {
       path = path.normalize();
     }
     return path;
+  }
+
+  /** Type-safer version of {@link #normalize(Path)}. */
+  public static AbsPath normalize(AbsPath path) {
+    return AbsPath.of(normalize(path.getPath()));
   }
 
   /** Return empty path with the same filesystem as provided path */

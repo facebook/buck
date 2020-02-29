@@ -17,6 +17,7 @@
 package com.facebook.buck.features.go;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.shell.ShellStep;
 import com.google.common.collect.ImmutableList;
@@ -33,7 +34,7 @@ public class CGoGenerateImportStep extends ShellStep {
   private final Path outputFile;
 
   public CGoGenerateImportStep(
-      Path workingDirectory,
+      AbsPath workingDirectory,
       ImmutableList<String> cgoCommandPrefix,
       GoPlatform platform,
       Supplier<String> packageName,

@@ -17,6 +17,7 @@
 package com.facebook.buck.infer;
 
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -239,21 +240,25 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
       SourcePathResolverAdapter sourcePathResolverAdapter = buildContext.getSourcePathResolver();
 
       Path scratchDir = filesystem.resolve(outputPathResolver.getTempPath());
-      Path argFilePath = filesystem.relativize(scratchDir.resolve("args.txt"));
-      Path inferOutPath = filesystem.relativize(scratchDir.resolve(INFER_DEFAULT_RESULT_DIR));
+      RelPath argFilePath = filesystem.relativize(scratchDir.resolve("args.txt"));
+      RelPath inferOutPath = filesystem.relativize(scratchDir.resolve(INFER_DEFAULT_RESULT_DIR));
       Path inferJsonReport = inferOutPath.resolve(INFER_JSON_REPORT_FILE);
 
       ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
       // Prepare infer command line arguments and write them to args.txt
       ImmutableList<String> argsBuilder =
-          buildArgs(inferOutPath, filesystem, sourcePathResolverAdapter, outputPathResolver);
+          buildArgs(
+              inferOutPath.getPath(), filesystem, sourcePathResolverAdapter, outputPathResolver);
       steps.add(
           new WriteFileStep(
-              filesystem, Joiner.on(System.lineSeparator()).join(argsBuilder), argFilePath, false));
+              filesystem,
+              Joiner.on(System.lineSeparator()).join(argsBuilder),
+              argFilePath.getPath(),
+              false));
 
       // Prepare and invoke cmd with appropriate environment
-      ImmutableList<String> cmd = buildCommand(argFilePath, sourcePathResolverAdapter);
+      ImmutableList<String> cmd = buildCommand(argFilePath.getPath(), sourcePathResolverAdapter);
       ImmutableMap<String, String> cmdEnv = buildEnv(sourcePathResolverAdapter);
       steps.add(
           new DefaultShellStep(filesystem.getRootPath(), cmd, cmdEnv) {
@@ -324,7 +329,7 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
 
       sources.stream()
           .map(s -> filesystem.relativize(sourcePathResolverAdapter.getAbsolutePath(s)))
-          .map(Path::toString)
+          .map(RelPath::toString)
           .forEach(s -> argsBuilder.add("--sources", s));
 
       addNotEmpty(
@@ -332,7 +337,7 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
           "--classpath",
           classpath.stream()
               .map(s -> filesystem.relativize(sourcePathResolverAdapter.getAbsolutePath(s)))
-              .map(Path::toString)
+              .map(RelPath::toString)
               .collect(Collectors.joining(File.pathSeparator)));
 
       JavacOptions buildTimeOptions =
@@ -350,7 +355,7 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
               () ->
                   bootClasspath.stream()
                       .map(s -> filesystem.relativize(sourcePathResolverAdapter.getAbsolutePath(s)))
-                      .map(Path::toString)
+                      .map(RelPath::toString)
                       .collect(Collectors.joining(File.pathSeparator))));
 
       argsBuilder.add(

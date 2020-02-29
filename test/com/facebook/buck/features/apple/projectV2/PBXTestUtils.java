@@ -92,12 +92,7 @@ public class PBXTestUtils {
         ImmutableMap.builder();
     for (Map.Entry<String, Optional<String>> name : sourcesAndFlags.entrySet()) {
       absolutePathFlagMapBuilder.put(
-          projectFilesystem
-              .getRootPath()
-              .resolve(name.getKey())
-              .toAbsolutePath()
-              .normalize()
-              .toString(),
+          projectFilesystem.getRootPath().resolve(name.getKey()).normalize().toString(),
           name.getValue());
     }
     ImmutableMap<String, Optional<String>> absolutePathFlagMap = absolutePathFlagMapBuilder.build();

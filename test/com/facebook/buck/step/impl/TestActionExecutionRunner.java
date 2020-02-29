@@ -107,7 +107,7 @@ public class TestActionExecutionRunner {
                 .setExecutors(ImmutableMap.of())
                 .setCellPathResolver(TestCellPathResolver.get(projectFilesystem))
                 .setCells(new TestCellBuilder().setFilesystem(projectFilesystem).build())
-                .setBuildCellRootPath(projectFilesystem.getRootPath())
+                .setBuildCellRootPath(projectFilesystem.getRootPath().getPath())
                 .setProcessExecutor(processExecutor)
                 .setProjectFilesystemFactory(projectFilesystemFactory)
                 .build());

@@ -77,8 +77,9 @@ public class ProjectSourcePathResolver {
    */
   public Path resolveSourcePath(SourcePath sourcePath) {
     if (sourcePath instanceof PathSourcePath) {
-      return projectFilesystem.relativize(
-          pathSourcePathResolverAdapter.getAbsolutePath(sourcePath));
+      return projectFilesystem
+          .relativize(pathSourcePathResolverAdapter.getAbsolutePath(sourcePath))
+          .getPath();
     }
     Preconditions.checkArgument(sourcePath instanceof BuildTargetSourcePath);
     BuildTargetSourcePath buildTargetSourcePath = (BuildTargetSourcePath) sourcePath;
@@ -94,7 +95,7 @@ public class ProjectSourcePathResolver {
             "The target '%s' does not have an output.", node.getBuildTarget());
       }
 
-      return projectFilesystem.relativize(output);
+      return projectFilesystem.relativize(output).getPath();
     }
 
     Optional<SourcePath> src = exportFileNode.get().getConstructorArg().getSrc();
@@ -107,7 +108,7 @@ public class ProjectSourcePathResolver {
                       .getPath()
                       .toPath(projectFilesystem.getFileSystem()))
               .resolve(buildTarget.getShortNameAndFlavorPostfix());
-      return projectFilesystem.relativize(output);
+      return projectFilesystem.relativize(output).getPath();
     }
 
     return resolveSourcePath(src.get());

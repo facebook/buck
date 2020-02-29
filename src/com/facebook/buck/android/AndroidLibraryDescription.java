@@ -23,6 +23,7 @@ import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRule;
@@ -52,7 +53,6 @@ import com.facebook.buck.util.MoreFunctions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import java.util.function.Function;
 import org.immutables.value.Value;
@@ -139,7 +139,7 @@ public class AndroidLibraryDescription
             javacFactory,
             buildTarget.getTargetConfiguration());
 
-    ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
+    FlavorSet flavors = buildTarget.getFlavors();
 
     if (flavors.contains(InferNullsafe.INFER_NULLSAFE)) {
       return InferNullsafe.create(

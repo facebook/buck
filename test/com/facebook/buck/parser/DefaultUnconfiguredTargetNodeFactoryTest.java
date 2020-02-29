@@ -23,11 +23,12 @@ import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.impl.Package;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
@@ -36,15 +37,15 @@ import com.facebook.buck.core.select.SelectorKey;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.impl.SelectorFactory;
 import com.facebook.buck.core.select.impl.SelectorListFactory;
+import com.facebook.buck.core.sourcepath.UnconfiguredSourcePathFactoryForTests;
 import com.facebook.buck.parser.api.PackageMetadata;
 import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.parser.syntax.SelectorValue;
-import com.facebook.buck.rules.coercer.JsonTypeConcatenatingCoercerFactory;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import java.util.List;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
@@ -69,14 +70,15 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
         new DefaultUnconfiguredTargetNodeFactory(
             knownRuleTypesProvider,
             new BuiltTargetVerifier(),
-            cell.getRootCell().getCellPathResolver(),
+            cell,
             new SelectorListFactory(
-                new SelectorFactory(new ParsingUnconfiguredBuildTargetViewFactory())));
+                new SelectorFactory(new ParsingUnconfiguredBuildTargetViewFactory())),
+            new DefaultTypeCoercerFactory());
   }
 
   @Test
   public void testCreatePopulatesNode() {
-    UnconfiguredBuildTargetView buildTarget =
+    UnconfiguredBuildTarget buildTarget =
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c");
 
     ImmutableMap<String, Object> inputAttributes =
@@ -103,41 +105,48 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
 
     ImmutableMap<String, Object> expectAttributes =
         ImmutableMap.<String, Object>builder()
-            .put("buck.type", "java_library")
             .put("name", "c")
-            .put("buck.base_path", "a/b")
-            .put("deps", ImmutableList.of("//a/b:d", "//a/b:e"))
+            .put(
+                "deps",
+                ImmutableList.of(
+                    UnconfiguredBuildTargetParser.parse("//a/b:d"),
+                    UnconfiguredBuildTargetParser.parse("//a/b:e")))
             .put(
                 "resources",
                 new SelectorList<>(
-                    JsonTypeConcatenatingCoercerFactory.createForType(List.class),
                     ImmutableList.of(
                         new Selector<>(
                             ImmutableMap.of(
                                 new SelectorKey(
                                     ConfigurationBuildTargetFactoryForTests.newInstance("//c:a")),
-                                ImmutableList.of("//a/b:file1", "//a/b:file2"),
+                                ImmutableList.of(
+                                    UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath(
+                                        "//a/b:file1"),
+                                    UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath(
+                                        "//a/b:file2")),
                                 new SelectorKey(
                                     ConfigurationBuildTargetFactoryForTests.newInstance("//c:b")),
-                                ImmutableList.of("//a/b:file3", "//a/b:file4")),
+                                ImmutableList.of(
+                                    UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath(
+                                        "//a/b:file3"),
+                                    UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath(
+                                        "//a/b:file4"))),
                             ImmutableSet.of(),
                             ""))))
-            .put("visibility", ImmutableList.of("//a/..."))
-            .put("within_view", ImmutableList.of("//b/..."))
             .build();
 
     UnconfiguredTargetNode unconfiguredTargetNode =
         factory.create(
             cell.getRootCell(),
-            cell.getRootCell().getRoot().resolve("a/b/BUCK"),
-            buildTarget.getData(),
+            cell.getRootCell().getRoot().resolve("a/b/BUCK").getPath(),
+            buildTarget,
             DependencyStack.root(),
             inputAttributes,
             getPackage());
 
     assertEquals(
         RuleType.of("java_library", RuleType.Kind.BUILD), unconfiguredTargetNode.getRuleType());
-    assertEquals(buildTarget.getData(), unconfiguredTargetNode.getBuildTarget());
+    assertEquals(buildTarget, unconfiguredTargetNode.getBuildTarget());
 
     assertEquals(expectAttributes, unconfiguredTargetNode.getAttributes());
 
@@ -157,7 +166,7 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
 
     return PackageFactory.create(
         cell.getRootCell(),
-        cell.getRootCell().getRoot().resolve("a/b/BUCK"),
+        cell.getRootCell().getRoot().resolve("a/b/BUCK").getPath(),
         pkg,
         Optional.empty());
   }

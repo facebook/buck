@@ -20,8 +20,10 @@ import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.util.Optional;
 
 /**
  * A target node with attributes kept in a map as oppose to in a structured object like in {@link
@@ -54,4 +56,16 @@ public interface UnconfiguredTargetNode extends ComputeResult {
 
   /** List of patterns from <code>within_view</code> attribute. */
   ImmutableSet<VisibilityPattern> getWithinViewPatterns();
+
+  /**
+   * Value of {@code default_target_platform} attribute. Note this attribute only exists for build
+   * targets.
+   */
+  Optional<UnconfiguredBuildTarget> getDefaultTargetPlatform();
+
+  /**
+   * List of targets from <code>compatible_with</code> attribute. Note method exists for all rules,
+   * while {@code compatible_with} can be defined only for build rules.
+   */
+  ImmutableList<UnconfiguredBuildTarget> getCompatibleWith();
 }

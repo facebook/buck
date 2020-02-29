@@ -41,7 +41,6 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.watchman.WatchmanFactory;
-import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.ParsingContext;
@@ -56,13 +55,10 @@ import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.CloseableResource;
-import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -100,11 +96,6 @@ public class BuckQueryEnvironmentTest {
     return QueryBuildTarget.of(BuildTargetFactory.newInstance(baseName, shortName));
   }
 
-  private static ThrowingCloseableMemoizedSupplier<ManifestService, IOException>
-      getManifestSupplier() {
-    return ThrowingCloseableMemoizedSupplier.of(() -> null, ManifestService::close);
-  }
-
   @Before
   public void setUp() throws IOException {
     executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
@@ -129,13 +120,11 @@ public class BuckQueryEnvironmentTest {
     PerBuildStateFactory perBuildStateFactory =
         new PerBuildStateFactory(
             typeCoercerFactory,
-            new DefaultConstructorArgMarshaller(typeCoercerFactory),
+            new DefaultConstructorArgMarshaller(),
             knownRuleTypesProvider,
             new ParserPythonInterpreterProvider(parserConfig, executableFinder),
             WatchmanFactory.NULL_WATCHMAN,
             eventBus,
-            getManifestSupplier(),
-            new FakeFileHashCache(ImmutableMap.of()),
             new ParsingUnconfiguredBuildTargetViewFactory(),
             UnconfiguredTargetConfiguration.INSTANCE);
     Parser parser =
@@ -151,7 +140,7 @@ public class BuckQueryEnvironmentTest {
     TargetPatternEvaluator targetPatternEvaluator =
         new TargetPatternEvaluator(
             cell.getRootCell(),
-            cell.getRootCell().getRoot(),
+            cell.getRootCell().getRoot().getPath(),
             FakeBuckConfig.builder().build(),
             parser,
             ParsingContext.builder(cell.getRootCell(), executor).build(),
@@ -159,7 +148,7 @@ public class BuckQueryEnvironmentTest {
     OwnersReport.Builder ownersReportBuilder =
         OwnersReport.builder(
             cell.getRootCell(),
-            cell.getRootCell().getRoot(),
+            cell.getRootCell().getRoot().getPath(),
             parser,
             parserState,
             Optional.empty());

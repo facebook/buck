@@ -16,8 +16,10 @@
 
 package com.facebook.buck.features.apple.projectV2;
 
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.rules.args.Arg;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -43,10 +45,12 @@ class CxxPlatformBuildConfiguration {
    * to append {@code appendSettings}.
    */
   public static ImmutableMap<String, String> getGenericTargetBuildSettings(
-      CxxPlatform cxxPlatform, Map<String, String> appendedSettings) {
-    ArrayList<String> cxxFlags = new ArrayList<String>(cxxPlatform.getCxxflags());
-    LinkedHashMap<String, String> mutableAppendedSettings =
-        new LinkedHashMap<String, String>(appendedSettings);
+      CxxPlatform cxxPlatform,
+      Map<String, String> appendedSettings,
+      SourcePathResolverAdapter pathResolver) {
+    ArrayList<String> cxxFlags =
+        new ArrayList<>(Arg.stringify(cxxPlatform.getCxxflags(), pathResolver));
+    LinkedHashMap<String, String> mutableAppendedSettings = new LinkedHashMap<>(appendedSettings);
 
     ImmutableMap.Builder<String, String> settingsBuilder = ImmutableMap.builder();
     getAndSetSdkRootAndDeploymentTargetValues(
@@ -60,11 +64,13 @@ class CxxPlatformBuildConfiguration {
    * and settings to append {@code appendSettings}.
    */
   public static ImmutableMap<String, String> getCxxLibraryBuildSettings(
-      CxxPlatform cxxPlatform, Map<String, String> appendedSettings) {
+      CxxPlatform cxxPlatform,
+      Map<String, String> appendedSettings,
+      SourcePathResolverAdapter pathResolver) {
 
-    ArrayList<String> cxxFlags = new ArrayList<String>(cxxPlatform.getCxxflags());
-    LinkedHashMap<String, String> mutableAppendedSettings =
-        new LinkedHashMap<String, String>(appendedSettings);
+    ArrayList<String> cxxFlags =
+        new ArrayList<>(Arg.stringify(cxxPlatform.getCxxflags(), pathResolver));
+    LinkedHashMap<String, String> mutableAppendedSettings = new LinkedHashMap<>(appendedSettings);
 
     ImmutableMap.Builder<String, String> settingsBuilder = ImmutableMap.builder();
     getAndSetSdkRootAndDeploymentTargetValues(
@@ -83,8 +89,11 @@ class CxxPlatformBuildConfiguration {
    * cxxPlatform} and settings to append {@code appendSettings}.
    */
   public static ImmutableMap<String, ImmutableMap<String, String>> getDefaultBuildConfigurations(
-      CxxPlatform cxxPlatform, Map<String, String> appendedSettings) {
-    ImmutableMap<String, String> config = getCxxLibraryBuildSettings(cxxPlatform, appendedSettings);
+      CxxPlatform cxxPlatform,
+      Map<String, String> appendedSettings,
+      SourcePathResolverAdapter pathResolver) {
+    ImmutableMap<String, String> config =
+        getCxxLibraryBuildSettings(cxxPlatform, appendedSettings, pathResolver);
     return new ImmutableMap.Builder<String, ImmutableMap<String, String>>()
         .put(BuildConfiguration.DEBUG_BUILD_CONFIGURATION_NAME, config)
         .put(BuildConfiguration.PROFILE_BUILD_CONFIGURATION_NAME, config)

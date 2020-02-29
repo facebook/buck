@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -63,13 +64,19 @@ public class ThrowingPackageBoundaryChecker implements PackageBoundaryChecker {
     for (ForwardRelativePath path : paths) {
       if (!isBasePathEmpty && !path.startsWith(basePath)) {
         String formatString = "'%s' in '%s' refers to a parent directory.";
-        warnOrError(enforcing, formatString, basePath.relativize(path), target);
+        warnOrError(
+            enforcing,
+            formatString,
+            basePath
+                .toPath(targetCell.getFilesystem().getFileSystem())
+                .relativize(path.toPath(targetCell.getFilesystem().getFileSystem())),
+            target);
         continue;
       }
 
-      Optional<Path> ancestor =
+      Optional<RelPath> ancestor =
           buildFileTree.getBasePathOfAncestorTarget(
-              path.toPath(targetCell.getFilesystem().getFileSystem()));
+              path.toRelPath(targetCell.getFilesystem().getFileSystem()));
       // It should not be possible for us to ever get an Optional.empty() for this because that
       // would require one of two conditions:
       // 1) The source path references parent directories, which we check for above.
@@ -83,7 +90,7 @@ public class ThrowingPackageBoundaryChecker implements PackageBoundaryChecker {
                 target, path));
       }
 
-      if (!ancestor.get().equals(basePath.toPath(targetCell.getFilesystem().getFileSystem()))) {
+      if (!ancestor.get().equals(basePath.toRelPath(targetCell.getFilesystem().getFileSystem()))) {
         String buildFileName = targetCell.getBuckConfigView(ParserConfig.class).getBuildFileName();
         Path buckFile = ancestor.get().resolve(buildFileName);
         // TODO(cjhopman): If we want to manually split error message lines ourselves, we should

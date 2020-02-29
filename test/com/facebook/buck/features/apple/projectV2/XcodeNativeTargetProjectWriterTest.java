@@ -81,7 +81,7 @@ public class XcodeNativeTargetProjectWriterTest {
     newCellPathResolver =
         CellMappingsFactory.create(
             projectFilesystem.getRootPath(),
-            Configs.createDefaultConfig(projectFilesystem.getRootPath()));
+            Configs.createDefaultConfig(projectFilesystem.getRootPath().getPath()));
     objectFactory = AbstractPBXObjectFactory.DefaultFactory();
   }
 

@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.toolchain.Compiler;
@@ -133,7 +134,7 @@ class CxxPreprocessAndCompileStep implements Step {
 
     env.putAll(
         sanitizer.getCompilationEnvironment(
-            filesystem.getRootPath().toAbsolutePath(), shouldSanitizeOutputBinary()));
+            filesystem.getRootPath().getPath(), shouldSanitizeOutputBinary()));
 
     // Set `TMPDIR` to `scratchDir` so the compiler/preprocessor uses this dir for it's temp and
     // intermediate files.
@@ -150,7 +151,7 @@ class CxxPreprocessAndCompileStep implements Step {
     }
 
     return ProcessExecutorParams.builder()
-        .setDirectory(filesystem.getRootPath().toAbsolutePath())
+        .setDirectory(filesystem.getRootPath().getPath())
         .setRedirectError(ProcessBuilder.Redirect.PIPE)
         .setEnvironment(ImmutableMap.copyOf(env));
   }
@@ -176,7 +177,7 @@ class CxxPreprocessAndCompileStep implements Step {
         .addAll(command.getArguments())
         .addAll(
             sanitizer.getCompilationFlags(
-                compiler, filesystem.getRootPath(), headerPathNormalizer.getPrefixMap()))
+                compiler, filesystem.getRootPath().getPath(), headerPathNormalizer.getPrefixMap()))
         .addAll(
             compiler.outputArgs(
                 useUnixPathSeparator
@@ -391,10 +392,10 @@ class CxxPreprocessAndCompileStep implements Step {
     int exitCode = result.getExitCode();
 
     if (exitCode == 0) {
-      Path path = filesystem.getRootPath().toAbsolutePath().resolve(output);
+      AbsPath path = filesystem.getRootPath().resolve(output);
 
       // Guarantee that the output file exists
-      if (!Files.exists(path)) {
+      if (!Files.exists(path.getPath())) {
         LOG.warn("Execution has exitCode 0 but output file does not exist: %s", path);
       }
 
@@ -403,8 +404,8 @@ class CxxPreprocessAndCompileStep implements Step {
       // above.  This locates the relevant debug section and swaps out the expanded actual
       // compilation directory with the one we really want.
       if (shouldSanitizeOutputBinary()) {
-        sanitizer.restoreCompilationDirectory(path, filesystem.getRootPath().toAbsolutePath());
-        FILE_LAST_MODIFIED_DATE_SCRUBBER.scrubFileWithPath(path);
+        sanitizer.restoreCompilationDirectory(path.getPath(), filesystem.getRootPath().getPath());
+        FILE_LAST_MODIFIED_DATE_SCRUBBER.scrubFileWithPath(path.getPath());
       }
     }
 

@@ -16,12 +16,14 @@
 
 package com.facebook.buck.skylark.parser;
 
+import com.facebook.buck.core.starlark.rule.names.UserDefinedRuleNames;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.BuildFileManifestPojoizer;
 import com.facebook.buck.parser.api.PackageMetadata;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
+import com.facebook.buck.parser.api.UserDefinedRuleLoader;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
@@ -38,11 +40,14 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.events.EventHandler;
+import com.google.devtools.build.lib.syntax.SkylarkImport;
 import com.google.devtools.build.lib.vfs.FileSystem;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -53,7 +58,7 @@ import java.util.Set;
  * Python DSL parser like {@code include_defs}, so use in production at your own risk.
  */
 public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<BuildFileManifest>
-    implements ProjectBuildFileParser {
+    implements ProjectBuildFileParser, UserDefinedRuleLoader {
 
   private static final Logger LOG = Logger.get(SkylarkProjectBuildFileParser.class);
 
@@ -230,5 +235,27 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
     }
 
     return true;
+  }
+
+  @Override
+  public void loadExtensionsForUserDefinedRules(Path buildFile, BuildFileManifest manifest) {
+    ImmutableList<SkylarkImport> extensionsToLoad =
+        manifest.getTargets().values().stream()
+            .map(
+                props -> UserDefinedRuleNames.importFromIdentifier((String) props.get("buck.type")))
+            .filter(Objects::nonNull)
+            .distinct()
+            .collect(ImmutableList.toImmutableList());
+
+    if (extensionsToLoad.isEmpty()) {
+      return;
+    }
+
+    try {
+      Label containingLabel = createContainingLabel(buildFile.getParent().toString());
+      loadExtensions(containingLabel, extensionsToLoad);
+    } catch (IOException | InterruptedException e) {
+      throw BuildFileParseException.createForUnknownParseError("Could not parse %s", buildFile);
+    }
   }
 }

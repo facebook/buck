@@ -45,7 +45,7 @@ public class QueryTargetAccessor {
       String attribute,
       CellNameResolver cellPathResolver) {
     Class<? extends ConstructorArg> constructorArgClass = node.getConstructorArg().getClass();
-    ParamInfo info =
+    ParamInfo<?> info =
         typeCoercerFactory
             .getConstructorArgDescriptor(constructorArgClass)
             .getParamInfos()
@@ -88,7 +88,7 @@ public class QueryTargetAccessor {
       Predicate<Object> predicate,
       CellNameResolver cellNameResolver) {
     Class<? extends ConstructorArg> constructorArgClass = node.getConstructorArg().getClass();
-    ParamInfo info =
+    ParamInfo<?> info =
         typeCoercerFactory
             .getConstructorArgDescriptor(constructorArgClass)
             .getParamInfos()

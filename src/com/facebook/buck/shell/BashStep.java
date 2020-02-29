@@ -17,6 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
@@ -38,6 +39,10 @@ public class BashStep extends ShellStep {
   public BashStep(Path workingDirectory, String... bashCommand) {
     super(workingDirectory);
     this.bashCommand = Joiner.on(' ').join(bashCommand);
+  }
+
+  public BashStep(AbsPath workingDirectory, String... bashCommand) {
+    this(workingDirectory.getPath(), bashCommand);
   }
 
   @Override

@@ -18,6 +18,7 @@ package com.facebook.buck.cli.configurations;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.core.model.BuildTarget;
@@ -28,6 +29,7 @@ import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.MoreStringsForTests;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -117,6 +119,22 @@ public class ConfigurationsIntegrationTest {
                 + "in \"compatible_with\" "
                 + "that do not match the target platform //config:osx_x86-64.\n"
                 + "Target compatible with configurations:\n//config:linux_config"));
+  }
+
+  @Test
+  public void testIncompleteSelectGetsFilteredIfIncompatible() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_target_filtering", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "build",
+            "--target-platforms",
+            "//config:linux_x86_64",
+            "//compatible_with:constrained_select");
+    result.assertSuccess();
+    MatcherAssert.assertThat(result.getStderr(), Matchers.containsString("1 target skipped"));
   }
 
   @Test
@@ -467,7 +485,9 @@ public class ConfigurationsIntegrationTest {
             this, "non_unique_conf_and_flavor_deny", tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand("query", "deps(//...)");
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "query", "-c", "project.buck_out_include_target_config_hash=false", "deps(//...)");
     result.assertFailure();
     MatcherAssert.assertThat(
         result.getStderr(),
@@ -483,13 +503,41 @@ public class ConfigurationsIntegrationTest {
             this, "non_unique_conf_and_flavor_deny", tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckCommand("build", "//...");
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "build", "-c", "project.buck_out_include_target_config_hash=false", "//...");
     result.assertFailure();
     MatcherAssert.assertThat(
         result.getStderr(),
         Matchers.matchesPattern(
             "(?s).*Target //:j has more than one configurations \\(//:p-. and //:p-.\\)"
                 + " with the same set of flavors \\[\\].*"));
+  }
+
+  @Test
+  public void allowNonUniqueConfAndFlavorInQuery() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "non_unique_conf_and_flavor_deny", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("query", "deps(//...)");
+    result.assertSuccess();
+    assertTrue(MoreStrings.lines(result.getStdout()).contains("//:j"));
+    assertTrue(MoreStrings.lines(result.getStdout()).contains("//:k"));
+  }
+
+  @Test
+  public void allowNonUniqueConfAndFlavorInBuild() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "non_unique_conf_and_flavor_deny", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("build", "//...");
+    result.assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally("//:j");
+    workspace.getBuildLog().assertTargetBuiltLocally("//:k");
   }
 
   @Test

@@ -15,6 +15,9 @@
 .fakebuckversion
 /.nobuckcheck
 
+# LogD logs
+/logd-out
+
 # From VSCode@FB language services
 /.lsp-buck-out
 /.lsp.buckd

@@ -60,10 +60,12 @@ import com.facebook.buck.parser.targetnode.BuildTargetToUnconfiguredTargetNodeCo
 import com.facebook.buck.parser.targetnode.UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.coercer.concat.Concatable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Closer;
 import java.io.IOException;
+import java.util.Optional;
 import javax.annotation.Nullable;
 
 /** Factory that creates {@link GraphTransformationEngine} for given parameters */
@@ -108,9 +110,7 @@ public class GraphEngineFactory {
             new DefaultTypeCoercerFactory(),
             params.getConsole(),
             new ParserPythonInterpreterProvider(cell.getBuckConfig(), params.getExecutableFinder()),
-            params.getKnownRuleTypesProvider(),
-            params.getManifestServiceSupplier(),
-            params.getFileHashCache());
+            params.getKnownRuleTypesProvider());
 
     ProjectBuildFileParser buildFileParser =
         projectBuildFileParserFactory.createFileParser(
@@ -134,7 +134,7 @@ public class GraphEngineFactory {
         BuildPackagePathToBuildFileManifestComputation.of(
             buildFileParser,
             cell.getFilesystem().getPath(parserConfig.getBuildFileName()),
-            cell.getRoot(),
+            cell.getRoot().getPath(),
             false);
 
     // COMPOSITION: build target pattern to build file manifest
@@ -147,9 +147,10 @@ public class GraphEngineFactory {
         new DefaultUnconfiguredTargetNodeFactory(
             params.getKnownRuleTypesProvider(),
             new BuiltTargetVerifier(),
-            cell.getCellPathResolver(),
+            cells,
             new SelectorListFactory(
-                new SelectorFactory(params.getUnconfiguredBuildTargetFactory())));
+                new SelectorFactory(params.getUnconfiguredBuildTargetFactory())),
+            params.getTypeCoercerFactory());
 
     BuildTargetToUnconfiguredTargetNodeComputation buildTargetToUnconfiguredTargetNodeComputation =
         BuildTargetToUnconfiguredTargetNodeComputation.of(rawTargetNodeFactory, cell);
@@ -163,7 +164,7 @@ public class GraphEngineFactory {
         new UnconfiguredTargetNodeToTargetNodeFactory(
             params.getTypeCoercerFactory(),
             params.getKnownRuleTypesProvider(),
-            new DefaultConstructorArgMarshaller(params.getTypeCoercerFactory()),
+            new DefaultConstructorArgMarshaller(),
             new TargetNodeFactory(
                 params.getTypeCoercerFactory(),
                 new DefaultCellNameResolverProvider(
@@ -181,6 +182,7 @@ public class GraphEngineFactory {
                   BuildTarget buildTarget,
                   String attributeName,
                   SelectorList<T> selectorList,
+                  Concatable<T> concatable,
                   DependencyStack dependencyStack) {
                 return selectorList.getSelectors().get(0).getDefaultConditionValue();
               }
@@ -188,7 +190,9 @@ public class GraphEngineFactory {
             // TODO: replace with RuleBasedConstraintResolver
             targetPlatformResolver,
             new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver),
-            params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE));
+            params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE),
+            cell.getBuckConfig(),
+            Optional.empty());
 
     UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation
         unconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation =
@@ -224,17 +228,23 @@ public class GraphEngineFactory {
                 new GraphComputationStage<>(patternToPackagePathComputation),
                 new GraphComputationStage<>(
                     directoryListComputation,
-                    params.getGlobalState().getDirectoryListCaches().getUnchecked(cell.getRoot())),
+                    params
+                        .getGlobalState()
+                        .getDirectoryListCaches()
+                        .getUnchecked(cell.getRoot().getPath())),
                 new GraphComputationStage<>(
                     fileTreeComputation,
-                    params.getGlobalState().getFileTreeCaches().getUnchecked(cell.getRoot())),
+                    params
+                        .getGlobalState()
+                        .getFileTreeCaches()
+                        .getUnchecked(cell.getRoot().getPath())),
                 patternToPathComputation.asStage(),
                 new GraphComputationStage<>(
                     packagePathToManifestComputation,
                     params
                         .getGlobalState()
                         .getBuildFileManifestCaches()
-                        .getUnchecked(cell.getRoot())),
+                        .getUnchecked(cell.getRoot().getPath())),
                 new GraphComputationStage<>(buildTargetToUnconfiguredTargetNodeComputation),
                 new GraphComputationStage<>(
                     unconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation),

@@ -18,6 +18,7 @@ package com.facebook.buck.features.rust;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -215,9 +216,9 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
 
       SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
 
-      Path argFilePath =
+      AbsPath argFilePath =
           filesystem.getRootPath().resolve(outputPathResolver.getTempPath("argsfile.txt"));
-      Path fileListPath =
+      AbsPath fileListPath =
           filesystem.getRootPath().resolve(outputPathResolver.getTempPath("filelist.txt"));
 
       ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
@@ -246,14 +247,14 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
                           ent -> resolver.getAbsolutePath(ent.getKey())))));
       steps.addAll(
           CxxPrepareForLinkStep.create(
-              argFilePath,
-              fileListPath,
+              argFilePath.getPath(),
+              fileListPath.getPath(),
               linker.fileList(fileListPath),
               outputPath,
               linkerArgs,
               linker,
               buildTarget.getCell(),
-              filesystem.getRootPath(),
+              filesystem.getRootPath().getPath(),
               resolver));
 
       steps.add(
@@ -320,7 +321,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
                   Maps.transformValues(
                       environment, v -> Arg.stringify(v, buildContext.getSourcePathResolver())));
 
-              Path root = filesystem.getRootPath();
+              AbsPath root = filesystem.getRootPath();
               ForwardRelativePath basePath = buildTarget.getCellRelativeBasePath().getPath();
 
               // These need to be set as absolute paths - the intended use

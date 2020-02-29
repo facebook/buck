@@ -130,7 +130,9 @@ public class BuckGlobalStateFactory {
     } else {
       webServer =
           createWebServer(
-              rootCell.getRootCell().getBuckConfig(), rootCell.getRootCell().getFilesystem());
+              rootCell.getRootCell().getBuckConfig(),
+              rootCell.getRootCell().getFilesystem(),
+              clock);
     }
     if (webServer.isPresent()) {
       Optional<ArtifactCache> servedCache =
@@ -209,7 +211,7 @@ public class BuckGlobalStateFactory {
 
   /** Create a number of instances of {@link BuildFileManifestCache}, one per each cell */
   private static LoadingCache<Path, BuildFileManifestCache> createBuildFileManifestCachePerCellMap(
-      EventBus fileEventBus, CellProvider cellProvider, Path superRootPath) {
+      EventBus fileEventBus, CellProvider cellProvider, AbsPath superRootPath) {
     return CacheBuilder.newBuilder()
         .build(
             new CacheLoader<Path, BuildFileManifestCache>() {
@@ -220,7 +222,7 @@ public class BuckGlobalStateFactory {
                     cell.getBuckConfigView(ParserConfig.class).getBuildFileName();
                 BuildFileManifestCache cache =
                     BuildFileManifestCache.of(
-                        superRootPath,
+                        superRootPath.getPath(),
                         path,
                         cell.getFilesystem().getPath(buildFileName),
                         cell.getFilesystemViewForSourceFiles());
@@ -231,12 +233,12 @@ public class BuckGlobalStateFactory {
   }
 
   private static Optional<WebServer> createWebServer(
-      BuckConfig config, ProjectFilesystem filesystem) {
+      BuckConfig config, ProjectFilesystem filesystem, Clock clock) {
     OptionalInt port = getValidWebServerPort(config);
     if (!port.isPresent()) {
       return Optional.empty();
     }
-    return Optional.of(new WebServer(port.getAsInt(), filesystem));
+    return Optional.of(new WebServer(port.getAsInt(), filesystem, clock));
   }
 
   /**

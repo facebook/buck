@@ -70,7 +70,7 @@ public class WatchmanWatcherIntegrationTest {
     WatchmanFactory watchmanFactory = new WatchmanFactory();
     watchman =
         watchmanFactory.build(
-            ImmutableSet.of(tmp.getRoot()),
+            ImmutableSet.of(AbsPath.of(tmp.getRoot())),
             EnvVariablesProvider.getSystemEnv(),
             new Console(Verbosity.ALL, System.out, System.err, Ansi.withoutTty()),
             new DefaultClock(),

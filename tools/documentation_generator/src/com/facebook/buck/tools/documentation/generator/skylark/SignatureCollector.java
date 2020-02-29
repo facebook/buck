@@ -37,9 +37,7 @@ public class SignatureCollector {
    */
   public static Stream<SkylarkCallable> getSkylarkCallables(Predicate<ClassInfo> classInfoPredicate)
       throws IOException {
-    return ClassPath.from(ClassPath.class.getClassLoader())
-        .getAllClasses()
-        .stream()
+    return ClassPath.from(ClassPath.class.getClassLoader()).getAllClasses().stream()
         .filter(classInfoPredicate)
         .map(ClassInfo::load)
         .flatMap(clazz -> Arrays.stream(clazz.getMethods()))

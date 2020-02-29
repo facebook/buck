@@ -19,9 +19,11 @@ package com.facebook.buck.rules.coercer;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.cell.nameresolver.TestCellNameResolver;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -46,11 +48,11 @@ public class OptionalTypeCoercerTest {
 
   @Test
   public void nullIsAbsent() throws CoerceFailedException {
-    OptionalTypeCoercer<Unit> coercer =
+    OptionalTypeCoercer<Unit, Unit> coercer =
         new OptionalTypeCoercer<>(new IdentityTypeCoercer<>(Unit.class));
     Optional<Unit> result =
-        coercer.coerce(
-            TestCellBuilder.createCellRoots(FILESYSTEM),
+        coercer.coerceBoth(
+            TestCellBuilder.createCellRoots(FILESYSTEM).getCellNameResolver(),
             FILESYSTEM,
             PATH_RELATIVE_TO_PROJECT_ROOT,
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -61,11 +63,11 @@ public class OptionalTypeCoercerTest {
 
   @Test
   public void emptyIsEmpty() throws CoerceFailedException {
-    OptionalTypeCoercer<Unit> coercer =
+    OptionalTypeCoercer<Unit, Unit> coercer =
         new OptionalTypeCoercer<>(new IdentityTypeCoercer<>(Unit.class));
     Optional<Unit> result =
-        coercer.coerce(
-            TestCellBuilder.createCellRoots(FILESYSTEM),
+        coercer.coerceBoth(
+            TestCellBuilder.createCellRoots(FILESYSTEM).getCellNameResolver(),
             FILESYSTEM,
             PATH_RELATIVE_TO_PROJECT_ROOT,
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -76,10 +78,11 @@ public class OptionalTypeCoercerTest {
 
   @Test
   public void nonNullIsPresent() throws CoerceFailedException {
-    OptionalTypeCoercer<String> coercer = new OptionalTypeCoercer<>(new StringTypeCoercer());
+    OptionalTypeCoercer<String, String> coercer =
+        new OptionalTypeCoercer<>(new StringTypeCoercer());
     Optional<String> result =
-        coercer.coerce(
-            TestCellBuilder.createCellRoots(FILESYSTEM),
+        coercer.coerceBoth(
+            TestCellBuilder.createCellRoots(FILESYSTEM).getCellNameResolver(),
             FILESYSTEM,
             PATH_RELATIVE_TO_PROJECT_ROOT,
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -97,7 +100,7 @@ public class OptionalTypeCoercerTest {
 
   @Test
   public void testConcatOfAbsentElementsIsAbsent() {
-    OptionalTypeCoercer<String> coercer =
+    OptionalTypeCoercer<String, String> coercer =
         new OptionalTypeCoercer<>(new IdentityTypeCoercer<>(String.class));
 
     assertFalse(coercer.concat(Arrays.asList(Optional.empty(), Optional.empty())).isPresent());
@@ -105,10 +108,11 @@ public class OptionalTypeCoercerTest {
 
   @Test
   public void testConcatOfPresentNonConcatableElementsIsAbsent() {
-    PairTypeCoercer<String, String> pairTypeCoercer =
+    PairTypeCoercer<String, String, String, String> pairTypeCoercer =
         new PairTypeCoercer<>(
             new IdentityTypeCoercer<>(String.class), new IdentityTypeCoercer<>(String.class));
-    OptionalTypeCoercer<Pair<String, String>> coercer = new OptionalTypeCoercer<>(pairTypeCoercer);
+    OptionalTypeCoercer<?, Pair<String, String>> coercer =
+        new OptionalTypeCoercer<>(pairTypeCoercer);
 
     assertNull(
         coercer.concat(
@@ -117,9 +121,10 @@ public class OptionalTypeCoercerTest {
 
   @Test
   public void testConcatOfPresentConcatableElementsReturnsAggregatedResult() {
-    ListTypeCoercer<String> listTypeCoercer =
+    ListTypeCoercer<String, String> listTypeCoercer =
         new ListTypeCoercer<>(new IdentityTypeCoercer<>(String.class));
-    OptionalTypeCoercer<ImmutableList<String>> coercer = new OptionalTypeCoercer<>(listTypeCoercer);
+    OptionalTypeCoercer<?, ImmutableList<String>> coercer =
+        new OptionalTypeCoercer<>(listTypeCoercer);
 
     assertEquals(
         ImmutableList.of("b", "a", "a", "c"),
@@ -129,5 +134,22 @@ public class OptionalTypeCoercerTest {
                     Optional.of(ImmutableList.of("b", "a")),
                     Optional.of(ImmutableList.of("a", "c"))))
             .get());
+  }
+
+  @Test
+  public void coerceUnconfiguredToConfiguredOptimizedIdentity() throws Exception {
+    OptionalTypeCoercer<String, String> coercer =
+        new OptionalTypeCoercer<>(new StringTypeCoercer());
+
+    Optional<String> input = Optional.of("aaa");
+    Optional<String> coerced =
+        coercer.coerce(
+            TestCellNameResolver.forRoot(),
+            new FakeProjectFilesystem(),
+            ForwardRelativePath.EMPTY,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            input);
+    assertSame(input, coerced);
   }
 }

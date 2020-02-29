@@ -647,7 +647,7 @@ public class AndroidBinaryInstallIntegrationTest {
             .launchAndExecute(
                 ProcessExecutorParams.builder()
                     .setCommand(ImmutableList.of("python", "generate.py"))
-                    .setDirectory(filesystem.getRootPath())
+                    .setDirectory(filesystem.getRootPath().getPath())
                     .build());
     assertEquals(result.getMessageForUnexpectedResult("File generation"), result.getExitCode(), 0);
     ProcessResult installResult = projectWorkspace.runBuckCommand("install", BINARY_TARGET);

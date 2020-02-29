@@ -18,6 +18,7 @@ package com.facebook.buck.features.haskell;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
+import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.rules.tool.config.ToolConfig;
@@ -124,6 +125,10 @@ public class HaskellBuckConfig {
 
   public boolean getSupportExposePackage(String section) {
     return delegate.getBooleanValue(section, "support_expose_package", false);
+  }
+
+  public Optional<ArchiveContents> getArchiveContents(String section) {
+    return delegate.getEnum(section, "archive_contents", ArchiveContents.class);
   }
 
   public Optional<String> getPackageNamePrefix(String section) {

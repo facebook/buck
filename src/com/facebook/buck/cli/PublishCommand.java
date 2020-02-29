@@ -22,7 +22,7 @@ import static com.facebook.buck.jvm.java.Javadoc.DOC_JAR;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.jvm.java.MavenPublishable;
 import com.facebook.buck.maven.Publisher;
@@ -213,7 +213,7 @@ public class PublishCommand extends BuildCommand {
   private ImmutableList<TargetNodeSpec> enhanceFlavorsForPublishing(
       ImmutableList<TargetNodeSpec> specs) {
 
-    Map<UnconfiguredBuildTargetView, TargetNodeSpec> uniqueSpecs = new HashMap<>();
+    Map<UnconfiguredBuildTarget, TargetNodeSpec> uniqueSpecs = new HashMap<>();
     for (TargetNodeSpec spec : specs) {
       if (!(spec instanceof BuildTargetSpec)) {
         throw new IllegalArgumentException(
@@ -221,21 +221,21 @@ public class PublishCommand extends BuildCommand {
       }
 
       BuildTargetSpec targetSpec = (BuildTargetSpec) spec;
-      Objects.requireNonNull(targetSpec.getUnconfiguredBuildTargetView());
+      Objects.requireNonNull(targetSpec.getUnconfiguredBuildTarget());
 
-      UnconfiguredBuildTargetView mavenTarget =
-          targetSpec.getUnconfiguredBuildTargetView().withFlavors(MAVEN_JAR);
+      UnconfiguredBuildTarget mavenTarget =
+          targetSpec.getUnconfiguredBuildTarget().withFlavors(MAVEN_JAR);
       uniqueSpecs.put(mavenTarget, BuildTargetSpec.from(mavenTarget));
 
       if (includeSource) {
-        UnconfiguredBuildTargetView sourceTarget =
-            targetSpec.getUnconfiguredBuildTargetView().withFlavors(MAVEN_JAR, SRC_JAR);
+        UnconfiguredBuildTarget sourceTarget =
+            targetSpec.getUnconfiguredBuildTarget().withFlavors(MAVEN_JAR, SRC_JAR);
         uniqueSpecs.put(sourceTarget, BuildTargetSpec.from(sourceTarget));
       }
 
       if (includeDocs) {
-        UnconfiguredBuildTargetView docsTarget =
-            targetSpec.getUnconfiguredBuildTargetView().withFlavors(MAVEN_JAR, DOC_JAR);
+        UnconfiguredBuildTarget docsTarget =
+            targetSpec.getUnconfiguredBuildTarget().withFlavors(MAVEN_JAR, DOC_JAR);
         uniqueSpecs.put(docsTarget, BuildTargetSpec.from(docsTarget));
       }
     }

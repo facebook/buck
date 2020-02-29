@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -24,11 +23,20 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableCollection;
 import java.util.Collection;
 
-public abstract class CollectionTypeCoercer<C extends ImmutableCollection<T>, T>
-    implements TypeCoercer<C> {
-  private final TypeCoercer<T> elementTypeCoercer;
+/**
+ * Base class for {@link com.google.common.collect.ImmutableCollection} subclasses coercers.
+ *
+ * @param <C> configured collection type
+ * @param <D> unconfigured collection type
+ * @param <T> configured collection element type
+ * @param <U> unconfigured collection element type
+ */
+public abstract class CollectionTypeCoercer<
+        D extends ImmutableCollection<U>, C extends ImmutableCollection<T>, U, T>
+    implements TypeCoercer<D, C> {
+  protected final TypeCoercer<U, T> elementTypeCoercer;
 
-  CollectionTypeCoercer(TypeCoercer<T> elementTypeCoercer) {
+  CollectionTypeCoercer(TypeCoercer<U, T> elementTypeCoercer) {
     this.elementTypeCoercer = elementTypeCoercer;
   }
 
@@ -46,45 +54,42 @@ public abstract class CollectionTypeCoercer<C extends ImmutableCollection<T>, T>
   }
 
   /** Helper method to add coerced elements to the builder. */
-  protected void fill(
-      CellPathResolver cellRoots,
+  protected void fillUnconfigured(
+      CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
-      ImmutableCollection.Builder<T> builder,
+      ImmutableCollection.Builder<U> builder,
       Object object)
       throws CoerceFailedException {
     if (object instanceof Collection) {
       Iterable<?> iterable = (Iterable<?>) object;
-      fill(
-          cellRoots,
-          filesystem,
-          pathRelativeToProjectRoot,
-          targetConfiguration,
-          hostConfiguration,
-          builder,
-          iterable);
+      for (Object element : iterable) {
+        // if any element failed, the entire collection fails
+        U coercedElement =
+            elementTypeCoercer.coerceToUnconfigured(
+                cellNameResolver, filesystem, pathRelativeToProjectRoot, element);
+        builder.add(coercedElement);
+      }
     } else {
-      throw CoerceFailedException.simple(object, getOutputClass());
+      throw CoerceFailedException.simple(object, getOutputType().getType());
     }
   }
 
-  /** Populates collection builder with coerced elements from {@code iterable}. */
-  private void fill(
-      CellPathResolver cellRoots,
+  /** Helper method to add coerced elements to the builder. */
+  protected void fillConfigured(
+      CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       TargetConfiguration hostConfiguration,
       ImmutableCollection.Builder<T> builder,
-      Iterable<?> iterable)
+      D object)
       throws CoerceFailedException {
-    for (Object element : iterable) {
+    for (U element : object) {
       // if any element failed, the entire collection fails
       T coercedElement =
           elementTypeCoercer.coerce(
-              cellRoots,
+              cellNameResolver,
               filesystem,
               pathRelativeToProjectRoot,
               targetConfiguration,

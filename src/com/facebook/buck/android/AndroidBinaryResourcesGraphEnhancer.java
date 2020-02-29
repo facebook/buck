@@ -101,6 +101,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   private final boolean useProtoFormat;
   private final boolean failOnLegacyAapt2Errors;
   private final boolean useAapt2LocaleFiltering;
+  private final ImmutableSet<String> extraFilteredResources;
 
   public AndroidBinaryResourcesGraphEnhancer(
       BuildTarget buildTarget,
@@ -133,7 +134,8 @@ class AndroidBinaryResourcesGraphEnhancer {
       APKModuleGraph apkModuleGraph,
       boolean useProtoFormat,
       boolean failOnLegacyAapt2Errors,
-      boolean useAapt2LocaleFiltering) {
+      boolean useAapt2LocaleFiltering,
+      ImmutableSet<String> extraFilteredResources) {
     this.androidPlatformTarget = androidPlatformTarget;
     this.buildTarget = buildTarget;
     this.projectFilesystem = projectFilesystem;
@@ -165,6 +167,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     this.failOnLegacyAapt2Errors = failOnLegacyAapt2Errors;
     this.noResourceRemoval = noResourceRemoval;
     this.useAapt2LocaleFiltering = useAapt2LocaleFiltering;
+    this.extraFilteredResources = extraFilteredResources;
   }
 
   @BuckStyleValueWithBuilder
@@ -578,7 +581,8 @@ class AndroidBinaryResourcesGraphEnhancer {
         additionalAaptParams,
         androidPlatformTarget.getAndroidJar(),
         useAapt2LocaleFiltering,
-        locales);
+        locales,
+        extraFilteredResources);
   }
 
   public static ImmutableList<Aapt2Compile> createAapt2CompileablesForResourceProvider(

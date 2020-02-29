@@ -1,0 +1,11 @@
+[repositories]
+cell = .
+root = ..
+
+[parser]
+polyglot_parsing_enabled=true
+default_build_file_syntax=PYTHON_DSL
+user_defined_rules=ENABLED
+
+[rule_analysis]
+mode=PROVIDER_COMPATIBLE

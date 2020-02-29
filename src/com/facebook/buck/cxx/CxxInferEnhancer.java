@@ -245,7 +245,7 @@ public final class CxxInferEnhancer {
 
   private ImmutableMap<String, CxxSource> collectSources(
       BuildTarget buildTarget, CxxConstructorArg args) {
-    InferFlavors.checkNoInferFlavors(buildTarget.getFlavors());
+    InferFlavors.checkNoInferFlavors(buildTarget.getFlavors().getSet());
     return CxxDescriptionEnhancer.parseCxxSources(buildTarget, graphBuilder, cxxPlatform, args);
   }
 
@@ -314,7 +314,7 @@ public final class CxxInferEnhancer {
       ImmutableMap<String, CxxSource> sources,
       CxxConstructorArg args) {
 
-    InferFlavors.checkNoInferFlavors(target.getFlavors());
+    InferFlavors.checkNoInferFlavors(target.getFlavors().getSet());
 
     ImmutableMap<Path, SourcePath> headers =
         CxxDescriptionEnhancer.parseHeaders(

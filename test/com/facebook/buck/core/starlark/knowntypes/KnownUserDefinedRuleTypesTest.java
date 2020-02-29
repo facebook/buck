@@ -19,11 +19,8 @@ package com.facebook.buck.core.starlark.knowntypes;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.model.RuleType;
-import com.facebook.buck.core.starlark.rule.SkylarkDescription;
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
 import com.facebook.buck.skylark.function.FakeSkylarkUserDefinedRuleFactory;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
@@ -100,7 +97,7 @@ public class KnownUserDefinedRuleTypesTest {
 
     knownRules.addRule(rule);
 
-    RuleType ruleType = knownRules.getRuleType(rule.getName());
+    RuleType ruleType = knownRules.getDescriptorByName(rule.getName()).getRuleType();
 
     assertEquals(expected, ruleType);
   }
@@ -109,20 +106,7 @@ public class KnownUserDefinedRuleTypesTest {
   public void errorsWhenTryingToGetRuleTypeForNonStoredType() {
     KnownUserDefinedRuleTypes knownRules = new KnownUserDefinedRuleTypes();
 
-    expectedThrown.expect(NullPointerException.class);
-    knownRules.getRuleType("//foo:bar.bzl:");
-  }
-
-  @Test
-  public void returnsCorrectDescription() throws LabelSyntaxException, EvalException {
-    KnownUserDefinedRuleTypes knownRules = new KnownUserDefinedRuleTypes();
-    SkylarkUserDefinedRule rule = FakeSkylarkUserDefinedRuleFactory.createSimpleRule();
-    knownRules.addRule(rule);
-
-    RuleType ruleType = knownRules.getRuleType(rule.getName());
-
-    BaseDescription<?> ret = knownRules.getDescription(ruleType);
-    assertTrue(ret instanceof SkylarkDescription);
-    assertSame(ret, knownRules.getDescription(ruleType));
+    expectedThrown.expect(IllegalStateException.class);
+    knownRules.getDescriptorByName("//foo:bar.bzl:");
   }
 }

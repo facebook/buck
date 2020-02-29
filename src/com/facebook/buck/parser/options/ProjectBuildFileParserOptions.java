@@ -17,6 +17,7 @@
 package com.facebook.buck.parser.options;
 
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rules.providers.impl.BuiltInProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.filesystem.PathMatcher;
@@ -25,16 +26,15 @@ import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.parser.implicit.ImplicitInclude;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import org.immutables.value.Value;
 
 @BuckStyleValueWithBuilder
 public abstract class ProjectBuildFileParserOptions {
-  public abstract Path getProjectRoot();
+  public abstract AbsPath getProjectRoot();
 
-  public abstract ImmutableMap<String, Path> getCellRoots();
+  public abstract ImmutableMap<String, AbsPath> getCellRoots();
 
   public abstract String getPythonInterpreter();
 

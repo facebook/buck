@@ -199,7 +199,7 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
       TestRunningOptions testRunningOptions,
       BuildContext buildContext) {
     return ExternalTestRunnerTestSpec.builder()
-        .setCwd(getProjectFilesystem().getRootPath())
+        .setCwd(getProjectFilesystem().getRootPath().getPath())
         .setTarget(getBuildTarget())
         .setType(type.orElse("custom"))
         .addAllCommand(Arg.stringify(args, buildContext.getSourcePathResolver()))

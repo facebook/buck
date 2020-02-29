@@ -17,14 +17,17 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.reflect.TypeToken;
 
 /** Superclass of coercers for non-collection/map types. */
-public abstract class LeafTypeCoercer<T> implements TypeCoercer<T> {
+public abstract class LeafTypeCoercer<T> implements TypeCoercer<Object, T> {
 
   @Override
   public boolean hasElementClass(Class<?>... types) {
     for (Class<?> type : types) {
-      if (type.isAssignableFrom(getOutputClass())) {
+      if (type.isAssignableFrom(getOutputType().getRawType())) {
         return true;
       }
     }
@@ -34,5 +37,20 @@ public abstract class LeafTypeCoercer<T> implements TypeCoercer<T> {
   @Override
   public void traverse(CellNameResolver cellPathResolver, Object object, Traversal traversal) {
     traversal.traverse(object);
+  }
+
+  @Override
+  public TypeToken<Object> getUnconfiguredType() {
+    return TypeToken.of(Object.class);
+  }
+
+  @Override
+  public Object coerceToUnconfigured(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      Object object)
+      throws CoerceFailedException {
+    return object;
   }
 }

@@ -46,7 +46,7 @@ public class CxxLinkGroupMappingTargetTraversalCoercerTest {
   public void canCoerceTreeTraversalKeyword() throws CoerceFailedException {
     CxxLinkGroupMappingTarget.Traversal traversal =
         coercer.coerce(
-            createCellRoots(filesystem),
+            createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -59,7 +59,7 @@ public class CxxLinkGroupMappingTargetTraversalCoercerTest {
   public void canCoerceNodeTraversalKeyword() throws CoerceFailedException {
     CxxLinkGroupMappingTarget.Traversal traversal =
         coercer.coerce(
-            createCellRoots(filesystem),
+            createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,

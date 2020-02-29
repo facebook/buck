@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.apkmodule.APKModule;
 import java.nio.file.Path;
-import java.util.OptionalInt;
+import java.util.Optional;
 
 /** Specifies how secondary .dex files should be stored in the .apk. */
 enum DexStore {
@@ -95,9 +95,9 @@ enum DexStore {
     return String.format("%d", index + 1);
   }
 
-  public String index(OptionalInt groupIndex, int index) {
+  public String index(Optional<Integer> groupIndex, int index) {
     if (groupIndex.isPresent()) {
-      return String.format("%d_%s", groupIndex.getAsInt(), index(index));
+      return String.format("%d_%s", groupIndex.get(), index(index));
     } else {
       return index(index);
     }

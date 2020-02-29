@@ -150,8 +150,8 @@ public class IjProjectCommandHelper {
       throws IOException, InterruptedException {
     if (updateOnly && projectConfig.getAggregationMode() != AggregationMode.NONE) {
       throw new CommandLineException(
-          "`--regenerate` option is incompatible with IntelliJ"
-              + " module aggregation. In order to use `--regenerate` set `--intellij-aggregation-mode=none`");
+          "`--update` option is incompatible with IntelliJ"
+              + " module aggregation. In order to use `--update` set `--intellij-aggregation-mode=none`");
     }
 
     List<String> targets = arguments;
@@ -419,9 +419,13 @@ public class IjProjectCommandHelper {
         .filter(
             test ->
                 (includePatterns.isEmpty()
-                        || includePatterns.stream().anyMatch(pattern -> pattern.matches(test)))
+                        || includePatterns.stream()
+                            .anyMatch(
+                                pattern -> pattern.matches(test.getUnconfiguredBuildTarget())))
                     && (excludePatterns.isEmpty()
-                        || excludePatterns.stream().noneMatch(pattern -> pattern.matches(test))))
+                        || excludePatterns.stream()
+                            .noneMatch(
+                                pattern -> pattern.matches(test.getUnconfiguredBuildTarget()))))
         .toImmutableSet();
   }
 

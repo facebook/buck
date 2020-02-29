@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
@@ -36,7 +37,7 @@ import java.nio.file.Path;
  */
 public interface Cell {
 
-  ImmutableSortedSet<Path> getKnownRootsOfAllCells();
+  ImmutableSortedSet<AbsPath> getKnownRootsOfAllCells();
 
   CanonicalCellName getCanonicalName();
 
@@ -58,7 +59,7 @@ public interface Cell {
 
   ToolchainProvider getToolchainProvider();
 
-  Path getRoot();
+  AbsPath getRoot();
 
   Cell getCellIgnoringVisibilityCheck(Path cellPath);
 
@@ -74,7 +75,7 @@ public interface Cell {
   ImmutableList<Cell> getAllCells();
 
   /** @return all loaded {@link Cell}s that are children of this {@link Cell}. */
-  ImmutableMap<Path, Cell> getLoadedCells();
+  ImmutableMap<AbsPath, Cell> getLoadedCells();
 
   CellPathResolver getCellPathResolver();
 

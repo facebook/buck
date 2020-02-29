@@ -236,7 +236,7 @@ public class BuildCacheArtifactFetcher {
     // to resolve a Path for a zip entry against a file Path on disk.
     ArtifactCompressionEvent.Started started =
         ArtifactCompressionEvent.started(
-            ArtifactCompressionEvent.Operation.DECOMPRESS, ImmutableSet.of(ruleKey));
+            ArtifactCompressionEvent.Operation.DECOMPRESS, ImmutableSet.of(ruleKey), rule);
     eventBus.post(started);
     long compressedSize = filesystem.getFileSize(zipPath);
     long fullSize = 0L;
@@ -279,7 +279,7 @@ public class BuildCacheArtifactFetcher {
               e.getMessage(), ruleKey),
           e.getCause());
     } finally {
-      eventBus.post(ArtifactCompressionEvent.finished(started, fullSize, compressedSize));
+      eventBus.post(ArtifactCompressionEvent.finished(started, fullSize, compressedSize, rule));
     }
 
     return cacheResult;

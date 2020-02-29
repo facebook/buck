@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -225,7 +226,7 @@ public class GenruleBuildable implements Buildable {
       Optional<Arg> cmdExe,
       Optional<String> type,
       Optional<String> out,
-      Optional<ImmutableMap<String, ImmutableSet<String>>> outs,
+      Optional<ImmutableMap<OutputLabel, ImmutableSet<String>>> outs,
       boolean enableSandboxingInGenrule,
       boolean isCacheable,
       String environmentExpansionSeparator,
@@ -252,13 +253,13 @@ public class GenruleBuildable implements Buildable {
     Preconditions.checkArgument(
         out.isPresent() ^ outs.isPresent(), "Genrule unexpectedly has both 'out' and 'outs'.");
     if (outs.isPresent()) {
-      ImmutableMap<String, ImmutableSet<String>> outputs = outs.get();
+      ImmutableMap<OutputLabel, ImmutableSet<String>> outputs = outs.get();
       ImmutableMap.Builder<OutputLabel, ImmutableSet<String>> outsBuilder =
           ImmutableMap.builderWithExpectedSize(outputs.size() + 1);
       ImmutableMap.Builder<OutputLabel, ImmutableSet<OutputPath>> outputPathsBuilder =
           ImmutableMap.builderWithExpectedSize(outputs.size() + 1);
-      for (Map.Entry<String, ImmutableSet<String>> outputLabelToOutputs : outputs.entrySet()) {
-        OutputLabel outputLabel = OutputLabel.of(outputLabelToOutputs.getKey());
+      for (Map.Entry<OutputLabel, ImmutableSet<String>> outputLabelToOutputs : outputs.entrySet()) {
+        OutputLabel outputLabel = outputLabelToOutputs.getKey();
         outsBuilder.put(outputLabel, outputLabelToOutputs.getValue());
         outputPathsBuilder.put(
             outputLabel,
@@ -270,8 +271,10 @@ public class GenruleBuildable implements Buildable {
                     })
                 .collect(ImmutableSet.toImmutableSet()));
       }
-      outsBuilder.put(OutputLabel.defaultLabel(), DEFAULT_OUTS);
-      outputPathsBuilder.put(OutputLabel.defaultLabel(), DEFAULT_OUTPUTS);
+      if (!outputs.containsKey(OutputLabel.defaultLabel())) {
+        outsBuilder.put(OutputLabel.defaultLabel(), DEFAULT_OUTS);
+        outputPathsBuilder.put(OutputLabel.defaultLabel(), DEFAULT_OUTPUTS);
+      }
       this.outs = Optional.of(outsBuilder.build());
       this.outputPaths = Optional.of(outputPathsBuilder.build());
       this.outputPath = Optional.empty();
@@ -478,8 +481,8 @@ public class GenruleBuildable implements Buildable {
     srcs.forEach(
         (name, src) -> {
           Path absolutePath = pathResolver.getAbsolutePath(src);
-          Path target = filesystem.relativize(absolutePath);
-          links.put(filesystem.getPath(name), target);
+          RelPath target = filesystem.relativize(absolutePath);
+          links.put(filesystem.getPath(name), target.getPath());
         });
   }
 
@@ -518,10 +521,10 @@ public class GenruleBuildable implements Buildable {
                 localPath = relativePath;
               }
 
-              Path target = filesystem.relativize(absolutePath);
-              if (!seenTargets.contains(target)) {
-                seenTargets.add(target);
-                links.put(localPath, target);
+              RelPath target = filesystem.relativize(absolutePath);
+              if (!seenTargets.contains(target.getPath())) {
+                seenTargets.add(target.getPath());
+                links.put(localPath, target.getPath());
               }
             });
   }

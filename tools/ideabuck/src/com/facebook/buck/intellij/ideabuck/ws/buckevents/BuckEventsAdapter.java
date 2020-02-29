@@ -19,7 +19,7 @@ package com.facebook.buck.intellij.ideabuck.ws.buckevents;
 import com.facebook.buck.event.external.events.BuckEventExternalInterface;
 import com.facebook.buck.event.external.events.CompilerErrorEventExternalInterface;
 import com.facebook.buck.event.external.events.ConsoleEventExternalInterface;
-import com.facebook.buck.event.external.events.IndividualTesEventFinishedExternalInterface;
+import com.facebook.buck.event.external.events.IndividualTestEventFinishedExternalInterface;
 import com.facebook.buck.event.external.events.InstallFinishedEventExternalInterface;
 import com.facebook.buck.event.external.events.ProgressEventInterface;
 import com.facebook.buck.event.external.events.StepEventExternalInterface;
@@ -55,7 +55,7 @@ public class BuckEventsAdapter extends HashMap<String, BuckEventHandler> {
     put(CompilerErrorEventExternalInterface.COMPILER_ERROR_EVENT, new BuckCompilerErrorHandler());
     put(ConsoleEventExternalInterface.CONSOLE_EVENT, new BuckConsoleEventHandler());
     put(
-        IndividualTesEventFinishedExternalInterface.INDIVIDUAL_TEST_AWAITING_RESULTS,
+        IndividualTestEventFinishedExternalInterface.INDIVIDUAL_TEST_AWAITING_RESULTS,
         new BuckIndividualTestAwaitingResultsHandler());
     put(InstallFinishedEventExternalInterface.INSTALL_FINISHED, new BuckInstallFinishedHandler());
     put(BuckEventExternalInterface.INSTALL_STARTED, new BuckInstallStartedHandler());
@@ -72,7 +72,7 @@ public class BuckEventsAdapter extends HashMap<String, BuckEventHandler> {
         BuckEventExternalInterface.PROJECT_GENERATION_STARTED,
         new BuckProjectGenerationStartedHandler());
     put(
-        IndividualTesEventFinishedExternalInterface.RESULTS_AVAILABLE,
+        IndividualTestEventFinishedExternalInterface.RESULTS_AVAILABLE,
         new BuckResultsAvailableHandler());
     put(TestRunFinishedEventInterface.RUN_COMPLETE, new BuckTestRunCompleteHandler());
     put(StepEventExternalInterface.STEP_FINISHED, new BuckStepFinishedHandler());

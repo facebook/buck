@@ -1,0 +1,23 @@
+prebuilt_jar(
+    name = "log4j2-api",
+    binary_jar = "log4j-api-2.13.0.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [],
+)
+
+prebuilt_jar(
+    name = "log4j2-core",
+    binary_jar = "log4j-core-2.13.0.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [],
+)

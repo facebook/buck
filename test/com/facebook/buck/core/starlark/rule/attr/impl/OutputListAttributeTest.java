@@ -23,8 +23,8 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactDeclarationException;
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -45,7 +45,8 @@ import org.junit.rules.ExpectedException;
 public class OutputListAttributeTest {
 
   private final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-  private final CellPathResolver cellRoots = TestCellPathResolver.get(filesystem);
+  private final CellNameResolver cellRoots =
+      TestCellPathResolver.get(filesystem).getCellNameResolver();
 
   private final OutputListAttribute attr =
       ImmutableOutputListAttribute.of(ImmutableList.of(), "", true, true);
@@ -192,8 +193,7 @@ public class OutputListAttributeTest {
     thrown.expect(CoerceFailedException.class);
     thrown.expectMessage("may not be empty");
 
-    OutputListAttribute attr =
-        ImmutableOutputListAttribute.of(ImmutableList.of(), "", true, false);
+    OutputListAttribute attr = ImmutableOutputListAttribute.of(ImmutableList.of(), "", true, false);
 
     attr.getValue(
         cellRoots,

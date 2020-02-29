@@ -22,6 +22,7 @@ import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.BuildRule;
@@ -30,6 +31,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.support.build.report.BuildReportConfig;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ErrorLogger;
@@ -56,6 +58,7 @@ public class BuildReport {
   private final Build.BuildExecutionResult buildExecutionResult;
   private final SourcePathResolverAdapter pathResolver;
   private final Cell rootCell;
+  private final boolean removeOutput;
 
   /**
    * @param buildExecutionResult the build result to generate the report for.
@@ -68,6 +71,7 @@ public class BuildReport {
     this.buildExecutionResult = buildExecutionResult;
     this.pathResolver = pathResolver;
     this.rootCell = rootCell;
+    this.removeOutput = rootCell.getBuckConfig().getView(BuildReportConfig.class).getRemoveOutput();
   }
 
   public String generateForConsole(Console console) {
@@ -194,7 +198,9 @@ public class BuildReport {
         // Put both "output" and "outputs" into the build report for backwards compatibility.
         // TODO(irenewchen): Remove "output" after existing parsing uses are removed outside Buck
         // code base.
-        value.put("output", getDefaultOutputPath(rule));
+        if (!removeOutput) {
+          value.put("output", getDefaultOutputPath(rule));
+        }
         value.put("outputs", getMultipleOutputPaths(rule));
       }
       results.put(rule.getFullyQualifiedName(), value);
@@ -219,7 +225,6 @@ public class BuildReport {
                 public void logVerbose(Throwable e) {}
               },
               new HumanReadableExceptionAugmentor(ImmutableMap.of()))
-          .setSuppressStackTraces(true)
           .logException(failure);
       failures.put(failureResult.getRule().getFullyQualifiedName(), messageBuilder.toString());
     }
@@ -256,7 +261,8 @@ public class BuildReport {
         ImmutableSet.Builder<Path> pathBuilderForLabel =
             ImmutableSet.builderWithExpectedSize(sourcePaths.size());
         for (SourcePath sourcePath : sourcePaths) {
-          pathBuilderForLabel.add(relativizeSourcePathToProjectRoot(projectFilesystem, sourcePath));
+          pathBuilderForLabel.add(
+              relativizeSourcePathToProjectRoot(projectFilesystem, sourcePath).getPath());
         }
         allPathsBuilder.put(outputLabel, pathBuilderForLabel.build());
       }
@@ -282,7 +288,8 @@ public class BuildReport {
           ((HasMultipleOutputs) rule).getSourcePathToOutput(OutputLabel.defaultLabel());
       if (defaultPaths != null && defaultPaths.size() == 1) {
         return relativizeSourcePathToProjectRoot(
-            rule.getProjectFilesystem(), Iterables.getOnlyElement(defaultPaths));
+                rule.getProjectFilesystem(), Iterables.getOnlyElement(defaultPaths))
+            .getPath();
       }
       return null;
     }
@@ -295,10 +302,10 @@ public class BuildReport {
     if (outputFile == null) {
       return null;
     }
-    return relativizeSourcePathToProjectRoot(rule.getProjectFilesystem(), outputFile);
+    return relativizeSourcePathToProjectRoot(rule.getProjectFilesystem(), outputFile).getPath();
   }
 
-  private Path relativizeSourcePathToProjectRoot(
+  private RelPath relativizeSourcePathToProjectRoot(
       ProjectFilesystem projectFilesystem, SourcePath sourcePath) {
     Path relativeOutputPath = pathResolver.getRelativePath(sourcePath);
     Path absoluteOutputPath = projectFilesystem.resolve(relativeOutputPath);

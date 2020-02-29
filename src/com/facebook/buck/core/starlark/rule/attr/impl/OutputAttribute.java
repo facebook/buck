@@ -21,8 +21,8 @@ import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.PostCoercionTransform;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
-import com.facebook.buck.rules.coercer.StringTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercer;
+import com.google.common.reflect.TypeToken;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 
 /**
@@ -34,7 +34,8 @@ import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 @BuckStyleValue
 public abstract class OutputAttribute extends Attribute<String> {
 
-  private static final TypeCoercer<String> coercer = new StringTypeCoercer();
+  private static final TypeCoercer<?, String> coercer =
+      TypeCoercerFactoryForStarlark.typeCoercerForType(TypeToken.of(String.class));
 
   @Override
   public abstract Object getPreCoercionDefaultValue();
@@ -51,7 +52,7 @@ public abstract class OutputAttribute extends Attribute<String> {
   }
 
   @Override
-  public TypeCoercer<String> getTypeCoercer() {
+  public TypeCoercer<?, String> getTypeCoercer() {
     return coercer;
   }
 

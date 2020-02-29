@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -229,10 +230,12 @@ public final class CommonRuleKeyHasherTest {
     public static void setupFileSystems() {
       filesystem1 =
           new FakeProjectFilesystem(
-              CanonicalCellName.rootCell(), Paths.get("first", "root").toAbsolutePath());
+              CanonicalCellName.rootCell(),
+              AbsPath.of(Paths.get("first", "root").toAbsolutePath()));
       filesystem2 =
           new FakeProjectFilesystem(
-              CanonicalCellName.rootCell(), Paths.get("other", "root").toAbsolutePath());
+              CanonicalCellName.rootCell(),
+              AbsPath.of(Paths.get("other", "root").toAbsolutePath()));
     }
 
     @Test

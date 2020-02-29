@@ -45,7 +45,8 @@ public class HeaderSymlinkTree extends MappedSymlinkTree {
    * entire buck-out).
    */
   public PathSourcePath getIncludeSourcePath() {
-    return PathSourcePath.of(getProjectFilesystem(), getProjectFilesystem().relativize(getRoot()));
+    return PathSourcePath.of(
+        getProjectFilesystem(), getProjectFilesystem().relativize(getRoot()).getPath());
   }
 
   public Optional<SourcePath> getHeaderMapSourcePath() {

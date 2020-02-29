@@ -62,7 +62,7 @@ public class BuilderParamInfoTest {
 
   @Test
   public void optionalsForAbstractClass() {
-    for (ParamInfo param :
+    for (ParamInfo<?> param :
         ((TypeCoercerFactory) new DefaultTypeCoercerFactory())
             .getConstructorArgDescriptor(DtoWithOptionals.class)
             .getParamInfos()
@@ -73,7 +73,7 @@ public class BuilderParamInfoTest {
 
   @Test
   public void optionalsForInterface() {
-    for (ParamInfo param :
+    for (ParamInfo<?> param :
         ((TypeCoercerFactory) new DefaultTypeCoercerFactory())
             .getConstructorArgDescriptor(DtoWithOptionalsFromInterface.class)
             .getParamInfos()
@@ -88,7 +88,7 @@ public class BuilderParamInfoTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     getParamInfo()
         .set(
-            TestCellPathResolver.get(filesystem),
+            TestCellPathResolver.get(filesystem).getCellNameResolver(),
             filesystem,
             ForwardRelativePath.of("doesnotexist"),
             UnconfiguredTargetConfiguration.INSTANCE,
@@ -114,7 +114,7 @@ public class BuilderParamInfoTest {
     assertEquals("some_string", getParamInfo().getPythonName());
   }
 
-  private ParamInfo getParamInfo() {
+  private ParamInfo<?> getParamInfo() {
     return Iterables.getOnlyElement(
         ((TypeCoercerFactory) new DefaultTypeCoercerFactory())
             .getConstructorArgDescriptor(DtoWithOneParameter.class)

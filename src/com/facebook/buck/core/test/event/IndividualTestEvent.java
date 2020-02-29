@@ -19,7 +19,7 @@ package com.facebook.buck.core.test.event;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.WorkAdvanceEvent;
-import com.facebook.buck.event.external.events.IndividualTesEventFinishedExternalInterface;
+import com.facebook.buck.event.external.events.IndividualTestEventFinishedExternalInterface;
 import com.facebook.buck.test.TestResults;
 
 public abstract class IndividualTestEvent extends AbstractBuckEvent implements WorkAdvanceEvent {
@@ -54,7 +54,7 @@ public abstract class IndividualTestEvent extends AbstractBuckEvent implements W
   }
 
   public static class Finished extends IndividualTestEvent
-      implements IndividualTesEventFinishedExternalInterface<TestResults> {
+      implements IndividualTestEventFinishedExternalInterface<TestResults> {
 
     private final TestResults results;
 

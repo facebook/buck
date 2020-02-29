@@ -45,7 +45,8 @@ public abstract class ConfigIgnoredByDaemon implements ConfigView<BuckConfig> {
         ImmutableMap.builder();
     ignoreFieldsForDaemonRestartBuilder.put(
         "apple", ImmutableSet.of("generate_header_symlink_tree_only"));
-    ignoreFieldsForDaemonRestartBuilder.put("build", ImmutableSet.of("threads"));
+    ignoreFieldsForDaemonRestartBuilder.put(
+        "build", ImmutableSet.of("threads", "delete_temporaries"));
     ignoreFieldsForDaemonRestartBuilder.put(
         "cache",
         ImmutableSet.of(

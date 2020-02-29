@@ -17,6 +17,7 @@
 package com.facebook.buck.features.d;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.shell.ShellStep;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -32,7 +33,7 @@ public class DCompileStep extends ShellStep {
   private final ImmutableCollection<Path> inputs;
 
   public DCompileStep(
-      Path workingDirectory,
+      AbsPath workingDirectory,
       ImmutableMap<String, String> environment,
       ImmutableList<String> compiler,
       ImmutableList<String> flags,

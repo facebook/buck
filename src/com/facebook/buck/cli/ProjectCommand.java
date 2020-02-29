@@ -202,7 +202,7 @@ public class ProjectCommand extends AbstractCommand implements PluginBasedComman
                     .put("BUCK_PROJECT_TARGETS", Joiner.on(" ").join(arguments))
                     .put("BUCK_PROJECT_TYPE", projectIde)
                     .build())
-            .setDirectory(params.getCells().getRootCell().getFilesystem().getRootPath())
+            .setDirectory(params.getCells().getRootCell().getFilesystem().getRootPath().getPath())
             .build();
     ForwardingProcessListener processListener =
         new ForwardingProcessListener(

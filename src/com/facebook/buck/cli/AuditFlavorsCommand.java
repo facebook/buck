@@ -91,7 +91,9 @@ public class AuditFlavorsCommand extends AbstractCommand {
 
       for (BuildTarget target : targets) {
         TargetNode<?> targetNode =
-            params.getParser().getTargetNode(parserState, target, DependencyStack.top(target));
+            params
+                .getParser()
+                .getTargetNodeAssertCompatible(parserState, target, DependencyStack.top(target));
         builder.add(targetNode);
       }
     } catch (BuildFileParseException e) {

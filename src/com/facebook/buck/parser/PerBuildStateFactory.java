@@ -20,12 +20,12 @@ import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.DefaultCellNameResolverProvider;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
 import com.facebook.buck.core.model.platform.impl.ThrowingPlatformResolver;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
-import com.facebook.buck.core.model.tc.factory.TargetConfigurationFactory;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rules.config.impl.ConfigurationRuleSelectableResolver;
@@ -42,21 +42,17 @@ import com.facebook.buck.core.select.impl.UnconfiguredSelectorListResolver;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.log.GlobalStateManager;
-import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.detector.TargetConfigurationDetector;
 import com.facebook.buck.parser.detector.TargetConfigurationDetectorFactory;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.concurrent.CommandThreadFactory;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.MostExecutors;
-import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -65,9 +61,6 @@ import java.util.concurrent.atomic.AtomicLong;
 /** Can be used to create {@link PerBuildState}. */
 public class PerBuildStateFactory {
 
-  private final ThrowingCloseableMemoizedSupplier<ManifestService, IOException>
-      manifestServiceSupplier;
-  private final FileHashLoader fileHashLoader;
   private final TypeCoercerFactory typeCoercerFactory;
   private final ConstructorArgMarshaller marshaller;
   private final KnownRuleTypesProvider knownRuleTypesProvider;
@@ -84,12 +77,8 @@ public class PerBuildStateFactory {
       ParserPythonInterpreterProvider parserPythonInterpreterProvider,
       Watchman watchman,
       BuckEventBus eventBus,
-      ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
-      FileHashLoader fileHashLoader,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       TargetConfiguration hostConfiguration) {
-    this.manifestServiceSupplier = manifestServiceSupplier;
-    this.fileHashLoader = fileHashLoader;
     this.typeCoercerFactory = typeCoercerFactory;
     this.marshaller = marshaller;
     this.knownRuleTypesProvider = knownRuleTypesProvider;
@@ -127,9 +116,7 @@ public class PerBuildStateFactory {
             parserPythonInterpreterProvider,
             parsingContext.isProfilingEnabled(),
             parseProcessedBytes,
-            knownRuleTypesProvider,
-            manifestServiceSupplier,
-            fileHashLoader);
+            knownRuleTypesProvider);
     ProjectBuildFileParserPool projectBuildFileParserPool =
         new ProjectBuildFileParserPool(
             numParsingThreads, // Max parsers to create per cell.
@@ -201,8 +188,9 @@ public class PerBuildStateFactory {
             new DefaultUnconfiguredTargetNodeFactory(
                 knownRuleTypesProvider,
                 new BuiltTargetVerifier(),
-                cells.getRootCell().getCellPathResolver(),
-                selectorListFactory));
+                cells,
+                selectorListFactory,
+                typeCoercerFactory));
 
     PackageBoundaryChecker packageBoundaryChecker =
         new ThrowingPackageBoundaryChecker(daemonicParserState.getBuildFileTrees());
@@ -218,7 +206,9 @@ public class PerBuildStateFactory {
             new ThrowingSelectorListResolver(),
             new ThrowingPlatformResolver(),
             new MultiPlatformTargetConfigurationTransformer(new ThrowingPlatformResolver()),
-            hostConfiguration);
+            hostConfiguration,
+            parsingContext.getCell().getBuckConfig(),
+            Optional.empty());
 
     // This pipeline uses a direct executor instead of pipelineExecutorService to avoid
     // deadlocks happening when too many node are requested from targetNodeParsePipeline.
@@ -234,15 +224,14 @@ public class PerBuildStateFactory {
             "nonresolving_raw_target_node_parse_pipeline",
             enableSpeculativeParsing,
             nonResolvingRawTargetNodeToTargetNodeFactory,
-            parserConfig.getRequireTargetPlatform(),
-            new TargetConfigurationFactory(
-                unconfiguredBuildTargetFactory, cells.getRootCell().getCellPathResolver()));
+            parserConfig.getRequireTargetPlatform());
 
     ConfigurationRuleRegistry configurationRuleRegistry =
         ConfigurationRuleRegistryFactory.createRegistry(
             (target, callerContext) ->
-                nonResolvingTargetNodeParsePipeline.getNode(
-                    cellManager.getCell(target.getCell()), target, callerContext));
+                nonResolvingTargetNodeParsePipeline
+                    .getNode(cellManager.getCell(target.getCell()), target, callerContext)
+                    .assertGetTargetNode(DependencyStack.root()));
 
     SelectableResolver selectableResolver =
         new ConfigurationRuleSelectableResolver(
@@ -267,7 +256,12 @@ public class PerBuildStateFactory {
             configurationRuleRegistry.getTargetPlatformResolver(),
             new MultiPlatformTargetConfigurationTransformer(
                 configurationRuleRegistry.getTargetPlatformResolver()),
-            hostConfiguration);
+            hostConfiguration,
+            parsingContext.getCell().getBuckConfig(),
+            (parsingContext.excludeUnsupportedTargets()
+                    && parsingContext.enableTargetCompatibilityChecks())
+                ? Optional.of(configurationRuleRegistry)
+                : Optional.empty());
 
     ListeningExecutorService configuredPipelineExecutor =
         MoreExecutors.listeningDecorator(
@@ -283,9 +277,7 @@ public class PerBuildStateFactory {
             "configured_raw_target_node_parse_pipeline",
             enableSpeculativeParsing,
             unconfiguredTargetNodeToTargetNodeFactory,
-            parserConfig.getRequireTargetPlatform(),
-            new TargetConfigurationFactory(
-                unconfiguredBuildTargetFactory, cells.getRootCell().getCellPathResolver())) {
+            parserConfig.getRequireTargetPlatform()) {
           @Override
           public void close() {
             super.close();

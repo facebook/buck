@@ -19,9 +19,7 @@ package com.facebook.buck.core.build.engine;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
-import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Preconditions;
-import com.google.common.util.concurrent.ListenableFuture;
 import java.util.Optional;
 import java.util.Set;
 import org.immutables.value.Value;
@@ -40,9 +38,6 @@ public abstract class BuildResult {
 
   public abstract Optional<CacheResult> getCacheResult();
 
-  /** Signals that the cache upload for this rule (if there were one) has completed. */
-  public abstract Optional<ListenableFuture<Unit>> getUploadCompleteFuture();
-
   public abstract Optional<BuildRuleSuccessType> getSuccessOptional();
 
   public abstract Optional<String> getStrategyResult();
@@ -59,9 +54,6 @@ public abstract class BuildResult {
     Preconditions.checkArgument(
         getStatus() != BuildRuleStatus.SUCCESS || getCacheResult().isPresent(),
         "must set a cache result for successes");
-    Preconditions.checkArgument(
-        !getUploadCompleteFuture().isPresent() || getStatus() == BuildRuleStatus.SUCCESS,
-        "upload completion future should only be provided for successes");
     Preconditions.checkArgument(
         (getStatus() == BuildRuleStatus.FAIL || getStatus() == BuildRuleStatus.CANCELED)
             == getFailureOptional().isPresent(),
@@ -81,16 +73,6 @@ public abstract class BuildResult {
   public static BuildResult success(
       BuildRule rule, BuildRuleSuccessType success, CacheResult cacheResult) {
     return successBuilder(rule, success, cacheResult).build();
-  }
-
-  public static BuildResult success(
-      BuildRule rule,
-      BuildRuleSuccessType success,
-      CacheResult cacheResult,
-      ListenableFuture<Unit> uploadCompleteFuture) {
-    return successBuilder(rule, success, cacheResult)
-        .setUploadCompleteFuture(uploadCompleteFuture)
-        .build();
   }
 
   public static BuildResult failure(BuildRule rule, Throwable failure) {

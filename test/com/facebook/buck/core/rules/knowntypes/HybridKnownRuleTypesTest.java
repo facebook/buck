@@ -70,22 +70,22 @@ public class HybridKnownRuleTypesTest {
 
     assertEquals(
         RuleType.of("known_rule_test", RuleType.Kind.BUILD),
-        knownTypes.getRuleType("known_rule_test"));
+        knownTypes.getDescriptorByName("known_rule_test").getRuleType());
     assertEquals(
         RuleType.of("//foo:bar.bzl:baz_rule", RuleType.Kind.BUILD),
-        knownTypes.getRuleType("//foo:bar.bzl:baz_rule"));
+        knownTypes.getDescriptorByName("//foo:bar.bzl:baz_rule").getRuleType());
     assertEquals(
         RuleType.of("@repo//foo:bar.bzl:other_baz_rule", RuleType.Kind.BUILD),
-        knownTypes.getRuleType("@repo//foo:bar.bzl:other_baz_rule"));
+        knownTypes.getDescriptorByName("@repo//foo:bar.bzl:other_baz_rule").getRuleType());
   }
 
   @Test
   public void errorsIfNoRuleWithIdentifierExists() {
     KnownRuleTypes knownTypes = new HybridKnownRuleTypes(nativeRuleTypes, userDefinedRuleTypes);
 
-    expected.expect(NullPointerException.class);
+    expected.expect(RuntimeException.class);
 
-    knownTypes.getRuleType("//foo:bar.bzl:invalid_rule");
+    knownTypes.getDescriptorByName("//foo:bar.bzl:invalid_rule").getRuleType();
   }
 
   @Test
@@ -93,23 +93,25 @@ public class HybridKnownRuleTypesTest {
     KnownRuleTypes knownTypes = new HybridKnownRuleTypes(nativeRuleTypes, userDefinedRuleTypes);
 
     BaseDescription<?> foundDescription =
-        knownTypes.getDescription(knownTypes.getRuleType("known_rule_test"));
+        knownTypes.getDescriptorByName("known_rule_test").getDescription();
     assertEquals(KnownRuleTestDescription.class, foundDescription.getClass());
 
     assertEquals(
         SkylarkDescription.class,
-        knownTypes.getDescription(knownTypes.getRuleType("//foo:bar.bzl:baz_rule")).getClass());
+        knownTypes.getDescriptorByName("//foo:bar.bzl:baz_rule").getDescription().getClass());
   }
 
   @Test
   public void returnsSkylarkDescriptionArgBuilderForUserDefinedRule() {
     KnownRuleTypes knownTypes = new HybridKnownRuleTypes(nativeRuleTypes, userDefinedRuleTypes);
-    RuleType ruleType = knownTypes.getRuleType("//foo:bar.bzl:baz_rule");
+    RuleType ruleType = knownTypes.getDescriptorByName("//foo:bar.bzl:baz_rule").getRuleType();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     DefaultTypeCoercerFactory factory = new DefaultTypeCoercerFactory();
 
     DataTransferObjectDescriptor<SkylarkDescriptionArg> argDescriptor =
-        knownTypes.getConstructorArgDescriptor(factory, ruleType, SkylarkDescriptionArg.class);
+        knownTypes
+            .getDescriptorByNameChecked(ruleType.getName(), SkylarkDescriptionArg.class)
+            .dataTransferObjectDescriptor(factory);
     SkylarkDescriptionArgBuilder builder =
         (SkylarkDescriptionArgBuilder) argDescriptor.getBuilderFactory().get();
     builder.setPostCoercionValue("baz", "value");
@@ -124,13 +126,14 @@ public class HybridKnownRuleTypesTest {
   @Test
   public void returnsImmutableDescriptionArgBuilderForNativeRule() {
     KnownRuleTypes knownTypes = new HybridKnownRuleTypes(nativeRuleTypes, userDefinedRuleTypes);
-    RuleType ruleType = knownTypes.getRuleType("known_rule_test");
+    RuleType ruleType = knownTypes.getDescriptorByName("known_rule_test").getRuleType();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     DefaultTypeCoercerFactory factory = new DefaultTypeCoercerFactory();
 
     DataTransferObjectDescriptor<KnownRuleTestDescriptionArg> argDescriptor =
-        knownTypes.getConstructorArgDescriptor(
-            factory, ruleType, KnownRuleTestDescriptionArg.class);
+        knownTypes
+            .getDescriptorByNameChecked(ruleType.getName(), KnownRuleTestDescriptionArg.class)
+            .dataTransferObjectDescriptor(factory);
 
     KnownRuleTestDescriptionArg.Builder builder =
         (KnownRuleTestDescriptionArg.Builder) argDescriptor.getBuilderFactory().get();

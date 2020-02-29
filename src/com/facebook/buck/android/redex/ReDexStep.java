@@ -20,6 +20,7 @@ import com.facebook.buck.android.KeystoreProperties;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -52,7 +53,7 @@ public class ReDexStep extends ShellStep {
 
   @VisibleForTesting
   ReDexStep(
-      Path workingDirectory,
+      AbsPath workingDirectory,
       AndroidSdkLocation androidSdkLocation,
       List<String> redexBinaryArgs,
       Map<String, String> redexEnvironmentVariables,

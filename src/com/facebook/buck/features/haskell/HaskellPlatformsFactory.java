@@ -58,6 +58,8 @@ public class HaskellPlatformsFactory {
         .setShouldUsedOldBinaryOutputLocation(
             haskellBuckConfig.getShouldUsedOldBinaryOutputLocation(section))
         .setSupportExposePackage(haskellBuckConfig.getSupportExposePackage(section))
+        .setArchiveContents(
+            haskellBuckConfig.getArchiveContents(section).orElse(cxxPlatform.getArchiveContents()))
         .setPackageNamePrefix(haskellBuckConfig.getPackageNamePrefix(section))
         .setGhciScriptTemplate(haskellBuckConfig.getGhciScriptTemplate(section))
         .setGhciIservScriptTemplate(haskellBuckConfig.getGhciIservScriptTemplate(section))

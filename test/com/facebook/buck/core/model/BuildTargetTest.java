@@ -26,8 +26,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.hamcrest.Matchers;
@@ -89,7 +87,7 @@ public class BuildTargetTest {
     BuildTarget target =
         BuildTargetFactory.newInstance("//foo/bar", "baz", InternalFlavor.of("d8"));
     assertEquals("baz#d8", target.getShortNameAndFlavorPostfix());
-    assertEquals(ImmutableSortedSet.of(InternalFlavor.of("d8")), target.getFlavors());
+    assertEquals(FlavorSet.of(InternalFlavor.of("d8")), target.getFlavors());
     assertTrue(target.isFlavored());
   }
 
@@ -97,7 +95,7 @@ public class BuildTargetTest {
   public void testBuildTargetWithoutFlavor() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo/bar", "baz");
     assertEquals(target.getShortNameAndFlavorPostfix(), "baz");
-    assertEquals(ImmutableSortedSet.<Flavor>of(), target.getFlavors());
+    assertEquals(FlavorSet.NO_FLAVORS, target.getFlavors());
     assertFalse(target.isFlavored());
   }
 
@@ -130,7 +128,7 @@ public class BuildTargetTest {
   @Test
   public void testFlavorDefaultsToNoneIfNotSet() {
     assertEquals(
-        ImmutableSet.<Flavor>of(), BuildTargetFactory.newInstance("//foo/bar", "baz").getFlavors());
+        FlavorSet.NO_FLAVORS, BuildTargetFactory.newInstance("//foo/bar", "baz").getFlavors());
   }
 
   @Test
@@ -157,7 +155,7 @@ public class BuildTargetTest {
     BuildTarget flavoredTarget = BuildTargetFactory.newInstance("//foo/bar", "baz", biz);
     BuildTarget appendedFlavor = flavoredTarget.withAppendedFlavors(aaa);
     assertThat(appendedFlavor, Matchers.not(Matchers.equalTo(flavoredTarget)));
-    ImmutableSortedSet<Flavor> expectedFlavors = ImmutableSortedSet.of(biz, aaa);
+    FlavorSet expectedFlavors = FlavorSet.of(biz, aaa);
     assertThat(appendedFlavor.getFlavors(), Matchers.equalTo(expectedFlavors));
   }
 

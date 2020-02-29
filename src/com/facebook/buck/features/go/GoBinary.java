@@ -18,6 +18,7 @@ package com.facebook.buck.features.go;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -165,13 +166,13 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     // cxxLinkerArgs comes from cgo rules and are reuqired for cxx deps linking
     ImmutableList.Builder<String> externalLinkerFlags = ImmutableList.builder();
     if (linkMode == GoLinkStep.LinkMode.EXTERNAL) {
-      Path argFilePath =
+      AbsPath argFilePath =
           getProjectFilesystem()
               .getRootPath()
               .resolve(
                   BuildTargetPaths.getScratchPath(
                       getProjectFilesystem(), getBuildTarget(), "%s.argsfile"));
-      Path fileListPath =
+      AbsPath fileListPath =
           getProjectFilesystem()
               .getRootPath()
               .resolve(
@@ -179,21 +180,21 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
                       getProjectFilesystem(), getBuildTarget(), "%s__filelist.txt"));
       steps.addAll(
           CxxPrepareForLinkStep.create(
-              argFilePath,
-              fileListPath,
+              argFilePath.getPath(),
+              fileListPath.getPath(),
               cxxLinker.fileList(fileListPath),
               output,
               cxxLinkerArgs,
               cxxLinker,
               getBuildTarget().getCell(),
-              getProjectFilesystem().getRootPath(),
+              getProjectFilesystem().getRootPath().getPath(),
               resolver));
       externalLinkerFlags.add(String.format("@%s", argFilePath));
     }
 
     steps.add(
         new GoLinkStep(
-            getProjectFilesystem().getRootPath(),
+            getProjectFilesystem().getRootPath().getPath(),
             getEnvironment(context),
             cxxLinker.getCommandPrefix(resolver),
             linker.getCommandPrefix(resolver),

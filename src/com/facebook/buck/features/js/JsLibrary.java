@@ -18,7 +18,7 @@ package com.facebook.buck.features.js;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -116,7 +116,7 @@ public class JsLibrary extends ModernBuildRule<JsLibrary.JsLibraryImpl> {
     @Override
     ObjectBuilder getJobArgs(
         SourcePathResolverAdapter resolver, Path outputPath, ProjectFilesystem filesystem) {
-      ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
+      FlavorSet flavors = buildTarget.getFlavors();
 
       return JsonBuilder.object()
           .addString("command", "library-dependencies")
@@ -208,7 +208,7 @@ public class JsLibrary extends ModernBuildRule<JsLibrary.JsLibraryImpl> {
     @Override
     ObjectBuilder getJobArgs(
         SourcePathResolverAdapter resolver, Path outputPath, ProjectFilesystem filesystem) {
-      ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
+      FlavorSet flavors = buildTarget.getFlavors();
 
       return JsonBuilder.object()
           .addString("command", "library-files")

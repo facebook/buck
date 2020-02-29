@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.sourcepath;
 
+import com.facebook.buck.core.filesystems.PathWrapper;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import java.nio.file.Path;
@@ -32,6 +33,10 @@ public final class FakeSourcePath {
 
   public static PathSourcePath of(Path path) {
     return of(new FakeProjectFilesystem(), path);
+  }
+
+  public static PathSourcePath of(PathWrapper path) {
+    return of(path.getPath());
   }
 
   public static PathSourcePath of(ProjectFilesystem filesystem, Path path) {

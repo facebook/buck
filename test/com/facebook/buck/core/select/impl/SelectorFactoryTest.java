@@ -51,7 +51,7 @@ public class SelectorFactoryTest {
   public void testCanCreateEmptySelector() {
     Selector<Object> selector =
         selectorFactory.createSelector(
-            TestCellPathResolver.get(projectFilesystem),
+            TestCellPathResolver.get(projectFilesystem).getCellNameResolver(),
             ForwardRelativePath.of(""),
             ImmutableMap.of());
 
@@ -62,7 +62,7 @@ public class SelectorFactoryTest {
   public void testCanCreateSelectorWithDefaultValue() {
     Selector<Object> selector =
         selectorFactory.createSelector(
-            TestCellPathResolver.get(projectFilesystem),
+            TestCellPathResolver.get(projectFilesystem).getCellNameResolver(),
             ForwardRelativePath.of(""),
             ImmutableMap.of("DEFAULT", "flavor1", "//:a", "flavor2"));
 
@@ -80,7 +80,7 @@ public class SelectorFactoryTest {
   public void testCanCreateSelectorWithoutDefaultValues() {
     Selector<Object> selector =
         selectorFactory.createSelector(
-            TestCellPathResolver.get(projectFilesystem),
+            TestCellPathResolver.get(projectFilesystem).getCellNameResolver(),
             ForwardRelativePath.of(""),
             ImmutableMap.of("//:z", "flavor1", "//:a", "flavor2"));
 
@@ -98,7 +98,7 @@ public class SelectorFactoryTest {
   public void testCanCreateSelectorWithOnlyDefaultValue() {
     Selector<Object> selector =
         selectorFactory.createSelector(
-            TestCellPathResolver.get(projectFilesystem),
+            TestCellPathResolver.get(projectFilesystem).getCellNameResolver(),
             ForwardRelativePath.of(""),
             ImmutableMap.of("DEFAULT", "flavor1"));
 
@@ -114,7 +114,7 @@ public class SelectorFactoryTest {
   public void testCanCreateSelectorWithNoneValues() throws CoerceFailedException {
     Selector<Object> selector =
         selectorFactory.createSelector(
-            TestCellPathResolver.get(projectFilesystem),
+            TestCellPathResolver.get(projectFilesystem).getCellNameResolver(),
             ForwardRelativePath.of(""),
             ImmutableMap.of("//:z", Runtime.NONE, "//:a", "flavor2"));
 

@@ -22,6 +22,7 @@ import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.android.aapt.RDotTxtEntry.IdType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
@@ -205,10 +206,10 @@ public class MergeAndroidResourcesStep implements Step {
       ImmutableMap.Builder<Path, HasAndroidResourceDeps> symbolsFileToResourceDeps =
           ImmutableMap.builder();
       for (HasAndroidResourceDeps res : androidResourceDeps) {
-        Path rDotTxtPath =
+        RelPath rDotTxtPath =
             filesystem.relativize(pathResolver.getAbsolutePath(res.getPathToTextSymbolsFile()));
-        rDotTxtToPackage.put(rDotTxtPath, res.getRDotJavaPackage());
-        symbolsFileToResourceDeps.put(rDotTxtPath, res);
+        rDotTxtToPackage.put(rDotTxtPath.getPath(), res.getRDotJavaPackage());
+        symbolsFileToResourceDeps.put(rDotTxtPath.getPath(), res);
       }
       Optional<ImmutableMap<RDotTxtEntry, String>> uberRDotTxtIds;
       if (uberRDotTxt.isEmpty()) {

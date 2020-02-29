@@ -390,7 +390,7 @@ public class WorkspaceAndProjectGenerator {
     requiredBuildTargetsBuilder.addAll(result.getRequiredBuildTargets());
     ImmutableSortedSet<Path> relativeXcconfigPaths =
         result.getXcconfigPaths().stream()
-            .map((Path p) -> rootCell.getFilesystem().relativize(p))
+            .map((Path p) -> rootCell.getFilesystem().relativize(p).getPath())
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
     xcconfigPathsBuilder.addAll(relativeXcconfigPaths);
     filesToCopyInXcodeBuilder.addAll(result.getFilesToCopyInXcode());
@@ -602,7 +602,7 @@ public class WorkspaceAndProjectGenerator {
           TargetNode<?> targetNode = projectGraph.get(buildTarget);
 
           schemeConfigsBuilder.put(
-              extensionSchemeName, createImplicitExtensionWorkspaceArgs(buildTarget));
+              extensionSchemeName, createImplicitExtensionWorkspaceArgs(sourceBuildTarget));
 
           schemeNameToSrcTargetNodeBuilder.put(extensionSchemeName, Optional.of(sourceTargetNode));
           schemeNameToSrcTargetNodeBuilder.put(extensionSchemeName, Optional.of(targetNode));
@@ -697,7 +697,6 @@ public class WorkspaceAndProjectGenerator {
       boolean includeDependenciesTests,
       ImmutableSet<TargetNode<?>> orderedTargetNodes,
       ImmutableSet<TargetNode<AppleTestDescriptionArg>> extraTestBundleTargets) {
-    LOG.debug("Getting ordered test target nodes for %s", orderedTargetNodes);
     ImmutableSet.Builder<TargetNode<AppleTestDescriptionArg>> testsBuilder = ImmutableSet.builder();
     if (includeProjectTests) {
       Optional<TargetNode<?>> mainTargetNode = Optional.empty();
@@ -960,7 +959,7 @@ public class WorkspaceAndProjectGenerator {
         wasCreatedForAppExtension,
         runnablePath,
         remoteRunnablePath,
-        XcodeWorkspaceConfigDescription.getActionConfigNamesFromArg(workspaceArguments),
+        XcodeWorkspaceConfigDescription.getActionConfigNamesFromArg(schemeConfigArg),
         targetToProjectPathMap,
         environmentVariables,
         additionalSchemeActions,

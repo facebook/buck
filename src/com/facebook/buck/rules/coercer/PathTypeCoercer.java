@@ -16,17 +16,18 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.reflect.TypeToken;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.nio.file.Path;
 
-public class PathTypeCoercer extends LeafTypeCoercer<Path> {
+/** Coerce to {@link java.nio.file.Path}. */
+public class PathTypeCoercer extends LeafUnconfiguredOnlyCoercer<Path> {
 
   private final LoadingCache<Path, LoadingCache<String, Path>> pathCache =
       CacheBuilder.newBuilder()
@@ -41,17 +42,15 @@ public class PathTypeCoercer extends LeafTypeCoercer<Path> {
                   }));
 
   @Override
-  public Class<Path> getOutputClass() {
-    return Path.class;
+  public TypeToken<Path> getUnconfiguredType() {
+    return TypeToken.of(Path.class);
   }
 
   @Override
-  public Path coerce(
-      CellPathResolver cellRoots,
+  public Path coerceToUnconfigured(
+      CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     if (object instanceof String) {
@@ -64,11 +63,11 @@ public class PathTypeCoercer extends LeafTypeCoercer<Path> {
         Path resultPath = pathCache.getUnchecked(fsPath).getUnchecked(pathString);
         if (resultPath.isAbsolute()) {
           throw CoerceFailedException.simple(
-              object, getOutputClass(), "Path cannot contain an absolute path");
+              object, getOutputType(), "Path cannot contain an absolute path");
         }
         if (resultPath.startsWith("..")) {
           throw CoerceFailedException.simple(
-              object, getOutputClass(), "Path cannot point to above repository root");
+              object, getOutputType(), "Path cannot point to above repository root");
         }
         return resultPath;
       } catch (UncheckedExecutionException e) {
@@ -76,7 +75,7 @@ public class PathTypeCoercer extends LeafTypeCoercer<Path> {
             String.format("Could not convert '%s' to a Path", pathString), e.getCause());
       }
     } else {
-      throw CoerceFailedException.simple(object, getOutputClass());
+      throw CoerceFailedException.simple(object, getOutputType());
     }
   }
 

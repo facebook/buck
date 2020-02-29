@@ -1613,7 +1613,7 @@ public class CxxDescriptionEnhancer {
     Preconditions.checkState(
         cxxPlatformFlavor.isPresent(),
         "Could not find cxx platform in:\n%s",
-        Joiner.on(", ").join(buildTarget.getFlavors()));
+        Joiner.on(", ").join(buildTarget.getFlavors().getSet()));
     ImmutableSet.Builder<SourcePath> sourcePaths = ImmutableSet.builder();
     for (BuildTarget dep : deps) {
       Optional<CxxCompilationDatabaseDependencies> compilationDatabases =

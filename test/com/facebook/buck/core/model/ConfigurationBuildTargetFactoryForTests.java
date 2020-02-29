@@ -21,7 +21,7 @@ public class ConfigurationBuildTargetFactoryForTests {
 
   public static BuildTarget newInstance(String fullyQualifiedName) {
     return BuildTargetFactory.newInstance(fullyQualifiedName)
-        .getUnconfiguredBuildTargetView()
+        .getUnconfiguredBuildTarget()
         .configure(ConfigurationForConfigurationTargets.INSTANCE);
   }
 

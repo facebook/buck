@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.select;
 
+import com.facebook.buck.util.function.ThrowingFunction;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Map;
@@ -134,5 +135,16 @@ public class Selector<T> {
     sb.append(")");
 
     return sb.toString();
+  }
+
+  /** Transform all items with given function. */
+  public <U, E extends Exception> Selector<U> mapValuesThrowing(ThrowingFunction<T, U, E> function)
+      throws E {
+    ImmutableMap.Builder<SelectorKey, U> conditions =
+        ImmutableMap.builderWithExpectedSize(this.conditions.size());
+    for (Map.Entry<SelectorKey, T> condition : this.conditions.entrySet()) {
+      conditions.put(condition.getKey(), function.apply(condition.getValue()));
+    }
+    return new Selector<>(conditions.build(), nullConditions, noMatchMessage);
   }
 }

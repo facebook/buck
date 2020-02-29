@@ -18,6 +18,8 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.parser.api.FileManifest;
@@ -25,21 +27,20 @@ import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /** A pipeline that provides cached parsed results for a given file. */
 public class GenericFileParsePipeline<T extends FileManifest> implements FileParsePipeline<T> {
 
   private final BuckEventBus eventBus;
-  private final PipelineNodeCache<Path, T> cache;
+  private final PipelineNodeCache<AbsPath, T> cache;
   private final ListeningExecutorService executorService;
   private final FileParserPool<T> fileParserPool;
   private final Watchman watchman;
   private final AtomicBoolean shuttingDown;
 
   public GenericFileParsePipeline(
-      PipelineNodeCache<Path, T> cache,
+      PipelineNodeCache<AbsPath, T> cache,
       FileParserPool<T> fileParserPool,
       ListeningExecutorService executorService,
       BuckEventBus eventBus,
@@ -53,7 +54,7 @@ public class GenericFileParsePipeline<T extends FileManifest> implements FilePar
   }
 
   @Override
-  public ListenableFuture<T> getFileJob(Cell cell, Path buildFile) throws BuildTargetException {
+  public ListenableFuture<T> getFileJob(Cell cell, AbsPath buildFile) throws BuildTargetException {
 
     if (shuttingDown.get()) {
       return Futures.immediateCancelledFuture();
@@ -67,7 +68,7 @@ public class GenericFileParsePipeline<T extends FileManifest> implements FilePar
             return Futures.immediateCancelledFuture();
           }
 
-          Path pathToCheck = cell.getRoot().relativize(buildFile.getParent());
+          RelPath pathToCheck = cell.getRoot().relativize(buildFile.getParent());
           if (cell.getFilesystem().isIgnored(pathToCheck)) {
             throw new HumanReadableException(
                 "Content of '%s' cannot be built because it is defined in an ignored directory.",

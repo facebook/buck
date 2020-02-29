@@ -99,7 +99,7 @@ public class WatchmanFactory {
 
   /** @return new instance of {@link Watchman} using the specified params. */
   public Watchman build(
-      ImmutableSet<Path> projectWatchList,
+      ImmutableSet<AbsPath> projectWatchList,
       ImmutableMap<String, String> env,
       Console console,
       Clock clock,
@@ -119,7 +119,7 @@ public class WatchmanFactory {
   @SuppressWarnings("PMD.PrematureDeclaration") // endTimeNanos
   Watchman build(
       ListeningProcessExecutor executor,
-      ImmutableSet<Path> projectWatchList,
+      ImmutableSet<AbsPath> projectWatchList,
       ImmutableMap<String, String> env,
       ExecutableFinder exeFinder,
       Console console,
@@ -200,7 +200,7 @@ public class WatchmanFactory {
   public static Watchman getWatchman(
       WatchmanClient client,
       Path transportPath,
-      ImmutableSet<Path> projectWatchList,
+      ImmutableSet<AbsPath> projectWatchList,
       Console console,
       Clock clock,
       long endTimeNanos)
@@ -237,13 +237,13 @@ public class WatchmanFactory {
     LOG.debug("Got Watchman capabilities: %s", capabilities);
 
     ImmutableMap.Builder<AbsPath, ProjectWatch> projectWatchesBuilder = ImmutableMap.builder();
-    for (Path projectRoot : projectWatchList) {
+    for (AbsPath projectRoot : projectWatchList) {
       Optional<ProjectWatch> projectWatch =
-          queryWatchProject(client, projectRoot, clock, endTimeNanos - clock.nanoTime());
+          queryWatchProject(client, projectRoot.getPath(), clock, endTimeNanos - clock.nanoTime());
       if (!projectWatch.isPresent()) {
         return NULL_WATCHMAN;
       }
-      projectWatchesBuilder.put(AbsPath.of(projectRoot), projectWatch.get());
+      projectWatchesBuilder.put(projectRoot, projectWatch.get());
     }
     ImmutableMap<AbsPath, ProjectWatch> projectWatches = projectWatchesBuilder.build();
     Iterable<String> watchRoots =

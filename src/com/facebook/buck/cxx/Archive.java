@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -60,9 +61,9 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
       Archiver archiver,
-      ImmutableList<String> archiverFlags,
+      ImmutableList<Arg> archiverFlags,
       Optional<Tool> ranlib,
-      ImmutableList<String> ranlibFlags,
+      ImmutableList<Arg> ranlibFlags,
       ArchiveContents contents,
       String outputFileName,
       ImmutableList<SourcePath> inputs,
@@ -86,6 +87,7 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
     this.cacheable = cacheable;
   }
 
+  /** @return the {@link Archive} created from the given parameters. */
   public static Archive from(
       BuildTarget target,
       ProjectFilesystem projectFilesystem,
@@ -93,6 +95,7 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
       CxxPlatform platform,
       String outputFileName,
       ImmutableList<SourcePath> inputs,
+      ArchiveContents contents,
       boolean cacheable) {
     return new Archive(
         target,
@@ -102,28 +105,47 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
         platform.getArflags(),
         platform.getRanlib().map(r -> r.resolve(resolver, target.getTargetConfiguration())),
         platform.getRanlibflags(),
-        platform.getArchiveContents(),
+        contents,
         outputFileName,
         inputs,
         cacheable);
+  }
+
+  /** @return the {@link Archive} created from the given parameters. */
+  public static Archive from(
+      BuildTarget target,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleResolver resolver,
+      CxxPlatform platform,
+      String outputFileName,
+      ImmutableList<SourcePath> inputs) {
+    return Archive.from(
+        target,
+        projectFilesystem,
+        resolver,
+        platform,
+        outputFileName,
+        inputs,
+        platform.getArchiveContents(),
+        true);
   }
 
   /** internal buildable implementation */
   static class Impl implements Buildable {
 
     @AddToRuleKey private final Archiver archiver;
-    @AddToRuleKey private final ImmutableList<String> archiverFlags;
+    @AddToRuleKey private final ImmutableList<Arg> archiverFlags;
     @AddToRuleKey private final Optional<Tool> ranlib;
-    @AddToRuleKey private final ImmutableList<String> ranlibFlags;
+    @AddToRuleKey private final ImmutableList<Arg> ranlibFlags;
     @AddToRuleKey private final ArchiveContents contents;
     @AddToRuleKey private final OutputPath output;
     @AddToRuleKey private final ImmutableList<SourcePath> inputs;
 
     Impl(
         Archiver archiver,
-        ImmutableList<String> archiverFlags,
+        ImmutableList<Arg> archiverFlags,
         Optional<Tool> ranlib,
-        ImmutableList<String> ranlibFlags,
+        ImmutableList<Arg> ranlibFlags,
         ArchiveContents contents,
         String outputFileName,
         ImmutableList<SourcePath> inputs) {
@@ -149,7 +171,7 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
       // archives embed relative paths from output to input inside the archive.  If this becomes a
       // limitation, we could make this rule uncacheable and allow thin archives to embed absolute
       // paths.
-      Path rootPath = filesystem.getRootPath();
+      AbsPath rootPath = filesystem.getRootPath();
       for (SourcePath input : inputs) {
         Preconditions.checkState(resolver.getFilesystem(input).getRootPath().equals(rootPath));
       }
@@ -163,7 +185,7 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
                   filesystem,
                   archiver.getEnvironment(resolver),
                   archiver.getCommandPrefix(resolver),
-                  archiverFlags,
+                  Arg.stringify(archiverFlags, resolver),
                   archiver.getArchiveOptions(contents == ArchiveContents.THIN),
                   outputPath,
                   inputs.stream()
@@ -179,7 +201,7 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
                 filesystem,
                 tool.getEnvironment(resolver),
                 tool.getCommandPrefix(resolver),
-                ranlibFlags,
+                Arg.stringify(ranlibFlags, resolver),
                 outputPath));
       }
 

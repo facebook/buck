@@ -57,7 +57,7 @@ public class SelectorListFactoryTest {
       throws CoerceFailedException {
     try {
       selectorListFactory.create(
-          TestCellPathResolver.get(projectFilesystem),
+          TestCellPathResolver.get(projectFilesystem).getCellNameResolver(),
           ForwardRelativePath.of(""),
           ListWithSelects.of(ImmutableList.of(new Object(), new Object()), Method.class));
       fail("SelectorListFactory.create should throw an exception");
@@ -74,7 +74,7 @@ public class SelectorListFactoryTest {
     String flavorName = "test";
     SelectorList<Object> selectors =
         selectorListFactory.create(
-            TestCellPathResolver.get(projectFilesystem),
+            TestCellPathResolver.get(projectFilesystem).getCellNameResolver(),
             ForwardRelativePath.of(""),
             ListWithSelects.of(ImmutableList.of(flavorName), List.class));
 
@@ -85,7 +85,7 @@ public class SelectorListFactoryTest {
   public void testCreateAcceptsEmptyList() throws CoerceFailedException {
     SelectorList<Object> selectors =
         selectorListFactory.create(
-            TestCellPathResolver.get(projectFilesystem),
+            TestCellPathResolver.get(projectFilesystem).getCellNameResolver(),
             ForwardRelativePath.of(""),
             ListWithSelects.of(ImmutableList.of(), List.class));
 
@@ -98,7 +98,7 @@ public class SelectorListFactoryTest {
     String flavorName2 = "test2";
     SelectorList<Object> selectors =
         selectorListFactory.create(
-            TestCellPathResolver.get(projectFilesystem),
+            TestCellPathResolver.get(projectFilesystem).getCellNameResolver(),
             ForwardRelativePath.of(""),
             ListWithSelects.of(
                 ImmutableList.of(ImmutableList.of(flavorName1), ImmutableList.of(flavorName2)),
@@ -123,7 +123,7 @@ public class SelectorListFactoryTest {
 
     SelectorList<Object> selectors =
         selectorListFactory.create(
-            TestCellPathResolver.get(projectFilesystem),
+            TestCellPathResolver.get(projectFilesystem).getCellNameResolver(),
             ForwardRelativePath.of(""),
             ListWithSelects.of(
                 ImmutableList.of(selectorValue, Lists.newArrayList(flavorName2)), List.class));

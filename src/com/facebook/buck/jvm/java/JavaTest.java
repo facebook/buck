@@ -552,7 +552,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             Optional.empty(),
             getClassNamesForSources(buildContext.getSourcePathResolver()));
     return ExternalTestRunnerTestSpec.builder()
-        .setCwd(getProjectFilesystem().getRootPath())
+        .setCwd(getProjectFilesystem().getRootPath().getPath())
         .setTarget(getBuildTarget())
         .setType("junit")
         .setCommand(externalJunitStep.getShellCommandInternal(executionContext))

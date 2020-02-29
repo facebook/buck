@@ -27,8 +27,6 @@ import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.providers.impl.BuiltInProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
-import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
-import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -55,19 +53,6 @@ public abstract class KnownNativeRuleTypes implements KnownRuleTypes {
         .collect(ImmutableMap.toImmutableMap(RuleType::getName, t -> t));
   }
 
-  /**
-   * @param name user-facing name of a rule, e.g. "java_library"
-   * @return {@link RuleType} that corresponds to the provided name.
-   */
-  @Override
-  public RuleType getRuleType(String name) {
-    RuleType type = getNativeTypesByName().get(name);
-    if (type == null) {
-      throw new HumanReadableException("Unable to find rule type: %s", name);
-    }
-    return type;
-  }
-
   /** @return all known descriptions */
   @Value.Lazy
   public ImmutableList<BaseDescription<?>> getDescriptions() {
@@ -84,17 +69,26 @@ public abstract class KnownNativeRuleTypes implements KnownRuleTypes {
         .collect(ImmutableMap.toImmutableMap(DescriptionCache::getRuleType, Function.identity()));
   }
 
-  /** @return a description by its {@link RuleType}. */
   @Override
-  public BaseDescription<?> getDescription(RuleType ruleType) {
-    return Preconditions.checkNotNull(
-        getDescriptionsByRule().get(ruleType), "Cannot find a description for type %s", ruleType);
+  public RuleDescriptor<?> getDescriptorByName(String name) {
+    return getDescriptorByNameImpl(name);
   }
 
-  @Override
-  public <T extends ConstructorArg> DataTransferObjectDescriptor<T> getConstructorArgDescriptor(
-      TypeCoercerFactory typeCoercerFactory, RuleType ruleType, Class<T> dtoClass) {
-    return typeCoercerFactory.getConstructorArgDescriptor(dtoClass);
+  @SuppressWarnings("unchecked")
+  private <T extends ConstructorArg> RuleDescriptor<T> getDescriptorByNameImpl(String name) {
+    RuleType type = getNativeTypesByName().get(name);
+    if (type == null) {
+      throw new HumanReadableException("Unable to find rule type: %s", name);
+    }
+    BaseDescription<T> description =
+        (BaseDescription<T>)
+            Preconditions.checkNotNull(
+                getDescriptionsByRule().get(type), "Cannot find a description for type %s", type);
+    return RuleDescriptor.of(
+        type,
+        description,
+        typeCoercerFactory ->
+            typeCoercerFactory.getConstructorArgDescriptor(description.getConstructorArgType()));
   }
 
   // Verify that there are no duplicate rule types being defined.

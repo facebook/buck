@@ -18,11 +18,11 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.targetgraph.impl.Package;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.google.common.base.Preconditions;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -64,17 +64,17 @@ class PerBuildStateCache {
   private class CellState {
 
     /** Used as an unbounded packageCache to stored computed packages by package file path. */
-    private final ConcurrentMapCache<Path, Package> packages;
+    private final ConcurrentMapCache<AbsPath, Package> packages;
 
     CellState(int parsingThreads) {
       this.packages = new ConcurrentMapCache<>(parsingThreads);
     }
 
-    Optional<Package> lookupPackage(Path packageFile) {
+    Optional<Package> lookupPackage(AbsPath packageFile) {
       return Optional.ofNullable(packages.getIfPresent(packageFile));
     }
 
-    Package putPackageIfNotPresent(Path packageFile, Package pkg) {
+    Package putPackageIfNotPresent(AbsPath packageFile, Package pkg) {
       return packages.putIfAbsentAndGet(packageFile, pkg);
     }
   }
@@ -83,12 +83,10 @@ class PerBuildStateCache {
    * A {@link PipelineNodeCache} compatible packageCache mapping a {@code packageFile} path to the
    * associated {@link Package}. Each {@link Cell} contains it's own PackageCache.
    */
-  class PackageCache implements PipelineNodeCache.Cache<Path, Package> {
+  class PackageCache implements PipelineNodeCache.Cache<AbsPath, Package> {
     @Override
-    public Optional<Package> lookupComputedNode(Cell cell, Path packageFile, BuckEventBus eventBus)
-        throws BuildTargetException {
-      Preconditions.checkState(packageFile.isAbsolute());
-
+    public Optional<Package> lookupComputedNode(
+        Cell cell, AbsPath packageFile, BuckEventBus eventBus) throws BuildTargetException {
       CellState state = getCellState(cell);
       if (state == null) {
         return Optional.empty();
@@ -99,12 +97,11 @@ class PerBuildStateCache {
     @Override
     public Package putComputedNodeIfNotPresent(
         Cell cell,
-        Path packageFile,
+        AbsPath packageFile,
         Package pkg,
         boolean targetIsConfiguration,
         BuckEventBus eventBus)
         throws BuildTargetException {
-      Preconditions.checkState(packageFile.isAbsolute());
       Preconditions.checkState(!targetIsConfiguration);
 
       return getOrCreateCellState(cell).putPackageIfNotPresent(packageFile, pkg);

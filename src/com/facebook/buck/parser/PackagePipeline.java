@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.targetgraph.impl.Package;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
@@ -57,7 +58,7 @@ class PackagePipeline implements AutoCloseable {
    */
   private final long minimumPerfEventTimeMs;
 
-  private final PipelineNodeCache<Path, Package> cache;
+  private final PipelineNodeCache<AbsPath, Package> cache;
 
   private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
 
@@ -82,12 +83,12 @@ class PackagePipeline implements AutoCloseable {
    * Given a build file at a particular path, returns the path of the package file in the same
    * directory.
    */
-  static Path getPackageFileFromBuildFile(Cell cell, Path buildFile) {
+  static AbsPath getPackageFileFromBuildFile(Cell cell, AbsPath buildFile) {
     Preconditions.checkArgument(
         buildFile.endsWith(cell.getBuckConfigView(ParserConfig.class).getBuildFileName()),
         "Invalid build file: %s",
         buildFile);
-    Path parent =
+    AbsPath parent =
         Preconditions.checkNotNull(
             buildFile.getParent(), "The build file path must have a parent: %s", buildFile);
     return parent.resolve(PACKAGE_FILE_NAME);
@@ -101,15 +102,15 @@ class PackagePipeline implements AutoCloseable {
    * @return the path of the parent package file for the given {@param packageFile} package file, if
    *     it exists, else an empty optional.
    */
-  static Optional<Path> getParentPackageFile(Cell cell, Path packageFile) {
-    Path currentDir =
+  static Optional<AbsPath> getParentPackageFile(Cell cell, AbsPath packageFile) {
+    AbsPath currentDir =
         Preconditions.checkNotNull(
             packageFile.getParent(), "The package file path must have a parent: %s", packageFile);
-    Path cellRoot = cell.getRoot();
+    AbsPath cellRoot = cell.getRoot();
     if (currentDir.equals(cellRoot)) {
       return Optional.empty();
     }
-    Path parentPackageFile = currentDir.getParent().resolve(PACKAGE_FILE_NAME);
+    AbsPath parentPackageFile = currentDir.getParent().resolve(PACKAGE_FILE_NAME);
     return Optional.of(parentPackageFile);
   }
 
@@ -117,9 +118,9 @@ class PackagePipeline implements AutoCloseable {
    * @return all the parent package files for the given {@param packageFile}, all the way to the
    *     root of the passed {@param cell}.
    */
-  static ImmutableSet<Path> getAllParentPackageFiles(Cell cell, Path packageFile) {
-    ImmutableSet.Builder<Path> paths = ImmutableSet.builder();
-    Optional<Path> parentPackageFile = getParentPackageFile(cell, packageFile);
+  static ImmutableSet<AbsPath> getAllParentPackageFiles(Cell cell, AbsPath packageFile) {
+    ImmutableSet.Builder<AbsPath> paths = ImmutableSet.builder();
+    Optional<AbsPath> parentPackageFile = getParentPackageFile(cell, packageFile);
     while (parentPackageFile.isPresent()) {
       paths.add(parentPackageFile.get());
       parentPackageFile = getParentPackageFile(cell, parentPackageFile.get());
@@ -131,20 +132,20 @@ class PackagePipeline implements AutoCloseable {
    * @return a future (potentially immediate) for the {@link Package} in the package file
    *     corresponding to the {@param buildFile} provided.
    */
-  public ListenableFuture<Package> getPackageJob(Cell cell, Path buildFile) {
-    Path packageFile = getPackageFileFromBuildFile(cell, buildFile);
+  public ListenableFuture<Package> getPackageJob(Cell cell, AbsPath buildFile) {
+    AbsPath packageFile = getPackageFileFromBuildFile(cell, buildFile);
 
     if (!cell.getBuckConfig().getView(ParserConfig.class).getEnablePackageFiles()) {
       Package pkg =
           PackageFactory.create(
-              cell, packageFile, PackageMetadata.EMPTY_SINGLETON, Optional.empty());
+              cell, packageFile.getPath(), PackageMetadata.EMPTY_SINGLETON, Optional.empty());
       return Futures.immediateFuture(pkg);
     }
 
     return getPackageJobInternal(cell, packageFile);
   }
 
-  private ListenableFuture<Package> getPackageJobInternal(Cell cell, Path packageFile)
+  private ListenableFuture<Package> getPackageJobInternal(Cell cell, AbsPath packageFile)
       throws BuildTargetException {
     if (shuttingDown()) {
       return Futures.immediateCancelledFuture();
@@ -172,19 +173,20 @@ class PackagePipeline implements AutoCloseable {
    *     the file exists on disk, or an immediate future with a default manifest.
    */
   private ListenableFuture<PackageFileManifest> getPackageFileManifest(
-      Cell cell, Path packageFile) {
+      Cell cell, AbsPath packageFile) {
     if (cell.getFilesystem().isFile(packageFile)) {
       return packageFileParsePipeline.getFileJob(cell, packageFile);
     }
     return Futures.immediateFuture(PackageFileManifest.EMPTY_SINGLETON);
   }
 
-  private ListenableFuture<Optional<Package>> getParentPackageJob(Cell cell, Path childBuildFile) {
+  private ListenableFuture<Optional<Package>> getParentPackageJob(
+      Cell cell, AbsPath childBuildFile) {
     if (shuttingDown()) {
       return Futures.immediateCancelledFuture();
     }
 
-    Optional<Path> parentBuildFile = getParentPackageFile(cell, childBuildFile);
+    Optional<AbsPath> parentBuildFile = getParentPackageFile(cell, childBuildFile);
     if (!parentBuildFile.isPresent()) {
       // childBuildFile is at the cell root and we have no more parents
       return Futures.immediateFuture(Optional.empty());
@@ -202,7 +204,7 @@ class PackagePipeline implements AutoCloseable {
   }
 
   private ListenableFuture<Package> computePackage(
-      Cell cell, Path packageFile, PackageMetadata pkg, Optional<Package> parentPkg)
+      Cell cell, AbsPath packageFile, PackageMetadata pkg, Optional<Package> parentPkg)
       throws BuildTargetException {
     if (shuttingDown()) {
       return Futures.immediateCancelledFuture();
@@ -219,7 +221,7 @@ class PackagePipeline implements AutoCloseable {
             minimumPerfEventTimeMs,
             TimeUnit.MILLISECONDS)) {
 
-      result = PackageFactory.create(cell, packageFile, pkg, parentPkg);
+      result = PackageFactory.create(cell, packageFile.getPath(), pkg, parentPkg);
     }
     return Futures.immediateFuture(result);
   }

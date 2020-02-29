@@ -39,7 +39,7 @@ public class VersionedTargetGraphTest {
         graph.get(node.getBuildTarget().withAppendedFlavors(InternalFlavor.of("hello")));
     assertThat(result, Matchers.notNullValue());
     assertThat(
-        result.getBuildTarget().getFlavors(),
+        result.getBuildTarget().getFlavors().getSet(),
         Matchers.containsInAnyOrder(InternalFlavor.of("hello")));
     assertNodeCreatedFrom(result, node);
   }
@@ -52,7 +52,7 @@ public class VersionedTargetGraphTest {
         graph.get(node.getBuildTarget().withAppendedFlavors(InternalFlavor.of("world")));
     assertThat(result, Matchers.notNullValue());
     assertThat(
-        result.getBuildTarget().getFlavors(),
+        result.getBuildTarget().getFlavors().getSet(),
         Matchers.containsInAnyOrder(InternalFlavor.of("hello"), InternalFlavor.of("world")));
     assertNodeCreatedFrom(result, node);
   }
@@ -66,7 +66,7 @@ public class VersionedTargetGraphTest {
         graph.get(node2.getBuildTarget().withAppendedFlavors(InternalFlavor.of("world")));
     assertThat(result, Matchers.notNullValue());
     assertThat(
-        result.getBuildTarget().getFlavors(),
+        result.getBuildTarget().getFlavors().getSet(),
         Matchers.containsInAnyOrder(
             InternalFlavor.of("hello"), InternalFlavor.of("bye"), InternalFlavor.of("world")));
     assertNodeCreatedFrom(result, node2);
@@ -96,7 +96,7 @@ public class VersionedTargetGraphTest {
     TargetNode<?> result = graph.get(node.getBuildTarget().withFlavors(InternalFlavor.of("world")));
     assertThat(result, Matchers.notNullValue());
     assertThat(
-        result.getBuildTarget().getFlavors(),
+        result.getBuildTarget().getFlavors().getSet(),
         Matchers.containsInAnyOrder(InternalFlavor.of("world")));
     assertNodeCreatedFrom(result, node);
   }

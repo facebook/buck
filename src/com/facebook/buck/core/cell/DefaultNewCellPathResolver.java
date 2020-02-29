@@ -17,6 +17,7 @@
 package com.facebook.buck.core.cell;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -34,11 +35,11 @@ import org.immutables.value.Value;
 public abstract class DefaultNewCellPathResolver implements NewCellPathResolver {
   // Note: don't expose this map, doing that would allow things to look up CanonicalCellName from
   // Path in places where they shouldn't do that.
-  abstract ImmutableMap<Path, CanonicalCellName> getPathToNameMap();
+  abstract ImmutableMap<AbsPath, CanonicalCellName> getPathToNameMap();
 
   @Value.Derived
-  ImmutableSortedMap<CanonicalCellName, Path> getCellToPathMap() {
-    ImmutableSortedMap<CanonicalCellName, Path> cellToPathMap =
+  ImmutableSortedMap<CanonicalCellName, AbsPath> getCellToPathMap() {
+    ImmutableSortedMap<CanonicalCellName, AbsPath> cellToPathMap =
         getPathToNameMap().entrySet().stream()
             .collect(
                 ImmutableSortedMap.toImmutableSortedMap(
@@ -48,19 +49,19 @@ public abstract class DefaultNewCellPathResolver implements NewCellPathResolver 
 
   @Override
   public Path getCellPath(CanonicalCellName cellName) {
-    Path path = getCellToPathMap().get(cellName);
+    AbsPath path = getCellToPathMap().get(cellName);
     if (path == null) {
       throw new RuntimeException(
           String.format(
               "Cell '%s' does not have a mapping to a path. Known cells are {%s}",
               cellName, formatKnownCells()));
     }
-    return path;
+    return path.getPath();
   }
 
   @Override
   public CanonicalCellName getCanonicalCellName(Path path) {
-    CanonicalCellName canonicalCellName = getPathToNameMap().get(path);
+    CanonicalCellName canonicalCellName = getPathToNameMap().get(AbsPath.of(path));
     if (canonicalCellName == null) {
       throw new RuntimeException(
           String.format(
@@ -70,7 +71,7 @@ public abstract class DefaultNewCellPathResolver implements NewCellPathResolver 
   }
 
   public static ImmutableDefaultNewCellPathResolver of(
-      Map<? extends Path, ? extends CanonicalCellName> pathToNameMap) {
+      Map<? extends AbsPath, ? extends CanonicalCellName> pathToNameMap) {
     return ImmutableDefaultNewCellPathResolver.of(pathToNameMap);
   }
 

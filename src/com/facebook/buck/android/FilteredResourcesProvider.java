@@ -33,7 +33,7 @@ public interface FilteredResourcesProvider {
   default ImmutableList<Path> getRelativeResDirectories(
       ProjectFilesystem filesystem, SourcePathResolverAdapter resolver) {
     return RichStream.from(getResDirectories())
-        .map(d -> filesystem.relativize(resolver.getAbsolutePath(d)))
+        .map(d -> filesystem.relativize(resolver.getAbsolutePath(d)).getPath())
         .toImmutableList();
   }
 

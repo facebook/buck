@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -94,7 +95,7 @@ public class KotlinLibraryDescription
       KotlinLibraryDescriptionArg args) {
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
-    ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
+    FlavorSet flavors = buildTarget.getFlavors();
 
     BuildTarget buildTargetWithMavenFlavor = null;
     BuildRuleParams paramsWithMavenFlavor = null;

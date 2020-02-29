@@ -108,7 +108,7 @@ class CodeSignStep implements Step {
     ProcessExecutorParams processExecutorParams =
         paramsBuilder
             .setCommand(commandBuilder.build())
-            .setDirectory(filesystem.getRootPath())
+            .setDirectory(filesystem.getRootPath().getPath())
             .build();
     // Must specify that stdout is expected or else output may be wrapped in Ansi escape chars.
     Set<ProcessExecutor.Option> options = EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);

@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.BuckConfigTestUtils;
@@ -33,6 +34,7 @@ import com.facebook.buck.io.watchman.WatchmanWatcher.CursorType;
 import com.facebook.buck.parser.implicit.ImplicitInclude;
 import com.facebook.buck.parser.options.UserDefinedRulesState;
 import com.facebook.buck.testutil.TemporaryPaths;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -41,6 +43,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -230,18 +233,109 @@ public class ParserConfigTest {
   public void userDefinedRulesState() throws IOException {
     assertEquals(UserDefinedRulesState.DISABLED, getDefaultConfig().getUserDefinedRulesState());
 
-    ParserConfig config = parseConfig("[parser]\nuser_defined_rules = disabled");
-    assertEquals(UserDefinedRulesState.DISABLED, config.getUserDefinedRulesState());
+    ImmutableList<ImmutableList<Object>> permutations =
+        ImmutableList.of(
+            ImmutableList.of(
+                "false", "python_dsl", "DISABLED", "DISABLED", UserDefinedRulesState.DISABLED),
+            ImmutableList.of(
+                "false", "skylark", "DISABLED", "DISABLED", UserDefinedRulesState.DISABLED),
+            ImmutableList.of(
+                "true", "python_dsl", "DISABLED", "DISABLED", UserDefinedRulesState.DISABLED),
+            ImmutableList.of(
+                "true", "skylark", "DISABLED", "DISABLED", UserDefinedRulesState.DISABLED),
+            ImmutableList.of(
+                "false",
+                "python_dsl",
+                "PROVIDER_COMPATIBLE",
+                "DISABLED",
+                UserDefinedRulesState.DISABLED),
+            ImmutableList.of(
+                "false",
+                "skylark",
+                "PROVIDER_COMPATIBLE",
+                "DISABLED",
+                UserDefinedRulesState.DISABLED),
+            ImmutableList.of(
+                "true",
+                "python_dsl",
+                "PROVIDER_COMPATIBLE",
+                "DISABLED",
+                UserDefinedRulesState.DISABLED),
+            ImmutableList.of(
+                "true",
+                "skylark",
+                "PROVIDER_COMPATIBLE",
+                "DISABLED",
+                UserDefinedRulesState.DISABLED),
+            ImmutableList.of(
+                "false", "python_dsl", "DISABLED", "ENABLED", "rule analysis is disabled"),
+            ImmutableList.of(
+                "false", "skylark", "DISABLED", "ENABLED", "rule analysis is disabled"),
+            ImmutableList.of(
+                "true", "python_dsl", "DISABLED", "ENABLED", "rule analysis is disabled"),
+            ImmutableList.of("true", "skylark", "DISABLED", "ENABLED", "rule analysis is disabled"),
+            ImmutableList.of(
+                "false",
+                "python_dsl",
+                "PROVIDER_COMPATIBLE",
+                "ENABLED",
+                "parser is not either polyglot"),
+            ImmutableList.of(
+                "false",
+                "skylark",
+                "PROVIDER_COMPATIBLE",
+                "ENABLED",
+                UserDefinedRulesState.ENABLED),
+            ImmutableList.of(
+                "true",
+                "python_dsl",
+                "PROVIDER_COMPATIBLE",
+                "ENABLED",
+                UserDefinedRulesState.ENABLED),
+            ImmutableList.of(
+                "true",
+                "skylark",
+                "PROVIDER_COMPATIBLE",
+                "ENABLED",
+                UserDefinedRulesState.ENABLED));
 
-    config = parseConfig("[parser]\nuser_defined_rules = enabled");
-    assertEquals(UserDefinedRulesState.ENABLED, config.getUserDefinedRulesState());
+    for (ImmutableList<Object> permutation : permutations) {
+      ParserConfig config =
+          parseConfig(
+              "[parser]",
+              String.format("polyglot_parsing_enabled = %s", permutation.get(0)),
+              String.format("default_build_file_syntax = %s", permutation.get(1)),
+              "[rule_analysis]",
+              String.format("mode = %s", permutation.get(2)),
+              "[parser]",
+              String.format("user_defined_rules = %s", permutation.get(3)));
+
+      Object expected = permutation.get(4);
+      String assertionMessage =
+          String.format("config %s", config.getDelegate().getConfig().getRawConfig().getValues());
+
+      if (expected instanceof String) {
+        try {
+          config.getUserDefinedRulesState();
+          fail("Expected exception for " + assertionMessage);
+        } catch (HumanReadableException e) {
+          assertThat(
+              assertionMessage,
+              e.getHumanReadableErrorMessage(),
+              Matchers.containsString((String) expected));
+        }
+      } else {
+        assertEquals(assertionMessage, expected, config.getUserDefinedRulesState());
+      }
+    }
   }
 
   private ParserConfig getDefaultConfig() {
     return FakeBuckConfig.builder().build().getView(ParserConfig.class);
   }
 
-  private ParserConfig parseConfig(String configString) throws IOException {
+  private ParserConfig parseConfig(String... configStrings) throws IOException {
+    String configString = Joiner.on("\n").join(configStrings);
     Reader reader = new StringReader(configString);
     return BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader)
         .getView(ParserConfig.class);

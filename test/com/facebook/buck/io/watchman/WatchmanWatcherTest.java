@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -379,8 +380,8 @@ public class WatchmanWatcherTest {
         WatchmanWatcher.createQuery(
             ProjectWatch.of("/path/to/repo", Optional.empty()),
             ImmutableSet.of(
-                RecursiveFileMatcher.of(Paths.get("foo")),
-                RecursiveFileMatcher.of(Paths.get("bar/baz"))),
+                RecursiveFileMatcher.of(RelPath.get("foo")),
+                RecursiveFileMatcher.of(RelPath.get("bar/baz"))),
             ImmutableSet.of(Capability.DIRNAME));
     assertEquals(
         ImmutableWatchmanQuery.of(
@@ -408,8 +409,8 @@ public class WatchmanWatcherTest {
         WatchmanWatcher.createQuery(
             ProjectWatch.of("/path/to/repo", Optional.empty()),
             ImmutableSet.of(
-                RecursiveFileMatcher.of(Paths.get("foo")),
-                RecursiveFileMatcher.of(Paths.get("bar/baz"))),
+                RecursiveFileMatcher.of(RelPath.get("foo")),
+                RecursiveFileMatcher.of(RelPath.get("bar/baz"))),
             ImmutableSet.of());
     assertEquals(
         ImmutableWatchmanQuery.of(
@@ -440,8 +441,8 @@ public class WatchmanWatcherTest {
         WatchmanWatcher.createQuery(
             ProjectWatch.of(watchRoot, Optional.empty()),
             ImmutableSet.of(
-                RecursiveFileMatcher.of(Paths.get("foo")),
-                RecursiveFileMatcher.of(Paths.get("bar/baz"))),
+                RecursiveFileMatcher.of(RelPath.get("foo")),
+                RecursiveFileMatcher.of(RelPath.get("bar/baz"))),
             ImmutableSet.of(Capability.DIRNAME));
     assertEquals(
         ImmutableWatchmanQuery.of(

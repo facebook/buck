@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import contextlib
 import json
 import os
@@ -460,8 +462,6 @@ class BuckTest(unittest.TestCase):
         java_file = ProjectFile(self.project_root, path="Foo.java", contents=())
         self.write_files(build_file, java_file)
         build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
-        diagnostics = []
-        rules = []
         fake_stdout = BytesIO()
         with build_file_processor.with_builtins(builtins.__dict__):
             self.assertRaises(
@@ -626,7 +626,7 @@ class BuckTest(unittest.TestCase):
     def test_watchman_glob_returns_basestring_instead_of_unicode(self):
         class FakeWatchmanClient:
             def query(self, *args):
-                return {"files": [u"Foo.java"]}
+                return {"files": ["Foo.java"]}
 
             def close(self):
                 pass
@@ -899,7 +899,7 @@ class BuckTest(unittest.TestCase):
             with self.assertRaisesRegexp(
                 TypeError, "got an unexpected keyword argument 'name'"
             ):
-                rules = build_file_processor.process(
+                build_file_processor.process(
                     build_file.root, build_file.prefix, build_file.path, [], None
                 )
 
@@ -1450,18 +1450,20 @@ class BuckTest(unittest.TestCase):
         self.assertEqual(
             BuildInclude(
                 cell_name="foo",
+                label="@foo//bar/baz.bzl",
                 path=os.path.abspath(
-                    os.path.join(self.project_root, "../cell/bar/baz")
+                    os.path.join(self.project_root, "../cell/bar/baz.bzl")
                 ),
             ),
-            build_file_processor._resolve_include("foo//bar/baz"),
+            build_file_processor._resolve_include("foo//bar/baz.bzl"),
         )
         self.assertEqual(
             BuildInclude(
                 cell_name="",
-                path=os.path.abspath(os.path.join(self.project_root, "bar/baz")),
+                label="//bar/baz.bzl",
+                path=os.path.abspath(os.path.join(self.project_root, "bar/baz.bzl")),
             ),
-            build_file_processor._resolve_include("//bar/baz"),
+            build_file_processor._resolve_include("//bar/baz.bzl"),
         )
 
     def test_load_path_is_resolved(self):
@@ -1490,10 +1492,13 @@ class BuckTest(unittest.TestCase):
                 "foo": os.path.abspath(os.path.join(self.project_root, "../cell"))
             }
         )
-        build_file_processor._current_build_env = IncludeContext("foo", "some_lib.bzl")
+        build_file_processor._current_build_env = IncludeContext(
+            "foo", "some_lib.bzl", "@foo//:some_lib.bzl"
+        )
         self.assertEqual(
             BuildInclude(
                 cell_name="foo",
+                label="@foo//bar:baz",
                 path=os.path.abspath(
                     os.path.join(self.project_root, "../cell/bar/baz")
                 ),
@@ -1508,11 +1513,12 @@ class BuckTest(unittest.TestCase):
             }
         )
         build_file_processor._current_build_env = IncludeContext(
-            "foo.cell", "some_lib.bzl"
+            "foo.cell", "some_lib.bzl", "@foo.cell//:some_lib.bzl"
         )
         self.assertEqual(
             BuildInclude(
                 cell_name="foo.cell",
+                label="@foo.cell//bar:baz",
                 path=os.path.abspath(
                     os.path.join(self.project_root, "../cell/bar/baz")
                 ),
@@ -1527,11 +1533,12 @@ class BuckTest(unittest.TestCase):
             }
         )
         build_file_processor._current_build_env = IncludeContext(
-            "foo-cell", "some_lib.bzl"
+            "foo-cell", "some_lib.bzl", "@foo-cell//:some_lib.bzl"
         )
         self.assertEqual(
             BuildInclude(
                 cell_name="foo-cell",
+                label="@foo-cell//bar:baz",
                 path=os.path.abspath(
                     os.path.join(self.project_root, "../cell/bar/baz")
                 ),
@@ -1548,6 +1555,7 @@ class BuckTest(unittest.TestCase):
         self.assertEqual(
             BuildInclude(
                 cell_name="foo",
+                label="@foo//bar:baz",
                 path=os.path.abspath(
                     os.path.join(self.project_root, "../cell/bar/baz")
                 ),
@@ -1866,7 +1874,7 @@ foo_rule(
         decoded_result = json.loads(result)
         self.assertEqual([], decoded_result.get("diagnostics", []))
         self.assertEqual(
-            [u"Foo.java", u"Foo.c"], decoded_result["values"][0].get("srcs", [])
+            ["Foo.java", "Foo.c"], decoded_result["values"][0].get("srcs", [])
         )
 
     def test_json_encoding_dict_like_object(self):
@@ -1918,7 +1926,7 @@ foo_rule(
         decoded_result = json.loads(result)
         self.assertEqual([], decoded_result.get("diagnostics", []))
         self.assertEqual(
-            {u"foo": u"bar", u"baz": u"blech"},
+            {"foo": "bar", "baz": "blech"},
             decoded_result["values"][0].get("options", {}),
         )
 

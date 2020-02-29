@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.android.StringResources.Gender;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemDelegate;
@@ -463,14 +464,14 @@ public class CompileStringsStepTest {
     private ImmutableMap.Builder<String, byte[]> fileContentsMapBuilder = ImmutableMap.builder();
 
     public FakeProjectFileSystem() {
-      this(Paths.get(".").toAbsolutePath());
+      this(AbsPath.of(Paths.get(".").toAbsolutePath()));
     }
 
-    private FakeProjectFileSystem(Path root) {
+    private FakeProjectFileSystem(AbsPath root) {
       super(
           CanonicalCellName.rootCell(),
           root,
-          new DefaultProjectFilesystemDelegate(root),
+          new DefaultProjectFilesystemDelegate(root.getPath()),
           DefaultProjectFilesystemFactory.getWindowsFSInstance(),
           TestProjectFilesystems.BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST);
     }

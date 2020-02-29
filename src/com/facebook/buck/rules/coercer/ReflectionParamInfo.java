@@ -23,6 +23,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.MapMaker;
+import com.google.common.reflect.TypeToken;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -36,7 +37,7 @@ import javax.annotation.Nullable;
  * Represents a single field that can be represented in buck build files, backed by an Immutable
  * DescriptionArg class
  */
-public class ReflectionParamInfo extends AbstractParamInfo {
+public class ReflectionParamInfo<T> extends AbstractParamInfo<T> {
 
   private final Method setter;
   /**
@@ -54,7 +55,7 @@ public class ReflectionParamInfo extends AbstractParamInfo {
   @SuppressWarnings("PMD.EmptyCatchBlock")
   private ReflectionParamInfo(
       String name,
-      TypeCoercer<?> typeCoercer,
+      TypeCoercer<?, T> typeCoercer,
       Method setter,
       Method closestGetterOnAbstractClassOrInterface,
       Method concreteGetter,
@@ -91,15 +92,15 @@ public class ReflectionParamInfo extends AbstractParamInfo {
       new MapMaker().weakValues().makeMap();
 
   /** Create an instance of {@link ReflectionParamInfo} */
-  public static ReflectionParamInfo of(TypeCoercerFactory typeCoercerFactory, Method setter) {
+  public static ReflectionParamInfo<?> of(TypeCoercerFactory typeCoercerFactory, Method setter) {
     StaticInfo staticInfo =
         staticInfoCache.computeIfAbsent(setter, ReflectionParamInfo::computeSetterInfo);
 
     try {
-      TypeCoercer<?> typeCoercer =
-          typeCoercerFactory.typeCoercerForType(staticInfo.setterParameterType);
+      TypeCoercer<?, ?> typeCoercer =
+          typeCoercerFactory.typeCoercerForType(TypeToken.of(staticInfo.setterParameterType));
 
-      return new ReflectionParamInfo(
+      return new ReflectionParamInfo<>(
           staticInfo.name,
           typeCoercer,
           setter,
@@ -206,10 +207,11 @@ public class ReflectionParamInfo extends AbstractParamInfo {
   }
 
   @Override
-  public Object get(Object dto) {
+  @SuppressWarnings("unchecked")
+  public T get(Object dto) {
     Method getter = this.concreteGetter;
     try {
-      return getter.invoke(dto);
+      return (T) getter.invoke(dto);
     } catch (InvocationTargetException | IllegalAccessException e) {
       throw new IllegalStateException(
           String.format(
@@ -222,14 +224,11 @@ public class ReflectionParamInfo extends AbstractParamInfo {
   public void setCoercedValue(Object dto, Object value) {
     try {
       setter.invoke(dto, value);
-    } catch (IllegalAccessException | InvocationTargetException e) {
-      throw new RuntimeException(e);
+    } catch (Exception e) {
+      throw new RuntimeException(
+          "failed to invoke setter " + setter + " with value of type " + value.getClass().getName(),
+          e);
     }
-  }
-
-  @Override
-  public Type[] getGenericParameterTypes() {
-    return setter.getGenericParameterTypes();
   }
 
   /** Returns the most-overridden getter on the abstract Immutable. */

@@ -102,7 +102,7 @@ public class AndroidInstrumentationTestTest {
     String result =
         ObjectMappers.WRITER.writeValueAsString(
             ExternalTestRunnerTestSpec.builder()
-                .setCwd(fakeFilesystem.getRootPath())
+                .setCwd(fakeFilesystem.getRootPath().getPath())
                 .setTarget(apk.getBuildTarget())
                 .setType("android_instrumentation")
                 .setRequiredPaths(

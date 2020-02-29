@@ -19,9 +19,10 @@ package com.facebook.buck.rules.query;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -46,6 +47,7 @@ import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.testutil.HashMapWithStats;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
+import com.google.common.reflect.TypeToken;
 import java.nio.file.Paths;
 import java.util.Optional;
 import org.hamcrest.Matchers;
@@ -62,8 +64,8 @@ public class QueryTargetsAndOutputsMacroExpanderTest {
 
   private ProjectFilesystem filesystem;
   private ActionGraphBuilder graphBuilder;
-  private CellPathResolver cellNames;
-  private TypeCoercer<?> coercer;
+  private CellNameResolver cellNameResolver;
+  private TypeCoercer<?, StringWithMacros> coercer;
   private BuildRule rule;
   private StringWithMacrosConverter converter;
   private HashMapWithStats<Macro, Object> cache;
@@ -71,9 +73,10 @@ public class QueryTargetsAndOutputsMacroExpanderTest {
   @Before
   public void setUp() {
     cache = new HashMapWithStats<>();
-    filesystem = new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp.getRoot());
-    cellNames = TestCellBuilder.createCellRoots(filesystem);
-    coercer = new DefaultTypeCoercerFactory().typeCoercerForType(StringWithMacros.class);
+    filesystem = new FakeProjectFilesystem(CanonicalCellName.rootCell(), AbsPath.of(tmp.getRoot()));
+    cellNameResolver = TestCellBuilder.createCellRoots(filesystem).getCellNameResolver();
+    coercer =
+        new DefaultTypeCoercerFactory().typeCoercerForType(TypeToken.of(StringWithMacros.class));
 
     TargetNode<?> depNode =
         JavaLibraryBuilder.createBuilder(
@@ -96,7 +99,7 @@ public class QueryTargetsAndOutputsMacroExpanderTest {
     converter =
         StringWithMacrosConverter.of(
             ruleNode.getBuildTarget(),
-            cellNames.getCellNameResolver(),
+            cellNameResolver,
             graphBuilder,
             ImmutableList.of(new QueryTargetsAndOutputsMacroExpander(targetGraph)),
             Optional.empty(),
@@ -185,8 +188,8 @@ public class QueryTargetsAndOutputsMacroExpanderTest {
   private String coerceAndStringify(String input, BuildRule rule) throws CoerceFailedException {
     StringWithMacros stringWithMacros =
         (StringWithMacros)
-            coercer.coerce(
-                cellNames,
+            coercer.coerceBoth(
+                cellNameResolver,
                 filesystem,
                 rule.getBuildTarget().getCellRelativeBasePath().getPath(),
                 UnconfiguredTargetConfiguration.INSTANCE,

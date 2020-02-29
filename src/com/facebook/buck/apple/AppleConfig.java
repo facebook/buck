@@ -23,7 +23,7 @@ import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
@@ -70,6 +70,8 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   private static final String FORCE_LOAD_LIBRARY_PATH = "force_load_library_path";
 
   public static final String BUILD_SCRIPT = "xcode_build_script";
+
+  public static final String LINK_SCRUB_CONCURRENTLY = "link_scrub_concurrently";
 
   private final BuckConfig delegate;
 
@@ -223,7 +225,7 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   public ToolProvider getCodesignProvider() {
     String codesignField = "codesign";
-    Optional<UnconfiguredBuildTargetView> target =
+    Optional<UnconfiguredBuildTarget> target =
         delegate.getMaybeUnconfiguredBuildTarget(APPLE_SECTION, codesignField);
     String source = String.format("[%s] %s", APPLE_SECTION, codesignField);
     if (target.isPresent()) {
@@ -500,6 +502,10 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   public boolean shouldUseModernBuildSystem() {
     return delegate.getBooleanValue(APPLE_SECTION, "use_modern_build_system", true);
+  }
+
+  public boolean shouldLinkScrubConcurrently() {
+    return delegate.getBooleanValue(APPLE_SECTION, LINK_SCRUB_CONCURRENTLY, false);
   }
 
   @BuckStyleValue

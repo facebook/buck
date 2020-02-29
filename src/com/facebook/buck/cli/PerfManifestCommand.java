@@ -185,7 +185,7 @@ public class PerfManifestCommand extends AbstractPerfCommand<Context> {
                           .getInputsAfterBuildingLocally(
                               BuildContext.of(
                                   graphBuilder.getSourcePathResolver(),
-                                  params.getCells().getRootCell().getRoot(),
+                                  params.getCells().getRootCell().getRoot().getPath(),
                                   params.getJavaPackageFinder(),
                                   params.getBuckEventBus(),
                                   false),

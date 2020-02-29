@@ -32,6 +32,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
@@ -468,7 +469,7 @@ public class WorkspaceAndProjectGenerator {
       }
       ImmutableMultimap<Path, BuildTarget> projectDirectoryToBuildTargets =
           projectDirectoryToBuildTargetsBuilder.build();
-      Path relativeTargetCell = rootCell.getRoot().relativize(projectCell.getRoot());
+      RelPath relativeTargetCell = rootCell.getRoot().relativize(projectCell.getRoot());
       for (Path projectDirectory : projectDirectoryToBuildTargets.keySet()) {
         ImmutableSet<BuildTarget> rules =
             filterRulesForProjectDirectory(
@@ -495,7 +496,7 @@ public class WorkspaceAndProjectGenerator {
                   // convert the projectPath to relative to the target cell here
                   result =
                       GenerationResult.of(
-                          relativeTargetCell.resolve(result.getProjectPath()),
+                          relativeTargetCell.getPath().resolve(result.getProjectPath()),
                           result.isProjectGenerated(),
                           result.getRequiredBuildTargets(),
                           result.getXcconfigPaths(),
@@ -536,7 +537,7 @@ public class WorkspaceAndProjectGenerator {
     requiredBuildTargetsBuilder.addAll(result.getRequiredBuildTargets());
     ImmutableSortedSet<Path> relativeXcconfigPaths =
         result.getXcconfigPaths().stream()
-            .map((Path p) -> rootCell.getFilesystem().relativize(p))
+            .map((Path p) -> rootCell.getFilesystem().relativize(p).getPath())
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
     xcconfigPathsBuilder.addAll(relativeXcconfigPaths);
     filesToCopyInXcodeBuilder.addAll(result.getFilesToCopyInXcode());
@@ -562,7 +563,8 @@ public class WorkspaceAndProjectGenerator {
       if (generator != null) {
         LOG.debug("Already generated project for target %s, skipping", projectDirectory);
       } else {
-        LOG.debug("Generating project for directory %s with targets %s", projectDirectory, rules);
+        LOG.debug(
+            "Generating projects for directory %s with %d targets", projectDirectory, rules.size());
         String projectName;
         Path projectDirectoryName = projectDirectory.getFileName();
         if (projectDirectoryName == null || projectDirectoryName.toString().equals("")) {
@@ -852,9 +854,9 @@ public class WorkspaceAndProjectGenerator {
       return false;
     }
 
-    // Only create schemes for APP_EXTENSION.
+    // Only create schemes for APP_EXTENSION or its subtypes. (e.g. iMesage apps)
     ProductType productType = ProductType.of(bundleArg.getXcodeProductType().get());
-    return productType.equals(ProductTypes.APP_EXTENSION);
+    return productType.toString().startsWith(ProductTypes.APP_EXTENSION.toString());
   }
 
   /**
@@ -963,7 +965,6 @@ public class WorkspaceAndProjectGenerator {
       boolean includeDependenciesTests,
       ImmutableSet<TargetNode<?>> orderedTargetNodes,
       ImmutableSet<TargetNode<AppleTestDescriptionArg>> extraTestBundleTargets) {
-    LOG.debug("Getting ordered test target nodes for %s", orderedTargetNodes);
     ImmutableSet.Builder<TargetNode<AppleTestDescriptionArg>> testsBuilder = ImmutableSet.builder();
     if (includeProjectTests) {
       Optional<TargetNode<?>> mainTargetNode = Optional.empty();
@@ -1281,7 +1282,7 @@ public class WorkspaceAndProjectGenerator {
         wasCreatedForAppExtension,
         runnablePath,
         remoteRunnablePath,
-        XcodeWorkspaceConfigDescription.getActionConfigNamesFromArg(workspaceArguments),
+        XcodeWorkspaceConfigDescription.getActionConfigNamesFromArg(schemeConfigArg),
         targetToProjectPathMap,
         environmentVariables,
         additionalSchemeActions,

@@ -18,10 +18,12 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.core.select.impl.SelectorListFactory;
@@ -30,8 +32,8 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import java.nio.file.Path;
 import java.util.Optional;
 
 public class PerBuildState implements AutoCloseable {
@@ -61,29 +63,40 @@ public class PerBuildState implements AutoCloseable {
     this.configurationRuleRegistry = configurationRuleRegistry;
   }
 
-  TargetNode<?> getTargetNode(BuildTarget target, DependencyStack dependencyStack)
+  TargetNodeMaybeIncompatible getTargetNode(BuildTarget target, DependencyStack dependencyStack)
       throws BuildFileParseException {
     Cell owningCell = cellManager.getCell(target.getCell());
 
     return targetNodeParsePipeline.getNode(owningCell, target, dependencyStack);
   }
 
-  ListenableFuture<TargetNode<?>> getTargetNodeJob(
+  TargetNode<?> getTargetNodeAssertCompatible(BuildTarget target, DependencyStack dependencyStack) {
+    Cell owningCell = cellManager.getCell(target.getCell());
+
+    return targetNodeParsePipeline
+        .getNode(owningCell, target, dependencyStack)
+        .assertGetTargetNode(dependencyStack);
+  }
+
+  ListenableFuture<TargetNode<?>> getTargetNodeJobAssertCompatible(
       BuildTarget target, DependencyStack dependencyStack) throws BuildTargetException {
     Cell owningCell = cellManager.getCell(target.getCell());
 
-    return targetNodeParsePipeline.getNodeJob(owningCell, target, dependencyStack);
+    return Futures.transform(
+        targetNodeParsePipeline.getNodeJob(owningCell, target, dependencyStack),
+        targetNodeMaybeIncompatible ->
+            targetNodeMaybeIncompatible.assertGetTargetNode(dependencyStack));
   }
 
-  ImmutableList<TargetNode<?>> getAllTargetNodes(
-      Cell cell, Path buildFile, Optional<TargetConfiguration> targetConfiguration)
+  ImmutableList<TargetNodeMaybeIncompatible> getAllTargetNodes(
+      Cell cell, AbsPath buildFile, Optional<TargetConfiguration> targetConfiguration)
       throws BuildFileParseException {
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
 
     return targetNodeParsePipeline.getAllRequestedTargetNodes(cell, buildFile, targetConfiguration);
   }
 
-  ListenableFuture<TargetNode<?>> getRequestedTargetNodeJob(
+  ListenableFuture<TargetNodeMaybeIncompatible> getRequestedTargetNodeJob(
       UnconfiguredBuildTarget target, Optional<TargetConfiguration> targetConfiguration) {
     Cell owningCell = cellManager.getCell(target.getCell());
 
@@ -91,8 +104,8 @@ public class PerBuildState implements AutoCloseable {
         owningCell, target, targetConfiguration);
   }
 
-  ListenableFuture<ImmutableList<TargetNode<?>>> getRequestedTargetNodesJob(
-      Cell cell, Path buildFile, Optional<TargetConfiguration> targetConfiguration)
+  ListenableFuture<ImmutableList<TargetNodeMaybeIncompatible>> getRequestedTargetNodesJob(
+      Cell cell, AbsPath buildFile, Optional<TargetConfiguration> targetConfiguration)
       throws BuildTargetException {
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
 
@@ -100,13 +113,13 @@ public class PerBuildState implements AutoCloseable {
         cell, buildFile, targetConfiguration);
   }
 
-  public BuildFileManifest getBuildFileManifest(Cell cell, Path buildFile)
+  public BuildFileManifest getBuildFileManifest(Cell cell, AbsPath buildFile)
       throws BuildFileParseException {
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
     return buildFileRawNodeParsePipeline.getFile(cell, buildFile);
   }
 
-  ListenableFuture<BuildFileManifest> getBuildFileManifestJob(Cell cell, Path buildFile)
+  ListenableFuture<BuildFileManifest> getBuildFileManifestJob(Cell cell, AbsPath buildFile)
       throws BuildFileParseException {
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
     return buildFileRawNodeParsePipeline.getFileJob(cell, buildFile);

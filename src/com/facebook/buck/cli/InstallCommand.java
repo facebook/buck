@@ -374,12 +374,14 @@ public class InstallCommand extends BuildCommand {
               .get();
 
       TargetNode<?> node =
-          params.getParser().getTargetNode(parsingContext, target, DependencyStack.top(target));
+          params
+              .getParser()
+              .getTargetNodeAssertCompatible(parsingContext, target, DependencyStack.top(target));
 
       if (node != null
           && node.getRuleType()
               .equals(DescriptionCache.getRuleType(AppleBundleDescription.class))) {
-        for (Flavor flavor : node.getBuildTarget().getFlavors()) {
+        for (Flavor flavor : node.getBuildTarget().getFlavors().getSet()) {
           if (ApplePlatform.needsInstallHelper(flavor.getName())) {
             AppleConfig appleConfig = params.getBuckConfig().getView(AppleConfig.class);
 

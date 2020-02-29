@@ -38,12 +38,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 public class ErrorLogger {
-  private boolean suppressStackTraces = false;
-
-  public ErrorLogger setSuppressStackTraces(boolean enabled) {
-    suppressStackTraces = enabled;
-    return this;
-  }
 
   @VisibleForTesting
   public interface LogImpl {
@@ -187,12 +181,10 @@ public class ErrorLogger {
      * with augmentations.
      */
     public String getAugmentedErrorWithContext(
-        boolean suppressStackTraces,
-        String indent,
-        HumanReadableExceptionAugmentor errorAugmentor) {
+        String indent, HumanReadableExceptionAugmentor errorAugmentor) {
       StringBuilder messageBuilder = new StringBuilder();
       // TODO(cjhopman): Based on verbosity, get the stacktrace here instead of just the message.
-      messageBuilder.append(getMessage(suppressStackTraces));
+      messageBuilder.append(getMessage(false));
       Optional<String> context = getContext(indent);
       if (context.isPresent()) {
         messageBuilder.append(System.lineSeparator());
@@ -271,8 +263,7 @@ public class ErrorLogger {
   }
 
   private void logUserVisible(DeconstructedException deconstructed) {
-    String augmentedError =
-        deconstructed.getAugmentedErrorWithContext(suppressStackTraces, "    ", errorAugmentor);
+    String augmentedError = deconstructed.getAugmentedErrorWithContext("    ", errorAugmentor);
     if (deconstructed.isUserError()) {
       logger.logUserVisible(augmentedError);
     } else {

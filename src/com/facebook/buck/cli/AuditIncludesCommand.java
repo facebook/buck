@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
@@ -63,9 +64,7 @@ public class AuditIncludesCommand extends AbstractCommand {
                 params.getConsole(),
                 new ParserPythonInterpreterProvider(
                     params.getCells().getRootCell().getBuckConfig(), params.getExecutableFinder()),
-                params.getKnownRuleTypesProvider(),
-                params.getManifestServiceSupplier(),
-                params.getFileHashCache())
+                params.getKnownRuleTypesProvider())
             .createFileParser(
                 params.getBuckEventBus(),
                 params.getCells().getRootCell(),
@@ -81,8 +80,8 @@ public class AuditIncludesCommand extends AbstractCommand {
         // Resolve the path specified by the user.
         Path path = Paths.get(pathToBuildFile);
         if (!path.isAbsolute()) {
-          Path root = projectFilesystem.getRootPath();
-          path = root.resolve(path);
+          AbsPath root = projectFilesystem.getRootPath();
+          path = root.resolve(path).getPath();
         }
 
         Iterable<String> includes = parser.getIncludedFiles(path);

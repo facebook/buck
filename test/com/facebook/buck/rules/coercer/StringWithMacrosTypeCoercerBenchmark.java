@@ -16,15 +16,13 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.macros.StringWithMacros;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.Main;
@@ -41,17 +39,17 @@ import org.openjdk.jmh.runner.RunnerException;
 public class StringWithMacrosTypeCoercerBenchmark {
 
   private ProjectFilesystem filesystem = new FakeProjectFilesystem();
-  private CellPathResolver cellPathResolver = TestCellPathResolver.get(filesystem);
+  private CellNameResolver cellNameResolver =
+      TestCellPathResolver.get(filesystem).getCellNameResolver();
   private ForwardRelativePath basePath = ForwardRelativePath.of("");
 
-  private StringWithMacrosTypeCoercer coercer =
-      StringWithMacrosTypeCoercer.from(ImmutableMap.of(), ImmutableList.of());
+  private StringWithMacrosTypeCoercer coercer = StringWithMacrosTypeCoercer.builder().build();
 
   @Benchmark
   @BenchmarkMode(Mode.AverageTime)
   public StringWithMacros coerce() throws Exception {
     return coercer.coerce(
-        cellPathResolver,
+        cellNameResolver,
         filesystem,
         basePath,
         UnconfiguredTargetConfiguration.INSTANCE,

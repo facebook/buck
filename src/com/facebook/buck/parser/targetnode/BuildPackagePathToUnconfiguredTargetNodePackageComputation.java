@@ -19,6 +19,7 @@ package com.facebook.buck.parser.targetnode;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
@@ -26,10 +27,10 @@ import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
-import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDeps;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDepsPackage;
@@ -91,7 +92,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputation
         unconfiguredTargetNodeToTargetNodeFactory,
         cell,
         throwOnValidationError,
-        cells.getSuperRootPath());
+        cells.getSuperRootPath().getPath());
   }
 
   @Override
@@ -107,7 +108,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputation
         env.getDeps(BuildTargetToUnconfiguredTargetNodeKey.IDENTIFIER);
 
     Path packagePath = key.getPath();
-    Path buildFileAbsolutePath =
+    AbsPath buildFileAbsolutePath =
         cell.getRoot()
             .resolve(packagePath)
             .resolve(cell.getBuckConfig().getView(ParserConfig.class).getBuildFileName());
@@ -173,24 +174,19 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputation
   private ImmutableSet<UnconfiguredBuildTarget> getTargetDeps(
       UnconfiguredTargetNode unconfiguredTargetNode,
       DependencyStack dependencyStack,
-      Path buildFileAbsolutePath) {
+      AbsPath buildFileAbsolutePath) {
     // To discover dependencies, we coerce UnconfiguredTargetNode to TargetNode, get dependencies
     // out of it,
     // then trash target node
     // THIS SOLUTION IS TEMPORARY and not 100% correct in general, because we have to resolve
     // configuration for Target Node (we use empty configuration at this point)
 
-    // Create short living UnconfiguredBuildTargetView
-    // TODO: configure data object directly
-    UnconfiguredBuildTargetView unconfiguredBuildTargetView =
-        UnconfiguredBuildTargetView.of(unconfiguredTargetNode.getBuildTarget());
-
     BuildTarget buildTarget =
-        unconfiguredBuildTargetView.configure(UnconfiguredTargetConfiguration.INSTANCE);
+        unconfiguredTargetNode.getBuildTarget().configure(UnconfiguredTargetConfiguration.INSTANCE);
 
     // All target nodes are created sequentially from raw target nodes
     // TODO: use RawTargetNodeToTargetNode transformation
-    TargetNode<?> targetNode =
+    TargetNodeMaybeIncompatible targetNodeMaybeIncompatible =
         unconfiguredTargetNodeToTargetNodeFactory.createTargetNode(
             cell,
             buildFileAbsolutePath,
@@ -201,8 +197,8 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputation
                 SimplePerfEvent.scope(
                     Optional.empty(), SimplePerfEvent.PerfEventId.of("raw_to_targetnode")));
 
-    return targetNode.getParseDeps().stream()
-        .map(bt -> bt.getUnconfiguredBuildTargetView().getData())
+    return targetNodeMaybeIncompatible.assertGetTargetNode(dependencyStack).getParseDeps().stream()
+        .map(BuildTarget::getUnconfiguredBuildTarget)
         .collect(ImmutableSet.toImmutableSet());
   }
 
@@ -221,10 +217,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputation
       BuildTargetToUnconfiguredTargetNodeKey depkey =
           ImmutableBuildTargetToUnconfiguredTargetNodeKey.of(
               UnconfiguredBuildTarget.of(
-                  cell.getCanonicalName(),
-                  BaseName.ofPath(basePath),
-                  target,
-                  UnconfiguredBuildTarget.NO_FLAVORS),
+                  cell.getCanonicalName(), BaseName.ofPath(basePath), target, FlavorSet.NO_FLAVORS),
               key.getPath());
       builder.add(depkey);
     }

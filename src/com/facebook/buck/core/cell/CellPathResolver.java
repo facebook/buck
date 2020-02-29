@@ -18,6 +18,7 @@ package com.facebook.buck.core.cell;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -70,7 +71,7 @@ public interface CellPathResolver {
    * @return absolute paths to all cells this resolver knows about. The key is the name of the cell
    *     in the root cell's config (this is not necessarily the canonical name).
    */
-  ImmutableMap<String, Path> getCellPathsByRootCellExternalName();
+  ImmutableMap<String, AbsPath> getCellPathsByRootCellExternalName();
 
   /**
    * Returns a cell name that can be used to refer to the cell at the given path.
@@ -85,6 +86,11 @@ public interface CellPathResolver {
    */
   Optional<String> getCanonicalCellName(Path cellPath);
 
+  /** Abs-path version of {@link #getCanonicalCellName(Path)}. */
+  default Optional<String> getCanonicalCellName(AbsPath cellPath) {
+    return getCanonicalCellName(cellPath.getPath());
+  }
+
   /** @return paths to roots of all cells known to this resolver. */
-  ImmutableSortedSet<Path> getKnownRoots();
+  ImmutableSortedSet<AbsPath> getKnownRoots();
 }
