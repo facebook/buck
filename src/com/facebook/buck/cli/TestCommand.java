@@ -46,6 +46,7 @@ import com.facebook.buck.core.test.rule.ExternalTestSpec;
 import com.facebook.buck.core.test.rule.TestRule;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.parser.ParsingContext;
@@ -350,44 +351,8 @@ public class TestCommand extends BuildCommand {
                       nonExternalTestRunnerRule.get().getBuildTarget())));
       return ExitCode.BUILD_ERROR;
     }
+
     TestRunningOptions options = getTestRunningOptions(params);
-    boolean parallelExternalTestSpecComputationEnabled =
-        params
-            .getBuckConfig()
-            .getView(TestBuckConfig.class)
-            .isParallelExternalTestSpecComputationEnabled();
-    // Walk the test rules, collecting all the specs.
-    ImmutableList<ExternalTestSpec> specs =
-        StreamSupport.stream(testRules.spliterator(), parallelExternalTestSpecComputationEnabled)
-            .map(ExternalTestRunnerRule.class::cast)
-            .map(
-                rule -> {
-                  try {
-                    params
-                        .getBuckEventBus()
-                        .post(ExternalTestSpecCalculationEvent.started(rule.getBuildTarget()));
-                    return rule.getExternalTestRunnerSpec(
-                        build.getExecutionContext(), options, buildContext);
-                  } finally {
-                    params
-                        .getBuckEventBus()
-                        .post(ExternalTestSpecCalculationEvent.finished(rule.getBuildTarget()));
-                  }
-                })
-            .collect(ImmutableList.toImmutableList());
-
-    StreamSupport.stream(testRules.spliterator(), parallelExternalTestSpecComputationEnabled)
-        .map(ExternalTestRunnerRule.class::cast)
-        .forEach(
-            rule -> {
-              try {
-                rule.onPreTest(buildContext);
-              } catch (IOException e) {
-                throw new RuntimeException(e);
-              }
-            });
-
-    // Serialize the specs to a file to pass into the test runner.
     Path infoFile =
         params
             .getCells()
@@ -395,9 +360,57 @@ public class TestCommand extends BuildCommand {
             .getFilesystem()
             .resolve(params.getCells().getRootCell().getFilesystem().getBuckPaths().getScratchDir())
             .resolve("external_runner_specs.json");
-    Files.createDirectories(infoFile.getParent());
-    Files.deleteIfExists(infoFile);
-    ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValue(infoFile.toFile(), specs);
+
+    try (SimplePerfEvent.Scope event =
+        SimplePerfEvent.scope(
+            buildContext.getEventBus(),
+            SimplePerfEvent.PerfEventId.of("external-test-runner-specs"))) {
+      LOG.info("Starting to write external test runner specs.");
+
+      boolean parallelExternalTestSpecComputationEnabled =
+          params
+              .getBuckConfig()
+              .getView(TestBuckConfig.class)
+              .isParallelExternalTestSpecComputationEnabled();
+
+      // Walk the test rules, collecting all the specs.
+      ImmutableList<ExternalTestSpec> specs =
+          StreamSupport.stream(testRules.spliterator(), parallelExternalTestSpecComputationEnabled)
+              .map(ExternalTestRunnerRule.class::cast)
+              .map(
+                  rule -> {
+                    try {
+                      params
+                          .getBuckEventBus()
+                          .post(ExternalTestSpecCalculationEvent.started(rule.getBuildTarget()));
+                      return rule.getExternalTestRunnerSpec(
+                          build.getExecutionContext(), options, buildContext);
+                    } finally {
+                      params
+                          .getBuckEventBus()
+                          .post(ExternalTestSpecCalculationEvent.finished(rule.getBuildTarget()));
+                    }
+                  })
+              .collect(ImmutableList.toImmutableList());
+
+      StreamSupport.stream(testRules.spliterator(), parallelExternalTestSpecComputationEnabled)
+          .map(ExternalTestRunnerRule.class::cast)
+          .forEach(
+              rule -> {
+                try {
+                  rule.onPreTest(buildContext);
+                } catch (IOException e) {
+                  throw new RuntimeException(e);
+                }
+              });
+
+      // Serialize the specs to a file to pass into the test runner.
+      Files.createDirectories(infoFile.getParent());
+      Files.deleteIfExists(infoFile);
+      ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValue(infoFile.toFile(), specs);
+
+      LOG.info("Finished writing external test runner specs.");
+    }
 
     // Launch and run the external test runner, forwarding it's stdout/stderr to the console.
     // We wait for it to complete then returns its error code.
