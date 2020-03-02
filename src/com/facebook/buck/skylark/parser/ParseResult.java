@@ -23,7 +23,6 @@ import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -42,7 +41,7 @@ public abstract class ParseResult {
    *
    * <p>For example {"name": "my_rule", ...}
    */
-  public abstract ImmutableMap<String, Map<String, Object>> getRawRules();
+  public abstract ImmutableMap<String, ImmutableMap<String, Object>> getRawRules();
 
   /**
    * Returns a set of extension paths that were loaded explicitly or transitively when parsing
@@ -63,9 +62,9 @@ public abstract class ParseResult {
 
   static ParseResult of(
       PackageMetadata getPackage,
-      Map<String, ? extends Map<String, Object>> rawRules,
+      ImmutableMap<String, ImmutableMap<String, Object>> rawRules,
       Iterable<String> loadedPaths,
-      Map<String, ? extends ImmutableMap<String, Optional<String>>> readConfigurationOptions,
+      ImmutableMap<String, ImmutableMap<String, Optional<String>>> readConfigurationOptions,
       Iterable<? extends GlobSpecWithResult> globManifestWithResult) {
     return ImmutableParseResult.ofImpl(
         getPackage, rawRules, loadedPaths, readConfigurationOptions, globManifestWithResult);

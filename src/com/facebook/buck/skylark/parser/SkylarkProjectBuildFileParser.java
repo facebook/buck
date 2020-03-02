@@ -46,7 +46,6 @@ import com.google.devtools.build.lib.syntax.SkylarkImport;
 import com.google.devtools.build.lib.vfs.FileSystem;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -140,7 +139,7 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
     try {
       ParseResult parseResult = parse(buildFile);
 
-      ImmutableMap<String, Map<String, Object>> rawRules = parseResult.getRawRules();
+      ImmutableMap<String, ImmutableMap<String, Object>> rawRules = parseResult.getRawRules();
       rulesParsed = rawRules.size();
 
       // By contract, BuildFileManifestPojoizer converts any Map to ImmutableMap.
