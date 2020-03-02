@@ -36,6 +36,7 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDe
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -348,8 +349,12 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
               .getPath()
               .toPathDefaultFileSystem()
               .resolve(resolver.getSourcePathName(target, sourcePath)));
+    } else if (sourcePath instanceof PathSourcePath) {
+      return Paths.get(ROOT_CELL_LINK_NAME).resolve(resolver.getRelativePath(sourcePath));
+    } else {
+      throw new RuntimeException(
+          "unknown source path: " + sourcePath + "for sh_binary " + this.getBuildTarget());
     }
-    return Paths.get(ROOT_CELL_LINK_NAME).resolve(resolver.getRelativePath(sourcePath));
   }
 
   @Override
