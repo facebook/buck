@@ -41,7 +41,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
-import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -63,11 +62,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.stream.Stream;
-import javax.annotation.Nullable;
 
 public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements BinaryBuildRule, HasRuntimeDeps {
@@ -80,8 +77,6 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private static final String RUNTIME_RESOURCES_DIR = "runtime_resources";
 
   private static final String ROOT_CELL_LINK_NAME = "__default__";
-  // TODO(nga): this is no-op
-  private static final String EXTERNAL_CELL_LINK_NAME = "__external__";
 
   private static final String STEP_CATEGORY = "sh_binary";
 
@@ -163,17 +158,11 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       // TODO(cjhopman) This is probably wrong. Shouldn't the resource appear under every cell
       // alias?
 
-      // Get the name of the cell containing the resource.
-      CellLookupResult lookupResult = lookupCellForPath(resourcePath);
-      // If resourceCellName is Optional.empty(), the call below will
-      // return the path of the root cell.
-
       // Get the path relative to its cell.
-      Path relativeResourcePath = lookupResult.getPath().relativize(resourcePath);
+      Path relativeResourcePath =
+          cellPathResolver.getCellPath(getBuildTarget().getCell()).relativize(resourcePath);
       // Get the path when referenced in the symlink created for the cell in the output folder.
-      Path linkedResourcePath =
-          Paths.get(lookupResult.getAlias().orElse(ROOT_CELL_LINK_NAME))
-              .resolve(relativeResourcePath);
+      Path linkedResourcePath = Paths.get(ROOT_CELL_LINK_NAME).resolve(relativeResourcePath);
       resourceStringsBuilder.add(Escaper.BASH_ESCAPER.apply(linkedResourcePath.toString()));
     }
 
@@ -219,34 +208,6 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
             new StringTemplateStep(TEMPLATE, getProjectFilesystem(), output, valuesBuilder.build()))
         .add(new MakeExecutableStep(getProjectFilesystem(), output))
         .build();
-  }
-
-  /** Simple internal data holder. */
-  @BuckStyleValue
-  interface CellLookupResult {
-    Optional<String> getAlias();
-
-    Path getPath();
-  }
-
-  private CellLookupResult lookupCellForPath(Path path) {
-    @Nullable Optional<String> result = null;
-    @Nullable Path matchedPath = null;
-
-    for (Map.Entry<Optional<String>, CanonicalCellName> alias :
-        cellNameResolver.getKnownCells().entrySet()) {
-      Path cellPath = cellPathResolver.getCellPath(alias.getValue());
-      if (path.startsWith(cellPath)
-          && (matchedPath == null || matchedPath.getNameCount() < cellPath.getNameCount())) {
-        result = alias.getKey();
-        matchedPath = cellPath;
-      }
-    }
-
-    return ImmutableCellLookupResult.ofImpl(
-        Objects.requireNonNull(result, String.format("path %s is not included in any cell", path)),
-        Objects.requireNonNull(
-            matchedPath, String.format("path %s is not included in any cell", path)));
   }
 
   @Override
@@ -334,21 +295,14 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 sourcePath, this.getBuildTarget()));
       }
 
-      // If resource is in a different cell, then link it under '__external__' with the cell name.
-      Optional<String> cellName =
-          lookupCellForPath(resolver.getAbsolutePath(sourcePath)).getAlias();
-      Path mapped =
-          cellName
-              .map(cell -> Paths.get(EXTERNAL_CELL_LINK_NAME).resolve(cell))
-              .orElse(Paths.get(ROOT_CELL_LINK_NAME));
-
       // Tack on the target's base path and the source path name of the resource
-      return mapped.resolve(
-          target
-              .getCellRelativeBasePath()
-              .getPath()
-              .toPathDefaultFileSystem()
-              .resolve(resolver.getSourcePathName(target, sourcePath)));
+      return Paths.get(ROOT_CELL_LINK_NAME)
+          .resolve(
+              target
+                  .getCellRelativeBasePath()
+                  .getPath()
+                  .toPathDefaultFileSystem()
+                  .resolve(resolver.getSourcePathName(target, sourcePath)));
     } else if (sourcePath instanceof PathSourcePath) {
       return Paths.get(ROOT_CELL_LINK_NAME).resolve(resolver.getRelativePath(sourcePath));
     } else {
