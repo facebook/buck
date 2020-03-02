@@ -22,7 +22,6 @@ ndk_toolchain(
     cxx_toolchain = ":ndk_cxx_toolchain",
     objdump = "//:objdump",
     shared_runtime_path = "//data:runtime.so",
-    ndk_path = "//data:gen_ndk",
     visibility = ["PUBLIC"],
 )
 
@@ -32,7 +31,6 @@ ndk_toolchain(
     cxx_toolchain = ":ndk_cxx_toolchain_compiler_flags",
     objdump = "//:objdump",
     shared_runtime_path = "//data:runtime.so",
-    ndk_path = "//data:gen_ndk",
     visibility = ["PUBLIC"],
 )
 
@@ -42,7 +40,6 @@ ndk_toolchain(
     cxx_toolchain = ":ndk_cxx_toolchain_linker_flags",
     objdump = "//:objdump",
     shared_runtime_path = "//data:runtime.so",
-    ndk_path = "//data:gen_ndk",
     visibility = ["PUBLIC"],
 )
 
@@ -63,12 +60,12 @@ cxx_toolchain(
     cxx_compiler = ":ndk_compiler",
     cxx_compiler_flags = [
         "-test-flag",
-        "$NDK_ROOT/outfile",
+        "$(location //data:gen_ndk)/outfile",
     ],
     linker = ":ndk_linker",
     linker_flags = [
         "-test-arg",
-        "$NDK_ROOT/outfile",
+        "$(location //data:gen_ndk)/outfile",
     ],
     nm = "//tools:unimplemented",
     objcopy_for_shared_library_interface = "//tools:unimplemented",
@@ -94,7 +91,7 @@ cxx_toolchain(
     cxx_compiler = ":ndk_compiler",
     cxx_compiler_flags = [
         "-test-flag",
-        "$NDK_ROOT/outfile",
+        "$(location //data:gen_ndk)/outfile",
     ],
     linker = ":ndk_linker",
     nm = "//tools:unimplemented",
@@ -122,7 +119,7 @@ cxx_toolchain(
     linker = ":ndk_linker",
     linker_flags = [
         "-test-arg",
-        "$NDK_ROOT/outfile",
+        "$(location //data:gen_ndk)/outfile",
     ],
     nm = "//tools:unimplemented",
     objcopy_for_shared_library_interface = "//tools:unimplemented",
