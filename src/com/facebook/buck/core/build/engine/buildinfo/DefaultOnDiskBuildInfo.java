@@ -281,9 +281,6 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
     ImmutableSortedSet<Path> outputPaths = getRecursivePaths(recordedPaths);
     long outputSize = getOutputSize(outputPaths);
     artifactMetadataJson.put(BuildInfo.MetadataKey.OUTPUT_SIZE, String.valueOf(outputSize));
-    projectFilesystem.writeContentsToPath(
-        String.valueOf(outputSize),
-        metadataDirectory.resolve(BuildInfo.MetadataKey.ARTIFACT_METADATA));
     if (shouldWriteOutputHashes.apply(outputSize)) {
       // Grab and record the output hashes in the build metadata so that cache hits avoid re-hashing
       // file contents.  Since we use output hashes for input-based rule keys and for detecting
