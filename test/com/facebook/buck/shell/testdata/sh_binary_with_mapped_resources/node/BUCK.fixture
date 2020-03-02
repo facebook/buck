@@ -8,7 +8,6 @@ sh_binary(
         ":resource1",
         ":resource2",
         "//node:stuff",
-        "@subnode//:stuff",
     ],
     visibility = [
         "PUBLIC",
@@ -25,7 +24,6 @@ sh_binary(
         ":resource1",
         ":resource2",
         "//:stuff",
-        "@subnode//:stuff",
     ],
     visibility = [
         "PUBLIC",

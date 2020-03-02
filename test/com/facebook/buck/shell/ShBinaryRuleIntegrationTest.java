@@ -107,7 +107,7 @@ public class ShBinaryRuleIntegrationTest {
   public void testShBinaryWithMappedResources() throws IOException {
     List<String> lines = testMappedResources("same_cell");
     String expectedPlatform = Platform.detect().getPrintableName();
-    List<String> expected = ImmutableList.of(expectedPlatform, "arg1 arg2", "stuff", "fluff");
+    List<String> expected = ImmutableList.of(expectedPlatform, "arg1 arg2", "stuff");
     assertEquals(expected, lines);
   }
 
@@ -115,7 +115,7 @@ public class ShBinaryRuleIntegrationTest {
   public void testShBinaryWithMappedResourcesDifferentCell() throws IOException {
     List<String> lines = testMappedResources("different_cell");
     String expectedPlatform = Platform.detect().getPrintableName();
-    List<String> expected = ImmutableList.of(expectedPlatform, "arg1 arg2", "stuff", "fluff");
+    List<String> expected = ImmutableList.of(expectedPlatform, "arg1 arg2", "stuff");
     assertEquals(expected, lines);
   }
 
@@ -165,12 +165,12 @@ public class ShBinaryRuleIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand("run", "//node:node1");
     result.assertSuccess();
-    assertThat(result.getStdout(), containsString("stuff\nfluff\n"));
+    assertThat(result.getStdout(), containsString("stuff\n"));
 
     workspace.runBuckCommand("clean", "--keep-cache");
     ProcessResult result2 = workspace.runBuckCommand("run", "//node:node1");
     result2.assertSuccess();
-    assertThat(result2.getStdout(), containsString("stuff\nfluff\n"));
+    assertThat(result2.getStdout(), containsString("stuff\n"));
   }
 
   @Test

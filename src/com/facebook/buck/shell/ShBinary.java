@@ -79,6 +79,7 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private static final String RUNTIME_RESOURCES_DIR = "runtime_resources";
 
   private static final String ROOT_CELL_LINK_NAME = "__default__";
+  // TODO(nga): this is no-op
   private static final String EXTERNAL_CELL_LINK_NAME = "__external__";
 
   private static final String STEP_CATEGORY = "sh_binary";
@@ -202,9 +203,6 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     String defaultRuntimeResources = Escaper.escapeAsBashString(defaultRuntimeResourcesPath);
 
     valuesBuilder.put("default_runtime_resources", defaultRuntimeResources);
-    valuesBuilder.put(
-        "external_runtime_resources",
-        Escaper.escapeAsBashString(runtimeResourcesDir.resolve(EXTERNAL_CELL_LINK_NAME)));
 
     return new ImmutableList.Builder<Step>()
         .addAll(
@@ -327,6 +325,13 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private Path deriveLinkPath(SourcePathResolverAdapter resolver, SourcePath sourcePath) {
     if (sourcePath instanceof DefaultBuildTargetSourcePath) {
       BuildTarget target = ((DefaultBuildTargetSourcePath) sourcePath).getTarget();
+
+      if (!target.getCell().equals(this.getBuildTarget().getCell())) {
+        throw new RuntimeException(
+            String.format(
+                "cross-cell resources are not implemented: %s in sh_binary %s",
+                sourcePath, this.getBuildTarget()));
+      }
 
       // If resource is in a different cell, then link it under '__external__' with the cell name.
       Optional<String> cellName =

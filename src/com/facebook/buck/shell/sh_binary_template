@@ -4,7 +4,6 @@ set -e
 
 SCRIPT_TO_RUN=<script_to_run>
 DEFAULT_RUNTIME_RESOURCES_RELATIVE=<default_runtime_resources>
-EXTERNAL_RUNTIME_RESOURCES_RELATIVE=<external_runtime_resources>
 
 BUCK_PROJECT_ROOT_FILE=<path_to_project_root_file>
 # This script can be cached and used on machines other than the one where it was created. That
@@ -79,7 +78,6 @@ if [ ! -f "$BUCK_PROJECT_ROOT_FILE_LOCATION" ]; then
 fi
 BUCK_PROJECT_ROOT="$(cat $BUCK_PROJECT_ROOT_FILE_LOCATION)"
 export BUCK_DEFAULT_RUNTIME_RESOURCES="$BUCK_PROJECT_ROOT/$DEFAULT_RUNTIME_RESOURCES_RELATIVE"
-export BUCK_EXTERNAL_RUNTIME_RESOURCES="$BUCK_PROJECT_ROOT/$EXTERNAL_RUNTIME_RESOURCES_RELATIVE"
 
 BUCK_TMP_ROOT="$(mktemp -d $BUCK_REAL_ROOT/sh_binary.XXXXXXXXXX)"
 trap "rm -rf $BUCK_TMP_ROOT" EXIT HUP INT TERM
