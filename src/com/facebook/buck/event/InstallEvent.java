@@ -54,8 +54,8 @@ public abstract class InstallEvent extends AbstractBuckEvent
       boolean success,
       Optional<Long> pid,
       Optional<String> packageName,
-      ImmutableMap<String, String> installDeviceInfo) {
-    return new Finished(started, success, pid, packageName, installDeviceInfo);
+      ImmutableMap<String, String> deviceInfos) {
+    return new Finished(started, success, pid, packageName, deviceInfos);
   }
 
   public static Finished finished(
@@ -84,19 +84,19 @@ public abstract class InstallEvent extends AbstractBuckEvent
     private final boolean success;
     private final long pid;
     private final String packageName;
-    private final ImmutableMap<String, String> installDeviceInfo;
+    private final ImmutableMap<String, String> deviceInfo;
 
     protected Finished(
         Started started,
         boolean success,
         Optional<Long> pid,
         Optional<String> packageName,
-        ImmutableMap<String, String> installDeviceInfo) {
+        ImmutableMap<String, String> deviceInfo) {
       super(started.getEventKey(), started.getBuildTarget());
       this.success = success;
       this.pid = pid.orElse(invalidPid);
       this.packageName = packageName.orElse("");
-      this.installDeviceInfo = installDeviceInfo;
+      this.deviceInfo = deviceInfo;
     }
 
     @Override
@@ -109,7 +109,7 @@ public abstract class InstallEvent extends AbstractBuckEvent
     }
 
     public ImmutableMap<String, String> getInstallDeviceInfo() {
-      return installDeviceInfo;
+      return deviceInfo;
     }
 
     @Override

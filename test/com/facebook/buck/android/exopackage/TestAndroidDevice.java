@@ -227,6 +227,11 @@ public class TestAndroidDevice implements AndroidDevice {
   }
 
   @Override
+  public String getWindowManagerProperty(String name) {
+    return "";
+  }
+
+  @Override
   public List<String> getDeviceAbis() {
     return ImmutableList.of(abi);
   }

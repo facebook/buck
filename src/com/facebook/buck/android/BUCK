@@ -317,6 +317,7 @@ java_library(
 
 HELPERS_SRCS = [
     "AdbHelper.java",
+    "AndroidDeviceInfo.java",
     "DexFilesInfo.java",
     "MacroExpandersForAndroidRules.java",
     "NativeFilesInfo.java",

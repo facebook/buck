@@ -59,4 +59,6 @@ public interface AndroidDevice {
   void sendBroadcast(String action, Map<String, String> stringExtras) throws Exception;
 
   String getSerialNumber();
+
+  String getWindowManagerProperty(String propertyName) throws Exception;
 }

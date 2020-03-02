@@ -1111,6 +1111,16 @@ public class RealAndroidDevice implements AndroidDevice {
   }
 
   @Override
+  public String getWindowManagerProperty(String name) throws Exception {
+    String result = executeCommandWithErrorChecking("wm " + name).trim();
+    String[] split = result.split(":");
+    if (split.length < 2) {
+      return result;
+    }
+    return split[1].trim();
+  }
+
+  @Override
   public List<String> getDeviceAbis() throws Exception {
     ImmutableList.Builder<String> abis = ImmutableList.builder();
     // Rare special indigenous to Lollipop devices

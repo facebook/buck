@@ -108,4 +108,9 @@ public class DelegatingAndroidDevice implements AndroidDevice {
   public String getSerialNumber() {
     return delegate.getSerialNumber();
   }
+
+  @Override
+  public String getWindowManagerProperty(String propertyName) throws Exception {
+    return delegate.getWindowManagerProperty(propertyName);
+  }
 }
