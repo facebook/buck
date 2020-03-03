@@ -277,21 +277,11 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     List<Path> requiredPaths = new ArrayList<>();
 
-    // Add the test binary.
-    requiredPaths.add(
-        buildContext.getSourcePathResolver().getAbsolutePath(binary.getSourcePathToOutput()));
-
     // Extract the in-place components link tree from the command and add it to required paths so
     // that external runners now to ship it remotely.
-    //
-    // TODO(agallagher): We should either a) provide a better way of extracting just the symlink
-    // tree from the executable `Tool` or b) (probably better) just dump out all the paths here too
-    // and expect the external test runner to ship these remotely and maintain the symlinks in the
-    // symlink tree (the worry here is that the serialization overhead of these giant lib lists
-    // will be noticeable).
-    if (binary instanceof PythonInPlaceBinary) {
-      requiredPaths.add(((PythonInPlaceBinary) binary).getLinkTree().getRoot());
-    }
+    BuildableSupport.deriveInputs(executable)
+        .map(buildContext.getSourcePathResolver()::getAbsolutePath)
+        .forEach(requiredPaths::add);
 
     // Extract any required paths from env.
     for (Arg arg : getEnv().values()) {

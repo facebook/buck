@@ -299,25 +299,11 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     List<Path> requiredPaths = new ArrayList<>();
 
-    // Add the test binary.
-    requiredPaths.add(
-        buildContext.getSourcePathResolver().getAbsolutePath(binary.getSourcePathToOutput()));
-
     // Extract the shared library link tree from the command and add it to required paths so that
     // external runners now to ship it remotely.
-    //
-    // TODO(agallagher): We should either a) provide a better way of extracting just the symlink
-    // tree from the executable `Tool` or b) (probably better) just dump out all the libs here too
-    // and expect the external test runner to ship these remotely and maintain the symlinks in the
-    // symlink tree (the worry here is that the serialization overhead of these giant lib lists
-    // will be noticeable).
     BuildableSupport.deriveInputs(executable)
         .map(buildContext.getSourcePathResolver()::getAbsolutePath)
-        // Skip the executable, as that's already handled in the command.
-        .skip(1)
-        // Skip all libs and just grab the symlink tree.
-        .reduce((first, second) -> second)
-        .ifPresent(requiredPaths::add);
+        .forEach(requiredPaths::add);
 
     // Extract any required paths from args/env.
     for (Arg arg : Iterables.concat(args, env.values())) {
