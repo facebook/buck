@@ -169,6 +169,20 @@ java_library(
 )
 
 java_library(
+    name = "barmeh_with_unused_dep_as_already_exported",
+    srcs = ["BarMeh.java"],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":dep_with_exported_dep",
+    ],
+    exported_deps = [
+        ":meh",
+    ],
+)
+
+java_library(
     name = "dep_with_exported_dep",
     srcs = [],
     exported_deps = [

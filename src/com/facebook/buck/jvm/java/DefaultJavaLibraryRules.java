@@ -406,13 +406,12 @@ public abstract class DefaultJavaLibraryRules {
         && getConfiguredCompilerFactory().trackClassUsage(getJavacOptions())) {
       BuildRuleResolver buildRuleResolver = getActionGraphBuilder();
 
+      JavaBuckConfig javaBuckConfig = Objects.requireNonNull(getJavaBuckConfig());
       unusedDependenciesFinderFactory =
           Optional.of(
               new UnusedDependenciesFinderFactory(
-                  Objects.requireNonNull(getJavaBuckConfig())
-                      .getUnusedDependenciesBuildozerString(),
-                  Objects.requireNonNull(getJavaBuckConfig())
-                      .isUnusedDependenciesOnlyPrintCommands(),
+                  javaBuckConfig.getUnusedDependenciesBuildozerString(),
+                  javaBuckConfig.isUnusedDependenciesOnlyPrintCommands(),
                   UnusedDependenciesFinder.getDependencies(
                       buildRuleResolver,
                       buildRuleResolver.getAllRules(
@@ -420,7 +419,12 @@ public abstract class DefaultJavaLibraryRules {
                   UnusedDependenciesFinder.getDependencies(
                       buildRuleResolver,
                       buildRuleResolver.getAllRules(
-                          Objects.requireNonNull(getDeps()).getProvidedDepTargets()))));
+                          Objects.requireNonNull(getDeps()).getProvidedDepTargets())),
+                  javaBuckConfig.isUnusedDependenciesExportedDepsAsFirstOrderDeps()
+                      ? Objects.requireNonNull(getDeps().getExportedDepTargets()).stream()
+                          .map(buildTarget -> buildTarget.getUnconfiguredBuildTarget().toString())
+                          .collect(ImmutableList.toImmutableList())
+                      : ImmutableList.of()));
     }
 
     DefaultJavaLibrary libraryRule =

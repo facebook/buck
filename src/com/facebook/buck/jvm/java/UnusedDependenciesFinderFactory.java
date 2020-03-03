@@ -44,15 +44,23 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
       inputs = DefaultFieldInputs.class)
   private final ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDeps> providedDeps;
 
+  @ExcludeFromRuleKey(
+      reason = "not required",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class)
+  private final ImmutableList<String> exportedDeps;
+
   public UnusedDependenciesFinderFactory(
       Optional<String> buildozerPath,
       boolean onlyPrintCommands,
       ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDeps> deps,
-      ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDeps> providedDeps) {
+      ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDeps> providedDeps,
+      ImmutableList<String> exportedDeps) {
     this.buildozerPath = buildozerPath;
     this.onlyPrintCommands = onlyPrintCommands;
     this.deps = deps;
     this.providedDeps = providedDeps;
+    this.exportedDeps = exportedDeps;
   }
 
   UnusedDependenciesFinder create(
@@ -66,6 +74,7 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
         CompilerOutputPaths.getDepFilePath(buildTarget, projectFilesystem),
         deps,
         providedDeps,
+        exportedDeps,
         sourcePathResolverAdapter,
         unusedDependenciesAction,
         buildozerPath,

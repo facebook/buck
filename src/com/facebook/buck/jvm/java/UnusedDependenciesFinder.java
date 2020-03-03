@@ -49,6 +49,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /**
@@ -73,6 +74,8 @@ public abstract class UnusedDependenciesFinder implements Step {
   public abstract ImmutableList<DependencyAndExportedDeps> getDeps();
 
   public abstract ImmutableList<DependencyAndExportedDeps> getProvidedDeps();
+
+  public abstract ImmutableList<String> getExportedDeps();
 
   public abstract SourcePathResolverAdapter getSourcePathResolver();
 
@@ -152,7 +155,9 @@ public abstract class UnusedDependenciesFinder implements Step {
     ImmutableSet.Builder<String> unusedDependencies = ImmutableSet.builder();
 
     ImmutableSet<String> firstOrderDeps =
-        targets.stream().map(x -> x.dependency.buildTarget).collect(ImmutableSet.toImmutableSet());
+        Stream.concat(
+                targets.stream().map(x -> x.dependency.buildTarget), getExportedDeps().stream())
+            .collect(ImmutableSet.toImmutableSet());
     for (DependencyAndExportedDeps target : targets) {
       if (isUnusedDependencyIncludingExportedDeps(
           target, usedJars, sourcePathResolverAdapter, firstOrderDeps)) {
