@@ -280,6 +280,11 @@ public class RemoteExecutionStrategyTest {
   private static class TestRemoteExecutionConfig implements RemoteExecutionStrategyConfig {
 
     @Override
+    public int getGrpcKeepAlivePeriodSeconds() {
+      return Integer.MAX_VALUE;
+    }
+
+    @Override
     public int getThreads() {
       return 1;
     }

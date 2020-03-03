@@ -49,4 +49,6 @@ public interface RemoteExecutionStrategyConfig {
   boolean tryLargerWorkerOnOom();
 
   ImmutableSet<PathMatcher> getIgnorePaths();
+
+  int getGrpcKeepAlivePeriodSeconds();
 }

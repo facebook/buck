@@ -155,6 +155,8 @@ public abstract class RemoteExecutionConfig implements ConfigView<BuckConfig> {
 
   public static final String DEFAULT_AUTO_RE_EXPERIMENT_PROPERTY = "remote_execution_beta_test";
 
+  public static final String GRPC_KEEPALIVE_EXPERIMENT_KEY = "grpc_keepalive_period_seconds";
+
   public static final String USE_REMOTE_EXECUTION_FOR_GENRULE_IF_REQUESTED_FORMAT =
       "use_remote_execution_for_%s_if_requested";
 
@@ -382,6 +384,11 @@ public abstract class RemoteExecutionConfig implements ConfigView<BuckConfig> {
     boolean tryLargerWorkerOnOom =
         getDelegate().getBoolean(SECTION, TRY_LARGER_WORKER_ON_OOM).orElse(false);
 
+    int grpcKeepAlivePeriodSeconds =
+        getDelegate()
+            .getInteger("experiments", GRPC_KEEPALIVE_EXPERIMENT_KEY)
+            .orElse(Integer.MAX_VALUE);
+
     // Some of these values are also limited by other ones (e.g. synchronous work is limited by the
     // number of threads). We detect some of these cases and log an error to the user to help them
     // understand the behavior.
@@ -408,6 +415,11 @@ public abstract class RemoteExecutionConfig implements ConfigView<BuckConfig> {
     }
 
     return new RemoteExecutionStrategyConfig() {
+      @Override
+      public int getGrpcKeepAlivePeriodSeconds() {
+        return grpcKeepAlivePeriodSeconds;
+      }
+
       @Override
       public int getThreads() {
         return workerThreads;
