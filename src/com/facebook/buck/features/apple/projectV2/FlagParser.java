@@ -68,7 +68,6 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Executors;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -90,7 +89,7 @@ class FlagParser {
   private final ImmutableSet<Flavor> appleCxxFlavors;
   private final XCodeDescriptions xcodeDescriptions;
   private final TargetGraph targetGraph;
-  private final Function<? super TargetNode<?>, ActionGraphBuilder> actionGraphBuilderForNode;
+  private final ActionGraphBuilder actionGraphBuilder;
   private final AppleDependenciesCache dependenciesCache;
   private final SourcePathResolverAdapter defaultPathResolver;
   private final HeaderSearchPaths headerSearchPaths;
@@ -105,7 +104,7 @@ class FlagParser {
       ImmutableSet<Flavor> appleCxxFlavors,
       XCodeDescriptions xcodeDescriptions,
       TargetGraph targetGraph,
-      Function<? super TargetNode<?>, ActionGraphBuilder> actionGraphBuilderForNode,
+      ActionGraphBuilder actionGraphBuilder,
       AppleDependenciesCache dependenciesCache,
       SourcePathResolverAdapter defaultPathResolver,
       HeaderSearchPaths headerSearchPaths) {
@@ -116,7 +115,7 @@ class FlagParser {
     this.appleCxxFlavors = appleCxxFlavors;
     this.xcodeDescriptions = xcodeDescriptions;
     this.targetGraph = targetGraph;
-    this.actionGraphBuilderForNode = actionGraphBuilderForNode;
+    this.actionGraphBuilder = actionGraphBuilder;
     this.dependenciesCache = dependenciesCache;
     this.defaultPathResolver = defaultPathResolver;
     this.headerSearchPaths = headerSearchPaths;
@@ -378,8 +377,7 @@ class FlagParser {
               throws MacroException {
             BuildTarget locationMacroTarget = input.getTarget();
 
-            ActionGraphBuilder builderFromNode =
-                actionGraphBuilderForNode.apply(targetGraph.get(locationMacroTarget));
+            ActionGraphBuilder builderFromNode = actionGraphBuilder;
             try {
               builderFromNode.requireRule(locationMacroTarget);
             } catch (NoSuchTargetException e) {

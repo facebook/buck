@@ -98,7 +98,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import org.hamcrest.FeatureMatcher;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
@@ -263,7 +262,7 @@ public class WorkspaceAndProjectGeneratorTest {
             DEFAULT_PLATFORM,
             ImmutableSet.of(),
             "BUCK",
-            getActionGraphBuilderForNodeFunction(targetGraph),
+            null,
             getFakeBuckEventBus(),
             TestRuleKeyConfigurationFactory.create(),
             halideBuckConfig,
@@ -298,7 +297,7 @@ public class WorkspaceAndProjectGeneratorTest {
             DEFAULT_PLATFORM,
             ImmutableSet.of(),
             "BUCK",
-            getActionGraphBuilderForNodeFunction(targetGraph),
+            null,
             getFakeBuckEventBus(),
             TestRuleKeyConfigurationFactory.create(),
             halideBuckConfig,
@@ -333,7 +332,7 @@ public class WorkspaceAndProjectGeneratorTest {
             DEFAULT_PLATFORM,
             ImmutableSet.of(),
             "BUCK",
-            getActionGraphBuilderForNodeFunction(targetGraph),
+            null,
             getFakeBuckEventBus(),
             TestRuleKeyConfigurationFactory.create(),
             halideBuckConfig,
@@ -413,7 +412,7 @@ public class WorkspaceAndProjectGeneratorTest {
             DEFAULT_PLATFORM,
             ImmutableSet.of(),
             "BUCK",
-            getActionGraphBuilderForNodeFunction(targetGraph),
+            getActionGraphBuilder(targetGraph),
             getFakeBuckEventBus(),
             TestRuleKeyConfigurationFactory.create(),
             halideBuckConfig,
@@ -555,7 +554,7 @@ public class WorkspaceAndProjectGeneratorTest {
             DEFAULT_PLATFORM,
             ImmutableSet.of(),
             "BUCK",
-            getActionGraphBuilderForNodeFunction(targetGraph),
+            null,
             getFakeBuckEventBus(),
             TestRuleKeyConfigurationFactory.create(),
             halideBuckConfig,
@@ -659,7 +658,7 @@ public class WorkspaceAndProjectGeneratorTest {
             DEFAULT_PLATFORM,
             ImmutableSet.of(),
             "BUCK",
-            getActionGraphBuilderForNodeFunction(targetGraph),
+            null,
             getFakeBuckEventBus(),
             TestRuleKeyConfigurationFactory.create(),
             halideBuckConfig,
@@ -724,7 +723,7 @@ public class WorkspaceAndProjectGeneratorTest {
             DEFAULT_PLATFORM,
             ImmutableSet.of(),
             "BUCK",
-            getActionGraphBuilderForNodeFunction(targetGraph),
+            null,
             getFakeBuckEventBus(),
             TestRuleKeyConfigurationFactory.create(),
             halideBuckConfig,
@@ -802,7 +801,7 @@ public class WorkspaceAndProjectGeneratorTest {
             DEFAULT_PLATFORM,
             ImmutableSet.of(),
             "BUCK",
-            getActionGraphBuilderForNodeFunction(targetGraph),
+            null,
             getFakeBuckEventBus(),
             TestRuleKeyConfigurationFactory.create(),
             halideBuckConfig,
@@ -882,7 +881,7 @@ public class WorkspaceAndProjectGeneratorTest {
             DEFAULT_PLATFORM,
             ImmutableSet.of(),
             "BUCK",
-            getActionGraphBuilderForNodeFunction(targetGraph),
+            null,
             getFakeBuckEventBus(),
             TestRuleKeyConfigurationFactory.create(),
             halideBuckConfig,
@@ -939,7 +938,7 @@ public class WorkspaceAndProjectGeneratorTest {
             DEFAULT_PLATFORM,
             ImmutableSet.of(),
             "BUCK",
-            getActionGraphBuilderForNodeFunction(targetGraph),
+            null,
             getFakeBuckEventBus(),
             TestRuleKeyConfigurationFactory.create(),
             halideBuckConfig,
@@ -1000,7 +999,7 @@ public class WorkspaceAndProjectGeneratorTest {
             DEFAULT_PLATFORM,
             ImmutableSet.of(),
             "BUCK",
-            getActionGraphBuilderForNodeFunction(targetGraph),
+            null,
             getFakeBuckEventBus(),
             TestRuleKeyConfigurationFactory.create(),
             halideBuckConfig,
@@ -1084,7 +1083,7 @@ public class WorkspaceAndProjectGeneratorTest {
             DEFAULT_PLATFORM,
             appleFlavors,
             "BUCK",
-            getActionGraphBuilderForNodeFunction(targetGraph),
+            null,
             getFakeBuckEventBus(),
             TestRuleKeyConfigurationFactory.create(),
             halideBuckConfig,
@@ -1161,7 +1160,7 @@ public class WorkspaceAndProjectGeneratorTest {
             DEFAULT_PLATFORM,
             ImmutableSet.of(),
             "BUCK",
-            getActionGraphBuilderForNodeFunction(targetGraph),
+            null,
             getFakeBuckEventBus(),
             TestRuleKeyConfigurationFactory.create(),
             halideBuckConfig,
@@ -1227,14 +1226,10 @@ public class WorkspaceAndProjectGeneratorTest {
     return testableReferenceWithName(name);
   }
 
-  private Function<TargetNode<?>, ActionGraphBuilder> getActionGraphBuilderForNodeFunction(
-      TargetGraph targetGraph) {
-    return input ->
-        new ActionGraphProviderBuilder()
-            .build()
-            .getFreshActionGraph(
-                TestTargetGraphCreationResultFactory.create(
-                    targetGraph.getSubgraph(ImmutableSet.of(input))))
-            .getActionGraphBuilder();
+  private ActionGraphBuilder getActionGraphBuilder(TargetGraph targetGraph) {
+    return new ActionGraphProviderBuilder()
+        .build()
+        .getFreshActionGraph(TestTargetGraphCreationResultFactory.create(targetGraph))
+        .getActionGraphBuilder();
   }
 }

@@ -15,6 +15,6 @@ apple_library(
 
 genrule(
     name = "gen",
-    out = "source.m",
+    out = "source_42.m",
     cmd = "echo \"static int answer = 42;\" > $OUT",
 )

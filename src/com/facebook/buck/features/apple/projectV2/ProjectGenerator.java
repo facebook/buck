@@ -69,7 +69,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /** Generates an Xcode project and writes the output to disk. */
@@ -91,7 +90,7 @@ public class ProjectGenerator {
   private final ProjectGeneratorOptions options;
   private final CxxPlatform defaultCxxPlatform;
 
-  private final Function<? super TargetNode<?>, ActionGraphBuilder> actionGraphBuilderForNode;
+  private final ActionGraphBuilder actionGraphBuilder;
   private final SourcePathResolverAdapter defaultPathResolver;
   private final BuckEventBus buckEventBus;
 
@@ -127,7 +126,7 @@ public class ProjectGenerator {
       ImmutableSet<BuildTarget> targetsInRequiredProjects,
       CxxPlatform defaultCxxPlatform,
       ImmutableSet<Flavor> appleCxxFlavors,
-      Function<? super TargetNode<?>, ActionGraphBuilder> actionGraphBuilderForNode,
+      ActionGraphBuilder actionGraphBuilder,
       BuckEventBus buckEventBus,
       HalideBuckConfig halideBuckConfig,
       CxxBuckConfig cxxBuckConfig,
@@ -148,7 +147,7 @@ public class ProjectGenerator {
     this.targetsInRequiredProjects = targetsInRequiredProjects;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.appleCxxFlavors = appleCxxFlavors;
-    this.actionGraphBuilderForNode = actionGraphBuilderForNode;
+    this.actionGraphBuilder = actionGraphBuilder;
     this.ruleKeyConfiguration = ruleKeyConfiguration;
     this.defaultPathResolver =
         new SourcePathResolverAdapter(
@@ -174,7 +173,7 @@ public class ProjectGenerator {
 
     this.projectSourcePathResolver =
         new ProjectSourcePathResolver(
-            projectCell, defaultPathResolver, targetGraph, actionGraphBuilderForNode);
+            projectCell, defaultPathResolver, targetGraph, actionGraphBuilder);
 
     this.sharedLibraryToBundle = sharedLibraryToBundle;
 
@@ -242,7 +241,7 @@ public class ProjectGenerator {
               ruleKeyConfiguration,
               xcodeDescriptions,
               targetGraph,
-              actionGraphBuilderForNode,
+              actionGraphBuilder,
               dependenciesCache,
               projectSourcePathResolver,
               pathRelativizer,
@@ -257,7 +256,7 @@ public class ProjectGenerator {
               appleCxxFlavors,
               xcodeDescriptions,
               targetGraph,
-              actionGraphBuilderForNode,
+              actionGraphBuilder,
               dependenciesCache,
               defaultPathResolver,
               headerSearchPaths);
@@ -277,7 +276,7 @@ public class ProjectGenerator {
               options,
               defaultCxxPlatform,
               appleCxxFlavors,
-              actionGraphBuilderForNode,
+              actionGraphBuilder,
               halideBuckConfig,
               headerSearchPaths,
               cxxBuckConfig,

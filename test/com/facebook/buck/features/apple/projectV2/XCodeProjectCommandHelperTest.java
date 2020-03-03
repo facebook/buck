@@ -30,10 +30,12 @@ import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.TestTargetGraphCreationResultFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup.Linkage;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -51,6 +53,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.util.Optional;
+import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -479,11 +482,14 @@ public class XCodeProjectCommandHelperTest {
     TargetGraph targetGraph =
         createTargetGraph(
             originalTargetGraph, passedInTargetsSet, isWithTests, isWithDependenciesTests);
+    TargetGraphCreationResult targetGraphCreationResult =
+        TestTargetGraphCreationResultFactory.create(targetGraph, passedInTargetsSet);
 
     Cells cell =
         new TestCellBuilder()
             .setFilesystem(new FakeProjectFilesystem(SettableFakeClock.DO_NOT_CARE))
             .build();
+
     return XCodeProjectCommandHelper.generateWorkspacesForTargets(
         BuckEventBusForTests.newInstance(),
         BuckPluginManagerFactory.createPluginManager(),
@@ -491,7 +497,7 @@ public class XCodeProjectCommandHelperTest {
         AppleProjectHelper.createDefaultBuckConfig(cell.getRootCell().getFilesystem()),
         TestRuleKeyConfigurationFactory.create(),
         MoreExecutors.newDirectExecutorService(),
-        TestTargetGraphCreationResultFactory.create(targetGraph, passedInTargetsSet),
+        targetGraphCreationResult,
         ProjectGeneratorOptions.builder()
             .setShouldGenerateReadOnlyFiles(false)
             .setShouldIncludeTests(isWithTests)
@@ -502,6 +508,7 @@ public class XCodeProjectCommandHelperTest {
             .build(),
         ImmutableSet.of(),
         FocusedTargetMatcher.noFocus(),
-        Optional.empty());
+        Optional.empty(),
+        EasyMock.createMock(ActionGraphBuilder.class));
   }
 }

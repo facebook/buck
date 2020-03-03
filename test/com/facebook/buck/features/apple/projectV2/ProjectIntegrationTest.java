@@ -144,38 +144,10 @@ public class ProjectIntegrationTest {
   }
 
   @Test
-  public void generatingCombinedProject() throws IOException {
-    ProjectWorkspace workspace = createWorkspace(this, "generating_combined_project");
-
-    ProcessResult result =
-        workspace.runBuckCommand(
-            "project",
-            "--combined-project",
-            "--without-tests",
-            "//Apps:workspace",
-            "--experimental");
-    result.assertSuccess();
-
-    workspace.verify();
-  }
-
-  @Test
   public void generatingRootDirectoryProject() throws IOException {
     ProjectWorkspace workspace = createWorkspace(this, "generating_root_directory_project");
 
     ProcessResult result = workspace.runBuckCommand("project", "//:bundle");
-    result.assertSuccess();
-
-    workspace.verify();
-  }
-
-  @Test
-  public void generatingCombinedProjectWithTests() throws IOException {
-    ProjectWorkspace workspace = createWorkspace(this, "generating_combined_project_with_tests");
-
-    ProcessResult result =
-        workspace.runBuckCommand(
-            "project", "--combined-project", "//Apps:workspace", "--experimental");
     result.assertSuccess();
 
     workspace.verify();
@@ -228,7 +200,8 @@ public class ProjectIntegrationTest {
   public void testGeneratingProjectWithTargetUsingGenruleSourceBuildsGenrule() throws IOException {
     ProjectWorkspace workspace = createWorkspace(this, "target_using_genrule_source");
 
-    workspace.runBuckCommand("project", "//lib:lib", "--experimental");
+    ProcessResult result = workspace.runBuckCommand("project", "//lib:lib", "--experimental");
+    result.assertSuccess();
 
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally("//lib:gen");
@@ -237,10 +210,18 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testGeneratingProjectWithGenruleResourceBuildsGenrule() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
     ProjectWorkspace workspace = createWorkspace(this, "target_using_genrule_resource");
 
-    workspace.runBuckCommand("project", "//app:TestApp", "--experimental");
+    ProcessResult processResult =
+        workspace.runBuckCommand(
+            "project",
+            "//app:TestApp",
+            "--experimental",
+            "--config",
+            "cxx.default_platform=iphonesimulator-x86_64");
 
+    processResult.assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally("//app:GenResource");
   }
@@ -320,7 +301,8 @@ public class ProjectIntegrationTest {
   public void testGeneratingProjectMetadataWithGenrule() throws IOException {
     ProjectWorkspace workspace = createWorkspace(this, "target_using_genrule_source");
 
-    workspace.runBuckCommand("project", "//lib:lib", "--experimental");
+    ProcessResult result = workspace.runBuckCommand("project", "//lib:lib", "--experimental");
+    result.assertSuccess();
     workspace.verify();
   }
 
@@ -346,6 +328,8 @@ public class ProjectIntegrationTest {
 
     ProcessResult result =
         workspace.runBuckCommand("project", "--show-full-output", "//lib:lib", "--experimental");
+    result.assertSuccess();
+
     workspace.verify();
 
     assertEquals(
@@ -375,7 +359,12 @@ public class ProjectIntegrationTest {
     ProjectWorkspace workspace = createWorkspace(this, "project_with_cell");
 
     ProcessResult result =
-        workspace.runBuckCommand("project", "//Apps:workspace", "--experimental");
+        workspace.runBuckCommand(
+            "project",
+            "//Apps:workspace",
+            "--experimental",
+            "--config",
+            "cxx.default_platform=iphonesimulator-x86_64");
     result.assertSuccess();
 
     runXcodebuild(workspace, "Apps/TestApp.xcworkspace", "TestApp");
@@ -393,7 +382,9 @@ public class ProjectIntegrationTest {
             "--config",
             "project.embedded_cell_buck_out_enabled=true",
             "//Apps:workspace",
-            "--experimental");
+            "--experimental",
+            "--config",
+            "cxx.default_platform=iphonesimulator-x86_64");
     result.assertSuccess();
 
     runXcodebuild(workspace, "Apps/TestApp.xcworkspace", "TestApp");
@@ -411,7 +402,9 @@ public class ProjectIntegrationTest {
             "--config",
             "apple.merge_header_maps_in_xcode=true",
             "//Apps:workspace",
-            "--experimental");
+            "--experimental",
+            "--config",
+            "cxx.default_platform=iphonesimulator-x86_64");
     result.assertSuccess();
 
     runXcodebuild(workspace, "Apps/TestApp.xcworkspace", "TestApp");
@@ -455,7 +448,9 @@ public class ProjectIntegrationTest {
             "--config",
             "apple.merge_header_maps_in_xcode=true",
             "//Apps:workspace",
-            "--experimental");
+            "--experimental",
+            "--config",
+            "cxx.default_platform=iphonesimulator-x86_64");
     result.assertSuccess();
 
     runXcodebuild(workspace, "Apps/TestApp.xcworkspace", "TestApp");

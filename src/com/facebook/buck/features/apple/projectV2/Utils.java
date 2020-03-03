@@ -35,7 +35,6 @@ import com.google.common.hash.Hashing;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.function.Function;
 
 /** Utility functions for project generation. */
 public class Utils {
@@ -87,20 +86,20 @@ public class Utils {
    * @param buildTargetSourcePath The build target source path to add.
    * @param requiredBuildTargetsBuilder The builder to add the target too, if necessary.
    * @param targetGraph The target graph that includes the target
-   * @param actionGraphBuilderForNode The action graph builder for the target node.
+   * @param actionGraphBuilder The action graph builder for the target node.
    */
   public static void addRequiredBuildTargetFromSourcePath(
       BuildTargetSourcePath buildTargetSourcePath,
       ImmutableSet.Builder<BuildTarget> requiredBuildTargetsBuilder,
       TargetGraph targetGraph,
-      Function<? super TargetNode<?>, ActionGraphBuilder> actionGraphBuilderForNode) {
+      ActionGraphBuilder actionGraphBuilder) {
 
     BuildTarget buildTarget = buildTargetSourcePath.getTarget();
     TargetNode<?> node = targetGraph.get(buildTarget);
     Optional<TargetNode<ExportFileDescriptionArg>> exportFileNode =
         TargetNodes.castArg(node, ExportFileDescriptionArg.class);
     if (!exportFileNode.isPresent()) {
-      BuildRuleResolver resolver = actionGraphBuilderForNode.apply(node);
+      BuildRuleResolver resolver = actionGraphBuilder;
       Path output = resolver.getSourcePathResolver().getAbsolutePath(buildTargetSourcePath);
       if (output == null) {
         throw new HumanReadableException(

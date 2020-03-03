@@ -121,7 +121,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -148,7 +147,7 @@ public class XcodeNativeTargetGenerator {
   private final ProjectGeneratorOptions options;
   private final CxxPlatform defaultCxxPlatform;
 
-  private final Function<? super TargetNode<?>, ActionGraphBuilder> actionGraphBuilderForNode;
+  private final ActionGraphBuilder actionGraphBuilder;
   private final SourcePathResolverAdapter defaultPathResolver;
 
   private final ImmutableSet<Flavor> appleCxxFlavors;
@@ -185,7 +184,7 @@ public class XcodeNativeTargetGenerator {
       ProjectGeneratorOptions options,
       CxxPlatform defaultCxxPlatform,
       ImmutableSet<Flavor> appleCxxFlavors,
-      Function<? super TargetNode<?>, ActionGraphBuilder> actionGraphBuilderForNode,
+      ActionGraphBuilder actionGraphBuilder,
       HalideBuckConfig halideBuckConfig,
       HeaderSearchPaths headerSearchPaths,
       CxxBuckConfig cxxBuckConfig,
@@ -204,7 +203,7 @@ public class XcodeNativeTargetGenerator {
     this.options = options;
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.appleCxxFlavors = appleCxxFlavors;
-    this.actionGraphBuilderForNode = actionGraphBuilderForNode;
+    this.actionGraphBuilder = actionGraphBuilder;
     this.defaultPathResolver = defaultPathResolver;
     this.projectSourcePathResolver = projectSourcePathResolver;
     this.pathRelativizer = pathRelativizer;
@@ -534,10 +533,7 @@ public class XcodeNativeTargetGenerator {
         .forEach(
             source -> {
               Utils.addRequiredBuildTargetFromSourcePath(
-                  source.get(),
-                  requiredBuildTargetsBuilder,
-                  targetGraph,
-                  actionGraphBuilderForNode);
+                  source.get(), requiredBuildTargetsBuilder, targetGraph, actionGraphBuilder);
             });
 
     Streams.concat(
@@ -554,7 +550,7 @@ public class XcodeNativeTargetGenerator {
                     sourcePath.get(),
                     requiredBuildTargetsBuilder,
                     targetGraph,
-                    actionGraphBuilderForNode));
+                    actionGraphBuilder));
 
     nativeTargetAttributes.directResources().stream()
         .forEach(
@@ -568,7 +564,7 @@ public class XcodeNativeTargetGenerator {
                               sourcePath.get(),
                               requiredBuildTargetsBuilder,
                               targetGraph,
-                              actionGraphBuilderForNode));
+                              actionGraphBuilder));
               arg.getDirs().stream()
                   .map(Utils::sourcePathTryIntoBuildTargetSourcePath)
                   .filter(Optional::isPresent)
@@ -578,7 +574,7 @@ public class XcodeNativeTargetGenerator {
                               sourcePath.get(),
                               requiredBuildTargetsBuilder,
                               targetGraph,
-                              actionGraphBuilderForNode));
+                              actionGraphBuilder));
               arg.getVariants().stream()
                   .map(Utils::sourcePathTryIntoBuildTargetSourcePath)
                   .filter(Optional::isPresent)
@@ -588,7 +584,7 @@ public class XcodeNativeTargetGenerator {
                               sourcePath.get(),
                               requiredBuildTargetsBuilder,
                               targetGraph,
-                              actionGraphBuilderForNode));
+                              actionGraphBuilder));
             });
 
     nativeTargetAttributes.directAssetCatalogs().stream()
@@ -603,7 +599,7 @@ public class XcodeNativeTargetGenerator {
                                 sourcePath.get(),
                                 requiredBuildTargetsBuilder,
                                 targetGraph,
-                                actionGraphBuilderForNode)));
+                                actionGraphBuilder)));
 
     nativeTargetAttributes
         .infoPlist()
@@ -616,7 +612,7 @@ public class XcodeNativeTargetGenerator {
                             sourcePath,
                             requiredBuildTargetsBuilder,
                             targetGraph,
-                            actionGraphBuilderForNode)));
+                            actionGraphBuilder)));
     nativeTargetAttributes
         .prefixHeader()
         .map(Utils::sourcePathTryIntoBuildTargetSourcePath)
@@ -628,7 +624,7 @@ public class XcodeNativeTargetGenerator {
                             buildTargetSourcePath,
                             requiredBuildTargetsBuilder,
                             targetGraph,
-                            actionGraphBuilderForNode)));
+                            actionGraphBuilder)));
     nativeTargetAttributes
         .bridgingHeader()
         .map(Utils::sourcePathTryIntoBuildTargetSourcePath)
@@ -640,7 +636,7 @@ public class XcodeNativeTargetGenerator {
                             buildTargetSourcePath,
                             requiredBuildTargetsBuilder,
                             targetGraph,
-                            actionGraphBuilderForNode)));
+                            actionGraphBuilder)));
   }
 
   private static Path getHalideOutputPath(ProjectFilesystem filesystem, BuildTarget target) {
@@ -1300,7 +1296,7 @@ public class XcodeNativeTargetGenerator {
                     sourcePath.get(),
                     requiredBuildTargetsBuilder,
                     targetGraph,
-                    actionGraphBuilderForNode));
+                    actionGraphBuilder));
 
     if (NodeHelper.isModularAppleLibrary(targetNode) && isFrameworkProductType(productType)) {
       // Modular frameworks should not include Buck-generated hmaps as they break the VFS overlay
@@ -2133,9 +2129,7 @@ public class XcodeNativeTargetGenerator {
     // path to the pch file itself. Resolve our target reference into a path
     Preconditions.checkArgument(pchPath instanceof BuildTargetSourcePath);
     BuildTargetSourcePath pchTargetSourcePath = (BuildTargetSourcePath) pchPath;
-    BuildTarget pchTarget = pchTargetSourcePath.getTarget();
-    TargetNode<?> node = targetGraph.get(pchTarget);
-    BuildRuleResolver resolver = actionGraphBuilderForNode.apply(node);
+    BuildRuleResolver resolver = actionGraphBuilder;
     BuildRule rule = resolver.getRule(pchTargetSourcePath);
     Preconditions.checkArgument(rule instanceof CxxPrecompiledHeaderTemplate);
     CxxPrecompiledHeaderTemplate pch = (CxxPrecompiledHeaderTemplate) rule;

@@ -148,7 +148,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -4680,8 +4679,7 @@ public class ProjectGeneratorTest {
             .add(workspaceTarget)
             .build();
 
-    Function<? super TargetNode<?>, ActionGraphBuilder> actionGraphBuilderForNode =
-        getActionGraphBuilderNodeFunction(targetGraph);
+    ActionGraphBuilder actionGraphBuilderForNode = getActionGraphBuilderNodeFunction(targetGraph);
 
     AppleDependenciesCache cache = new AppleDependenciesCache(targetGraph);
     ProjectGenerationStateCache projStateCache = new ProjectGenerationStateCache();
@@ -4708,8 +4706,7 @@ public class ProjectGeneratorTest {
         sharedLibrariesToBundles);
   }
 
-  private Function<TargetNode<?>, ActionGraphBuilder> getActionGraphBuilderNodeFunction(
-      TargetGraph targetGraph) {
+  private ActionGraphBuilder getActionGraphBuilderNodeFunction(TargetGraph targetGraph) {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     AbstractBottomUpTraversal<TargetNode<?>, RuntimeException> bottomUpTraversal =
         new AbstractBottomUpTraversal<TargetNode<?>, RuntimeException>(targetGraph) {
@@ -4727,7 +4724,7 @@ public class ProjectGeneratorTest {
           }
         };
     bottomUpTraversal.traverse();
-    return input -> graphBuilder;
+    return graphBuilder;
   }
 
   private Pair<BuildTarget, ImmutableSet<TargetNode<?>>> setupSimpleLibraryWithResources(
@@ -4862,7 +4859,7 @@ public class ProjectGeneratorTest {
 
   private Path getAbsoluteOutputForNode(TargetNode<?> node, ImmutableSet<TargetNode<?>> nodes) {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
-    BuildRuleResolver ruleResolver = getActionGraphBuilderNodeFunction(targetGraph).apply(node);
+    BuildRuleResolver ruleResolver = getActionGraphBuilderNodeFunction(targetGraph);
     SourcePath nodeOutput = ruleResolver.getRule(node.getBuildTarget()).getSourcePathToOutput();
     return ruleResolver.getSourcePathResolver().getAbsolutePath(nodeOutput);
   }

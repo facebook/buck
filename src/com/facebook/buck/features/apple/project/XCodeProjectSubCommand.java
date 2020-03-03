@@ -197,7 +197,8 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
                       throw new RuntimeException("Cannot run a build", e);
                     }
                   },
-                  projectCommandArguments);
+                  projectCommandArguments,
+                  params.getActionGraphProvider());
       return xcodeProjectCommandHelper.parseTargetsAndRunXCodeGenerator();
     }
   }

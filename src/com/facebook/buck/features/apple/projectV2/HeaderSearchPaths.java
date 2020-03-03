@@ -72,7 +72,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
-import java.util.function.Function;
 import java.util.regex.Pattern;
 
 /** Helper class to derive and generate all settings for file headers and where to find them. */
@@ -87,7 +86,7 @@ class HeaderSearchPaths {
   private final RuleKeyConfiguration ruleKeyConfiguration;
   private final XCodeDescriptions xcodeDescriptions;
   private final TargetGraph targetGraph;
-  private final Function<? super TargetNode<?>, ActionGraphBuilder> actionGraphBuilderForNode;
+  private final ActionGraphBuilder actionGraphBuilder;
   private final AppleDependenciesCache dependenciesCache;
   private final ProjectSourcePathResolver projectSourcePathResolver;
   private final PathRelativizer pathRelativizer;
@@ -103,7 +102,7 @@ class HeaderSearchPaths {
       RuleKeyConfiguration ruleKeyConfiguration,
       XCodeDescriptions xcodeDescriptions,
       TargetGraph targetGraph,
-      Function<? super TargetNode<?>, ActionGraphBuilder> actionGraphBuilderForNode,
+      ActionGraphBuilder actionGraphBuilder,
       AppleDependenciesCache dependenciesCache,
       ProjectSourcePathResolver projectSourcePathResolver,
       PathRelativizer pathRelativizer,
@@ -115,7 +114,7 @@ class HeaderSearchPaths {
     this.ruleKeyConfiguration = ruleKeyConfiguration;
     this.xcodeDescriptions = xcodeDescriptions;
     this.targetGraph = targetGraph;
-    this.actionGraphBuilderForNode = actionGraphBuilderForNode;
+    this.actionGraphBuilder = actionGraphBuilder;
     this.dependenciesCache = dependenciesCache;
     this.projectSourcePathResolver = projectSourcePathResolver;
     this.pathRelativizer = pathRelativizer;
@@ -295,7 +294,7 @@ class HeaderSearchPaths {
       ImmutableSortedMap<String, SourcePath> fullExportedHeaders = exportedHeadersBuilder.build();
       return convertMapKeysToPaths(fullExportedHeaders);
     } else {
-      ActionGraphBuilder graphBuilder = actionGraphBuilderForNode.apply(targetNode);
+      ActionGraphBuilder graphBuilder = actionGraphBuilder;
       ImmutableSortedMap.Builder<Path, SourcePath> allHeadersBuilder =
           ImmutableSortedMap.naturalOrder();
       String platform = cxxPlatform.getFlavor().toString();
@@ -365,7 +364,7 @@ class HeaderSearchPaths {
       ImmutableSortedMap<String, SourcePath> fullHeaders = fullHeadersBuilder.build();
       return convertMapKeysToPaths(fullHeaders);
     } else {
-      ActionGraphBuilder graphBuilder = actionGraphBuilderForNode.apply(targetNode);
+      ActionGraphBuilder graphBuilder = actionGraphBuilder;
       ImmutableSortedMap.Builder<Path, SourcePath> allHeadersBuilder =
           ImmutableSortedMap.naturalOrder();
       String platform = cxxPlatform.getFlavor().toString();

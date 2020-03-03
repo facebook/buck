@@ -33,7 +33,6 @@ import com.facebook.buck.shell.ExportFileDescriptionArg;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.function.Function;
 
 /**
  * Helper class to resolve {@link SourcePath}s to the cell in which we generate the Xcode project.
@@ -43,7 +42,7 @@ public class ProjectSourcePathResolver {
   private final Cell projectCell;
   private final SourcePathResolverAdapter pathSourcePathResolverAdapter;
   private final TargetGraph targetGraph;
-  private final Function<? super TargetNode<?>, ActionGraphBuilder> actionGraphBuilderForNode;
+  private final ActionGraphBuilder actionGraphBuilder;
 
   private final ProjectFilesystem projectFilesystem;
 
@@ -51,17 +50,17 @@ public class ProjectSourcePathResolver {
    * @param projectCell Cell to which the project target belongs.
    * @param pathSourcePathResolverAdapter Source path resolver to use for {@link PathSourcePath}s.
    * @param targetGraph Target graph for the project target.
-   * @param actionGraphBuilderForNode Action graph builder for the project target.
+   * @param actionGraphBuilder Action graph builder for the project target.
    */
   public ProjectSourcePathResolver(
       Cell projectCell,
       SourcePathResolverAdapter pathSourcePathResolverAdapter,
       TargetGraph targetGraph,
-      Function<? super TargetNode<?>, ActionGraphBuilder> actionGraphBuilderForNode) {
+      ActionGraphBuilder actionGraphBuilder) {
     this.projectCell = projectCell;
     this.pathSourcePathResolverAdapter = pathSourcePathResolverAdapter;
     this.targetGraph = targetGraph;
-    this.actionGraphBuilderForNode = actionGraphBuilderForNode;
+    this.actionGraphBuilder = actionGraphBuilder;
 
     this.projectFilesystem = projectCell.getFilesystem();
   }
@@ -88,7 +87,7 @@ public class ProjectSourcePathResolver {
     Optional<TargetNode<ExportFileDescriptionArg>> exportFileNode =
         TargetNodes.castArg(node, ExportFileDescriptionArg.class);
     if (!exportFileNode.isPresent()) {
-      BuildRuleResolver resolver = actionGraphBuilderForNode.apply(node);
+      BuildRuleResolver resolver = actionGraphBuilder;
       Path output = resolver.getSourcePathResolver().getAbsolutePath(sourcePath);
       if (output == null) {
         throw new HumanReadableException(

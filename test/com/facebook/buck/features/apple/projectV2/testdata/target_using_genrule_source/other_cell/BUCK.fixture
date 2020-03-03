@@ -1,6 +1,6 @@
 genrule(
     name = "gen",
-    out = "source.m",
+    out = "source_43.m",
     cmd = "echo \"static int answer2 = 43;\" > $OUT",
     visibility = ["PUBLIC"],
 )

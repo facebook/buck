@@ -27,7 +27,6 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.cli.ProjectTestsMode;
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
@@ -40,6 +39,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
+import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.model.targetgraph.NoSuchTargetException;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
@@ -47,11 +47,6 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.config.registry.impl.ConfigurationRuleRegistryFactory;
-import com.facebook.buck.core.rules.resolver.impl.MultiThreadedActionGraphBuilder;
-import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
-import com.facebook.buck.core.util.graph.CycleException;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
@@ -70,7 +65,6 @@ import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
-import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
@@ -93,26 +87,19 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import javax.annotation.concurrent.ThreadSafe;
 import org.pf4j.PluginManager;
 
 public class XCodeProjectCommandHelper {
@@ -152,6 +139,7 @@ public class XCodeProjectCommandHelper {
   private final Supplier<DepsAwareExecutor<? super ComputeResult, ?>> depsAwareExecutorSupplier;
 
   private final FocusedTargetMatcher focusedTargetMatcher;
+  private final ActionGraphProvider actionGraphProvider;
 
   public XCodeProjectCommandHelper(
       BuckEventBus buckEventBus,
@@ -183,7 +171,8 @@ public class XCodeProjectCommandHelper {
       PathOutputPresenter outputPresenter,
       Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser,
       Function<ImmutableList<String>, ExitCode> buildRunner,
-      List<String> arguments) {
+      List<String> arguments,
+      ActionGraphProvider actionGraphProvider) {
     this.buckEventBus = buckEventBus;
     this.pluginManager = pluginManager;
     this.parser = parser;
@@ -220,6 +209,7 @@ public class XCodeProjectCommandHelper {
             .build();
 
     this.focusedTargetMatcher = new FocusedTargetMatcher(focus, cell.getCellNameResolver());
+    this.actionGraphProvider = actionGraphProvider;
   }
 
   public ExitCode parseTargetsAndRunXCodeGenerator() throws IOException, InterruptedException {
@@ -410,6 +400,9 @@ public class XCodeProjectCommandHelper {
 
     LOG.debug("Xcode project generation: Generates workspaces for targets");
 
+    ActionGraphBuilder actionGraphBuilder =
+        actionGraphProvider.getActionGraph(targetGraphCreationResult).getActionGraphBuilder();
+
     ImmutableList<Result> results =
         generateWorkspacesForTargets(
             buckEventBus,
@@ -422,7 +415,8 @@ public class XCodeProjectCommandHelper {
             options,
             appleCxxFlavors,
             focusedTargetMatcher,
-            sharedLibraryToBundle);
+            sharedLibraryToBundle,
+            actionGraphBuilder);
     ImmutableSet<BuildTarget> requiredBuildTargets =
         results.stream()
             .flatMap(b -> b.getBuildTargets().stream())
@@ -510,11 +504,9 @@ public class XCodeProjectCommandHelper {
       ProjectGeneratorOptions options,
       ImmutableSet<Flavor> appleCxxFlavors,
       FocusedTargetMatcher focusedTargetMatcher, // @audited(chatatap)]
-      Optional<ImmutableMap<BuildTarget, TargetNode<?>>> sharedLibraryToBundle)
+      Optional<ImmutableMap<BuildTarget, TargetNode<?>>> sharedLibraryToBundle,
+      ActionGraphBuilder actionGraphBuilder)
       throws IOException, InterruptedException {
-
-    LazyActionGraph lazyActionGraph =
-        new LazyActionGraph(targetGraphCreationResult.getTargetGraph(), cell.getCellProvider());
 
     XCodeDescriptions xcodeDescriptions = XCodeDescriptionsFactory.create(pluginManager);
 
@@ -565,7 +557,7 @@ public class XCodeProjectCommandHelper {
               defaultCxxPlatform,
               appleCxxFlavors,
               buckConfig.getView(ParserConfig.class).getBuildFileName(),
-              lazyActionGraph::getActionGraphBuilderWhileRequiringSubgraph,
+              actionGraphBuilder,
               buckEventBus,
               ruleKeyConfiguration,
               halideBuckConfig,
@@ -825,59 +817,5 @@ public class XCodeProjectCommandHelper {
         RichStream.from(nodes)
             .filter(node -> focusedTargetMatcher.matches(node.getBuildTarget()))
             .iterator());
-  }
-
-  /**
-   * An action graph where subtrees are populated as needed.
-   *
-   * <p>This is useful when only select sub-graphs of the action graph needs to be generated, but
-   * the subgraph is not known at this point in time. The synchronization and bottom-up traversal is
-   * necessary as this will be accessed from multiple threads during project generation, and
-   * BuildRuleResolver is not 100% thread safe when it comes to mutations.
-   */
-  @ThreadSafe
-  private static class LazyActionGraph {
-    private final TargetGraph targetGraph;
-    private final ActionGraphBuilder graphBuilder;
-    private final Set<BuildTarget> traversedTargets;
-
-    public LazyActionGraph(TargetGraph targetGraph, CellProvider cellProvider) {
-      this.targetGraph = targetGraph;
-      this.graphBuilder =
-          new MultiThreadedActionGraphBuilder(
-              MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
-              targetGraph,
-              ConfigurationRuleRegistryFactory.createRegistry(targetGraph),
-              new DefaultTargetNodeToBuildRuleTransformer(),
-              cellProvider);
-      this.traversedTargets = new HashSet<>();
-    }
-
-    public ActionGraphBuilder getActionGraphBuilderWhileRequiringSubgraph(TargetNode<?> root) {
-      synchronized (this) {
-        try {
-          List<BuildTarget> currentTargets = new ArrayList<>();
-          for (TargetNode<?> targetNode :
-              new AcyclicDepthFirstPostOrderTraversal<TargetNode<?>>(
-                      node ->
-                          traversedTargets.contains(node.getBuildTarget())
-                              ? Collections.emptyIterator()
-                              : targetGraph.getOutgoingNodesFor(node).iterator())
-                  .traverse(ImmutableList.of(root))) {
-            if (!traversedTargets.contains(targetNode.getBuildTarget())
-                && targetNode.getRuleType().isBuildRule()) {
-              graphBuilder.requireRule(targetNode.getBuildTarget());
-              currentTargets.add(targetNode.getBuildTarget());
-            }
-          }
-          traversedTargets.addAll(currentTargets);
-        } catch (NoSuchBuildTargetException e) {
-          throw new HumanReadableException(e);
-        } catch (CycleException e) {
-          throw new RuntimeException(e);
-        }
-        return graphBuilder;
-      }
-    }
   }
 }

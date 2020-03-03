@@ -76,7 +76,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -98,7 +97,7 @@ public class WorkspaceAndProjectGenerator {
 
   private final Map<String, SchemeGenerator> schemeGenerators = new HashMap<>();
   private final String buildFileName;
-  private final Function<TargetNode<?>, ActionGraphBuilder> graphBuilderForNode;
+  private final ActionGraphBuilder actionGraphBuilder;
   private final BuckEventBus buckEventBus;
   private final RuleKeyConfiguration ruleKeyConfiguration;
 
@@ -142,7 +141,7 @@ public class WorkspaceAndProjectGenerator {
       CxxPlatform defaultCxxPlatform,
       ImmutableSet<Flavor> appleCxxFlavors,
       String buildFileName,
-      Function<TargetNode<?>, ActionGraphBuilder> graphBuilderForNode,
+      ActionGraphBuilder actionGraphBuilder,
       BuckEventBus buckEventBus,
       RuleKeyConfiguration ruleKeyConfiguration,
       HalideBuckConfig halideBuckConfig,
@@ -163,7 +162,7 @@ public class WorkspaceAndProjectGenerator {
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.appleCxxFlavors = appleCxxFlavors;
     this.buildFileName = buildFileName;
-    this.graphBuilderForNode = graphBuilderForNode;
+    this.actionGraphBuilder = actionGraphBuilder;
     this.buckEventBus = buckEventBus;
     this.swiftBuckConfig = swiftBuckConfig;
     this.halideBuckConfig = halideBuckConfig;
@@ -422,7 +421,7 @@ public class WorkspaceAndProjectGenerator {
             targetsInRequiredProjects,
             defaultCxxPlatform,
             appleCxxFlavors,
-            graphBuilderForNode,
+            actionGraphBuilder,
             buckEventBus,
             halideBuckConfig,
             cxxBuckConfig,
@@ -438,7 +437,7 @@ public class WorkspaceAndProjectGenerator {
         .forEach(
             sourcePath -> {
               Utils.addRequiredBuildTargetFromSourcePath(
-                  sourcePath, requiredBuildTargetsBuilder, projectGraph, graphBuilderForNode);
+                  sourcePath, requiredBuildTargetsBuilder, projectGraph, actionGraphBuilder);
             });
 
     ImmutableMap<BuildTarget, PBXTarget> buildTargetToGeneratedTargetMap =
