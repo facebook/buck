@@ -20,9 +20,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.MetadataProviderFactory;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionStrategyConfig;
-import com.facebook.buck.remoteexecution.grpc.retry.Backoff;
-import com.facebook.buck.remoteexecution.grpc.retry.RetryClientInterceptor;
-import com.facebook.buck.remoteexecution.grpc.retry.RetryPolicy;
 import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
 import com.facebook.buck.remoteexecution.util.LocalContentAddressedStorage;
 import com.facebook.buck.util.NamedTemporaryDirectory;
@@ -31,24 +28,15 @@ import io.grpc.ManagedChannel;
 import io.grpc.Server;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
-import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
-import io.grpc.netty.shaded.io.grpc.netty.NegotiationType;
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
-import io.grpc.netty.shaded.io.netty.handler.ssl.SslContextBuilder;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLException;
 
 /** Factory for creating grpc-based strategies. */
 public class GrpcExecutionFactory {
-  public static final int MAX_INBOUND_MESSAGE_SIZE = 500 * 1024 * 1024;
-  private static final int MAX_CONNECT_RETRIES = 2;
-  private static final int INITIAL_DELAY_ON_RETRY_MS = 50;
-  private static final int MAX_DELAY_ON_RETRY_MS = 2000;
   private static final int CAS_DEADLINE_S = 120;
-  private static final int KEEPALIVE_TIMEOUT_S = 10;
 
   /**
    * The in-process strategy starts up a grpc remote execution service in process and connects to it
@@ -114,10 +102,12 @@ public class GrpcExecutionFactory {
     ManagedChannel executionEngineChannel;
     if (insecure) {
       executionEngineChannel =
-          createInsecureChannel(executionEngineHost, executionEnginePort, strategyConfig).build();
+          GrpcChannelFactory.createInsecureChannel(
+                  executionEngineHost, executionEnginePort, strategyConfig)
+              .build();
     } else {
       executionEngineChannel =
-          createSecureChannel(
+          GrpcChannelFactory.createSecureChannel(
                   executionEngineHost,
                   executionEnginePort,
                   certPath,
@@ -129,10 +119,12 @@ public class GrpcExecutionFactory {
 
     NettyChannelBuilder casChannelBuilder;
     if (casInsecure) {
-      casChannelBuilder = createInsecureChannel(casHost, casPort, strategyConfig);
+      casChannelBuilder =
+          GrpcChannelFactory.createInsecureChannel(casHost, casPort, strategyConfig);
     } else {
       casChannelBuilder =
-          createSecureChannel(casHost, casPort, certPath, keyPath, caPath, strategyConfig);
+          GrpcChannelFactory.createSecureChannel(
+              casHost, casPort, certPath, keyPath, caPath, strategyConfig);
     }
     casChannelBuilder.flowControlWindow(100 * 1024 * 1024);
 
@@ -144,53 +136,5 @@ public class GrpcExecutionFactory {
         metadataProvider,
         buckEventBus,
         strategyConfig);
-  }
-
-  private static NettyChannelBuilder channelBuilder(
-      String host, int port, RemoteExecutionStrategyConfig strategyConfig) {
-    return NettyChannelBuilder.forAddress(host, port)
-        .maxInboundMessageSize(MAX_INBOUND_MESSAGE_SIZE)
-        .keepAliveTime(strategyConfig.getGrpcKeepAlivePeriodSeconds(), TimeUnit.SECONDS)
-        .keepAliveTimeout(KEEPALIVE_TIMEOUT_S, TimeUnit.SECONDS)
-        .intercept(getRetryInterceptor());
-  }
-
-  private static NettyChannelBuilder createInsecureChannel(
-      String host, int port, RemoteExecutionStrategyConfig strategyConfig) {
-    return channelBuilder(host, port, strategyConfig).usePlaintext(true);
-  }
-
-  private static NettyChannelBuilder createSecureChannel(
-      String host,
-      int port,
-      Optional<Path> certPath,
-      Optional<Path> keyPath,
-      Optional<Path> caPath,
-      RemoteExecutionStrategyConfig strategyConfig)
-      throws SSLException {
-
-    SslContextBuilder contextBuilder = GrpcSslContexts.forClient();
-    if (certPath.isPresent() && keyPath.isPresent()) {
-      contextBuilder.keyManager(certPath.get().toFile(), keyPath.get().toFile());
-    }
-    if (caPath.isPresent()) {
-      contextBuilder.trustManager(caPath.get().toFile());
-    }
-
-    return channelBuilder(host, port, strategyConfig)
-        .sslContext(contextBuilder.build())
-        .negotiationType(NegotiationType.TLS);
-  }
-
-  private static RetryClientInterceptor getRetryInterceptor() {
-    return new RetryClientInterceptor(
-        RetryPolicy.builder()
-            .setMaxRetries(MAX_CONNECT_RETRIES)
-            .setBackoffStrategy(
-                Backoff.exponential(INITIAL_DELAY_ON_RETRY_MS, MAX_DELAY_ON_RETRY_MS))
-            // Build Actions and CAS operations can be retried without issue even if they fail in
-            // the middle of execution.
-            .setRestartAllStreamingCalls(true)
-            .build());
   }
 }
