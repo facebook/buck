@@ -68,7 +68,7 @@ public class TargetNodeMaybeIncompatible {
             compatibles.append(target.getFullyQualifiedName()).append(System.lineSeparator()));
     throw new HumanReadableException(
         dependencyStack,
-        "Build target %s is restricted to contraints in \"compatible_with\""
+        "Build target %s is restricted to constraints in \"compatible_with\""
             + " that do not match the target platform "
             + compatibles,
         buildTarget);

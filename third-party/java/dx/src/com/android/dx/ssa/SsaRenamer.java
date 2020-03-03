@@ -409,7 +409,7 @@ public class SsaRenamer implements Runnable {
         }
 
         /**
-         * Enforces a few contraints when a register mapping is added.
+         * Enforces a few contsraints when a register mapping is added.
          *
          * <ol>
          * <li> Ensures that all new SSA registers specs in the mapping
