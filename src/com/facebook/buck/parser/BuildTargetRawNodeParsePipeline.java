@@ -22,9 +22,9 @@ import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -51,7 +51,7 @@ public class BuildTargetRawNodeParsePipeline
    * makes error messages more useful
    */
   private static ImmutableList<UnconfiguredBuildTarget> findSimilarTargets(
-      ImmutableMap<String, ImmutableMap<String, Object>> buildFileTargets,
+      TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>> buildFileTargets,
       UnconfiguredBuildTarget expectedTarget,
       int maxLevenshteinDistance) {
 

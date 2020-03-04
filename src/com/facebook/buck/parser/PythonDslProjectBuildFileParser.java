@@ -51,6 +51,7 @@ import com.facebook.buck.util.MoreThrowables;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Threads;
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.facebook.buck.util.concurrent.AssertScopeExclusiveAccess;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.types.Unit;
@@ -481,7 +482,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
         // in case Python process cannot send values due to serialization issues, it will send an
         // empty list
         return BuildFileManifest.of(
-            ImmutableMap.of(),
+            TwoArraysImmutableHashMap.of(),
             ImmutableSortedSet.of(),
             ImmutableMap.of(),
             Optional.empty(),
@@ -527,20 +528,20 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
         ImmutableList.of());
   }
 
-  private static ImmutableMap<String, ImmutableMap<String, Object>> indexTargetsByName(
-      ImmutableList<Map<String, Object>> targets) {
-    ImmutableMap.Builder<String, ImmutableMap<String, Object>> builder =
-        ImmutableMap.builderWithExpectedSize(targets.size());
+  private static TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>>
+      indexTargetsByName(ImmutableList<Map<String, Object>> targets) {
+    TwoArraysImmutableHashMap.Builder<String, TwoArraysImmutableHashMap<String, Object>> builder =
+        TwoArraysImmutableHashMap.builderWithExpectedSize(targets.size());
     targets.forEach(
         target -> builder.put((String) target.get("name"), convertSelectableAttributes(target)));
     return builder.build();
   }
 
-  private static ImmutableMap<String, Object> convertSelectableAttributes(
+  private static TwoArraysImmutableHashMap<String, Object> convertSelectableAttributes(
       Map<String, Object> values) {
     return values.entrySet().stream()
         .collect(
-            ImmutableMap.toImmutableMap(
+            TwoArraysImmutableHashMap.toMap(
                 Map.Entry::getKey,
                 e ->
                     PythonDslProjectBuildFileParser.convertToSelectableAttributeIfNeeded(

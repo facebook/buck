@@ -35,6 +35,7 @@ import com.facebook.buck.skylark.io.Globber;
 import com.facebook.buck.skylark.io.GlobberFactory;
 import com.facebook.buck.skylark.io.impl.CachingGlobber;
 import com.facebook.buck.skylark.parser.context.ParseContext;
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -145,8 +146,8 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
       // By contract, BuildFileManifestPojoizer converts any Map to ImmutableMap.
       // ParseResult.getRawRules() returns ImmutableMap<String, Map<String, Object>>, so it is
       // a safe downcast here
-      ImmutableMap<String, ImmutableMap<String, Object>> targets =
-          (ImmutableMap<String, ImmutableMap<String, Object>>)
+      TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>> targets =
+          (TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>>)
               getBuildFileManifestPojoizer().convertToPojo(rawRules);
 
       rulesParsed = targets.size();
@@ -189,8 +190,8 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
                   (com.google.devtools.build.lib.syntax.SelectorValue) obj;
               // recursively convert dictionary elements
               @SuppressWarnings("unchecked")
-              ImmutableMap<String, Object> dictionary =
-                  (ImmutableMap<String, Object>)
+              TwoArraysImmutableHashMap<String, Object> dictionary =
+                  (TwoArraysImmutableHashMap<String, Object>)
                       pojoizer.convertToPojo(skylarkSelectorValue.getDictionary());
               return SelectorValue.of(dictionary, skylarkSelectorValue.getNoMatchError());
             }));

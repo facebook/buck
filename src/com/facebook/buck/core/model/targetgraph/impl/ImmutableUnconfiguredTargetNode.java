@@ -21,6 +21,7 @@ import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableList;
@@ -42,7 +43,7 @@ public abstract class ImmutableUnconfiguredTargetNode implements UnconfiguredTar
 
   @Override
   @JsonProperty("attributes")
-  public abstract ImmutableMap<String, Object> getAttributes();
+  public abstract TwoArraysImmutableHashMap<String, Object> getAttributes();
 
   // Visibility patterns might not really serialize/deserialize well
   // TODO: should we move them out of UnconfiguredTargetNode to TargetNode ?
@@ -66,7 +67,7 @@ public abstract class ImmutableUnconfiguredTargetNode implements UnconfiguredTar
   public static UnconfiguredTargetNode of(
       UnconfiguredBuildTarget buildTarget,
       RuleType ruleType,
-      ImmutableMap<String, Object> attributes,
+      TwoArraysImmutableHashMap<String, Object> attributes,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
       ImmutableSet<VisibilityPattern> withinViewPatterns,
       Optional<UnconfiguredBuildTarget> defaultTargetPlatform,
@@ -75,6 +76,26 @@ public abstract class ImmutableUnconfiguredTargetNode implements UnconfiguredTar
         buildTarget,
         ruleType,
         attributes,
+        visibilityPatterns,
+        withinViewPatterns,
+        defaultTargetPlatform,
+        compatibleWith);
+  }
+
+  /** Kill me. */
+  // TODO: kill me
+  public static UnconfiguredTargetNode of(
+      UnconfiguredBuildTarget buildTarget,
+      RuleType ruleType,
+      ImmutableMap<String, Object> attributes,
+      ImmutableSet<VisibilityPattern> visibilityPatterns,
+      ImmutableSet<VisibilityPattern> withinViewPatterns,
+      Optional<UnconfiguredBuildTarget> defaultTargetPlatform,
+      ImmutableList<UnconfiguredBuildTarget> compatibleWith) {
+    return of(
+        buildTarget,
+        ruleType,
+        TwoArraysImmutableHashMap.copyOf(attributes),
         visibilityPatterns,
         withinViewPatterns,
         defaultTargetPlatform,

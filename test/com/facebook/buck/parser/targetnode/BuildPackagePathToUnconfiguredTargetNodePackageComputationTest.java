@@ -49,6 +49,7 @@ import com.facebook.buck.parser.manifest.BuildPackagePathToBuildFileManifestKey;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -128,7 +129,11 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
 
     BuildFileManifest buildFileManifest =
         BuildFileManifest.of(
-            ImmutableMap.of("target1", rawAttributes1, "target2", rawAttributes2),
+            TwoArraysImmutableHashMap.of(
+                "target1",
+                TwoArraysImmutableHashMap.copyOf(rawAttributes1),
+                "target2",
+                TwoArraysImmutableHashMap.copyOf(rawAttributes2)),
             ImmutableSortedSet.of(),
             ImmutableMap.of(),
             Optional.empty(),

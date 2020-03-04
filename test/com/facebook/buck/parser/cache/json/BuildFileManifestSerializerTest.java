@@ -23,6 +23,7 @@ import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.exceptions.ParsingError;
 import com.facebook.buck.skylark.io.GlobSpec;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -66,10 +67,12 @@ public class BuildFileManifestSerializerTest {
     ImmutableMap<String, Object> configs =
         ImmutableMap.of("confKey1", "confVal1", "confKey2", "confVal2");
     ImmutableSortedSet<String> includes = ImmutableSortedSet.of("/Includes1", "/includes2");
-    ImmutableMap<String, Object> target1 = ImmutableMap.of("t1K1", "t1V1", "t1K2", "t1V2");
-    ImmutableMap<String, Object> target2 = ImmutableMap.of("t2K1", "t2V1", "t2K2", "t2V2");
-    ImmutableMap<String, ImmutableMap<String, Object>> targets =
-        ImmutableMap.of("tar1", target1, "tar2", target2);
+    TwoArraysImmutableHashMap<String, Object> target1 =
+        TwoArraysImmutableHashMap.of("t1K1", "t1V1", "t1K2", "t1V2");
+    TwoArraysImmutableHashMap<String, Object> target2 =
+        TwoArraysImmutableHashMap.of("t2K1", "t2V1", "t2K2", "t2V2");
+    TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>> targets =
+        TwoArraysImmutableHashMap.of("tar1", target1, "tar2", target2);
 
     ImmutableList<ParsingError> errors =
         ImmutableList.of(

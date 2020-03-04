@@ -28,6 +28,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.PackageFileManifest;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.facebook.buck.util.concurrent.AutoCloseableLock;
 import com.facebook.buck.util.concurrent.AutoCloseableReadWriteUpdateLock;
 import com.google.common.base.Preconditions;
@@ -297,7 +298,7 @@ class DaemonicCellState {
       int invalidatedRawNodes = 0;
       BuildFileManifest buildFileManifest = allBuildFileManifests.getIfPresent(path);
       if (buildFileManifest != null) {
-        ImmutableMap<String, ImmutableMap<String, Object>> rawNodes =
+        TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>> rawNodes =
             buildFileManifest.getTargets();
         // Increment the counter
         invalidatedRawNodes = rawNodes.size();

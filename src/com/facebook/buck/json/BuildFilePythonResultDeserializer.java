@@ -17,6 +17,7 @@
 package com.facebook.buck.json;
 
 import com.facebook.buck.util.ImmutableMapWithNullValues;
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
@@ -94,8 +95,7 @@ final class BuildFilePythonResultDeserializer extends StdDeserializer<BuildFileP
   }
 
   private static Map<String, Object> deserializeObject(JsonParser jp) throws IOException {
-    ImmutableMapWithNullValues.Builder<String, Object> builder =
-        ImmutableMapWithNullValues.Builder.insertionOrder();
+    TwoArraysImmutableHashMap.Builder<String, Object> builder = TwoArraysImmutableHashMap.builder();
     String fieldName;
     while ((fieldName = jp.nextFieldName()) != null) {
       builder.put(STRING_INTERNER.intern(fieldName), deserializeRecursive(jp, jp.nextToken()));

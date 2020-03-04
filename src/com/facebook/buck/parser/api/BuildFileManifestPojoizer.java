@@ -17,17 +17,15 @@
 package com.facebook.buck.parser.api;
 
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.function.Function;
 
@@ -174,19 +172,13 @@ public class BuildFileManifestPojoizer {
     return needConversion ? builder.build() : (ImmutableSet<Object>) set;
   }
 
-  private ImmutableMap<Object, Object> convertMapToPojo(Object object) {
+  private TwoArraysImmutableHashMap<Object, Object> convertMapToPojo(Object object) {
     @SuppressWarnings("unchecked")
     Map<Object, Object> map = (Map<Object, Object>) object;
 
-    boolean needConversion;
-    ImmutableMap.Builder<Object, Object> builder;
-    if (map instanceof SortedMap) {
-      needConversion = !(map instanceof ImmutableSortedMap);
-      builder = new ImmutableSortedMap.Builder<>(((SortedMap<Object, Object>) map).comparator());
-    } else {
-      needConversion = !(map instanceof ImmutableMap);
-      builder = ImmutableMap.builderWithExpectedSize(map.size());
-    }
+    TwoArraysImmutableHashMap.Builder<Object, Object> builder =
+        TwoArraysImmutableHashMap.builderWithExpectedSize(map.size());
+    boolean needConversion = !(map instanceof TwoArraysImmutableHashMap<?, ?>);
 
     for (Map.Entry<?, ?> entry : map.entrySet()) {
       Object key = entry.getKey();
@@ -200,7 +192,7 @@ public class BuildFileManifestPojoizer {
 
       builder.put(convertedKey, convertedValue);
     }
-    return needConversion ? builder.build() : (ImmutableMap<Object, Object>) map;
+    return needConversion ? builder.build() : (TwoArraysImmutableHashMap<Object, Object>) map;
   }
 
   private Object convertObjectToPojo(Object obj) {

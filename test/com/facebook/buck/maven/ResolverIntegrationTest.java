@@ -48,6 +48,7 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.HttpdForTests;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -196,7 +197,7 @@ public class ResolverIntegrationTest {
     HashCode seen = MorePaths.asByteSource(jarFile).hash(Hashing.sha1());
     assertEquals(expected, seen);
 
-    ImmutableMap<String, ImmutableMap<String, Object>> rules =
+    TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>> rules =
         buildFileParser.getManifest(groupDir.resolve("BUCK")).getTargets();
 
     assertEquals(1, rules.size());
@@ -222,7 +223,7 @@ public class ResolverIntegrationTest {
     resolveWithArtifacts("com.example:with-sources:jar:1.0");
 
     Path groupDir = thirdParty.resolve("example");
-    ImmutableMap<String, ImmutableMap<String, Object>> rules =
+    TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>> rules =
         buildFileParser.getManifest(groupDir.resolve("BUCK")).getTargets();
 
     Map<String, Object> rule = Iterables.getOnlyElement(rules.values());
@@ -272,7 +273,7 @@ public class ResolverIntegrationTest {
     resolveWithArtifacts("com.example:deps-in-same-project:jar:1.0");
 
     Path exampleDir = thirdPartyRelative.resolve("example");
-    ImmutableMap<String, ImmutableMap<String, Object>> allTargets =
+    TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>> allTargets =
         buildFileParser.getManifest(buckRepoRoot.resolve(exampleDir).resolve("BUCK")).getTargets();
 
     assertEquals(2, allTargets.size());

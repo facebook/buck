@@ -42,9 +42,9 @@ import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.rules.visibility.parser.VisibilityPatterns;
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.TypeToken;
 import java.nio.file.Path;
@@ -88,14 +88,14 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
             .checkUnconfiguredAssignableTo(TypeToken.of(UnconfiguredBuildTarget.class));
   }
 
-  private ImmutableMap<String, Object> convertSelects(
+  private TwoArraysImmutableHashMap<String, Object> convertSelects(
       Cell cell,
       UnconfiguredBuildTarget target,
       RuleDescriptor<?> descriptor,
       Map<String, Object> attrs,
       CellRelativePath pathRelativeToProjectRoot,
       DependencyStack dependencyStack) {
-    ImmutableMap.Builder<String, Object> result = ImmutableMap.builder();
+    TwoArraysImmutableHashMap.Builder<String, Object> result = TwoArraysImmutableHashMap.builder();
     DataTransferObjectDescriptor<?> constructorDescriptor =
         descriptor.dataTransferObjectDescriptor(typeCoercerFactory);
     for (Map.Entry<String, Object> attr : attrs.entrySet()) {
@@ -211,7 +211,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
       withinViewPatterns = pkg.getWithinViewPatterns();
     }
 
-    ImmutableMap<String, Object> withSelects =
+    TwoArraysImmutableHashMap<String, Object> withSelects =
         convertSelects(
             cell,
             target,

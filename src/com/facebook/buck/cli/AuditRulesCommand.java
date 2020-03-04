@@ -29,10 +29,10 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.ExitCode;
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.io.BufferedOutputStream;
@@ -131,7 +131,7 @@ public class AuditRulesCommand extends AbstractCommand {
           }
 
           // Parse the rules from the build file.
-          ImmutableMap<String, ImmutableMap<String, Object>> rawRules =
+          TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>> rawRules =
               parser.getManifest(path).getTargets();
 
           // Format and print the rules from the raw data, filtered by type.
@@ -159,7 +159,7 @@ public class AuditRulesCommand extends AbstractCommand {
 
   private void printRulesToStdout(
       PrintStream stdOut,
-      ImmutableMap<String, ImmutableMap<String, Object>> rawRules,
+      TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>> rawRules,
       Predicate<String> includeType) {
     rawRules.entrySet().stream()
         .filter(

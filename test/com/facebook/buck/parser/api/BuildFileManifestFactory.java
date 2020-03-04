@@ -16,9 +16,11 @@
 
 package com.facebook.buck.parser.api;
 
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Map;
 import java.util.Optional;
 
 public class BuildFileManifestFactory {
@@ -28,7 +30,10 @@ public class BuildFileManifestFactory {
   public static BuildFileManifest create(
       ImmutableMap<String, ImmutableMap<String, Object>> targets) {
     return ImmutableBuildFileManifest.of(
-        targets,
+        targets.entrySet().stream()
+            .collect(
+                TwoArraysImmutableHashMap.toMap(
+                    Map.Entry::getKey, e -> TwoArraysImmutableHashMap.copyOf(e.getValue()))),
         ImmutableSortedSet.of(),
         ImmutableMap.of(),
         Optional.empty(),

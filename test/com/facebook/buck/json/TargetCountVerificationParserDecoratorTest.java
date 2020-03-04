@@ -25,6 +25,7 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.BuckEventBusForTests.CapturingConsoleEventListener;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -107,7 +108,10 @@ public class TargetCountVerificationParserDecoratorTest {
   private BuildFileManifest toBuildFileManifest(
       ImmutableMap<String, ImmutableMap<String, Object>> rawTargets) {
     return BuildFileManifest.of(
-        rawTargets,
+        rawTargets.entrySet().stream()
+            .collect(
+                TwoArraysImmutableHashMap.toMap(
+                    Map.Entry::getKey, e -> TwoArraysImmutableHashMap.copyOf(e.getValue()))),
         ImmutableSortedSet.of(),
         ImmutableMap.of(),
         Optional.empty(),

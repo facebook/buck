@@ -20,6 +20,7 @@ import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.parser.exceptions.ParsingError;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -29,7 +30,8 @@ import java.util.Optional;
 @BuckStyleValue
 public abstract class BuildFileManifest implements ComputeResult, FileManifest {
   /** @return a list of targets defined in the build file. */
-  public abstract ImmutableMap<String, ImmutableMap<String, Object>> getTargets();
+  public abstract TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>>
+      getTargets();
 
   @Override
   public abstract ImmutableSortedSet<String> getIncludes();
@@ -47,12 +49,33 @@ public abstract class BuildFileManifest implements ComputeResult, FileManifest {
   public abstract ImmutableList<ParsingError> getErrors();
 
   public static BuildFileManifest of(
-      ImmutableMap<String, ImmutableMap<String, Object>> targets,
+      TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>> targets,
       ImmutableSortedSet<String> includes,
       ImmutableMap<String, Object> configs,
       Optional<ImmutableMap<String, Optional<String>>> env,
       ImmutableList<GlobSpecWithResult> globManifest,
       ImmutableList<ParsingError> errors) {
     return ImmutableBuildFileManifest.ofImpl(targets, includes, configs, env, globManifest, errors);
+  }
+
+  /** Temporary for existing tests. */
+  // TODO: inline
+  public static BuildFileManifest of(
+      ImmutableMap<String, ImmutableMap<String, Object>> targets,
+      ImmutableSortedSet<String> includes,
+      ImmutableMap<String, Object> configs,
+      Optional<ImmutableMap<String, Optional<String>>> env,
+      ImmutableList<GlobSpecWithResult> globManifest,
+      ImmutableList<ParsingError> errors) {
+    return of(
+        targets.entrySet().stream()
+            .collect(
+                TwoArraysImmutableHashMap.toMap(
+                    e -> e.getKey(), e -> TwoArraysImmutableHashMap.copyOf(e.getValue()))),
+        includes,
+        configs,
+        env,
+        globManifest,
+        errors);
   }
 }
