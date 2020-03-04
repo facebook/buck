@@ -214,6 +214,11 @@ public class TargetsCommand extends AbstractCommand {
   private boolean isShowFullOutput;
 
   @Option(
+      name = "--show-full-outputs",
+      usage = "Print the absolute paths to the outputs for each rule after the rule name.")
+  private boolean isShowFullOutputs;
+
+  @Option(
       name = "--show-rulekey",
       aliases = {"--show_rulekey"},
       forbids = {"--show-target-hash"},
@@ -505,6 +510,7 @@ public class TargetsCommand extends AbstractCommand {
         || isShowOutput
         || isShowOutputs
         || isShowFullOutput
+        || isShowFullOutputs
         || isShowRuleKey
         || isShowTargetHash)) {
       printResults(
@@ -529,7 +535,7 @@ public class TargetsCommand extends AbstractCommand {
         buildTargetGraphAndTargetsForShowRules(
             params, targetNodeSpecs, executor, descriptionClasses);
     boolean useVersioning =
-        isShowRuleKey || isShowOutput || isShowOutputs || isShowFullOutput
+        isShowRuleKey || isShowOutput || isShowOutputs || isShowFullOutput || isShowFullOutputs
             ? params.getBuckConfig().getView(BuildBuckConfig.class).getBuildVersions()
             : params.getBuckConfig().getView(BuildBuckConfig.class).getTargetsVersions();
     targetGraphAndBuildTargetsForShowRules =
@@ -1145,7 +1151,7 @@ public class TargetsCommand extends AbstractCommand {
     Optional<ParallelRuleKeyCalculator<RuleKey>> ruleKeyCalculator = Optional.empty();
 
     try (ThriftRuleKeyLogger ruleKeyLogger = createRuleKeyLogger().orElse(null)) {
-      if (isShowRuleKey || isShowOutput || isShowOutputs || isShowFullOutput) {
+      if (isShowRuleKey || isShowOutput || isShowOutputs || isShowFullOutput || isShowFullOutputs) {
         ActionGraphAndBuilder result =
             params
                 .getActionGraphProvider()
@@ -1265,14 +1271,14 @@ public class TargetsCommand extends AbstractCommand {
           Objects.requireNonNull(buildTargetToTargetBuilderMap.get(target));
       BuildRule rule = graphBuilder.requireRule(target);
       builder.setRuleType(rule.getType());
-      if (isShowOutput || isShowOutputs || isShowFullOutput) {
+      if (isShowOutput || isShowOutputs || isShowFullOutput || isShowFullOutputs) {
         SourcePathResolverAdapter sourcePathResolverAdapter = graphBuilder.getSourcePathResolver();
         PathUtils.getUserFacingOutputPath(
                 sourcePathResolverAdapter,
                 rule,
                 params.getBuckConfig().getView(BuildBuckConfig.class).getBuckOutCompatLink(),
                 targetWithOutputs.getOutputLabel(),
-                isShowOutputs)
+                isShowOutputs || isShowFullOutputs)
             .map(path -> pathToString(path, params))
             .ifPresent(
                 path -> {
@@ -1300,7 +1306,7 @@ public class TargetsCommand extends AbstractCommand {
 
   private String pathToString(Path path, CommandRunnerParams params) {
     Path formattedPath =
-        isShowFullOutput
+        isShowFullOutput || isShowFullOutputs
             ? path
             : params.getCells().getRootCell().getFilesystem().relativize(path).getPath();
     return formattedPath.toString();

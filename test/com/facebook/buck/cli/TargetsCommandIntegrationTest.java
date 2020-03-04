@@ -211,6 +211,71 @@ public class TargetsCommandIntegrationTest {
   }
 
   @Test
+  public void showFullOutputsForMultipleNamedOutputs() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_paths", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "targets", "--show-full-outputs", "//:test_multiple_outputs[out2]");
+    result.assertSuccess();
+    assertEquals(
+        linesToText(
+            "//:test_multiple_outputs[out2] "
+                + MorePaths.pathWithPlatformSeparators(
+                    tmp.getRoot()
+                        .resolve(
+                            getNonLegacyGenDir("//:test_multiple_outputs", workspace)
+                                .resolve("out2.txt"))),
+            ""),
+        result.getStdout());
+    assertFalse(result.getStdout().contains("out1"));
+
+    result =
+        workspace.runBuckCommand(
+            "targets", "--show-full-outputs", "//:test_multiple_outputs[out1]");
+    result.assertSuccess();
+    assertEquals(
+        linesToText(
+            "//:test_multiple_outputs[out1] "
+                + MorePaths.pathWithPlatformSeparators(
+                    tmp.getRoot()
+                        .resolve(
+                            getNonLegacyGenDir("//:test_multiple_outputs", workspace)
+                                .resolve("out1.txt"))),
+            ""),
+        result.getStdout());
+    assertFalse(result.getStdout().contains("out2"));
+  }
+
+  @Test
+  public void showFullOutputsForeNamedAndDefaultOutputs() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_paths", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "targets",
+            "--show-full-outputs",
+            "//:test_multiple_outputs",
+            "//:test_multiple_outputs[out2]");
+    result.assertSuccess();
+    assertEquals(
+        linesToText(
+            "//:test_multiple_outputs",
+            "//:test_multiple_outputs[out2] "
+                + MorePaths.pathWithPlatformSeparators(
+                    tmp.getRoot()
+                        .resolve(
+                            getNonLegacyGenDir("//:test_multiple_outputs", workspace)
+                                .resolve("out2.txt"))),
+            ""),
+        result.getStdout());
+  }
+
+  @Test
   public void showOutputsWithJsonForMultipleNamedOutputs() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "output_paths", tmp);
@@ -357,6 +422,22 @@ public class TargetsCommandIntegrationTest {
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     ProcessResult result = workspace.runBuckCommand("targets", "--show-full-output", "//:");
+    result.assertSuccess();
+
+    verifyTestConfigurationRulesWithAnnotationProcessorOutput(
+        filesystem, result, s -> MorePaths.pathWithPlatformSeparators(tmp.getRoot().resolve(s)));
+  }
+
+  @Test
+  public void configurationRulesWithAnnotationProcessorFullOutputs() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "targets_command_annotation_processor", tmp);
+    workspace.setUp();
+
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
+
+    ProcessResult result = workspace.runBuckCommand("targets", "--show-full-outputs", "//:");
     result.assertSuccess();
 
     verifyTestConfigurationRulesWithAnnotationProcessorOutput(
@@ -997,7 +1078,6 @@ public class TargetsCommandIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand("targets", "--json", "--show-cell-path", "//:test");
 
-    // Parse the observed JSON.
     JsonNode observed =
         ObjectMappers.READER.readTree(ObjectMappers.createParser(result.getStdout()));
 
@@ -1018,25 +1098,93 @@ public class TargetsCommandIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand("targets", "--json", "--show-full-output", "//:test");
 
-    // Parse the observed JSON.
     JsonNode observed =
         ObjectMappers.READER.readTree(ObjectMappers.createParser(result.getStdout()));
     assertTrue(observed.isArray());
+    assertEquals(1, observed.size());
     JsonNode targetNode = observed.get(0);
     assertTrue(targetNode.isObject());
-    JsonNode cellPath = targetNode.get("buck.outputPath");
-    assertNotNull(cellPath);
+    JsonNode outputPath = targetNode.get("buck.outputPath");
+    assertNotNull(outputPath);
 
     Path expectedPath =
         tmp.getRoot()
             .resolve(getLegacyGenDir("//:test", workspace).resolve("test-output").toString());
     String expectedRootPath = MorePaths.pathWithPlatformSeparators(expectedPath);
 
-    assertEquals(expectedRootPath, cellPath.asText());
+    assertEquals(expectedRootPath, outputPath.asText());
 
     JsonNode ruleType = targetNode.get("buck.ruleType");
     assertNotNull(ruleType);
     assertEquals("genrule", ruleType.asText());
+  }
+
+  @Test
+  public void jsonOutputWithShowFullOutputs() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_path", tmp);
+    workspace.setUp();
+    ProcessResult result =
+        workspace.runBuckCommand("targets", "--json", "--show-full-outputs", "//:test");
+
+    JsonNode observed =
+        ObjectMappers.READER.readTree(ObjectMappers.createParser(result.getStdout()));
+    assertTrue(observed.isArray());
+    assertEquals(1, observed.size());
+    JsonNode targetNode = observed.get(0);
+    assertTrue(targetNode.isObject());
+    JsonNode outputPath = targetNode.get("buck.outputPath");
+    assertNotNull(outputPath);
+
+    String expectedPath =
+        MorePaths.pathWithPlatformSeparators(
+            tmp.getRoot()
+                .resolve(getLegacyGenDir("//:test", workspace).resolve("test-output").toString()));
+    assertEquals(expectedPath, targetNode.get("buck.outputPaths").get("DEFAULT").get(0).asText());
+  }
+
+  @Test
+  public void jsonNamedOutputsWithShowFullOutputs() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_paths", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "targets", "--json", "--show-full-outputs", "//:test_multiple_outputs[out2]");
+    result.assertSuccess();
+
+    JsonNode observed =
+        ObjectMappers.READER.readTree(ObjectMappers.createParser(result.getStdout()));
+    assertTrue(observed.isArray());
+    assertEquals(1, observed.size());
+    JsonNode targetNode = observed.get(0);
+    assertTrue(targetNode.isObject());
+
+    String expectedPath =
+        MorePaths.pathWithPlatformSeparators(
+            tmp.getRoot()
+                .resolve(
+                    getNonLegacyGenDir("//:test_multiple_outputs", workspace)
+                        .resolve("out2.txt")
+                        .toString()));
+    assertEquals(expectedPath, targetNode.get("buck.outputPaths").get("out2").get(0).asText());
+
+    result =
+        workspace.runBuckCommand(
+            "targets", "--json", "--show-full-outputs", "//:test_multiple_outputs[out1]");
+    result.assertSuccess();
+
+    observed = ObjectMappers.READER.readTree(ObjectMappers.createParser(result.getStdout()));
+    targetNode = observed.get(0);
+    expectedPath =
+        MorePaths.pathWithPlatformSeparators(
+            tmp.getRoot()
+                .resolve(
+                    getNonLegacyGenDir("//:test_multiple_outputs", workspace)
+                        .resolve("out1.txt")
+                        .toString()));
+    assertEquals(expectedPath, targetNode.get("buck.outputPaths").get("out1").get(0).asText());
   }
 
   @Test
@@ -1618,7 +1766,7 @@ public class TargetsCommandIntegrationTest {
     assertTrue(targetNode.isObject());
     JsonNode outputPaths = targetNode.get("buck.outputPaths");
     assertEquals(
-        removeNewLinesAndSpaces(expected),
+        removeNewLinesAndSpaces(replaceHashInPath(expected)),
         removeNewLinesAndSpaces(replaceHashInPath(outputPaths.toString())));
   }
 }
