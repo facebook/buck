@@ -46,6 +46,11 @@ message LogMessage {
     string logMessage = 2;
 }
 
+// Client sends a ShutdownRequest to signal logD to shutdown its server
+message ShutdownRequest {
+
+}
+
 // Existing types of logs we are currently maintaining. To be revised/extended.
 enum LogType {
     BUCK_LOG = 0;
@@ -78,6 +83,12 @@ service LogdService {
      // After the client finishes sending logs, it should call onCompleted() on the returned
      // StreamObserver to signal logD to close the corresponding writer stream to log file.
     rpc OpenLog(stream LogMessage) returns (google.rpc.Status) {}
+
+    // A simple, unary RPC.
+    //
+    // Client sends a ShutdownRequest to logD, after which logD will close all current existing
+    // streams to log files, return a Status message and shutdown server.
+    rpc ShutdownServer(ShutdownRequest) returns (google.rpc.Status) {}
 }
 
 
