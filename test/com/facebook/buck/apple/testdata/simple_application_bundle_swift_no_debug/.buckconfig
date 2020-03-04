@@ -5,4 +5,5 @@
   default_debug_info_format_for_binaries = NONE
   default_debug_info_format_for_libraries = NONE
   default_debug_info_format_for_tests = NONE
-
+  iphoneos_target_sdk_version = 12.0
+  iphonesimulator_target_sdk_version = 12.0
