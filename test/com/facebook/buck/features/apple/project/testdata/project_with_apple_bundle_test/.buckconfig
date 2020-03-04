@@ -6,6 +6,9 @@
 [alias]
   app = //:binary
 
+[apple]
+  macosx_target_sdk_version = 10.14
+
 [project]
   ide = xcode
   ignore = .buckd, \
