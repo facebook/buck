@@ -18,7 +18,6 @@ package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.apple.clang.ModuleMapFactory;
 import com.facebook.buck.apple.clang.ModuleMapMode;
-import com.facebook.buck.apple.clang.UmbrellaHeader;
 import com.facebook.buck.apple.clang.UmbrellaHeaderModuleMap;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
@@ -28,9 +27,7 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.WriteFileStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -84,38 +81,18 @@ public final class HeaderSymlinkTreeWithModuleMap extends HeaderSymlinkTree {
     ImmutableList.Builder<Step> builder =
         ImmutableList.<Step>builder().addAll(super.getBuildSteps(context, buildableContext));
     moduleName.ifPresent(
-        moduleName -> {
-          builder.add(
-              new ModuleMapStep(
-                  getProjectFilesystem(),
-                  moduleMapPath(getProjectFilesystem(), getBuildTarget(), moduleName),
-                  ModuleMapFactory.createModuleMap(
-                      moduleName,
-                      moduleMapMode,
-                      containsSwiftHeader(paths, moduleName)
-                          ? UmbrellaHeaderModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER
-                          : UmbrellaHeaderModuleMap.SwiftMode.NO_SWIFT,
-                      getLinks().keySet())));
-
-          Path umbrellaHeaderPath = Paths.get(moduleName, moduleName + ".h");
-          if (moduleMapMode.shouldGenerateMissingUmbrellaHeader()
-              && !paths.contains(umbrellaHeaderPath)) {
+        moduleName ->
             builder.add(
-                new WriteFileStep(
+                new ModuleMapStep(
                     getProjectFilesystem(),
-                    new UmbrellaHeader(
-                            moduleName,
-                            getLinks().keySet().stream()
-                                .map(x -> x.getFileName().toString())
-                                .collect(ImmutableList.toImmutableList()))
-                        .render(),
-                    BuildTargetPaths.getGenPath(
-                        getProjectFilesystem(),
-                        getBuildTarget(),
-                        "%s/" + PathFormatter.pathWithUnixSeparators(umbrellaHeaderPath)),
-                    false));
-          }
-        });
+                    moduleMapPath(getProjectFilesystem(), getBuildTarget(), moduleName),
+                    ModuleMapFactory.createModuleMap(
+                        moduleName,
+                        moduleMapMode,
+                        containsSwiftHeader(paths, moduleName)
+                            ? UmbrellaHeaderModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER
+                            : UmbrellaHeaderModuleMap.SwiftMode.NO_SWIFT,
+                        getLinks().keySet()))));
     return builder.build();
   }
 

@@ -374,8 +374,6 @@ public class XCodeProjectCommandHelper {
                 appleConfig.shouldAddLinkerFlagsForLinkWholeLibraries())
             .setShouldGenerateHeaderSymlinkTreesOnly(
                 appleConfig.shouldGenerateHeaderSymlinkTreesOnly())
-            .setShouldGenerateMissingUmbrellaHeader(
-                appleConfig.shouldGenerateMissingUmbrellaHeaders())
             .setShouldUseShortNamesForTargets(true)
             .setShouldCreateDirectoryStructure(combinedProject)
             .setShouldGenerateProjectSchemes(createProjectSchemes)

@@ -52,12 +52,6 @@ public interface ProjectGeneratorOptions {
     return false;
   }
 
-  /** Generate an umbrella header for modular targets without one for use in a modulemap */
-  @Value.Default
-  default boolean shouldGenerateMissingUmbrellaHeader() {
-    return false;
-  }
-
   /** Add linker flags to OTHER_LDFLAGS to force load of libraries with link_whole = true */
   @Value.Default
   default boolean shouldForceLoadLinkWholeLibraries() {

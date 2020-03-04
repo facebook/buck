@@ -1,7 +1,10 @@
 apple_library(
     name = "Foo",
     srcs = ["Hello.m"],
-    exported_headers = ["Hello.h"],
+    exported_headers = [
+        "Foo.h",
+        "Hello.h",
+    ],
     modular = True,
     frameworks = [
         "$SDKROOT/System/Library/Frameworks/Foundation.framework",

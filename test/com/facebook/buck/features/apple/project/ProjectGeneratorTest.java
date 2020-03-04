@@ -877,68 +877,6 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testModularLibraryGeneratesUmbrella() throws IOException {
-    BuildTarget libTarget = BuildTargetFactory.newInstance("//foo", "lib");
-
-    TargetNode<?> libNode =
-        AppleLibraryBuilder.createBuilder(libTarget)
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("Foo.swift"))))
-            .setExportedHeaders(ImmutableSortedSet.of(FakeSourcePath.of("lib/foo.h")))
-            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
-            .setSwiftVersion(Optional.of("3"))
-            .setModular(true)
-            .build();
-
-    ProjectGenerator projectGenerator =
-        createProjectGenerator(
-            ImmutableSet.of(libNode),
-            ProjectGeneratorOptions.builder().setShouldGenerateMissingUmbrellaHeader(true).build());
-
-    projectGenerator.createXcodeProjects();
-    PBXProject project = projectGenerator.getGeneratedProject();
-    assertNotNull(project);
-
-    List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
-    assertThat(headerSymlinkTrees, hasSize(2));
-    assertEquals("buck-out/gen/_p/CwkbTNOBmb-pub", headerSymlinkTrees.get(0).toString());
-
-    Path umbrellaHeaderPath = headerSymlinkTrees.get(0).resolve("lib/lib.h");
-    Optional<String> umbrellaContents = projectFilesystem.readFileIfItExists(umbrellaHeaderPath);
-    assertTrue(umbrellaContents.isPresent());
-    assertFalse(umbrellaContents.get().contains("lib-Swift.h"));
-  }
-
-  @Test
-  public void testModularLibraryDoesNotOverwriteExistingUmbrella() throws IOException {
-    BuildTarget libTarget = BuildTargetFactory.newInstance("//foo", "lib");
-
-    TargetNode<?> libNode =
-        AppleLibraryBuilder.createBuilder(libTarget)
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("Foo.swift"))))
-            .setExportedHeaders(ImmutableSortedSet.of(FakeSourcePath.of("lib/lib.h")))
-            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
-            .setSwiftVersion(Optional.of("3"))
-            .setModular(true)
-            .build();
-
-    ProjectGenerator projectGenerator =
-        createProjectGenerator(
-            ImmutableSet.of(libNode),
-            ProjectGeneratorOptions.builder().setShouldGenerateMissingUmbrellaHeader(true).build());
-
-    projectGenerator.createXcodeProjects();
-    PBXProject project = projectGenerator.getGeneratedProject();
-    assertNotNull(project);
-
-    List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
-    assertThat(headerSymlinkTrees, hasSize(2));
-    assertEquals("buck-out/gen/_p/CwkbTNOBmb-pub", headerSymlinkTrees.get(0).toString());
-    Path umbrellaPath = headerSymlinkTrees.get(0).resolve("lib/lib.h");
-    assertTrue(projectFilesystem.isSymLink(umbrellaPath));
-    assertFalse(projectFilesystem.isFile(umbrellaPath));
-  }
-
-  @Test
   public void testNonModularLibraryMixedSourcesFlags() throws IOException {
     BuildTarget libTarget = BuildTargetFactory.newInstance("//foo", "lib");
 

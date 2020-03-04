@@ -392,8 +392,6 @@ public class XCodeProjectCommandHelper {
             .setShouldAddLinkedLibrariesAsFlags(appleConfig.shouldAddLinkedLibrariesAsFlags())
             .setShouldForceLoadLinkWholeLibraries(
                 appleConfig.shouldAddLinkerFlagsForLinkWholeLibraries())
-            .setShouldGenerateMissingUmbrellaHeader(
-                appleConfig.shouldGenerateMissingUmbrellaHeaders())
             .setShouldUseShortNamesForTargets(true)
             .setShouldGenerateProjectSchemes(createProjectSchemes)
             .build();

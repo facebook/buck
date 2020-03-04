@@ -510,7 +510,6 @@ public class XCodeProjectCommandHelperTest {
             .setShouldMergeHeaderMaps(false)
             .setShouldForceLoadLinkWholeLibraries(false)
             .setShouldGenerateHeaderSymlinkTreesOnly(false)
-            .setShouldGenerateMissingUmbrellaHeader(false)
             .setShouldUseShortNamesForTargets(true)
             .setShouldCreateDirectoryStructure(false)
             .build(),

@@ -54,7 +54,6 @@ import com.facebook.buck.apple.XcodePrebuildScriptDescription;
 import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.apple.clang.ModuleMapFactory;
 import com.facebook.buck.apple.clang.ModuleMapMode;
-import com.facebook.buck.apple.clang.UmbrellaHeader;
 import com.facebook.buck.apple.clang.UmbrellaHeaderModuleMap;
 import com.facebook.buck.apple.clang.VFSOverlay;
 import com.facebook.buck.apple.xcode.AbstractPBXObjectFactory;
@@ -2033,9 +2032,7 @@ public class ProjectGenerator {
     Optional<String> moduleName =
         isModularAppleLibrary ? Optional.of(getModuleName(targetNode)) : Optional.empty();
     ModuleMapMode moduleMapMode = getModuleMapMode(targetNode);
-    boolean shouldGenerateMissingUmbrellaHeader =
-        options.shouldGenerateMissingUmbrellaHeader()
-            && moduleMapMode.shouldGenerateMissingUmbrellaHeader();
+
     // -- phases
     createHeaderSymlinkTree(
         publicCxxHeaders,
@@ -2046,8 +2043,7 @@ public class ProjectGenerator {
         arg.getXcodePublicHeadersSymlinks().orElse(cxxBuckConfig.getPublicHeadersSymlinksEnabled())
             || !options.shouldUseHeaderMaps()
             || isModularAppleLibrary,
-        !shouldMergeHeaderMaps(),
-        shouldGenerateMissingUmbrellaHeader);
+        !shouldMergeHeaderMaps());
     if (isFocusedOnTarget) {
       createHeaderSymlinkTree(
           getPrivateCxxHeaders(targetNode),
@@ -2058,8 +2054,7 @@ public class ProjectGenerator {
           arg.getXcodePrivateHeadersSymlinks()
                   .orElse(cxxBuckConfig.getPrivateHeadersSymlinksEnabled())
               || !options.shouldUseHeaderMaps(),
-          options.shouldUseHeaderMaps(),
-          shouldGenerateMissingUmbrellaHeader);
+          options.shouldUseHeaderMaps());
     }
 
     Optional<TargetNode<AppleNativeTargetDescriptionArg>> appleTargetNode =
@@ -3082,8 +3077,7 @@ public class ProjectGenerator {
       ModuleMapMode moduleMapMode,
       Path headerSymlinkTreeRoot,
       boolean shouldCreateHeadersSymlinks,
-      boolean shouldCreateHeaderMap,
-      boolean shouldGenerateUmbrellaHeaderIfMissing)
+      boolean shouldCreateHeaderMap)
       throws IOException {
     if (!shouldCreateHeaderMap && !shouldCreateHeadersSymlinks) {
       return;
@@ -3158,10 +3152,6 @@ public class ProjectGenerator {
         projectFilesystem.writeBytesToPath(headerMapBuilder.build().getBytes(), headerMapLocation);
       }
       if (moduleName.isPresent() && resolvedContents.size() > 0) {
-        if (shouldGenerateUmbrellaHeaderIfMissing) {
-          writeUmbrellaHeaderIfNeeded(
-              moduleName.get(), resolvedContents.keySet(), headerSymlinkTreeRoot);
-        }
         boolean containsSwift = !nonSourcePaths.isEmpty();
         Set<Path> headerPaths =
             resolvedContents.keySet().stream()
@@ -3227,22 +3217,6 @@ public class ProjectGenerator {
       }
     }
     headerSymlinkTrees.add(headerSymlinkTreeRoot);
-  }
-
-  private void writeUmbrellaHeaderIfNeeded(
-      String moduleName, ImmutableSortedSet<Path> headerPaths, Path headerSymlinkTreeRoot)
-      throws IOException {
-    ImmutableList<String> headerPathStrings =
-        headerPaths.stream()
-            .map(Path::getFileName)
-            .map(Path::toString)
-            .collect(ImmutableList.toImmutableList());
-    if (!headerPathStrings.contains(moduleName + ".h")) {
-      Path umbrellaPath = headerSymlinkTreeRoot.resolve(Paths.get(moduleName, moduleName + ".h"));
-      Preconditions.checkState(!projectFilesystem.exists(umbrellaPath));
-      projectFilesystem.writeContentsToPath(
-          new UmbrellaHeader(moduleName, headerPathStrings).render(), umbrellaPath);
-    }
   }
 
   private Path getHeaderMapRelativeSymlinkPathForEntry(

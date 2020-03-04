@@ -503,7 +503,6 @@ public class XCodeProjectCommandHelperTest {
             .setShouldIncludeTests(isWithTests)
             .setShouldIncludeDependenciesTests(isWithDependenciesTests)
             .setShouldForceLoadLinkWholeLibraries(false)
-            .setShouldGenerateMissingUmbrellaHeader(false)
             .setShouldUseShortNamesForTargets(true)
             .build(),
         ImmutableSet.of(),

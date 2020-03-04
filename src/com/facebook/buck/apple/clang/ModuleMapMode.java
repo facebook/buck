@@ -24,19 +24,4 @@ public enum ModuleMapMode {
   /** Generate a module map that requires an umbrella header. */
   UMBRELLA_HEADER,
   ;
-
-  /**
-   * If true, an umbrella header for the module should be created if it is not already present in
-   * the user-declared exported header files. Otherwise, no umbrella header should be automatically
-   * generated.
-   */
-  public boolean shouldGenerateMissingUmbrellaHeader() {
-    switch (this) {
-      case HEADERS:
-        return false;
-      case UMBRELLA_HEADER:
-        return true;
-    }
-    throw new RuntimeException();
-  }
 }
