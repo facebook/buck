@@ -604,10 +604,7 @@ public class BuildCommand extends AbstractCommand {
             return ExitCode.BUILD_ERROR;
           }
           projectFilesystem.mkdirs(outputPathForSingleBuildTarget);
-          projectFilesystem.mergeChildren(
-              outputAbsPath,
-              outputPathForSingleBuildTarget,
-              java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+          projectFilesystem.copyFolder(outputAbsPath, outputPathForSingleBuildTarget);
         } else {
           Path outputPath;
           if (Files.isDirectory(outputPathForSingleBuildTarget)) {

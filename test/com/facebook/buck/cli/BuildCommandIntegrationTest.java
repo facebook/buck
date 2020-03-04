@@ -152,6 +152,15 @@ public class BuildCommandIntegrationTest {
     assertEquals(2, MoreFiles.listFiles(outputDir).size());
     assertTrue(Files.isRegularFile(outputDir.resolve("example.jar")));
     assertTrue(Files.isRegularFile(outputDir.resolve("example-2.jar")));
+
+    // File in gen dir must be preserved after `--out` invocation
+    Path exampleJarInGenDir =
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance("//:example_dir"), "%s")
+            .resolve("example_dir")
+            .resolve("example.jar");
+
+    assertTrue(exampleJarInGenDir.toString(), Files.exists(exampleJarInGenDir));
   }
 
   @Test
