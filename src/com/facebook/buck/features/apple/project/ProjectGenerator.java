@@ -1751,12 +1751,13 @@ public class ProjectGenerator {
 
       boolean shouldSetUseHeadermap = false;
       if (isModularAppleLibrary) {
-        extraSettingsBuilder.put("CLANG_ENABLE_MODULES", "YES");
         extraSettingsBuilder.put("DEFINES_MODULE", "YES");
 
         if (isFrameworkProductType(productType)) {
-          // Modular frameworks need to have both USE_HEADERMAP enabled so that Xcode generates
-          // .framework VFS overlays, in modular libraries we handle this in buck
+          // Modular frameworks need to have both USE_HEADERMAP and CLANG_ENABLE_MODULES enabled so
+          // that Xcode generates .framework VFS overlays, in modular libraries we handle this in
+          // buck
+          extraSettingsBuilder.put("CLANG_ENABLE_MODULES", "YES");
           shouldSetUseHeadermap = true;
         }
       }
