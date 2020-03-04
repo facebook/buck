@@ -191,6 +191,7 @@ public class ObjectMappers {
     mapper.registerModule(new GuavaModule());
     mapper.registerModule(new Jdk8Module());
     mapper.registerModule(new KotlinModule());
+    mapper.registerModule(new TwoArraysImmutableHashMapModule());
 
     // With some version of Jackson JDK8 module, it starts to serialize Path objects using
     // getURI() function, this results for serialized paths to be absolute paths with 'file:///'

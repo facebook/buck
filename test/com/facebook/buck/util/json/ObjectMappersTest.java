@@ -19,6 +19,9 @@ package com.facebook.buck.util.json;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.collect.ImmutableList;
@@ -89,5 +92,33 @@ public class ObjectMappersTest {
     ForwardRelativePath path =
         ObjectMappers.READER.forType(ForwardRelativePath.class).readValue(data);
     assertEquals(ForwardRelativePath.of(""), path);
+  }
+
+  public static class TestObject {
+    private final TwoArraysImmutableHashMap<String, Integer> mmmmm;
+
+    @JsonCreator
+    public TestObject(@JsonProperty("mmmmm") TwoArraysImmutableHashMap<String, Integer> mmmmm) {
+      this.mmmmm = mmmmm;
+    }
+
+    public TwoArraysImmutableHashMap<String, Integer> getMmmmm() {
+      return mmmmm;
+    }
+  }
+
+  private void serializeDeserialize(TwoArraysImmutableHashMap<String, Integer> o) throws Exception {
+    String json = ObjectMappers.WRITER.writeValueAsString(new TestObject(o));
+    TestObject read = ObjectMappers.READER.forType(TestObject.class).readValue(json);
+    assertEquals(o, read.mmmmm);
+  }
+
+  @Test
+  public void twoArraysImmutableHashMap() throws Exception {
+    serializeDeserialize(TwoArraysImmutableHashMap.of());
+    serializeDeserialize(TwoArraysImmutableHashMap.of("ab", 1));
+    serializeDeserialize(TwoArraysImmutableHashMap.of("a", 1, "b", 2));
+    serializeDeserialize(TwoArraysImmutableHashMap.of("a", 1, "b", 2, "c", 3));
+    serializeDeserialize(TwoArraysImmutableHashMap.of("a", 1, "b", 2, "c", 3, "d", 4));
   }
 }
