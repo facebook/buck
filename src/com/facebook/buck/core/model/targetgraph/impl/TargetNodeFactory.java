@@ -42,6 +42,7 @@ import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.PathTypeCoercer.PathExistenceVerificationMode;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
+import com.facebook.buck.util.collect.MoreSets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -155,6 +156,7 @@ public class TargetNodeFactory implements NodeCopier {
     ImmutableSortedSet.Builder<BuildTarget> targetGraphOnlyDepsBuilder =
         ImmutableSortedSet.naturalOrder();
     ImmutableSet.Builder<ForwardRelativePath> pathsBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<ForwardRelativePath> filePathsBuilder = ImmutableSet.builder();
 
     ImmutableMap<String, ParamInfo<?>> paramInfos;
     if (constructorArg instanceof SkylarkDescriptionArg) {
@@ -180,6 +182,7 @@ public class TargetNodeFactory implements NodeCopier {
             cellNameResolver,
             info.isTargetGraphOnlyDep() ? targetGraphOnlyDepsBuilder : extraDepsBuilder,
             pathsBuilder,
+            filePathsBuilder,
             info,
             constructorArg);
       }
@@ -213,7 +216,8 @@ public class TargetNodeFactory implements NodeCopier {
     }
 
     ImmutableSet<ForwardRelativePath> paths = pathsBuilder.build();
-    pathsChecker.checkPaths(filesystem, buildTarget, paths);
+    ImmutableSet<ForwardRelativePath> filePaths = filePathsBuilder.build();
+    pathsChecker.checkPaths(filesystem, buildTarget, paths, filePaths);
 
     // This method uses the TargetNodeFactory, rather than just calling withBuildTarget,
     // because
@@ -226,7 +230,7 @@ public class TargetNodeFactory implements NodeCopier {
         description,
         constructorArg,
         filesystem,
-        paths,
+        MoreSets.union(paths, filePaths),
         declaredDeps,
         extraDepsBuilder.build(),
         targetGraphOnlyDepsBuilder.build(),
@@ -241,6 +245,7 @@ public class TargetNodeFactory implements NodeCopier {
       CellNameResolver cellRoots,
       ImmutableSet.Builder<BuildTarget> depsBuilder,
       ImmutableSet.Builder<ForwardRelativePath> pathsBuilder,
+      ImmutableSet.Builder<ForwardRelativePath> filePathsBuilder,
       ParamInfo<?> info,
       ConstructorArg constructorArg)
       throws NoSuchBuildTargetException {
@@ -253,10 +258,20 @@ public class TargetNodeFactory implements NodeCopier {
             if (object instanceof PathSourcePath) {
               // We know that coercer returns normalized object, so
               // converting to ForwardRelativePath is OK
-              pathsBuilder.add(
-                  ForwardRelativePath.ofPath(((PathSourcePath) object).getRelativePath()));
+              ForwardRelativePath path =
+                  ForwardRelativePath.ofPath(((PathSourcePath) object).getRelativePath());
+              if (info.pathsMustBeRegularFiles()) {
+                filePathsBuilder.add(path);
+              } else {
+                pathsBuilder.add(path);
+              }
             } else if (object instanceof Path) {
-              pathsBuilder.add(ForwardRelativePath.ofPath((Path) object));
+              ForwardRelativePath path = ForwardRelativePath.ofPath((Path) object);
+              if (info.pathsMustBeRegularFiles()) {
+                filePathsBuilder.add(path);
+              } else {
+                pathsBuilder.add(path);
+              }
             } else if (object instanceof BuildTargetSourcePath) {
               depsBuilder.add(((BuildTargetSourcePath) object).getTarget());
             } else if (object instanceof BuildTarget) {

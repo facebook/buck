@@ -111,6 +111,15 @@ public abstract class AbstractParamInfo<T> implements ParamInfo<T> {
   }
 
   @Override
+  public boolean pathsMustBeRegularFiles() {
+    Hint hint = getHint();
+    if (hint != null) {
+      return hint.pathsMustBeRegularFiles();
+    }
+    return Hint.DEFAULT_MUST_BE_REGULAR_FILES;
+  }
+
+  @Override
   public Class<?> getResultClass() {
     return typeCoercer.getOutputType().getRawType();
   }

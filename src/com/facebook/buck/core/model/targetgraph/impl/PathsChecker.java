@@ -28,5 +28,6 @@ interface PathsChecker {
   void checkPaths(
       ProjectFilesystem projectFilesystem,
       BuildTarget buildTarget,
-      ImmutableSet<ForwardRelativePath> paths);
+      ImmutableSet<ForwardRelativePath> paths,
+      ImmutableSet<ForwardRelativePath> filePaths);
 }

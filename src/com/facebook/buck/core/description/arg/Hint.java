@@ -36,6 +36,7 @@ public @interface Hint {
   boolean DEFAULT_IS_CONFIGURABLE = true;
   boolean DEFAULT_SPLIT_CONFIGURATION = false;
   boolean DEFAULT_EXEC_CONFIGURATION = false;
+  boolean DEFAULT_MUST_BE_REGULAR_FILES = false;
 
   /** @return Whether to search the field's value for dependencies */
   boolean isDep() default DEFAULT_IS_DEP;
@@ -77,4 +78,10 @@ public @interface Hint {
    * to be built for execution configuration.
    */
   boolean execConfiguration() default DEFAULT_EXEC_CONFIGURATION;
+
+  /**
+   * @return Whether field's values which are paths must be regular files and not folders or
+   *     symlinks. By default target node factory just checks that paths exist.
+   */
+  boolean pathsMustBeRegularFiles() default DEFAULT_MUST_BE_REGULAR_FILES;
 }
