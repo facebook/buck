@@ -244,8 +244,7 @@ public class BuildCommandIntegrationTest {
   public void enableEmbeddedCellHasOnlyOneBuckOut() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "multiple_cell_build", tmp);
     workspace.setUp();
-    ProcessResult runBuckResult =
-        workspace.runBuckBuild("-c", "project.embedded_cell_buck_out_enabled=true", "//main/...");
+    ProcessResult runBuckResult = workspace.runBuckBuild("//main/...");
     runBuckResult.assertSuccess();
 
     assertTrue(Files.exists(workspace.getPath("buck-out/cells/cxx")));

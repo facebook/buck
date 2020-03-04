@@ -130,9 +130,7 @@ public class IntraCellIntegrationTest {
     String target = "//:reexported-dummy.c";
 
     Map<String, Map<String, String>> childLocalConfigs =
-        ImmutableMap.of(
-            "log", ImmutableMap.of("jul_build_log", "true"),
-            "project", ImmutableMap.of("embedded_cell_buck_out_enabled", "true"));
+        ImmutableMap.of("log", ImmutableMap.of("jul_build_log", "true"));
     workspace.writeContentsToPath(
         workspace.convertToBuckConfig(childLocalConfigs), "child-repo/.buckconfig.local");
 
@@ -160,11 +158,7 @@ public class IntraCellIntegrationTest {
     workspace.setUp();
 
     Map<String, Map<String, String>> childLocalConfigs =
-        ImmutableMap.of(
-            "project",
-            ImmutableMap.of(
-                "absolute_header_map_paths", "true",
-                "embedded_cell_buck_out_enabled", "true"));
+        ImmutableMap.of("project", ImmutableMap.of("absolute_header_map_paths", "true"));
     workspace.writeContentsToPath(
         workspace.convertToBuckConfig(childLocalConfigs), "child-repo/.buckconfig.local");
 

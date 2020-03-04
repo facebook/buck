@@ -379,8 +379,6 @@ public class ProjectIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand(
             "project",
-            "--config",
-            "project.embedded_cell_buck_out_enabled=true",
             "//Apps:workspace",
             "--experimental",
             "--config",
@@ -444,8 +442,6 @@ public class ProjectIntegrationTest {
         workspace.runBuckCommand(
             "project",
             "--config",
-            "project.embedded_cell_buck_out_enabled=true",
-            "--config",
             "apple.merge_header_maps_in_xcode=true",
             "//Apps:workspace",
             "--experimental",
@@ -465,8 +461,6 @@ public class ProjectIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand(
             "project",
-            "--config",
-            "project.embedded_cell_buck_out_enabled=true",
             "--config",
             "apple.merge_header_maps_in_xcode=true",
             "--show-output",

@@ -219,11 +219,6 @@ public abstract class BuildBuckConfig implements ConfigView<BuckConfig> {
   }
 
   @Value.Lazy
-  public boolean isEmbeddedCellBuckOutEnabled() {
-    return getDelegate().getBooleanValue(PROJECT_SECTION, "embedded_cell_buck_out_enabled", true);
-  }
-
-  @Value.Lazy
   public Optional<String> getPathToBuildPrehookScript() {
     return getDelegate().getValue(BUILD_SECTION, "prehook_script");
   }

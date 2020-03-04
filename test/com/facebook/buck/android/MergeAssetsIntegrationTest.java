@@ -63,14 +63,7 @@ public class MergeAssetsIntegrationTest {
 
   @Test
   public void testNoRelativePathsInOutputWithEmbeddedCells() throws Exception {
-    workspace
-        .runBuckCommand(
-            workspace.getPath("home"),
-            "build",
-            ":list_outputs",
-            "--config",
-            "project.embedded_cell_buck_out_enabled=true")
-        .assertSuccess();
+    workspace.runBuckCommand(workspace.getPath("home"), "build", ":list_outputs").assertSuccess();
     String unzipOutput =
         workspace.getFileContents(
             "home/"

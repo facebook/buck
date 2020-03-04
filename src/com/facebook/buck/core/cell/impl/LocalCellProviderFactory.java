@@ -140,8 +140,8 @@ public class LocalCellProviderFactory {
                     cellPathResolver
                         .getNewCellPathResolver()
                         .getCanonicalCellName(normalizedCellPath.getPath());
-                if (rootConfig.getView(BuildBuckConfig.class).isEmbeddedCellBuckOutEnabled()
-                    && canonicalCellName.getLegacyName().isPresent()) {
+                rootConfig.getView(BuildBuckConfig.class);
+                if (canonicalCellName.getLegacyName().isPresent()) {
                   embeddedCellBuckOutInfo =
                       Optional.of(
                           EmbeddedCellBuckOutInfo.of(

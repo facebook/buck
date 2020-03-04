@@ -456,12 +456,7 @@ public class ProjectIntegrationTest {
             this, "project_with_cell", temporaryFolder);
     workspace.setUp();
 
-    ProcessResult result =
-        workspace.runBuckCommand(
-            "project",
-            "--config",
-            "project.embedded_cell_buck_out_enabled=true",
-            "//Apps:workspace");
+    ProcessResult result = workspace.runBuckCommand("project", "//Apps:workspace");
     result.assertSuccess();
 
     runXcodebuild(workspace, "Apps/TestApp.xcworkspace", "TestApp");
@@ -522,12 +517,7 @@ public class ProjectIntegrationTest {
 
     ProcessResult result =
         workspace.runBuckCommand(
-            "project",
-            "--config",
-            "project.embedded_cell_buck_out_enabled=true",
-            "--config",
-            "apple.merge_header_maps_in_xcode=true",
-            "//Apps:workspace");
+            "project", "--config", "apple.merge_header_maps_in_xcode=true", "//Apps:workspace");
     result.assertSuccess();
 
     runXcodebuild(workspace, "Apps/TestApp.xcworkspace", "TestApp");
@@ -545,8 +535,6 @@ public class ProjectIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand(
             "project",
-            "--config",
-            "project.embedded_cell_buck_out_enabled=true",
             "--config",
             "apple.merge_header_maps_in_xcode=true",
             "--show-output",

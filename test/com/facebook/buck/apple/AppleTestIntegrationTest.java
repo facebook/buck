@@ -962,13 +962,7 @@ public class AppleTestIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "fbxctest_zip", tmp);
     workspace.setUp();
-    ProcessResult result =
-        workspace.runBuckCommand(
-            "test",
-            "--config",
-            "project.embedded_cell_buck_out_enabled=true",
-            "//:foo",
-            "cell//:bar");
+    ProcessResult result = workspace.runBuckCommand("test", "//:foo", "cell//:bar");
     result.assertSuccess();
     System.err.println(result.getStderr());
     assertThat(result.getStderr(), containsString("1 Passed   0 Skipped   0 Failed   FooXCTest"));

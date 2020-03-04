@@ -582,14 +582,7 @@ public class ProjectIntegrationTest {
 
     // First try with cross-cell enabled
     String target = "//apps/sample:app_with_cross_cell_android_lib";
-    ProcessResult result =
-        primary.runBuckCommand(
-            "project",
-            "--config",
-            "project.embedded_cell_buck_out_enabled=true",
-            "--ide",
-            "intellij",
-            target);
+    ProcessResult result = primary.runBuckCommand("project", "--ide", "intellij", target);
     result.assertSuccess();
 
     String libImlPath = ".idea/libraries/secondary__java_com_crosscell_crosscell.xml";
@@ -600,20 +593,6 @@ public class ProjectIntegrationTest {
         doc,
         Matchers.hasXPath(
             urlXpath, Matchers.startsWith("jar://$PROJECT_DIR$/buck-out/cells/secondary/gen/")));
-
-    result =
-        primary.runBuckCommand(
-            "project",
-            "--config",
-            "project.embedded_cell_buck_out_enabled=false",
-            "--ide",
-            "intellij",
-            target);
-    result.assertSuccess();
-
-    Node doc2 = XmlDomParser.parse(primary.getFileContents(libImlPath));
-    // Assert that the library URL is outside the project root
-    assertThat(doc2, Matchers.hasXPath(urlXpath, Matchers.startsWith("jar://$PROJECT_DIR$/..")));
   }
 
   @Test
