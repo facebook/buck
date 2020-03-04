@@ -36,6 +36,9 @@ public class BuckConstant {
 
   public static final String BUCK_SIMPLE_CONSOLE_LOG_FILE_NAME = "simple_console.log";
 
+  public static final boolean IS_LOGD_ENABLED =
+      Boolean.parseBoolean(System.getProperty("logd.enabled", "false"));
+
   private BuckConstant() {}
 
   /**
