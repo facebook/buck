@@ -105,6 +105,7 @@ message WorkerRequirements {
   enum WorkerPlatformType {
     LINUX = 0;
     ANDROID_EMULATOR = 1;
+    LINUX_GPU = 2;
   }
 
   enum WorkerSize {
