@@ -238,6 +238,15 @@ public class CxxRawHeadersIntegrationTest {
     runCommand("build", "//app:app5").assertSuccess();
   }
 
+  @Test
+  public void prohibitFolders() throws IOException {
+    ProcessResult processResult = runCommand("targets", "//lib6:lib6");
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
+        containsString("In //lib6:lib6 expected regular file: lib6/headers"));
+  }
+
   private ProcessResult runCommand(String... args) throws IOException {
     if (useBuckd) {
       return workspace.runBuckdCommand(args);

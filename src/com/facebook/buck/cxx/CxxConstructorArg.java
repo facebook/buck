@@ -101,6 +101,7 @@ public interface CxxConstructorArg
    *
    * @return a list of raw headers
    */
+  @Hint(pathsMustBeRegularFiles = true)
   @Value.Default
   default ImmutableSortedSet<SourcePath> getRawHeaders() {
     return ImmutableSortedSet.of();
