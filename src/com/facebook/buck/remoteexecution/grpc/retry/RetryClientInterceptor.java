@@ -16,6 +16,7 @@
 
 package com.facebook.buck.remoteexecution.grpc.retry;
 
+import com.facebook.buck.core.util.log.Logger;
 import io.grpc.CallOptions;
 import io.grpc.Channel;
 import io.grpc.ClientCall;
@@ -41,6 +42,7 @@ import javax.annotation.Nullable;
  */
 public class RetryClientInterceptor implements ClientInterceptor {
   private final RetryPolicy retryPolicy;
+  private static final Logger LOG = Logger.get(RetryClientInterceptor.class);
 
   public RetryClientInterceptor(RetryPolicy retryPolicy) {
     this.retryPolicy = retryPolicy;
@@ -84,7 +86,14 @@ public class RetryClientInterceptor implements ClientInterceptor {
 
                 attemptNumber++;
                 final Runnable runnable =
-                    Context.current().wrap(() -> replay(next.newCall(method, callOptions)));
+                    Context.current()
+                        .wrap(
+                            () -> {
+                              LOG.debug(
+                                  "Retrying gRPC call with statusCode = %s for  method %s",
+                                  status.getCode(), method.toString());
+                              replay(next.newCall(method, callOptions));
+                            });
                 future =
                     delay == 0
                         ? retryPolicy.getExecutor().submit(runnable)
