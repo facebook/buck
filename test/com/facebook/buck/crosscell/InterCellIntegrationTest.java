@@ -34,6 +34,7 @@ import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
@@ -123,7 +124,7 @@ public class InterCellIntegrationTest {
     assertEquals(expected, actual);
 
     Path secondaryPath = primary.buildAndReturnRelativeOutput("secondary//:hello");
-    actual = new String(Files.readAllBytes(secondary.resolve(secondaryPath)), UTF_8);
+    actual = new String(Files.readAllBytes(primary.resolve(secondaryPath)), UTF_8);
     assertEquals(expected, actual);
   }
 
@@ -213,20 +214,38 @@ public class InterCellIntegrationTest {
     Pair<ProjectWorkspace, ProjectWorkspace> cells =
         prepare("inter-cell/export-file/primary", "inter-cell/export-file/secondary");
     ProjectWorkspace primary = cells.getFirst();
-    ProjectWorkspace secondary = cells.getSecond();
+    Path secondaryBuckOut =
+        primary
+            .getProjectFileSystem()
+            .resolve(
+                primary
+                    .asCell()
+                    .getCell(CanonicalCellName.unsafeOf(Optional.of("secondary")))
+                    .getFilesystem()
+                    .getBuckPaths()
+                    .getBuckOut());
 
     primary.runBuckBuild("//:cxxbinary");
     ImmutableMap<String, HashCode> firstPrimaryObjectFiles = findObjectFiles(primary);
-    ImmutableMap<String, HashCode> firstObjectFiles = findObjectFiles(secondary);
+    ImmutableMap<String, HashCode> firstObjectFiles = findObjectFilesInBuckOut(secondaryBuckOut);
 
     // Now recreate an identical checkout
     cells = prepare("inter-cell/export-file/primary", "inter-cell/export-file/secondary");
     primary = cells.getFirst();
-    secondary = cells.getSecond();
+    secondaryBuckOut =
+        primary
+            .getProjectFileSystem()
+            .resolve(
+                primary
+                    .asCell()
+                    .getCell(CanonicalCellName.unsafeOf(Optional.of("secondary")))
+                    .getFilesystem()
+                    .getBuckPaths()
+                    .getBuckOut());
 
     primary.runBuckBuild("//:cxxbinary");
     ImmutableMap<String, HashCode> secondPrimaryObjectFiles = findObjectFiles(primary);
-    ImmutableMap<String, HashCode> secondObjectFiles = findObjectFiles(secondary);
+    ImmutableMap<String, HashCode> secondObjectFiles = findObjectFilesInBuckOut(secondaryBuckOut);
 
     assertEquals(firstPrimaryObjectFiles, secondPrimaryObjectFiles);
     assertEquals(firstObjectFiles, secondObjectFiles);
@@ -240,8 +259,11 @@ public class InterCellIntegrationTest {
       throws IOException {
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
-    Path buckOut = workspace.getPath(filesystem.getBuckPaths().getBuckOut());
 
+    return findObjectFilesInBuckOut(workspace.getPath(filesystem.getBuckPaths().getBuckOut()));
+  }
+
+  private ImmutableMap<String, HashCode> findObjectFilesInBuckOut(Path buckOut) throws IOException {
     ImmutableMap.Builder<String, HashCode> objectHashCodes = ImmutableMap.builder();
     Files.walkFileTree(
         buckOut,
@@ -773,18 +795,22 @@ public class InterCellIntegrationTest {
     Pair<ProjectWorkspace, ProjectWorkspace> cells =
         prepare("inter-cell/export-file/primary", "inter-cell/export-file/secondary");
     ProjectWorkspace primary = cells.getFirst();
-    ProjectWorkspace secondary = cells.getSecond();
 
     List<Path> primaryDirs =
         ImmutableList.of(
             primary.getPath(primary.getBuckPaths().getScratchDir()),
             primary.getPath(primary.getBuckPaths().getGenDir()),
             primary.getPath(primary.getBuckPaths().getTrashDir()));
+    Path secondaryBuckOut =
+        primary
+            .getProjectFileSystem()
+            .resolve(primary.getBuckPaths().getEmbeddedCellsBuckOutBaseDir())
+            .resolve("secondary");
     List<Path> secondaryDirs =
         ImmutableList.of(
-            secondary.getPath(secondary.getBuckPaths().getScratchDir()),
-            secondary.getPath(secondary.getBuckPaths().getGenDir()),
-            secondary.getPath(secondary.getBuckPaths().getTrashDir()));
+            secondaryBuckOut.resolve("bin"),
+            secondaryBuckOut.resolve("gen"),
+            secondaryBuckOut.resolve(".trash"));
 
     // Set up the directories to be cleaned
     for (Path dir : primaryDirs) {
@@ -802,7 +828,7 @@ public class InterCellIntegrationTest {
       assertFalse(Files.exists(dir));
     }
     for (Path dir : secondaryDirs) {
-      assertFalse(Files.exists(dir));
+      assertFalse("must be deleted: " + dir, Files.exists(dir));
     }
   }
 

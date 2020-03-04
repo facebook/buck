@@ -18,7 +18,7 @@
 			<key>name</key>
 			<string>Dep2-Debug.xcconfig</string>
 			<key>path</key>
-			<string>../buck-out/gen/Dep2/Dep2-Debug.xcconfig</string>
+			<string>../../buck-out/cells/bar/gen/<CONFIG_HASH>/Dep2/Dep2-Debug.xcconfig</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 			<key>explicitFileType</key>
@@ -31,7 +31,7 @@
 			<key>name</key>
 			<string>Dep2-Profile.xcconfig</string>
 			<key>path</key>
-			<string>../buck-out/gen/Dep2/Dep2-Profile.xcconfig</string>
+			<string>../../buck-out/cells/bar/gen/<CONFIG_HASH>/Dep2/Dep2-Profile.xcconfig</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 			<key>explicitFileType</key>
@@ -44,7 +44,7 @@
 			<key>name</key>
 			<string>Dep2-Release.xcconfig</string>
 			<key>path</key>
-			<string>../buck-out/gen/Dep2/Dep2-Release.xcconfig</string>
+			<string>../../buck-out/cells/bar/gen/<CONFIG_HASH>/Dep2/Dep2-Release.xcconfig</string>
 			<key>sourceTree</key>
 			<string>SOURCE_ROOT</string>
 			<key>explicitFileType</key>

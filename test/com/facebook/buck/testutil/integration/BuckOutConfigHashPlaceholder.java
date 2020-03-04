@@ -30,7 +30,7 @@ public class BuckOutConfigHashPlaceholder {
    */
   public static String replaceHashByPlaceholder(String contents) {
     return contents.replaceAll(
-        "(?<=buck-out/(gen|bin|annotation)/)[a-f0-9]{8}/",
+        "(?<=buck-out/(cells/[a-z][a-z]?[a-z]?[a-z]?[a-z]?/)?(gen|bin|annotation)/)[a-f0-9]{8}/",
         CONFIG_HASH_PLACEHOLDER_WITH_TRAILING_SLASH);
   }
 

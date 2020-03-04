@@ -1067,8 +1067,8 @@ public class RustBinaryIntegrationTest {
     workspace.resetBuildLogFile();
 
     String binary =
-        "cell/"
-            + BuildTargetPaths.getGenPath(
+        "buck-out/cells/cell/gen/"
+            + BuildTargetPaths.getBasePath(
                     workspace.getProjectFileSystem(),
                     BuildTargetFactory.newInstance("//:thinguser#binary"),
                     "%s")

@@ -220,7 +220,7 @@ public abstract class BuildBuckConfig implements ConfigView<BuckConfig> {
 
   @Value.Lazy
   public boolean isEmbeddedCellBuckOutEnabled() {
-    return getDelegate().getBooleanValue(PROJECT_SECTION, "embedded_cell_buck_out_enabled", false);
+    return getDelegate().getBooleanValue(PROJECT_SECTION, "embedded_cell_buck_out_enabled", true);
   }
 
   @Value.Lazy

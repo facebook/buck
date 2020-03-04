@@ -835,9 +835,9 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     if (compileAgainstAbis.equals(TRUE)) {
       BuildTarget utilTarget = BuildTargetFactory.newInstance("//util:util#class-abi");
       utilJarPath =
-          MorePaths.pathWithPlatformSeparators(
-              "/away_cell/"
-                  + BuildTargetPaths.getGenPath(
+          "buck-out/cells/away_cell/gen/"
+              + MorePaths.pathWithPlatformSeparators(
+                  BuildTargetPaths.getBasePath(
                           workspace.getProjectFileSystem(),
                           utilTarget,
                           "%s/" + utilTarget.getShortName() + "-abi.jar")
@@ -845,9 +845,9 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     } else {
       BuildTarget utilTarget = BuildTargetFactory.newInstance("//util:util");
       utilJarPath =
-          "/away_cell/"
+          "buck-out/cells/away_cell/gen/"
               + MorePaths.pathWithPlatformSeparators(
-                  BuildTargetPaths.getGenPath(
+                  BuildTargetPaths.getBasePath(
                           workspace.getProjectFileSystem(),
                           utilTarget,
                           "lib__%s__output/" + utilTarget.getShortName() + ".jar")

@@ -2962,7 +2962,7 @@ public class ProjectGenerator {
       outputConfiguration.setBaseConfigurationReference(fileReference);
 
       xcconfigPathsBuilder.add(
-          projectFilesystem.getPathForRelativePath(xcconfigPath).toAbsolutePath());
+          projectFilesystem.getPathForRelativePath(xcconfigPath).toAbsolutePath().normalize());
     }
   }
 
