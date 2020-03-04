@@ -14,10 +14,15 @@
 
 from __future__ import absolute_import, division, print_function, with_statement
 
-import collections
 from json import JSONEncoder
 
 from .select_support import SelectorList, SelectorValue
+
+
+try:
+    from collections.abc import Mapping, Sized, Iterable
+except ImportError:
+    from collections import Mapping, Sized, Iterable
 
 
 # A JSONEncoder subclass which handles map-like and list-like objects.
@@ -26,13 +31,9 @@ class BuckJSONEncoder(JSONEncoder):
         super(BuckJSONEncoder, self).__init__()
 
     def default(self, obj):
-        if isinstance(obj, collections.Mapping) and isinstance(
-            obj, collections.Sized
-        ):  # nopep8
+        if isinstance(obj, Mapping) and isinstance(obj, Sized):  # nopep8
             return dict(obj)
-        elif isinstance(obj, collections.Iterable) and isinstance(
-            obj, collections.Sized
-        ):
+        elif isinstance(obj, Iterable) and isinstance(obj, Sized):
             return list(obj)
         elif isinstance(obj, SelectorValue):
             return {
