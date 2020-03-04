@@ -553,4 +553,15 @@ public class CxxLibraryIntegrationTest {
     workspace.setUp();
     workspace.runBuckBuild("//:bin").assertSuccess();
   }
+
+  @Test
+  public void prohibitFoldersInSrcs() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "folder_inputs", tmp);
+    workspace.setUp();
+    ProcessResult processResult = workspace.runBuckCommand("targets", "//:lib");
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(), containsString("In //:lib expected regular file: srcs.c"));
+  }
 }

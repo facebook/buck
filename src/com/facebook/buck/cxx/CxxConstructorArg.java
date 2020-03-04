@@ -51,6 +51,7 @@ public interface CxxConstructorArg
         HasDefaultPlatform,
         HasTests,
         HasSystemFrameworkAndLibraries {
+  @Hint(pathsMustBeRegularFiles = true)
   @Value.NaturalOrder
   ImmutableSortedSet<SourceWithFlags> getSrcs();
 
