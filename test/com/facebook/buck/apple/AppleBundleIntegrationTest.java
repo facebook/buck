@@ -294,8 +294,7 @@ public class AppleBundleIntegrationTest {
                 .resolve("DemoAppWithDylib.app"));
 
     NSDictionary resultPlist = verifyAndParsePlist(appPath.resolve("BUCK_code_sign_args.plist"));
-    assertEquals(
-        new NSArray(new NSString("../fake.dylib")), resultPlist.get("extra-paths-to-sign"));
+    assertEquals(new NSArray(new NSString("fake.dylib")), resultPlist.get("extra-paths-to-sign"));
   }
 
   @Test

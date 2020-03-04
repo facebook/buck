@@ -93,7 +93,7 @@ class CodeSignStep implements Step {
       if (!extraPathsToSign.isEmpty()) {
         ImmutableList.Builder<String> extraPathsBuilder = ImmutableList.builder();
         for (Path extraPath : extraPathsToSign) {
-          extraPathsBuilder.add(dryRunResultsPath.relativize(extraPath).toString());
+          extraPathsBuilder.add(dryRunResultsPath.getParent().relativize(extraPath).toString());
         }
         ImmutableList<String> extraPaths = extraPathsBuilder.build();
         dryRunResult.put("extra-paths-to-sign", extraPaths);
