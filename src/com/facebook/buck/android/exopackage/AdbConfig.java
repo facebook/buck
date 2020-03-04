@@ -46,4 +46,13 @@ public abstract class AdbConfig implements ConfigView<BuckConfig> {
   public boolean getMultiInstallMode() {
     return getDelegate().getBooleanValue("adb", "multi_install_mode", false);
   }
+
+  /**
+   * Whether to chmod exo files remotely. This is very slow when there are lots of files. Setting
+   * this false speeds up rapid and multi installs.
+   */
+  @Value.Lazy
+  public boolean getChmodExoFilesRemotely() {
+    return getDelegate().getBooleanValue("adb", "chmod_exo_files_remotely", true);
+  }
 }

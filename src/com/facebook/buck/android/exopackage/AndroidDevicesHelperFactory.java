@@ -40,6 +40,7 @@ public class AndroidDevicesHelperFactory {
         toolchainProvider,
         contextSupplier,
         adbConfig.getRestartAdbOnFailure(),
-        adbConfig.getAdbRapidInstallTypes());
+        adbConfig.getAdbRapidInstallTypes(),
+        adbConfig.getChmodExoFilesRemotely());
   }
 }

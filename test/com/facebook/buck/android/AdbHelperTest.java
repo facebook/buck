@@ -89,7 +89,8 @@ public class AdbHelperTest {
             .build(),
         () -> executionContext,
         true,
-        ImmutableList.of());
+        ImmutableList.of(),
+        /* chmodExoFilesRemotely= */ true);
   }
 
   /** Verify that null is returned when no devices are present. */
@@ -408,7 +409,8 @@ public class AdbHelperTest {
             .build(),
         () -> testContext,
         true,
-        ImmutableList.of()) {
+        ImmutableList.of(),
+        /* chmodExoFilesRemotely= */ true) {
       @Override
       public ImmutableList<AndroidDevice> getDevices(boolean quiet) {
         return deviceList.stream()

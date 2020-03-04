@@ -231,8 +231,25 @@ public class AgentMain {
       throw new RuntimeException("Received only " + totalSize + " of " + size + " bytes.");
     }
     boolean success = tempfile.renameTo(path);
+    chmodFile(path);
     if (!success) {
       throw new RuntimeException("Failed to rename temp file.");
+    }
+  }
+
+  private static void chmodFile(File path) {
+    // If we're using API 9+ we can use the File api to chmod the file. It seems to be a
+    // teensy-weensy bit faster than calling chmod on emulators.
+    try {
+      // Allow all users to read the file.
+      path.setReadable(/*readable=*/ true, /*ownerOnly=*/ false);
+    } catch (Throwable t) {
+      // Fall back to using Runtime.exec to chmod the file.
+      try {
+        Runtime.getRuntime().exec("chmod 644 " + path);
+      } catch (IOException e) {
+        throw new RuntimeException("Failed to chmod " + path, e);
+      }
     }
   }
 

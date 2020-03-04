@@ -111,6 +111,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   private final boolean restartAdbOnFailure;
   private final ImmutableList<String> rapidInstallTypes;
   private final Supplier<ImmutableList<AndroidDevice>> devicesSupplier;
+  private final boolean chmodExoFilesRemotely;
 
   @Nullable private ListeningExecutorService executorService = null;
 
@@ -120,7 +121,8 @@ public class AdbHelper implements AndroidDevicesHelper {
       ToolchainProvider toolchainProvider,
       Supplier<ExecutionContext> contextSupplier,
       boolean restartAdbOnFailure,
-      ImmutableList<String> rapidInstallTypes) {
+      ImmutableList<String> rapidInstallTypes,
+      boolean chmodExoFilesRemotely) {
     this.options = adbOptions;
     this.deviceOptions = deviceOptions;
     this.toolchainProvider = toolchainProvider;
@@ -128,6 +130,7 @@ public class AdbHelper implements AndroidDevicesHelper {
     this.restartAdbOnFailure = restartAdbOnFailure;
     this.rapidInstallTypes = rapidInstallTypes;
     this.devicesSupplier = MoreSuppliers.memoize(this::getDevicesImpl);
+    this.chmodExoFilesRemotely = chmodExoFilesRemotely;
   }
 
   @VisibleForTesting
@@ -562,7 +565,8 @@ public class AdbHelper implements AndroidDevicesHelper {
         getConsole(),
         getApkFilePathFromProperties().orElse(null),
         nextAgentPort.incrementAndGet(),
-        rapidInstallTypes);
+        rapidInstallTypes,
+        chmodExoFilesRemotely);
   }
 
   private static boolean isAdbInitialized(AndroidDebugBridge adb) {

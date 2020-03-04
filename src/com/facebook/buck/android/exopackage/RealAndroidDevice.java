@@ -116,6 +116,7 @@ public class RealAndroidDevice implements AndroidDevice {
   private final ImmutableList<String> rapidInstallTypes;
   private final Supplier<ExopackageAgent> agent;
   private final int agentPort;
+  private final boolean chmodExoFilesRemotely;
 
   public RealAndroidDevice(
       BuckEventBus eventBus,
@@ -123,7 +124,8 @@ public class RealAndroidDevice implements AndroidDevice {
       Console console,
       @Nullable Path agentApkPath,
       int agentPort,
-      ImmutableList<String> rapidInstallTypes) {
+      ImmutableList<String> rapidInstallTypes,
+      boolean chmodExoFilesRemotely) {
     this.eventBus = eventBus;
     this.device = device;
     this.console = console;
@@ -136,10 +138,19 @@ public class RealAndroidDevice implements AndroidDevice {
                     this,
                     Objects.requireNonNull(agentApkPath, "Agent not configured for this device.")));
     this.agentPort = agentPort;
+    this.chmodExoFilesRemotely = chmodExoFilesRemotely;
   }
 
+  @VisibleForTesting
   public RealAndroidDevice(BuckEventBus buckEventBus, IDevice device, Console console) {
-    this(buckEventBus, device, console, null, -1, ImmutableList.of());
+    this(
+        buckEventBus,
+        device,
+        console,
+        null,
+        -1,
+        ImmutableList.of(),
+        /* chmodExoFilesRemotely= */ true);
   }
 
   /**
@@ -948,8 +959,10 @@ public class RealAndroidDevice implements AndroidDevice {
       throw shellException;
     }
 
-    for (Path targetFileName : installPaths.keySet()) {
-      chmod644(targetFileName);
+    if (chmodExoFilesRemotely) {
+      for (Path targetFileName : installPaths.keySet()) {
+        chmod644(targetFileName);
+      }
     }
   }
 
@@ -1081,9 +1094,10 @@ public class RealAndroidDevice implements AndroidDevice {
     if (failure != null) {
       throw failure;
     }
-
-    for (Path targetFileName : installPaths.keySet()) {
-      chmod644(targetFileName);
+    if (chmodExoFilesRemotely) {
+      for (Path targetFileName : installPaths.keySet()) {
+        chmod644(targetFileName);
+      }
     }
   }
 
@@ -1329,6 +1343,8 @@ public class RealAndroidDevice implements AndroidDevice {
    */
   private void multiInstallFilesToStream(
       OutputStream stream, String filesType, Map<Path, Path> installPaths) throws IOException {
+    long startTime = System.currentTimeMillis();
+    long totalByteCount = 0;
     for (Map.Entry<Path, Path> entry : installPaths.entrySet()) {
       Path destination = entry.getKey();
       Path source = entry.getValue();
@@ -1341,8 +1357,16 @@ public class RealAndroidDevice implements AndroidDevice {
         stream.write(headerPrefix);
         stream.write(restOfHeader);
         stream.write(bytes);
+        totalByteCount += bytes.length;
       }
     }
+    long elapsedMillis = System.currentTimeMillis() - startTime;
+
+    double kbps = (totalByteCount / 1024.0) / (elapsedMillis / 1000.0);
+    LOG.info(
+        "%s: Transferred %s files (%,d bytes) in %,dms (%,.2f kB/s)",
+        filesType, installPaths.size(), totalByteCount, elapsedMillis, kbps);
+
     stream.write("000D 0 --complete\n".getBytes(Charsets.UTF_8));
     stream.flush();
   }
