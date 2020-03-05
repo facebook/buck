@@ -30,6 +30,7 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.ManifestEntries;
@@ -39,6 +40,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Collections2;
@@ -54,6 +56,8 @@ import javax.annotation.Nullable;
 
 /** Perform the "aapt2 link" step of building an Android app. */
 public class Aapt2Link extends AbstractBuildRule {
+  private static final Logger LOG = Logger.get(Aapt2Link.class);
+
   @AddToRuleKey private final boolean includesVectorDrawables;
   @AddToRuleKey private final boolean noAutoVersion;
   @AddToRuleKey private final boolean noVersionTransitions;
@@ -229,6 +233,8 @@ public class Aapt2Link extends AbstractBuildRule {
    * It's also superbly dangerous.
    */
   class ExtraFilterResourcesStep extends ShellStep {
+    private static final int ZIP_NOTHING_TO_DO_EXIT_CODE = 12;
+
     ExtraFilterResourcesStep(ProjectFilesystem filesystem) {
       super(filesystem.getRootPath());
     }
@@ -248,6 +254,19 @@ public class Aapt2Link extends AbstractBuildRule {
         builder.add(extra);
       }
       return builder.build();
+    }
+
+    @Override
+    protected int getExitCodeFromResult(ExecutionContext context, ProcessExecutor.Result result) {
+      // If there's nothing to do (i.e. no matches), print a warning, but don't fail.
+      int realExitCode = result.getExitCode();
+      if (realExitCode == ZIP_NOTHING_TO_DO_EXIT_CODE) {
+        LOG.warn(
+            "extra_filtered_resources pattern '%s' has no matches in '%s'",
+            extraFilteredResources, getResourceApkPath().toString());
+        return 0;
+      }
+      return realExitCode;
     }
   }
 
