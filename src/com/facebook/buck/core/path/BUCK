@@ -2,7 +2,7 @@ java_library(
     name = "path",
     srcs = glob(["*.java"]),
     tests = [
-        "//test/com/facebook/buck/core/path:test",
+        "//test/com/facebook/buck/core/path:path",
     ],
     visibility = [
         "PUBLIC",

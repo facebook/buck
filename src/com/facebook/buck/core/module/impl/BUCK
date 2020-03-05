@@ -4,7 +4,7 @@ java_library(
         ["*.java"],
     ),
     tests = [
-        "//test/com/facebook/buck/core/module/impl/jarwithouthash:jarwithouthash-test",
+        "//test/com/facebook/buck/core/module/impl/jarwithouthash:test",
         "//test/com/facebook/buck/core/module/impl/moduleclass:moduleclass-test",
         "//test/com/facebook/buck/core/module/impl/nonmoduleclass:nonmoduleclass-test",
     ],
