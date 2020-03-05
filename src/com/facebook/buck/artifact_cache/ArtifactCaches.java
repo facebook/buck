@@ -19,6 +19,7 @@ package com.facebook.buck.artifact_cache;
 import static com.facebook.buck.artifact_cache.config.ArtifactCacheMode.CacheType.local;
 import static com.facebook.buck.artifact_cache.config.ArtifactCacheMode.CacheType.remote;
 
+import build.bazel.remote.execution.v2.ContentAddressableStorageGrpc;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheEntries;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
@@ -36,6 +37,14 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.NetworkEvent.BytesReceivedEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.remoteexecution.ContentAddressedStorageClient;
+import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
+import com.facebook.buck.remoteexecution.config.RemoteExecutionStrategyConfig;
+import com.facebook.buck.remoteexecution.grpc.GrpcChannelFactory;
+import com.facebook.buck.remoteexecution.grpc.GrpcContentAddressableStorageClient;
+import com.facebook.buck.remoteexecution.grpc.GrpcProtocol;
+import com.facebook.buck.remoteexecution.proto.ClientActionInfo;
+import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
 import com.facebook.buck.slb.HttpLoadBalancer;
 import com.facebook.buck.slb.HttpService;
 import com.facebook.buck.slb.LoadBalancedService;
@@ -45,6 +54,7 @@ import com.facebook.buck.support.bgtasks.BackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskAction;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.util.timing.DefaultClock;
+import com.google.bytestream.ByteStreamGrpc;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -52,6 +62,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import io.grpc.ManagedChannel;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
@@ -63,6 +74,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLException;
 import okhttp3.ConnectionPool;
 import okhttp3.Dispatcher;
 import okhttp3.MediaType;
@@ -375,11 +387,14 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
       result = new MultiArtifactCache(artifactCaches);
     }
 
+    SecondLevelArtifactCache secondCache =
+        createSecondLevelCache(buckConfig, result, projectFilesystem, buckEventBus);
+
     // Always support reading two-level cache stores (in case we performed any in the past).
     result =
         new TwoLevelArtifactCacheDecorator(
             result,
-            new SimpleSecondLevelArtifactCache(result, projectFilesystem, buckEventBus),
+            secondCache,
             projectFilesystem,
             buckEventBus,
             buckConfig.getTwoLevelCachingEnabled(),
@@ -721,6 +736,68 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
       throw new HumanReadableException(
           e, "Failure initializing artifact cache directory: %s", cacheDir);
     }
+  }
+
+  private static SecondLevelArtifactCache createSecondLevelCache(
+      ArtifactCacheBuckConfig buckConfig,
+      ArtifactCache cache,
+      ProjectFilesystem projectFilesystem,
+      BuckEventBus buckEventBus) {
+    RemoteExecutionStrategyConfig strategyConfig =
+        buckConfig.getDelegate().getView(RemoteExecutionConfig.class).getStrategyConfig();
+
+    if (buckConfig.getArtifactCacheModes().contains(ArtifactCacheMode.hybrid_thrift_grpc)
+        && buckConfig.getCasHost().isPresent()
+        && buckConfig.getClientTlsCertificate().isPresent()
+        && buckConfig.getClientTlsKey().isPresent()) {
+      try {
+        ManagedChannel channel =
+            GrpcChannelFactory.createSecureChannel(
+                    buckConfig.getCasHost().get(),
+                    buckConfig.getCasPort(),
+                    buckConfig.getClientTlsCertificate(),
+                    buckConfig.getClientTlsKey(),
+                    buckConfig.getClientTlsTrustedCertificates(),
+                    strategyConfig)
+                .build();
+
+        RemoteExecutionMetadata metadata =
+            RemoteExecutionMetadata.newBuilder()
+                .setClientActionInfo(
+                    ClientActionInfo.newBuilder()
+                        .setScheduleType(buckConfig.getScheduleType())
+                        .setRepository(buckConfig.getRepository())
+                        .build())
+                .build();
+
+        Optional<ContentAddressedStorageClient> casClient =
+            Optional.of(
+                new GrpcContentAddressableStorageClient(
+                    ContentAddressableStorageGrpc.newFutureStub(channel),
+                    ByteStreamGrpc.newStub(channel),
+                    buckConfig.getCasDeadline(),
+                    "buckcache",
+                    new GrpcProtocol(),
+                    buckEventBus,
+                    metadata,
+                    strategyConfig.getOutputMaterializationThreads()));
+
+        return new HybridCASSecondLevelArtifactCache(
+            cache,
+            projectFilesystem,
+            buckEventBus,
+            casClient,
+            buckConfig.getEnableWriteToCas(),
+            buckConfig.getCasWritePercentage());
+      } catch (SSLException e) {
+        LOG.error(
+            e,
+            "Exception when creating GRPC SSL context, falling back to SimpleSecondLevelArtifactCache.");
+        return new SimpleSecondLevelArtifactCache(cache, projectFilesystem, buckEventBus);
+      }
+    }
+
+    return new SimpleSecondLevelArtifactCache(cache, projectFilesystem, buckEventBus);
   }
 
   private static String stripNonAscii(String str) {

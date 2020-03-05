@@ -20,6 +20,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.resources.ResourcesConfig;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.slb.SlbBuckConfig;
 import com.facebook.buck.util.unit.SizeUnit;
@@ -42,6 +43,7 @@ import java.util.stream.Collectors;
  * Represents configuration specific to the {@link com.facebook.buck.artifact_cache.ArtifactCache}.
  */
 public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
+  public static final Logger LOG = Logger.get(ArtifactCacheBuckConfig.class);
   private static final String CACHE_SECTION_NAME = "cache";
 
   private static final String DEFAULT_DIR_CACHE_MODE = CacheReadMode.READWRITE.name();
@@ -132,6 +134,8 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
 
   private static final String ENABLE_WRITE_TO_CAS = "enable_write_to_cas";
   private static final Boolean DEFAULT_ENABLE_WRITE_TO_CAS = false;
+  private static final String CAS_WRITE_PERCENTAGE = "cas_write_percentage";
+  private static final int DEFAULT_CAS_WRITE_PERCENTAGE = 0;
   private static final String CAS_HOST = "cache_cas_host";
   private static final String CAS_PORT = "cache_cas_port";
   private static final int DEFAULT_CAS_PORT = 443;
@@ -208,6 +212,27 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   public Boolean getEnableWriteToCas() {
     return buckConfig.getBooleanValue(
         CACHE_SECTION_NAME, ENABLE_WRITE_TO_CAS, DEFAULT_ENABLE_WRITE_TO_CAS);
+  }
+
+  /**
+   * Gets the CAS write percentage value from the config file, clamping to [0, 100] if necessary.
+   *
+   * @return the percentage value
+   */
+  public int getCasWritePercentage() {
+    int raw =
+        buckConfig
+            .getValue(CACHE_SECTION_NAME, CAS_WRITE_PERCENTAGE)
+            .map(Integer::parseInt)
+            .orElse(DEFAULT_CAS_WRITE_PERCENTAGE);
+
+    if (raw < 0 || raw > 100) {
+      LOG.warn(
+          "Bad percentage value for %s.%s=%d, clamping to [0, 100].",
+          CACHE_SECTION_NAME, CAS_WRITE_PERCENTAGE, raw);
+    }
+
+    return Math.min(Math.max(raw, 0), 100);
   }
 
   public Optional<String> getCasHost() {
