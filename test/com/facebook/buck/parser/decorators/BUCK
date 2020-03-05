@@ -12,6 +12,7 @@ java_test(
         "//src/com/facebook/buck/parser/exceptions:exceptions",
         "//src/com/facebook/buck/skylark/io:io",
         "//test/com/facebook/buck/event:testutil",
+        "//test/com/facebook/buck/parser/api:testutil",
         "//third-party/java/guava:guava",
         "//third-party/java/hamcrest:java-hamcrest",
         "//third-party/java/jsr:jsr305",

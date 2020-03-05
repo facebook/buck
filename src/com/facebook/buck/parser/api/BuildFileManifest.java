@@ -57,25 +57,4 @@ public abstract class BuildFileManifest implements ComputeResult, FileManifest {
       ImmutableList<ParsingError> errors) {
     return ImmutableBuildFileManifest.ofImpl(targets, includes, configs, env, globManifest, errors);
   }
-
-  /** Temporary for existing tests. */
-  // TODO: inline
-  public static BuildFileManifest of(
-      ImmutableMap<String, ImmutableMap<String, Object>> targets,
-      ImmutableSortedSet<String> includes,
-      ImmutableMap<String, Object> configs,
-      Optional<ImmutableMap<String, Optional<String>>> env,
-      ImmutableList<GlobSpecWithResult> globManifest,
-      ImmutableList<ParsingError> errors) {
-    return of(
-        targets.entrySet().stream()
-            .collect(
-                TwoArraysImmutableHashMap.toMap(
-                    e -> e.getKey(), e -> TwoArraysImmutableHashMap.copyOf(e.getValue()))),
-        includes,
-        configs,
-        env,
-        globManifest,
-        errors);
-  }
 }

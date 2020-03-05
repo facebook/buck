@@ -26,6 +26,7 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.watchman.WatchmanEvent.Kind;
 import com.facebook.buck.io.watchman.WatchmanPathEvent;
 import com.facebook.buck.parser.api.BuildFileManifest;
+import com.facebook.buck.parser.api.BuildFileManifestFactory;
 import com.facebook.buck.skylark.io.GlobSpec;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -113,7 +114,7 @@ public class BuildFileManifestCacheTest {
                 ImmutableSet.of("1.java", "2.java")));
 
     manifestCell1Root =
-        BuildFileManifest.of(
+        BuildFileManifestFactory.create(
             targets, includes, configs, Optional.empty(), globManifest, ImmutableList.of());
 
     cache.put(ImmutableBuildPackagePathToBuildFileManifestKey.of(Paths.get("")), manifestCell1Root);
@@ -123,7 +124,7 @@ public class BuildFileManifestCacheTest {
             includesFolder.resolve("include2.bzl").toString(),
             cell2IncludesFolder.resolve("include2.bzl").toString());
     manifestCell1Folder =
-        BuildFileManifest.of(
+        BuildFileManifestFactory.create(
             targets, includes, configs, Optional.empty(), globManifest, ImmutableList.of());
 
     cache.put(

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.parser.api;
 
+import com.facebook.buck.parser.exceptions.ParsingError;
+import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -29,15 +31,31 @@ public class BuildFileManifestFactory {
 
   public static BuildFileManifest create(
       ImmutableMap<String, ImmutableMap<String, Object>> targets) {
-    return ImmutableBuildFileManifest.of(
-        targets.entrySet().stream()
-            .collect(
-                TwoArraysImmutableHashMap.toMap(
-                    Map.Entry::getKey, e -> TwoArraysImmutableHashMap.copyOf(e.getValue()))),
+    return create(
+        targets,
         ImmutableSortedSet.of(),
         ImmutableMap.of(),
         Optional.empty(),
         ImmutableList.of(),
         ImmutableList.of());
+  }
+
+  public static BuildFileManifest create(
+      ImmutableMap<String, ImmutableMap<String, Object>> targets,
+      ImmutableSortedSet<String> includes,
+      ImmutableMap<String, Object> configs,
+      Optional<ImmutableMap<String, Optional<String>>> env,
+      ImmutableList<GlobSpecWithResult> globManifest,
+      ImmutableList<ParsingError> errors) {
+    return BuildFileManifest.of(
+        targets.entrySet().stream()
+            .collect(
+                TwoArraysImmutableHashMap.toMap(
+                    Map.Entry::getKey, e -> TwoArraysImmutableHashMap.copyOf(e.getValue()))),
+        includes,
+        configs,
+        env,
+        globManifest,
+        errors);
   }
 }

@@ -8,6 +8,7 @@ standard_java_test(
         "//src/com/facebook/buck/parser/manifest:manifest",
         "//test/com/facebook/buck/core/graph/transformation/impl:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
+        "//test/com/facebook/buck/parser/api:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//third-party/java/easymock:easymock",
         "//third-party/java/guava:guava",
