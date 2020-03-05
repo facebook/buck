@@ -34,6 +34,7 @@ import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.CacheRequestEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.NetworkEvent.BytesReceivedEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -645,6 +646,8 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
         .networkInterceptors()
         .add(
             (chain -> {
+              buckEventBus.post(
+                  new CacheRequestEvent(chain.connection().socket().getLocalAddress()));
               Response originalResponse = chain.proceed(chain.request());
               return originalResponse
                   .newBuilder()
