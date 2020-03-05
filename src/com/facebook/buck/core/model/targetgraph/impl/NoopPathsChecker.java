@@ -28,5 +28,6 @@ class NoopPathsChecker implements PathsChecker {
       ProjectFilesystem projectFilesystem,
       BuildTarget buildTarget,
       ImmutableSet<ForwardRelativePath> paths,
-      ImmutableSet<ForwardRelativePath> filePaths) {}
+      ImmutableSet<ForwardRelativePath> filePaths,
+      ImmutableSet<ForwardRelativePath> dirPaths) {}
 }

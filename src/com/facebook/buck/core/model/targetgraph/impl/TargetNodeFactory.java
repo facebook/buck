@@ -157,6 +157,7 @@ public class TargetNodeFactory implements NodeCopier {
         ImmutableSortedSet.naturalOrder();
     ImmutableSet.Builder<ForwardRelativePath> pathsBuilder = ImmutableSet.builder();
     ImmutableSet.Builder<ForwardRelativePath> filePathsBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<ForwardRelativePath> dirPathsBuilder = ImmutableSet.builder();
 
     ImmutableMap<String, ParamInfo<?>> paramInfos;
     if (constructorArg instanceof SkylarkDescriptionArg) {
@@ -183,6 +184,7 @@ public class TargetNodeFactory implements NodeCopier {
             info.isTargetGraphOnlyDep() ? targetGraphOnlyDepsBuilder : extraDepsBuilder,
             pathsBuilder,
             filePathsBuilder,
+            dirPathsBuilder,
             info,
             constructorArg);
       }
@@ -217,7 +219,8 @@ public class TargetNodeFactory implements NodeCopier {
 
     ImmutableSet<ForwardRelativePath> paths = pathsBuilder.build();
     ImmutableSet<ForwardRelativePath> filePaths = filePathsBuilder.build();
-    pathsChecker.checkPaths(filesystem, buildTarget, paths, filePaths);
+    ImmutableSet<ForwardRelativePath> dirPaths = dirPathsBuilder.build();
+    pathsChecker.checkPaths(filesystem, buildTarget, paths, filePaths, dirPaths);
 
     // This method uses the TargetNodeFactory, rather than just calling withBuildTarget,
     // because
@@ -230,7 +233,7 @@ public class TargetNodeFactory implements NodeCopier {
         description,
         constructorArg,
         filesystem,
-        MoreSets.union(paths, filePaths),
+        MoreSets.union(paths, filePaths, dirPaths),
         declaredDeps,
         extraDepsBuilder.build(),
         targetGraphOnlyDepsBuilder.build(),
@@ -246,6 +249,7 @@ public class TargetNodeFactory implements NodeCopier {
       ImmutableSet.Builder<BuildTarget> depsBuilder,
       ImmutableSet.Builder<ForwardRelativePath> pathsBuilder,
       ImmutableSet.Builder<ForwardRelativePath> filePathsBuilder,
+      ImmutableSet.Builder<ForwardRelativePath> dirPathsBuilder,
       ParamInfo<?> info,
       ConstructorArg constructorArg)
       throws NoSuchBuildTargetException {
@@ -260,17 +264,33 @@ public class TargetNodeFactory implements NodeCopier {
               // converting to ForwardRelativePath is OK
               ForwardRelativePath path =
                   ForwardRelativePath.ofPath(((PathSourcePath) object).getRelativePath());
-              if (info.pathsMustBeRegularFiles()) {
-                filePathsBuilder.add(path);
-              } else {
-                pathsBuilder.add(path);
+              switch (info.pathsMustBe()) {
+                case REGULAR_FILE:
+                  filePathsBuilder.add(path);
+                  break;
+                case DIRECTORY:
+                  dirPathsBuilder.add(path);
+                  break;
+                case ANY:
+                  pathsBuilder.add(path);
+                  break;
+                default:
+                  throw new AssertionError("unreachable");
               }
             } else if (object instanceof Path) {
               ForwardRelativePath path = ForwardRelativePath.ofPath((Path) object);
-              if (info.pathsMustBeRegularFiles()) {
-                filePathsBuilder.add(path);
-              } else {
-                pathsBuilder.add(path);
+              switch (info.pathsMustBe()) {
+                case REGULAR_FILE:
+                  filePathsBuilder.add(path);
+                  break;
+                case DIRECTORY:
+                  dirPathsBuilder.add(path);
+                  break;
+                case ANY:
+                  pathsBuilder.add(path);
+                  break;
+                default:
+                  throw new AssertionError("unreachable");
               }
             } else if (object instanceof BuildTargetSourcePath) {
               depsBuilder.add(((BuildTargetSourcePath) object).getTarget());

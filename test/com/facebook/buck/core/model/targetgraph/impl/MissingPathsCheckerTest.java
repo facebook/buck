@@ -47,6 +47,7 @@ public class MissingPathsCheckerTest {
         new FakeProjectFilesystem(),
         BuildTargetFactory.newInstance("//:a"),
         ImmutableSet.of(ForwardRelativePath.of("b")),
+        ImmutableSet.of(),
         ImmutableSet.of());
   }
 
@@ -58,6 +59,7 @@ public class MissingPathsCheckerTest {
         new FakeProjectFilesystem(ImmutableSet.of(Paths.get("b"))),
         BuildTargetFactory.newInstance("//:a"),
         ImmutableSet.of(ForwardRelativePath.of("b")),
+        ImmutableSet.of(),
         ImmutableSet.of());
   }
 
@@ -81,6 +83,7 @@ public class MissingPathsCheckerTest {
         filesystem,
         BuildTargetFactory.newInstance("//:a"),
         ImmutableSet.of(ForwardRelativePath.of("b")),
+        ImmutableSet.of(),
         ImmutableSet.of());
   }
 }

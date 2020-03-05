@@ -51,7 +51,7 @@ public interface CxxConstructorArg
         HasDefaultPlatform,
         HasTests,
         HasSystemFrameworkAndLibraries {
-  @Hint(pathsMustBeRegularFiles = true)
+  @Hint(pathsMustBe = Hint.PathsMustBe.REGULAR_FILE)
   @Value.NaturalOrder
   ImmutableSortedSet<SourceWithFlags> getSrcs();
 
@@ -102,7 +102,7 @@ public interface CxxConstructorArg
    *
    * @return a list of raw headers
    */
-  @Hint(pathsMustBeRegularFiles = true)
+  @Hint(pathsMustBe = Hint.PathsMustBe.REGULAR_FILE)
   @Value.Default
   default ImmutableSortedSet<SourcePath> getRawHeaders() {
     return ImmutableSortedSet.of();

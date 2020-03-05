@@ -61,8 +61,8 @@ public interface ParamInfo<T> {
   /** @see Hint#execConfiguration() */
   boolean execConfiguration();
 
-  /** @see Hint#pathsMustBeRegularFiles() */
-  boolean pathsMustBeRegularFiles();
+  /** @see Hint#pathsMustBe() () */
+  Hint.PathsMustBe pathsMustBe();
 
   /**
    * @return the type that input values will be coerced to. Return the type parameter of Optional if

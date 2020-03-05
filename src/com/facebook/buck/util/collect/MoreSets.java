@@ -29,4 +29,14 @@ public class MoreSets {
         .addAll(set2)
         .build();
   }
+
+  /** Creates a union of three immutable sets. */
+  public static <T> ImmutableSet<T> union(
+      ImmutableSet<T> set1, ImmutableSet<T> set2, ImmutableSet<T> set3) {
+    return ImmutableSet.<T>builderWithExpectedSize(set1.size() + set2.size() + set3.size())
+        .addAll(set1)
+        .addAll(set2)
+        .addAll(set3)
+        .build();
+  }
 }

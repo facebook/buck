@@ -21,6 +21,7 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -30,61 +31,83 @@ import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Set;
+import java.util.function.Function;
 
 /** Checks that paths exist and throw an exception if at least one path doesn't exist. */
 class MissingPathsChecker implements PathsChecker {
 
-  private final LoadingCache<AbsPath, Set<ForwardRelativePath>> pathsCache =
-      CacheBuilder.newBuilder()
-          .weakValues()
-          .build(CacheLoader.from(rootPath -> Sets.newConcurrentHashSet()));
-  private final LoadingCache<AbsPath, Set<ForwardRelativePath>> filePathsCache =
-      CacheBuilder.newBuilder()
-          .weakValues()
-          .build(CacheLoader.from(rootPath -> Sets.newConcurrentHashSet()));
+  private final LoadingCache<AbsPath, Set<ForwardRelativePath>> pathsCache = initCache();
+  private final LoadingCache<AbsPath, Set<ForwardRelativePath>> filePathsCache = initCache();
+  private final LoadingCache<AbsPath, Set<ForwardRelativePath>> dirPathsCache = initCache();
+
+  private static LoadingCache<AbsPath, Set<ForwardRelativePath>> initCache() {
+    return CacheBuilder.newBuilder()
+        .weakValues()
+        .build(CacheLoader.from(rootPath -> Sets.newConcurrentHashSet()));
+  }
 
   @Override
   public void checkPaths(
       ProjectFilesystem projectFilesystem,
       BuildTarget buildTarget,
       ImmutableSet<ForwardRelativePath> paths,
-      ImmutableSet<ForwardRelativePath> filePaths) {
+      ImmutableSet<ForwardRelativePath> filePaths,
+      ImmutableSet<ForwardRelativePath> dirPaths) {
+    checkPathsWithExtraCheck(projectFilesystem, buildTarget, paths, pathsCache, args -> null);
+    checkPathsWithExtraCheck(
+        projectFilesystem,
+        buildTarget,
+        filePaths,
+        filePathsCache,
+        args -> {
+          if (!args.getSecond().isRegularFile()) {
+            throw new HumanReadableException(
+                "In %s expected regular file: %s", buildTarget, args.getFirst());
+          }
+          return null;
+        });
+    checkPathsWithExtraCheck(
+        projectFilesystem,
+        buildTarget,
+        dirPaths,
+        dirPathsCache,
+        args -> {
+          if (!args.getSecond().isDirectory()) {
+            throw new HumanReadableException(
+                "In %s expected directory: %s", buildTarget, args.getFirst());
+          }
+          return null;
+        });
+  }
+
+  private static void checkPathsWithExtraCheck(
+      ProjectFilesystem projectFilesystem,
+      BuildTarget buildTarget,
+      ImmutableSet<ForwardRelativePath> paths,
+      LoadingCache<AbsPath, Set<ForwardRelativePath>> pathsCache,
+      Function<Pair<ForwardRelativePath, BasicFileAttributes>, Void> extraCheck) {
     Set<ForwardRelativePath> checkedPaths =
         pathsCache.getUnchecked(projectFilesystem.getRootPath());
     for (ForwardRelativePath path : paths) {
       if (!checkedPaths.add(path)) {
         continue;
       }
-      checkExistsAndAccessible(projectFilesystem, buildTarget, path);
-    }
-    Set<ForwardRelativePath> checkedFilePaths =
-        filePathsCache.getUnchecked(projectFilesystem.getRootPath());
-    for (ForwardRelativePath path : filePaths) {
-      if (!checkedFilePaths.add(path)) {
-        continue;
+      try {
+        BasicFileAttributes attrs =
+            projectFilesystem.readAttributes(
+                path.toPath(projectFilesystem.getFileSystem()), BasicFileAttributes.class);
+        extraCheck.apply(new Pair<>(path, attrs));
+      } catch (NoSuchFileException e) {
+        throw new HumanReadableException(
+            e, "%s references non-existing file or directory '%s'", buildTarget, path);
+      } catch (IOException e) {
+        throw new HumanReadableException(
+            e,
+            "%s references inaccessible file or directory '%s': %s",
+            buildTarget,
+            path,
+            e.getMessage());
       }
-      BasicFileAttributes attrs = checkExistsAndAccessible(projectFilesystem, buildTarget, path);
-      if (!attrs.isRegularFile()) {
-        throw new HumanReadableException("In %s expected regular file: %s", buildTarget, path);
-      }
-    }
-  }
-
-  private BasicFileAttributes checkExistsAndAccessible(
-      ProjectFilesystem projectFilesystem, BuildTarget buildTarget, ForwardRelativePath path) {
-    try {
-      return projectFilesystem.readAttributes(
-          path.toPath(projectFilesystem.getFileSystem()), BasicFileAttributes.class);
-    } catch (NoSuchFileException e) {
-      throw new HumanReadableException(
-          e, "%s references non-existing file or directory '%s'", buildTarget, path);
-    } catch (IOException e) {
-      throw new HumanReadableException(
-          e,
-          "%s references inaccessible file or directory '%s': %s",
-          buildTarget,
-          path,
-          e.getMessage());
     }
   }
 }
