@@ -2,7 +2,6 @@ kotlin_library(
     name = "annotation-lib",
     srcs = [
         "KotlinAnnotation.kt",
-        "ThrowingKotlinAnnotation.kt",
     ],
     visibility = [
         "PUBLIC",
