@@ -106,12 +106,18 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
           .map(Either::<String, Exception>ofLeft)
           .orElseGet(
               () -> {
-                return Either.ofRight(
-                    new Exception(
-                        "artifact metadata file "
-                            + artifactMetadataFilePath
-                            + " does not have a key "
-                            + key));
+                String errorMsg =
+                    "artifact metadata file "
+                        + artifactMetadataFilePath
+                        + " does not have a key "
+                        + key;
+                LOG.warn(errorMsg);
+                LOG.warn(
+                    "The actual content of metadata file "
+                        + artifactMetadataFilePath
+                        + ": "
+                        + json);
+                return Either.ofRight(new Exception(errorMsg));
               });
     } catch (IOException e) {
       LOG.warn(
