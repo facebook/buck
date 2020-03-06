@@ -23,7 +23,6 @@ import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.android.redex.RedexOptions;
-import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
@@ -109,6 +108,7 @@ public class AndroidBinary extends AbstractBuildRule
   private final ManifestEntries manifestEntries;
   private final boolean skipProguard;
   private final Tool javaRuntimeLauncher;
+  private final Tool zipalignTool;
   private final boolean isCacheable;
 
   private final Optional<BuildRule> moduleVerification;
@@ -126,7 +126,6 @@ public class AndroidBinary extends AbstractBuildRule
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       AndroidSdkLocation androidSdkLocation,
-      AndroidPlatformTarget androidPlatformTarget,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       Optional<List<String>> proguardJvmArgs,
@@ -150,6 +149,7 @@ public class AndroidBinary extends AbstractBuildRule
       Optional<CompressionAlgorithm> assetCompressionAlgorithm,
       ManifestEntries manifestEntries,
       Tool javaRuntimeLauncher,
+      Tool zipalignTool,
       boolean isCacheable,
       Optional<BuildRule> moduleVerification,
       DexFilesInfo dexFilesInfo,
@@ -162,6 +162,7 @@ public class AndroidBinary extends AbstractBuildRule
     this.proguardJvmArgs = proguardJvmArgs;
     this.keystore = keystore;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
+    this.zipalignTool = zipalignTool;
     this.buildTargetsToExcludeFromDex = ImmutableSet.copyOf(buildTargetsToExcludeFromDex);
     this.sdkProguardConfig = sdkProguardConfig;
     this.optimizationPasses = proguardOptimizationPasses;
@@ -207,7 +208,6 @@ public class AndroidBinary extends AbstractBuildRule
             getBuildTarget(),
             getProjectFilesystem(),
             androidSdkLocation,
-            androidPlatformTarget,
             keystore.getPathToStore(),
             keystore.getPathToPropertiesFile(),
             redexOptions,
@@ -220,6 +220,7 @@ public class AndroidBinary extends AbstractBuildRule
             compressAssetLibraries,
             assetCompressionAlgorithm,
             javaRuntimeLauncher,
+            zipalignTool,
             enhancementResult.getAndroidManifestPath(),
             resourceCompressionMode.isCompressResources(),
             dexFilesInfo,
@@ -320,6 +321,10 @@ public class AndroidBinary extends AbstractBuildRule
 
   Tool getJavaRuntimeLauncher() {
     return javaRuntimeLauncher;
+  }
+
+  Tool getZipalignTool() {
+    return zipalignTool;
   }
 
   @VisibleForTesting

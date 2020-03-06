@@ -202,7 +202,7 @@ public class GenruleBuildableTest {
             new ConstantToolProvider(new SimpleTool("aapt2")),
             filesystem.getPath(""),
             filesystem.getPath(""),
-            filesystem.getPath("zipalign"),
+            new ConstantToolProvider(new SimpleTool("zipalign")),
             filesystem.getPath("."),
             filesystem.getPath(""),
             filesystem.getPath(""),

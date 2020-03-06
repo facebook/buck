@@ -277,7 +277,6 @@ public class AndroidInstrumentationApkDescription
             AndroidSdkLocation.DEFAULT_NAME,
             buildTarget.getTargetConfiguration(),
             AndroidSdkLocation.class),
-        androidPlatformTarget,
         params,
         graphBuilder,
         apkUnderTest,

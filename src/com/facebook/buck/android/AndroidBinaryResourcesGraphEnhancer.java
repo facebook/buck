@@ -518,13 +518,16 @@ class AndroidBinaryResourcesGraphEnhancer {
 
   private SplitResources createSplitResourcesRule(
       SourcePath aaptOutputPath, SourcePath aaptRDotTxtPath) {
+    BuildTarget target = buildTarget.withAppendedFlavors(SPLIT_RESOURCES_FLAVOR);
     return new SplitResources(
-        buildTarget.withAppendedFlavors(SPLIT_RESOURCES_FLAVOR),
+        target,
         projectFilesystem,
         graphBuilder,
         aaptOutputPath,
         aaptRDotTxtPath,
-        androidPlatformTarget);
+        androidPlatformTarget
+            .getZipalignToolProvider()
+            .resolve(graphBuilder, target.getTargetConfiguration()));
   }
 
   private Aapt2Link createAapt2Link(

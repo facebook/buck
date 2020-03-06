@@ -61,6 +61,12 @@ public interface AndroidBuildToolsLocation extends Toolchain {
     return getBuildToolsBinPath()
         .resolve(Platform.detect() == Platform.WINDOWS ? "aapt2.exe" : "aapt2");
   }
+  /** @return {@code Path} pointing to Android SDK zipalign binary */
+  @Value.Derived
+  default Path getZipalignPath() {
+    return getBuildToolsBinPath()
+        .resolve(Platform.detect() == Platform.WINDOWS ? "zipalign.exe" : "zipalign");
+  }
 
   @Override
   default String getName() {

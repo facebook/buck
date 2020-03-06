@@ -209,6 +209,7 @@ java_test(
     name = "steps",
     srcs = glob(STEP_TEST_SRCS),
     deps = [
+        ":utils",
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:helpers",
         "//src/com/facebook/buck/android:rules",

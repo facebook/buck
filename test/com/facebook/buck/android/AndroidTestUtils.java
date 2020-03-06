@@ -40,17 +40,17 @@ public class AndroidTestUtils {
   static AndroidPlatformTarget createAndroidPlatformTarget() {
     return AndroidPlatformTarget.of(
         "android",
-        Paths.get(""),
-        Collections.emptyList(),
-        () -> new SimpleTool(""),
-        new ConstantToolProvider(new SimpleTool("")),
-        Paths.get(""),
-        Paths.get(""),
-        Paths.get(""),
-        Paths.get("/usr/bin/dx"),
-        Paths.get(""),
-        Paths.get(""),
-        Paths.get(""),
-        Paths.get(""));
+        /* androidJar= */ Paths.get(""),
+        /* bootclasspathEntries= */ Collections.emptyList(),
+        /* aaptExecutable= */ () -> new SimpleTool(""),
+        /* aapt2ToolProvider= */ new ConstantToolProvider(new SimpleTool("")),
+        /* adbExecutable= */ Paths.get(""),
+        /* aidlExecutable= */ Paths.get(""),
+        /* zipalignToolProvider= */ new ConstantToolProvider(new SimpleTool("")),
+        /* dxExecutable= */ Paths.get("/usr/bin/dx"),
+        /* androidFrameworkIdlFile= */ Paths.get(""),
+        /* proguardJar= */ Paths.get(""),
+        /* proguardConfig= */ Paths.get(""),
+        /* optimizedProguardConfig= */ Paths.get(""));
   }
 }

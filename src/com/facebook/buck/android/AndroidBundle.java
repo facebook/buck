@@ -22,7 +22,6 @@ import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.redex.RedexOptions;
-import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
@@ -113,7 +112,6 @@ public class AndroidBundle extends AbstractBuildRule
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       AndroidSdkLocation androidSdkLocation,
-      AndroidPlatformTarget androidPlatformTarget,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       Optional<List<String>> proguardJvmArgs,
@@ -134,6 +132,7 @@ public class AndroidBundle extends AbstractBuildRule
       Optional<CompressionAlgorithm> assetCompressionAlgorithm,
       ManifestEntries manifestEntries,
       Tool javaRuntimeLauncher,
+      Tool zipalignTool,
       boolean isCacheable,
       Optional<BuildRule> moduleVerification,
       DexFilesInfo dexFilesInfo,
@@ -189,7 +188,6 @@ public class AndroidBundle extends AbstractBuildRule
             getBuildTarget(),
             getProjectFilesystem(),
             androidSdkLocation,
-            androidPlatformTarget,
             keystore.getPathToStore(),
             keystore.getPathToPropertiesFile(),
             redexOptions,
@@ -202,6 +200,7 @@ public class AndroidBundle extends AbstractBuildRule
             compressAssetLibraries,
             assetCompressionAlgorithm,
             javaRuntimeLauncher,
+            zipalignTool,
             enhancementResult.getAndroidManifestPath(),
             resourceCompressionMode.isCompressResources(),
             dexFilesInfo,

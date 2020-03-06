@@ -326,6 +326,14 @@ public class AndroidBuckConfig {
     return getToolProvider("aapt2");
   }
 
+  /**
+   * Returns the tool provider to the platform specific zipalign executable that is overridden by
+   * the current project. If not specified, the Android platform zipalign will be used.
+   */
+  public Optional<ToolProvider> getZipalignOverride() {
+    return getToolProvider("zipalign");
+  }
+
   public Optional<BuildTarget> getRedexTarget(TargetConfiguration targetConfiguration) {
     return delegate.getMaybeBuildTarget(ANDROID_SECTION, REDEX, targetConfiguration);
   }

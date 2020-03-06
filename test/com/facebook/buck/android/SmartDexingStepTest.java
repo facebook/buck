@@ -21,10 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.SmartDexingStep.DxPseudoRule;
-import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.context.FakeBuildContext;
-import com.facebook.buck.core.toolchain.tool.impl.testutil.SimpleTool;
-import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -46,7 +43,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.zip.ZipEntry;
@@ -80,7 +76,7 @@ public class SmartDexingStepTest {
     Sha1HashCode actualHashCode = Sha1HashCode.of(Strings.repeat("a", 40));
     DxPseudoRule rule =
         new DxPseudoRule(
-            createAndroidPlatformTarget(),
+            AndroidTestUtils.createAndroidPlatformTarget(),
             FakeBuildContext.NOOP_CONTEXT,
             filesystem,
             ImmutableMap.of(testIn.toPath(), actualHashCode),
@@ -116,7 +112,7 @@ public class SmartDexingStepTest {
 
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     SmartDexingStep.createDxStepForDxPseudoRule(
-        createAndroidPlatformTarget(),
+        AndroidTestUtils.createAndroidPlatformTarget(),
         steps,
         FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(filesystem.getRootPath().getPath()),
         filesystem,
@@ -161,7 +157,7 @@ public class SmartDexingStepTest {
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     SmartDexingStep.createDxStepForDxPseudoRule(
-        createAndroidPlatformTarget(),
+        AndroidTestUtils.createAndroidPlatformTarget(),
         steps,
         FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(filesystem.getRootPath().getPath()),
         filesystem,
@@ -206,7 +202,7 @@ public class SmartDexingStepTest {
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     SmartDexingStep.createDxStepForDxPseudoRule(
-        createAndroidPlatformTarget(),
+        AndroidTestUtils.createAndroidPlatformTarget(),
         steps,
         FakeBuildContext.NOOP_CONTEXT,
         filesystem,
@@ -245,7 +241,7 @@ public class SmartDexingStepTest {
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     SmartDexingStep.createDxStepForDxPseudoRule(
-        createAndroidPlatformTarget(),
+        AndroidTestUtils.createAndroidPlatformTarget(),
         steps,
         FakeBuildContext.NOOP_CONTEXT,
         filesystem,
@@ -286,7 +282,7 @@ public class SmartDexingStepTest {
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     SmartDexingStep.createDxStepForDxPseudoRule(
-        createAndroidPlatformTarget(),
+        AndroidTestUtils.createAndroidPlatformTarget(),
         steps,
         FakeBuildContext.NOOP_CONTEXT,
         filesystem,
@@ -330,7 +326,7 @@ public class SmartDexingStepTest {
         EnumSet.of(DxStep.Option.RUN_IN_PROCESS, DxStep.Option.USE_CUSTOM_DX_IF_AVAILABLE);
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     SmartDexingStep.createDxStepForDxPseudoRule(
-        createAndroidPlatformTarget(),
+        AndroidTestUtils.createAndroidPlatformTarget(),
         steps,
         FakeBuildContext.NOOP_CONTEXT,
         filesystem,
@@ -358,7 +354,7 @@ public class SmartDexingStepTest {
     Path outputPath = Paths.get("classes.flex");
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     SmartDexingStep.createDxStepForDxPseudoRule(
-        createAndroidPlatformTarget(),
+        AndroidTestUtils.createAndroidPlatformTarget(),
         new ImmutableList.Builder<>(),
         FakeBuildContext.NOOP_CONTEXT,
         filesystem,
@@ -371,22 +367,5 @@ public class SmartDexingStepTest {
         null,
         false,
         Optional.empty());
-  }
-
-  private AndroidPlatformTarget createAndroidPlatformTarget() {
-    return AndroidPlatformTarget.of(
-        "android",
-        Paths.get(""),
-        Collections.emptyList(),
-        () -> new SimpleTool(""),
-        new ConstantToolProvider(new SimpleTool("")),
-        Paths.get(""),
-        Paths.get(""),
-        Paths.get(""),
-        Paths.get("/usr/bin/dx"),
-        Paths.get(""),
-        Paths.get(""),
-        Paths.get(""),
-        Paths.get(""));
   }
 }

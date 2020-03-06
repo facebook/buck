@@ -35,8 +35,6 @@ import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.attr.BuildOutputInitializer;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.toolchain.tool.impl.testutil.SimpleTool;
-import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -58,7 +56,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.List;
 import org.junit.Test;
 
@@ -94,21 +91,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
             "%s/dex.jar");
     createFiles(filesystem, dexOutput.toString(), jarOutput.toString());
 
-    AndroidPlatformTarget androidPlatformTarget =
-        AndroidPlatformTarget.of(
-            "android",
-            Paths.get(""),
-            Collections.emptyList(),
-            () -> new SimpleTool(""),
-            new ConstantToolProvider(new SimpleTool("")),
-            Paths.get(""),
-            Paths.get(""),
-            Paths.get(""),
-            Paths.get("/usr/bin/dx"),
-            Paths.get(""),
-            Paths.get(""),
-            Paths.get(""),
-            Paths.get(""));
+    AndroidPlatformTarget androidPlatformTarget = AndroidTestUtils.createAndroidPlatformTarget();
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#dex");
     DexProducedFromJavaLibrary preDex =

@@ -16,35 +16,39 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.shell.ShellStep;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 
 public class ZipalignStep extends ShellStep {
 
-  private final AndroidPlatformTarget androidPlatformTarget;
   private final Path inputFile;
   private final Path outputFile;
+  private final Tool zipalignTool;
+  private final SourcePathResolverAdapter sourcePathResolver;
 
   public ZipalignStep(
       AbsPath workingDirectory,
-      AndroidPlatformTarget androidPlatformTarget,
       Path inputFile,
-      Path outputFile) {
+      Path outputFile,
+      Tool zipalignTool,
+      SourcePathResolverAdapter sourcePathResolver) {
     super(workingDirectory);
-    this.androidPlatformTarget = androidPlatformTarget;
     this.inputFile = inputFile;
     this.outputFile = outputFile;
+    this.zipalignTool = zipalignTool;
+    this.sourcePathResolver = sourcePathResolver;
   }
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
 
-    args.add(androidPlatformTarget.getZipalignExecutable().toString());
+    args.addAll(zipalignTool.getCommandPrefix(sourcePathResolver));
     args.add("-f").add("4");
     args.add(inputFile.toString());
     args.add(outputFile.toString());

@@ -65,7 +65,7 @@ public class ProGuardObfuscateStepTest {
             new ConstantToolProvider(new SimpleTool("")),
             Paths.get(""),
             Paths.get(""),
-            Paths.get(""),
+            new ConstantToolProvider(new SimpleTool("")),
             Paths.get(""),
             Paths.get(""),
             Paths.get("proguard.jar"),

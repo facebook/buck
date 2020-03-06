@@ -17,7 +17,6 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.resources.ExoResourcesRewriter;
-import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
@@ -31,6 +30,7 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -58,7 +58,8 @@ public class SplitResources extends AbstractBuildRule {
   @AddToRuleKey private final SourcePath pathToAaptResources;
   @AddToRuleKey private final SourcePath pathToOriginalRDotTxt;
 
-  private final AndroidPlatformTarget androidPlatformTarget;
+  @AddToRuleKey private final Tool zipalignTool;
+
   private final SourcePathRuleFinder ruleFinder;
 
   public SplitResources(
@@ -67,15 +68,15 @@ public class SplitResources extends AbstractBuildRule {
       SourcePathRuleFinder ruleFinder,
       SourcePath pathToAaptResources,
       SourcePath pathToOriginalRDotTxt,
-      AndroidPlatformTarget androidPlatformTarget) {
+      Tool zipalignTool) {
     super(buildTarget, projectFilesystem);
-    this.androidPlatformTarget = androidPlatformTarget;
     this.ruleFinder = ruleFinder;
     this.pathToAaptResources = pathToAaptResources;
     this.pathToOriginalRDotTxt = pathToOriginalRDotTxt;
     this.exoResourcesOutputPath = getOutputDirectory().resolve("exo-resources.apk");
     this.primaryResourcesOutputPath = getOutputDirectory().resolve("primary-resources.apk");
     this.rDotTxtOutputPath = getOutputDirectory().resolve("R.txt");
+    this.zipalignTool = zipalignTool;
   }
 
   private Path getOutputDirectory() {
@@ -106,9 +107,10 @@ public class SplitResources extends AbstractBuildRule {
         .add(
             new ZipalignStep(
                 getProjectFilesystem().getRootPath(),
-                androidPlatformTarget,
                 getUnalignedExoPath(),
-                exoResourcesOutputPath))
+                exoResourcesOutputPath,
+                zipalignTool,
+                context.getSourcePathResolver()))
         .build();
   }
 

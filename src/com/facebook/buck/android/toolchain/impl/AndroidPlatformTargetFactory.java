@@ -27,7 +27,6 @@ import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainFactory;
 import com.facebook.buck.core.toolchain.ToolchainInstantiationException;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.environment.Platform;
 import java.util.Optional;
@@ -55,7 +54,6 @@ public class AndroidPlatformTargetFactory implements ToolchainFactory<AndroidPla
     }
 
     try {
-      Optional<ToolProvider> aapt2Override = androidBuckConfig.getAapt2Override();
       return Optional.of(
           AndroidPlatformTargetProducer.getTargetForId(
               context.getFilesystem(),
@@ -69,7 +67,8 @@ public class AndroidPlatformTargetFactory implements ToolchainFactory<AndroidPla
                   toolchainTargetConfiguration,
                   AndroidSdkLocation.class),
               androidBuckConfig.getAaptOverride(),
-              aapt2Override,
+              androidBuckConfig.getAapt2Override(),
+              androidBuckConfig.getZipalignOverride(),
               toolchainProvider.getByName(
                   AdbToolchain.DEFAULT_NAME, toolchainTargetConfiguration, AdbToolchain.class)));
     } catch (HumanReadableException e) {

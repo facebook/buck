@@ -93,7 +93,7 @@ public class GenAidlTest {
             new ConstantToolProvider(new SimpleTool("")),
             Paths.get(""),
             Paths.get(pathToAidlExecutable),
-            Paths.get(""),
+            new ConstantToolProvider(new SimpleTool("")),
             Paths.get(""),
             Paths.get(pathToFrameworkAidl),
             Paths.get(""),

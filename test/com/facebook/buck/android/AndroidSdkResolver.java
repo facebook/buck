@@ -56,8 +56,9 @@ final class AndroidSdkResolver {
             fileSystem,
             buildToolsLocation,
             sdkLocation,
-            Optional.empty(),
-            Optional.empty(),
+            /* aaptOverride= */ Optional.empty(),
+            /* aapt2Override= */ Optional.empty(),
+            /* zipalignOverride= */ Optional.empty(),
             adbToolchain);
   }
 

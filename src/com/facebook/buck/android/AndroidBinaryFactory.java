@@ -108,6 +108,12 @@ public class AndroidBinaryFactory {
       moduleVerification = Optional.empty();
     }
 
+    AndroidPlatformTarget androidPlatformTarget =
+        toolchainProvider.getByName(
+            AndroidPlatformTarget.DEFAULT_NAME,
+            buildTarget.getTargetConfiguration(),
+            AndroidPlatformTarget.class);
+
     return new AndroidBinary(
         buildTarget,
         projectFilesystem,
@@ -115,10 +121,6 @@ public class AndroidBinaryFactory {
             AndroidSdkLocation.DEFAULT_NAME,
             buildTarget.getTargetConfiguration(),
             AndroidSdkLocation.class),
-        toolchainProvider.getByName(
-            AndroidPlatformTarget.DEFAULT_NAME,
-            buildTarget.getTargetConfiguration(),
-            AndroidPlatformTarget.class),
         params,
         graphBuilder,
         Optional.of(args.getProguardJvmArgs()),
@@ -149,6 +151,9 @@ public class AndroidBinaryFactory {
         args.getAssetCompressionAlgorithm(),
         args.getManifestEntries(),
         javaOptions.getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
+        androidPlatformTarget
+            .getZipalignToolProvider()
+            .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
         args.getIsCacheable(),
         moduleVerification,
         filesInfo.getDexFilesInfo(),

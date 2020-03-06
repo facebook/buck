@@ -20,7 +20,6 @@ import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.redex.ReDexStep;
 import com.facebook.buck.android.redex.RedexOptions;
-import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
@@ -111,17 +110,18 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   // Path to Bundles config file
   @AddToRuleKey private final Optional<SourcePath> bundleConfigFilePath;
 
+  // The zipalign tool.
+  @AddToRuleKey private final Tool zipalignTool;
+
   // These should be the only things not added to the rulekey.
   private final ProjectFilesystem filesystem;
   private final BuildTarget buildTarget;
   private final AndroidSdkLocation androidSdkLocation;
-  private final AndroidPlatformTarget androidPlatformTarget;
 
   AndroidBinaryBuildable(
       BuildTarget buildTarget,
       ProjectFilesystem filesystem,
       AndroidSdkLocation androidSdkLocation,
-      AndroidPlatformTarget androidPlatformTarget,
       SourcePath keystorePath,
       SourcePath keystorePropertiesPath,
       Optional<RedexOptions> redexOptions,
@@ -132,6 +132,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       boolean compressAssetLibraries,
       Optional<CompressionAlgorithm> assetCompressionAlgorithm,
       Tool javaRuntimeLauncher,
+      Tool zipalignTool,
       SourcePath androidManifestPath,
       boolean isCompressResources,
       DexFilesInfo dexFilesInfo,
@@ -144,7 +145,6 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     this.filesystem = filesystem;
     this.buildTarget = buildTarget;
     this.androidSdkLocation = androidSdkLocation;
-    this.androidPlatformTarget = androidPlatformTarget;
     this.keystorePath = keystorePath;
     this.keystorePropertiesPath = keystorePropertiesPath;
     this.redexOptions = redexOptions;
@@ -152,6 +152,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     this.exopackageModes = exopackageModes;
     this.xzCompressionLevel = xzCompressionLevel;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
+    this.zipalignTool = zipalignTool;
     this.androidManifestPath = androidManifestPath;
     this.isCompressResources = isCompressResources;
     this.apkModules = apkModules;
@@ -357,9 +358,10 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       steps.add(
           new ZipalignStep(
               getProjectFilesystem().getRootPath(),
-              androidPlatformTarget,
               apkToAlign,
-              zipalignedApkPath));
+              zipalignedApkPath,
+              zipalignTool,
+              pathResolver));
       steps.add(
           new ApkSignerStep(
               getProjectFilesystem(),
@@ -372,9 +374,10 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       steps.add(
           new ZipalignStep(
               getProjectFilesystem().getRootPath(),
-              androidPlatformTarget,
               apkToAlign,
-              v2SignedApkPath));
+              v2SignedApkPath,
+              zipalignTool,
+              pathResolver));
     }
     buildableContext.recordArtifact(v2SignedApkPath);
     return steps.build();

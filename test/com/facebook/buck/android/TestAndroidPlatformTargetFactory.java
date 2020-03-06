@@ -33,8 +33,9 @@ public class TestAndroidPlatformTargetFactory {
         AndroidBuildToolsLocation.of(
             MorePathsForTests.rootRelativePath("AndroidSDK").resolve("build-tools")),
         AndroidSdkLocation.of(MorePathsForTests.rootRelativePath("AndroidSDK")),
-        Optional.empty(),
-        Optional.empty(),
+        /* aaptOverride= */ Optional.empty(),
+        /* aapt2Override= */ Optional.empty(),
+        /* zipalignOverride= */ Optional.empty(),
         AdbToolchain.of(
             MorePathsForTests.rootRelativePath("AndroidSDK").resolve("platform-tools/adb")));
   }

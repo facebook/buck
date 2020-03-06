@@ -26,6 +26,7 @@ import com.facebook.buck.android.toolchain.AndroidBuildToolsLocation;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.file.MorePathsForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -72,8 +73,9 @@ public class AndroidPlatformTargetProducerTest {
             AndroidSdkLocation.of(androidSdkDir),
             platformDirectoryPath,
             additionalJarPaths,
-            /* aaptOverride */ Optional.empty(),
-            /* aapt2Override */ Optional.empty(),
+            /* aaptOverride= */ Optional.empty(),
+            /* aapt2Override= */ Optional.empty(),
+            /* zipalignOverride= */ Optional.empty(),
             adbToolchain);
     assertEquals(name, androidPlatformTarget.getPlatformName());
     assertEquals(
@@ -137,8 +139,9 @@ public class AndroidPlatformTargetProducerTest {
             "Google Inc.:Google APIs:17",
             AndroidBuildToolsLocation.of(buildToolsDir.toPath()),
             AndroidSdkLocation.of(androidSdkDir.toPath()),
-            /* aaptOverride */ Optional.empty(),
-            /* aapt2Override */ Optional.empty(),
+            /* aaptOverride= */ Optional.empty(),
+            /* aapt2Override= */ Optional.empty(),
+            /* zipalignOverride= */ Optional.empty(),
             adbToolchain);
 
     // Verify that addOnsLibsDir2 was picked up since addOnsLibsDir1 is empty.
@@ -178,8 +181,9 @@ public class AndroidPlatformTargetProducerTest {
             platformId,
             AndroidBuildToolsLocation.of(buildToolsDir.toPath()),
             AndroidSdkLocation.of(androidSdkDir.toPath()),
-            /* aaptOverride */ Optional.empty(),
-            /* aapt2Override */ Optional.empty(),
+            /* aaptOverride= */ Optional.empty(),
+            /* aapt2Override= */ Optional.empty(),
+            /* zipalignOverride= */ Optional.empty(),
             adbToolchain);
 
     assertEquals(platformId, androidPlatformTarget.getPlatformName());
@@ -209,8 +213,9 @@ public class AndroidPlatformTargetProducerTest {
           platformId,
           AndroidBuildToolsLocation.of(androidSdkDir.toPath().resolve("build-tools")),
           AndroidSdkLocation.of(androidSdkDir.toPath()),
-          /* aaptOverride */ Optional.empty(),
-          /* aapt2Override */ Optional.empty(),
+          /* aaptOverride= */ Optional.empty(),
+          /* aapt2Override= */ Optional.empty(),
+          /* zipalignOverride= */ Optional.empty(),
           adbToolchain);
       fail("Should have thrown HumanReadableException");
     } catch (HumanReadableException e) {
@@ -249,8 +254,9 @@ public class AndroidPlatformTargetProducerTest {
             "Google Inc.:Google APIs:17",
             AndroidBuildToolsLocation.of(buildToolsDir.toPath()),
             AndroidSdkLocation.of(androidSdkDir.toPath()),
-            /* aaptOverride */ Optional.empty(),
-            /* aapt2Override */ Optional.empty(),
+            /* aaptOverride= */ Optional.empty(),
+            /* aapt2Override= */ Optional.empty(),
+            /* zipalignOverride= */ Optional.empty(),
             adbToolchain);
     assertEquals(
         ImmutableList.of(
@@ -267,8 +273,9 @@ public class AndroidPlatformTargetProducerTest {
             "android-17",
             AndroidBuildToolsLocation.of(buildToolsDir.toPath()),
             AndroidSdkLocation.of(androidSdkDir.toPath()),
-            /* aaptOverride */ Optional.empty(),
-            /* aapt2Override */ Optional.empty(),
+            /* aaptOverride= */ Optional.empty(),
+            /* aapt2Override= */ Optional.empty(),
+            /* zipalignOverride= */ Optional.empty(),
             adbToolchain);
     assertEquals(
         ImmutableList.of(pathToAndroidSdkDir.resolve("platforms/android-17/android.jar")),
@@ -296,32 +303,23 @@ public class AndroidPlatformTargetProducerTest {
             platformId,
             AndroidBuildToolsLocation.of(buildToolsDirFromOldUpgradePath.toPath()),
             AndroidSdkLocation.of(androidSdkDir.toPath()),
-            /* aaptOverride */ Optional.empty(),
-            /* aapt2Override */ Optional.empty(),
+            /* aaptOverride= */ Optional.empty(),
+            /* aapt2Override= */ Optional.empty(),
+            /* zipalignOverride= */ Optional.empty(),
             adbToolchain);
 
     assertEquals(platformId, androidPlatformTarget.getPlatformName());
     String binaryExtension = Platform.detect() == Platform.WINDOWS ? ".exe" : "";
-    assertEquals(
-        pathToAndroidSdkDir.resolve("build-tools/17.0.0/zipalign" + binaryExtension),
-        androidPlatformTarget.getZipalignExecutable());
 
-    File toolsDir = new File(androidSdkDir, "tools");
-    toolsDir.mkdirs();
-    Files.touch(new File(toolsDir, "zipalign" + binaryExtension));
-    androidPlatformTarget =
-        AndroidPlatformTargetProducer.getTargetForId(
-            filesystem,
-            platformId,
-            AndroidBuildToolsLocation.of(buildToolsDirFromOldUpgradePath.toPath()),
-            AndroidSdkLocation.of(androidSdkDir.toPath()),
-            /* aaptOverride */ Optional.empty(),
-            /* aapt2Override */ Optional.empty(),
-            adbToolchain);
-    assertEquals(platformId, androidPlatformTarget.getPlatformName());
+    Tool zipalignTool =
+        androidPlatformTarget
+            .getZipalignToolProvider()
+            .resolve(/* resolver= */ null, /* targetConfiguration= */ null);
+    String zipalignPath = zipalignTool.getCommandPrefix(/* resolver= */ null).get(0);
+
     assertEquals(
-        pathToAndroidSdkDir.resolve("tools/zipalign" + binaryExtension),
-        androidPlatformTarget.getZipalignExecutable());
+        pathToAndroidSdkDir.resolve("build-tools/17.0.0/zipalign" + binaryExtension).toString(),
+        zipalignPath);
   }
 
   @Test

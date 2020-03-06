@@ -222,7 +222,7 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
             new ConstantToolProvider(new SimpleTool("")),
             Paths.get(""),
             Paths.get(""),
-            Paths.get(""),
+            new ConstantToolProvider(new SimpleTool("")),
             Paths.get(""),
             Paths.get(""),
             Paths.get(""),

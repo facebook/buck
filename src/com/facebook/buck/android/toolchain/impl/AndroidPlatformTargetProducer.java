@@ -58,6 +58,7 @@ public class AndroidPlatformTargetProducer {
       AndroidSdkLocation androidSdkLocation,
       Optional<Supplier<Tool>> aaptOverride,
       Optional<ToolProvider> aapt2Override,
+      Optional<ToolProvider> zipalignOverride,
       AdbToolchain adbToolchain) {
 
     Matcher platformMatcher = PLATFORM_TARGET_PATTERN.matcher(platformId);
@@ -76,6 +77,7 @@ public class AndroidPlatformTargetProducer {
           apiLevel,
           aaptOverride,
           aapt2Override,
+          zipalignOverride,
           adbToolchain);
     } else {
       String messagePrefix =
@@ -92,6 +94,7 @@ public class AndroidPlatformTargetProducer {
       AndroidSdkLocation androidSdkLocation,
       Optional<Supplier<Tool>> aaptOverride,
       Optional<ToolProvider> aapt2Override,
+      Optional<ToolProvider> zipalignOverride,
       AdbToolchain platformToolsLocation) {
     return getTargetForId(
         filesystem,
@@ -100,6 +103,7 @@ public class AndroidPlatformTargetProducer {
         androidSdkLocation,
         aaptOverride,
         aapt2Override,
+        zipalignOverride,
         platformToolsLocation);
   }
 
@@ -111,6 +115,7 @@ public class AndroidPlatformTargetProducer {
         String apiLevel,
         Optional<Supplier<Tool>> aaptOverride,
         Optional<ToolProvider> aapt2Override,
+        Optional<ToolProvider> zipalignOverride,
         AdbToolchain adbToolchain);
   }
 
@@ -129,6 +134,7 @@ public class AndroidPlatformTargetProducer {
       Set<Path> additionalJarPaths,
       Optional<Supplier<Tool>> aaptOverride,
       Optional<ToolProvider> aapt2Override,
+      Optional<ToolProvider> zipalignOverride,
       AdbToolchain adbToolchain) {
     Path androidSdkDir = androidSdkLocation.getSdkRootPath();
     if (!androidSdkDir.isAbsolute()) {
@@ -167,16 +173,6 @@ public class AndroidPlatformTargetProducer {
     String version = buildToolsDir.getFileName().toString();
 
     String binaryExtension = Platform.detect() == Platform.WINDOWS ? ".exe" : "";
-    Path zipAlignExecutable =
-        androidSdkDir.resolve("tools/zipalign" + binaryExtension).toAbsolutePath();
-    if (!zipAlignExecutable.toFile().exists()) {
-      // Android SDK Build-tools >= 19.1.0 have zipalign under the build-tools directory.
-      zipAlignExecutable =
-          androidSdkDir
-              .resolve(buildToolsBinDir)
-              .resolve("zipalign" + binaryExtension)
-              .toAbsolutePath();
-    }
 
     Path androidFrameworkIdlFile = platformDirectory.resolve("framework.aidl");
     Path proguardJar = androidSdkDir.resolve("tools/proguard/lib/proguard.jar");
@@ -210,7 +206,16 @@ public class AndroidPlatformTargetProducer {
                     version))),
         adbToolchain.getAdbPath(),
         androidSdkDir.resolve(buildToolsBinDir).resolve("aidl" + binaryExtension).toAbsolutePath(),
-        zipAlignExecutable,
+        zipalignOverride.orElse(
+            new ConstantToolProvider(
+                VersionedTool.of(
+                    "zipalign" + binaryExtension,
+                    PathSourcePath.of(
+                        filesystem,
+                        androidSdkDir
+                            .resolve(androidBuildToolsLocation.getZipalignPath())
+                            .toAbsolutePath()),
+                    version))),
         buildToolsDir
             .resolve(Platform.detect() == Platform.WINDOWS ? "dx.bat" : "dx")
             .toAbsolutePath(),
@@ -233,6 +238,7 @@ public class AndroidPlatformTargetProducer {
         String apiLevel,
         Optional<Supplier<Tool>> aaptOverride,
         Optional<ToolProvider> aapt2Override,
+        Optional<ToolProvider> zipalignOverride,
         AdbToolchain adbToolchain) {
       // TODO(natthu): Use Paths instead of Strings everywhere in this file.
       Path androidSdkDir = androidSdkLocation.getSdkRootPath();
@@ -283,6 +289,7 @@ public class AndroidPlatformTargetProducer {
                 additionalJarPaths.build(),
                 aaptOverride,
                 aapt2Override,
+                zipalignOverride,
                 adbToolchain);
           }
         }
@@ -307,6 +314,7 @@ public class AndroidPlatformTargetProducer {
         String apiLevel,
         Optional<Supplier<Tool>> aaptOverride,
         Optional<ToolProvider> aapt2Override,
+        Optional<ToolProvider> zipalignOverride,
         AdbToolchain adbToolchain) {
       return createFromDefaultDirectoryStructure(
           filesystem,
@@ -317,6 +325,7 @@ public class AndroidPlatformTargetProducer {
           /* additionalJarPaths */ ImmutableSet.of(),
           aaptOverride,
           aapt2Override,
+          zipalignOverride,
           adbToolchain);
     }
   }
