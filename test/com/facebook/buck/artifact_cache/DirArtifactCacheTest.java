@@ -52,6 +52,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.MoreExecutors;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -762,6 +763,40 @@ public class DirArtifactCacheTest {
     assertThat(result.getMetadata(), Matchers.equalTo(metadata));
     assertThat(
         result.getArtifactSizeBytes(), Matchers.equalTo(projectFilesystem.getFileSize(data)));
+
+    cache.close();
+  }
+
+  @Test
+  public void testCacheStoreCorruptedMetadataAndFetchMiss() throws IOException {
+    DirArtifactCache cache = newDirArtifactCache(Optional.empty(), CacheReadMode.READWRITE);
+
+    RuleKey ruleKey = new RuleKey("0000");
+    ImmutableMap<String, String> metadata = ImmutableMap.of("some", "metadata");
+
+    // Create a dummy data file.
+    Path data = Paths.get("data");
+    projectFilesystem.touch(data);
+
+    // Store the artifact with metadata
+    cache.store(
+        ArtifactInfo.builder().addRuleKeys(ruleKey).setMetadata(metadata).build(),
+        BorrowablePath.notBorrowablePath(data));
+
+    // Corrupt the metadata
+    Path metadataPath = cache.getPathForRuleKey(ruleKey, Optional.of(".metadata"));
+    try (DataOutputStream out =
+        new DataOutputStream(projectFilesystem.newFileOutputStream(metadataPath))) {
+      out.writeInt(1);
+      out.flush();
+    }
+
+    CacheResult result =
+        Futures.getUnchecked(
+            cache.fetchAsync(null, ruleKey, LazyPath.ofInstance(Paths.get("out-data"))));
+
+    // Verify that the metadata is correct.
+    assertThat(result.getType(), Matchers.equalTo(CacheResultType.ERROR));
 
     cache.close();
   }

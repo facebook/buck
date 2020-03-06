@@ -63,7 +63,6 @@ public class DirArtifactCache implements ArtifactCache {
   private static final float STORED_TO_MAX_BYTES_RATIO_TRIM_TRIGGER = 0.5f;
   // How much of the max size to leave if we decide to delete old files.
   private static final float MAX_BYTES_TRIM_RATIO = 2 / 3f;
-  private static final String TMP_EXTENSION = ".tmp";
 
   private final String name;
   private final ProjectFilesystem filesystem;
@@ -188,25 +187,24 @@ public class DirArtifactCache implements ArtifactCache {
         }
         bytesSinceLastDeleteOldFiles += filesystem.getFileSize(artifactPath);
 
-        // Now, write the meta data artifact.
-        Path tmp = filesystem.createTempFile(getPreparedTempFolder(), "metadata", TMP_EXTENSION);
-        try {
-          try (DataOutputStream out = new DataOutputStream(filesystem.newFileOutputStream(tmp))) {
-            out.writeInt(info.getMetadata().size());
-            for (Map.Entry<String, String> ent : info.getMetadata().entrySet()) {
-              out.writeUTF(ent.getKey());
-              byte[] val = ent.getValue().getBytes(Charsets.UTF_8);
-              out.writeInt(val.length);
-              out.write(val);
-            }
+        // Now, write the meta data artifact. It is safe to write it directly because if something
+        // goes wrong and the metadata is corrupted then we will detect that when we try to read
+        // it.
+        try (DataOutputStream out =
+            new DataOutputStream(filesystem.newFileOutputStream(metadataPath))) {
+          out.writeInt(info.getMetadata().size());
+          for (Map.Entry<String, String> ent : info.getMetadata().entrySet()) {
+            out.writeUTF(ent.getKey());
+            byte[] val = ent.getValue().getBytes(Charsets.UTF_8);
+            out.writeInt(val.length);
+            out.write(val);
           }
-          filesystem.move(tmp, metadataPath, StandardCopyOption.REPLACE_EXISTING);
+          out.flush();
           bytesSinceLastDeleteOldFiles += filesystem.getFileSize(metadataPath);
-        } finally {
-          filesystem.deleteFileAtPathIfExists(tmp);
+        } catch (IOException e) {
+          Files.deleteIfExists(metadataPath);
         }
       }
-
     } catch (IOException e) {
       LOG.warn(e, "Artifact store(%s, %s) error", info.getRuleKeys(), output);
     }
@@ -244,14 +242,6 @@ public class DirArtifactCache implements ArtifactCache {
 
   private Path getPathToTempFolder() {
     return cacheDir.resolve("tmp");
-  }
-
-  private Path getPreparedTempFolder() throws IOException {
-    Path tmp = getPathToTempFolder();
-    if (!filesystem.exists(tmp)) {
-      filesystem.mkdirs(tmp);
-    }
-    return tmp;
   }
 
   private ImmutableList<String> subfolders(RuleKey ruleKey) {
