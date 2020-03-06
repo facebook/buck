@@ -34,7 +34,6 @@ import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -204,15 +203,6 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
           return delegate.store(info, output);
         },
         MoreExecutors.directExecutor());
-  }
-
-  /**
-   * Contains is supposed to be best-effort, but super-fast => Assume the second level is present.
-   */
-  @Override
-  public ListenableFuture<ImmutableMap<RuleKey, CacheResult>> multiContainsAsync(
-      ImmutableSet<RuleKey> ruleKeys) {
-    return delegate.multiContainsAsync(ruleKeys);
   }
 
   @Override

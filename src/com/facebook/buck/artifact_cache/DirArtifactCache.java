@@ -51,7 +51,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import javax.annotation.Nullable;
 
 public class DirArtifactCache implements ArtifactCache {
@@ -218,29 +217,6 @@ public class DirArtifactCache implements ArtifactCache {
       bytesSinceLastDeleteOldFiles = 0L;
       deleteOldFiles();
     }
-  }
-
-  @Override
-  public ListenableFuture<ImmutableMap<RuleKey, CacheResult>> multiContainsAsync(
-      ImmutableSet<RuleKey> ruleKeys) {
-    return Futures.immediateFuture(multiContains(ruleKeys));
-  }
-
-  private ImmutableMap<RuleKey, CacheResult> multiContains(Set<RuleKey> ruleKeys) {
-    ImmutableMap.Builder<RuleKey, CacheResult> results = new ImmutableMap.Builder<>();
-
-    for (RuleKey ruleKey : ruleKeys) {
-      Path artifactPath = getPathForRuleKey(ruleKey, Optional.empty());
-      Path metadataPath = getPathForRuleKey(ruleKey, Optional.of(".metadata"));
-
-      boolean contains = filesystem.exists(artifactPath) && filesystem.exists(metadataPath);
-      results.put(ruleKey, contains ? CacheResult.contains(name, CACHE_MODE) : CacheResult.miss());
-      LOG.verbose(
-          "Artifact contains request for rulekey [%s] was a cache %s.",
-          ruleKey, (contains ? "hit" : "miss"));
-    }
-
-    return results.build();
   }
 
   private void deleteSync(RuleKey ruleKey) {

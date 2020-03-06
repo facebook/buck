@@ -478,16 +478,6 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
   }
 
   @Override
-  public final ListenableFuture<ImmutableMap<RuleKey, CacheResult>> multiContainsAsync(
-      ImmutableSet<RuleKey> ruleKeys) {
-    return fetchExecutorService.submit(
-        () -> {
-          MultiContainsResult results = multiContainsImpl(ruleKeys);
-          return results.getCacheResults();
-        });
-  }
-
-  @Override
   public final ListenableFuture<Unit> store(ArtifactInfo info, BorrowablePath output) {
     if (!getCacheReadMode().isWritable()) {
       return Futures.immediateFuture(null);

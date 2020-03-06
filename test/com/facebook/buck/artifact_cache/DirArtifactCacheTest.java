@@ -153,54 +153,6 @@ public class DirArtifactCacheTest {
   }
 
   @Test
-  public void testCacheContainsMiss() throws IOException {
-    Path fileX = tmpDir.newFile("x");
-
-    fileHashLoader = new FakeFileHashCache(ImmutableMap.of(fileX, HashCode.fromInt(0)));
-
-    dirArtifactCache = newDirArtifactCache(Optional.of(0L), CacheReadMode.READWRITE);
-
-    Files.write(fileX, "x".getBytes(UTF_8));
-    BuildRule inputRuleX = new BuildRuleForTest(fileX);
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    graphBuilder.addToIndex(inputRuleX);
-    RuleKey ruleKeyX =
-        new TestDefaultRuleKeyFactory(fileHashLoader, graphBuilder).build(inputRuleX);
-
-    assertEquals(
-        CacheResultType.MISS,
-        Futures.getUnchecked(dirArtifactCache.multiContainsAsync(ImmutableSet.of(ruleKeyX)))
-            .get(ruleKeyX)
-            .getType());
-  }
-
-  @Test
-  public void testCacheStoreAndContainsHit() throws IOException {
-    Path fileX = tmpDir.newFile("x");
-
-    fileHashLoader = new FakeFileHashCache(ImmutableMap.of(fileX, HashCode.fromInt(0)));
-
-    dirArtifactCache = newDirArtifactCache(Optional.empty(), CacheReadMode.READWRITE);
-
-    Files.write(fileX, "x".getBytes(UTF_8));
-    BuildRule inputRuleX = new BuildRuleForTest(fileX);
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    graphBuilder.addToIndex(inputRuleX);
-    RuleKey ruleKeyX =
-        new TestDefaultRuleKeyFactory(fileHashLoader, graphBuilder).build(inputRuleX);
-
-    dirArtifactCache.store(
-        ArtifactInfo.builder().addRuleKeys(ruleKeyX).build(),
-        BorrowablePath.notBorrowablePath(fileX));
-
-    assertEquals(
-        CacheResultType.CONTAINS,
-        Futures.getUnchecked(dirArtifactCache.multiContainsAsync(ImmutableSet.of(ruleKeyX)))
-            .get(ruleKeyX)
-            .getType());
-  }
-
-  @Test
   public void testCacheStoreOverwrite() throws IOException {
     Path fileX = tmpDir.newFile("x");
 
@@ -434,76 +386,6 @@ public class DirArtifactCacheTest {
       assertThat(filenames, Matchers.hasItem(ruleKey.toString()));
       assertThat(filenames, Matchers.hasItem(ruleKey + ".metadata"));
     }
-  }
-
-  @Test
-  public void testCacheStoresAndMultiContainsHits() throws IOException {
-
-    Path fileX = tmpDir.newFile("x");
-    Path fileY = tmpDir.newFile("y");
-    Path fileZ = tmpDir.newFile("z");
-
-    fileHashLoader =
-        new FakeFileHashCache(
-            ImmutableMap.of(
-                fileX, HashCode.fromInt(0),
-                fileY, HashCode.fromInt(1),
-                fileZ, HashCode.fromInt(2)));
-
-    dirArtifactCache = newDirArtifactCache(Optional.empty(), CacheReadMode.READWRITE);
-
-    Files.write(fileX, "x".getBytes(UTF_8));
-    Files.write(fileY, "y".getBytes(UTF_8));
-    Files.write(fileZ, "x".getBytes(UTF_8));
-
-    BuildRule inputRuleX = new BuildRuleForTest(fileX);
-    BuildRule inputRuleY = new BuildRuleForTest(fileY);
-    BuildRule inputRuleZ = new BuildRuleForTest(fileZ);
-    assertNotEquals(inputRuleX, inputRuleY);
-    assertNotEquals(inputRuleX, inputRuleZ);
-    assertNotEquals(inputRuleY, inputRuleZ);
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    graphBuilder.addToIndex(inputRuleX);
-    graphBuilder.addToIndex(inputRuleY);
-    graphBuilder.addToIndex(inputRuleZ);
-
-    DefaultRuleKeyFactory fakeRuleKeyFactory =
-        new TestDefaultRuleKeyFactory(fileHashLoader, graphBuilder);
-
-    RuleKey ruleKeyX = fakeRuleKeyFactory.build(inputRuleX);
-    RuleKey ruleKeyY = fakeRuleKeyFactory.build(inputRuleY);
-    RuleKey ruleKeyZ = fakeRuleKeyFactory.build(inputRuleZ);
-
-    assertEquals(
-        ImmutableList.of(CacheResultType.MISS, CacheResultType.MISS, CacheResultType.MISS),
-        Futures.getUnchecked(
-                dirArtifactCache.multiContainsAsync(ImmutableSet.of(ruleKeyX, ruleKeyY, ruleKeyZ)))
-            .values().stream()
-            .map(CacheResult::getType)
-            .collect(ImmutableList.toImmutableList()));
-
-    dirArtifactCache.store(
-        ArtifactInfo.builder().addRuleKeys(ruleKeyX).build(),
-        BorrowablePath.notBorrowablePath(fileX));
-    dirArtifactCache.store(
-        ArtifactInfo.builder().addRuleKeys(ruleKeyY).build(),
-        BorrowablePath.notBorrowablePath(fileY));
-    dirArtifactCache.store(
-        ArtifactInfo.builder().addRuleKeys(ruleKeyZ).build(),
-        BorrowablePath.notBorrowablePath(fileZ));
-
-    Files.delete(fileX);
-    Files.delete(fileY);
-    Files.delete(fileZ);
-
-    assertEquals(
-        ImmutableList.of(
-            CacheResultType.CONTAINS, CacheResultType.CONTAINS, CacheResultType.CONTAINS),
-        Futures.getUnchecked(
-                dirArtifactCache.multiContainsAsync(ImmutableSet.of(ruleKeyX, ruleKeyY, ruleKeyZ)))
-            .values().stream()
-            .map(CacheResult::getType)
-            .collect(ImmutableList.toImmutableList()));
   }
 
   @Test

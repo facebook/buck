@@ -24,8 +24,6 @@ import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -88,18 +86,6 @@ public interface ArtifactCache extends AutoCloseable {
         input -> this.store(rest),
         MoreExecutors.directExecutor());
   }
-
-  /**
-   * Check if the cache contains the given artifacts, keyed by ruleKeys, without fetching them, and
-   * return a map of results wrapped in a {@link ListenableFuture}. This is supposed to be fast, but
-   * best-effort, meaning that there will be false-positives.
-   *
-   * @param ruleKeys Set of cache fetch keys.
-   * @return map of keys to {@link CacheResult} which can be a {@link CacheResultType#MISS} / {@link
-   *     CacheResultType#ERROR} (indicating a failure) or {@link CacheResultType#CONTAINS}.
-   */
-  ListenableFuture<ImmutableMap<RuleKey, CacheResult>> multiContainsAsync(
-      ImmutableSet<RuleKey> ruleKeys);
 
   ListenableFuture<CacheDeleteResult> deleteAsync(List<RuleKey> ruleKeys);
 

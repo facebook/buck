@@ -259,12 +259,6 @@ public class SQLiteArtifactCache implements ArtifactCache {
   }
 
   @Override
-  public ListenableFuture<ImmutableMap<RuleKey, CacheResult>> multiContainsAsync(
-      ImmutableSet<RuleKey> ruleKeys) {
-    throw new UnsupportedOperationException("multiContains is not supported");
-  }
-
-  @Override
   public ListenableFuture<CacheDeleteResult> deleteAsync(List<RuleKey> ruleKeys) {
     throw new RuntimeException("Delete operation is not yet supported");
   }

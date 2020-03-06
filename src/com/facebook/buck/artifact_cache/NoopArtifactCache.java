@@ -25,9 +25,6 @@ import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.util.List;
@@ -54,12 +51,6 @@ public class NoopArtifactCache implements ArtifactCache {
   @Override
   public ListenableFuture<Unit> store(ImmutableList<Pair<ArtifactInfo, BorrowablePath>> artifacts) {
     return Futures.immediateFuture(Unit.UNIT);
-  }
-
-  @Override
-  public ListenableFuture<ImmutableMap<RuleKey, CacheResult>> multiContainsAsync(
-      ImmutableSet<RuleKey> ruleKeys) {
-    return Futures.immediateFuture(Maps.toMap(ruleKeys, k -> CacheResult.miss()));
   }
 
   @Override

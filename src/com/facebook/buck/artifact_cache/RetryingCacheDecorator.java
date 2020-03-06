@@ -30,8 +30,6 @@ import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -119,13 +117,6 @@ public class RetryingCacheDecorator implements ArtifactCache, CacheDecorator {
   @Override
   public ListenableFuture<Unit> store(ImmutableList<Pair<ArtifactInfo, BorrowablePath>> artifacts) {
     return delegate.store(artifacts);
-  }
-
-  @Override
-  public ListenableFuture<ImmutableMap<RuleKey, CacheResult>> multiContainsAsync(
-      ImmutableSet<RuleKey> ruleKeys) {
-    // Contains is best-effort.
-    return delegate.multiContainsAsync(ruleKeys);
   }
 
   @Override
