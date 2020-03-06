@@ -1,6 +1,6 @@
 java_annotation_processor(
     name = "ap",
-    processor_class = "com.example.ap.kotlinap.AnnotationProcessorKotlin",
+    processor_class = "com.example.ap.throwingkotlinap.ThrowingAnnotationProcessorKotlin",
     visibility = [
         "PUBLIC",
     ],
@@ -12,7 +12,7 @@ java_annotation_processor(
 kotlin_library(
     name = "ap-lib",
     srcs = [
-        "AnnotationProcessorKotlin.kt",
+        "ThrowingAnnotationProcessorKotlin.kt",
     ],
     plugins = [
         "//com/example/ap/libs:google_auto_service",
@@ -30,6 +30,5 @@ kotlin_library(
         "//com/example/ap/libs:auto-common.jar",
         "//com/example/ap/libs:auto-service.jar",
         "//com/example/ap/libs:kotlinpoet.jar",
-        "//com/example/ap/throwingkotlinap:ap-lib",
     ],
 )
