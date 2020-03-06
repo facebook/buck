@@ -95,6 +95,18 @@ public class BuildCommandIntegrationTest {
   }
 
   @Test
+  public void justBuildWithDefaultTargetPlatform() throws IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace.setUp();
+    workspace
+        .runBuckBuild("--just-build", "//:bar", "//:with-default-target-platform")
+        .assertSuccess();
+    assertThat(
+        workspace.getBuildLog().getAllTargets(),
+        Matchers.contains(BuildTargetFactory.newInstance("//:bar")));
+  }
+
+  @Test
   public void buckBuildAndCopyOutputFileWithBuildTargetThatSupportsIt() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "build_into", tmp);
     workspace.setUp();

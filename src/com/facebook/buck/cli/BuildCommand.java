@@ -29,8 +29,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
-import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.graph.ActionAndTargetGraphs;
 import com.facebook.buck.core.model.impl.BuildPaths;
@@ -98,6 +97,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
+import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 import org.kohsuke.args4j.Argument;
@@ -438,8 +438,7 @@ public class BuildCommand extends AbstractCommand {
         justBuildTarget == null
             ? matchBuildTargetsWithLabelsFromSpecs(
                 specs, targetGraphForLocalBuild.getBuildTargets())
-            : getBuildTargetsWithOutputsForJustBuild(
-                params, params.getTargetConfiguration(), actionGraph, justBuildTarget);
+            : getBuildTargetsWithOutputsForJustBuild(params, actionGraph, justBuildTarget);
 
     ActionAndTargetGraphs actionAndTargetGraphs =
         ActionAndTargetGraphs.of(unversionedTargetGraph, versionedTargetGraph, actionGraph);
@@ -449,28 +448,31 @@ public class BuildCommand extends AbstractCommand {
 
   private ImmutableSet<BuildTargetWithOutputs> getBuildTargetsWithOutputsForJustBuild(
       CommandRunnerParams params,
-      Optional<TargetConfiguration> targetConfiguration,
       ActionGraphAndBuilder actionGraphAndBuilder,
       String justBuildTarget)
       throws ActionGraphCreationException {
     BuildTargetOutputLabelParser.TargetWithOutputLabel targetWithOutputLabel =
         BuildTargetOutputLabelParser.getBuildTargetNameWithOutputLabel(justBuildTarget);
-    BuildTarget explicitTarget =
+    UnconfiguredBuildTarget explicitTarget =
         params
             .getUnconfiguredBuildTargetFactory()
             .create(
                 targetWithOutputLabel.getTargetName(),
-                params.getCells().getRootCell().getCellNameResolver())
-            // TODO(nga): ignores default_target_platform and configuration detector
-            .configure(targetConfiguration.orElse(UnconfiguredTargetConfiguration.INSTANCE));
-    Iterable<BuildRule> actionGraphRules =
-        Objects.requireNonNull(actionGraphAndBuilder.getActionGraph().getNodes());
-    if (!Iterables.any(actionGraphRules, rule -> explicitTarget.equals(rule.getBuildTarget()))) {
+                params.getCells().getRootCell().getCellNameResolver());
+
+    ImmutableSet<BuildTargetWithOutputs> targets =
+        StreamSupport.stream(actionGraphAndBuilder.getActionGraph().getNodes().spliterator(), false)
+            .map(BuildRule::getBuildTarget)
+            .filter(t -> t.getUnconfiguredBuildTarget().equals(explicitTarget))
+            .map(t -> BuildTargetWithOutputs.of(t, targetWithOutputLabel.getOutputLabel()))
+            .collect(ImmutableSet.toImmutableSet());
+
+    if (targets.isEmpty()) {
       throw new ActionGraphCreationException(
           "Targets specified via `--just-build` must be a subset of action graph.");
     }
-    return ImmutableSet.of(
-        BuildTargetWithOutputs.of(explicitTarget, targetWithOutputLabel.getOutputLabel()));
+
+    return targets;
   }
 
   private void checkSingleBuildTargetSpecifiedForOutBuildMode(
