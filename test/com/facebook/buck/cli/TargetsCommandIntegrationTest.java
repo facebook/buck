@@ -264,7 +264,12 @@ public class TargetsCommandIntegrationTest {
     result.assertSuccess();
     assertEquals(
         linesToText(
-            "//:test_multiple_outputs",
+            "//:test_multiple_outputs "
+                + MorePaths.pathWithPlatformSeparators(
+                    tmp.getRoot()
+                        .resolve(
+                            getNonLegacyGenDir("//:test_multiple_outputs", workspace)
+                                .resolve("out1.txt"))),
             "//:test_multiple_outputs[out2] "
                 + MorePaths.pathWithPlatformSeparators(
                     tmp.getRoot()
@@ -304,12 +309,17 @@ public class TargetsCommandIntegrationTest {
         workspace
             .runBuckCommand("targets", "--show-outputs", "//:test_multiple_outputs")
             .assertSuccess();
-    assertThat(result.getStdout(), containsString("//:test_multiple_outputs"));
-    assertThat(result.getStdout(), not(containsString("buck-out")));
+    assertEquals(
+        linesToText(
+            "//:test_multiple_outputs "
+                + MorePaths.pathWithPlatformSeparators(
+                    getNonLegacyGenDir("//:test_multiple_outputs", workspace).resolve("out1.txt")),
+            ""),
+        result.getStdout());
   }
 
   @Test
-  public void showOutputsWithJsonForEmptyDefaultOutputs() throws IOException {
+  public void showOutputsWithJsonForDefaultOutputs() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "output_paths", tmp);
     workspace.setUp();
@@ -317,6 +327,23 @@ public class TargetsCommandIntegrationTest {
     ProcessResult result =
         workspace
             .runBuckCommand("targets", "--show-outputs", "--json", "//:test_multiple_outputs")
+            .assertSuccess();
+    assertOutputPaths("{\"DEFAULT\" : [\"<OUTPUT_PREFIX>out1.txt\"]}", result);
+  }
+
+  @Test
+  public void showOutputsWithJsonForEmptyDefaultOutputs() throws IOException {
+    // We don't want this behavior anymore. default_outs should be specified if outs is present, and
+    // default_outs shouldn't be empty. But we keep this test here for now to make sure there are no
+    // regressions with not specifying default_outs, since repo usages aren't currently specifying
+    // default_outs.
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_paths", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace
+            .runBuckCommand("targets", "--show-outputs", "--json", "//:no_defaults")
             .assertSuccess();
     JsonNode observed =
         ObjectMappers.READER.readTree(ObjectMappers.createParser(result.getStdout()));
