@@ -31,6 +31,7 @@ genrule(
             "out",
         ],
     },
+    default_outs = ["out"],
     cmd = "cp $(location :source) $OUT/out",
     cmd_exe = "copy $(location :source) %OUT%\\out",
 )

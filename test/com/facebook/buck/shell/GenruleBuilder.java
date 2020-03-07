@@ -102,6 +102,11 @@ public class GenruleBuilder
     return this;
   }
 
+  public GenruleBuilder setDefaultOuts(ImmutableSet<String> defaultOuts) {
+    getArgForPopulating().setDefaultOuts(defaultOuts);
+    return this;
+  }
+
   public GenruleBuilder setBash(@Nullable String bash) {
     getArgForPopulating().setBash(Optional.ofNullable(bash).map(StringWithMacrosUtils::format));
     return this;

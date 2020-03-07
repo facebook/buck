@@ -18,6 +18,7 @@ genrule(
             "baz",
         ],
     },
+    default_outs = ["baz"],
     cmd = "cp $(location :bar) $OUT/baz",
     executable = True,
 )
@@ -29,15 +30,17 @@ genrule(
             "example_out.txt",
         ],
     },
+    default_outs = ["example_out.txt"],
     cmd = "$(exe :extra_layer_for_test[bar]) > $OUT/example_out.txt",
 )
 
 genrule(
-    name = "exe_macro_with_invalid_outputs",
+    name = "exe_macro_with_default_output",
     outs = {
         "output": [
             "example_out.txt",
         ],
     },
+    default_outs = ["example_out.txt"],
     cmd = "$(exe :extra_layer_for_test) > $OUT/example_out.txt",
 )

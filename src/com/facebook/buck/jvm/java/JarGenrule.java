@@ -70,6 +70,7 @@ public final class JarGenrule extends BaseGenrule<GenruleBuildable> implements B
             type,
             Optional.of(out + ".jar"),
             Optional.empty(),
+            Optional.empty(),
             false,
             isCacheable,
             environmentExpansionSeparator.orElse(" "),

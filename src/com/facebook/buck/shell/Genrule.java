@@ -152,6 +152,7 @@ public class Genrule extends BaseGenrule<GenruleBuildable>
       Optional<String> type,
       Optional<String> out,
       Optional<ImmutableMap<String, ImmutableSet<String>>> outs,
+      Optional<ImmutableSet<String>> defaultOuts,
       boolean enableSandboxingInGenrule,
       boolean isCacheable,
       Optional<String> environmentExpansionSeparator,
@@ -177,6 +178,7 @@ public class Genrule extends BaseGenrule<GenruleBuildable>
                         .collect(
                             ImmutableMap.toImmutableMap(
                                 e -> OutputLabel.of(e.getKey()), Map.Entry::getValue))),
+            defaultOuts,
             enableSandboxingInGenrule,
             isCacheable,
             environmentExpansionSeparator.orElse(" "),

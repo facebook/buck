@@ -77,6 +77,7 @@ public final class ExternallyBuiltApplePackage
                     + "."
                     + packageConfigAndPlatformInfo.getConfig().getExtension()),
             Optional.empty(),
+            Optional.empty(),
             false,
             cacheable,
             environmentExpansionSeparator.orElse(" "),
@@ -110,6 +111,7 @@ public final class ExternallyBuiltApplePackage
         Optional<String> type,
         Optional<String> out,
         Optional<ImmutableMap<OutputLabel, ImmutableSet<String>>> outs,
+        Optional<ImmutableSet<String>> defaultOuts,
         boolean enableSandboxingInGenrule,
         boolean isCacheable,
         String environmentExpansionSeparator,
@@ -130,6 +132,7 @@ public final class ExternallyBuiltApplePackage
           type,
           out,
           outs,
+          defaultOuts,
           enableSandboxingInGenrule,
           isCacheable,
           environmentExpansionSeparator,

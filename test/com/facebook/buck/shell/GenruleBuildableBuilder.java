@@ -72,6 +72,11 @@ abstract class GenruleBuildableBuilder {
   }
 
   @Value.Default
+  public Optional<ImmutableSet<String>> getDefaultOuts() {
+    return Optional.empty();
+  }
+
+  @Value.Default
   public boolean getEnableSandboxingInGenrule() {
     return false;
   }
@@ -110,6 +115,7 @@ abstract class GenruleBuildableBuilder {
         getType(),
         getOut(),
         getOuts(),
+        getDefaultOuts(),
         getEnableSandboxingInGenrule(),
         isCacheable(),
         getEnvironmentExpansionSeparator(),

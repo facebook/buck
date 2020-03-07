@@ -11,5 +11,6 @@ genrule(
             "",
         ],
     },
+    default_outs = [""],
     cmd = "echo something > $OUT",
 )

@@ -128,6 +128,7 @@ public final class JsBundleGenrule extends BaseGenrule<JsBundleGenrule.Buildable
                     args.getRewriteMisc(),
                     args.getRewriteDepsFile(),
                     bundleName)),
+            Optional.of(ImmutableSet.of(JsBundleOutputs.JS_DIR_NAME)),
             false,
             true,
             environmentExpansionSeparator.orElse(" "),
@@ -207,6 +208,7 @@ public final class JsBundleGenrule extends BaseGenrule<JsBundleGenrule.Buildable
         Optional<String> type,
         Optional<String> out,
         Optional<ImmutableMap<OutputLabel, ImmutableSet<String>>> outs,
+        Optional<ImmutableSet<String>> defaultOuts,
         boolean enableSandboxingInGenrule,
         boolean isCacheable,
         String environmentExpansionSeparator,
@@ -237,6 +239,7 @@ public final class JsBundleGenrule extends BaseGenrule<JsBundleGenrule.Buildable
           type,
           out,
           outs,
+          defaultOuts,
           enableSandboxingInGenrule,
           isCacheable,
           environmentExpansionSeparator,
@@ -505,7 +508,6 @@ public final class JsBundleGenrule extends BaseGenrule<JsBundleGenrule.Buildable
     }
 
     builder.put(JS, ImmutableSet.of(JsBundleOutputs.JS_DIR_NAME));
-    builder.put(OutputLabel.defaultLabel(), ImmutableSet.of(JsBundleOutputs.JS_DIR_NAME));
     return builder.build();
   }
 }

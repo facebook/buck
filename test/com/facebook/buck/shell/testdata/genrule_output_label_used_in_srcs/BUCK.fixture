@@ -8,6 +8,7 @@ genrule(
             "other-file.txt",
         ],
     },
+    default_outs = ["other-file.txt"],
     bash = "echo something > $OUT/some-file.txt && echo other > $OUT/other-file.txt",
     cmd_exe = "powershell -Command \"Out-File -FilePath $env:OUT\\some-file.txt -Encoding ascii -InputObject \"something\"\"; powershell -Command \"Out-File -FilePath $env:OUT\\other-file.txt -Encoding ascii -InputObject \"other\"\"",
 )

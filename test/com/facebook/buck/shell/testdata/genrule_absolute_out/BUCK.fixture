@@ -11,5 +11,6 @@ genrule(
             "/tmp/file",
         ],
     },
+    default_outs = ["/tmp/file"],
     cmd = "echo something > $OUT",
 )

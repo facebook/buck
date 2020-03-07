@@ -857,7 +857,8 @@ public class GenruleBuildableTest {
             .setFilesystem(new FakeProjectFilesystem())
             .setCmd("echo something")
             .setOuts(
-                Optional.of(ImmutableMap.of(OutputLabel.defaultLabel(), ImmutableSet.of("foo"))))
+                Optional.of(ImmutableMap.of(OutputLabel.of("foo_label"), ImmutableSet.of("foo"))))
+            .setDefaultOuts(Optional.of(ImmutableSet.of("foo")))
             .build()
             .toBuildable();
 

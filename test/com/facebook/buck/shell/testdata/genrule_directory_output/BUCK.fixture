@@ -11,6 +11,7 @@ genrule(
             "directory",
         ],
     },
+    default_outs = ["directory"],
     bash = "mkdir -p $OUT/directory && echo something> $OUT/directory/file",
     cmd_exe = "mkdir -p $OUT\\directory && echo something> $OUT\\directory\\file",
 )

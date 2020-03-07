@@ -48,6 +48,7 @@ genrule(
             "file",
         ],
     },
+    default_outs = [ "file", ],
     bash = BASH_COMMAND_FOR_OUTS,
     cmd_exe = CMD_COMMAND_FOR_OUTS,
 )

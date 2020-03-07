@@ -28,6 +28,7 @@ genrule(
             "output.txt",
         ],
     },
+    default_outs = ["output.txt"],
     bash = "echo \"one\" > $OUT/output.txt",
     cmd_exe = "powershell -Command Out-File -FilePath $env:OUT\output.txt -Encoding ascii -InputObject \"one\"",
 )
@@ -42,6 +43,7 @@ genrule(
             "output.txt",
         ],
     },
+    default_outs = ["output.txt"],
     bash = "echo \"two\" > $OUT/output.txt",
     cmd_exe = "powershell -Command Out-File -FilePath $env:OUT\output.txt -Encoding ascii -InputObject \"two\"",
 )

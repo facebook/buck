@@ -19,6 +19,7 @@ genrule(
             "out.bat",
         ],
     },
+    default_outs = ["out.bat"],
     bash = "cp $SRCS $OUT/out.bat && chmod +x $OUT/out.bat",
     cmd_exe = "copy %SRCS% %OUT%\\out.bat",
     executable = True,

@@ -86,7 +86,6 @@ import java.util.stream.Collectors;
  * extending the functionality of a bare Genrule.
  */
 public class GenruleBuildable implements Buildable {
-  private static final ImmutableSet<OutputPath> DEFAULT_OUTPUTS = ImmutableSet.of();
   private static final ImmutableSet<String> DEFAULT_OUTS = ImmutableSet.of();
 
   /**
@@ -227,6 +226,7 @@ public class GenruleBuildable implements Buildable {
       Optional<String> type,
       Optional<String> out,
       Optional<ImmutableMap<OutputLabel, ImmutableSet<String>>> outs,
+      Optional<ImmutableSet<String>> defaultOuts,
       boolean enableSandboxingInGenrule,
       boolean isCacheable,
       String environmentExpansionSeparator,
@@ -271,10 +271,13 @@ public class GenruleBuildable implements Buildable {
                     })
                 .collect(ImmutableSet.toImmutableSet()));
       }
-      if (!outputs.containsKey(OutputLabel.defaultLabel())) {
-        outsBuilder.put(OutputLabel.defaultLabel(), DEFAULT_OUTS);
-        outputPathsBuilder.put(OutputLabel.defaultLabel(), DEFAULT_OUTPUTS);
-      }
+      // TODO(irenewchen): Should add a Preconditions check here to enforce that default_outs must
+      // be present if outs is present after repo usages have been changed to meet this requirement
+      ImmutableSet<String> defaults = defaultOuts.isPresent() ? defaultOuts.get() : DEFAULT_OUTS;
+      outsBuilder.put(OutputLabel.defaultLabel(), defaults);
+      outputPathsBuilder.put(
+          OutputLabel.defaultLabel(),
+          defaults.stream().map(OutputPath::new).collect(ImmutableSet.toImmutableSet()));
       this.outs = Optional.of(outsBuilder.build());
       this.outputPaths = Optional.of(outputPathsBuilder.build());
       this.outputPath = Optional.empty();

@@ -17,6 +17,7 @@ genrule(
             "directory",
         ],
     },
+    default_outs = ["directory"],
     bash = "mkdir $OUT/directory && echo something > $OUT/directory/two",
     cmd_exe = "powershell -Command mkdir (Split-Path -Parent ${OUT}\\directory\\two) ; New-Item -Type file ${OUT}\\directory\\two",
 )
@@ -28,6 +29,7 @@ genrule(
             "another_directory",
         ],
     },
+    default_outs = ["another_directory"],
     bash = "mkdir $OUT/another_directory && echo something > $OUT/another_directory/file",
     cmd_exe = "powershell -Command mkdir (Split-Path -Parent ${OUT}\\another_directory\\file) ; New-Item -Type file ${OUT}\\another_directory\\file",
 )

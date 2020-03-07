@@ -19,6 +19,7 @@ genrule(
             "output-one.zip",
         ],
     },
+    default_outs = ["output-one.zip"],
     cmd = "python $SRCS $OUT/output-one.zip 0",
 )
 
@@ -41,6 +42,7 @@ genrule(
             "output-two.zip",
         ],
     },
+    default_outs = ["output-two.zip"],
     cmd = "python $SRCS $OUT/output-two.zip 0",
 )
 
@@ -64,6 +66,7 @@ genrule(
             "output.zip",
         ],
     },
+    default_outs = ["output.zip"],
     bash = "cp $SRCS $OUT/output.zip",
     cmd_exe = "copy $SRCS $OUT\\output.zip",
 )
@@ -88,6 +91,7 @@ genrule(
             "output.zip",
         ],
     },
+    default_outs = ["output.zip"],
     bash = "cp $SRCS $OUT/output.zip",
     cmd_exe = "copy $SRCS $OUT\\output.zip",
 )

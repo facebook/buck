@@ -14,6 +14,7 @@ genrule(
             "directory",
         ],
     },
+    default_outs = ["directory"],
     # One should never navigate up from a directory path provided by a genrule. We do so in this
     # test just to make sure that the entire directory is removed between runs, as a precaution
     # against bugs in genrules.

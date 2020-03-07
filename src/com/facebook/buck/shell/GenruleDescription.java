@@ -74,6 +74,7 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
           args.getType(),
           args.getOut(),
           args.getOuts(),
+          args.getDefaultOuts(),
           sandboxConfig.isSandboxEnabledForCurrentPlatform()
               && args.getEnableSandbox().orElse(sandboxConfig.isGenruleSandboxEnabled()),
           args.getCacheable().orElse(true),
@@ -93,6 +94,7 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
           args.getType(),
           args.getOut(),
           args.getOuts(),
+          args.getDefaultOuts(),
           args.getCacheable().orElse(true),
           args.getEnvironmentExpansionSeparator(),
           getAndroidToolsOptional(args, buildTarget.getTargetConfiguration()),
@@ -113,6 +115,8 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
 
     Optional<ImmutableMap<String, ImmutableSet<String>>> getOuts();
 
+    Optional<ImmutableSet<String>> getDefaultOuts();
+
     Optional<Boolean> getExecutable();
 
     @Value.Check
@@ -124,7 +128,8 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
       // Lets check if out fields are valid GenruleOutPath
       if (getOut().isPresent()) {
         GenruleOutPath.of(getOut().get());
-      } else if (getOuts().isPresent()) {
+      } else {
+        getDefaultOuts().ifPresent(defaultOuts -> defaultOuts.forEach(GenruleOutPath::of));
         getOuts().get().forEach((key, paths) -> paths.forEach(path -> GenruleOutPath.of(path)));
       }
     }

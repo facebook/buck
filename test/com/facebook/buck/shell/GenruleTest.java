@@ -622,6 +622,7 @@ public class GenruleTest {
       Genrule genrule =
           GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:test"))
               .setOuts(ImmutableMap.of("label", ImmutableSet.of(name)))
+              .setDefaultOuts(ImmutableSet.of(name))
               .build(new TestActionGraphBuilder());
       assertEquals(name, genrule.getOutputName(OutputLabel.of("label")));
     }
@@ -1003,10 +1004,13 @@ public class GenruleTest {
   }
 
   @Test
-  public void defaultOutputGroupIsEmpty() {
+  public void canGetDefaultOutputGroup() {
+    ProjectFilesystem fakeFileSystem = new FakeProjectFilesystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(graphBuilder);
+    BuildTarget target = BuildTargetFactory.newInstance("//:test_genrule");
     Genrule genrule =
-        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:test_genrule"))
+        GenruleBuilder.newGenruleBuilder(target)
             .setCmd("echo hello >> $OUT")
             .setOuts(
                 ImmutableMap.of(
@@ -1014,9 +1018,13 @@ public class GenruleTest {
                     ImmutableSet.of("output1a", "output1b"),
                     "label2",
                     ImmutableSet.of("output2a")))
+            .setDefaultOuts(ImmutableSet.of("output3"))
             .build(graphBuilder, new FakeProjectFilesystem());
 
-    assertThat(genrule.getSourcePathToOutput(OutputLabel.defaultLabel()), Matchers.empty());
+    ImmutableSet<Path> actual =
+        convertSourcePathsToPaths(
+            sourcePathResolver, genrule.getSourcePathToOutput(OutputLabel.defaultLabel()));
+    assertThat(actual, Matchers.contains(getExpectedPath(fakeFileSystem, target, "output3")));
   }
 
   @Test
@@ -1034,6 +1042,7 @@ public class GenruleTest {
                     ImmutableSet.of("output1a", "output1b"),
                     "label2",
                     ImmutableSet.of("output2a")))
+            .setDefaultOuts(ImmutableSet.of("output2a"))
             .build(graphBuilder, new FakeProjectFilesystem());
 
     ImmutableSet<Path> actual =
@@ -1058,6 +1067,7 @@ public class GenruleTest {
                     ImmutableSet.of("output1a", "output1b"),
                     "label2",
                     ImmutableSet.of("output2a")))
+            .setDefaultOuts(ImmutableSet.of("output2a"))
             .build(new TestActionGraphBuilder(), new FakeProjectFilesystem());
 
     ImmutableSet<OutputLabel> actual = genrule.getOutputLabels();

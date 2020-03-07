@@ -39,6 +39,7 @@ genrule(
     outs = {
         "output": ["../abc.txt"],
     },
+    default_outs = ["../abc.txt"],
     cmd = "echo something > $OUT",
 )
 
@@ -47,6 +48,7 @@ genrule(
     outs = {
         "output": [".."],
     },
+    default_outs = [".."],
     cmd = "echo something > $OUT",
 )
 
@@ -55,6 +57,7 @@ genrule(
     outs = {
         "output": ["a/b/../c"],
     },
+    default_outs = ["a/b/../c"],
     cmd = "echo something > $OUT",
 )
 
@@ -63,6 +66,7 @@ genrule(
     outs = {
         "output": ["//a/b/c"],
     },
+    default_outs = ["//a/b/c"],
     cmd = "echo something > $OUT",
 )
 
@@ -71,6 +75,7 @@ genrule(
     outs = {
         "output": ["a/./b"],
     },
+    default_outs = ["a/./b"],
     cmd = "echo something > $OUT",
 )
 
@@ -79,5 +84,6 @@ genrule(
     outs = {
         "output": ["a/b/"],
     },
+    default_outs = ["a/b/"],
     cmd = "echo something > $OUT",
 )

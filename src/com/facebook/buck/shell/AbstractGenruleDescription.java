@@ -133,7 +133,8 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       Optional<Arg> bash,
       Optional<Arg> cmdExe,
       Optional<String> outputFileName,
-      Optional<ImmutableMap<String, ImmutableSet<String>>> outputFileNames) {
+      Optional<ImmutableMap<String, ImmutableSet<String>>> namedOutputFileNames,
+      Optional<ImmutableSet<String>> defaultOutputFileNames) {
     return new Genrule(
         buildTarget,
         projectFilesystem,
@@ -145,7 +146,8 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
         cmdExe,
         args.getType(),
         outputFileName,
-        outputFileNames,
+        namedOutputFileNames,
+        defaultOutputFileNames,
         args.getEnableSandbox().orElse(enableSandbox),
         args.getCacheable().orElse(true),
         args.getEnvironmentExpansionSeparator(),

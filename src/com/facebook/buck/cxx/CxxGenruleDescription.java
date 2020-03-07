@@ -307,7 +307,8 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
         bash,
         cmdExe,
         Optional.of(args.getOut()),
-        Optional.empty()); // multiple outputs not supported yet for CxxGenRule
+        Optional.empty(), // named outputs not supported yet for CxxGenRule
+        Optional.empty());
   }
 
   @Override

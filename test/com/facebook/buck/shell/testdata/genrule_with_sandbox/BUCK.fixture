@@ -17,6 +17,7 @@ genrule(
             "output.txt",
         ],
     },
+    default_outs = ["output.txt"],
     bash = "cat `dirname $SRCS`/undeclared_input.txt > $OUT/output.txt",
 )
 
@@ -40,6 +41,7 @@ genrule(
             "output.txt",
         ],
     },
+    default_outs = ["output.txt"],
     bash = "cat `dirname $SRCS`/undeclared_input.txt > $OUT/output.txt",
     enable_sandbox = True,
 )

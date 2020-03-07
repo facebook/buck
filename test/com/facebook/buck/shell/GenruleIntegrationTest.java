@@ -379,19 +379,16 @@ public class GenruleIntegrationTest {
   }
 
   @Test
-  public void exeMacroThrowsForNamedOutputsIfNotOneOutput() throws Exception {
+  public void exeMacroWorksWithDefaultOutput() throws Exception {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "genrule_exe_macro", temporaryFolder);
     workspace.setUp();
 
-    ProcessResult result =
-        workspace.runBuckBuild("//:exe_macro_with_invalid_outputs").assertFailure();
-    assertTrue(
-        result
-            .getStderr()
-            .contains("Unexpectedly found 0 outputs for //:extra_layer_for_test[DEFAULT]"));
+    Path result = workspace.buildAndReturnOutput("//:exe_macro_with_default_output");
+    assertTrue(result.endsWith("example_out.txt"));
+    assertEquals("hello\n", workspace.getFileContents(result));
   }
 
   @Test
@@ -565,6 +562,10 @@ public class GenruleIntegrationTest {
     result = workspace.buildAndReturnOutput("//:outputs_map[output2]");
     assertTrue(result.endsWith("out2.txt"));
     assertEquals("another" + System.lineSeparator(), workspace.getFileContents(result));
+
+    result = workspace.buildAndReturnOutput("//:outputs_map");
+    assertTrue(result.endsWith("default.txt"));
+    assertEquals("foo" + System.lineSeparator(), workspace.getFileContents(result));
   }
 
   @Test
@@ -579,6 +580,10 @@ public class GenruleIntegrationTest {
     assertEquals("something" + System.lineSeparator(), workspace.getFileContents(result));
 
     result = workspace.buildAndReturnOutput("//:named_output_groups[output2]");
+    assertTrue(result.endsWith("out.txt"));
+    assertEquals("something" + System.lineSeparator(), workspace.getFileContents(result));
+
+    result = workspace.buildAndReturnOutput("//:named_output_groups");
     assertTrue(result.endsWith("out.txt"));
     assertEquals("something" + System.lineSeparator(), workspace.getFileContents(result));
   }
