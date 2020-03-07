@@ -23,6 +23,9 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.graph.TraversableGraph;
 import com.google.common.base.Preconditions;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -36,6 +39,8 @@ public class VersionedTargetGraph extends TargetGraph {
 
   private final FlavorSearchTargetNodeFinder nodeFinder;
 
+  private final LoadingCache<BuildTarget, TargetNode<?>> internalTargetCache;
+
   private VersionedTargetGraph(
       MutableDirectedGraph<TargetNode<?>> graph, FlavorSearchTargetNodeFinder nodeFinder) {
     super(
@@ -47,11 +52,17 @@ public class VersionedTargetGraph extends TargetGraph {
           !TargetGraphVersionTransformations.getVersionedNode(node).isPresent());
     }
     this.nodeFinder = nodeFinder;
+    this.internalTargetCache =
+        CacheBuilder.newBuilder().build(CacheLoader.from(this::getTargetWithFlavors));
   }
 
   @Nullable
   @Override
   protected TargetNode<?> getInternal(BuildTarget target) {
+    return internalTargetCache.getUnchecked(target);
+  }
+
+  private TargetNode<?> getTargetWithFlavors(BuildTarget target) {
     return nodeFinder
         .get(target)
         .map(n -> n.withFlavors(target.getFlavors().getSet()))

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.versions;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.model.BuildTarget;
@@ -26,6 +27,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -72,16 +74,20 @@ public class VersionedTargetGraphTest {
     assertNodeCreatedFrom(result, node2);
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test
   public void getNodeWithExtraFlavorsWithMultipleAmbiguousCandidates() {
     TargetNode<?> node1 = createTargetNode("bar#one,two");
     TargetNode<?> node2 = createTargetNode("bar#two,three");
     TargetGraph graph = VersionedTargetGraphFactory.newInstance(ImmutableList.of(node1, node2));
-    graph.get(
-        node2
-            .getBuildTarget()
-            .withFlavors(
-                InternalFlavor.of("one"), InternalFlavor.of("two"), InternalFlavor.of("three")));
+    try {
+      graph.get(
+          node2
+              .getBuildTarget()
+              .withFlavors(
+                  InternalFlavor.of("one"), InternalFlavor.of("two"), InternalFlavor.of("three")));
+    } catch (UncheckedExecutionException exception) {
+      assertEquals(exception.getCause().getClass(), IllegalStateException.class);
+    }
   }
 
   @Test
