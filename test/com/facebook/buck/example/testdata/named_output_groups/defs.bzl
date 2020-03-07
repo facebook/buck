@@ -11,12 +11,20 @@ def menu(name, foods = []):
     The set of outputs provided by a build target with output label is referred to as a "named output group."
       In the example above, the outputs produced from building //:target_name[sushi] would be a named output group.
 
-    If no output label is specified, the outputs are referred to as the default output group.
+    If no output label is specified, the outputs are referred to as the default output group. The default output group for this macro is empty.
       In the example above, the outputs produced from building //:target_name would be the default output group.
 
     To refer to a rule's named outputs, a mapping from an output's name to its outputs must be defined.
 
-    For genrule, this mapping is defined in its 'outs' arg. The genrule contract enforces that any outputs declared in 'outs' must be created after executing the genrule. Genrule's default output group is currently an empty output group, but it will eventually be the set of all named outputs. Each rule has its own default output group, so the default group for other rules may not be the set of empty outputs or the set of all named outputs.
+    For genrule, this mapping is defined in its 'outs' arg. The genrule contract enforces that any outputs declared in 'outs' must be created after executing the genrule.
+
+    Genrule's default output group is defined by its 'default_outs' arg. This arg must be present if 'outs' is present. Otherwise it does not apply.
+
+    Note that for both default and named output groups, each group can currently only hold one output. For example:
+      default_outs = [ "output_one", ]
+    is valid, whereas
+      default_outs = [ "output_one", "output_two", ]
+    is not valid.
 
     Params:
         name: name of the genrule to be created
@@ -36,6 +44,7 @@ def menu(name, foods = []):
     genrule(
         name = name,
         outs = outputs,
+        default_outs = [],
         bash = " && ".join(bash),
         cmd_exe = " && ".join(cmd_exe),
     )
@@ -47,7 +56,7 @@ def eat(name, srcs, out):
     Params:
         name: name of the genrule to be created
         srcs: list of targets whose outputs should be text files to be appended after the phrase "I ate: "
-        out: output file name that is also used as the output label to the genrule
+        out: output file name that is also the default output as well as the output label to the genrule
     """
     bash = []
     cmd_exe = []
@@ -61,6 +70,7 @@ def eat(name, srcs, out):
         outs = {
             out: [out],
         },
+        default_outs = [out],
         bash = " && ".join(bash),
         cmd_exe = " && ".join(cmd_exe),
     )

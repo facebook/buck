@@ -84,4 +84,26 @@ public class MultipleOutputsIntegrationTest {
         workspace.runBuckBuild(targetWithLabel, "--show-outputs").assertSuccess();
     assertEquals(String.format("%s %s", targetWithLabel, expectedPath), result.getStdout().trim());
   }
+
+  @Test
+  public void defaultOutputsAreReturnedIfNoOutputLabelIsProvided() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "named_output_groups", tmp).setUp();
+    String targetWithDefaultOutputLabel = "//:i_ate_it";
+    Path expectedPath =
+        BuildTargetPaths.getGenPath(
+                workspace.getProjectFileSystem(),
+                BuildTargetFactory.newInstance("//:i_ate_it"),
+                "%s__")
+            .resolve("out.txt");
+
+    ProcessResult result =
+        workspace.runBuckBuild(targetWithDefaultOutputLabel, "--show-outputs").assertSuccess();
+    assertEquals(
+        String.format("%s %s", targetWithDefaultOutputLabel, expectedPath),
+        result.getStdout().trim());
+    assertEquals(
+        "I ate maguro yellowtail unagi",
+        workspace.getFileContents(expectedPath).replace(System.lineSeparator(), "").trim());
+  }
 }
