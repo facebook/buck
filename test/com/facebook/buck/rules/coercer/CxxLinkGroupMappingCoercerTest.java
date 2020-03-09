@@ -43,7 +43,7 @@ public class CxxLinkGroupMappingCoercerTest {
 
   @Before
   public void setUp() {
-    TypeCoercer<Object, CxxLinkGroupMappingTarget.Traversal> traversalCoercer =
+    CxxLinkGroupMappingTargetTraversalCoercer traversalCoercer =
         CxxLinkGroupMappingTargetTraversalCoercerTest.buildTypeCoercer();
     TypeCoercer<Object, CxxLinkGroupMappingTarget> targetTypeCoercer =
         CxxLinkGroupMappingTargetCoercerTest.buildTypeCoercer(traversalCoercer);

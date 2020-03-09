@@ -18,7 +18,6 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.reflect.TypeToken;
@@ -30,20 +29,18 @@ import com.google.common.reflect.TypeToken;
  * <code>(..., "tree")</code>) to a {@link CxxLinkGroupMappingTarget.Traversal}.
  */
 public class CxxLinkGroupMappingTargetTraversalCoercer
-    extends LeafTypeCoercer<CxxLinkGroupMappingTarget.Traversal> {
+    extends LeafUnconfiguredOnlyCoercer<CxxLinkGroupMappingTarget.Traversal> {
 
   @Override
-  public TypeToken<CxxLinkGroupMappingTarget.Traversal> getOutputType() {
+  public TypeToken<CxxLinkGroupMappingTarget.Traversal> getUnconfiguredType() {
     return TypeToken.of(CxxLinkGroupMappingTarget.Traversal.class);
   }
 
   @Override
-  public CxxLinkGroupMappingTarget.Traversal coerce(
+  public CxxLinkGroupMappingTarget.Traversal coerceToUnconfigured(
       CellNameResolver cellRoots,
-      ProjectFilesystem alsoUnused,
+      ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     if (!(object instanceof String)) {

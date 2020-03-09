@@ -127,8 +127,8 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
         new QueryCoercer(this, unconfiguredBuildTargetFactory);
     TypeCoercer<ImmutableList<UnconfiguredBuildTarget>, ImmutableList<BuildTarget>>
         buildTargetsTypeCoercer = new ListTypeCoercer<>(buildTargetTypeCoercer);
-    TypeCoercer<Object, CxxLinkGroupMappingTarget.Traversal> linkGroupMappingTraversalCoercer =
-        new CxxLinkGroupMappingTargetTraversalCoercer();
+    TypeCoercer<CxxLinkGroupMappingTarget.Traversal, CxxLinkGroupMappingTarget.Traversal>
+        linkGroupMappingTraversalCoercer = new CxxLinkGroupMappingTargetTraversalCoercer();
     TypeCoercer<Object, CxxLinkGroupMappingTarget> linkGroupMappingTargetCoercer =
         new CxxLinkGroupMappingTargetCoercer(
             buildTargetTypeCoercer, linkGroupMappingTraversalCoercer, patternTypeCoercer);

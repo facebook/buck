@@ -59,7 +59,7 @@ public class ManifestEntriesTypeCoercerTest {
             .build();
 
     ManifestEntries result =
-        manifestEntriesTypeCoercer.coerce(
+        manifestEntriesTypeCoercer.coerceBoth(
             createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             basePath,
@@ -79,7 +79,7 @@ public class ManifestEntriesTypeCoercerTest {
     ImmutableMap<String, Object> inputMap =
         ImmutableMap.<String, Object>builder().put("bad_param_name", 3).build();
 
-    manifestEntriesTypeCoercer.coerce(
+    manifestEntriesTypeCoercer.coerceBoth(
         createCellRoots(filesystem).getCellNameResolver(),
         filesystem,
         basePath,
@@ -98,7 +98,7 @@ public class ManifestEntriesTypeCoercerTest {
             .build();
 
     ManifestEntries result =
-        manifestEntriesTypeCoercer.coerce(
+        manifestEntriesTypeCoercer.coerceBoth(
             createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             basePath,

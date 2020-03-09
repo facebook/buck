@@ -37,14 +37,17 @@ import java.util.regex.Pattern;
 public class CxxLinkGroupMappingTargetCoercer
     implements TypeCoercer<Object, CxxLinkGroupMappingTarget> {
   private final TypeCoercer<UnconfiguredBuildTarget, BuildTarget> buildTargetTypeCoercer;
-  private final TypeCoercer<Object, CxxLinkGroupMappingTarget.Traversal> traversalCoercer;
+  private final TypeCoercer<
+          CxxLinkGroupMappingTarget.Traversal, CxxLinkGroupMappingTarget.Traversal>
+      traversalCoercer;
   private final TypeCoercer<Pattern, Pattern> patternTypeCoercer;
 
   private static final String LABEL_REGEX_PREFIX = "label:";
 
   public CxxLinkGroupMappingTargetCoercer(
       TypeCoercer<UnconfiguredBuildTarget, BuildTarget> buildTargetTypeCoercer,
-      TypeCoercer<Object, CxxLinkGroupMappingTarget.Traversal> traversalCoercer,
+      TypeCoercer<CxxLinkGroupMappingTarget.Traversal, CxxLinkGroupMappingTarget.Traversal>
+          traversalCoercer,
       TypeCoercer<Pattern, Pattern> patternTypeCoercer) {
     this.buildTargetTypeCoercer = buildTargetTypeCoercer;
     this.traversalCoercer = traversalCoercer;
@@ -110,7 +113,7 @@ public class CxxLinkGroupMappingTargetCoercer
                 hostConfiguration,
                 objects[0]);
         CxxLinkGroupMappingTarget.Traversal traversal =
-            traversalCoercer.coerce(
+            traversalCoercer.coerceBoth(
                 cellRoots,
                 filesystem,
                 pathRelativeToProjectRoot,

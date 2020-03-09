@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.json.ObjectMappers;
@@ -32,7 +31,7 @@ import java.util.Map;
  * and coverts it to {@link ManifestEntries}. This class takes care of parsing each dict entry,
  * making sure it conforms to the specification in {@link ManifestEntries}.
  */
-public class ManifestEntriesTypeCoercer extends LeafTypeCoercer<ManifestEntries> {
+public class ManifestEntriesTypeCoercer extends LeafUnconfiguredOnlyCoercer<ManifestEntries> {
 
   private final ObjectMapper objectMapper =
       ObjectMappers.legacyCreate()
@@ -40,17 +39,15 @@ public class ManifestEntriesTypeCoercer extends LeafTypeCoercer<ManifestEntries>
           .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
   @Override
-  public TypeToken<ManifestEntries> getOutputType() {
+  public TypeToken<ManifestEntries> getUnconfiguredType() {
     return TypeToken.of(ManifestEntries.class);
   }
 
   @Override
-  public ManifestEntries coerce(
+  public ManifestEntries coerceToUnconfigured(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     if (!(object instanceof Map)) {

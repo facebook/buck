@@ -18,7 +18,6 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
@@ -30,20 +29,18 @@ import java.util.List;
  * BuildConfigFields}. This class takes care of parsing each string, making sure it conforms to the
  * specification in {@link BuildConfigFields}.
  */
-public class BuildConfigFieldsTypeCoercer extends LeafTypeCoercer<BuildConfigFields> {
+public class BuildConfigFieldsTypeCoercer extends LeafUnconfiguredOnlyCoercer<BuildConfigFields> {
 
   @Override
-  public TypeToken<BuildConfigFields> getOutputType() {
+  public TypeToken<BuildConfigFields> getUnconfiguredType() {
     return TypeToken.of(BuildConfigFields.class);
   }
 
   @Override
-  public BuildConfigFields coerce(
+  public BuildConfigFields coerceToUnconfigured(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     if (!(object instanceof List)) {

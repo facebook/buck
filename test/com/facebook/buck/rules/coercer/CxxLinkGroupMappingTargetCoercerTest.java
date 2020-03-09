@@ -39,7 +39,8 @@ public class CxxLinkGroupMappingTargetCoercerTest {
   private CxxLinkGroupMappingTargetCoercer coercer;
 
   public static CxxLinkGroupMappingTargetCoercer buildTypeCoercer(
-      TypeCoercer<Object, CxxLinkGroupMappingTarget.Traversal> traversalTypeCoercer) {
+      TypeCoercer<CxxLinkGroupMappingTarget.Traversal, CxxLinkGroupMappingTarget.Traversal>
+          traversalTypeCoercer) {
     UnconfiguredBuildTargetTypeCoercer unconfigured =
         new UnconfiguredBuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetViewFactory());
     TypeCoercer<UnconfiguredBuildTarget, BuildTarget> buildTargetTypeCoercer =
@@ -50,7 +51,7 @@ public class CxxLinkGroupMappingTargetCoercerTest {
 
   @Before
   public void setUp() {
-    TypeCoercer<Object, CxxLinkGroupMappingTarget.Traversal> traversalCoercer =
+    CxxLinkGroupMappingTargetTraversalCoercer traversalCoercer =
         CxxLinkGroupMappingTargetTraversalCoercerTest.buildTypeCoercer();
     coercer = buildTypeCoercer(traversalCoercer);
   }
