@@ -417,23 +417,30 @@ public class TwoArraysImmutableHashMap<K, V> extends AbstractImmutableMap<K, V> 
 
   /** Constructor. */
   public static <K, V> TwoArraysImmutableHashMap<K, V> of(K k0, V v0) {
-    return TwoArraysImmutableHashMap.<K, V>builder().put(k0, v0).build();
+    return TwoArraysImmutableHashMap.<K, V>builderWithExpectedSize(1).put(k0, v0).build();
   }
 
   /** Constructor. */
   public static <K, V> TwoArraysImmutableHashMap<K, V> of(K k0, V v0, K k1, V v1) {
-    return TwoArraysImmutableHashMap.<K, V>builder().put(k0, v0).put(k1, v1).build();
+    return TwoArraysImmutableHashMap.<K, V>builderWithExpectedSize(2)
+        .put(k0, v0)
+        .put(k1, v1)
+        .build();
   }
 
   /** Constructor. */
   public static <K, V> TwoArraysImmutableHashMap<K, V> of(K k0, V v0, K k1, V v1, K k2, V v2) {
-    return TwoArraysImmutableHashMap.<K, V>builder().put(k0, v0).put(k1, v1).put(k2, v2).build();
+    return TwoArraysImmutableHashMap.<K, V>builderWithExpectedSize(3)
+        .put(k0, v0)
+        .put(k1, v1)
+        .put(k2, v2)
+        .build();
   }
 
   /** Constructor. */
   public static <K, V> TwoArraysImmutableHashMap<K, V> of(
       K k0, V v0, K k1, V v1, K k2, V v2, K k3, V v3) {
-    return TwoArraysImmutableHashMap.<K, V>builder()
+    return TwoArraysImmutableHashMap.<K, V>builderWithExpectedSize(4)
         .put(k0, v0)
         .put(k1, v1)
         .put(k2, v2)
