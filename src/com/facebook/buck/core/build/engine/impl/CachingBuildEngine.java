@@ -244,7 +244,9 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         customBuildRuleStrategy.get().close();
       }
       terminateBuildWithFailure(new CancellationException("Cancelling due to engine shutdown."));
-      Futures.allAsList(asyncCallbacks).get();
+      while (!asyncCallbacks.isEmpty()) {
+        asyncCallbacks.poll().get();
+      }
     } catch (InterruptedException e) {
       e.printStackTrace();
     } catch (IOException | ExecutionException e) {
