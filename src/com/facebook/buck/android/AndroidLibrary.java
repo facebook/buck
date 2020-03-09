@@ -138,9 +138,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
   }
 
   private String evalType(AndroidLibraryDescription.JvmLanguage jvmLanguage) {
-    if (!jvmLanguage.equals(AndroidLibraryDescription.JvmLanguage.JAVA)) {
-      return super.getType();
-    }
     return jvmLanguage.toString().toLowerCase() + "_" + super.getType();
   }
 

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.model.BuildTarget;
@@ -53,5 +54,41 @@ public class AndroidLibraryTest {
 
     assertTrue(library.getGeneratedAnnotationSourcePath().isPresent());
     assertTrue(library.hasAnnotationProcessing());
+  }
+
+  @Test
+  public void testGetTypeJava() {
+    BuildTarget libTarget = BuildTargetFactory.newInstance("//java/lib:lib");
+    TargetNode<?> libraryNode =
+        AndroidLibraryBuilder.createBuilder(libTarget)
+            .setLanguage(AndroidLibraryDescription.JvmLanguage.JAVA)
+            .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(libraryNode);
+    ActionGraphBuilder graphBuilder =
+        new TestActionGraphBuilder(
+            targetGraph, AndroidLibraryBuilder.createToolchainProviderForAndroidLibrary());
+
+    AndroidLibrary library = (AndroidLibrary) graphBuilder.requireRule(libTarget);
+
+    assertEquals("java_android_library", library.getType());
+  }
+
+  @Test
+  public void testGetTypeKotlin() {
+    BuildTarget libTarget = BuildTargetFactory.newInstance("//java/lib:lib");
+    TargetNode<?> libraryNode =
+        AndroidLibraryBuilder.createBuilder(libTarget)
+            .setLanguage(AndroidLibraryDescription.JvmLanguage.KOTLIN)
+            .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(libraryNode);
+    ActionGraphBuilder graphBuilder =
+        new TestActionGraphBuilder(
+            targetGraph, AndroidLibraryBuilder.createToolchainProviderForAndroidLibrary());
+
+    AndroidLibrary library = (AndroidLibrary) graphBuilder.requireRule(libTarget);
+
+    assertEquals("kotlin_android_library", library.getType());
   }
 }
