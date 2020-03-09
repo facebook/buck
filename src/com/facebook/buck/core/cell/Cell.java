@@ -27,7 +27,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystemView;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 
 /**
  * Represents a single checkout of a code base. Two cells model the same code base if their
@@ -60,10 +59,6 @@ public interface Cell {
   ToolchainProvider getToolchainProvider();
 
   AbsPath getRoot();
-
-  Cell getCellIgnoringVisibilityCheck(Path cellPath);
-
-  Cell getCell(Path cellPath);
 
   Cell getCell(CanonicalCellName cellName);
 

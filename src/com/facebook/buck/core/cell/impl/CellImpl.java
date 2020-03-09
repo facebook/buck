@@ -24,7 +24,6 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -34,12 +33,10 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
 import com.facebook.buck.io.filesystem.RecursiveFileMatcher;
 import com.facebook.buck.util.stream.RichStream;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 import org.immutables.value.Value;
 
 @BuckStyleValue
@@ -95,21 +92,6 @@ abstract class CellImpl implements Cell {
   @Override
   public AbsPath getRoot() {
     return getFilesystem().getRootPath();
-  }
-
-  @Override
-  public Cell getCellIgnoringVisibilityCheck(Path cellPath) {
-    return getCellProvider().getCellByPath(cellPath);
-  }
-
-  @Override
-  public Cell getCell(Path cellPath) {
-    if (!getKnownRootsOfAllCells().contains(AbsPath.of(cellPath))) {
-      throw new HumanReadableException(
-          "Unable to find repository rooted at %s. Known roots are:\n  %s",
-          cellPath, Joiner.on(",\n  ").join(getKnownRootsOfAllCells()));
-    }
-    return getCellIgnoringVisibilityCheck(cellPath);
   }
 
   @Override

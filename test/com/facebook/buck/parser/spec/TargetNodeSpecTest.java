@@ -19,6 +19,7 @@ package com.facebook.buck.parser.spec;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
@@ -30,6 +31,7 @@ import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.hamcrest.Matchers;
@@ -124,7 +126,7 @@ public class TargetNodeSpecTest {
 
     Cells defaultCell =
         getDefaultCell(rootFileSystem, ImmutableMap.of("cell-a", cellAPath, "cell-b", cellBPath));
-    Cell cellB = defaultCell.getRootCell().getCell(cellBPath);
+    Cell cellB = defaultCell.getCell(CanonicalCellName.of(Optional.of("cell-b")));
 
     TargetNodeSpec spec = parseTargetNodeSpec(defaultCell.getRootCell(), pattern);
     thrown.expectMessage(Matchers.containsString("cell-a"));

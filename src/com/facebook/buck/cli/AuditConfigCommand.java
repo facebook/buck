@@ -16,8 +16,8 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.Cells;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.support.cli.args.BuckCellArg;
@@ -29,7 +29,6 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -106,7 +105,7 @@ public class AuditConfigCommand extends AbstractCommand {
           .forEach(
               input -> {
                 BuckCellArg arg = BuckCellArg.of(input);
-                BuckConfig buckConfig = getCellBuckConfig(cells.getRootCell(), arg.getCellName());
+                BuckConfig buckConfig = getCellBuckConfig(cells, arg.getCellName());
                 String[] parts = arg.getArg().split("\\.", 2);
 
                 DirtyPrintStreamDecorator stdErr = params.getConsole().getStdErr();
@@ -162,12 +161,13 @@ public class AuditConfigCommand extends AbstractCommand {
     return ExitCode.SUCCESS;
   }
 
-  private BuckConfig getCellBuckConfig(Cell cell, Optional<String> cellName) {
-    Optional<Path> cellPath = cell.getCellPathResolver().getCellPath(cellName);
-    if (!cellPath.isPresent()) {
-      return cell.getBuckConfig();
+  private BuckConfig getCellBuckConfig(Cells cells, Optional<String> cellName) {
+    Optional<CanonicalCellName> canonicalCellName =
+        cells.getRootCell().getCellNameResolver().getNameIfResolvable(cellName);
+    if (!canonicalCellName.isPresent()) {
+      return cells.getRootCell().getBuckConfig();
     }
-    return cell.getCell(cellPath.get()).getBuckConfig();
+    return cells.getCell(canonicalCellName.get()).getBuckConfig();
   }
 
   private void printTabbedOutput(

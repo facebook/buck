@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -61,7 +62,7 @@ public class PerBuildStateCacheTest {
             .setSections(ImmutableMap.of("repositories", ImmutableMap.of("xplat", "xplat")))
             .build();
     cells = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
-    childCell = cells.getRootCell().getCell(filesystem.resolve("xplat").toAbsolutePath());
+    childCell = cells.getCell(CanonicalCellName.of(Optional.of("xplat")));
   }
 
   Package createPackage(Cell cell, AbsPath packageFile) {
