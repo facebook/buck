@@ -79,11 +79,13 @@ public abstract class AndroidPlatformTarget implements Toolchain, AddsToRuleKey 
 
   public abstract Path getOptimizedProguardConfig();
 
-  /** Process aapt2 tool's parse dependencies and adds them to the {@code builder} */
+  /** Adds parse time dependencies for tool providers. */
   @Value.Derived
   public void addParseTimeDeps(
       ImmutableCollection.Builder<BuildTarget> builder, TargetConfiguration targetConfiguration) {
-    builder.addAll(getAapt2ToolProvider().getParseTimeDeps(targetConfiguration));
+    builder
+        .addAll(getAapt2ToolProvider().getParseTimeDeps(targetConfiguration))
+        .addAll(getZipalignToolProvider().getParseTimeDeps(targetConfiguration));
   }
 
   public static AndroidPlatformTarget of(
