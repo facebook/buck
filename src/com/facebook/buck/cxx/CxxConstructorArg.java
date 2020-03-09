@@ -55,7 +55,6 @@ public interface CxxConstructorArg
   @Value.NaturalOrder
   ImmutableSortedSet<SourceWithFlags> getSrcs();
 
-  @Hint(pathsMustBe = Hint.PathsMustBe.REGULAR_FILE)
   @Value.Default
   default PatternMatchedCollection<ImmutableSortedSet<SourceWithFlags>> getPlatformSrcs() {
     return PatternMatchedCollection.of();
@@ -92,7 +91,6 @@ public interface CxxConstructorArg
     }
   }
 
-  @Hint(pathsMustBe = Hint.PathsMustBe.REGULAR_FILE)
   @Value.Default
   default SourceSortedSet getHeaders() {
     return SourceSortedSet.EMPTY;
@@ -115,7 +113,6 @@ public interface CxxConstructorArg
    *
    * @return a list of private include paths for this cxx target.
    */
-  @Hint(pathsMustBe = Hint.PathsMustBe.DIRECTORY)
   @Value.Default
   default ImmutableSortedSet<String> getIncludeDirectories() {
     return ImmutableSortedSet.of();
@@ -137,16 +134,13 @@ public interface CxxConstructorArg
     }
   }
 
-  @Hint(pathsMustBe = Hint.PathsMustBe.REGULAR_FILE)
   @Value.Default
   default PatternMatchedCollection<SourceSortedSet> getPlatformHeaders() {
     return PatternMatchedCollection.of();
   }
 
-  @Hint(pathsMustBe = Hint.PathsMustBe.REGULAR_FILE)
   Optional<SourcePath> getPrefixHeader();
 
-  @Hint(pathsMustBe = Hint.PathsMustBe.REGULAR_FILE)
   Optional<SourcePath> getPrecompiledHeader();
 
   ImmutableList<StringWithMacros> getCompilerFlags();

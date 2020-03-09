@@ -18,7 +18,6 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
-import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.description.attr.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.core.description.impl.DescriptionCache;
@@ -378,7 +377,6 @@ public class CxxLibraryDescription
   }
 
   public interface CommonArg extends LinkableCxxConstructorArg {
-    @Hint(pathsMustBe = Hint.PathsMustBe.REGULAR_FILE)
     @Value.Default
     default SourceSortedSet getExportedHeaders() {
       return SourceSortedSet.EMPTY;
@@ -404,7 +402,6 @@ public class CxxLibraryDescription
       }
     }
 
-    @Hint(pathsMustBe = Hint.PathsMustBe.REGULAR_FILE)
     @Value.Default
     default PatternMatchedCollection<SourceSortedSet> getExportedPlatformHeaders() {
       return PatternMatchedCollection.of();
@@ -470,14 +467,12 @@ public class CxxLibraryDescription
      * extra_xcode_sources will add the files to the list of files to be compiled in the Xcode
      * target.
      */
-    @Hint(pathsMustBe = Hint.PathsMustBe.REGULAR_FILE)
     ImmutableList<SourcePath> getExtraXcodeSources();
 
     /**
-     * extra_xcode_files will add the files to the list of files in the project and won't add them
+     * extra_xcode_sources will add the files to the list of files in the project and won't add them
      * to an Xcode target.
      */
-    @Hint(pathsMustBe = Hint.PathsMustBe.REGULAR_FILE)
     ImmutableList<SourcePath> getExtraXcodeFiles();
 
     /**
@@ -490,7 +485,6 @@ public class CxxLibraryDescription
      * These fields are passed through to SwiftLibrary for mixed C/Swift targets; they are not used
      * otherwise.
      */
-    @Hint(pathsMustBe = Hint.PathsMustBe.REGULAR_FILE)
     Optional<SourcePath> getBridgingHeader();
 
     Optional<String> getModuleName();
@@ -501,7 +495,6 @@ public class CxxLibraryDescription
      *
      * @return a list of public (exported) include paths for this cxx target.
      */
-    @Hint(pathsMustBe = Hint.PathsMustBe.DIRECTORY)
     @Value.Default
     default ImmutableSortedSet<String> getPublicIncludeDirectories() {
       return ImmutableSortedSet.of();
@@ -513,7 +506,6 @@ public class CxxLibraryDescription
      *
      * @return a list of public (exported) include paths for this cxx target.
      */
-    @Hint(pathsMustBe = Hint.PathsMustBe.DIRECTORY)
     @Value.Default
     default ImmutableSortedSet<String> getPublicSystemIncludeDirectories() {
       return ImmutableSortedSet.of();
