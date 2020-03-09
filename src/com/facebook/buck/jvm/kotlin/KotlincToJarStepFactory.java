@@ -81,6 +81,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   @AddToRuleKey private final AnnotationProcessingTool annotationProcessingTool;
   @AddToRuleKey private final ImmutableMap<String, String> kaptApOptions;
   @AddToRuleKey private final ExtraClasspathProvider extraClassPath;
+  @AddToRuleKey private final boolean kaptCorrectErrorTypes;
   @AddToRuleKey private final Javac javac;
   @AddToRuleKey private final JavacOptions javacOptions;
   private final ImmutableSortedSet<Path> kotlinHomeLibraries;
@@ -118,6 +119,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       ImmutableList<SourcePath> friendPaths,
       AnnotationProcessingTool annotationProcessingTool,
       ImmutableMap<String, String> kaptApOptions,
+      boolean kaptCorrectErrorTypes,
       ExtraClasspathProvider extraClassPath,
       Javac javac,
       JavacOptions javacOptions) {
@@ -129,6 +131,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
     this.friendPaths = friendPaths;
     this.annotationProcessingTool = annotationProcessingTool;
     this.kaptApOptions = kaptApOptions;
+    this.kaptCorrectErrorTypes = kaptCorrectErrorTypes;
     this.extraClassPath = extraClassPath;
     this.javac = javac;
     this.javacOptions = Objects.requireNonNull(javacOptions);
@@ -229,7 +232,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                             projectFilesystem.resolve(kaptGeneratedOutput).toString()))
                 .add(JAVAC_ARG + encodeOptions(Collections.emptyMap()))
                 .add(LIGHT_ANALYSIS + "true") // TODO: Provide value as argument
-                .add(CORRECT_ERROR_TYPES + "false") // TODO: Provide value as argument
+                .add(CORRECT_ERROR_TYPES + kaptCorrectErrorTypes)
                 .build();
 
         annotationProcessingOptionsBuilder

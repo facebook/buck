@@ -87,6 +87,10 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
         .orElse(AbiGenerationMode.CLASS);
   }
 
+  public boolean hasKaptCorrectErrorTypes() {
+    return delegate.getBooleanValue(SECTION, "kapt_correct_error_types", false);
+  }
+
   Path getPathToCompilerBinary() {
     Path compilerPath = getKotlinHome().resolve("kotlinc");
     if (!Files.isExecutable(compilerPath)) {
