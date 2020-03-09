@@ -186,6 +186,11 @@ public class ArtifactImplTest {
     assertEquals(expectedShortPath, artifact.getShortPath());
     assertFalse(artifact.isSource());
     assertEquals(String.format("<generated file '%s'>", expectedShortPath), Printer.repr(artifact));
+
+    ArtifactImpl artifact2 =
+        ArtifactImpl.of(target, genDir, packagePath, Paths.get("bar/no_ext"), Location.BUILTIN);
+    assertEquals("no_ext", artifact2.getBasename());
+    assertEquals("", artifact2.getExtension());
   }
 
   @Test

@@ -20,9 +20,13 @@ package com.facebook.buck.skylark.function.attr;
 class AttributeConstants {
   static final String DEFAULT_PARAM_NAME = "default";
   static final String DEFAULT_PARAM_DOC = "The default value for this parameter";
+  static final String DEFAULT_PARAM_DOC_NO_NONE =
+      "The default value for this parameter. Note that `None` indicates that a user must specify "
+          + "a value. If no value is specified, it results in a build error.";
 
   static final String MANDATORY_PARAM_NAME = "mandatory";
-  static final String MANDATORY_PARAM_DOC = "Whether this parameter is mandatory";
+  static final String MANDATORY_PARAM_DOC =
+      "Whether a user must provide this parameter. If True, default is not used.";
   static final String MANDATORY_PARAM_DEFAULT_VALUE = "False";
 
   static final String DOC_PARAM_NAME = "doc";

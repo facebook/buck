@@ -58,7 +58,12 @@ public interface SkylarkRuleFunctionsApi {
 
   @SkylarkCallable(
       name = "rule",
-      doc = "Creates a user-defined rule",
+      doc =
+          "Declares a User Defined Rule. The result is a callable that, when called by user, "
+              + "adds a new target to the build. When that target is eventually evaluated, the "
+              + "provided implementation function is called. This function creates actions for "
+              + "Buck to execute, and handles linking inputs and outputs to the target via the "
+              + "functions in `ctx`.",
       parameters = {
         @Param(
             name = "implementation",
@@ -66,13 +71,19 @@ public interface SkylarkRuleFunctionsApi {
             noneable = false,
             positional = true,
             named = true,
-            doc = "The implementation function that takes a ctx"),
+            doc =
+                "The function that implements the rule. It must take a single argument 'ctx' "
+                    + "and if it returns anything, it must return a list of ProviderInfo objects."),
         @Param(
             name = "attrs",
             type = SkylarkDict.class,
             positional = false,
             named = true,
-            doc = "A mapping of parameter names to the type of value that is expected"),
+            doc =
+                "A mapping of parameter names to `Attribute` instances (see `attr`). This controls "
+                    + "what parameters are able to be passed by users into the callable that "
+                    + "`rule()` returns, and what fields are available on `ctx.attr` in the "
+                    + "implementation function"),
         @Param(
             name = "infer_run_info",
             type = Boolean.class,

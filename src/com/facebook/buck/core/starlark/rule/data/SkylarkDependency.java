@@ -53,7 +53,10 @@ public class SkylarkDependency implements SkylarkValue, SkylarkIndexable {
     this.providerInfos = providerInfos;
   }
 
-  @SkylarkCallable(name = "label", structField = true)
+  @SkylarkCallable(
+      name = "label",
+      structField = true,
+      doc = "The build target that this dependency represents")
   public Label label() {
     return label;
   }

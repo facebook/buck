@@ -39,33 +39,43 @@ public interface SkylarkArtifactApi extends SkylarkValue {
 
   @SkylarkCallable(
       name = "basename",
-      doc = "The base name of this artifact. e.g. for an artifact at foo/bar, this would is 'bar'",
+      doc = "The base name of this artifact. e.g. for an artifact at `foo/bar`, this is `bar`",
       structField = true)
   String getBasename();
 
   @SkylarkCallable(
       name = "extension",
-      doc = "The file extension of this artifact. e.g. for an artifact at foo/bar.sh, this is 'sh'",
+      doc =
+          "The file extension of this artifact. e.g. for an artifact at foo/bar.sh, this is "
+              + "`sh`. If no extension is present, an empty string is returned",
       structField = true)
   String getExtension();
 
   @SkylarkCallable(
       name = "is_source",
-      doc = "Whether the file is a source file",
+      doc = "Whether the artifact represents a source file",
       structField = true)
   boolean isSource();
 
   @SkylarkCallable(
       name = "owner",
       doc =
-          "The label of the rule that originally created this artifact. May also be None "
-              + "(especially in the case of source files)",
+          "The `Label` of the rule that originally created this artifact. May also be None in "
+              + "the case of source files, or if the artifact has not be used in an action.",
       structField = true)
   Object getOwner();
 
   @SkylarkCallable(
       name = "short_path",
-      doc = "The path of this file relative to its root. This excludes the aforementioned root.",
+      doc =
+          "The partial path of this artifact.\n"
+              + "**This directory component of this path is not guaranteed to follow any specific "
+              + "pattern.**\n"
+              + "If the artifact is a source artifact, this path is relative to the project root. "
+              + "If it is a generated artifact, it is relative to the build artifact root "
+              + "directory. e.g. `buck-out/<configuration hash>/gen`. For example, a file "
+              + "`baz/qux.cpp` declared by `//foo:bar`, might return `foo/bar__/baz/qux.cpp`.\n"
+              + "To get the file's original package, use `Artifact.owner.package`.",
       structField = true)
   String getShortPath();
 
@@ -73,7 +83,7 @@ public interface SkylarkArtifactApi extends SkylarkValue {
       name = "as_output",
       doc =
           "Get an instance of this artifact that signals it is intended to be used as an output. "
-              + "This is normally only of use with `ctx.action.run()`, or `ctx.action.args()`",
+              + "This is normally only of use with `ctx.actions.run()`, or `ctx.actions.args()`",
       useLocation = true)
   SkylarkOutputArtifactApi asSkylarkOutputArtifact(Location location) throws EvalException;
 

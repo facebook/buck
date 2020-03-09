@@ -103,11 +103,11 @@ public class RunInfoTest {
   public void handlesPartiallyBuiltCommandLineArgs() throws EvalException {
     CommandLineArgsBuilder builder =
         new CommandLineArgsBuilder()
-            .add("foo", Runtime.UNBOUND, CommandLineArgs.DEFAULT_FORMAT_STRING, Location.BUILTIN)
-            .add("bar", Runtime.UNBOUND, CommandLineArgs.DEFAULT_FORMAT_STRING, Location.BUILTIN);
+            .add("foo", Runtime.NONE, CommandLineArgs.DEFAULT_FORMAT_STRING, Location.BUILTIN)
+            .add("bar", Runtime.NONE, CommandLineArgs.DEFAULT_FORMAT_STRING, Location.BUILTIN);
 
     RunInfo runInfo = RunInfo.instantiateFromSkylark(SkylarkDict.empty(), builder);
-    builder.add("baz", Runtime.UNBOUND, CommandLineArgs.DEFAULT_FORMAT_STRING, Location.BUILTIN);
+    builder.add("baz", Runtime.NONE, CommandLineArgs.DEFAULT_FORMAT_STRING, Location.BUILTIN);
 
     CommandLine cli =
         new ExecCompatibleCommandLineBuilder(new ArtifactFilesystem(new FakeProjectFilesystem()))
@@ -119,8 +119,8 @@ public class RunInfoTest {
   public void handlesCommandLineArgs() throws EvalException {
     CommandLineArgs args =
         new CommandLineArgsBuilder()
-            .add("foo", Runtime.UNBOUND, CommandLineArgs.DEFAULT_FORMAT_STRING, Location.BUILTIN)
-            .add("bar", Runtime.UNBOUND, CommandLineArgs.DEFAULT_FORMAT_STRING, Location.BUILTIN)
+            .add("foo", Runtime.NONE, CommandLineArgs.DEFAULT_FORMAT_STRING, Location.BUILTIN)
+            .add("bar", Runtime.NONE, CommandLineArgs.DEFAULT_FORMAT_STRING, Location.BUILTIN)
             .build();
 
     RunInfo runInfo = RunInfo.instantiateFromSkylark(SkylarkDict.empty(), args);

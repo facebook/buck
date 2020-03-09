@@ -31,21 +31,30 @@ import com.google.devtools.build.lib.skylarkinterface.SkylarkValue;
     title = "ctx",
     category = SkylarkModuleCategory.BUILTIN)
 interface SkylarkRuleContextApi extends SkylarkValue {
+
+  @SkylarkCallable(
+      name = "actions",
+      doc =
+          "Struct containing methods to create and interact with actions within a rule's "
+              + "implementation method",
+      structField = true)
+  SkylarkRuleContextActionsApi getActions();
+
   @SkylarkCallable(
       name = "attr",
-      doc = "Struct of parameters that were provided when the user instantiated this rule",
+      doc =
+          "A struct is used to access the parameters that were passed in by a user. \n"
+              + "Each parameter is given a field on this struct. So, a parameter named `deps` "
+              + "would be available via `ctx.attr.deps`.\n"
+              + "At this point, all `select()`s have been resolved, and all parameters validated "
+              + "and converted tot he right type (e.g. build target strings are converted to "
+              + "`Dependency` objects).",
       structField = true)
   SkylarkRuleContextAttr getAttr();
 
   @SkylarkCallable(
       name = "label",
-      doc = "The label for the target that is currently being created",
+      doc = "The `Label` for the target that is currently being evaluated",
       structField = true)
   Label getLabel();
-
-  @SkylarkCallable(
-      name = "actions",
-      doc = "Struct containing methods to create and interact with actions",
-      structField = true)
-  SkylarkRuleContextActionsApi getActions();
 }

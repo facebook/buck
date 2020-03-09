@@ -40,79 +40,8 @@ import com.google.devtools.build.lib.syntax.SkylarkList;
 public interface SkylarkRuleContextActionsApi {
 
   @SkylarkCallable(
-      name = "declare_file",
-      doc = "Declares a file that will be used as the output by subsequent actions",
-      useLocation = true,
-      parameters = {
-        @Param(
-            name = "filename",
-            doc =
-                "The name of the file that will be created. This must be relative and not traverse "
-                    + "upward in the filesystem",
-            type = String.class,
-            named = true)
-      })
-  Artifact declareFile(String path, Location location) throws EvalException;
-
-  @SkylarkCallable(
-      name = "copy_file",
-      doc = "Copies a file",
-      useLocation = true,
-      parameters = {
-        @Param(name = "src", doc = "The file to copy", type = Artifact.class, named = true),
-        @Param(
-            name = "dest",
-            doc =
-                "The destination to copy to. This may either be a file declared with "
-                    + "`declare_file`, or a string that will be used to declare a new file "
-                    + "(which is returned by this function)",
-            type = Object.class,
-            allowedTypes = {@ParamType(type = Artifact.class), @ParamType(type = String.class)},
-            named = true),
-      })
-  Artifact copyFile(Artifact src, Object dest, Location location) throws EvalException;
-
-  @SkylarkCallable(
-      name = "write",
-      doc =
-          "Creates a file write action. When the action is executed, it will write the given "
-              + "content to a file. This is used to generate files using information available "
-              + "in the analysis phase. Returns the artifact in `output`",
-      useLocation = true,
-      parameters = {
-        @Param(
-            name = "output",
-            doc =
-                "The file to write to. This may either be a string, in which case the Artifact "
-                    + "is declared for you, or it must have been returned from "
-                    + "ctx.actions.declare_file",
-            allowedTypes = {
-              @ParamType(type = SkylarkArtifactApi.class),
-              @ParamType(type = String.class)
-            },
-            named = true),
-        @Param(
-            name = "content",
-            doc = "The content to write to this file",
-            allowedTypes = {
-              @ParamType(type = CommandLineArgsBuilderApi.class),
-              @ParamType(type = CommandLineArgsApi.class),
-              @ParamType(type = String.class)
-            },
-            named = true),
-        @Param(
-            name = "is_executable",
-            doc = "Whether the file should be marked executable after writing",
-            type = Boolean.class,
-            named = true,
-            defaultValue = "False")
-      })
-  Artifact write(Object output, Object content, boolean isExecutable, Location location)
-      throws EvalException;
-
-  @SkylarkCallable(
       name = "args",
-      doc = "Get an instance of Args to construct command lines for actions",
+      doc = "Get an instance of `Args` to construct command lines for actions",
       useLocation = true,
       parameters = {
         @Param(
@@ -138,15 +67,52 @@ public interface SkylarkRuleContextActionsApi {
       throws EvalException;
 
   @SkylarkCallable(
-      name = "run",
+      name = "copy_file",
+      doc = "Copies a file from `src` to `dst`",
+      useLocation = true,
+      parameters = {
+        @Param(name = "src", doc = "The file to copy", type = Artifact.class, named = true),
+        @Param(
+            name = "dest",
+            doc =
+                "The destination to copy to. This may either be a file declared with "
+                    + "`declare_file` or in an `output` attribute, or a string that will be used "
+                    + "to declare a new file (which is returned by this function)",
+            type = Object.class,
+            allowedTypes = {@ParamType(type = Artifact.class), @ParamType(type = String.class)},
+            named = true),
+      })
+  Artifact copyFile(Artifact src, Object dest, Location location) throws EvalException;
+
+  @SkylarkCallable(
+      name = "declare_file",
       doc =
-          "Creates a run action. When the action is executed it will run the specified executable with the given arguments and environment",
+          "Creates an `Artifact` for the given filename within this build rule. "
+              + "The returned `Artifact` must be used as an output by an action within the same "
+              + "rule in which it is declared.",
+      useLocation = true,
+      parameters = {
+        @Param(
+            name = "filename",
+            doc =
+                "The name of the file that will be created. This must be relative and not traverse "
+                    + "upward in the filesystem",
+            type = String.class,
+            named = true)
+      })
+  Artifact declareFile(String path, Location location) throws EvalException;
+
+  @SkylarkCallable(
+      name = "run",
+      doc = "Creates an action that runs a given executable in a specific environment.",
       useLocation = true,
       parameters = {
         @Param(
             name = "arguments",
             doc =
-                "The list of arguments to pass to executable. This must be a list containing only strings or objects from ctx.actions.args()",
+                "The arguments to run. After all elements of this list are combined, there must "
+                    + "be at least one argument. Empty lists will result in a build failure. Any "
+                    + "`OutputArtifact`s must be written to by the specified executable.",
             named = true,
             type = SkylarkList.class,
             defaultValue = "[]"),
@@ -166,5 +132,46 @@ public interface SkylarkRuleContextActionsApi {
             defaultValue = "None")
       })
   void run(SkylarkList<Object> arguments, Object shortName, Object userEnv, Location location)
+      throws EvalException;
+
+  @SkylarkCallable(
+      name = "write",
+      doc =
+          "Creates a file write action. When the action is executed, it will write the given "
+              + "content to a file. This is used to generate files using information available "
+              + "when a rule's implementation function is called.",
+      useLocation = true,
+      parameters = {
+        @Param(
+            name = "output",
+            doc =
+                "The file to write to. This may either be a file declared with `declare_file` or "
+                    + "in an `output` attribute, or a string that will be used to declare a new "
+                    + "file (which is returned by this function)",
+            allowedTypes = {
+              @ParamType(type = SkylarkArtifactApi.class),
+              @ParamType(type = String.class)
+            },
+            named = true),
+        @Param(
+            name = "content",
+            doc =
+                "The content to write to this file. If a string, it is written as-is to the "
+                    + "file. If it is an instance of `Args`, each argument is stringified and "
+                    + "put on a single line by itself in `output`.",
+            allowedTypes = {
+              @ParamType(type = CommandLineArgsBuilderApi.class),
+              @ParamType(type = CommandLineArgsApi.class),
+              @ParamType(type = String.class)
+            },
+            named = true),
+        @Param(
+            name = "is_executable",
+            doc = "For Posix platforms, whether this file should be made executable",
+            type = Boolean.class,
+            named = true,
+            defaultValue = "False")
+      })
+  Artifact write(Object output, Object content, boolean isExecutable, Location location)
       throws EvalException;
 }

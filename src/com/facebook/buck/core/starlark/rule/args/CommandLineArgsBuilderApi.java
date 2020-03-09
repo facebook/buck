@@ -39,7 +39,9 @@ import com.google.devtools.build.lib.syntax.SkylarkList;
 public interface CommandLineArgsBuilderApi extends SkylarkValue {
   @SkylarkCallable(
       name = "add",
-      doc = "Add an argument to the existing Args object",
+      doc =
+          "Adds an argument to an existing `Args` object. Returns the original `Args` object "
+              + "after modifying it.",
       parameters = {
         @Param(
             name = "arg_name_or_value",
@@ -58,9 +60,14 @@ public interface CommandLineArgsBuilderApi extends SkylarkValue {
             }),
         @Param(
             name = "value",
-            defaultValue = "unbound",
-            doc = "If provided, the value",
+            defaultValue = "None",
+            doc =
+                "If provided, the value to add. e.g. `ctx.actions.args().add(\"--foo\", \"bar\")` "
+                    + "would add `\"--foo\"` and `\"bar\"`. This can be more convenient for the "
+                    + "common \"--flag value\" pattern; however, for longer lists of arguments, "
+                    + "use `Args.add_all()`",
             named = false,
+            noneable = true,
             allowedTypes = {
               @ParamType(type = String.class),
               @ParamType(type = Integer.class),
@@ -87,13 +94,14 @@ public interface CommandLineArgsBuilderApi extends SkylarkValue {
 
   @SkylarkCallable(
       name = "add_all",
-      doc = "Add an argument to the existing Args object",
+      doc =
+          "Adds a list of arguments to an existing `Args` object. Returns the original `Args` "
+              + "object after modifying it.",
       parameters = {
         @Param(
             name = "values",
             doc =
-                "Values to add to the existing Args object. Must be one of str, int, Label, "
-                    + "Artifact or RunInfo",
+                "Values to add to the existing `Args` object. See `args.add()` for type restrictions",
             type = SkylarkList.class),
         @Param(
             name = "format",

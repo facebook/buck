@@ -133,7 +133,7 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
       if (args instanceof SkylarkList) {
         builder.addAll((SkylarkList<?>) args, formatString, location);
       } else {
-        builder.add(args, Runtime.UNBOUND, formatString, location);
+        builder.add(args, Runtime.NONE, formatString, location);
       }
     }
     return builder;

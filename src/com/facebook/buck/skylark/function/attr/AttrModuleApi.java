@@ -37,7 +37,7 @@ import com.google.devtools.build.lib.syntax.SkylarkList;
 public interface AttrModuleApi extends SkylarkValue {
   @SkylarkCallable(
       name = "int",
-      doc = "Create a parameter for user defined rules that is an integer",
+      doc = "Specifies a parameter for a User Defined Rule that is an integer.",
       parameters = {
         @Param(
             name = AttributeConstants.DEFAULT_PARAM_NAME,
@@ -79,7 +79,7 @@ public interface AttrModuleApi extends SkylarkValue {
 
   @SkylarkCallable(
       name = "int_list",
-      doc = "Create a parameter for user defined rules that is a list of ints",
+      doc = "Specifies a parameter for a User Defined Rule that is a list of integers.",
       parameters = {
         @Param(
             name = AttributeConstants.DEFAULT_PARAM_NAME,
@@ -120,7 +120,7 @@ public interface AttrModuleApi extends SkylarkValue {
 
   @SkylarkCallable(
       name = "string",
-      doc = "Create a parameter for user defined rules that is a string",
+      doc = "Specifies a parameter for a User Defined Rule that is a string.",
       parameters = {
         @Param(
             name = AttributeConstants.DEFAULT_PARAM_NAME,
@@ -162,7 +162,7 @@ public interface AttrModuleApi extends SkylarkValue {
 
   @SkylarkCallable(
       name = "string_list",
-      doc = "Create a parameter for user defined rules that is a list of strings",
+      doc = "Specifies a parameter for a User Defined Rule that is a list of strings.",
       parameters = {
         @Param(
             name = AttributeConstants.DEFAULT_PARAM_NAME,
@@ -203,7 +203,7 @@ public interface AttrModuleApi extends SkylarkValue {
 
   @SkylarkCallable(
       name = "bool",
-      doc = "Create a parameter for user defined rules that is a boolean",
+      doc = "Specifies a parameter for a User Defined Rule that is a boolean.",
       parameters = {
         @Param(
             name = AttributeConstants.DEFAULT_PARAM_NAME,
@@ -234,13 +234,56 @@ public interface AttrModuleApi extends SkylarkValue {
       throws EvalException;
 
   @SkylarkCallable(
+      name = "source",
+      doc =
+          "Specifies a parameter for User Defined Rules that is a source."
+              + "A 'source' can be a file in the repo or a build target. If a build target is "
+              + "specified, the source is taken from its `DefaultInfo` provider based on the "
+              + "output label. The output label must return exactly one `Artifact`. If it "
+              + "specifies zero or more than one artifacts, the build will fail. This is exposed "
+              + "to rule implementations via ctx.attr.`name` as a single `Artifact`, not as a "
+              + "`Dependency`. If a dependency is required, or access to providers are required, "
+              + "this is not the correct attribute to use. See `attr.dep()`",
+      parameters = {
+        @Param(
+            name = AttributeConstants.DEFAULT_PARAM_NAME,
+            doc = AttributeConstants.DEFAULT_PARAM_DOC_NO_NONE,
+            defaultValue = "None",
+            noneable = true,
+            positional = false,
+            named = true,
+            type = String.class,
+            generic1 = String.class),
+        @Param(
+            name = AttributeConstants.DOC_PARAM_NAME,
+            doc = AttributeConstants.DOC_PARAM_DOC,
+            defaultValue = AttributeConstants.DOC_PARAM_DEFAULT_VALUE,
+            noneable = false,
+            positional = false,
+            named = true,
+            type = String.class),
+        @Param(
+            name = AttributeConstants.MANDATORY_PARAM_NAME,
+            doc = AttributeConstants.MANDATORY_PARAM_DOC,
+            defaultValue = AttributeConstants.MANDATORY_PARAM_DEFAULT_VALUE,
+            noneable = false,
+            positional = false,
+            named = true,
+            type = Boolean.class)
+      })
+  AttributeHolder sourceAttribute(Object defaultValue, String doc, boolean mandatory)
+      throws EvalException;
+
+  @SkylarkCallable(
       name = "source_list",
       doc =
-          "Create a parameter for user defined rules that is a list of sources, both source files "
-              + "on disk, and build targets.\nThis is exposed to rule implementations via "
-              + "ctx.attr.{@code name}  as a list of artifacts, not as a list of ProviderInfo "
-              + "objects.\nIf only a list of dependencies is required, or ProviderInfo objects "
-              + "are needed, this is not the correct attribute to use.",
+          "Specifies a parameter for User Defined Rules that is a list of sources. These can be "
+              + "both source files in the repo, and build targets. Sources for build targets are "
+              + "taken from the target's `DefaultInfo` provider\n"
+              + "This is exposed to rule implementations via ctx.attr.`name` as a list of "
+              + "`Artifact` objects, not as a list of `Dependency` objects.\n"
+              + "If a list of dependencies is required, or access to providers is required, "
+              + "this is not the correct attribute to use. See instead `attr.dep_list()`",
       parameters = {
         @Param(
             name = AttributeConstants.DEFAULT_PARAM_NAME,
@@ -280,55 +323,15 @@ public interface AttrModuleApi extends SkylarkValue {
       throws EvalException;
 
   @SkylarkCallable(
-      name = "source",
-      doc =
-          "Create a parameter for user defined rules that is a source file on disk "
-              + "or a build target.\nThis is exposed to rule implementations via "
-              + "ctx.attr.{@code name}  as a single artifact, not as a ProviderInfoCollection "
-              + "object.\nIf only a dependency is required, or ProviderInfo objects "
-              + "are needed, this is not the correct attribute to use.",
-      parameters = {
-        @Param(
-            name = AttributeConstants.DEFAULT_PARAM_NAME,
-            doc = AttributeConstants.DEFAULT_PARAM_DOC,
-            defaultValue = "None",
-            noneable = true,
-            positional = false,
-            named = true,
-            type = String.class,
-            generic1 = String.class),
-        @Param(
-            name = AttributeConstants.DOC_PARAM_NAME,
-            doc =
-                "The default value for this parameter. Note that `None` is not valid and is "
-                    + "only used as there is no universal default value that is applicable.",
-            defaultValue = AttributeConstants.DOC_PARAM_DEFAULT_VALUE,
-            noneable = false,
-            positional = false,
-            named = true,
-            type = String.class),
-        @Param(
-            name = AttributeConstants.MANDATORY_PARAM_NAME,
-            doc = AttributeConstants.MANDATORY_PARAM_DOC,
-            defaultValue = AttributeConstants.MANDATORY_PARAM_DEFAULT_VALUE,
-            noneable = false,
-            positional = false,
-            named = true,
-            type = Boolean.class)
-      })
-  AttributeHolder sourceAttribute(Object defaultValue, String doc, boolean mandatory)
-      throws EvalException;
-
-  @SkylarkCallable(
       name = "dep",
       doc =
-          "Create a parameter for user defined rules that is a build target.\nThis is exposed to "
-              + "rule implementations via ctx.attr.{@code name} as a single ProviderInfoCollection "
-              + "object.",
+          "Specifies a parameter for User Defined Rules that is a dependency's build target.\n"
+              + "This is exposed to rule implementations via ctx.attr.`name` as a single "
+              + "`Dependency` object.",
       parameters = {
         @Param(
             name = AttributeConstants.DEFAULT_PARAM_NAME,
-            doc = AttributeConstants.DEFAULT_PARAM_DOC,
+            doc = AttributeConstants.DEFAULT_PARAM_DOC_NO_NONE,
             defaultValue = "None",
             noneable = true,
             positional = false,
@@ -337,9 +340,7 @@ public interface AttrModuleApi extends SkylarkValue {
             generic1 = String.class),
         @Param(
             name = AttributeConstants.DOC_PARAM_NAME,
-            doc =
-                "The default value for this parameter. Note that `None` is not valid and is "
-                    + "only used as there is no universal default value that is applicable.",
+            doc = AttributeConstants.DOC_PARAM_DOC,
             defaultValue = AttributeConstants.DOC_PARAM_DEFAULT_VALUE,
             noneable = false,
             positional = false,
@@ -355,7 +356,9 @@ public interface AttrModuleApi extends SkylarkValue {
             type = Boolean.class),
         @Param(
             name = "providers",
-            doc = "If non-empty, all specified build targets must have these providers",
+            doc =
+                "If non-empty, the specified build target must return these providers. e.g. "
+                    + "To require a dependency to be runnable, specify `[RunInfo]`.",
             defaultValue = "[]",
             positional = false,
             named = true,
@@ -369,10 +372,9 @@ public interface AttrModuleApi extends SkylarkValue {
   @SkylarkCallable(
       name = "dep_list",
       doc =
-          "Create a parameter for user defined rules that is a list of build targets that are "
-              + "dependencies of this target\nThis is exposed to rule implementations via "
-              + "ctx.attr.{@code name} as a list of ProviderInfoCollection objects, that provide "
-              + "access to various metadata about the dependency.",
+          "Specifies a parameter for User Defined Rules that is a list of build targets\n"
+              + "This is exposed to rule implementations via ctx.attr.`name` as a list of "
+              + "`Dependency` objects",
       parameters = {
         @Param(
             name = AttributeConstants.DEFAULT_PARAM_NAME,
@@ -408,7 +410,9 @@ public interface AttrModuleApi extends SkylarkValue {
             type = Boolean.class),
         @Param(
             name = "providers",
-            doc = "If non-empty, all specified build targets must have these providers",
+            doc =
+                "If non-empty, all specified build targets must return these providers. e.g. "
+                    + "To require all dependencies to be runnable, specify `[RunInfo]`.",
             defaultValue = "[]",
             positional = false,
             named = true,
@@ -426,16 +430,17 @@ public interface AttrModuleApi extends SkylarkValue {
   @SkylarkCallable(
       name = "output",
       doc =
-          "Create a parameter for user defined rules that is an output artifact.\n"
+          "Specifies a parameter for User Defined Rules that is an output `Artifact`.\n"
               + "Rules with this attribute take a string file name, and an artifact is "
-              + "automatically declared with this name (see ctx.actions.declare_file). This is "
-              + "exposed to rule implementations via ctx.attr.{@code name} as a single Artifact "
-              + "object. Note that if `None` is set for the default value, a value /must/ be "
-              + "provided at runtime.",
+              + "automatically declared with this name (see `ctx.actions.declare_file()`). This is "
+              + "exposed to rule implementations via ctx.attr.`name` as a single `Artifact` "
+              + "object.\n"
+              + "Note that this output *must* be used as the output of an action. The build will "
+              + "fail otherwise.",
       parameters = {
         @Param(
             name = AttributeConstants.DEFAULT_PARAM_NAME,
-            doc = AttributeConstants.DEFAULT_PARAM_DOC,
+            doc = AttributeConstants.DEFAULT_PARAM_DOC_NO_NONE,
             defaultValue = "None",
             noneable = true,
             positional = false,
@@ -465,11 +470,13 @@ public interface AttrModuleApi extends SkylarkValue {
   @SkylarkCallable(
       name = "output_list",
       doc =
-          "Create a parameter for user defined rules that is a list of output artifacts.\n"
+          "Specifies a parameter for User Defined Rules that is a list of output `Artifact`s.\n"
               + "Rules with this attribute take a list of string file names, and an artifact is "
-              + "automatically declared for each name name (see ctx.actions.declare_file). This is "
-              + "exposed to rule implementations via ctx.attr.{@code name} as a list of Artifact "
-              + "objects",
+              + "automatically declared for each name name (see `ctx.actions.declare_file()`). "
+              + "This is exposed to rule implementations via ctx.attr.`name` as a list of "
+              + "`Artifact` objects"
+              + "Note that the outputs *must* be used as the output of an action. The build will "
+              + "fail otherwise.",
       parameters = {
         @Param(
             name = AttributeConstants.DEFAULT_PARAM_NAME,

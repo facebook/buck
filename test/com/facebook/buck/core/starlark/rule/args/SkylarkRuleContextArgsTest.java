@@ -38,7 +38,7 @@ public class SkylarkRuleContextArgsTest {
   public void addAddsArg() throws EvalException, LabelSyntaxException {
     CommandLineArgs args =
         new CommandLineArgsBuilder()
-            .add(1, Runtime.UNBOUND, CommandLineArgs.DEFAULT_FORMAT_STRING, Location.BUILTIN)
+            .add(1, Runtime.NONE, CommandLineArgs.DEFAULT_FORMAT_STRING, Location.BUILTIN)
             .add(
                 "--foo",
                 Label.parseAbsolute("//foo:bar", ImmutableMap.of()),

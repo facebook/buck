@@ -69,7 +69,7 @@ public class CommandLineArgsBuilder implements CommandLineArgsBuilderApi {
     formatString = CommandLineArgsFactory.validateFormatString(formatString);
     try {
       ImmutableList<Object> args;
-      if (value == Runtime.UNBOUND) {
+      if (value == Runtime.NONE) {
         args = ImmutableList.of(requireCorrectType(argNameOrValue));
       } else {
         args = ImmutableList.of(requireCorrectType(argNameOrValue), requireCorrectType(value));
