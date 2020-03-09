@@ -385,7 +385,9 @@ public abstract class RemoteExecutionConfig implements ConfigView<BuckConfig> {
         getDelegate().getBoolean(SECTION, TRY_LARGER_WORKER_ON_OOM).orElse(false);
 
     int grpcKeepAlivePeriodSeconds =
-        getDelegate().getInteger("experiments", GRPC_KEEPALIVE_EXPERIMENT_KEY).orElse(60);
+        getDelegate()
+            .getInteger("experiments", GRPC_KEEPALIVE_EXPERIMENT_KEY)
+            .orElse(Integer.MAX_VALUE);
 
     // Some of these values are also limited by other ones (e.g. synchronous work is limited by the
     // number of threads). We detect some of these cases and log an error to the user to help them
