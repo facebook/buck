@@ -219,7 +219,6 @@ python_binary(
         ":buck_committed_version",
         ":bucklib",
         ":java_version",
-        ":logd",
         ":subprocutils",
     ],
 )
@@ -236,23 +235,6 @@ python_binary(
     ],
     deps = [
         ":buck_local_version",
-        ":bucklib",
-        ":java_version",
-        ":subprocutils",
-    ],
-)
-
-python_binary(
-    name = "logd",
-    build_args = interpreter_override_args(),
-    main = "logd.py",
-    visibility = [
-        "//scripts/...",
-        "//test/...",
-        "//tools/...",
-    ],
-    deps = [
-        ":buck_committed_version",
         ":bucklib",
         ":java_version",
         ":subprocutils",
