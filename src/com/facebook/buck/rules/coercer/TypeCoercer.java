@@ -32,8 +32,10 @@ import javax.annotation.Nullable;
  * <p>Used to coerce JSON parser output from BUCK files into the proper type to populate Description
  * rule args.
  *
- * @param <T> resulting type
- * @param <U> input type
+ * <p>Conversion is composed of two stages: Object -> U (unconfigured) and then U -> T (configured).
+ *
+ * @param <T> resulting configured type
+ * @param <U> resulting unconfigured type
  */
 public interface TypeCoercer<U, T> extends Concatable<T> {
 
