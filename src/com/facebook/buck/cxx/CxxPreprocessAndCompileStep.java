@@ -156,8 +156,8 @@ class CxxPreprocessAndCompileStep implements Step {
         .setEnvironment(ImmutableMap.copyOf(env));
   }
 
-  private Path getArgfile() {
-    return filesystem.resolve(scratchDir).resolve("ppandcompile.argsfile");
+  private AbsPath getArgfile() {
+    return AbsPath.of(filesystem.resolve(scratchDir).resolve("ppandcompile.argsfile"));
   }
 
   @VisibleForTesting
@@ -200,11 +200,11 @@ class CxxPreprocessAndCompileStep implements Step {
     ProcessExecutorParams.Builder builder = makeSubprocessBuilder(context);
 
     if (useArgfile) {
-      Path argfilePath = getArgfile();
+      AbsPath argfilePath = getArgfile();
       filesystem.writeLinesToPath(
           Iterables.transform(
               getArguments(context.getAnsi().isAnsiTerminal()), Escaper.ARGFILE_ESCAPER::apply),
-          argfilePath);
+          argfilePath.getPath());
 
       String argfilePathString;
       if (context.getPlatform().getType().isWindows()) {

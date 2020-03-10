@@ -21,7 +21,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.MoreProjectFilesystems;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -387,30 +389,28 @@ public class MorePathsTest {
 
   @Test
   @Parameters({
-    "a/b/c",
-    "/a/b/c/d",
-    "a/b/../c/d/../../e",
-    "../a/.././../b",
+    "C:/some/path",
+    "D:\\other\\path",
   })
   public void windowsLongPathStringHasCorrectPrefix(String testPathString) {
+    assumeTrue(Platform.detect() == Platform.WINDOWS);
     String uncPrefix = "\\\\?\\";
 
-    Path path = Paths.get(testPathString);
+    AbsPath path = AbsPath.of(Paths.get(testPathString));
     String longPathString = MorePaths.getWindowsLongPathString(path);
     assertTrue(longPathString.startsWith(uncPrefix));
   }
 
   @Test
   @Parameters({
-    "a/b/c",
-    "/a/b/c/d",
-    "a/b/../c/d/../../e",
-    "../a/.././../b",
+    "C:/some/path",
+    "D:\\other\\path",
   })
   public void windowsLongPathStringIsAbsolute(String testPathString) {
+    assumeTrue(Platform.detect() == Platform.WINDOWS);
     String uncPrefix = "\\\\?\\";
 
-    Path path = Paths.get(testPathString);
+    AbsPath path = AbsPath.of(Paths.get(testPathString));
     String longPathString = MorePaths.getWindowsLongPathString(path);
     Path pathComponent = Paths.get(longPathString.substring(uncPrefix.length()));
     assertTrue(pathComponent.isAbsolute());

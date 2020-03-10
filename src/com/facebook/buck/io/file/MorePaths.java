@@ -478,8 +478,8 @@ public class MorePaths {
    * @param path The path to transform to a long path appropriate string form
    * @return The string representation of the path appropriate for long file name usage.
    */
-  public static String getWindowsLongPathString(Path path) {
+  public static String getWindowsLongPathString(AbsPath path) {
     // The path must be normalized and absolutized first.
-    return "\\\\?\\" + MorePaths.normalize(path).toAbsolutePath();
+    return "\\\\?\\" + MorePaths.normalize(path);
   }
 }
