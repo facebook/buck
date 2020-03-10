@@ -84,7 +84,8 @@ public class JsBundleDescription
           JsFlavors.PLATFORM_DOMAIN,
           JsFlavors.OPTIMIZATION_DOMAIN,
           JsFlavors.RAM_BUNDLE_DOMAIN,
-          JsFlavors.OUTPUT_OPTIONS_DOMAIN);
+          JsFlavors.OUTPUT_OPTIONS_DOMAIN,
+          JsFlavors.TRANSFORM_PROFILE_DOMAIN);
 
   private final ToolchainProvider toolchainProvider;
   private final AndroidBuckConfig androidBuckConfig;

@@ -19,6 +19,7 @@ package com.facebook.buck.features.js;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -51,6 +52,10 @@ public class JsFlavors {
   public static final UserFlavor MISC = UserFlavor.of("misc", "Expose misc directory");
   public static final UserFlavor DEPENDENCY_FILE =
       UserFlavor.of("dependencies", "Build dependency file");
+  public static final UserFlavor HERMES_STABLE =
+      UserFlavor.of("hermes-stable", "Enable the hermes-stable JS transform profile");
+  public static final UserFlavor HERMES_CANARY =
+      UserFlavor.of("hermes-canary", "Enable the hermes-canary JS transform profile");
 
   public static final FlavorDomain<String> OPTIMIZATION_DOMAIN =
       new FlavorDomain<>("Build optimization", ImmutableMap.of(RELEASE, "--release"));
@@ -70,6 +75,10 @@ public class JsFlavors {
       new FlavorDomain<>(
           "Output options",
           ImmutableMap.of(SOURCE_MAP, SOURCE_MAP, DEPENDENCY_FILE, DEPENDENCY_FILE, MISC, MISC));
+  public static final FlavorDomain<String> TRANSFORM_PROFILE_DOMAIN =
+      new FlavorDomain<>(
+          "Transform profile",
+          ImmutableMap.of(HERMES_STABLE, "hermes-stable", HERMES_CANARY, "hermes-canary"));
 
   public static final InternalFlavor ANDROID_RESOURCES = InternalFlavor.of("_res_");
   public static final InternalFlavor FORCE_JS_BUNDLE = InternalFlavor.of("_js_");
@@ -107,7 +116,8 @@ public class JsFlavors {
   }
 
   public static boolean isFileFlavor(Flavor flavor) {
-    return flavor.toString().startsWith(fileFlavorPrefix);
+    return flavor.toString().startsWith(fileFlavorPrefix)
+        || TRANSFORM_PROFILE_DOMAIN.contains(flavor);
   }
 
   private JsFlavors() {}
@@ -135,5 +145,9 @@ public class JsFlavors {
         && !flavor.equals(ANDROID_RESOURCES)
         && !flavor.equals(FORCE_JS_BUNDLE)
         && !isFileFlavor(flavor);
+  }
+
+  public static Optional<String> transformProfileArg(FlavorSet flavors) {
+    return TRANSFORM_PROFILE_DOMAIN.getValue(flavors);
   }
 }

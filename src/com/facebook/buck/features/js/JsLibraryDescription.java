@@ -57,6 +57,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
+import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
@@ -72,7 +73,10 @@ public class JsLibraryDescription
         ImplicitDepsInferringDescription<JsLibraryDescription.AbstractJsLibraryDescriptionArg> {
 
   static final ImmutableSet<FlavorDomain<?>> FLAVOR_DOMAINS =
-      ImmutableSet.of(JsFlavors.PLATFORM_DOMAIN, JsFlavors.OPTIMIZATION_DOMAIN);
+      ImmutableSet.of(
+          JsFlavors.PLATFORM_DOMAIN,
+          JsFlavors.OPTIMIZATION_DOMAIN,
+          JsFlavors.TRANSFORM_PROFILE_DOMAIN);
   private final Cache<
           ImmutableSet<Either<SourcePath, Pair<SourcePath, String>>>,
           ImmutableBiMap<Either<SourcePath, Pair<SourcePath, String>>, Flavor>>
@@ -209,9 +213,14 @@ public class JsLibraryDescription
       // Platform information is only relevant when building release-optimized files.
       // Stripping platform targets from individual files allows us to use the base version of
       // every file in the build for all supported platforms, leading to improved cache reuse.
+      // However, we preserve the transform profile flavor domain, because those flavors do
+      // affect unoptimized builds.
       this.fileBaseTarget =
           !baseTarget.getFlavors().contains(JsFlavors.RELEASE)
-              ? baseTarget.withFlavors()
+              ? baseTarget.withFlavors(
+                  Sets.intersection(
+                      baseTarget.getFlavors().getSet(),
+                      JsFlavors.TRANSFORM_PROFILE_DOMAIN.getFlavors()))
               : baseTarget;
     }
 

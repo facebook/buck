@@ -63,6 +63,7 @@ public class JsFile<T extends AbstractImpl> extends ModernBuildRule<T> {
     @AddToRuleKey private final Optional<Arg> extraJson;
     @AddToRuleKey private final WorkerTool workerTool;
     @AddToRuleKey final OutputPath output;
+    @AddToRuleKey final Optional<String> transformProfile;
 
     AbstractImpl(
         BuildTarget buildTarget,
@@ -75,6 +76,7 @@ public class JsFile<T extends AbstractImpl> extends ModernBuildRule<T> {
       this.output =
           new PublicOutputPath(
               BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s.jsfile"));
+      this.transformProfile = JsFlavors.transformProfileArg(buildTarget.getFlavors());
     }
 
     @Override
@@ -168,7 +170,8 @@ public class JsFile<T extends AbstractImpl> extends ModernBuildRule<T> {
               virtualPath.orElseGet(
                   () ->
                       PathFormatter.pathWithUnixSeparators(
-                          sourcePathResolverAdapter.getRelativePath(src))));
+                          sourcePathResolverAdapter.getRelativePath(src))))
+          .addString("transformProfile", transformProfile);
     }
 
     @Nullable
@@ -231,7 +234,8 @@ public class JsFile<T extends AbstractImpl> extends ModernBuildRule<T> {
           .addString("outputFilePath", outputPath)
           .addString(
               "transformedJsFilePath",
-              sourcePathResolverAdapter.getAbsolutePath(devFile).toString());
+              sourcePathResolverAdapter.getAbsolutePath(devFile).toString())
+          .addString("transformProfile", transformProfile);
     }
 
     @Override
