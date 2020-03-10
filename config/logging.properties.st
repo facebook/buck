@@ -51,6 +51,9 @@ com.facebook.buck.jvm.java.Jsr199JavacInvocation.level=FINE
 org.eclipse.jetty.level=INFO
 oshi.level=OFF
 
+# Disable ManagedChannelOrphanWrapper channel shutdown logging
+io.grpc.internal.ManagedChannelOrphanWrapper.level=OFF
+
 # Example: Verbose logging for all classes under com.facebook.buck
 # com.facebook.buck.level=FINE
 
