@@ -1277,8 +1277,7 @@ public class TargetsCommand extends AbstractCommand {
                 sourcePathResolverAdapter,
                 rule,
                 params.getBuckConfig().getView(BuildBuckConfig.class).getBuckOutCompatLink(),
-                targetWithOutputs.getOutputLabel(),
-                isShowOutputs || isShowFullOutputs)
+                targetWithOutputs.getOutputLabel())
             .map(path -> pathToString(path, params))
             .ifPresent(
                 path -> {

@@ -656,8 +656,7 @@ public class BuildCommand extends AbstractCommand {
       HashedBuckOutLinkMode linkMode)
       throws IOException {
     Optional<Path> outputPath =
-        PathUtils.getUserFacingOutputPath(
-            pathResolver, rule, buckOutCompatLink, outputLabel, showOutputs);
+        PathUtils.getUserFacingOutputPath(pathResolver, rule, buckOutCompatLink, outputLabel);
     if (!outputPath.isPresent()) {
       return;
     }
@@ -711,8 +710,7 @@ public class BuildCommand extends AbstractCommand {
             pathResolver,
             rule,
             buckConfig.getView(BuildBuckConfig.class).getBuckOutCompatLink(),
-            outputLabel,
-            showOutputs);
+            outputLabel);
     if (outputPath.isPresent()) {
       Path absolutePath = outputPath.get();
       Path destPath;
@@ -806,8 +804,7 @@ public class BuildCommand extends AbstractCommand {
                   graphBuilder.getSourcePathResolver(),
                   rule,
                   params.getBuckConfig().getView(BuildBuckConfig.class).getBuckOutCompatLink(),
-                  targetWithOutputs.getOutputLabel(),
-                  showOutputs)
+                  targetWithOutputs.getOutputLabel())
               .map(
                   path ->
                       isShowOutputsPathAbsolute()

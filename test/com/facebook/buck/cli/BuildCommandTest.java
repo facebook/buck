@@ -17,7 +17,6 @@
 package com.facebook.buck.cli;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
@@ -27,7 +26,6 @@ import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.DependencyStack;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
@@ -399,30 +397,6 @@ public class BuildCommandTest {
     assertThat(
         console.getTextWrittenToStdOut(),
         Matchers.equalTo(getExpectedShowOutputsLog(ImmutableMap.of("//foo:foo", expected))));
-  }
-
-  @Test
-  public void failsIfShowOutputsFlagNotUsedForOutputLabel() throws Exception {
-    exception.expect(HumanReadableException.class);
-    exception.expectMessage(
-        containsString(
-            "path_reference_rule_with_multiple_outputs target //foo:foo[label] should use --show-outputs"));
-
-    String buildTargetName = "//foo:foo";
-    String label = "label";
-    BuildCommand.GraphsAndBuildTargets graphsAndBuildTargets =
-        getGraphsAndBuildTargets(
-            ImmutableSet.of(new Pair(buildTargetName, label)),
-            Paths.get("path, wrongpath"),
-            ImmutableMap.of(
-                buildTargetName,
-                ImmutableMap.of(
-                    OutputLabel.of(label), ImmutableSet.of(Paths.get("path, timeforlunch")))),
-            true);
-    CommandRunnerParams params = createTestParams(ImmutableSet.of(buildTargetName));
-
-    BuildCommand command = getCommand("--show-output");
-    command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
   }
 
   @Test

@@ -359,21 +359,6 @@ public class TargetsCommandIntegrationTest {
   }
 
   @Test
-  public void mustUseShowOutputsForNamedOutput() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "output_paths", tmp);
-    workspace.setUp();
-
-    ProcessResult result =
-        workspace
-            .runBuckCommand("targets", "--show-output", "//:test_multiple_outputs[out1]")
-            .assertExitCode(ExitCode.BUILD_ERROR);
-    assertThat(
-        result.getStderr(),
-        containsString("genrule target //:test_multiple_outputs[out1] should use --show-outputs"));
-  }
-
-  @Test
   public void testConfigurationRulesIncludedInOutputPath() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "targets_command", tmp);

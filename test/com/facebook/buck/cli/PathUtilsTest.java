@@ -20,7 +20,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertFalse;
 
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -63,8 +62,7 @@ public class PathUtilsTest {
     Path expected = fileSystem.resolve(fileSystem.getBuckPaths().getBuckOut()).resolve("foo");
 
     assertThat(
-        PathUtils.getUserFacingOutputPath(
-                pathResolver, rule, true, OutputLabel.defaultLabel(), true)
+        PathUtils.getUserFacingOutputPath(pathResolver, rule, true, OutputLabel.defaultLabel())
             .get(),
         Matchers.equalTo(expected));
   }
@@ -77,8 +75,7 @@ public class PathUtilsTest {
     AbsPath expected = fileSystem.getRootPath().resolve("foo");
 
     assertThat(
-        PathUtils.getUserFacingOutputPath(
-                pathResolver, rule, false, OutputLabel.defaultLabel(), true)
+        PathUtils.getUserFacingOutputPath(pathResolver, rule, false, OutputLabel.defaultLabel())
             .get(),
         Matchers.equalTo(expected.getPath()));
   }
@@ -102,8 +99,7 @@ public class PathUtilsTest {
     AbsPath expected = fileSystem.getRootPath().resolve("bar");
 
     assertThat(
-        PathUtils.getUserFacingOutputPath(pathResolver, rule, false, OutputLabel.of("bar"), true)
-            .get(),
+        PathUtils.getUserFacingOutputPath(pathResolver, rule, false, OutputLabel.of("bar")).get(),
         Matchers.equalTo(expected.getPath()));
   }
 
@@ -125,7 +121,7 @@ public class PathUtilsTest {
     graphBuilder.addToIndex(rule);
 
     assertFalse(
-        PathUtils.getUserFacingOutputPath(pathResolver, rule, false, OutputLabel.of("dne"), true)
+        PathUtils.getUserFacingOutputPath(pathResolver, rule, false, OutputLabel.of("dne"))
             .isPresent());
   }
 
@@ -139,27 +135,7 @@ public class PathUtilsTest {
     BuildRule rule = new PathReferenceRule(buildTarget, fileSystem, Paths.get("foo"));
     graphBuilder.addToIndex(rule);
 
-    PathUtils.getUserFacingOutputPath(pathResolver, rule, false, OutputLabel.of("label"), true);
-  }
-
-  @Test
-  public void throwsIfShowOutputsFlagNotPassedForNonDefaultLabel() {
-    exception.expect(HumanReadableException.class);
-    exception.expectMessage(
-        containsString(
-            "path_reference_rule_with_multiple_outputs target //:foo[label] should use --show-outputs"));
-
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//:foo");
-    BuildRule rule =
-        new PathReferenceRuleWithMultipleOutputs(
-            buildTarget,
-            fileSystem,
-            Paths.get("foo"),
-            ImmutableMap.of(OutputLabel.of("foo"), ImmutableSet.of(Paths.get("foo"))));
-    graphBuilder.addToIndex(rule);
-
-    PathUtils.getUserFacingOutputPath(pathResolver, rule, false, OutputLabel.of("label"), false)
-        .get();
+    PathUtils.getUserFacingOutputPath(pathResolver, rule, false, OutputLabel.of("label"));
   }
 
   @Test
@@ -172,8 +148,7 @@ public class PathUtilsTest {
     AbsPath expected = fileSystem.getRootPath().resolve("bar");
 
     assertThat(
-        PathUtils.getUserFacingOutputPath(
-                pathResolver, rule, false, OutputLabel.defaultLabel(), false)
+        PathUtils.getUserFacingOutputPath(pathResolver, rule, false, OutputLabel.defaultLabel())
             .get(),
         Matchers.equalTo(expected.getPath()));
   }
