@@ -22,12 +22,9 @@ import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.path.ForwardRelativePath;
-import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
-import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.UnconfiguredSourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.google.common.base.Preconditions;
 import com.google.common.reflect.TypeToken;
 import java.nio.file.Path;
 
@@ -94,19 +91,6 @@ public class SourcePathTypeCoercer extends LeafTypeNewCoercer<UnconfiguredSource
       TargetConfiguration hostConfiguration,
       UnconfiguredSourcePath object)
       throws CoerceFailedException {
-    return object.match(
-        new UnconfiguredSourcePath.Matcher<SourcePath>() {
-          @Override
-          public SourcePath path(CellRelativePath path) {
-            Preconditions.checkState(path.getCellName() == cellRoots.getCurrentCellName());
-            return PathSourcePath.of(
-                filesystem, path.getPath().toRelPath(filesystem.getFileSystem()));
-          }
-
-          @Override
-          public SourcePath buildTarget(UnconfiguredBuildTargetWithOutputs target) {
-            return DefaultBuildTargetSourcePath.of(target.configure(targetConfiguration));
-          }
-        });
+    return object.configure(cellRoots, filesystem, targetConfiguration);
   }
 }

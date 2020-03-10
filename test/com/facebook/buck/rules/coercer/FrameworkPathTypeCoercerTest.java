@@ -42,7 +42,7 @@ public class FrameworkPathTypeCoercerTest {
   private final TypeCoercer<Path, Path> pathTypeCoercer = new PathTypeCoercer();
   private final TypeCoercer<UnconfiguredSourcePath, SourcePath> sourcePathTypeCoercer =
       new SourcePathTypeCoercer(buildTargetWithOutputsTypeCoercer, pathTypeCoercer);
-  private final TypeCoercer<Object, FrameworkPath> frameworkPathTypeCoercer =
+  private final TypeCoercer<UnconfiguredFrameworkPath, FrameworkPath> frameworkPathTypeCoercer =
       new FrameworkPathTypeCoercer(sourcePathTypeCoercer);
 
   private FakeProjectFilesystem projectFilesystem;
@@ -55,7 +55,7 @@ public class FrameworkPathTypeCoercerTest {
 
   @Test(expected = HumanReadableException.class)
   public void shouldRejectUnknownBuildSettingsInFrameworkEntries() throws CoerceFailedException {
-    frameworkPathTypeCoercer.coerce(
+    frameworkPathTypeCoercer.coerceBoth(
         createCellRoots(projectFilesystem).getCellNameResolver(),
         projectFilesystem,
         pathRelativeToProjectRoot,

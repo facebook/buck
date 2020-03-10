@@ -16,8 +16,12 @@
 
 package com.facebook.buck.core.sourcepath;
 
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.CellRelativePath;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.base.Preconditions;
 
 /**
  * Like {@link com.facebook.buck.core.sourcepath.SourcePath} but when configuration is not yet
@@ -109,4 +113,25 @@ public abstract class UnconfiguredSourcePath {
    * subclasses).
    */
   public abstract <R> R match(Matcher<R> matcher);
+
+  /** Apply a configuration to this source path. */
+  public SourcePath configure(
+      CellNameResolver cellNameResolver,
+      ProjectFilesystem projectFilesystem,
+      TargetConfiguration targetConfiguration) {
+    return this.match(
+        new UnconfiguredSourcePath.Matcher<SourcePath>() {
+          @Override
+          public SourcePath path(CellRelativePath path) {
+            Preconditions.checkState(path.getCellName() == cellNameResolver.getCurrentCellName());
+            return PathSourcePath.of(
+                projectFilesystem, path.getPath().toRelPath(projectFilesystem.getFileSystem()));
+          }
+
+          @Override
+          public SourcePath buildTarget(UnconfiguredBuildTargetWithOutputs target) {
+            return DefaultBuildTargetSourcePath.of(target.configure(targetConfiguration));
+          }
+        });
+  }
 }

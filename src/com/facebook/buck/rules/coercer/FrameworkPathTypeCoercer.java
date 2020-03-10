@@ -35,7 +35,8 @@ import java.util.Objects;
 import java.util.Optional;
 
 /** Coerce to {@link com.facebook.buck.rules.coercer.FrameworkPath}. */
-public class FrameworkPathTypeCoercer implements TypeCoercer<Object, FrameworkPath> {
+public class FrameworkPathTypeCoercer
+    implements TypeCoercer<UnconfiguredFrameworkPath, FrameworkPath> {
 
   private final TypeCoercer<UnconfiguredSourcePath, SourcePath> sourcePathTypeCoercer;
 
@@ -50,8 +51,8 @@ public class FrameworkPathTypeCoercer implements TypeCoercer<Object, FrameworkPa
   }
 
   @Override
-  public TypeToken<Object> getUnconfiguredType() {
-    return TypeToken.of(Object.class);
+  public TypeToken<UnconfiguredFrameworkPath> getUnconfiguredType() {
+    return TypeToken.of(UnconfiguredFrameworkPath.class);
   }
 
   @Override
@@ -79,22 +80,10 @@ public class FrameworkPathTypeCoercer implements TypeCoercer<Object, FrameworkPa
   }
 
   @Override
-  public Object coerceToUnconfigured(
+  public UnconfiguredFrameworkPath coerceToUnconfigured(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
-      Object object)
-      throws CoerceFailedException {
-    return object;
-  }
-
-  @Override
-  public FrameworkPath coerce(
-      CellNameResolver cellRoots,
-      ProjectFilesystem filesystem,
-      ForwardRelativePath pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     if (object instanceof String) {
@@ -114,7 +103,7 @@ public class FrameworkPathTypeCoercer implements TypeCoercer<Object, FrameworkPa
                     + "'%s'.",
                 path, firstElement);
           }
-          return FrameworkPath.ofSourceTreePath(
+          return UnconfiguredFrameworkPath.ofSourceTreePath(
               new SourceTreePath(
                   sourceTree.get(), path.subpath(1, path.getNameCount()), Optional.empty()));
         } else {
@@ -128,18 +117,37 @@ public class FrameworkPathTypeCoercer implements TypeCoercer<Object, FrameworkPa
                           input -> "$" + input)));
         }
       } else {
-        return FrameworkPath.ofSourcePath(
-            sourcePathTypeCoercer.coerceBoth(
-                cellRoots,
-                filesystem,
-                pathRelativeToProjectRoot,
-                targetConfiguration,
-                hostConfiguration,
-                object));
+        return UnconfiguredFrameworkPath.ofSourcePath(
+            sourcePathTypeCoercer.coerceToUnconfigured(
+                cellRoots, filesystem, pathRelativeToProjectRoot, object));
       }
     }
 
     throw CoerceFailedException.simple(
         object, getOutputType(), "input should be either a source tree path or a source path");
+  }
+
+  @Override
+  public FrameworkPath coerce(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
+      UnconfiguredFrameworkPath object)
+      throws CoerceFailedException {
+    return object.match(
+        new UnconfiguredFrameworkPath.Matcher<FrameworkPath>() {
+          @Override
+          public FrameworkPath sourcePath(UnconfiguredSourcePath sourcePath) {
+            return FrameworkPath.ofSourcePath(
+                sourcePath.configure(cellRoots, filesystem, targetConfiguration));
+          }
+
+          @Override
+          public FrameworkPath sourceTreePath(SourceTreePath sourceTreePath) {
+            return FrameworkPath.ofSourceTreePath(sourceTreePath);
+          }
+        });
   }
 }
