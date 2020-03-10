@@ -953,16 +953,6 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
     return queryBuilder.toString();
   }
 
-  /** @return the equivalent 'buck query' call to 'buck audit tests'. */
-  static String buildAuditTestsQueryExpression(List<String> arguments, boolean jsonOutput) {
-    StringBuilder queryBuilder = new StringBuilder("buck query \"testsof('%s')\" ");
-    queryBuilder.append(getEscapedArgumentsListAsString(arguments));
-    if (jsonOutput) {
-      queryBuilder.append(getJsonOutputParamDeclaration());
-    }
-    return queryBuilder.toString();
-  }
-
   /** @return the equivalent 'buck query' call to 'buck audit owner'. */
   static String buildAuditOwnerQueryExpression(List<String> arguments, boolean jsonOutput) {
     StringBuilder queryBuilder = new StringBuilder("buck query \"owner('%s')\" ");
