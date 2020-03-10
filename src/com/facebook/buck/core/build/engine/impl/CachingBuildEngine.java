@@ -47,6 +47,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.TopLevelRuleKeyCalculatedEvent;
 import com.facebook.buck.rules.keys.RuleKeyDiagnostics;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.hasher.StringRuleKeyHasher;
@@ -313,7 +314,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     List<ListenableFuture<BuildResult>> depResults =
         new ArrayList<>(SortedSets.sizeEstimate(rule.getBuildDeps()));
     for (BuildRule dep : shuffled(rule.getBuildDeps())) {
-      depResults.add(getBuildRuleResultWithRuntimeDeps(dep, buildContext, executionContext));
+      depResults.add(getBuildRuleResultWithRuntimeDeps(dep, buildContext, executionContext, false));
     }
     return Futures.allAsList(depResults);
   }
@@ -335,7 +336,10 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   // Provide a future that resolves to the result of executing this rule and its runtime
   // dependencies.
   private ListenableFuture<BuildResult> getBuildRuleResultWithRuntimeDeps(
-      BuildRule rule, BuildEngineBuildContext buildContext, ExecutionContext executionContext) {
+      BuildRule rule,
+      BuildEngineBuildContext buildContext,
+      ExecutionContext executionContext,
+      boolean isTopLevel) {
 
     // If the rule is already executing, return its result future from the cache.
     ListenableFuture<BuildResult> existingResult = results.get(rule.getBuildTarget());
@@ -357,7 +361,14 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     ListenableFuture<BuildResult> result =
         Futures.transformAsync(
             ruleKey,
-            input -> processBuildRule(rule, buildContext, executionContext),
+            input -> {
+              if (isTopLevel) {
+                buildContext
+                    .getEventBus()
+                    .post(new TopLevelRuleKeyCalculatedEvent(rule.getBuildTarget(), ruleKey.get()));
+              }
+              return processBuildRule(rule, buildContext, executionContext);
+            },
             serviceByAdjustingDefaultWeightsTo(SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS));
     if (!(rule instanceof HasRuntimeDeps)) {
       future.setFuture(result);
@@ -369,7 +380,9 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         ((HasRuntimeDeps) rule)
             .getRuntimeDeps(resolver)
             .map(resolver::getRule)
-            .map(dep -> getBuildRuleResultWithRuntimeDeps(dep, buildContext, executionContext))
+            .map(
+                dep ->
+                    getBuildRuleResultWithRuntimeDeps(dep, buildContext, executionContext, false))
             .collect(ImmutableList.toImmutableList());
 
     // If we don't have any runtime deps we can short circuit here
@@ -447,7 +460,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     // to make sure we wait for these before calling yielding the final build result.
     registerTopLevelRule(rule, buildContext.getEventBus());
     ListenableFuture<BuildResult> resultFuture =
-        getBuildRuleResultWithRuntimeDeps(rule, buildContext, executionContext);
+        getBuildRuleResultWithRuntimeDeps(rule, buildContext, executionContext, true);
     return BuildEngine.BuildEngineResult.of(resultFuture);
   }
 

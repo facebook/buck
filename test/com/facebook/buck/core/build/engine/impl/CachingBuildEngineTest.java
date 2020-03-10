@@ -29,6 +29,7 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
@@ -112,6 +113,7 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.event.TestEventConfigurator;
+import com.facebook.buck.event.TopLevelRuleKeyCalculatedEvent;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
@@ -188,6 +190,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -406,10 +409,31 @@ public class CachingBuildEngineTest {
       BuildRuleEvent.Started started =
           TestEventConfigurator.configureTestEvent(
               BuildRuleEvent.ruleKeyCalculationStarted(ruleToTest, durationTracker));
+      TopLevelRuleKeyCalculatedEvent topLevelRuleKeyCalculatedEvent =
+          TestEventConfigurator.configureTestEvent(
+              new TopLevelRuleKeyCalculatedEvent(ruleToTest.getBuildTarget(), ruleToTestKey));
+      int numTopLevelRuleKeyCalculatedEvents =
+          Collections.frequency(events, topLevelRuleKeyCalculatedEvent);
+      assertEquals(1, numTopLevelRuleKeyCalculatedEvents);
+      assertNotEquals(
+          numTopLevelRuleKeyCalculatedEvents,
+          events.stream()
+              .filter(event -> event instanceof BuildRuleEvent.FinishedRuleKeyCalc)
+              .count());
+      assertEquals(
+          events.stream()
+              .filter(
+                  event ->
+                      event instanceof BuildRuleEvent.FinishedRuleKeyCalc
+                          || event instanceof TopLevelRuleKeyCalculatedEvent)
+              .reduce((first, second) -> second)
+              .orElse(null),
+          topLevelRuleKeyCalculatedEvent);
       assertThat(
           listener.getEvents(),
           Matchers.containsInRelativeOrder(
               started,
+              topLevelRuleKeyCalculatedEvent,
               BuildRuleEvent.finished(
                   started,
                   BuildRuleKeys.of(ruleToTestKey),
