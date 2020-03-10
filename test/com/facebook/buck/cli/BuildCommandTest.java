@@ -284,7 +284,7 @@ public class BuildCommandTest {
             true);
     CommandRunnerParams params = createTestParams(ImmutableSet.of(buildTargetName));
 
-    BuildCommand command = getCommand("--show-outputs");
+    BuildCommand command = getCommand("--show-output");
     command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
     assertThat(
         console.getTextWrittenToStdOut(),
@@ -306,7 +306,7 @@ public class BuildCommandTest {
             false);
     CommandRunnerParams params = createTestParams(ImmutableSet.of(buildTargetName));
 
-    BuildCommand command = getCommand("--show-outputs");
+    BuildCommand command = getCommand("--show-output");
     command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
     assertThat(
         console.getTextWrittenToStdOut(),
@@ -327,7 +327,7 @@ public class BuildCommandTest {
             true);
     CommandRunnerParams params = createTestParams(ImmutableSet.of(buildTargetName));
 
-    BuildCommand command = getCommand("--show-outputs");
+    BuildCommand command = getCommand("--show-output");
     command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
     assertThat(
         console.getTextWrittenToStdOut(),
@@ -356,7 +356,7 @@ public class BuildCommandTest {
     CommandRunnerParams params =
         createTestParams(ImmutableSet.of(buildTargetName, buildTargetName2));
 
-    BuildCommand command = getCommand("--show-outputs");
+    BuildCommand command = getCommand("--show-output");
     command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
     assertThat(
         console.getTextWrittenToStdOut(),
@@ -392,7 +392,7 @@ public class BuildCommandTest {
     CommandRunnerParams params =
         createTestParams(ImmutableSet.of(buildTargetName, buildTargetName2));
 
-    BuildCommand command = getCommand("--show-outputs");
+    BuildCommand command = getCommand("--show-output");
     command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
     assertThat(
         console.getTextWrittenToStdOut(),
@@ -441,7 +441,7 @@ public class BuildCommandTest {
             true);
     CommandRunnerParams params = createTestParams(ImmutableSet.of(buildTargetName));
 
-    BuildCommand command = getCommand("--show-outputs");
+    BuildCommand command = getCommand("--show-output");
     command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
     assertThat(
         console.getTextWrittenToStdOut(),
@@ -483,7 +483,7 @@ public class BuildCommandTest {
             true);
     CommandRunnerParams params = createTestParams(ImmutableSet.of(buildTargetName));
 
-    BuildCommand command = getCommand("--show-outputs");
+    BuildCommand command = getCommand("--show-output");
     command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
     assertThat(console.getTextWrittenToStdOut(), Matchers.equalTo("//foo:foo[label]\n"));
   }

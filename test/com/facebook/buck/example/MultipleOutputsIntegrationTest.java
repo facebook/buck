@@ -80,8 +80,7 @@ public class MultipleOutputsIntegrationTest {
                 "%s__")
             .resolve("maguro.txt");
 
-    ProcessResult result =
-        workspace.runBuckBuild(targetWithLabel, "--show-outputs").assertSuccess();
+    ProcessResult result = workspace.runBuckBuild(targetWithLabel, "--show-output").assertSuccess();
     assertEquals(String.format("%s %s", targetWithLabel, expectedPath), result.getStdout().trim());
   }
 
@@ -98,7 +97,7 @@ public class MultipleOutputsIntegrationTest {
             .resolve("out.txt");
 
     ProcessResult result =
-        workspace.runBuckBuild(targetWithDefaultOutputLabel, "--show-outputs").assertSuccess();
+        workspace.runBuckBuild(targetWithDefaultOutputLabel, "--show-output").assertSuccess();
     assertEquals(
         String.format("%s %s", targetWithDefaultOutputLabel, expectedPath),
         result.getStdout().trim());

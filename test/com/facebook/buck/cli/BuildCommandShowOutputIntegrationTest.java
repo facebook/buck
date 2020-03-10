@@ -39,53 +39,19 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ObjectArrays;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
-@RunWith(Parameterized.class)
 public class BuildCommandShowOutputIntegrationTest {
-
-  private static final ImmutableMap<String, String[]> SHOW_OUTPUT_TO_SHOW_OUTPUTS =
-      ImmutableMap.of(
-          "--show-output",
-          new String[] {"--show-outputs"},
-          "--show-full-output",
-          new String[] {"--show-outputs", "--output-format", "full"},
-          "--show-json-output",
-          new String[] {"--show-outputs", "--output-format", "json"},
-          "--show-full-json-output",
-          new String[] {"--show-outputs", "--output-format", "full_json"});
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
-
-  @Parameterized.Parameters
-  public static Collection<Object> useShowOutputsParams() {
-    return Arrays.asList(new Object[] {false, true});
-  }
-
-  @Parameterized.Parameter public boolean useShowOutputs;
-
-  private String[] getCommandArgsForShowOutputOrShowOutputs(
-      String showOutputCommand, String... args) {
-    if (useShowOutputs) {
-      return ObjectArrays.concat(
-          SHOW_OUTPUT_TO_SHOW_OUTPUTS.get(showOutputCommand), args, String.class);
-    }
-    return ObjectArrays.concat(showOutputCommand, args);
-  }
 
   private RelPath getExpectedOutputPathRelativeToProjectRoot(String targetName, String pathName)
       throws IOException {
@@ -102,7 +68,7 @@ public class BuildCommandShowOutputIntegrationTest {
   public void showOutput() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
-    String[] args = getCommandArgsForShowOutputOrShowOutputs("--show-output", "//:bar");
+    String[] args = new String[] {"--show-output", "//:bar"};
     ProcessResult runBuckResult = workspace.runBuckBuild(args);
     runBuckResult.assertSuccess();
     assertThat(runBuckResult.getStdout(), Matchers.containsString("//:bar buck-out"));
@@ -119,7 +85,7 @@ public class BuildCommandShowOutputIntegrationTest {
 
     ProcessResult runBuckResult =
         workspace
-            .runBuckBuild("--show-outputs", "//:bar_with_multiple_outputs[output1]")
+            .runBuckBuild("--show-output", "//:bar_with_multiple_outputs[output1]")
             .assertSuccess();
     assertThat(
         runBuckResult.getStdout(),
@@ -132,7 +98,7 @@ public class BuildCommandShowOutputIntegrationTest {
 
     runBuckResult =
         workspace
-            .runBuckBuild("--show-outputs", "//:bar_with_multiple_outputs[output2]")
+            .runBuckBuild("--show-output", "//:bar_with_multiple_outputs[output2]")
             .assertSuccess();
     assertThat(
         runBuckResult.getStdout(),
@@ -148,7 +114,7 @@ public class BuildCommandShowOutputIntegrationTest {
         getExpectedOutputPathRelativeToProjectRoot("//:bar_with_multiple_outputs", "baz");
 
     ProcessResult result =
-        workspace.runBuckBuild("--show-outputs", "//:bar_with_multiple_outputs").assertSuccess();
+        workspace.runBuckBuild("--show-output", "//:bar_with_multiple_outputs").assertSuccess();
     assertThat(
         result.getStdout(),
         Matchers.containsString(String.format("//:bar_with_multiple_outputs %s", expectedPath)));
@@ -164,7 +130,7 @@ public class BuildCommandShowOutputIntegrationTest {
     workspace.setUp();
 
     ProcessResult result =
-        workspace.runBuckBuild("--show-outputs", "//:no_defaults").assertSuccess();
+        workspace.runBuckBuild("--show-output", "//:no_defaults").assertSuccess();
     assertThat(result.getStdout(), Matchers.containsString("//:no_defaults"));
     assertThat(result.getStdout(), Matchers.not(Matchers.containsString("buck-out")));
   }
@@ -174,7 +140,7 @@ public class BuildCommandShowOutputIntegrationTest {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
 
-    String[] args = getCommandArgsForShowOutputOrShowOutputs("--show-full-output", "//:bar");
+    String[] args = new String[] {"--show-full-output", "//:bar"};
     ProcessResult runBuckResult = workspace.runBuckBuild(args);
 
     runBuckResult.assertSuccess();
@@ -200,11 +166,7 @@ public class BuildCommandShowOutputIntegrationTest {
 
     ProcessResult runBuckResult =
         workspace
-            .runBuckBuild(
-                "--show-outputs",
-                "--output-format",
-                "full",
-                "//:bar_with_multiple_outputs[output1]")
+            .runBuckBuild("--show-full-output", "//:bar_with_multiple_outputs[output1]")
             .assertSuccess();
     assertThat(
         runBuckResult.getStdout(),
@@ -217,11 +179,7 @@ public class BuildCommandShowOutputIntegrationTest {
 
     runBuckResult =
         workspace
-            .runBuckBuild(
-                "--show-outputs",
-                "--output-format",
-                "full",
-                "//:bar_with_multiple_outputs[output2]")
+            .runBuckBuild("--show-full-output", "//:bar_with_multiple_outputs[output2]")
             .assertSuccess();
     assertThat(
         runBuckResult.getStdout(),
@@ -236,9 +194,7 @@ public class BuildCommandShowOutputIntegrationTest {
     workspace.setUp();
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
-    String[] args =
-        getCommandArgsForShowOutputOrShowOutputs(
-            "--show-json-output", "//:foo", "//:bar", "//:ex ample");
+    String[] args = new String[] {"--show-json-output", "//:foo", "//:bar", "//:ex ample"};
     ProcessResult runBuckResult = workspace.runBuckBuild(args);
 
     runBuckResult.assertSuccess();
@@ -266,11 +222,7 @@ public class BuildCommandShowOutputIntegrationTest {
 
     ProcessResult runBuckResult =
         workspace
-            .runBuckBuild(
-                "--show-outputs",
-                "--output-format",
-                "json",
-                "//:bar_with_multiple_outputs[output1]")
+            .runBuckBuild("--show-json-output", "//:bar_with_multiple_outputs[output1]")
             .assertSuccess();
     JsonNode observed =
         ObjectMappers.READER.readTree(ObjectMappers.createParser(runBuckResult.getStdout()));
@@ -281,11 +233,7 @@ public class BuildCommandShowOutputIntegrationTest {
 
     runBuckResult =
         workspace
-            .runBuckBuild(
-                "--show-outputs",
-                "--output-format",
-                "json",
-                "//:bar_with_multiple_outputs[output2]")
+            .runBuckBuild("--show-json-output", "//:bar_with_multiple_outputs[output2]")
             .assertSuccess();
     observed = ObjectMappers.READER.readTree(ObjectMappers.createParser(runBuckResult.getStdout()));
 
@@ -301,9 +249,7 @@ public class BuildCommandShowOutputIntegrationTest {
     workspace.setUp();
     ProjectFilesystem projectFilesystem = workspace.getProjectFileSystem();
 
-    String[] args =
-        getCommandArgsForShowOutputOrShowOutputs(
-            "--show-full-json-output", "//:bar", "//:foo", "//:ex ample");
+    String[] args = new String[] {"--show-full-json-output", "//:bar", "//:foo", "//:ex ample"};
     ProcessResult runBuckResult = workspace.runBuckBuild(args);
 
     runBuckResult.assertSuccess();
@@ -339,11 +285,7 @@ public class BuildCommandShowOutputIntegrationTest {
 
     ProcessResult runBuckResult =
         workspace
-            .runBuckBuild(
-                "--show-outputs",
-                "--output-format",
-                "full_json",
-                "//:bar_with_multiple_outputs[output1]")
+            .runBuckBuild("--show-full-json-output", "//:bar_with_multiple_outputs[output1]")
             .assertSuccess();
     JsonNode observed =
         ObjectMappers.READER.readTree(ObjectMappers.createParser(runBuckResult.getStdout()));
@@ -354,11 +296,7 @@ public class BuildCommandShowOutputIntegrationTest {
 
     runBuckResult =
         workspace
-            .runBuckBuild(
-                "--show-outputs",
-                "--output-format",
-                "full_json",
-                "//:bar_with_multiple_outputs[output2]")
+            .runBuckBuild("--show-full-json-output", "//:bar_with_multiple_outputs[output2]")
             .assertSuccess();
     observed = ObjectMappers.READER.readTree(ObjectMappers.createParser(runBuckResult.getStdout()));
 
@@ -385,8 +323,7 @@ public class BuildCommandShowOutputIntegrationTest {
   public void showRuleKeyAndOutput() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
-    String[] args =
-        getCommandArgsForShowOutputOrShowOutputs("--show-output", "--show-rulekey", "//:bar");
+    String[] args = new String[] {"--show-output", "--show-rulekey", "//:bar"};
     ProcessResult runBuckResult = workspace.runBuckBuild(args);
     runBuckResult.assertSuccess();
 
@@ -405,7 +342,7 @@ public class BuildCommandShowOutputIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "buck_out_config_target_hash", tmp);
     workspace.setUp();
 
-    String[] args = getCommandArgsForShowOutputOrShowOutputs("--show-output", "//:binary");
+    String[] args = new String[] {"--show-output", "//:binary"};
     ProcessResult runBuckResult = workspace.runBuckBuild(args);
 
     BuildTarget target = BuildTargetFactory.newInstance("//:binary");

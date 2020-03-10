@@ -114,7 +114,6 @@ public class BuildCommand extends AbstractCommand {
   private static final String SHALLOW_LONG_ARG = "--shallow";
   private static final String REPORT_ABSOLUTE_PATHS = "--report-absolute-paths";
   private static final String SHOW_OUTPUT_LONG_ARG = "--show-output";
-  private static final String SHOW_OUTPUTS_LONG_ARG = "--show-outputs";
   private static final String SHOW_FULL_OUTPUT_LONG_ARG = "--show-full-output";
   private static final String SHOW_JSON_OUTPUT_LONG_ARG = "--show-json-output";
   private static final String SHOW_FULL_JSON_OUTPUT_LONG_ARG = "--show-full-json-output";
@@ -175,31 +174,6 @@ public class BuildCommand extends AbstractCommand {
       name = SHOW_OUTPUT_LONG_ARG,
       usage = "Print the path to the output for each of the built rules relative to the cell.")
   private boolean showOutput;
-
-  /**
-   * Enum with values for `--output-format` CLI parameter. Only applies when --show-outputs is used.
-   */
-  private enum OutputFormat {
-    DEFAULT,
-    FULL,
-    JSON,
-    FULL_JSON,
-  }
-
-  @Option(
-      name = "--output-format",
-      usage =
-          "Output format (default: list).\n"
-              + " default -  output paths are printed relative to the cell.\n"
-              + " full - output paths are printed as absolute paths.\n"
-              + " json - JSON format with relative paths\n"
-              + " full_json - JSON format with absolute paths.\n")
-  private OutputFormat outputFormat = OutputFormat.DEFAULT;
-
-  @Option(
-      name = SHOW_OUTPUTS_LONG_ARG,
-      usage = "Print the path to the outputs for each of the built rules relative to the cell.")
-  private boolean showOutputs;
 
   @Option(name = OUT_LONG_ARG, usage = "Copies the output of the lone build target to this path.")
   @Nullable
@@ -557,19 +531,7 @@ public class BuildCommand extends AbstractCommand {
       linkBuildResultsToHashedBuckOut(params, graphsAndBuildTargets);
     }
     ActionAndTargetGraphs graphs = graphsAndBuildTargets.getGraphs();
-    // TODO(irenewchen): Merge full output, JSON output, full JSON output into a enum
-    if (showOutput
-        || showOutputs
-        || showFullOutput
-        || showJsonOutput
-        || showFullJsonOutput
-        || showRuleKey) {
-      if (outputFormat != OutputFormat.DEFAULT && !showOutputs) {
-        params
-            .getConsole()
-            .printErrorText(String.format("--output-format can only be used with --show-outputs"));
-        return ExitCode.BUILD_ERROR;
-      }
+    if (showOutput || showFullOutput || showJsonOutput || showFullJsonOutput || showRuleKey) {
       showOutputs(params, graphsAndBuildTargets, ruleKeyCacheScope);
     }
     if (outputPathForSingleBuildTarget != null) {
@@ -828,7 +790,7 @@ public class BuildCommand extends AbstractCommand {
                 "%s%s%s\n",
                 targetWithOutputs,
                 showRuleKey ? " " + ruleKeyFactory.get().build(rule) : "",
-                showOutput || showOutputs || showFullOutput ? getOutputPathToShow(outputPath) : "");
+                showOutput || showFullOutput ? getOutputPathToShow(outputPath) : "");
       }
     }
 
@@ -842,17 +804,11 @@ public class BuildCommand extends AbstractCommand {
   }
 
   private boolean isShowOutputsPathAbsolute() {
-    return showFullOutput
-        || showFullJsonOutput
-        || showOutputs
-            && (outputFormat == OutputFormat.FULL || outputFormat == OutputFormat.FULL_JSON);
+    return showFullOutput || showFullJsonOutput;
   }
 
   private boolean isShowOutputsPathJsonFormat() {
-    return showJsonOutput
-        || showFullJsonOutput
-        || showOutputs
-            && (outputFormat == OutputFormat.JSON || outputFormat == OutputFormat.FULL_JSON);
+    return showJsonOutput || showFullJsonOutput;
   }
 
   private String getOutputPathToShow(Optional<Path> path) {
