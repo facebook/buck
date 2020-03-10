@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -75,14 +76,15 @@ public class StripLinkable extends ModernBuildRule<StripLinkable.Impl> {
 
       SourcePathResolverAdapter sourcePathResolverAdapter = buildContext.getSourcePathResolver();
       Path destination = outputPathResolver.resolvePath(output);
+
       return ImmutableList.of(
           new StripStep(
               filesystem.getRootPath(),
               stripTool.getEnvironment(sourcePathResolverAdapter),
               stripTool.getCommandPrefix(sourcePathResolverAdapter),
               ImmutableList.of("--strip-unneeded"),
-              sourcePathResolverAdapter.getAbsolutePath(sourcePathToStrip),
-              destination));
+              AbsPath.of(sourcePathResolverAdapter.getAbsolutePath(sourcePathToStrip)),
+              AbsPath.of(filesystem.resolve(destination))));
     }
   }
 

@@ -18,10 +18,11 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.nio.file.Path;
 
 /** Run strip on a binary. */
 public class StripStep extends ShellStep {
@@ -29,16 +30,16 @@ public class StripStep extends ShellStep {
   private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> stripCommandPrefix;
   private final ImmutableList<String> flags;
-  private final Path source;
-  private final Path destination;
+  private final AbsPath source;
+  private final AbsPath destination;
 
   public StripStep(
       AbsPath workingDirectory,
       ImmutableMap<String, String> environment,
       ImmutableList<String> stripCommandPrefix,
       ImmutableList<String> flags,
-      Path source,
-      Path destination) {
+      AbsPath source,
+      AbsPath destination) {
     super(workingDirectory);
     this.environment = environment;
     this.stripCommandPrefix = stripCommandPrefix;
@@ -49,12 +50,19 @@ public class StripStep extends ShellStep {
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+    // flavors embedded in the output path can make the path very very long
+    String outputPath;
+    if (context.getPlatform() == Platform.WINDOWS) {
+      outputPath = MorePaths.getWindowsLongPathString(destination);
+    } else {
+      outputPath = destination.toString();
+    }
     return ImmutableList.<String>builder()
         .addAll(stripCommandPrefix)
         .addAll(flags)
         .add(source.toString())
         .add("-o")
-        .add(destination.toString())
+        .add(outputPath)
         .build();
   }
 
