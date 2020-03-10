@@ -23,12 +23,14 @@ import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.util.stream.RichStream;
+import com.facebook.buck.util.types.Either;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.HashSet;
@@ -56,20 +58,7 @@ class BuildTargetParser {
     // this is stateless. There's no need to do anything other than grab the instance needed.
   }
 
-  /**
-   * Creates {@link BuildTarget} using a target name.
-   *
-   * <p>The target name can either be fully-qualified or relative. Relative target names are
-   * resolved using the provided base name (which can also be empty when relative target name is at
-   * the root of a cell). For example, a target name with base name "java/com/company" and relative
-   * name "app" is equal to the fully-qualified target name "java/com/company:app".
-   *
-   * @param buildTargetName either a fully-qualified or relative target name.
-   * @param buildTargetBaseName the base name of the target.
-   * @param allowWildCards whether to allow a colon at the end of the target name. This is used when
-   *     parsing target name patterns.
-   */
-  UnconfiguredBuildTarget parse(
+  private Either<UnconfiguredBuildTarget, CellRelativePath> parseTargetOrPackageWildcardImpl(
       String buildTargetName,
       @Nullable BaseName buildTargetBaseName,
       boolean allowWildCards,
@@ -120,21 +109,33 @@ class BuildTargetParser {
       String shortName = parts.get(1);
       Iterable<String> flavorNames = new HashSet<>();
       int hashIndex = shortName.indexOf('#');
+
       if (hashIndex != -1 && hashIndex < shortName.length()) {
         flavorNames = flavorParser.parseFlavorString(shortName.substring(hashIndex + 1));
         shortName = shortName.substring(0, hashIndex);
       }
 
-      // Set the cell path correctly. Because the cellNames comes from the owning cell we can
-      // be sure that if this doesn't throw an exception the target cell is visible to the
-      // owning cell.
-      UnflavoredBuildTarget unflavoredBuildTarget =
-          UnflavoredBuildTarget.of(canonicalCellName, baseName, shortName);
-      ImmutableSortedSet<Flavor> flavors =
-          RichStream.from(flavorNames)
-              .map(InternalFlavor::of)
-              .collect(ImmutableSortedSet.toImmutableSortedSet(FlavorSet.FLAVOR_ORDERING));
-      return UnconfiguredBuildTarget.of(unflavoredBuildTarget, FlavorSet.copyOf(flavors));
+      if (shortName.isEmpty()) {
+        if (hashIndex != -1) {
+          throw new HumanReadableException("cannot specify flavors for package matcher");
+        }
+
+        return Either.ofRight(CellRelativePath.of(canonicalCellName, baseName));
+      } else {
+
+        ImmutableSortedSet<Flavor> flavors =
+            RichStream.from(flavorNames)
+                .map(InternalFlavor::of)
+                .collect(ImmutableSortedSet.toImmutableSortedSet(FlavorSet.FLAVOR_ORDERING));
+
+        // Set the cell path correctly. Because the cellNames comes from the owning cell we can
+        // be sure that if this doesn't throw an exception the target cell is visible to the
+        // owning cell.
+        UnflavoredBuildTarget unflavoredBuildTarget =
+            UnflavoredBuildTarget.of(canonicalCellName, baseName, shortName);
+        return Either.ofLeft(
+            UnconfiguredBuildTarget.of(unflavoredBuildTarget, FlavorSet.copyOf(flavors)));
+      }
     } catch (HumanReadableException e) {
       throw new BuildTargetParseException(
           e,
@@ -142,5 +143,50 @@ class BuildTargetParser {
     } catch (Exception e) {
       throw new BuckUncheckedExecutionException(e, "When parsing %s.", buildTargetName);
     }
+  }
+
+  /**
+   * Creates {@link BuildTarget} or a package wildcard using a target name.
+   *
+   * <p>The target or wildcard name can either be fully-qualified or relative. Relative target names
+   * are resolved using the provided base name (which can also be empty when relative target name is
+   * at the root of a cell). For example, a target name with base name "java/com/company" and
+   * relative name "app" is equal to the fully-qualified target name "java/com/company:app".
+   *
+   * <p>Wildcard is something like "//foo/bar:" and returned as cell-relative path "foo/bar"
+   *
+   * @param buildTargetName either a fully-qualified or relative target name.
+   * @param buildTargetBaseName the base name of the target.
+   */
+  Either<UnconfiguredBuildTarget, CellRelativePath> parseTargetOrPackageWildcard(
+      String buildTargetName,
+      @Nullable BaseName buildTargetBaseName,
+      CellNameResolver cellNameResolver) {
+    return parseTargetOrPackageWildcardImpl(
+        buildTargetName, buildTargetBaseName, true, cellNameResolver);
+  }
+
+  /**
+   * Creates {@link BuildTarget} using a target name.
+   *
+   * <p>The target name can either be fully-qualified or relative. Relative target names are
+   * resolved using the provided base name (which can also be empty when relative target name is at
+   * the root of a cell). For example, a target name with base name "java/com/company" and relative
+   * name "app" is equal to the fully-qualified target name "java/com/company:app".
+   *
+   * @param buildTargetName either a fully-qualified or relative target name.
+   * @param buildTargetBaseName the base name of the target.
+   */
+  UnconfiguredBuildTarget parseTarget(
+      String buildTargetName,
+      @Nullable BaseName buildTargetBaseName,
+      CellNameResolver cellNameResolver) {
+    return parseTargetOrPackageWildcardImpl(
+            buildTargetName, buildTargetBaseName, false, cellNameResolver)
+        .transform(
+            t -> t,
+            p -> {
+              throw new IllegalStateException("unreachable");
+            });
   }
 }

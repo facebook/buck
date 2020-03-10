@@ -19,8 +19,10 @@ package com.facebook.buck.core.parser.buildtargetparser;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BaseName;
+import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.util.types.Either;
 import java.nio.file.Path;
 
 /** Creates {@link UnconfiguredBuildTarget} from a raw string. */
@@ -74,6 +76,6 @@ public interface UnconfiguredBuildTargetViewFactory {
    * specified in the target name. The build target contains a {@link
    * CellPathResolver#getCanonicalCellName(Path) canonical cell name}.
    */
-  UnconfiguredBuildTarget createWithWildcard(
+  Either<UnconfiguredBuildTarget, CellRelativePath> createWithWildcard(
       String buildTargetName, CellNameResolver cellNameResolver);
 }

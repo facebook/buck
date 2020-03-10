@@ -54,4 +54,8 @@ public abstract class CellRelativePath implements Comparable<CellRelativePath> {
   public static CellRelativePath of(CanonicalCellName cellName, ForwardRelativePath path) {
     return ImmutableCellRelativePath.ofImpl(cellName, path);
   }
+
+  public static CellRelativePath of(CanonicalCellName cellName, BaseName path) {
+    return of(cellName, path.getPath());
+  }
 }

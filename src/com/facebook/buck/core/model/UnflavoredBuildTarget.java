@@ -18,7 +18,6 @@ package com.facebook.buck.core.model;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.DependencyStack;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
@@ -36,8 +35,7 @@ public class UnflavoredBuildTarget
   private final int hash;
 
   private UnflavoredBuildTarget(CellRelativePath cellRelativeBasePath, String localName) {
-    Preconditions.checkArgument(
-        !localName.contains("#"), "Build target name cannot contain '#' but was: %s.", localName);
+    LocalName.validate(localName);
     this.cellRelativeBasePath = cellRelativeBasePath;
     this.localName = localName;
     this.hash = Objects.hash(cellRelativeBasePath, localName);

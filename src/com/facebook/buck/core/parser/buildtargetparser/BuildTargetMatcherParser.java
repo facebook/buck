@@ -24,6 +24,7 @@ import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
 import java.util.Optional;
 
@@ -77,23 +78,19 @@ public abstract class BuildTargetMatcherParser<T> {
       return createWildCardPattern(cellNameResolver, buildTargetPattern);
     }
 
-    UnconfiguredBuildTarget target =
+    Either<UnconfiguredBuildTarget, CellRelativePath> target =
         unconfiguredBuildTargetFactory.createWithWildcard(
             targetWithOutputLabel.getTargetName(), cellNameResolver);
-    if (target.getShortNameAndFlavorPostfix().isEmpty()) {
-      if (!targetWithOutputLabel.getOutputLabel().isDefault()) {
-        throw createOutputLabelParseException(targetWithOutputLabel);
-      }
-      return createForChildren(target.getCellRelativeBasePath());
-    } else {
-      // TODO(nga): prohibit empty local name in build target
-      if (target.getName().isEmpty()) {
-        throw new BuildTargetParseException("cannot specify flavors for package matcher");
-      }
-
-      return createForSingleton(
-          UnconfiguredBuildTargetWithOutputs.of(target, targetWithOutputLabel.getOutputLabel()));
-    }
+    return target.transform(
+        t ->
+            createForSingleton(
+                UnconfiguredBuildTargetWithOutputs.of(t, targetWithOutputLabel.getOutputLabel())),
+        p -> {
+          if (!targetWithOutputLabel.getOutputLabel().isDefault()) {
+            throw createOutputLabelParseException(targetWithOutputLabel);
+          }
+          return createForChildren(p);
+        });
   }
 
   private T createWildCardPattern(CellNameResolver cellNames, String buildTargetPatternWithCell) {
