@@ -176,4 +176,31 @@ public class TwoArraysImmutableHashMapTest {
     expectedException.expect(IllegalStateException.class);
     TwoArraysImmutableHashMap.of("1", true, "1", false, "2", true);
   }
+
+  @Test
+  public void mapValues() {
+    assertEquals(
+        TwoArraysImmutableHashMap.of(),
+        TwoArraysImmutableHashMap.of()
+            .mapValues(
+                (k, x) -> {
+                  throw new AssertionError();
+                }));
+    assertEquals(
+        TwoArraysImmutableHashMap.of("1", "10"),
+        TwoArraysImmutableHashMap.of("1", 10)
+            .mapValues(
+                (k, x) -> {
+                  assertEquals("1", k);
+                  return Integer.toString(x);
+                }));
+    assertEquals(
+        TwoArraysImmutableHashMap.of("1", 11, "2", 21),
+        TwoArraysImmutableHashMap.of("1", 10, "2", 20)
+            .mapValues(
+                (k, x) -> {
+                  assertTrue(k.equals("1") && x.equals(10) || k.equals("2") && x.equals(20));
+                  return x + 1;
+                }));
+  }
 }

@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import javax.annotation.Nullable;
@@ -301,6 +302,25 @@ public class TwoArraysImmutableHashMap<K, V> extends AbstractImmutableMap<K, V> 
     }
 
     return new Values<>(this);
+  }
+
+  /**
+   * Apply a function to each value to create a new map. This operation is faster and more memory
+   * efficient than stream, map and collect to map.
+   */
+  public <W> TwoArraysImmutableHashMap<K, W> mapValues(BiFunction<K, V, W> f) {
+    if (isEmpty()) {
+      return of();
+    }
+    Object[] newEntries = new Object[entries.length];
+    for (int i = 0; i < entries.length; i += 2) {
+      if (entries[i] == null) {
+        continue;
+      }
+      newEntries[i] = entries[i];
+      newEntries[i + 1] = f.apply((K) entries[i], (V) entries[i + 1]);
+    }
+    return new TwoArraysImmutableHashMap<>(newEntries, iterationOrder);
   }
 
   /** Builder. */
