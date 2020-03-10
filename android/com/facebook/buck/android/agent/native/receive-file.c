@@ -22,6 +22,7 @@
 #include <poll.h>
 #include <sys/time.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
@@ -326,6 +327,12 @@ static int raw_receive_file(const char* path, int expected_size, int sock) {
   ret = rename(tempfile, path);
   if (ret != 0) {
     perror("rename");
+    goto error;
+  }
+
+  ret = chmod(path, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH );
+  if (ret != 0) {
+    perror("chmod");
     goto error;
   }
 
