@@ -16,6 +16,8 @@
 
 package com.facebook.buck.core.cell.impl;
 
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
@@ -92,7 +94,7 @@ public class DefaultCellPathResolverTest {
 
   @Test
   public void transitiveMappingForSymlinkCycle() throws Exception {
-    Assume.assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), is(not(Platform.WINDOWS)));
 
     FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
 

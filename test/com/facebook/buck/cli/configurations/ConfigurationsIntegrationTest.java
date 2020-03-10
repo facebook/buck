@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cli.configurations;
 
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -543,7 +545,7 @@ public class ConfigurationsIntegrationTest {
   @Test
   public void allowNonUniqueTargersWithDifferentFlavorsInQuery() throws Exception {
     // To avoid test failures on Windows because of missing compiler
-    Assume.assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), is(not(Platform.WINDOWS)));
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
@@ -556,7 +558,7 @@ public class ConfigurationsIntegrationTest {
   @Test
   public void allowNonUniqueTargersWithDifferentFlavorsInBuild() throws Exception {
     // To avoid test failures on Windows because of missing compiler
-    Assume.assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), is(not(Platform.WINDOWS)));
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(

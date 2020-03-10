@@ -454,7 +454,7 @@ public class NdkCxxPlatformTest {
   // ndk platform flags so that such changes can actually be reviewed.
   @Test
   public void testExtraNdkFlagsLiterally() throws IOException {
-    Assume.assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), is(Matchers.not(Platform.WINDOWS)));
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     Path ndkRoot = tmp.newFolder("android-ndk-r10b");
     NdkCxxPlatformTargetConfiguration targetConfiguration =

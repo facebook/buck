@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.keys;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.util.log.Logger;
@@ -143,7 +144,7 @@ public class DiffRuleKeysScriptIntegrationTest {
 
   @Test
   public void cxxHeaderChanged() throws Exception {
-    Assume.assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(not(Platform.WINDOWS)));
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "diff_rulekeys_script", tmp);

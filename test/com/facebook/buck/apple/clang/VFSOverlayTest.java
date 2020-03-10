@@ -17,6 +17,8 @@
 package com.facebook.buck.apple.clang;
 
 import static com.facebook.buck.util.MoreStringsForTests.equalToIgnoringPlatformNewlines;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.file.MorePathsForTests;
@@ -35,7 +37,7 @@ public class VFSOverlayTest {
 
   @Test
   public void testSerialization() throws IOException {
-    Assume.assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), is(not(Platform.WINDOWS)));
     VFSOverlay vfsOverlay =
         new VFSOverlay(
             ImmutableSortedMap.of(
@@ -48,7 +50,7 @@ public class VFSOverlayTest {
 
   @Test
   public void testSerializationWindows() throws IOException {
-    Assume.assumeTrue(Platform.detect() == Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), is(Platform.WINDOWS));
     VFSOverlay vfsOverlay =
         new VFSOverlay(
             ImmutableSortedMap.of(
@@ -61,7 +63,7 @@ public class VFSOverlayTest {
 
   @Test
   public void testTwoFiles() throws IOException {
-    Assume.assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), is(not(Platform.WINDOWS)));
     VFSOverlay vfsOverlay =
         new VFSOverlay(
             ImmutableSortedMap.of(
@@ -76,7 +78,7 @@ public class VFSOverlayTest {
 
   @Test
   public void testTwoDirectories() throws IOException {
-    Assume.assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), is(not(Platform.WINDOWS)));
     VFSOverlay vfsOverlay =
         new VFSOverlay(
             ImmutableSortedMap.of(
@@ -91,7 +93,7 @@ public class VFSOverlayTest {
 
   @Test
   public void testNestedDirectories() throws IOException {
-    Assume.assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), is(not(Platform.WINDOWS)));
     // the default clang writer groups nested directories, for simplicity this generator doesn't.
     // This test shows the expectation for this generator, we can update it if we implement
     // directory nesting/grouping. Clang has an internal representation after reading the vfs so as
