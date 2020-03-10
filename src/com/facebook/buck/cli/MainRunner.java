@@ -95,6 +95,8 @@ import com.facebook.buck.event.listener.MachineReadableLoggerListener;
 import com.facebook.buck.event.listener.ParserProfilerLoggerListener;
 import com.facebook.buck.event.listener.PublicAnnouncementManager;
 import com.facebook.buck.event.listener.RenderingConsole;
+import com.facebook.buck.event.listener.RuleKeyCheckListener;
+import com.facebook.buck.event.listener.RuleKeyCheckListenerConfig;
 import com.facebook.buck.event.listener.RuleKeyDiagnosticsListener;
 import com.facebook.buck.event.listener.RuleKeyLoggerListener;
 import com.facebook.buck.event.listener.SilentConsoleEventBusListener;
@@ -2204,7 +2206,11 @@ public final class MainRunner {
       throws IOException {
     ImmutableList.Builder<BuckEventListener> eventListenersBuilder =
         ImmutableList.<BuckEventListener>builder().add(new LoggingBuildListener());
-
+    RuleKeyCheckListenerConfig ruleKeyCheckListenerConfig =
+        buckConfig.getView(RuleKeyCheckListenerConfig.class);
+    if (ruleKeyCheckListenerConfig.getEndpoint().isPresent()) {
+      buckEventBus.register(new RuleKeyCheckListener(ruleKeyCheckListenerConfig, buckEventBus));
+    }
     LogBuckConfig logBuckConfig = buckConfig.getView(LogBuckConfig.class);
     if (logBuckConfig.isJavaUtilsLoggingEnabled()) {
       eventListenersBuilder.add(new JavaUtilsLoggingBuildListener(projectFilesystem));
