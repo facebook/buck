@@ -549,11 +549,6 @@ public abstract class DefaultJavaLibraryRules {
   }
 
   @Value.Lazy
-  DefaultJavaLibraryClasspaths getClasspathsForSourceOnlyAbi() {
-    return getClasspaths().getSourceOnlyAbiClasspaths();
-  }
-
-  @Value.Lazy
   CompileToJarStepFactory getConfiguredCompiler() {
     return getConfiguredCompilerFactory()
         .configure(
@@ -623,7 +618,6 @@ public abstract class DefaultJavaLibraryRules {
 
   @Value.Lazy
   JarBuildStepsFactory getJarBuildStepsFactoryForSourceOnlyAbi() {
-    DefaultJavaLibraryClasspaths classpaths = getClasspathsForSourceOnlyAbi();
     return new JarBuildStepsFactory(
         getLibraryTarget(),
         getConfiguredCompilerForSourceOnlyAbi(),
@@ -637,7 +631,7 @@ public abstract class DefaultJavaLibraryRules {
         getClassesToRemoveFromJar(),
         getAbiGenerationMode(),
         getAbiCompatibilityMode(),
-        classpaths.getDependencyInfos(),
+        getClasspaths().getDependencyInfosForSourceOnlyAbi(),
         getRequiredForSourceOnlyAbi());
   }
 

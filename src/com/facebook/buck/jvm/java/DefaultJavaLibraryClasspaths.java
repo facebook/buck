@@ -207,4 +207,11 @@ abstract class DefaultJavaLibraryClasspaths {
 
     return builder.build();
   }
+
+  @Value.Lazy
+  public ImmutableList<JavaDependencyInfo> getDependencyInfosForSourceOnlyAbi() {
+    return getDependencyInfos().stream()
+        .filter(javaDependencyInfo -> javaDependencyInfo.isRequiredForSourceOnlyAbi)
+        .collect(ImmutableList.toImmutableList());
+  }
 }
