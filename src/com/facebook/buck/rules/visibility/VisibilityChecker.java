@@ -34,7 +34,7 @@ public class VisibilityChecker {
   }
 
   /** Check whether {@code viewer} is within view or visible to this checker. */
-  public Optional<VisibilityError> isVisibleToWithError(ObeysVisibility viewer) {
+  public Optional<VisibilityError> isVisibleTo(ObeysVisibility viewer) {
     // Check that the owner (dep) is within_view of the viewer (node).s
     if (!viewer.getVisibilityChecker().withinViewPatterns.isEmpty()) {
       boolean withinView = false;

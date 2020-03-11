@@ -1,0 +1,55 @@
+# Should succeed
+java_library(
+    name = "Lib1",
+    srcs = [
+        "Lib1.java",
+    ],
+    deps = [
+        "//bar:Lib1",
+        "//bar:Lib2",
+        "//bar:Lib3",
+    ],
+)
+
+# Should fail with //bar:Lib2 not being visible to this target
+java_library(
+    name = "Lib2",
+    srcs = [
+        "Lib2.java",
+    ],
+    deps = [
+        "//bar:Lib1",
+        "//bar:Lib2",
+    ],
+)
+
+# Should fail with //bar:Lib2 and //bar:Lib3 not being visible to this target
+java_library(
+    name = "Lib3",
+    srcs = [
+        "Lib3.java",
+    ],
+    deps = [
+        "//bar:Lib1",
+        "//bar:Lib2",
+        "//bar:Lib3",
+    ],
+)
+
+# Should fail with //bar:Lib1, //bar:Lib2, and //bar:Lib4 not being within view, along with
+# //bar:Lib2 not being within view of //bar:Lib4
+java_library(
+    name = "Lib4",
+    srcs = [
+        "Lib4.java",
+    ],
+    deps = [
+        "//bar:Lib1",
+        "//bar:Lib2",
+        "//bar:Lib3",
+        "//bar:Lib4",
+    ],
+    within_view = [
+        "//bar:Lib3",
+    ],
+)

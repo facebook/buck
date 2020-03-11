@@ -18,6 +18,9 @@ package com.facebook.buck.rules.visibility;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.google.common.annotations.VisibleForTesting;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /** Visibility error generated when verifying target graph visibility. */
 @BuckStyleValue
@@ -37,10 +40,21 @@ public abstract class VisibilityError {
 
   @Override
   public String toString() {
+    return errorString(
+        getErrorType(), getNode().getFullyQualifiedName(), getDep().getFullyQualifiedName());
+  }
+
+  public static String combinedErrorString(List<VisibilityError> errors) {
+    String errorTest =
+        errors.stream().map(error -> error.toString()).collect(Collectors.joining("\n\n"));
+    return String.format(
+        "%s\n\nMore info at:\nhttps://buck.build/concept/visibility.html", errorTest);
+  }
+
+  @VisibleForTesting
+  public static String errorString(ErrorType errorType, String node, String dep) {
     return String.format(
         "%s depends on %s, which is not %s. More info at:\nhttps://buck.build/concept/visibility.html",
-        getNode(),
-        getDep(),
-        getErrorType() == VisibilityError.ErrorType.WITHIN_VIEW ? "within view" : "visible");
+        node, dep, errorType == VisibilityError.ErrorType.WITHIN_VIEW ? "within view" : "visible");
   }
 }

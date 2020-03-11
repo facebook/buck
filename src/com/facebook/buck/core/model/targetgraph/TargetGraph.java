@@ -17,11 +17,14 @@
 package com.facebook.buck.core.model.targetgraph;
 
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
+import com.facebook.buck.rules.visibility.VisibilityError;
 import com.facebook.buck.util.MoreMaps;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -50,10 +53,16 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?>> {
   }
 
   private void verifyVisibilityIntegrity() {
+    ImmutableList.Builder<VisibilityError> errors = ImmutableList.builder();
     for (TargetNode<?> node : getNodes()) {
       for (TargetNode<?> dep : getOutgoingNodesFor(node)) {
-        dep.isVisibleToOrThrow(node);
+        Optional<VisibilityError> error = dep.isVisibleTo(node);
+        error.ifPresent(visibilityError -> errors.add(visibilityError));
       }
+    }
+    ImmutableList<VisibilityError> computedErrors = errors.build();
+    if (!computedErrors.isEmpty()) {
+      throw new HumanReadableException(VisibilityError.combinedErrorString(computedErrors));
     }
   }
 

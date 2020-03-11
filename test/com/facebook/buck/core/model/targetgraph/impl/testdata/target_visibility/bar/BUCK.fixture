@@ -1,0 +1,44 @@
+# Should never be part of an error
+java_library(
+    name = "Lib1",
+    srcs = [
+        "Lib1.java",
+    ],
+    visibility = ["PUBLIC"],
+)
+
+# Only visible to //foo:Lib1
+java_library(
+    name = "Lib2",
+    srcs = [
+        "Lib2.java",
+    ],
+    visibility = ["//foo:Lib1"],
+)
+
+# Only visible to //foo:Lib1
+java_library(
+    name = "Lib3",
+    srcs = [
+        "Lib3.java",
+    ],
+    deps = [
+        ":Lib2",
+    ],
+    visibility = ["//foo:Lib1"],
+)
+
+# Package level target is not within view
+java_library(
+    name = "Lib4",
+    srcs = [
+        "Lib4.java",
+    ],
+    deps = [
+        ":Lib2",
+    ],
+    within_view = [
+        "//bar:Lib3",
+    ],
+    visibility = ["//foo:Lib1"],
+)

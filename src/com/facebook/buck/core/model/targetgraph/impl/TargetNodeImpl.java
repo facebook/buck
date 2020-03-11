@@ -19,7 +19,6 @@ package com.facebook.buck.core.model.targetgraph.impl;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.impl.DescriptionCache;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.RuleType;
@@ -141,16 +140,7 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
 
   @Override
   public Optional<VisibilityError> isVisibleTo(TargetNode<?> viewer) {
-    return getVisibilityChecker().isVisibleToWithError(viewer);
-  }
-
-  @Override
-  public void isVisibleToOrThrow(TargetNode<?> viewer) {
-    Optional<VisibilityError> visibilityError = isVisibleTo(viewer);
-    visibilityError.ifPresent(
-        error -> {
-          throw new HumanReadableException(error.toString());
-        });
+    return getVisibilityChecker().isVisibleTo(viewer);
   }
 
   @Override

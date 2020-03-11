@@ -111,8 +111,6 @@ public interface TargetNode<T extends ConstructorArg>
 
   Optional<VisibilityError> isVisibleTo(TargetNode<?> viewer);
 
-  void isVisibleToOrThrow(TargetNode<?> viewer);
-
   RuleType getRuleType();
 
   /**
