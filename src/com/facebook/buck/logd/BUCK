@@ -11,10 +11,12 @@ java_library(
         "//src-gen:protobuf",
         "//src/com/facebook/buck/core/exceptions:exceptions",
         "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
         "//third-party/java/grpc:grpc-netty-shaded",
         "//third-party/java/log4j2:log4j2-api",
         "//third-party/java/log4j2:log4j2-core",
+        "//third-party/java/nuprocess:nuprocess",
         "//third-party/java/remote-apis:remote-apis",
     ],
 )
