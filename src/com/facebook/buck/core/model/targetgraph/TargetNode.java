@@ -19,7 +19,6 @@ package com.facebook.buck.core.model.targetgraph;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -29,6 +28,7 @@ import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.visibility.ObeysVisibility;
+import com.facebook.buck.rules.visibility.VisibilityError;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.versions.Version;
 import com.google.common.base.Preconditions;
@@ -109,7 +109,7 @@ public interface TargetNode<T extends ConstructorArg>
    */
   Set<BuildTarget> getTotalDeps();
 
-  Optional<HumanReadableException> isVisibleTo(TargetNode<?> viewer);
+  Optional<VisibilityError> isVisibleTo(TargetNode<?> viewer);
 
   void isVisibleToOrThrow(TargetNode<?> viewer);
 

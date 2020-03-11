@@ -16,7 +16,6 @@
 
 package com.facebook.buck.rules.visibility;
 
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 
@@ -35,7 +34,8 @@ public class VisibilityChecker {
   }
 
   /** Check whether {@code viewer} is within view or visible to this checker. */
-  public Optional<HumanReadableException> isVisibleToWithError(ObeysVisibility viewer) {
+  public Optional<VisibilityError> isVisibleToWithError(ObeysVisibility viewer) {
+    // Check that the owner (dep) is within_view of the viewer (node).s
     if (!viewer.getVisibilityChecker().withinViewPatterns.isEmpty()) {
       boolean withinView = false;
       for (VisibilityPattern pattern : viewer.getVisibilityChecker().withinViewPatterns) {
@@ -46,12 +46,15 @@ public class VisibilityChecker {
       }
       if (!withinView) {
         return Optional.of(
-            new HumanReadableException(
-                "%s depends on %s, which is not within view. More info at:\nhttps://buck.build/concept/visibility.html",
-                viewer, owner.getBuildTarget()));
+            ImmutableVisibilityError.ofImpl(
+                VisibilityError.ErrorType.WITHIN_VIEW,
+                viewer.getBuildTarget(),
+                owner.getBuildTarget()));
       }
     }
 
+    // Nodes in the same package are always visible to other nodes in the package, so we can skip
+    // visibility checking.
     if (owner
         .getBuildTarget()
         .getCellRelativeBasePath()
@@ -59,6 +62,7 @@ public class VisibilityChecker {
       return Optional.empty();
     }
 
+    // Check that the owner (dep) is visible to the viewer (node).
     for (VisibilityPattern pattern : visibilityPatterns) {
       if (pattern.checkVisibility(viewer)) {
         return Optional.empty();
@@ -66,8 +70,7 @@ public class VisibilityChecker {
     }
 
     return Optional.of(
-        new HumanReadableException(
-            "%s depends on %s, which is not visible. More info at:\nhttps://buck.build/concept/visibility.html",
-            viewer, owner.getBuildTarget()));
+        ImmutableVisibilityError.ofImpl(
+            VisibilityError.ErrorType.VISIBILITY, viewer.getBuildTarget(), owner.getBuildTarget()));
   }
 }

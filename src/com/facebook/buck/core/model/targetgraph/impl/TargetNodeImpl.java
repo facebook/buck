@@ -29,6 +29,7 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.visibility.VisibilityChecker;
+import com.facebook.buck.rules.visibility.VisibilityError;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.versions.Version;
 import com.google.common.base.Preconditions;
@@ -139,16 +140,16 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
   }
 
   @Override
-  public Optional<HumanReadableException> isVisibleTo(TargetNode<?> viewer) {
+  public Optional<VisibilityError> isVisibleTo(TargetNode<?> viewer) {
     return getVisibilityChecker().isVisibleToWithError(viewer);
   }
 
   @Override
   public void isVisibleToOrThrow(TargetNode<?> viewer) {
-    Optional<HumanReadableException> visibilityError = isVisibleTo(viewer);
+    Optional<VisibilityError> visibilityError = isVisibleTo(viewer);
     visibilityError.ifPresent(
-        e -> {
-          throw e;
+        error -> {
+          throw new HumanReadableException(error.toString());
         });
   }
 
