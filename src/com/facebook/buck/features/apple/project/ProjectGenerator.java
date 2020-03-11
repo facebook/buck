@@ -3154,19 +3154,27 @@ public class ProjectGenerator {
       }
       if (moduleName.isPresent() && resolvedContents.size() > 0) {
         boolean containsSwift = !nonSourcePaths.isEmpty();
-        Set<Path> headerPaths =
+        String generatedHeaderName = getSwiftObjCGeneratedHeaderName(moduleName.get());
+        Set<Path> headerPathsWithoutSwiftObjCHeader =
             resolvedContents.keySet().stream()
                 .map(path -> headerSymlinkTreeRoot.relativize(path))
+                .filter(path -> !path.endsWith(generatedHeaderName))
                 .collect(ImmutableSet.toImmutableSet());
         if (containsSwift) {
           projectFilesystem.writeContentsToPath(
               ModuleMapFactory.createModuleMap(
-                      moduleName.get(), moduleMapMode, SwiftMode.INCLUDE_SWIFT_HEADER, headerPaths)
+                      moduleName.get(),
+                      moduleMapMode,
+                      SwiftMode.INCLUDE_SWIFT_HEADER,
+                      headerPathsWithoutSwiftObjCHeader)
                   .render(),
               headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("module.modulemap"));
           projectFilesystem.writeContentsToPath(
               ModuleMapFactory.createModuleMap(
-                      moduleName.get(), moduleMapMode, SwiftMode.NO_SWIFT, headerPaths)
+                      moduleName.get(),
+                      moduleMapMode,
+                      SwiftMode.NO_SWIFT,
+                      headerPathsWithoutSwiftObjCHeader)
                   .render(),
               headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("objc.modulemap"));
 
@@ -3186,7 +3194,10 @@ public class ProjectGenerator {
         } else {
           projectFilesystem.writeContentsToPath(
               ModuleMapFactory.createModuleMap(
-                      moduleName.get(), moduleMapMode, SwiftMode.NO_SWIFT, headerPaths)
+                      moduleName.get(),
+                      moduleMapMode,
+                      SwiftMode.NO_SWIFT,
+                      headerPathsWithoutSwiftObjCHeader)
                   .render(),
               headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("module.modulemap"));
         }
@@ -3577,7 +3588,11 @@ public class ProjectGenerator {
   }
 
   private String getSwiftObjCGeneratedHeaderName(TargetNode<?> node) {
-    return getModuleName(node) + "-Swift.h";
+    return getSwiftObjCGeneratedHeaderName(getModuleName(node));
+  }
+
+  private String getSwiftObjCGeneratedHeaderName(String moduleName) {
+    return moduleName + "-Swift.h";
   }
 
   private Path getSwiftObjCGeneratedHeaderPath(TargetNode<?> node, ProjectFilesystem fs) {
