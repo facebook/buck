@@ -20,6 +20,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.parser.api.PackageMetadata;
 import com.facebook.buck.skylark.io.GlobSpec;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -41,7 +42,8 @@ public abstract class ParseResult {
    *
    * <p>For example {"name": "my_rule", ...}
    */
-  public abstract ImmutableMap<String, ImmutableMap<String, Object>> getRawRules();
+  public abstract TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>>
+      getRawRules();
 
   /**
    * Returns a set of extension paths that were loaded explicitly or transitively when parsing
@@ -62,7 +64,7 @@ public abstract class ParseResult {
 
   static ParseResult of(
       PackageMetadata getPackage,
-      ImmutableMap<String, ImmutableMap<String, Object>> rawRules,
+      TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>> rawRules,
       Iterable<String> loadedPaths,
       ImmutableMap<String, ImmutableMap<String, Optional<String>>> readConfigurationOptions,
       Iterable<? extends GlobSpecWithResult> globManifestWithResult) {

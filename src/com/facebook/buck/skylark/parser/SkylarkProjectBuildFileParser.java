@@ -114,7 +114,8 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
   ParseResult getParseResult(
       Path parseFile, ParseContext context, Globber globber, ImmutableList<String> loadedPaths) {
     Preconditions.checkState(globber instanceof CachingGlobber);
-    ImmutableMap<String, ImmutableMap<String, Object>> rules = context.getRecordedRules();
+    TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>> rules =
+        context.getRecordedRules();
     if (LOG.isVerboseEnabled()) {
       LOG.verbose("Got rules: %s", rules.values());
     }
@@ -140,7 +141,8 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
     try {
       ParseResult parseResult = parse(buildFile);
 
-      ImmutableMap<String, ImmutableMap<String, Object>> rawRules = parseResult.getRawRules();
+      TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>> rawRules =
+          parseResult.getRawRules();
       rulesParsed = rawRules.size();
 
       // By contract, BuildFileManifestPojoizer converts any Map to ImmutableMap.

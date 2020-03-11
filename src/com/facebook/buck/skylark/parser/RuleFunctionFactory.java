@@ -23,6 +23,7 @@ import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.skylark.parser.context.ParseContext;
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -76,8 +77,8 @@ public class RuleFunctionFactory {
       public Runtime.NoneType invoke(
           Map<String, Object> kwargs, FuncallExpression ast, Environment env) throws EvalException {
         ParseContext parseContext = ParseContext.getParseContext(env, ast);
-        ImmutableMap.Builder<String, Object> builder =
-            ImmutableMap.<String, Object>builder()
+        TwoArraysImmutableHashMap.Builder<String, Object> builder =
+            TwoArraysImmutableHashMap.<String, Object>builder()
                 .put(
                     "buck.base_path",
                     parseContext
@@ -141,7 +142,7 @@ public class RuleFunctionFactory {
    */
   private void populateAttributes(
       Map<String, Object> kwargs,
-      ImmutableMap.Builder<String, Object> builder,
+      TwoArraysImmutableHashMap.Builder<String, Object> builder,
       ImmutableMap<String, ParamInfo<?>> allParamInfo) {
     for (Map.Entry<String, Object> kwargEntry : kwargs.entrySet()) {
       String paramName =

@@ -18,6 +18,7 @@ package com.facebook.buck.skylark.parser.context;
 
 import com.facebook.buck.parser.api.PackageMetadata;
 import com.facebook.buck.skylark.packages.PackageContext;
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.syntax.Environment;
@@ -44,7 +45,7 @@ public class ParseContext {
 
   private @Nullable PackageMetadata pkg;
 
-  private final Map<String, ImmutableMap<String, Object>> rawRules;
+  private final Map<String, TwoArraysImmutableHashMap<String, Object>> rawRules;
   // stores every accessed configuration option while parsing the build file.
   // the schema is: section->key->value
   private final Map<String, Map<String, Optional<String>>> readConfigOptions;
@@ -67,7 +68,7 @@ public class ParseContext {
   }
 
   /** Records the parsed {@code rawRule}. */
-  public void recordRule(ImmutableMap<String, Object> rawRule, FuncallExpression ast)
+  public void recordRule(TwoArraysImmutableHashMap<String, Object> rawRule, FuncallExpression ast)
       throws EvalException {
     Preconditions.checkState(pkg == null, "Build files cannot contain package definitions.");
     Object nameObject =
@@ -113,8 +114,9 @@ public class ParseContext {
    * @return The list of raw build rules discovered in parsed build file. Raw rule is presented as a
    *     map with attributes as keys and parameters as values.
    */
-  public ImmutableMap<String, ImmutableMap<String, Object>> getRecordedRules() {
-    return ImmutableMap.copyOf(rawRules);
+  public TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>>
+      getRecordedRules() {
+    return TwoArraysImmutableHashMap.copyOf(rawRules);
   }
 
   /** @return {@code true} if the rule with provided name exists, {@code false} otherwise. */

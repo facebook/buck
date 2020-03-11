@@ -27,6 +27,7 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.skylark.io.Globber;
 import com.facebook.buck.skylark.parser.context.ParseContext;
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -91,7 +92,7 @@ public class SkylarkPackageFileParser extends AbstractSkylarkFileParser<PackageF
     }
     return ParseResult.of(
         pkg,
-        ImmutableMap.of(),
+        TwoArraysImmutableHashMap.of(),
         loadedPaths,
         context.getAccessedConfigurationOptions(),
         ImmutableList.of());

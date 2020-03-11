@@ -28,6 +28,7 @@ import com.facebook.buck.core.starlark.rule.attr.impl.StringAttribute;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.parser.context.ParseContext;
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -291,7 +292,7 @@ public class SkylarkUserDefinedRuleTest {
           rule.call(
               ImmutableList.of(), ImmutableMap.of("name", "some_rule_name"), getJunkAst(), env);
 
-      ImmutableMap<String, ImmutableMap<String, Object>> rules =
+      TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>> rules =
           ParseContext.getParseContext(env, null).getRecordedRules();
 
       assertEquals(Runtime.NONE, res);
@@ -342,7 +343,7 @@ public class SkylarkUserDefinedRuleTest {
               getJunkAst(),
               env);
 
-      ImmutableMap<String, ImmutableMap<String, Object>> rules =
+      TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>> rules =
           ParseContext.getParseContext(env, null).getRecordedRules();
 
       assertEquals(Runtime.NONE, res);
@@ -474,7 +475,7 @@ public class SkylarkUserDefinedRuleTest {
               getJunkAst(),
               env);
 
-      ImmutableMap<String, ImmutableMap<String, Object>> rules =
+      TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>> rules =
           ParseContext.getParseContext(env, null).getRecordedRules();
 
       assertEquals(Runtime.NONE, res);

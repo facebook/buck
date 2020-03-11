@@ -23,6 +23,7 @@ import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
 import com.facebook.buck.core.starlark.rule.names.UserDefinedRuleNames;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.skylark.parser.context.ParseContext;
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -103,8 +104,8 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
     Preconditions.checkArgument(
         names.size() == args.length, "Got different number of arguments than expected");
     ParseContext parseContext = ParseContext.getParseContext(env, ast);
-    ImmutableMap.Builder<String, Object> builder =
-        ImmutableMap.<String, Object>builder()
+    TwoArraysImmutableHashMap.Builder<String, Object> builder =
+        TwoArraysImmutableHashMap.<String, Object>builder()
             .put(
                 "buck.base_path",
                 parseContext
