@@ -29,6 +29,11 @@ import com.facebook.buck.util.ExitCode;
 
 /**
  * Buck subcommand which relies on the configured target graph, whose nodes' selects are evaluated
+ *
+ * <p>NOTE: While `query` technically runs on the configured target graph, it's existence predates
+ * the configured target graph and therefore it lacks tools to operate on said graph effectively. In
+ * the long run users who want to query the configured target graph should use `buck cquery`, though
+ * at time of writing that command isn't production ready.
  */
 public class QueryCommand extends AbstractQueryCommand {
 
@@ -72,6 +77,6 @@ public class QueryCommand extends AbstractQueryCommand {
 
   @Override
   public String getShortDescription() {
-    return "provides facilities to query information about the configured target nodes graph";
+    return "provides facilities to query information about the configured target nodes graph (see - cquery)";
   }
 }

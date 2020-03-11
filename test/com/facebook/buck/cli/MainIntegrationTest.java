@@ -88,6 +88,8 @@ public class MainIntegrationTest {
         "  cache          makes calls to the artifact cache",
         "  cachedelete    Delete artifacts from the local and remote cache",
         "  clean          deletes any generated files and caches",
+        "  cquery         "
+            + "provides facilities to query information about the configured target nodes graph",
         "  doctor         debug and fix issues of Buck commands",
         "  fetch          downloads remote resources to your local machine",
         "  fix            attempts to fix errors encountered in the previous build",
@@ -102,7 +104,7 @@ public class MainIntegrationTest {
         "  project        generates project configuration files for an IDE",
         "  publish        builds and publishes a library to a central repository",
         "  query          "
-            + "provides facilities to query information about the configured target nodes graph",
+            + "provides facilities to query information about the configured target nodes graph (see - cquery)",
         "  rage           debug and fix issues of Buck commands",
         "  root           prints the absolute path to the root of the current buck project",
         "  run            runs a target as a command",
