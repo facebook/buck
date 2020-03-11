@@ -31,10 +31,13 @@ import org.junit.runners.Parameterized.Parameters;
 @RunWith(Parameterized.class)
 public class DefaultJavaLibraryRulesIntegrationTest {
   public static class Params {
+    public final String compileAgainstAbis;
     public final String abiGenerationMode;
     public final String sourceAbiVerificationMode;
 
-    public Params(String abiGenerationMode, String sourceAbiVerificationMode) {
+    public Params(
+        String compileAgainstAbis, String abiGenerationMode, String sourceAbiVerificationMode) {
+      this.compileAgainstAbis = compileAgainstAbis;
       this.abiGenerationMode = abiGenerationMode;
       this.sourceAbiVerificationMode = sourceAbiVerificationMode;
     }
@@ -48,11 +51,12 @@ public class DefaultJavaLibraryRulesIntegrationTest {
   @Parameters(name = "{0}")
   public static Params[] getParams() {
     return new Params[] {
-      new Params("class", "off"),
-      new Params("source", "off"),
-      new Params("source", "fail"),
-      new Params("source_only", "off"),
-      new Params("source_only", "fail"),
+      new Params("false", "class", "off"),
+      new Params("true", "class", "off"),
+      new Params("true", "source", "off"),
+      new Params("true", "source", "fail"),
+      new Params("true", "source_only", "off"),
+      new Params("true", "source_only", "fail"),
     };
   }
 
@@ -101,6 +105,8 @@ public class DefaultJavaLibraryRulesIntegrationTest {
     workspace.setUp();
     workspace
         .runBuckBuild(
+            "-c",
+            String.format("java.compile_against_abis=%s", params.compileAgainstAbis),
             "-c",
             String.format("java.abi_generation_mode=%s", params.abiGenerationMode),
             "-c",
