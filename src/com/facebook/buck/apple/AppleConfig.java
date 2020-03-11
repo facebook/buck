@@ -16,7 +16,6 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.apple.clang.ModuleMapMode;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
@@ -469,13 +468,6 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   public boolean shouldWorkAroundDsymutilLTOStackOverflowBug() {
     return delegate.getBooleanValue(
         APPLE_SECTION, "work_around_dsymutil_lto_stack_overflow_bug", false);
-  }
-
-  /** @return The module map mode to use for modular libraries. */
-  public ModuleMapMode moduleMapMode() {
-    return delegate
-        .getEnum(APPLE_SECTION, "modulemap_mode", ModuleMapMode.class)
-        .orElse(ModuleMapMode.UMBRELLA_HEADER);
   }
 
   public Path shellPath() {

@@ -16,9 +16,7 @@
 
 package com.facebook.buck.cxx.toolchain;
 
-import com.facebook.buck.apple.clang.ModuleMapFactory;
-import com.facebook.buck.apple.clang.ModuleMapMode;
-import com.facebook.buck.apple.clang.SwiftMode;
+import com.facebook.buck.apple.clang.ModuleMap;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
@@ -31,6 +29,7 @@ import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -38,29 +37,24 @@ import java.util.Optional;
 public final class HeaderSymlinkTreeWithModuleMap extends HeaderSymlinkTree {
 
   @AddToRuleKey private final Optional<String> moduleName;
-  @AddToRuleKey private final ModuleMapMode moduleMapMode;
 
   private HeaderSymlinkTreeWithModuleMap(
       BuildTarget target,
       ProjectFilesystem filesystem,
       Path root,
       ImmutableMap<Path, SourcePath> links,
-      Optional<String> moduleName,
-      ModuleMapMode moduleMapMode) {
+      Optional<String> moduleName) {
     super(target, filesystem, root, links);
     this.moduleName = moduleName;
-    this.moduleMapMode = moduleMapMode;
   }
 
   public static HeaderSymlinkTreeWithModuleMap create(
       BuildTarget target,
       ProjectFilesystem filesystem,
       Path root,
-      ImmutableMap<Path, SourcePath> links,
-      ModuleMapMode moduleMapMode) {
+      ImmutableMap<Path, SourcePath> links) {
     Optional<String> moduleName = getModuleName(links);
-    return new HeaderSymlinkTreeWithModuleMap(
-        target, filesystem, root, links, moduleName, moduleMapMode);
+    return new HeaderSymlinkTreeWithModuleMap(target, filesystem, root, links, moduleName);
   }
 
   @Override
@@ -78,21 +72,28 @@ public final class HeaderSymlinkTreeWithModuleMap extends HeaderSymlinkTree {
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     ImmutableSortedSet<Path> paths = getLinks().keySet();
+
     ImmutableList.Builder<Step> builder =
         ImmutableList.<Step>builder().addAll(super.getBuildSteps(context, buildableContext));
     moduleName.ifPresent(
-        moduleName ->
-            builder.add(
-                new ModuleMapStep(
-                    getProjectFilesystem(),
-                    moduleMapPath(getProjectFilesystem(), getBuildTarget(), moduleName),
-                    ModuleMapFactory.createModuleMap(
-                        moduleName,
-                        moduleMapMode,
-                        containsSwiftHeader(paths, moduleName)
-                            ? SwiftMode.INCLUDE_SWIFT_HEADER
-                            : SwiftMode.NO_SWIFT,
-                        getLinks().keySet()))));
+        moduleName -> {
+          Path expectedSwiftHeaderPath = Paths.get(moduleName, moduleName + "-Swift.h");
+          ImmutableSortedSet<Path> pathsWithoutSwiftHeader =
+              paths.stream()
+                  .filter(path -> !path.equals(expectedSwiftHeaderPath))
+                  .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+
+          builder.add(
+              new ModuleMapStep(
+                  getProjectFilesystem(),
+                  moduleMapPath(getProjectFilesystem(), getBuildTarget(), moduleName),
+                  ModuleMap.create(
+                      moduleName,
+                      paths.contains(expectedSwiftHeaderPath)
+                          ? ModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER
+                          : ModuleMap.SwiftMode.NO_SWIFT,
+                      pathsWithoutSwiftHeader)));
+        });
     return builder.build();
   }
 
@@ -107,9 +108,5 @@ public final class HeaderSymlinkTreeWithModuleMap extends HeaderSymlinkTree {
   static Path moduleMapPath(ProjectFilesystem filesystem, BuildTarget target, String moduleName) {
     return BuildTargetPaths.getGenPath(
         filesystem, target, "%s/" + moduleName + "/module.modulemap");
-  }
-
-  private static boolean containsSwiftHeader(ImmutableSortedSet<Path> paths, String moduleName) {
-    return paths.contains(Paths.get(moduleName, moduleName + "-Swift.h"));
   }
 }

@@ -759,18 +759,13 @@ public class WorkspaceAndProjectGenerator {
             nativeTargetNode -> {
               TargetNode<AppleNativeTargetDescriptionArg> modularNode =
                   (TargetNode<AppleNativeTargetDescriptionArg>) nativeTargetNode;
-              HeaderMode headerMode =
-                  HeaderMode.forModuleMapMode(
-                      modularNode
-                          .getConstructorArg()
-                          .getModulemapMode()
-                          .orElse(appleConfig.moduleMapMode()));
               Flavor defaultPlatformFlavor =
                   modularNode
                       .getConstructorArg()
                       .getDefaultPlatform()
                       .orElse(defaultCxxPlatform.getFlavor());
-              return NodeHelper.getModularMapTarget(modularNode, headerMode, defaultPlatformFlavor);
+              return NodeHelper.getModularMapTarget(
+                  modularNode, HeaderMode.SYMLINK_TREE_WITH_MODULEMAP, defaultPlatformFlavor);
             })
         .collect(ImmutableSet.toImmutableSet());
   }

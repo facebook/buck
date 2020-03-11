@@ -735,9 +735,7 @@ public class WorkspaceAndProjectGeneratorTest {
 
     BuildTarget expectedTarget =
         NodeHelper.getModularMapTarget(
-            fooLib,
-            HeaderMode.forModuleMapMode(appleConfig.moduleMapMode()),
-            DEFAULT_PLATFORM.getFlavor());
+            fooLib, HeaderMode.SYMLINK_TREE_WITH_MODULEMAP, DEFAULT_PLATFORM.getFlavor());
 
     assertThat(generator.getRequiredBuildTargets(), hasSize(1));
     assertThat(

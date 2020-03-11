@@ -235,7 +235,6 @@ public class ProjectGenerator {
       HeaderSearchPaths headerSearchPaths =
           new HeaderSearchPaths(
               projectCell,
-              appleConfig,
               cxxBuckConfig,
               defaultCxxPlatform,
               ruleKeyConfiguration,

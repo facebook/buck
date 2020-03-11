@@ -1,7 +1,6 @@
 apple_library(
     name = "Library",
     exported_headers = glob(["Library/**/*.h"]),
-    modulemap_mode = "headers",
     modular = True,
 )
 
@@ -11,7 +10,6 @@ apple_library(
         [("PathsLibrary", "**/*.h")],
         prefix = "PathsLibrary",
     ),
-    modulemap_mode = "headers",
     modular = True,
 )
 
@@ -19,6 +17,5 @@ apple_library(
     name = "Test",
     srcs = ["Test/Test.swift"],
     exported_deps = [":Library", ":PathsLibrary"],
-    modulemap_mode = "headers",
     swift_version = "5",
 )

@@ -518,7 +518,7 @@ public class ProjectGeneratorTest {
             projectFilesystem,
             NodeHelper.getModularMapTarget(
                 frameworkLibNode,
-                HeaderMode.SYMLINK_TREE_WITH_UMBRELLA_HEADER_MODULEMAP,
+                HeaderMode.SYMLINK_TREE_WITH_MODULEMAP,
                 DEFAULT_PLATFORM.getFlavor()),
             HeaderVisibility.PUBLIC);
     ImmutableList<String> expectedIncludes =

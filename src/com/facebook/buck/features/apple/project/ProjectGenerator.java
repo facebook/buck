@@ -52,9 +52,7 @@ import com.facebook.buck.apple.XCodeDescriptions;
 import com.facebook.buck.apple.XcodePostbuildScriptDescription;
 import com.facebook.buck.apple.XcodePrebuildScriptDescription;
 import com.facebook.buck.apple.clang.HeaderMap;
-import com.facebook.buck.apple.clang.ModuleMapFactory;
-import com.facebook.buck.apple.clang.ModuleMapMode;
-import com.facebook.buck.apple.clang.SwiftMode;
+import com.facebook.buck.apple.clang.ModuleMap;
 import com.facebook.buck.apple.clang.VFSOverlay;
 import com.facebook.buck.apple.xcode.AbstractPBXObjectFactory;
 import com.facebook.buck.apple.xcode.GidGenerator;
@@ -2032,14 +2030,12 @@ public class ProjectGenerator {
 
     Optional<String> moduleName =
         isModularAppleLibrary ? Optional.of(getModuleName(targetNode)) : Optional.empty();
-    ModuleMapMode moduleMapMode = getModuleMapMode(targetNode);
 
     // -- phases
     createHeaderSymlinkTree(
         publicCxxHeaders,
         getSwiftPublicHeaderMapEntriesForTarget(targetNode),
         moduleName,
-        moduleMapMode,
         getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PUBLIC),
         arg.getXcodePublicHeadersSymlinks().orElse(cxxBuckConfig.getPublicHeadersSymlinksEnabled())
             || !options.shouldUseHeaderMaps()
@@ -2050,7 +2046,6 @@ public class ProjectGenerator {
           getPrivateCxxHeaders(targetNode),
           ImmutableMap.of(), // private interfaces never have a modulemap
           Optional.empty(),
-          moduleMapMode,
           getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PRIVATE),
           arg.getXcodePrivateHeadersSymlinks()
                   .orElse(cxxBuckConfig.getPrivateHeadersSymlinksEnabled())
@@ -2707,16 +2702,6 @@ public class ProjectGenerator {
     }
   }
 
-  private ModuleMapMode getModuleMapMode(
-      TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode) {
-    Optional<ModuleMapMode> moduleMapMode =
-        (targetNode instanceof AppleNativeTargetDescriptionArg)
-            ? ((AppleNativeTargetDescriptionArg) targetNode).getModulemapMode()
-            : Optional.empty();
-
-    return moduleMapMode.orElse(appleConfig.moduleMapMode());
-  }
-
   private ImmutableSortedMap<Path, SourcePath> convertMapKeysToPaths(
       ImmutableSortedMap<String, SourcePath> input) {
     ImmutableSortedMap.Builder<Path, SourcePath> output = ImmutableSortedMap.naturalOrder();
@@ -3075,7 +3060,6 @@ public class ProjectGenerator {
       Map<Path, SourcePath> contents,
       ImmutableMap<Path, Path> nonSourcePaths,
       Optional<String> moduleName,
-      ModuleMapMode moduleMapMode,
       Path headerSymlinkTreeRoot,
       boolean shouldCreateHeadersSymlinks,
       boolean shouldCreateHeaderMap)
@@ -3162,18 +3146,16 @@ public class ProjectGenerator {
                 .collect(ImmutableSet.toImmutableSet());
         if (containsSwift) {
           projectFilesystem.writeContentsToPath(
-              ModuleMapFactory.createModuleMap(
+              ModuleMap.create(
                       moduleName.get(),
-                      moduleMapMode,
-                      SwiftMode.INCLUDE_SWIFT_HEADER,
+                      ModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER,
                       headerPathsWithoutSwiftObjCHeader)
                   .render(),
               headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("module.modulemap"));
           projectFilesystem.writeContentsToPath(
-              ModuleMapFactory.createModuleMap(
+              ModuleMap.create(
                       moduleName.get(),
-                      moduleMapMode,
-                      SwiftMode.NO_SWIFT,
+                      ModuleMap.SwiftMode.NO_SWIFT,
                       headerPathsWithoutSwiftObjCHeader)
                   .render(),
               headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("objc.modulemap"));
@@ -3193,10 +3175,9 @@ public class ProjectGenerator {
               getObjcModulemapVFSOverlayLocationFromSymlinkTreeRoot(headerSymlinkTreeRoot));
         } else {
           projectFilesystem.writeContentsToPath(
-              ModuleMapFactory.createModuleMap(
+              ModuleMap.create(
                       moduleName.get(),
-                      moduleMapMode,
-                      SwiftMode.NO_SWIFT,
+                      ModuleMap.SwiftMode.NO_SWIFT,
                       headerPathsWithoutSwiftObjCHeader)
                   .render(),
               headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("module.modulemap"));

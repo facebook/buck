@@ -23,7 +23,6 @@ import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleLibraryDescriptionArg;
 import com.facebook.buck.apple.AppleTestDescription;
-import com.facebook.buck.apple.clang.ModuleMapMode;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -67,12 +66,6 @@ public class NodeHelper {
     }
 
     return false;
-  }
-
-  static Optional<ModuleMapMode> getModuleMapMode(TargetNode<?> libraryNode) {
-    Optional<TargetNode<AppleLibraryDescriptionArg>> appleLibNode =
-        TargetNodes.castArg(libraryNode, AppleLibraryDescriptionArg.class);
-    return appleLibNode.flatMap(node -> node.getConstructorArg().getModulemapMode());
   }
 
   /**

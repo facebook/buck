@@ -16,7 +16,6 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.apple.clang.ModuleMapMode;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.swift.SwiftCommonArg;
@@ -39,7 +38,7 @@ public interface AppleNativeTargetDescriptionArg
   }
 
   /** A modulemap mode, to override the one specified in .buckconfig. */
-  Optional<ModuleMapMode> getModulemapMode();
+  Optional<String> getModulemapMode(); // TODO(natesm) T55436951: remove this
 
   @Value.Check
   default void checkModularUsage() {

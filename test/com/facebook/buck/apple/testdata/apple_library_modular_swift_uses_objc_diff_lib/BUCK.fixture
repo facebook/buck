@@ -2,7 +2,6 @@ apple_library(
     name = "Foo",
     srcs = ["Hello.m"],
     exported_headers = [
-        "Foo.h",
         "Hello.h",
     ],
     modular = True,

@@ -1,7 +1,6 @@
 apple_library(
     name = "Foo",
     srcs = ["dummy.swift"],
-    exported_headers = ["Foo.h"],
     frameworks = [
         "$SDKROOT/System/Library/Frameworks/Foundation.framework",
     ],

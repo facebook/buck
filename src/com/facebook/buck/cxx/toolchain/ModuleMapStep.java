@@ -71,4 +71,9 @@ class ModuleMapStep implements Step {
   public int hashCode() {
     return Objects.hashCode(output, moduleMap);
   }
+
+  @Override
+  public String toString() {
+    return String.format("modulemap %s %s", output.toString(), moduleMap.render());
+  }
 }

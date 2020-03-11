@@ -17,7 +17,6 @@
 package com.facebook.buck.features.apple.projectV2;
 
 import com.facebook.buck.apple.AppleBuildRules;
-import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleDependenciesCache;
 import com.facebook.buck.apple.AppleDescriptions;
 import com.facebook.buck.apple.AppleHeaderVisibilities;
@@ -25,7 +24,6 @@ import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
 import com.facebook.buck.apple.XCodeDescriptions;
 import com.facebook.buck.apple.clang.HeaderMap;
-import com.facebook.buck.apple.clang.ModuleMapMode;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -80,7 +78,6 @@ class HeaderSearchPaths {
   private static final Logger LOG = Logger.get(HeaderSearchPaths.class);
 
   private final Cell projectCell;
-  private final AppleConfig appleConfig;
   private final CxxBuckConfig cxxBuckConfig;
   private final CxxPlatform cxxPlatform;
   private final RuleKeyConfiguration ruleKeyConfiguration;
@@ -96,7 +93,6 @@ class HeaderSearchPaths {
 
   HeaderSearchPaths(
       Cell projectCell,
-      AppleConfig appleConfig,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       RuleKeyConfiguration ruleKeyConfiguration,
@@ -108,7 +104,6 @@ class HeaderSearchPaths {
       PathRelativizer pathRelativizer,
       SwiftAttributeParser swiftAttributeParser) {
     this.projectCell = projectCell;
-    this.appleConfig = appleConfig;
     this.cxxBuckConfig = cxxBuckConfig;
     this.cxxPlatform = cxxPlatform;
     this.ruleKeyConfiguration = ruleKeyConfiguration;
@@ -391,16 +386,6 @@ class HeaderSearchPaths {
     }
   }
 
-  private ModuleMapMode getModuleMapMode(
-      TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode) {
-    Optional<ModuleMapMode> moduleMapMode =
-        (targetNode instanceof AppleNativeTargetDescriptionArg)
-            ? ((AppleNativeTargetDescriptionArg) targetNode).getModulemapMode()
-            : Optional.empty();
-
-    return moduleMapMode.orElse(appleConfig.moduleMapMode());
-  }
-
   private static ImmutableSortedMap<Path, SourcePath> convertMapKeysToPaths(
       ImmutableSortedMap<String, SourcePath> input) {
     ImmutableSortedMap.Builder<Path, SourcePath> output = ImmutableSortedMap.naturalOrder();
@@ -610,9 +595,7 @@ class HeaderSearchPaths {
                 targetNode.getConstructorArg().getDefaultPlatform().orElse(cxxPlatform.getFlavor());
             BuildTarget flavoredBuildTarget =
                 NodeHelper.getModularMapTarget(
-                    nativeNode,
-                    HeaderMode.forModuleMapMode(getModuleMapMode(nativeNode)),
-                    defaultPlatformFlavor);
+                    nativeNode, HeaderMode.SYMLINK_TREE_WITH_MODULEMAP, defaultPlatformFlavor);
 
             Path symlinkPath =
                 CxxDescriptionEnhancer.getHeaderSymlinkTreePath(

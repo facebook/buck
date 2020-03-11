@@ -4,7 +4,7 @@ apple_library(
         "Hello.m",
         "dummy.swift",
     ],
-    exported_headers = ["Mixed.h", "Hello.h"],
+    exported_headers = ["Hello.h"],
     frameworks = [
         "$SDKROOT/System/Library/Frameworks/Foundation.framework",
     ],
