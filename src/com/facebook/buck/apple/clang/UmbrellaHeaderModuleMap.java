@@ -45,12 +45,6 @@ public class UmbrellaHeaderModuleMap implements ModuleMap {
           + "    requires objc\n"
           + "}\n"
           + "<endif>"
-          + "\n"
-          + "<if(exclude_swift_header)>"
-          + "module <module_name>.__Swift {\n"
-          + "    exclude header \"<module_name>-Swift.h\"\n"
-          + "}\n"
-          + "<endif>"
           + "\n";
 
   public UmbrellaHeaderModuleMap(String moduleName, SwiftMode swiftMode) {
@@ -64,18 +58,7 @@ public class UmbrellaHeaderModuleMap implements ModuleMap {
       ST st =
           new ST(template)
               .add("module_name", moduleName)
-              .add("include_swift_header", false)
-              .add("exclude_swift_header", false);
-      switch (swiftMode) {
-        case INCLUDE_SWIFT_HEADER:
-          st.add("include_swift_header", true);
-          break;
-        case EXCLUDE_SWIFT_HEADER:
-          st.add("exclude_swift_header", true);
-          break;
-        default:
-        case NO_SWIFT:
-      }
+              .add("include_swift_header", swiftMode.includeSwift());
       this.generatedModule = st.render();
     }
     return this.generatedModule;

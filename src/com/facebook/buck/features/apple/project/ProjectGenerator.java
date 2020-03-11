@@ -3166,7 +3166,7 @@ public class ProjectGenerator {
               headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("module.modulemap"));
           projectFilesystem.writeContentsToPath(
               ModuleMapFactory.createModuleMap(
-                      moduleName.get(), moduleMapMode, SwiftMode.EXCLUDE_SWIFT_HEADER, headerPaths)
+                      moduleName.get(), moduleMapMode, SwiftMode.NO_SWIFT, headerPaths)
                   .render(),
               headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("objc.modulemap"));
 

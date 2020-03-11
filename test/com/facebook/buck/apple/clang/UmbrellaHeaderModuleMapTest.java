@@ -56,23 +56,4 @@ public class UmbrellaHeaderModuleMapTest {
             + "\n",
         equalToIgnoringPlatformNewlines(testMap.render()));
   }
-
-  @Test
-  public void testExcludeSwift() {
-    UmbrellaHeaderModuleMap testMap =
-        new UmbrellaHeaderModuleMap("TestModule", SwiftMode.EXCLUDE_SWIFT_HEADER);
-    assertThat(
-        "module TestModule {\n"
-            + "    umbrella header \"TestModule.h\"\n"
-            + "\n"
-            + "    export *\n"
-            + "    module * { export * }\n"
-            + "}\n"
-            + "\n"
-            + "module TestModule.__Swift {\n"
-            + "    exclude header \"TestModule-Swift.h\"\n"
-            + "}"
-            + "\n",
-        equalToIgnoringPlatformNewlines(testMap.render()));
-  }
 }

@@ -18,13 +18,11 @@ package com.facebook.buck.apple.clang;
 
 public enum SwiftMode {
   NO_SWIFT,
-  INCLUDE_SWIFT_HEADER,
-  EXCLUDE_SWIFT_HEADER;
+  INCLUDE_SWIFT_HEADER;
 
   public boolean includeSwift() {
     switch (this) {
       case NO_SWIFT:
-      case EXCLUDE_SWIFT_HEADER:
         return false;
       case INCLUDE_SWIFT_HEADER:
         return true;
