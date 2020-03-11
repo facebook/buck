@@ -53,6 +53,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
 import org.junit.Assert;
 import org.junit.Before;
@@ -476,6 +478,42 @@ public class AppleBinaryIntegrationTest {
     assertThat(
         workspace.runCommand("file", outputPath.toString()).getStdout().get(),
         containsString("executable"));
+  }
+
+  @Test(timeout = 120000)
+  public void testAppleBinaryWithMultipleSwiftLibDepsHasASTPaths() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_binary_with_multiple_swift_libs", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("apple", "use_swift_delegate", "false");
+
+    BuildTarget target =
+        BuildTargetFactory.newInstance("//Apps/TestApp:TestApp")
+            .withAppendedFlavors(InternalFlavor.of("macosx-x86_64"));
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    Path outputPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s"));
+    assertThat(Files.exists(outputPath), is(true));
+    assertThat(
+        workspace.runCommand("file", outputPath.toString()).getStdout().get(),
+        containsString("executable"));
+
+    String nmOutput = workspace.runCommand("nm", "-a", outputPath.toString()).getStdout().get();
+    assertTrue(findSwiftModuleASTInSymbolOutput("Bar", nmOutput));
+    assertTrue(findSwiftModuleASTInSymbolOutput("Foo", nmOutput));
+  }
+
+  private boolean findSwiftModuleASTInSymbolOutput(String moduleName, String nmOutput) {
+    Pattern barPattern =
+        Pattern.compile("[0-9a-fA-F]+ a [a-zA-Z0-9\\-_/#,]+" + moduleName + ".swiftmodule");
+    Matcher matcher = barPattern.matcher(nmOutput);
+    return matcher.find();
   }
 
   @Test(timeout = 120000)

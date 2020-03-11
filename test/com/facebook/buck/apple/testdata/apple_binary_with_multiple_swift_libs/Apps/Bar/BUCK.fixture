@@ -1,0 +1,12 @@
+apple_library(
+    name = "Bar",
+    srcs = [
+        "Bar.swift",
+    ],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    swift_version = "5",
+    visibility = ["//Apps/..."],
+    swift_compiler_flags = ["-g"],
+)
