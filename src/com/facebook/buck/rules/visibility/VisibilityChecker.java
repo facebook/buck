@@ -16,7 +16,9 @@
 
 package com.facebook.buck.rules.visibility;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.google.common.collect.ImmutableSet;
+import java.util.Optional;
 
 public class VisibilityChecker {
   private final ObeysVisibility owner;
@@ -32,7 +34,8 @@ public class VisibilityChecker {
     this.withinViewPatterns = withinViewPatterns;
   }
 
-  public boolean isVisibleTo(ObeysVisibility viewer) {
+  /** Check whether {@code viewer} is within view or visible to this checker. */
+  public Optional<HumanReadableException> isVisibleToWithError(ObeysVisibility viewer) {
     if (!viewer.getVisibilityChecker().withinViewPatterns.isEmpty()) {
       boolean withinView = false;
       for (VisibilityPattern pattern : viewer.getVisibilityChecker().withinViewPatterns) {
@@ -42,7 +45,10 @@ public class VisibilityChecker {
         }
       }
       if (!withinView) {
-        return false;
+        return Optional.of(
+            new HumanReadableException(
+                "%s depends on %s, which is not within view. More info at:\nhttps://buck.build/concept/visibility.html",
+                viewer, owner.getBuildTarget()));
       }
     }
 
@@ -50,15 +56,18 @@ public class VisibilityChecker {
         .getBuildTarget()
         .getCellRelativeBasePath()
         .equals(viewer.getBuildTarget().getCellRelativeBasePath())) {
-      return true;
+      return Optional.empty();
     }
 
     for (VisibilityPattern pattern : visibilityPatterns) {
       if (pattern.checkVisibility(viewer)) {
-        return true;
+        return Optional.empty();
       }
     }
 
-    return false;
+    return Optional.of(
+        new HumanReadableException(
+            "%s depends on %s, which is not visible. More info at:\nhttps://buck.build/concept/visibility.html",
+            viewer, owner.getBuildTarget()));
   }
 }

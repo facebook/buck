@@ -16,16 +16,15 @@
 
 package com.facebook.buck.core.model.targetgraph;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.SingleRootCellNameResolverProvider;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
@@ -45,9 +44,14 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class TargetNodeVisibilityTest {
+
+  @Rule public ExpectedException expectedException = ExpectedException.none();
 
   private static final ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
@@ -74,8 +78,8 @@ public class TargetNodeVisibilityTest {
     TargetNode<?> publicTargetNode = createTargetNode(publicTarget, publicBuildFile, PUBLIC);
     TargetNode<?> orcaRule = createTargetNode(orcaTarget, orcaBuildFile, DEFAULT);
 
-    assertTrue(publicTargetNode.isVisibleTo(orcaRule));
-    assertFalse(orcaRule.isVisibleTo(publicTargetNode));
+    assertTrue(isVisible(publicTargetNode, orcaRule));
+    assertFalse(isVisible(orcaRule, publicTargetNode));
   }
 
   @Test
@@ -89,15 +93,15 @@ public class TargetNodeVisibilityTest {
 
     assertTrue(
         shouldBeVisibleMessage(nonPublicTargetNode1, orcaTarget),
-        nonPublicTargetNode1.isVisibleTo(orcaRule));
+        isVisible(nonPublicTargetNode1, orcaRule));
     assertTrue(
         shouldBeVisibleMessage(nonPublicTargetNode2, orcaTarget),
-        nonPublicTargetNode2.isVisibleTo(orcaRule));
-    assertFalse(orcaRule.isVisibleTo(nonPublicTargetNode1));
-    assertFalse(orcaRule.isVisibleTo(nonPublicTargetNode2));
+        isVisible(nonPublicTargetNode2, orcaRule));
+    assertFalse(isVisible(orcaRule, nonPublicTargetNode1));
+    assertFalse(isVisible(orcaRule, nonPublicTargetNode2));
 
-    assertTrue(publicTargetNode.isVisibleTo(nonPublicTargetNode1));
-    assertFalse(nonPublicTargetNode1.isVisibleTo(publicTargetNode));
+    assertTrue(isVisible(publicTargetNode, nonPublicTargetNode1));
+    assertFalse(isVisible(nonPublicTargetNode1, publicTargetNode));
   }
 
   @Test
@@ -106,16 +110,12 @@ public class TargetNodeVisibilityTest {
         createTargetNode(nonPublicTarget1, nonPublicBuildFile, ORCA);
     TargetNode<?> publicTargetNode = createTargetNode(publicTarget, publicBuildFile, PUBLIC);
 
-    try {
-      nonPublicTargetNode1.isVisibleToOrThrow(publicTargetNode);
-      fail("checkVisibility() should throw an exception");
-    } catch (RuntimeException e) {
-      assertEquals(
-          String.format(
-              "%s depends on %s, which is not visible. More info at:\nhttps://buck.build/concept/visibility.html",
-              publicTarget, nonPublicTargetNode1.getBuildTarget()),
-          e.getMessage());
-    }
+    expectedException.expectMessage(
+        String.format(
+            "%s depends on %s, which is not visible. More info at:\nhttps://buck.build/concept/visibility.html",
+            publicTarget, nonPublicTargetNode1.getBuildTarget()));
+
+    nonPublicTargetNode1.isVisibleToOrThrow(publicTargetNode);
   }
 
   @Test
@@ -129,14 +129,14 @@ public class TargetNodeVisibilityTest {
 
     assertTrue(
         shouldBeVisibleMessage(nonPublicTargetNode1, orcaTarget),
-        nonPublicTargetNode1.isVisibleTo(orcaRule));
+        isVisible(nonPublicTargetNode1, orcaRule));
     assertTrue(
         shouldBeVisibleMessage(nonPublicTargetNode2, orcaTarget),
-        nonPublicTargetNode2.isVisibleTo(orcaRule));
-    assertTrue(publicTargetNode.isVisibleTo(orcaRule));
-    assertFalse(orcaRule.isVisibleTo(nonPublicTargetNode1));
-    assertFalse(orcaRule.isVisibleTo(nonPublicTargetNode2));
-    assertFalse(orcaRule.isVisibleTo(publicTargetNode));
+        isVisible(nonPublicTargetNode2, orcaRule));
+    assertTrue(isVisible(publicTargetNode, orcaRule));
+    assertFalse(isVisible(orcaRule, nonPublicTargetNode1));
+    assertFalse(isVisible(orcaRule, nonPublicTargetNode2));
+    assertFalse(isVisible(orcaRule, publicTargetNode));
   }
 
   @Test
@@ -151,16 +151,12 @@ public class TargetNodeVisibilityTest {
     publicTargetNode.isVisibleToOrThrow(orcaRule);
     nonPublicTargetNode1.isVisibleToOrThrow(orcaRule);
 
-    try {
-      nonPublicTargetNode2.isVisibleToOrThrow(orcaRule);
-      fail("checkVisibility() should throw an exception");
-    } catch (RuntimeException e) {
-      assertEquals(
-          String.format(
-              "%s depends on %s, which is not visible. More info at:\nhttps://buck.build/concept/visibility.html",
-              orcaTarget, nonPublicTargetNode2.getBuildTarget()),
-          e.getMessage());
-    }
+    expectedException.expectMessage(
+        String.format(
+            "%s depends on %s, which is not visible. More info at:\nhttps://buck.build/concept/visibility.html",
+            orcaTarget, nonPublicTargetNode2.getBuildTarget()));
+
+    nonPublicTargetNode2.isVisibleToOrThrow(orcaRule);
   }
 
   @Test
@@ -187,18 +183,18 @@ public class TargetNodeVisibilityTest {
     // Build rule that visible to targets in or under directory src/com/facebook
     TargetNode<?> directoryTargetNode =
         createTargetNode(libTarget, Paths.get("/BUCK"), ImmutableList.of("//src/com/facebook/..."));
-    assertTrue(directoryTargetNode.isVisibleTo(targetInSpecifiedDirectory));
-    assertTrue(directoryTargetNode.isVisibleTo(targetUnderSpecifiedDirectory));
-    assertFalse(directoryTargetNode.isVisibleTo(targetInOtherDirectory));
-    assertFalse(directoryTargetNode.isVisibleTo(targetInParentDirectory));
+    assertTrue(isVisible(directoryTargetNode, targetInSpecifiedDirectory));
+    assertTrue(isVisible(directoryTargetNode, targetUnderSpecifiedDirectory));
+    assertFalse(isVisible(directoryTargetNode, targetInOtherDirectory));
+    assertFalse(isVisible(directoryTargetNode, targetInParentDirectory));
 
     // Build rule that's visible to all targets, equals to PUBLIC.
     TargetNode<?> pubicTargetNode =
         createTargetNode(libTarget, Paths.get("/BUCK"), ImmutableList.of("//..."));
-    assertTrue(pubicTargetNode.isVisibleTo(targetInSpecifiedDirectory));
-    assertTrue(pubicTargetNode.isVisibleTo(targetUnderSpecifiedDirectory));
-    assertTrue(pubicTargetNode.isVisibleTo(targetInOtherDirectory));
-    assertTrue(pubicTargetNode.isVisibleTo(targetInParentDirectory));
+    assertTrue(isVisible(pubicTargetNode, targetInSpecifiedDirectory));
+    assertTrue(isVisible(pubicTargetNode, targetUnderSpecifiedDirectory));
+    assertTrue(isVisible(pubicTargetNode, targetInOtherDirectory));
+    assertTrue(isVisible(pubicTargetNode, targetInParentDirectory));
   }
 
   @Test
@@ -206,8 +202,14 @@ public class TargetNodeVisibilityTest {
     TargetNode<?> publicTargetNode = createTargetNode(publicTarget, publicBuildFile, PUBLIC, ORCA);
     TargetNode<?> publicOrcaRule = createTargetNode(orcaTarget, orcaBuildFile, PUBLIC, SOME_OTHER);
 
-    assertTrue(publicOrcaRule.isVisibleTo(publicTargetNode));
-    assertFalse(publicTargetNode.isVisibleTo(publicOrcaRule));
+    assertTrue(isVisible(publicOrcaRule, publicTargetNode));
+
+    expectedException.expectMessage(
+        String.format(
+            "%s depends on %s, which is not within view. More info at:\nhttps://buck.build/concept/visibility.html",
+            orcaTarget, publicTargetNode.getBuildTarget()));
+
+    publicTargetNode.isVisibleToOrThrow(publicOrcaRule);
   }
 
   private String shouldBeVisibleMessage(TargetNode<?> rule, BuildTarget target) {
@@ -269,5 +271,10 @@ public class TargetNodeVisibilityTest {
             withinView.stream()
                 .map(s -> VisibilityPatternParser.parse(cellNames, buildFile, s))
                 .collect(ImmutableSet.toImmutableSet()));
+  }
+
+  private static boolean isVisible(TargetNode<?> owner, TargetNode<?> viewer) {
+    Optional<HumanReadableException> visibilityError = owner.isVisibleTo(viewer);
+    return !visibilityError.isPresent();
   }
 }

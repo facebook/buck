@@ -139,17 +139,17 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
   }
 
   @Override
-  public boolean isVisibleTo(TargetNode<?> viewer) {
-    return getVisibilityChecker().isVisibleTo(viewer);
+  public Optional<HumanReadableException> isVisibleTo(TargetNode<?> viewer) {
+    return getVisibilityChecker().isVisibleToWithError(viewer);
   }
 
   @Override
   public void isVisibleToOrThrow(TargetNode<?> viewer) {
-    if (!isVisibleTo(viewer)) {
-      throw new HumanReadableException(
-          "%s depends on %s, which is not visible. More info at:\nhttps://buck.build/concept/visibility.html",
-          viewer, getBuildTarget());
-    }
+    Optional<HumanReadableException> visibilityError = isVisibleTo(viewer);
+    visibilityError.ifPresent(
+        e -> {
+          throw e;
+        });
   }
 
   @Override

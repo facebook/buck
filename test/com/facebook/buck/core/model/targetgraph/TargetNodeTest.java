@@ -18,7 +18,6 @@ package com.facebook.buck.core.model.targetgraph;
 
 import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -154,9 +153,7 @@ public class TargetNodeTest {
     BuildTarget buildTargetTwo = BuildTargetFactory.newInstance("bbb//foo:bar");
     TargetNode<ExampleDescriptionArg> targetNodeTwo = createTargetNode(buildTargetTwo, cellNames);
 
-    boolean isVisible = targetNodeOne.isVisibleTo(targetNodeTwo);
-
-    assertThat(isVisible, is(false));
+    assertTrue(targetNodeOne.isVisibleTo(targetNodeTwo).isPresent());
   }
 
   @Test

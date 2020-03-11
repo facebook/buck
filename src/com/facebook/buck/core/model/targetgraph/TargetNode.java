@@ -19,6 +19,7 @@ package com.facebook.buck.core.model.targetgraph;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -108,7 +109,7 @@ public interface TargetNode<T extends ConstructorArg>
    */
   Set<BuildTarget> getTotalDeps();
 
-  boolean isVisibleTo(TargetNode<?> viewer);
+  Optional<HumanReadableException> isVisibleTo(TargetNode<?> viewer);
 
   void isVisibleToOrThrow(TargetNode<?> viewer);
 
