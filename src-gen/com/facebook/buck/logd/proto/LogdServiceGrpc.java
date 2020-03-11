@@ -104,6 +104,43 @@ public final class LogdServiceGrpc {
      }
      return getOpenLogMethod;
   }
+  @io.grpc.ExperimentalApi("https://github.com/grpc/grpc-java/issues/1901")
+  @java.lang.Deprecated // Use {@link #getShutdownServerMethod()} instead. 
+  public static final io.grpc.MethodDescriptor<com.facebook.buck.logd.proto.ShutdownRequest,
+      com.google.rpc.Status> METHOD_SHUTDOWN_SERVER = getShutdownServerMethodHelper();
+
+  private static volatile io.grpc.MethodDescriptor<com.facebook.buck.logd.proto.ShutdownRequest,
+      com.google.rpc.Status> getShutdownServerMethod;
+
+  @io.grpc.ExperimentalApi("https://github.com/grpc/grpc-java/issues/1901")
+  public static io.grpc.MethodDescriptor<com.facebook.buck.logd.proto.ShutdownRequest,
+      com.google.rpc.Status> getShutdownServerMethod() {
+    return getShutdownServerMethodHelper();
+  }
+
+  private static io.grpc.MethodDescriptor<com.facebook.buck.logd.proto.ShutdownRequest,
+      com.google.rpc.Status> getShutdownServerMethodHelper() {
+    io.grpc.MethodDescriptor<com.facebook.buck.logd.proto.ShutdownRequest, com.google.rpc.Status> getShutdownServerMethod;
+    if ((getShutdownServerMethod = LogdServiceGrpc.getShutdownServerMethod) == null) {
+      synchronized (LogdServiceGrpc.class) {
+        if ((getShutdownServerMethod = LogdServiceGrpc.getShutdownServerMethod) == null) {
+          LogdServiceGrpc.getShutdownServerMethod = getShutdownServerMethod = 
+              io.grpc.MethodDescriptor.<com.facebook.buck.logd.proto.ShutdownRequest, com.google.rpc.Status>newBuilder()
+              .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
+              .setFullMethodName(generateFullMethodName(
+                  "logd.v1.LogdService", "ShutdownServer"))
+              .setSampledToLocalTracing(true)
+              .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                  com.facebook.buck.logd.proto.ShutdownRequest.getDefaultInstance()))
+              .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                  com.google.rpc.Status.getDefaultInstance()))
+                  .setSchemaDescriptor(new LogdServiceMethodDescriptorSupplier("ShutdownServer"))
+                  .build();
+          }
+        }
+     }
+     return getShutdownServerMethod;
+  }
 
   /**
    * Creates a new async stub that supports all call types for the service
@@ -165,6 +202,18 @@ public final class LogdServiceGrpc {
       return asyncUnimplementedStreamingCall(getOpenLogMethodHelper(), responseObserver);
     }
 
+    /**
+     * <pre>
+     * A simple, unary RPC.
+     * Client sends a ShutdownRequest to logD, after which logD will close all current existing
+     * streams to log files, return a Status message and shutdown server.
+     * </pre>
+     */
+    public void shutdownServer(com.facebook.buck.logd.proto.ShutdownRequest request,
+        io.grpc.stub.StreamObserver<com.google.rpc.Status> responseObserver) {
+      asyncUnimplementedUnaryCall(getShutdownServerMethodHelper(), responseObserver);
+    }
+
     @java.lang.Override public final io.grpc.ServerServiceDefinition bindService() {
       return io.grpc.ServerServiceDefinition.builder(getServiceDescriptor())
           .addMethod(
@@ -181,6 +230,13 @@ public final class LogdServiceGrpc {
                 com.facebook.buck.logd.proto.LogMessage,
                 com.google.rpc.Status>(
                   this, METHODID_OPEN_LOG)))
+          .addMethod(
+            getShutdownServerMethodHelper(),
+            asyncUnaryCall(
+              new MethodHandlers<
+                com.facebook.buck.logd.proto.ShutdownRequest,
+                com.google.rpc.Status>(
+                  this, METHODID_SHUTDOWN_SERVER)))
           .build();
     }
   }
@@ -237,6 +293,19 @@ public final class LogdServiceGrpc {
       return asyncClientStreamingCall(
           getChannel().newCall(getOpenLogMethodHelper(), getCallOptions()), responseObserver);
     }
+
+    /**
+     * <pre>
+     * A simple, unary RPC.
+     * Client sends a ShutdownRequest to logD, after which logD will close all current existing
+     * streams to log files, return a Status message and shutdown server.
+     * </pre>
+     */
+    public void shutdownServer(com.facebook.buck.logd.proto.ShutdownRequest request,
+        io.grpc.stub.StreamObserver<com.google.rpc.Status> responseObserver) {
+      asyncUnaryCall(
+          getChannel().newCall(getShutdownServerMethodHelper(), getCallOptions()), request, responseObserver);
+    }
   }
 
   /**
@@ -270,6 +339,18 @@ public final class LogdServiceGrpc {
     public com.facebook.buck.logd.proto.CreateLogResponse createLogFile(com.facebook.buck.logd.proto.CreateLogRequest request) {
       return blockingUnaryCall(
           getChannel(), getCreateLogFileMethodHelper(), getCallOptions(), request);
+    }
+
+    /**
+     * <pre>
+     * A simple, unary RPC.
+     * Client sends a ShutdownRequest to logD, after which logD will close all current existing
+     * streams to log files, return a Status message and shutdown server.
+     * </pre>
+     */
+    public com.google.rpc.Status shutdownServer(com.facebook.buck.logd.proto.ShutdownRequest request) {
+      return blockingUnaryCall(
+          getChannel(), getShutdownServerMethodHelper(), getCallOptions(), request);
     }
   }
 
@@ -306,10 +387,24 @@ public final class LogdServiceGrpc {
       return futureUnaryCall(
           getChannel().newCall(getCreateLogFileMethodHelper(), getCallOptions()), request);
     }
+
+    /**
+     * <pre>
+     * A simple, unary RPC.
+     * Client sends a ShutdownRequest to logD, after which logD will close all current existing
+     * streams to log files, return a Status message and shutdown server.
+     * </pre>
+     */
+    public com.google.common.util.concurrent.ListenableFuture<com.google.rpc.Status> shutdownServer(
+        com.facebook.buck.logd.proto.ShutdownRequest request) {
+      return futureUnaryCall(
+          getChannel().newCall(getShutdownServerMethodHelper(), getCallOptions()), request);
+    }
   }
 
   private static final int METHODID_CREATE_LOG_FILE = 0;
-  private static final int METHODID_OPEN_LOG = 1;
+  private static final int METHODID_SHUTDOWN_SERVER = 1;
+  private static final int METHODID_OPEN_LOG = 2;
 
   private static final class MethodHandlers<Req, Resp> implements
       io.grpc.stub.ServerCalls.UnaryMethod<Req, Resp>,
@@ -331,6 +426,10 @@ public final class LogdServiceGrpc {
         case METHODID_CREATE_LOG_FILE:
           serviceImpl.createLogFile((com.facebook.buck.logd.proto.CreateLogRequest) request,
               (io.grpc.stub.StreamObserver<com.facebook.buck.logd.proto.CreateLogResponse>) responseObserver);
+          break;
+        case METHODID_SHUTDOWN_SERVER:
+          serviceImpl.shutdownServer((com.facebook.buck.logd.proto.ShutdownRequest) request,
+              (io.grpc.stub.StreamObserver<com.google.rpc.Status>) responseObserver);
           break;
         default:
           throw new AssertionError();
@@ -398,6 +497,7 @@ public final class LogdServiceGrpc {
               .setSchemaDescriptor(new LogdServiceFileDescriptorSupplier())
               .addMethod(getCreateLogFileMethodHelper())
               .addMethod(getOpenLogMethodHelper())
+              .addMethod(getShutdownServerMethodHelper())
               .build();
         }
       }
